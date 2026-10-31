@@ -1,0 +1,85 @@
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+
+test.describe.configure({ timeout: 90_000 });
+
+const HOUR_PX = 56;
+
+async function seed(request: APIRequestContext) {
+  const tag = Date.now().toString(36);
+  const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
+  const conny = people.find((p) => p.name === 'Conny')!;
+  const boardName = `Kalender ${tag}`;
+  const boardId = (await (await request.post('/api/boards', { data: { name: boardName } })).json()).id as string;
+  const columns = (await (await request.get(`/api/boards/${boardId}`)).json()).columns as { id: string }[];
+  const mk = async (title: string, assigneeIds: string[]) => {
+    const res = await request.post(`/api/boards/${boardId}/cards`, {
+      data: { title, columnId: columns[0]!.id, dueAt: new Date().toISOString(), assigneeIds },
+    });
+    return (await res.json()).id as string;
+  };
+  const t = { conny: `Friseur ${tag}`, offen: `Paket ${tag}` };
+  await mk(t.conny, [conny.id]);
+  await mk(t.offen, []);
+  return { t, boardName };
+}
+
+const block = (page: Page, title: string, board: string) => page.getByRole('button', { name: `${title}, ${board}` });
+
+test('Kalender: Tagesansicht zeigt die Karte zur Uhrzeit, Filter nach Person', async ({ page, request }) => {
+  const s = await seed(request);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Kalender' }).click();
+  await page.getByRole('group', { name: 'Ansicht' }).getByRole('button', { name: 'Tag' }).click();
+
+  await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
+  await expect(block(page, s.t.offen, s.boardName)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Filter' }).click();
+  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
+  await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
+  await expect(block(page, s.t.offen, s.boardName)).toBeHidden();
+
+  // Karte öffnen
+  await block(page, s.t.conny, s.boardName).click();
+  await expect(page.getByRole('dialog').locator('input, textarea').first()).toHaveValue(s.t.conny);
+});
+
+test('Kalender: Monatsansicht, Tipp auf einen Tag öffnet die Tagesansicht', async ({ page, request }) => {
+  const s = await seed(request);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Kalender' }).click();
+  await page.getByRole('group', { name: 'Ansicht' }).getByRole('button', { name: 'Monat' }).click();
+
+  const today = page.locator('[data-testid="calendar-month"] [data-today]');
+  await expect(today).toBeVisible();
+  await expect(today).toHaveAttribute('aria-label', /[2-9]\d* Karten|[1-9]\d+ Karten/);
+  await today.click();
+  await expect(page.getByRole('group', { name: 'Ansicht' }).getByRole('button', { name: 'Tag' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
+});
+
+test('Kalender: auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an', async ({ page, request }, info) => {
+  // Die angelegte Karte bleibt in der Datenbank: jeder Lauf (Theme, Wiederholung) nimmt eine eigene Stunde
+  const hour = 5 + info.repeatEachIndex * 2 + (info.project.name === 'hell' ? 1 : 0);
+  const s = await seed(request);
+  const title = `Elektriker ${Date.now().toString(36)}`;
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Kalender' }).click();
+  await page.getByRole('group', { name: 'Ansicht' }).getByRole('button', { name: 'Tag' }).click();
+  await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
+
+  // auf die Stunde scrollen und die Spalte dort antippen (erst warten, bis die Ansicht ihren Startpunkt angesprungen ist)
+  await page.waitForTimeout(400);
+  const grid = page.getByTestId('calendar-grid');
+  await grid.evaluate((el, [px, h]) => (el.scrollTop = h * px), [HOUR_PX, hour - 1]);
+  const column = page.getByRole('button', { name: /^Neue Karte am/ });
+  const box = (await column.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + hour * HOUR_PX + 20);
+
+  await expect(page.getByTestId('slot-time')).toContainText(`${String(hour).padStart(2, '0')}:00`);
+  await page.getByRole('textbox', { name: 'Titel' }).fill(title);
+  await page.getByRole('group', { name: 'Board' }).getByRole('button', { name: s.boardName }).click();
+  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByText('Karte angelegt')).toBeVisible();
+  await expect(block(page, title, s.boardName)).toBeVisible();
+});

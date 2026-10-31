@@ -1,0 +1,26 @@
+configuration:
+  users:
+    name: Personen und Push-Geräte
+    description: >-
+      Wer Stups nutzen darf und auf welchen Geräten die Push-Nachrichten ankommen. Pro Eintrag der Name der Person
+      (wie in Home Assistant, unter Einstellungen › Personen) und die Notify-Dienste der Companion App ohne "notify."
+      (z. B. mobile_app_annas_iphone). Ist hier mindestens eine Person eingetragen, gilt diese Liste, und Personen,
+      Geräte und Zugriff sind in der App gesperrt. Bleibt die Liste leer, pflegst du alles in der App unter
+      Einstellungen › Personen & Zugriff.
+  access_mode:
+    name: Zugriff
+    description: >-
+      Gilt nur, wenn oben Personen eingetragen sind. "selected" = nur diese Personen und Administratoren von Home
+      Assistant dürfen Stups öffnen, "everyone" = jeder Home-Assistant-Benutzer.
+  dashboard_path:
+    name: Dashboard-Pfad
+    description: Ziel des Zurück-Buttons, z. B. /lovelace/0 oder /dashboard-handy/start.
+  daily_summary_time:
+    name: Uhrzeit der täglichen Zusammenfassung
+    description: Format HH:MM.
+  overdue_nag_time:
+    name: Uhrzeit für das Nachhaken bei Überfälligkeit
+    description: Format HH:MM.
+  log_level:
+    name: Log-Level
+    description: Detailgrad der Protokolle im Add-on-Log.

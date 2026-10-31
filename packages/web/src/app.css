@@ -1,0 +1,208 @@
+@import 'tailwindcss';
+
+/*
+ * Design "Stups": warmes Schwarz und das Orange aus dem Logo (dunkel), Creme mit weichen Schatten (hell).
+ * Hell/Dunkel folgt dem System. --accent trägt Flächen (Knöpfe, aktiver Reiter), --accent-text trägt Schrift in
+ * Orange und ist je Thema so gewählt, dass sie auf Karten und Hintergrund gut lesbar bleibt.
+ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface2);
+  --color-line: var(--border);
+  --color-fg: var(--text);
+  --color-fg2: var(--text2);
+  --color-accent: var(--accent);
+  --color-accent2: var(--accent2);
+  --color-accent-text: var(--accent-text);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #0e0d10;
+  --surface: #1a181d;
+  --surface2: #262329;
+  --border: #2d2a31;
+  --text: #f6f4f7;
+  --text2: #a8a2af;
+  --accent: #f2500f;
+  --accent2: #ff8a4d;
+  --accent-text: #ff8a4d;
+  --on-accent: #ffffff;
+  --danger: #ff8a8a;
+  --danger-bg: #3a1d22;
+  --scrim: rgba(0, 0, 0, 0.55);
+  --glow: radial-gradient(ellipse at 85% -5%, rgba(255, 90, 31, 0.32), transparent 62%);
+  --shadow-card: none;
+  --shadow-accent: 0 10px 24px rgba(255, 90, 31, 0.4);
+  /* Dringlichkeit: Balken links an der Karte */
+  --u-over: #ff4d4d;
+  --u-today: #ff5a1f;
+  --u-soon: #ffc83c;
+  --u-later: #6b6573;
+
+  --c-blue-bg: #1e2c45; --c-blue-fg: #7fb2ff;
+  --c-teal-bg: #12332f; --c-teal-fg: #5ed7c4;
+  --c-green-bg: #1f3a2b; --c-green-fg: #6fdc9e;
+  --c-yellow-bg: #3a3216; --c-yellow-fg: #ffd24d;
+  --c-orange-bg: #3a2a16; --c-orange-fg: #ffa45c;
+  --c-red-bg: #3a1d22; --c-red-fg: #ff7b86;
+  --c-pink-bg: #3a1d2e; --c-pink-fg: #ff8fc2;
+  --c-purple-bg: #2e2547; --c-purple-fg: #b9a2ff;
+  --c-indigo-bg: #202448; --c-indigo-fg: #98a6ff;
+  --c-brown-bg: #33261f; --c-brown-fg: #e0b8a0;
+  --c-gray-bg: #2d2a31; --c-gray-fg: #c9c4d0;
+  --c-mint-bg: #16342a; --c-mint-fg: #8ae9b6;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --bg: #fff6ee;
+    --surface: #ffffff;
+    --surface2: #f6e8dc;
+    --border: #efdccb;
+    --text: #2b1d15;
+    --text2: #7a6558;
+    --accent: #d03f09;
+    --accent2: #f2601f;
+    --accent-text: #c23c06;
+    --on-accent: #ffffff;
+    --danger: #b0001a;
+    --danger-bg: #ffe5e7;
+    --scrim: rgba(43, 29, 21, 0.4);
+    --glow: radial-gradient(ellipse at 90% -10%, rgba(255, 138, 77, 0.42), transparent 60%);
+    --shadow-card: 0 6px 18px rgba(120, 60, 20, 0.08);
+    --shadow-accent: 0 10px 22px rgba(208, 63, 9, 0.3);
+    --u-over: #d4382a;
+    --u-today: #e0480d;
+    --u-soon: #d9a000;
+    --u-later: #c9b8a8;
+
+    --c-blue-bg: #e1f0ff; --c-blue-fg: #0058b8;
+    --c-teal-bg: #ddf5f1; --c-teal-fg: #0a6b5e;
+    --c-green-bg: #e4f7e9; --c-green-fg: #1c7a3a;
+    --c-yellow-bg: #fff4d6; --c-yellow-fg: #7a5a00;
+    --c-orange-bg: #ffebd6; --c-orange-fg: #a04a00;
+    --c-red-bg: #ffe5e7; --c-red-fg: #b0001a;
+    --c-pink-bg: #ffe4f1; --c-pink-fg: #b0105f;
+    --c-purple-bg: #f0e6ff; --c-purple-fg: #6b32b8;
+    --c-indigo-bg: #e6e9ff; --c-indigo-fg: #3340b8;
+    --c-brown-bg: #f3e8e1; --c-brown-fg: #7a4a2b;
+    --c-gray-bg: #f1e6dc; --c-gray-fg: #5c4a3d;
+    --c-mint-bg: #dff8ea; --c-mint-fg: #14704a;
+  }
+}
+
+/* Leuchtende Orange-Fläche: Knopf „+", aktiver Reiter, wichtige Knöpfe */
+.bg-accent-grad {
+  background-image: linear-gradient(135deg, var(--accent2), var(--accent));
+  box-shadow: var(--shadow-accent);
+  color: var(--on-accent);
+}
+
+/* Schimmer hinter der Kopfzeile */
+.header-glow {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 340px;
+  background: var(--glow);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Karten im hellen Thema mit weichem Schatten statt Rahmenlinie */
+.card-shadow { box-shadow: var(--shadow-card); }
+@layer base {
+  /*
+   * Abstand zu Statusleiste und Home-Balken. Läuft Stups als eingebettete Seite in Home Assistant, hält die
+   * Companion App diesen Platz schon frei; das iPhone meldet ihn der Seite im iframe trotzdem noch einmal.
+   * Dann würde er doppelt gezählt (leere Streifen oben und unten), darum gilt er nur außerhalb eines iframes.
+   */
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root.embedded {
+    --safe-top: 0px;
+    --safe-bottom: 0px;
+  }
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
+    overflow-x: hidden;
+  }
+  #app {
+    height: 100%;
+    overflow-x: hidden;
+    /* die Seite lässt sich nur senkrecht ziehen; Leisten mit Chips (.no-scrollbar) wischen weiter seitlich */
+    touch-action: pan-y;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  /* 16px verhindert das automatische Hineinzoomen auf dem iPhone */
+  input,
+  textarea,
+  select {
+    font: inherit;
+    font-size: 16px;
+    color: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.cat {
+  border-radius: 8px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cat-blue { background: var(--c-blue-bg); color: var(--c-blue-fg); }
+.cat-teal { background: var(--c-teal-bg); color: var(--c-teal-fg); }
+.cat-green { background: var(--c-green-bg); color: var(--c-green-fg); }
+.cat-yellow { background: var(--c-yellow-bg); color: var(--c-yellow-fg); }
+.cat-orange { background: var(--c-orange-bg); color: var(--c-orange-fg); }
+.cat-red { background: var(--c-red-bg); color: var(--c-red-fg); }
+.cat-pink { background: var(--c-pink-bg); color: var(--c-pink-fg); }
+.cat-purple { background: var(--c-purple-bg); color: var(--c-purple-fg); }
+.cat-indigo { background: var(--c-indigo-bg); color: var(--c-indigo-fg); }
+.cat-brown { background: var(--c-brown-bg); color: var(--c-brown-fg); }
+.cat-gray { background: var(--c-gray-bg); color: var(--c-gray-fg); }
+.cat-mint { background: var(--c-mint-bg); color: var(--c-mint-fg); }
+
+/* Rückmeldung nach dem Stupsen: die Karte hüpft kurz */
+@keyframes hop {
+  0% { transform: translateY(0); }
+  30% { transform: translateY(-10px) rotate(-1deg); }
+  55% { transform: translateY(0); }
+  75% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+.hop { animation: hop 0.7s ease-out; }
+
+.no-scrollbar { scrollbar-width: none; touch-action: pan-x pan-y; }
+/* unten Platz für die schwebende Leiste */
+.pb-tabbar { padding-bottom: calc(max(10px, var(--safe-bottom)) + 100px); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

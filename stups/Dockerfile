@@ -1,0 +1,29 @@
+# Build-Kontext ist das Repository-Root:
+#   docker build -f stups/Dockerfile .
+FROM node:24-alpine AS build
+RUN npm install -g pnpm@12.16.1
+WORKDIR /app
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/server/package.json packages/server/
+COPY packages/web/package.json packages/web/
+RUN pnpm install --frozen-lockfile
+COPY packages packages
+# baut den Server nach packages/server/dist und die Oberfläche nach packages/server/web
+RUN pnpm -r build
+
+FROM node:24-alpine
+RUN npm install -g pnpm@12.16.1
+WORKDIR /app
+ENV NODE_ENV=production \
+    OPTIONS_PATH=/data/options.json \
+    PORT=8099
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/server/package.json packages/server/
+COPY packages/web/package.json packages/web/
+RUN pnpm install --frozen-lockfile --prod --filter @stups/server
+COPY --from=build /app/packages/server/dist packages/server/dist
+COPY --from=build /app/packages/server/web packages/server/web
+COPY packages/server/public packages/server/public
+WORKDIR /app/packages/server
+EXPOSE 8099
+CMD ["node", "dist/main.js"]

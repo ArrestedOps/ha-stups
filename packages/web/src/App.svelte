@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import AgendaView from './components/AgendaView.svelte';
   import ArchiveSheet from './components/ArchiveSheet.svelte';
+  import AuthView from './components/AuthView.svelte';
   import CalendarView from './components/CalendarView.svelte';
   import SlotSheet from './components/SlotSheet.svelte';
   import TabBar from './components/TabBar.svelte';
@@ -26,7 +27,7 @@
   import { catClass } from './lib/colors';
   import { deviceTz, formatCost } from './lib/datetime';
   import { costTotals, countByColumn, dueStats, filterCards } from './lib/filters';
-  import { goToDashboard, init, openSheet, ui } from './lib/store.svelte';
+  import { feat, goToDashboard, init, openSheet, ui } from './lib/store.svelte';
 
   onMount(init);
 
@@ -93,6 +94,8 @@
   </div>
 {:else if !ui.ready}
   <div class="flex h-full items-center justify-center text-fg2">Lädt …</div>
+{:else if ui.gate}
+  <AuthView />
 {:else if !ui.allowed}
   <NoAccess />
 {:else}
@@ -101,9 +104,13 @@
   <main class="relative z-[1] mx-auto flex h-full max-w-[1400px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
     <header class="shrink-0">
       <div class="flex items-center justify-between">
-        <button class="-ml-1.5 flex min-h-11 items-center text-[17px] text-accent-text" onclick={goToDashboard}>
-          <Icon name="chevron-left" size={24} stroke={2.6} />Dashboard
-        </button>
+        {#if feat.haUi}
+          <button class="-ml-1.5 flex min-h-11 items-center text-[17px] text-accent-text" onclick={goToDashboard}>
+            <Icon name="chevron-left" size={24} stroke={2.6} />Dashboard
+          </button>
+        {:else}
+          <span class="min-h-11"></span>
+        {/if}
         {#if !ui.online}
           <span class="flex items-center gap-1.5 rounded-full bg-surface2 px-3 py-1 text-[13px] text-fg2" role="status">
             <Icon name="wifi-off" size={14} />Offline

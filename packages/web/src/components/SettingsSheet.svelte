@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { api, ApiError, type PushStatus } from '../lib/api';
   import { applyHeaderHiding, isHeaderHidingWanted, setHeaderHidingWanted, showHaHeader } from '../lib/hideHaHeader';
-  import { act, closeSheet, openSheet, selectTab, toast, ui } from '../lib/store.svelte';
+  import { act, closeSheet, feat, logout, openSheet, selectTab, toast, ui } from '../lib/store.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
   import Row from './Row.svelte';
@@ -63,6 +63,29 @@
     sending = false;
   }
 
+  let changingPassword = $state(false);
+  let pwCurrent = $state('');
+  let pwNext = $state('');
+  let pwRepeat = $state('');
+  let pwBusy = $state(false);
+  async function savePassword(e: Event) {
+    e.preventDefault();
+    if (pwNext !== pwRepeat) {
+      toast('Die beiden neuen Passwörter sind nicht gleich', { tone: 'error' });
+      return;
+    }
+    pwBusy = true;
+    try {
+      await api.changePassword(pwCurrent, pwNext);
+      toast('Passwort geändert. Andere Geräte melden sich neu an.');
+      changingPassword = false;
+      pwCurrent = pwNext = pwRepeat = '';
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : 'Passwort konnte nicht geändert werden', { tone: 'error' });
+    }
+    pwBusy = false;
+  }
+
   let exporting = $state(false);
   async function exportData() {
     exporting = true;
@@ -116,6 +139,31 @@ tap_action:
     </button>
   </Group>
 
+  {#if feat.standalone}
+    <Group title="Konto" hint="Wenn du dein Passwort änderst, melden sich deine anderen Geräte ab.">
+      <Row label="Angemeldet als"><span class="text-fg2">{ui.me?.displayName ?? '—'}</span></Row>
+      {#if changingPassword}
+        <form onsubmit={savePassword} class="space-y-2 px-4 py-3" aria-label="Passwort ändern">
+          <input type="password" bind:value={pwCurrent} autocomplete="current-password" placeholder="Aktuelles Passwort" aria-label="Aktuelles Passwort" class="min-h-11 w-full rounded-xl bg-surface2 px-3" required />
+          <input type="password" bind:value={pwNext} autocomplete="new-password" placeholder="Neues Passwort (mindestens 10 Zeichen)" aria-label="Neues Passwort" minlength="10" class="min-h-11 w-full rounded-xl bg-surface2 px-3" required />
+          <input type="password" bind:value={pwRepeat} autocomplete="new-password" placeholder="Neues Passwort wiederholen" aria-label="Neues Passwort wiederholen" class="min-h-11 w-full rounded-xl bg-surface2 px-3" required />
+          <div class="flex gap-2">
+            <button class="min-h-11 flex-1 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-60" disabled={pwBusy}>Speichern</button>
+            <button type="button" class="min-h-11 flex-1 rounded-xl bg-surface2 font-semibold" onclick={() => (changingPassword = false)}>Abbrechen</button>
+          </div>
+        </form>
+      {:else}
+        <Row label="Passwort">
+          <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold" onclick={() => (changingPassword = true)}>Ändern</button>
+        </Row>
+      {/if}
+      <Row label="Auf diesem Gerät">
+        <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold text-danger" onclick={() => void logout()}>Abmelden</button>
+      </Row>
+    </Group>
+  {/if}
+
+  {#if feat.haUi}
   <Group
     title="Zurück zum Dashboard"
     hint={ui.isAdmin
@@ -141,7 +189,9 @@ tap_action:
       </form>
     {/if}
   </Group>
+  {/if}
 
+  {#if feat.haUi}
   <Group title="Darstellung" hint="Blendet die Kopfzeile von Home Assistant (Titel und Menü) über der App aus. Falls die App danach falsch aussieht, hier wieder ausschalten.">
     <Row label="HA-Kopfzeile ausblenden">
       <input
@@ -158,7 +208,9 @@ tap_action:
       />
     </Row>
   </Group>
+  {/if}
 
+  {#if feat.watchers}
   <Group title="Wächter" hint="Karten, die von selbst aus Home Assistant entstehen, zum Beispiel wenn die Waschmaschine fertig ist.">
     <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => selectTab('watchers')}>
       <Icon name="eye" size={20} />
@@ -166,7 +218,9 @@ tap_action:
       <Icon name="chevron-right" size={18} />
     </button>
   </Group>
+  {/if}
 
+  {#if feat.push}
   <Group
     title="Benachrichtigungen"
     hint="Auf dem iPhone erscheint „Erledigt“ erst, wenn man die Nachricht aufklappt (nach links wischen und „Ansicht“, herunterziehen oder lange drücken)."
@@ -239,15 +293,18 @@ tap_action:
       </Row>
     {/if}
   </Group>
+  {/if}
 
+  {#if feat.haUi}
   <Group title="Dashboard-Button (Bubble Card)">
     <Row stack>
       <pre class="overflow-x-auto rounded-xl bg-surface2 p-3 text-[13px] leading-relaxed">{yaml}</pre>
       <button class="mt-2 min-h-10 rounded-xl bg-surface2 px-4 font-semibold" onclick={copyYaml}>Kopieren</button>
     </Row>
   </Group>
+  {/if}
 
-  {#if ui.isAdmin}
+  {#if ui.isAdmin && feat.migration}
     <Group
       title="Umzug"
       hint="Zieht Stups in Home Assistant auf eine andere Adresse um (zum Beispiel aus einem neuen Repository), kommen die Daten über diesen Export mit: Er legt Datenbank und Anhänge in /share/stups-umzug ab, die neue App übernimmt sie beim ersten Start."
@@ -260,8 +317,10 @@ tap_action:
     </Group>
   {/if}
 
-  <p class="mt-5 px-3 text-center text-[13px] text-fg2">
-    Angemeldet als {ui.me?.displayName ?? '—'} ·
-    <a class="text-accent-text" href="diagnose.html">Diagnose-Seite</a>
-  </p>
+  {#if !feat.standalone}
+    <p class="mt-5 px-3 text-center text-[13px] text-fg2">
+      Angemeldet als {ui.me?.displayName ?? '—'}
+      {#if feat.haUi}· <a class="text-accent-text" href="diagnose.html">Diagnose-Seite</a>{/if}
+    </p>
+  {/if}
 </Sheet>

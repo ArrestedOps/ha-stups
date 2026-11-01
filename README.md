@@ -52,11 +52,29 @@ Am einfachsten über den Knopf oben („Zu Home Assistant hinzufügen"). Von Han
 
 Bedienung und Optionen: [stups/DOCS.md](stups/DOCS.md). Änderungen: [stups/CHANGELOG.md](stups/CHANGELOG.md).
 
+### Ohne Home Assistant (Docker)
+
+Stups läuft auch als eigener Container, zum Beispiel auf einer Synology-NAS, mit eigenen Konten statt Home Assistant:
+
+```yaml
+services:
+  stups:
+    image: ghcr.io/arrestedops/stups:latest
+    restart: unless-stopped
+    ports: ["8099:8099"]
+    environment:
+      TZ: Europe/Berlin
+    volumes: ["./stups-daten:/data"]
+```
+
+Beim ersten Start zeigt das Protokoll (`docker logs stups`) einen Code für die Einrichtung des ersten Administrators. Boards, Agenda, Kalender, Wiederholungen und Stupsen funktionieren wie in der App; Wächter und Sensoren brauchen Home Assistant. Alles Weitere (Synology, HTTPS, Einstellungen, Umzug): [docs/docker.md](docs/docker.md).
+
 ## Dokumentation
 
 | | |
 |---|---|
 | [stups/DOCS.md](stups/DOCS.md) | Bedienung und Optionen (steht auch in Home Assistant unter „Dokumentation") |
+| [docs/docker.md](docs/docker.md) | Stups ohne Home Assistant: Docker, Synology, Anmeldung, Einstellungen |
 | [docs/entwicklung.md](docs/entwicklung.md) | Betrieb, Fehlersuche und Entwicklung |
 | [docs/testliste.md](docs/testliste.md) | Was am iPhone zu prüfen ist |
 

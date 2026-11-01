@@ -26,6 +26,10 @@ export interface Runtime {
   options: Options;
   ha: HaConnection | null;
   identity: {
+    /** Wie sich Benutzer anmelden: über Ingress (Add-on, Entwicklung) oder mit eigenem Konto (Sitzungs-Cookie) */
+    kind: 'ingress' | 'session';
+    /** Erster Administrator aus STUPS_ADMIN_USER und STUPS_ADMIN_PASSWORD (nur bei eigener Anmeldung) */
+    bootstrap?: { username: string; password: string };
     /** Nur den Ingress-Proxy von Home Assistant zulassen */
     enforceIngressIp: boolean;
     /** Nur für Entwicklung und Tests */
@@ -105,6 +109,13 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
   const noIpCheck = env.ENFORCE_INGRESS_IP === 'false';
   const devAdmins = noIpCheck ? set(env.DEV_ADMINS) : undefined;
   const publicUrl = own('PUBLIC_URL')?.replace(/\/+$/, '') ?? null;
+  // Ohne Add-on melden sich Benutzer mit eigenem Konto an. Ohne IP-Prüfung (Entwicklung, Tests) bleibt es bei Ingress.
+  const kind = mode === 'addon' || noIpCheck ? 'ingress' : 'session';
+  const adminUser = own('ADMIN_USER');
+  const adminPassword = own('ADMIN_PASSWORD');
+  if (kind === 'session' && (adminUser === undefined) !== (adminPassword === undefined)) {
+    throw new Error('STUPS_ADMIN_USER und STUPS_ADMIN_PASSWORD gehören zusammen: bitte beide setzen oder beide weglassen');
+  }
 
   return {
     mode,
@@ -116,6 +127,8 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
     options,
     ha,
     identity: {
+      kind,
+      bootstrap: kind === 'session' && adminUser !== undefined && adminPassword !== undefined ? { username: adminUser, password: adminPassword } : undefined,
       enforceIngressIp: !noIpCheck,
       devUser: devName ? { id: `dev-${devName}`, name: devName, displayName: devName } : undefined,
       devAdmins: devAdmins === undefined ? undefined : devAdmins.split(',').map((s) => s.trim()).filter(Boolean),
@@ -126,7 +139,7 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
 /** Was die Oberfläche anzeigen darf: ohne Home Assistant entfallen Wächter und Sensoren ohne Fehlermeldung */
 export interface Capabilities {
   mode: Mode;
-  auth: 'ingress';
+  auth: 'ingress' | 'session';
   ha: boolean;
   watchers: boolean;
   sensors: boolean;

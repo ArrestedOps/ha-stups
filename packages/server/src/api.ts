@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import multipart from '@fastify/multipart';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { createAccess, type Access, type AccessResult } from './access.js';
+import type { Account, Accounts } from './accounts.js';
+import { sessionToken } from './session-auth.js';
 import type { Directory } from './directory.js';
 import type { Capabilities } from './runtime.js';
 import { AppError, ConflictError, ForbiddenError, NotFoundError, ValidationError } from './errors.js';
@@ -55,6 +57,8 @@ export interface ApiDeps {
   access?: Access;
   /** Vorgabe aus den Add-on-Optionen */
   defaultDashboardPath?: string;
+  /** Eigene Konten mit Passwort (Betrieb ohne Home Assistant); ohne sie gibt es keine Routen für die Benutzerverwaltung */
+  accounts?: Accounts;
   /** Was in dieser Betriebsart verfügbar ist (Wächter, Sensoren, Push-Wege); die Oberfläche richtet sich danach */
   capabilities?: Capabilities;
   /** Ablage für Anhänge, ohne sie gibt es keine Uploads */
@@ -82,7 +86,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   app.decorateRequest('access', null);
 
   const requireAdmin = (req: FastifyRequest) => {
-    if (!req.access?.isAdmin) throw new ForbiddenError('Das dürfen nur Administratoren von Home Assistant');
+    if (!req.access?.isAdmin) throw new ForbiddenError('Das dürfen nur Administratoren');
   };
 
   app.setErrorHandler((err: Error & { statusCode?: number }, _req: FastifyRequest, reply: FastifyReply) => {
@@ -271,9 +275,59 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
     }
     return person;
   });
+  // ----- Konten (nur ohne Home Assistant: eigene Anmeldung) -----
+  const accounts = deps.accounts;
+  if (accounts) {
+    const view = (a: Account) => ({ userId: a.userId, username: a.username, displayName: a.displayName, isAdmin: a.isAdmin, createdAt: a.createdAt });
+    app.get('/api/auth/users', async (req) => {
+      requireAdmin(req);
+      return accounts.list().map(view);
+    });
+    app.post('/api/auth/users', async (req, reply) => {
+      requireAdmin(req);
+      const b = body(req);
+      const account =
+        typeof b.userId === 'string'
+          ? await accounts.createFor(b.userId, { username: b.username, password: b.password, isAdmin: b.isAdmin === true })
+          : await accounts.create({ username: b.username, displayName: b.displayName, password: b.password, isAdmin: b.isAdmin === true });
+      return reply.code(201).send(view(account));
+    });
+    app.patch<{ Params: Params }>('/api/auth/users/:id', async (req) => {
+      requireAdmin(req);
+      const b = body(req);
+      let account = accounts.byUserId(req.params.id);
+      if (!account) throw new NotFoundError('Benutzer nicht gefunden');
+      if (b.isAdmin !== undefined) {
+        if (typeof b.isAdmin !== 'boolean') throw new ValidationError('isAdmin muss wahr oder falsch sein');
+        if (account.userId === req.user?.id && !b.isAdmin) throw new ConflictError('Du kannst dir die Administratorrechte nicht selbst nehmen');
+        account = accounts.setAdmin(account.userId, b.isAdmin);
+      }
+      if (b.password !== undefined) await accounts.setPassword(account.userId, b.password);
+      return view(accounts.byUserId(account.userId)!);
+    });
+    app.delete<{ Params: Params }>('/api/auth/users/:id', async (req, reply) => {
+      requireAdmin(req);
+      if (req.params.id === req.user?.id) throw new ConflictError('Du kannst dich nicht selbst löschen');
+      accounts.remove(req.params.id);
+      return noContent(reply);
+    });
+    // Das eigene Passwort ändern: die anderen Geräte müssen sich danach neu anmelden
+    app.post('/api/auth/password', async (req, reply) => {
+      const b = body(req);
+      const me = req.user ? accounts.byUserId(req.user.id) : null;
+      if (!me) throw new ForbiddenError('Nur mit einem Konto möglich');
+      if (!(await accounts.verify(me.username, b.current))) throw new ForbiddenError('Das aktuelle Passwort stimmt nicht');
+      await accounts.setPassword(me.userId, b.next, sessionToken(req.headers));
+      return noContent(reply);
+    });
+  }
+
   app.delete<{ Params: Params }>('/api/access/people/:id', async (req, reply) => {
     requireAdmin(req);
     notManaged();
+    if (req.params.id === req.user?.id && accounts) throw new ConflictError('Du kannst dich nicht selbst entfernen');
+    // Mit der Person verschwindet auch ihr Konto (Anmeldung), sonst käme sie weiter hinein
+    if (accounts?.byUserId(req.params.id)) accounts.remove(req.params.id);
     store.removePerson(req.params.id);
     return noContent(reply);
   });

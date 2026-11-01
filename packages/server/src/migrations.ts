@@ -300,4 +300,28 @@ export const migrations: Migration[] = [
       create index ix_cards_dedupe on cards(dedupe_key) where dedupe_key is not null;
     `,
   },
+  {
+    version: 11,
+    // Betrieb ohne Home Assistant: eigene Konten mit Passwort und Sitzungen. Ein Konto gehört zu einer Person (users);
+    // dessen ha_user_id lautet "local:<Zufallswert>". Im Add-on bleiben beide Tabellen leer.
+    sql: `
+      create table local_accounts (
+        user_id             text primary key references users(id) on delete cascade,
+        username            text not null unique collate nocase,
+        password_hash       text not null,
+        is_admin            integer not null default 0,
+        created_at          text not null,
+        password_changed_at text not null
+      );
+
+      create table sessions (
+        token_hash   text primary key,
+        user_id      text not null references users(id) on delete cascade,
+        created_at   text not null,
+        last_seen_at text not null,
+        expires_at   text not null
+      );
+      create index ix_sessions_user on sessions(user_id);
+    `,
+  },
 ];

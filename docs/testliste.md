@@ -135,6 +135,18 @@ Zuerst Einstellungen › Diagnose-Seite › „Wächter-Test": Alle Zustände le
 - [ ] Kosten: Bei einer Karte „Kosten" eintragen. Oben im Board steht „Kosten: … offen", nach dem Erledigen „… erledigt"
 - [ ] iPad oder Laptop ab 1024 px: alle Spalten nebeneinander, Karten per Maus ziehbar
 
+## 13 · Eigener Container ohne Home Assistant (nur wenn du ihn nutzt)
+
+Nach `docs/docker.md` aufgebaut, zum Beispiel auf der NAS.
+
+- [ ] Erster Start: `docker logs stups` zeigt „Einrichtung: … Code". Im Browser erscheint die Einrichtung, ein falscher Code wird abgelehnt, mit dem richtigen entsteht der Administrator und man ist gleich drin. Danach lässt sich die Einrichtung nicht mehr öffnen
+- [ ] Drei Reiter (Boards, Agenda, Kalender), kein „Dashboard"-Button, in den Einstellungen nichts von Home Assistant, Wächtern oder Benachrichtigungen
+- [ ] Personen & Zugriff › Benutzer anlegen: Ben bekommt ein Konto, meldet sich auf seinem Handy an und sieht die gemeinsamen Boards. Er sieht keine Benutzerverwaltung
+- [ ] Neu laden bzw. App schließen und wieder öffnen: man bleibt angemeldet. Einstellungen › Abmelden führt zur Anmeldung
+- [ ] Passwort ändern: danach melden sich die anderen Geräte der Person ab
+- [ ] Hinter dem Reverse Proxy mit https: Anmeldung, Live-Sync zwischen zwei Geräten (WebSocket) und Fotos hochladen funktionieren
+- [ ] Container neu starten (oder `docker compose pull && up -d`): Daten und Anmeldungen sind noch da, unter `data/backups` liegt nach einem Versionswechsel eine Sicherung
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

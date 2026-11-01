@@ -90,6 +90,34 @@ describe('Einstellungen', () => {
   });
 });
 
+describe('Anmeldung', () => {
+  it('Add-on: Ingress', () => {
+    expect(resolveRuntime({ SUPERVISOR_TOKEN: 'abc' }, files()).identity.kind).toBe('ingress');
+  });
+
+  it('Standalone: eigene Anmeldung mit Sitzung', () => {
+    expect(resolveRuntime({}, files()).identity.kind).toBe('session');
+    expect(resolveRuntime({ HA_URL: 'http://ha', HA_TOKEN: 't' }, files()).identity.kind).toBe('session');
+  });
+
+  it('ohne IP-Prüfung (Entwicklung, Tests) bleibt es bei Ingress', () => {
+    expect(resolveRuntime({ ENFORCE_INGRESS_IP: 'false' }, files()).identity.kind).toBe('ingress');
+  });
+
+  it('erster Administrator aus der Umgebung, nur beide zusammen', () => {
+    const r = resolveRuntime({ STUPS_ADMIN_USER: 'chef', STUPS_ADMIN_PASSWORD: 'langes-passwort' }, files());
+    expect(r.identity.bootstrap).toEqual({ username: 'chef', password: 'langes-passwort' });
+    expect(() => resolveRuntime({ STUPS_ADMIN_USER: 'chef' }, files())).toThrow(/gehören zusammen/);
+    expect(() => resolveRuntime({ STUPS_ADMIN_PASSWORD: 'langes-passwort' }, files())).toThrow(/gehören zusammen/);
+    expect(resolveRuntime({}, files()).identity.bootstrap).toBeUndefined();
+  });
+
+  it('Add-on: STUPS_ADMIN_* wird ignoriert', () => {
+    const r = resolveRuntime({ SUPERVISOR_TOKEN: 'abc', STUPS_ADMIN_USER: 'chef', STUPS_ADMIN_PASSWORD: 'langes-passwort' }, files());
+    expect(r.identity.bootstrap).toBeUndefined();
+  });
+});
+
 describe('Entwicklung und Tests', () => {
   it('Ingress-Prüfung ist vorgabemäßig an', () => {
     const r = resolveRuntime({ DEV_USER: 'rene', DEV_ADMINS: 'dev-rene' }, files());

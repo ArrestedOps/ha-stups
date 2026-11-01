@@ -1,9 +1,11 @@
 import {
   api,
   ApiError,
+  setUnauthorizedHandler,
   type Attachment,
   type BoardSummary,
   type BoardView,
+  type Capabilities,
   type Card,
   type Settings,
   type User,
@@ -42,6 +44,10 @@ export interface Toast {
 export const ui = $state({
   ready: false,
   fatal: null as string | null,
+  /** Was die Betriebsart bietet (null = unbekannt, dann gilt alles wie im Add-on) */
+  caps: null as Capabilities | null,
+  /** Statt der App steht die Anmeldung oder die Einrichtung des ersten Administrators */
+  gate: null as null | 'login' | 'setup',
   online: true,
   me: null as User | null,
   /** Administrator in Home Assistant */
@@ -76,6 +82,31 @@ export const ui = $state({
   /** Rückfrage vor einer Aktion, die sich nicht von selbst zurücknehmen lässt */
   confirm: null as null | { title: string; text: string; label: string; run: () => Promise<void> | void },
 });
+
+/**
+ * Was angezeigt wird. Im Add-on (Anmeldung über Home Assistant) bleibt alles wie bisher, auch wenn Home Assistant
+ * gerade nicht antwortet. Nur beim eigenständigen Betrieb mit eigener Anmeldung entfällt, was es dort nicht gibt.
+ */
+export const feat = {
+  /** eigene Konten statt Home Assistant */
+  get standalone(): boolean {
+    return ui.caps?.auth === 'session';
+  },
+  get watchers(): boolean {
+    return !this.standalone || (ui.caps?.watchers ?? false);
+  },
+  get push(): boolean {
+    return !this.standalone || (ui.caps?.push.length ?? 0) > 0;
+  },
+  /** Dashboard-Button, Kopfzeile von Home Assistant, Bubble Card, Diagnose-Seite */
+  get haUi(): boolean {
+    return !this.standalone || (ui.caps?.ha ?? false);
+  },
+  /** Umzug zwischen zwei Add-ons */
+  get migration(): boolean {
+    return !this.standalone;
+  },
+};
 
 // ---------- lokale Merkzettel (können im iframe blockiert sein) ----------
 
@@ -187,8 +218,33 @@ async function load(): Promise<void> {
   }
 }
 
+/** Nach einer erfolgreichen Anmeldung oder Einrichtung: alles frisch laden (Sitzung, Synchronisierung, Ansicht) */
+export function reloadApp(): void {
+  location.reload();
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await api.logout();
+  } finally {
+    reloadApp();
+  }
+}
+
 export async function init(): Promise<void> {
   try {
+    ui.caps = await api.capabilities().catch(() => null);
+    if (ui.caps?.auth === 'session') {
+      setUnauthorizedHandler(() => {
+        ui.gate = 'login'; // Sitzung abgelaufen: zurück zur Anmeldung
+      });
+      const status = await api.authStatus();
+      if (status.setupRequired || !status.authenticated) {
+        ui.gate = status.setupRequired ? 'setup' : 'login';
+        ui.ready = true;
+        return;
+      }
+    }
     const me = await api.me();
     ui.me = me.user;
     ui.isAdmin = me.isAdmin;
@@ -215,7 +271,7 @@ export async function init(): Promise<void> {
     return;
   }
 
-  applyHeaderHiding();
+  if (feat.haUi) applyHeaderHiding();
   const cardId = takeDeepLink();
   if (cardId) ui.sheet = { type: 'card', id: cardId };
   reportPanelPath();
@@ -292,7 +348,7 @@ const TABS: Tab[] = ['boards', 'agenda', 'calendar', 'watchers'];
 /** Gemerkte Ansicht und gemerkter Filter von diesem Gerät (nur bekannte Boards und Personen bleiben im Filter) */
 function restoreView(): void {
   const tab = memo.get('stups.tab') as Tab | null;
-  if (tab && TABS.includes(tab)) ui.tab = tab;
+  if (tab && TABS.includes(tab) && (tab !== 'watchers' || feat.watchers)) ui.tab = tab;
   try {
     const raw = JSON.parse(memo.get('stups.schedule') ?? 'null') as Partial<ScheduleFilter> | null;
     if (!raw) return;

@@ -1,14 +1,16 @@
 <script lang="ts">
-  import { selectTab, ui, type Tab } from '../lib/store.svelte';
+  import { feat, selectTab, ui, type Tab } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
-  const tabs: { id: Tab; label: string; icon: string }[] = [
+  const all: { id: Tab; label: string; icon: string }[] = [
     { id: 'boards', label: 'Boards', icon: 'columns' },
     { id: 'agenda', label: 'Agenda', icon: 'list' },
     { id: 'calendar', label: 'Kalender', icon: 'calendar' },
     { id: 'watchers', label: 'Wächter', icon: 'eye' },
   ];
-  // Alle sehen alle vier Reiter; nur Administratoren ändern im Reiter „Wächter" etwas
+  // Alle sehen alle vier Reiter; nur Administratoren ändern im Reiter „Wächter" etwas.
+  // Ohne Home Assistant (eigene Anmeldung) gibt es die Wächter nicht, dann sind es drei Reiter.
+  const tabs = $derived(all.filter((t) => t.id !== 'watchers' || feat.watchers));
   const active = $derived(ui.tab);
 </script>
 

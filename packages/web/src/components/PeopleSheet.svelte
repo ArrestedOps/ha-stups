@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { api, ApiError, type AccessInfo, type AccessMode } from '../lib/api';
-  import { closeSheet, refresh, toast, ui } from '../lib/store.svelte';
+  import { api, ApiError, type AccessInfo, type AccessMode, type Account } from '../lib/api';
+  import { closeSheet, feat, refresh, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
@@ -16,9 +16,20 @@
 
   const admin = $derived(info?.isAdmin ?? false);
 
+  // Eigene Anmeldung (ohne Home Assistant): Konten der Personen
+  let accounts = $state<Account[]>([]);
+  const accountOf = (userId: string) => accounts.find((a) => a.userId === userId);
+  let acctUser = $state('');
+  let acctPw = $state('');
+  let nuName = $state('');
+  let nuUser = $state('');
+  let nuPw = $state('');
+  let nuAdmin = $state(false);
+
   async function load() {
     try {
       info = await api.access();
+      if (feat.standalone && info.isAdmin) accounts = await api.accounts().catch(() => accounts);
       loadError = '';
     } catch (e) {
       loadError = e instanceof ApiError ? e.message : 'Konnte die Personen nicht laden';
@@ -78,6 +89,38 @@
     void run(() => api.removePerson(id));
   }
 
+  function createAccountFor(userId: string) {
+    const username = acctUser.trim();
+    const password = acctPw;
+    if (!username || !password) return;
+    void run(async () => {
+      await api.createAccount({ userId, username, password });
+      acctUser = acctPw = '';
+      toast('Konto angelegt');
+    });
+  }
+
+  function resetPassword(a: Account) {
+    const password = acctPw;
+    if (!password) return;
+    void run(async () => {
+      await api.updateAccount(a.userId, { password });
+      acctPw = '';
+      toast(`Neues Passwort für ${a.username} gesetzt. Seine Geräte melden sich neu an.`);
+    });
+  }
+
+  async function addUser(e: Event) {
+    e.preventDefault();
+    const b = { displayName: nuName.trim(), username: nuUser.trim(), password: nuPw, isAdmin: nuAdmin };
+    if (!b.username || !b.password) return;
+    await run(async () => {
+      await api.createAccount({ ...b, displayName: b.displayName || undefined });
+      nuName = nuUser = nuPw = '';
+      nuAdmin = false;
+    });
+  }
+
   const deviceLabel = (n: number) => (n === 0 ? 'Kein Push-Gerät' : n === 1 ? '1 Push-Gerät' : `${n} Push-Geräte`);
   const canEdit = (id: string) => admin || ui.me?.id === id;
 </script>
@@ -94,6 +137,7 @@
         (Einstellungen › Apps › Stups › Konfiguration). Hier sind sie nur zu sehen. Anzeigename und Ruhezeit lassen sich weiter ändern.
       </p>
     {/if}
+    {#if !feat.standalone}
     <Group
       title="Wer darf Stups öffnen?"
       hint={info.mode === 'everyone'
@@ -120,6 +164,7 @@
         {#if !admin && !info.managed}<p class="mt-2 text-[13px] text-fg2">Das ändern nur Administratoren von Home Assistant.</p>{/if}
       </Row>
     </Group>
+    {/if}
 
     <Group title="Personen" hint="Diese Personen kann man Karten zuweisen, und sie bekommen die Push-Nachrichten.">
       {#each info.people as p (p.id)}
@@ -135,9 +180,15 @@
               <span class="block truncate text-[17px] font-medium">
                 {p.displayName}{#if p.id === ui.me?.id}<span class="text-fg2"> (du)</span>{/if}
               </span>
-              <span class="block text-[13px] {p.notifyServices.length ? 'text-fg2' : 'text-danger'}">
-                {deviceLabel(p.notifyServices.length)}{p.isAdmin ? ' · Administrator' : ''}
-              </span>
+              {#if feat.push}
+                <span class="block text-[13px] {p.notifyServices.length ? 'text-fg2' : 'text-danger'}">
+                  {deviceLabel(p.notifyServices.length)}{p.isAdmin ? ' · Administrator' : ''}
+                </span>
+              {:else}
+                <span class="block text-[13px] text-fg2">
+                  {accountOf(p.id) ? `Benutzername ${accountOf(p.id)?.username}` : 'Ohne Anmeldung'}{p.isAdmin ? ' · Administrator' : ''}
+                </span>
+              {/if}
             </span>
             <Icon name={openId === p.id ? 'chevron-up' : 'chevron-down'} size={18} />
           </button>
@@ -157,6 +208,49 @@
                 </label>
               {/if}
 
+              {#if feat.standalone && admin}
+                {@const acct = accountOf(p.id)}
+                <div data-testid="account-{p.id}">
+                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">Anmeldung</p>
+                  {#if acct}
+                    <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                      <span>Administrator</span>
+                      <input
+                        type="checkbox"
+                        class="h-5 w-5 accent-[var(--accent)]"
+                        checked={acct.isAdmin}
+                        disabled={busy || acct.userId === ui.me?.id}
+                        aria-label="{p.displayName} ist Administrator"
+                        onchange={(e) => run(() => api.updateAccount(acct.userId, { isAdmin: e.currentTarget.checked }))}
+                      />
+                    </label>
+                    <div class="mt-1 flex items-center gap-2">
+                      <input
+                        type="password"
+                        bind:value={acctPw}
+                        autocomplete="new-password"
+                        placeholder="Neues Passwort"
+                        aria-label="Neues Passwort für {p.displayName}"
+                        class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3"
+                      />
+                      <button type="button" class="min-h-11 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-40" disabled={busy || acctPw.length < 10} onclick={() => resetPassword(acct)}>
+                        Setzen
+                      </button>
+                    </div>
+                  {:else}
+                    <p class="mb-2 text-[13px] text-fg2">{p.displayName} hat noch keine Anmeldung (wird nur zugewiesen).</p>
+                    <div class="flex flex-col gap-2">
+                      <input bind:value={acctUser} autocomplete="off" autocapitalize="none" placeholder="Benutzername" aria-label="Benutzername für {p.displayName}" class="min-h-11 rounded-xl bg-surface2 px-3" />
+                      <input type="password" bind:value={acctPw} autocomplete="new-password" placeholder="Passwort (mindestens 10 Zeichen)" aria-label="Passwort für {p.displayName}" class="min-h-11 rounded-xl bg-surface2 px-3" />
+                      <button type="button" class="min-h-11 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-40" disabled={busy || !acctUser.trim() || acctPw.length < 10} onclick={() => createAccountFor(p.id)}>
+                        Anmeldung anlegen
+                      </button>
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+
+              {#if feat.push}
               <div>
                 <p class="mb-1.5 text-[13px] font-semibold text-fg2">Push-Geräte (Companion App)</p>
                 {#if info.managed}
@@ -193,6 +287,7 @@
                   {/each}
                 {/if}
               </div>
+              {/if}
 
               {#if canEdit(p.id)}
                 <div>
@@ -253,7 +348,25 @@
       {/each}
     </Group>
 
-    {#if admin && !info.managed}
+    {#if admin && feat.standalone}
+      <Group title="Benutzer anlegen" hint="Wer sich anmelden soll. Das Passwort sagst du der Person selbst, sie kann es danach unter Einstellungen ändern.">
+        <form onsubmit={addUser} class="flex flex-col gap-2 px-4 py-3" aria-label="Benutzer anlegen">
+          <input bind:value={nuName} maxlength="60" placeholder="Name in Stups (zum Beispiel Anna)" aria-label="Name der neuen Person" class="min-h-11 rounded-xl bg-surface2 px-3" />
+          <input bind:value={nuUser} autocomplete="off" autocapitalize="none" placeholder="Benutzername" aria-label="Benutzername" class="min-h-11 rounded-xl bg-surface2 px-3" />
+          <input type="password" bind:value={nuPw} autocomplete="new-password" placeholder="Passwort (mindestens 10 Zeichen)" aria-label="Passwort" class="min-h-11 rounded-xl bg-surface2 px-3" />
+          <label class="flex min-h-11 items-center gap-3 text-[15px]">
+            <input type="checkbox" class="h-5 w-5 accent-[var(--accent)]" bind:checked={nuAdmin} />Administrator
+          </label>
+          <button class="min-h-11 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-40" disabled={busy || !nuUser.trim() || nuPw.length < 10}>Benutzer anlegen</button>
+        </form>
+      </Group>
+      <Group title="Person ohne Anmeldung" hint="Zum Zuweisen von Karten, zum Beispiel für Kinder, die Stups nicht selbst öffnen.">
+        <form onsubmit={addManual} class="flex items-center gap-2 px-4 py-2">
+          <input bind:value={manualName} maxlength="60" placeholder="Name" enterkeyhint="done" class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3" aria-label="Name der Person ohne Anmeldung" />
+          <button class="min-h-11 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-40" disabled={busy || !manualName.trim()}>Hinzufügen</button>
+        </form>
+      </Group>
+    {:else if admin && !info.managed}
       {#if info.pending.length}
         <Group title="Wartet auf Freigabe" hint="Diese Benutzer haben Stups geöffnet, sind aber keine Person.">
           {#each info.pending as u (u.id)}

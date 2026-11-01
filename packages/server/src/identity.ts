@@ -18,9 +18,11 @@ export interface IdentityRequest {
   headers: IncomingHttpHeaders;
 }
 
-/** Port: bestimmt aus einer Anfrage den angemeldeten Benutzer. Adapter: Ingress, später Sitzung und Proxy. */
+/** Port: bestimmt aus einer Anfrage den angemeldeten Benutzer. Adapter: Ingress, Sitzung (eigene Anmeldung). */
 export interface Identity {
   authenticate(req: IdentityRequest): IdentityResult | Promise<IdentityResult>;
+  /** Pfade, die ohne Anmeldung erreichbar sind (Oberfläche, Anmeldeseite); /healthz ist es immer */
+  isPublic?(path: string): boolean;
 }
 
 declare module 'fastify' {
@@ -36,7 +38,8 @@ export async function identityAuth(app: FastifyInstance, opts: { identity: Ident
   app.decorateRequest('principal', null);
 
   app.addHook('onRequest', async (req, reply) => {
-    if (OPEN_PATHS.has(req.url.split('?')[0] ?? '')) return;
+    const path = req.url.split('?')[0] ?? '';
+    if (OPEN_PATHS.has(path) || opts.identity.isPublic?.(path)) return;
     const result = await opts.identity.authenticate({ ip: req.ip, url: req.url, headers: req.headers });
     if (!result.ok) return reply.code(result.status).send({ error: result.error });
     req.principal = result.principal;

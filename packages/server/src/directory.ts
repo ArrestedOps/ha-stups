@@ -12,6 +12,14 @@ export interface Directory {
   persons(): Promise<DirectoryPerson[] | null>;
 }
 
+/** Eigene Konten (Betrieb ohne Home Assistant): Administrator ist, wer es im Konto ist. Personen pflegt Stups selbst. */
+export function createLocalDirectory(accounts: { byExternalId(id: string): { isAdmin: boolean } | null }): Directory {
+  return {
+    isAdmin: async (id) => accounts.byExternalId(id)?.isAdmin ?? false,
+    persons: async () => [],
+  };
+}
+
 /** Feste Administratorenliste ohne Personen: für die lokale Entwicklung und Tests ohne Home Assistant. */
 export function createStaticDirectory(adminIds: string[]): Directory {
   return { isAdmin: async (id) => adminIds.includes(id), persons: async () => [] };

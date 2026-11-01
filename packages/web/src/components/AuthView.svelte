@@ -1,0 +1,94 @@
+<script lang="ts">
+  import { api, ApiError } from '../lib/api';
+  import { reloadApp, ui } from '../lib/store.svelte';
+  import Icon from './Icon.svelte';
+
+  const setup = $derived(ui.gate === 'setup');
+
+  let username = $state('');
+  let displayName = $state('');
+  let password = $state('');
+  let repeat = $state('');
+  let code = $state('');
+  let error = $state('');
+  let busy = $state(false);
+
+  const field = 'min-h-12 w-full rounded-xl border border-line bg-surface px-4 text-[17px]';
+
+  async function submit(e: Event) {
+    e.preventDefault();
+    if (busy) return;
+    error = '';
+    if (setup) {
+      if (password !== repeat) {
+        error = 'Die beiden Passwörter sind nicht gleich';
+        return;
+      }
+    }
+    busy = true;
+    try {
+      if (setup) await api.setup({ code, username, displayName, password });
+      else await api.login(username, password);
+      reloadApp();
+    } catch (err) {
+      error = err instanceof ApiError ? err.message : 'Etwas ist schiefgelaufen';
+      busy = false;
+    }
+  }
+</script>
+
+<main class="mx-auto flex min-h-full max-w-[420px] flex-col justify-center gap-6 px-6 py-10" data-testid={setup ? 'setup' : 'login'}>
+  <div class="text-center">
+    <span class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-[18px] bg-accent-grad"><Icon name="columns" size={28} /></span>
+    <h1 class="text-[34px] leading-tight font-bold tracking-tight">Stups</h1>
+    <p class="mt-1 text-fg2">{setup ? 'Willkommen! Richte den ersten Administrator ein.' : 'Bitte melde dich an.'}</p>
+  </div>
+
+  <form onsubmit={submit} class="flex flex-col gap-3" aria-label={setup ? 'Einrichtung' : 'Anmeldung'}>
+    {#if setup}
+      <div class="flex flex-col gap-1.5">
+        <label class="flex flex-col gap-1.5">
+          <span class="text-[13px] font-semibold text-fg2">Einrichtungscode</span>
+          <input class={field} bind:value={code} autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD-EFGH" required />
+        </label>
+        <span class="text-[13px] text-fg2">Den Code zeigt das Protokoll des Containers an (zum Beispiel mit <code>docker logs stups</code>).</span>
+      </div>
+    {/if}
+    <label class="flex flex-col gap-1.5">
+      <span class="text-[13px] font-semibold text-fg2">Benutzername</span>
+      <input class={field} bind:value={username} autocomplete="username" autocapitalize="none" spellcheck="false" required />
+    </label>
+    {#if setup}
+      <label class="flex flex-col gap-1.5">
+        <span class="text-[13px] font-semibold text-fg2">Name in Stups</span>
+        <input class={field} bind:value={displayName} maxlength="60" autocomplete="name" placeholder="Wie du angezeigt wirst" />
+      </label>
+    {/if}
+    <div class="flex flex-col gap-1.5">
+      <label class="flex flex-col gap-1.5">
+        <span class="text-[13px] font-semibold text-fg2">Passwort</span>
+        <input
+          class={field}
+          type="password"
+          bind:value={password}
+          autocomplete={setup ? 'new-password' : 'current-password'}
+          minlength={setup ? 10 : undefined}
+          required
+        />
+      </label>
+      {#if setup}<span class="text-[13px] text-fg2">Mindestens 10 Zeichen.</span>{/if}
+    </div>
+    {#if setup}
+      <label class="flex flex-col gap-1.5">
+        <span class="text-[13px] font-semibold text-fg2">Passwort wiederholen</span>
+        <input class={field} type="password" bind:value={repeat} autocomplete="new-password" required />
+      </label>
+    {/if}
+
+    {#if error}<p class="rounded-xl bg-danger-bg px-4 py-3 text-[15px] text-danger" role="alert">{error}</p>{/if}
+
+    <button class="mt-1 min-h-12 rounded-xl bg-accent px-5 text-[17px] font-semibold text-on-accent disabled:opacity-60" disabled={busy}>
+      {setup ? 'Einrichten' : 'Anmelden'}
+    </button>
+  </form>
+</main>

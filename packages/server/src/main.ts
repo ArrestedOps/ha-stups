@@ -12,8 +12,11 @@ import { createEventBus } from './events.js';
 import { createFileStore } from './files.js';
 import { HaClient } from './ha.js';
 import { createAccess } from './access.js';
-import { createDirectory, createStaticDirectory } from './directory.js';
+import { createAccounts } from './accounts.js';
+import { createDirectory, createLocalDirectory, createStaticDirectory } from './directory.js';
+import { identityAuth } from './identity.js';
 import { ingressAuth } from './ingress.js';
+import { authRoutes, clientGuard, createLoginLimiter, createSessionIdentity, createSetup, type Setup } from './session-auth.js';
 import { repairShortMapsLinks } from './linkRepair.js';
 import { createNotifier } from './notifications.js';
 import { createAutomationCards } from './automation-cards.js';
@@ -28,6 +31,12 @@ const runtime = resolveRuntime(process.env);
 const { dataDir, shareDir, port, options } = runtime;
 
 const app = Fastify({ logger: { level: options.logLevel } });
+if (runtime.mode === 'standalone-ha') {
+  // Die Verbindung eines eigenständigen Containers zu Home Assistant folgt in einer späteren Version
+  app.log.warn('HA_URL und HA_TOKEN werden in dieser Version noch nicht genutzt: Stups läuft ohne Home Assistant');
+  runtime.mode = 'standalone';
+  runtime.ha = null;
+}
 
 const dbPath = `${dataDir}/stups.sqlite`;
 // Neue App ohne eigene Daten: Datenbank und Anhänge aus einem Export der alten App übernehmen (Einstellungen › Umzug)
@@ -38,6 +47,8 @@ let timeZone = runtime.timeZone;
 // Der Store meldet geschlossene Stupse, der Notifier (weiter unten gebaut) schickt die Rückmeldung an die Absender
 let nudgesClosed: ((list: ClosedNudge[]) => void) | null = null;
 const store = createStore(db, { timeZone: () => timeZone, onNudgesClosed: (list) => nudgesClosed?.(list) });
+// Eigene Konten mit Passwort, wenn Stups nicht als Add-on hinter Ingress läuft
+const accounts = runtime.identity.kind === 'session' ? createAccounts(db, store) : undefined;
 // Personen und Push-Geräte stehen seit 0.11 in der Datenbank und werden in der App gepflegt.
 // Die Add-on-Optionen werden nur einmal übernommen.
 if (options.users.some((u) => u.name !== '')) {
@@ -137,27 +148,44 @@ setInterval(syncPlanned, 5 * 60 * 1000).unref();
 void repairShortMapsLinks(store, undefined, log).catch((err) => app.log.warn(err, 'Maps-Links: Reparatur fehlgeschlagen'));
 
 await ensureWebsocket(app); // einmal für den ganzen Server, nicht je Routen-Gruppe
-// Anmeldung: im Add-on über Ingress (weitere Wege kommen für den Betrieb ohne Supervisor)
-await app.register(ingressAuth, {
-  enforceIp: runtime.identity.enforceIngressIp,
-  devUser: runtime.identity.devUser,
-});
+// Anmeldung: im Add-on über Ingress, sonst mit eigenem Konto (Sitzungs-Cookie)
+let setup: Setup | undefined;
+if (accounts) {
+  setup = createSetup({ accounts, log, bootstrap: runtime.identity.bootstrap, publicUrl: runtime.publicUrl });
+  await setup.init();
+  await app.register(clientGuard);
+  await app.register(identityAuth, { identity: createSessionIdentity({ accounts }) });
+  await app.register(authRoutes, {
+    accounts,
+    limiter: createLoginLimiter(),
+    setup,
+    secureCookie: runtime.publicUrl?.startsWith('https://') ?? false,
+  });
+  setInterval(() => accounts.purgeSessions(), 60 * 60 * 1000).unref();
+} else {
+  await app.register(ingressAuth, {
+    enforceIp: runtime.identity.enforceIngressIp,
+    devUser: runtime.identity.devUser,
+  });
+}
 
 // Ohne Verbindung zu Home Assistant (lokale Entwicklung, Tests) gibt es kein Verzeichnis: Personen gelten als Administratoren.
 // Nur dort lässt sich mit DEV_ADMINS (Kennungen, durch Komma getrennt) eine feste Administratorenliste vorgeben.
-const directory = runtime.ha
-  ? createDirectory({ ha })
-  : runtime.identity.devAdmins
-    ? createStaticDirectory(runtime.identity.devAdmins)
-    : undefined;
+const directory = accounts
+  ? createLocalDirectory(accounts)
+  : runtime.ha
+    ? createDirectory({ ha })
+    : runtime.identity.devAdmins
+      ? createStaticDirectory(runtime.identity.devAdmins)
+      : undefined;
 const access = createAccess({ store, directory });
 const capabilities: Capabilities = {
   mode: runtime.mode,
-  auth: 'ingress',
+  auth: accounts ? 'session' : 'ingress',
   ha: runtime.ha !== null,
   watchers: watchers !== undefined,
   sensors: runtime.ha !== null,
-  push: ['ha-notify'],
+  push: runtime.ha ? ['ha-notify'] : [],
   publicUrl: runtime.publicUrl,
 };
 // Die Diagnose-Seite liegt außerhalb der API-Routen und braucht dieselbe Sperre
@@ -181,6 +209,7 @@ await app.register(apiRoutes, {
   directory,
   access,
   defaultDashboardPath: options.dashboardPath,
+  accounts,
   capabilities,
   files,
   watchers,

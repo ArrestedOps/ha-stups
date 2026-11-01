@@ -15,7 +15,6 @@ FROM node:24-alpine
 RUN npm install -g pnpm@12.16.1
 WORKDIR /app
 ENV NODE_ENV=production \
-    OPTIONS_PATH=/data/options.json \
     PORT=8099
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/server/package.json packages/server/
@@ -26,4 +25,7 @@ COPY --from=build /app/packages/server/web packages/server/web
 COPY packages/server/public packages/server/public
 WORKDIR /app/packages/server
 EXPOSE 8099
+# /healthz ist ohne Anmeldung erreichbar; der Port kann mit STUPS_PORT geändert sein
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.STUPS_PORT||process.env.PORT||8099)+'/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
 CMD ["node", "dist/main.js"]

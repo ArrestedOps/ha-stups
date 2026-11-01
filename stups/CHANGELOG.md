@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.5.0
+
+- **Stups läuft jetzt auch ohne Home Assistant**, als eigener Docker-Container (zum Beispiel auf einer Synology-NAS), mit eigenen Konten und Passwort statt Home Assistant. Boards, Agenda, Kalender, Wiederholungen und Stupsen funktionieren dort wie in der App; Wächter und Sensoren bleiben Home Assistant vorbehalten und sind im Container ausgeblendet. Anleitung und Compose-Beispiel: `docs/docker.md` im Repository
+- **Für die App in Home Assistant ändert sich nichts:** gleiche Anmeldung über Home Assistant, gleiche Optionen, Daten und Oberfläche
+- Eigene Anmeldung (nur im Container): Einrichtung des ersten Administrators mit einem Code aus dem Protokoll oder über `STUPS_ADMIN_USER`/`STUPS_ADMIN_PASSWORD`, Passwörter mit scrypt, Sitzungen 30 Tage, Wartezeit nach Fehlversuchen, Benutzerverwaltung unter Personen & Zugriff, Passwort ändern und Abmelden in den Einstellungen
+- Neuer Image-Name `ghcr.io/arrestedops/stups` für beide Architekturen (die App nutzt weiter die Bilder mit Architektur im Namen)
+- Datenbank: zwei neue Tabellen für Konten und Sitzungen (Migration 11, vorher wie immer eine Sicherung)
+
 ## 1.4.0
 
 - **Unter der Haube umgebaut, für dich ändert sich nichts.** Anmeldung, Personen, Push und Einstellungen hängen jetzt an eigenen Schnittstellen statt direkt an Home Assistant. Das ist die Grundlage dafür, dass Stups später auch ohne Home Assistant laufen kann. Daten, Optionen und Verhalten im Add-on bleiben gleich

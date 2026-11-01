@@ -227,13 +227,50 @@ export class ApiError extends Error {
   }
 }
 
+/** Was die Betriebsart bietet (GET api/capabilities) */
+export interface Capabilities {
+  mode: 'addon' | 'standalone-ha' | 'standalone';
+  /** ingress: Anmeldung über Home Assistant; session: eigenes Konto mit Passwort */
+  auth: 'ingress' | 'session';
+  ha: boolean;
+  watchers: boolean;
+  sensors: boolean;
+  push: string[];
+  publicUrl: string | null;
+}
+
+export interface AuthStatus {
+  authenticated: boolean;
+  /** true: es gibt noch kein Konto, der erste Administrator wird eingerichtet */
+  setupRequired: boolean;
+  user: { username: string; displayName: string; isAdmin: boolean } | null;
+}
+
+/** Konto einer Person (eigene Anmeldung) */
+export interface Account {
+  userId: string;
+  username: string;
+  displayName: string;
+  isAdmin: boolean;
+  createdAt: string;
+}
+
+/** Wird aufgerufen, wenn der Server „nicht angemeldet" meldet (Sitzung abgelaufen oder beendet) */
+let onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(fn: (() => void) | null): void {
+  onUnauthorized = fn;
+}
+
+/** Jede ändernde Anfrage trägt diese Kopfzeile; der Server lehnt sonst Anfragen ab, die von einer fremden Seite kommen */
+const CLIENT = { 'x-stups-client': '1' };
+
 // Relative Adresse: funktioniert unter dem wechselnden Ingress-Pfad von Home Assistant.
 async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`api/${path}`, {
       method,
-      headers: body === undefined ? undefined : { 'content-type': 'application/json' },
+      headers: body === undefined ? CLIENT : { ...CLIENT, 'content-type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
@@ -241,6 +278,7 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
   }
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && !path.startsWith('auth/')) onUnauthorized?.();
   if (!res.ok) throw new ApiError((data as { error?: string }).error ?? `Fehler ${res.status}`, res.status, data);
   return data as T;
 }
@@ -252,6 +290,17 @@ const put = <T>(p: string, b: unknown) => req<T>('PUT', p, b);
 const del = (p: string) => req<void>('DELETE', p);
 
 export const api = {
+  capabilities: () => get<Capabilities>('capabilities'),
+  authStatus: () => get<AuthStatus>('auth/status'),
+  login: (username: string, password: string) => post<AuthStatus>('auth/login', { username, password }),
+  logout: () => post<void>('auth/logout'),
+  setup: (b: { code: string; username: string; displayName: string; password: string }) => post<AuthStatus>('auth/setup', b),
+  changePassword: (current: string, next: string) => post<void>('auth/password', { current, next }),
+  accounts: () => get<Account[]>('auth/users'),
+  createAccount: (b: { username: string; displayName?: string; password: string; isAdmin?: boolean; userId?: string }) =>
+    post<Account>('auth/users', b),
+  updateAccount: (userId: string, b: Partial<{ password: string; isAdmin: boolean }>) => patch<Account>(`auth/users/${userId}`, b),
+  deleteAccount: (userId: string) => del(`auth/users/${userId}`),
   me: () => get<Me>('me'),
   people: () => get<User[]>('people'),
   access: () => get<AccessInfo>('access'),
@@ -305,7 +354,7 @@ export const api = {
     if (thumb) form.append('thumb', thumb, 'vorschau.jpg');
     let res: Response;
     try {
-      res = await fetch(`api/cards/${cardId}/attachments`, { method: 'POST', body: form });
+      res = await fetch(`api/cards/${cardId}/attachments`, { method: 'POST', headers: CLIENT, body: form });
     } catch {
       throw new ApiError('Keine Verbindung zum Server', 0);
     }

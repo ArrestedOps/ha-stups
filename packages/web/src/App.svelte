@@ -22,10 +22,11 @@
   import Toasts from './components/Toasts.svelte';
   import TrashSheet from './components/TrashSheet.svelte';
   import WatcherSheet from './components/WatcherSheet.svelte';
+  import WatchersView from './components/WatchersView.svelte';
   import { catClass } from './lib/colors';
   import { deviceTz, formatCost } from './lib/datetime';
   import { costTotals, countByColumn, dueStats, filterCards } from './lib/filters';
-  import { goToDashboard, init, openSheet, ui } from './lib/store.svelte';
+  import { currentTab, goToDashboard, init, openSheet, ui } from './lib/store.svelte';
 
   onMount(init);
 
@@ -39,6 +40,7 @@
   });
   const desktop = $derived(ui.desktop);
 
+  const tab = $derived(currentTab());
   const view = $derived(ui.view);
   const columns = $derived(view?.columns ?? []);
   const board = $derived(ui.boards.find((b) => b.id === ui.boardId));
@@ -95,7 +97,7 @@
   <NoAccess />
 {:else}
   <div class="header-glow" aria-hidden="true"></div>
-  {#if ui.tab === 'boards'}
+  {#if tab === 'boards'}
   <main class="relative z-[1] mx-auto flex h-full max-w-[1400px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
     <header class="shrink-0">
       <div class="flex items-center justify-between">
@@ -212,13 +214,15 @@
       </div>
     {/if}
   </main>
-  {:else if ui.tab === 'agenda'}
+  {:else if tab === 'agenda'}
     <AgendaView />
-  {:else}
+  {:else if tab === 'calendar'}
     <CalendarView />
+  {:else}
+    <WatchersView />
   {/if}
 
-  {#if ui.tab === 'boards' && view && ui.columnId && !desktop}
+  {#if tab === 'boards' && view && ui.columnId && !desktop}
     <button
       class="fixed right-5 bottom-[calc(max(10px,var(--safe-bottom))+80px)] z-30 flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-accent-grad"
       aria-label="Neue Karte"
@@ -247,7 +251,7 @@
   {:else if ui.sheet?.type === 'people'}
     <PeopleSheet />
   {:else if ui.sheet?.type === 'watcher'}
-    {#key ui.sheet.id ?? 'neu'}<WatcherSheet id={ui.sheet.id} />{/key}
+    {#key ui.sheet.id ?? 'neu'}<WatcherSheet id={ui.sheet.id} template={ui.sheet.template} />{/key}
   {:else if ui.sheet?.type === 'nudge'}
     {#key ui.sheet.id}<NudgeSheet id={ui.sheet.id} />{/key}
   {:else if ui.sheet?.type === 'trash'}

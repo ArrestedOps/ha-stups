@@ -119,9 +119,11 @@ An der Karte zeigt ein orangefarbenes Abzeichen „Conny stupst dich", wenn dich
 
 Ein Wächter beobachtet eine Entität in Home Assistant und legt **von selbst eine Karte an und weist sie zu**, sobald etwas passiert. Das Standardbeispiel: Die Waschmaschine ist fertig, und eine Person, die gerade zu Hause ist, bekommt die Karte „Waschmaschine ausräumen" (fällig in 30 Minuten) samt Push-Nachricht. Wächter einrichten und ändern dürfen nur **Administratoren** von Home Assistant, alle Personen sehen sie.
 
-![Wächter in den Einstellungen](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-liste-dunkel.png)
+![Der Reiter Wächter](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-liste-dunkel.png)
 
-**Einrichten (ohne YAML):** Einstellungen › Wächter › „Wächter hinzufügen". Eine **Vorlage** füllt das Formular vor (Waschmaschine, Spülmaschine, Trockner, Filter, Batterie, Saugroboter), alles bleibt änderbar. Oben steht immer ein Satz, der zusammenfasst, was der Wächter tut.
+**Der Reiter „Wächter":** Er steht als vierter Reiter in der Leiste unten. Er zeigt jeden Wächter mit seiner Bedingung, dem aktuellen Zustand der Entität, dem Zählerstand (bei „erst beim N-ten Mal"), der offenen Karte (ein Tipp öffnet sie) und was zuletzt ausgelöst hat. Darunter steht die **letzte Aktivität** über alle Wächter. **Administratoren** sehen den Reiter immer und können dort Wächter anlegen, ändern und pausieren. **Alle anderen** sehen ihn nur, wenn es Wächter gibt, und nur lesend. Ohne Verbindung zu Home Assistant erklärt der Reiter, warum es nichts zu sehen gibt.
+
+**Einrichten (ohne YAML):** Reiter „Wächter" › „+" (ohne Wächter stehen die Vorlagen gleich da). Eine **Vorlage** füllt das Formular vor (Waschmaschine, Spülmaschine, Trockner, Filter, Batterie, Saugroboter), alles bleibt änderbar. Oben steht immer ein Satz, der zusammenfasst, was der Wächter tut.
 
 ![Wächter bearbeiten](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-bearbeiten-dunkel.png)
 

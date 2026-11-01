@@ -45,6 +45,8 @@ const TEST_NOTE = 'Test';
 interface Seen {
   state: string;
   lastChanged: string | null;
+  name?: string;
+  unit?: string;
 }
 
 interface Presence {
@@ -91,9 +93,16 @@ export function createWatchers(deps: WatcherDeps) {
 
   const seenOf = (entityId: string): Seen | null => seen.get(entityId) ?? null;
 
-  function toSeen(s: { state?: unknown; last_changed?: unknown } | null | undefined): Seen | null {
+  function toSeen(s: { state?: unknown; last_changed?: unknown; attributes?: Record<string, any> } | null | undefined): Seen | null {
     if (!s || typeof s.state !== 'string') return null;
-    return { state: s.state, lastChanged: typeof s.last_changed === 'string' ? s.last_changed : null };
+    const name = s.attributes?.friendly_name;
+    const unit = s.attributes?.unit_of_measurement;
+    return {
+      state: s.state,
+      lastChanged: typeof s.last_changed === 'string' ? s.last_changed : null,
+      ...(typeof name === 'string' ? { name } : {}),
+      ...(typeof unit === 'string' ? { unit } : {}),
+    };
   }
 
   /** Seit wann gilt die Bedingung? Beim Zustandswechsel genau seit dem Wechsel, sonst ab jetzt */
@@ -660,19 +669,32 @@ export function createWatchers(deps: WatcherDeps) {
   /** Für die Oberfläche: Wächter mit Zustand, Zählerstand, Abo und letztem Lauf */
   function view() {
     const active = new Set(ha.activeSubscriptions?.() ?? []);
+    const waiting = new Set(data.listWaiting().map((x) => x.cardId));
     return data.list().map((w) => {
       const st = data.getState(w.id);
+      const open = store.openCardOfWatcher(w.id);
       return {
         ...w,
         armed: st.armed,
         counter: w.trigger.count > 1 ? counterOf(w.id) : 0,
         subscribed: w.active ? active.has(`w:${w.id}:fire`) : false,
         lastRun: data.runs(w.id, 1)[0] ?? null,
+        /** zuletzt gesehener Zustand der beobachteten Entität */
+        entityState: seenOf(w.trigger.entityId)?.state ?? null,
+        entityName: seenOf(w.trigger.entityId)?.name ?? null,
+        entityUnit: seenOf(w.trigger.entityId)?.unit ?? null,
+        /** die offene Karte dieses Wächters, falls es eine gibt */
+        openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, waiting: waiting.has(open.id) } : null,
       };
     });
   }
 
-  return { start, presentPersonIds, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
+  /** Die letzten Läufe über alle Wächter (für den Reiter „Wächter") */
+  function activity(limit = 20) {
+    return data.recentRuns(limit);
+  }
+
+  return { start, presentPersonIds, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
 }
 
 export type Watchers = ReturnType<typeof createWatchers>;

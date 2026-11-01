@@ -210,6 +210,14 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
   const runs = (watcherId: string, limit = KEEP_RUNS): WatcherRun[] =>
     all('select * from watcher_runs where watcher_id = ? order by at desc, rowid desc limit ?', watcherId, limit).map(toRun);
 
+  /** Die letzten Läufe aller Wächter mit deren Namen, neueste zuerst (ohne reines Zählen und Sperrzeit) */
+  const recentRuns = (limit = 20): (WatcherRun & { watcherName: string })[] =>
+    all(
+      `select r.*, w.name as watcher_name from watcher_runs r join watchers w on w.id = r.watcher_id
+       where r.result not in ('counted', 'cooldown') order by r.at desc, r.rowid desc limit ?`,
+      limit,
+    ).map((r) => ({ ...toRun(r), watcherName: r.watcher_name }));
+
   /** Läufe zu einer Karte, älteste zuerst (Verlauf der Karte) */
   const runsOfCard = (cardId: string): WatcherRun[] =>
     all('select * from watcher_runs where card_id = ? order by at, rowid', cardId).map(toRun);
@@ -237,6 +245,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     addRun,
     runs,
     runsOfCard,
+    recentRuns,
     addWaiting,
     listWaiting,
     markFirstAssigned,

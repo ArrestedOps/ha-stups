@@ -130,6 +130,26 @@ describe('Testen, Zähler, Läufe', () => {
   });
 });
 
+describe('Reiter „Wächter"', () => {
+  it('zeigt je Wächter Zustand der Entität und die offene Karte; die Aktivität nennt die Wächter, alle dürfen sie sehen', async () => {
+    const id = (await call(chef, 'POST', '/api/watchers', input())).body.id;
+    expect((await call(anna, 'GET', '/api/watchers')).body.items[0]).toMatchObject({ entityState: '120', openCard: null });
+
+    await call(chef, 'POST', `/api/watchers/${id}/test`);
+    const item = (await call(anna, 'GET', '/api/watchers')).body.items[0];
+    expect(item.openCard).toMatchObject({ title: 'Waschmaschine ausräumen', assigneeIds: [annaId], waiting: false });
+
+    const activity = await call(anna, 'GET', '/api/watchers/activity');
+    expect(activity.status).toBe(200);
+    expect(activity.body[0]).toMatchObject({ watcherName: 'Waschmaschine fertig', result: 'test', cardId: item.openCard.id });
+  });
+
+  it('ohne Home Assistant ist die Aktivität leer', async () => {
+    await build(false);
+    expect((await call(chef, 'GET', '/api/watchers/activity')).body).toEqual([]);
+  });
+});
+
 describe('Entitäten suchen', () => {
   it('nur Administratoren; Suche nach Name oder Kennung, mit Zustand und Einheit', async () => {
     expect((await call(anna, 'GET', '/api/ha/entities?q=wasch')).status).toBe(403);

@@ -1,20 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { api, ApiError, type PushStatus, type WatcherItem } from '../lib/api';
-  import { watcherLine } from '../lib/watchers';
+  import { api, ApiError, type PushStatus } from '../lib/api';
   import { applyHeaderHiding, isHeaderHidingWanted, setHeaderHidingWanted, showHaHeader } from '../lib/hideHaHeader';
-  import { act, closeSheet, openSheet, personById, toast, ui } from '../lib/store.svelte';
+  import { act, closeSheet, openSheet, selectTab, toast, ui } from '../lib/store.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
   import Row from './Row.svelte';
   import Sheet from './Sheet.svelte';
 
-  let watchers = $state<{ available: boolean; items: WatcherItem[] } | null>(null);
-  // lädt die Wächter neu, wenn sich etwas ändert (Live-Sync zählt ui.rev hoch)
-  $effect(() => {
-    void ui.rev;
-    api.watchers().then((r) => (watchers = r)).catch(() => undefined);
-  });
+  // Die Wächter hält der Store (Reiter „Wächter"); hier nur die Zahl
+  const watchers = $derived(ui.watchers);
 
   let headerHidden = $state(isHeaderHidingWanted());
   let dashboards = $state<{ title: string; path: string }[]>([]);
@@ -164,42 +159,12 @@ tap_action:
     </Row>
   </Group>
 
-  <Group
-    title="Wächter"
-    hint="Ein Wächter beobachtet eine Entität in Home Assistant (zum Beispiel die Waschmaschine) und legt von selbst eine Karte an, die jemandem zugewiesen wird."
-  >
-    {#if watchers && !watchers.available}
-      <Row stack><p class="text-[15px] text-fg2">Wächter brauchen die Verbindung zu Home Assistant. Sie steht gerade nicht.</p></Row>
-    {:else}
-      {#each watchers?.items ?? [] as w (w.id)}
-        {@const bad = w.status !== 'ok' || (w.active && !w.subscribed)}
-        <div class="flex min-h-[56px] items-center gap-3 px-4 py-2">
-          <button
-            type="button"
-            class="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-100"
-            disabled={!ui.isAdmin}
-            aria-label="Wächter {w.name} bearbeiten"
-            onclick={() => openSheet({ type: 'watcher', id: w.id })}
-          >
-            <span class="shrink-0 {w.active ? 'text-accent-text' : 'text-fg2'}"><Icon name="eye" size={20} /></span>
-            <span class="min-w-0 flex-1">
-              <span class="block truncate text-[17px] font-medium {w.active ? '' : 'text-fg2'}">{w.name}{w.active ? '' : ' (pausiert)'}</span>
-              <span class="block truncate text-[13px] {bad ? 'text-danger' : 'text-fg2'}">
-                {w.active && w.status === 'ok' && !w.subscribed ? 'Abo bei Home Assistant nicht aktiv' : watcherLine(w, (id) => personById(id)?.displayName ?? '?')}
-              </span>
-            </span>
-            {#if ui.isAdmin}<Icon name="chevron-right" size={18} />{/if}
-          </button>
-        </div>
-      {:else}
-        <Row stack><p class="text-[15px] text-fg2">Noch kein Wächter.</p></Row>
-      {/each}
-      {#if ui.isAdmin}
-        <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px] text-accent-text" onclick={() => openSheet({ type: 'watcher', id: null })}>
-          <Icon name="plus" size={20} />Wächter hinzufügen
-        </button>
-      {/if}
-    {/if}
+  <Group title="Wächter" hint="Karten, die von selbst aus Home Assistant entstehen, zum Beispiel wenn die Waschmaschine fertig ist.">
+    <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => selectTab('watchers')}>
+      <Icon name="eye" size={20} />
+      <span class="flex-1">Wächter{watchers && watchers.items.length ? ` (${watchers.items.filter((w) => w.active).length} aktiv)` : ''}</span>
+      <Icon name="chevron-right" size={18} />
+    </button>
   </Group>
 
   <Group

@@ -254,15 +254,13 @@ async function seedWatchers() {
 
 const watcherScreens = [
   ['waechter-liste', async (page) => {
-    await nav(page, 'Boards').click();
-    await page.getByRole('button', { name: 'Board wechseln' }).click();
-    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
-    await page.getByRole('button', { name: /Wächter Waschmaschine fertig bearbeiten/ }).scrollIntoViewIfNeeded();
+    await nav(page, 'Wächter').click();
+    await page.getByTestId('watcher-card').first().waitFor();
+    await page.getByTestId('watcher-activity').waitFor();
   }],
   ['waechter-bearbeiten', async (page) => {
     await nav(page, 'Boards').click();
-    await page.getByRole('button', { name: 'Board wechseln' }).click();
-    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await nav(page, 'Wächter').click();
     await page.getByRole('button', { name: /Wächter Waschmaschine fertig bearbeiten/ }).click();
     await page.getByTestId('watcher-preview').waitFor();
   }],

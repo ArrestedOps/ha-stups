@@ -1,5 +1,5 @@
 import type { Recurrence } from './recurrence';
-import type { HaEntity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
+import type { HaEntity, WatcherActivity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
 
 export type Priority = 'low' | 'medium' | 'high';
 
@@ -338,6 +338,7 @@ export const api = {
   },
 
   watchers: () => get<{ available: boolean; items: WatcherItem[] }>('watchers'),
+  watcherActivity: () => get<WatcherActivity[]>('watchers/activity'),
   createWatcher: (b: WatcherInput) => post<WatcherItem>('watchers', b),
   updateWatcher: (id: string, b: Partial<WatcherInput>) => patch<WatcherItem>(`watchers/${id}`, b),
   deleteWatcher: (id: string) => del(`watchers/${id}`),
@@ -394,7 +395,7 @@ export interface NudgeInfo {
   people: NudgeTarget[];
 }
 
-export type { HaEntity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
+export type { HaEntity, WatcherActivity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
 
 export interface NudgeResult {
   sent: { nudgeId: string; to: string; status: 'sent' | 'queued'; deliverAt: string }[];

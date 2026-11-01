@@ -71,6 +71,14 @@ export interface WatcherItem extends WatcherInput {
   /** Home Assistant hat das Abo bestätigt */
   subscribed: boolean;
   lastRun: WatcherRun | null;
+  entityState: string | null;
+  entityName: string | null;
+  entityUnit: string | null;
+  openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; waiting: boolean } | null;
+}
+
+export interface WatcherActivity extends WatcherRun {
+  watcherName: string;
 }
 
 export interface HaEntity {

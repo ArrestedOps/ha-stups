@@ -4,14 +4,17 @@
   import { clock } from '../lib/nudge';
   import { emptyForm, formProblem, fromWatcher, previewSentence, RUN_TEXT, TEMPLATES, toInput, type WatcherForm, type WatcherTemplate } from '../lib/watchers';
   import { catClass } from '../lib/colors';
-  import { openSheet, personById, toast, ui } from '../lib/store.svelte';
+  import { closeSheet, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Group from './Group.svelte';
   import Row from './Row.svelte';
   import Sheet from './Sheet.svelte';
 
-  /** id = null: neuer Wächter */
-  let { id }: { id: string | null } = $props();
+  /** id = null: neuer Wächter; template: Kennung einer Vorlage, die gleich angewendet wird */
+  let { id, template = undefined }: { id: string | null; template?: string } = $props();
+
+  // Aus dem Reiter „Wächter" geht es dorthin zurück, sonst in die Einstellungen
+  const back = () => (ui.tab === 'watchers' ? closeSheet() : openSheet({ type: 'settings' }));
 
   const people = $derived(ui.people.filter((p) => p.isPerson));
   const personName = (pid: string) => personById(pid)?.displayName ?? '?';
@@ -51,6 +54,8 @@
       toast(e instanceof ApiError ? e.message : 'Konnte den Wächter nicht laden', { tone: 'error' });
     }
     loading = false;
+    const wanted = !id && template ? TEMPLATES.find((t) => t.id === template) : undefined;
+    if (wanted) applyTemplate(wanted);
   });
 
   // Spalten und Kategorien des gewählten Boards
@@ -137,7 +142,7 @@
       if (id) await api.updateWatcher(id, toInput(form));
       else await api.createWatcher(toInput(form));
       toast('Wächter gespeichert');
-      openSheet({ type: 'settings' });
+      back();
     } catch (e) {
       toast(e instanceof ApiError ? e.message : 'Speichern fehlgeschlagen', { tone: 'error' });
     }
@@ -188,7 +193,7 @@
         try {
           await api.deleteWatcher(id!);
           toast('Wächter gelöscht');
-          openSheet({ type: 'settings' });
+          back();
         } catch (e) {
           toast(e instanceof ApiError ? e.message : 'Löschen fehlgeschlagen', { tone: 'error' });
         }
@@ -216,7 +221,7 @@
   </button>
 {/snippet}
 
-<Sheet title={id ? 'Wächter' : 'Neuer Wächter'} onclose={() => openSheet({ type: 'settings' })} right={saveButton}>
+<Sheet title={id ? 'Wächter' : 'Neuer Wächter'} onclose={back} right={saveButton}>
   {#if loading}
     <p class="py-10 text-center text-fg2">Lädt …</p>
   {:else}

@@ -7,10 +7,12 @@ import {
   type Card,
   type Settings,
   type User,
+  type WatcherItem,
 } from './api';
 import { formatDue } from './datetime';
 import { applyHeaderHiding } from './hideHaHeader';
 import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
+import { watcherTabVisible } from './watchers';
 import { swipeTarget } from './swipe';
 import { startSync } from './sync';
 
@@ -24,12 +26,12 @@ export type Sheet =
   | { type: 'boardSettings' }
   | { type: 'settings' }
   | { type: 'people' }
-  | { type: 'watcher'; id: string | null }
+  | { type: 'watcher'; id: string | null; template?: string }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
   | { type: 'archive' };
 
-export type Tab = 'boards' | 'agenda' | 'calendar';
+export type Tab = 'boards' | 'agenda' | 'calendar' | 'watchers';
 
 export interface Toast {
   id: number;
@@ -53,6 +55,8 @@ export const ui = $state({
   view: null as BoardView | null,
   columnId: null as string | null,
   settings: null as Settings | null,
+  /** Wächter (null = noch nicht geladen); bestimmt mit, ob der Reiter „Wächter" erscheint */
+  watchers: null as { available: boolean; items: WatcherItem[] } | null,
   filter: { categoryIds: [] as string[], onlyMine: false, nudged: false, search: '' },
   searchOpen: false,
   sheet: null as Sheet,
@@ -174,6 +178,7 @@ async function load(): Promise<void> {
     }
     ui.view = ui.boardId ? await api.board(ui.boardId) : null;
     ensureColumn();
+    ui.watchers = await api.watchers().catch(() => ui.watchers);
     ui.rev += 1;
     ui.online = true;
   } catch (e) {
@@ -204,6 +209,9 @@ export async function init(): Promise<void> {
     restoreView();
     if (ui.boardId) ui.view = await api.board(ui.boardId);
     ensureColumn();
+    ui.watchers = await api.watchers().catch(() => null);
+    // Ein gemerkter Reiter „Wächter" gilt nur, solange er für diese Person überhaupt erscheint
+    if (ui.tab === 'watchers' && !watcherTabVisible(ui.isAdmin, ui.watchers)) ui.tab = 'boards';
     ui.ready = true;
   } catch (e) {
     ui.fatal = errorText(e);
@@ -282,7 +290,7 @@ export function selectColumn(id: string): void {
   memo.set('stups.column', id);
 }
 
-const TABS: Tab[] = ['boards', 'agenda', 'calendar'];
+const TABS: Tab[] = ['boards', 'agenda', 'calendar', 'watchers'];
 
 /** Gemerkte Ansicht und gemerkter Filter von diesem Gerät (nur bekannte Boards und Personen bleiben im Filter) */
 function restoreView(): void {
@@ -302,6 +310,9 @@ function restoreView(): void {
     /* kaputter Merkzettel: Standardfilter */
   }
 }
+
+/** Der Reiter, der gerade gilt: „Wächter" nur, wenn er für diese Person erscheint */
+export const currentTab = (): Tab => (ui.tab === 'watchers' && !watcherTabVisible(ui.isAdmin, ui.watchers) ? 'boards' : ui.tab);
 
 export function selectTab(tab: Tab): void {
   ui.tab = tab;

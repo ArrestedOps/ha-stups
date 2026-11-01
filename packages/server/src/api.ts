@@ -44,7 +44,7 @@ export interface ApiDeps {
     getStates?(): Promise<HaState[]>;
   };
   /** Wächter (nur mit Verbindung zu Home Assistant) */
-  watchers?: Pick<Watchers, 'view' | 'onSaved' | 'test' | 'resetCounter' | 'syncSubscriptions'>;
+  watchers?: Pick<Watchers, 'view' | 'activity' | 'onSaved' | 'test' | 'resetCounter' | 'syncSubscriptions'>;
   watcherData?: WatcherData;
   /** Letzte Ereignisse stups_create_card mit Ergebnis (für die Diagnose) */
   automationLog?: () => AutomationEntry[];
@@ -452,6 +452,9 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   const watcherView = (id: string) => deps.watchers!.view().find((w) => w.id === id);
 
   app.get('/api/watchers', async () => ({ available: !!deps.watchers, items: deps.watchers?.view() ?? [] }));
+
+  /** Letzte Aktivität über alle Wächter (Reiter „Wächter") */
+  app.get('/api/watchers/activity', async () => (deps.watchers ? deps.watchers.activity(20) : []));
 
   app.get<{ Params: Params }>('/api/watchers/:id/runs', async (req) => {
     const { data } = watcherEngine();

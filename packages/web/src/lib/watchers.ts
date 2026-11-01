@@ -272,6 +272,13 @@ export function fromWatcher(w: WatcherItem, entities: Map<string, HaEntity> = ne
   };
 }
 
+/**
+ * Erscheint der Reiter „Wächter"? Administratoren sehen ihn immer (dort richten sie ein),
+ * alle anderen nur, wenn es Wächter gibt (dann sehen sie, was im Haus automatisch passiert).
+ */
+export const watcherTabVisible = (isAdmin: boolean, watchers: { items: unknown[] } | null): boolean =>
+  isAdmin || (watchers?.items.length ?? 0) > 0;
+
 // ---------- Texte ----------
 
 const forText = (min: number) => (min <= 0 ? '' : min === 1 ? '1 Minute ' : `${min} Minuten `);
@@ -312,11 +319,11 @@ export function previewSentence(f: WatcherForm, personName: (id: string) => stri
 }
 
 /** Zeile unter dem Namen in der Liste: letzter Lauf, Zählerstand, Probleme */
-export function watcherLine(w: WatcherItem, personName: (id: string) => string, tz?: string): string {
+export function watcherLine(w: WatcherItem, personName: (id: string) => string, tz?: string, withCounter = true): string {
   if (w.status === 'target_missing') return 'Pausiert: Board oder Spalte gibt es nicht mehr';
   if (w.status === 'entity_missing') return 'Entität fehlt in Home Assistant';
   const parts: string[] = [];
-  if (w.trigger.count > 1) parts.push(`${w.counter} von ${w.trigger.count}`);
+  if (withCounter && w.trigger.count > 1) parts.push(`${w.counter} von ${w.trigger.count}`);
   if (w.lastFiredAt) {
     const who = w.lastAssignees.map(personName).join(', ');
     parts.push(`Zuletzt ${clock(w.lastFiredAt, tz)} Uhr${who ? ` → ${who}` : ''}`);

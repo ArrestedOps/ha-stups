@@ -103,7 +103,8 @@ Zwei Personen, jede mit dem eigenen Handy.
 
 Zuerst Einstellungen › Diagnose-Seite › „Wächter-Test": Alle Zustände lesen und beide Auslöser müssen „geht" zeigen.
 
-- [ ] **Waschmaschine:** Einstellungen › Wächter › Hinzufügen › Vorlage „Waschmaschine fertig", den Leistungs-Sensor wählen, Board und Titel prüfen, Speichern. Ein echter Waschgang: Nach dem Ende (Leistung 3 Minuten unter dem Schwellwert) entsteht die Karte, bei einer **anwesenden** Person, mit Push „Neue Karte für dich"
+- [ ] **Reiter:** In der Leiste unten gibt es „Wächter" (als Administrator immer). Er zeigt je Wächter Bedingung, aktuellen Zustand, offene Karte und die letzte Aktivität. Ein Mitglied (kein Administrator) sieht den Reiter nur, wenn es Wächter gibt, und kann nichts ändern
+- [ ] **Waschmaschine:** Reiter „Wächter" › „+" › Vorlage „Waschmaschine fertig", den Leistungs-Sensor wählen, Board und Titel prüfen, Speichern. Ein echter Waschgang: Nach dem Ende (Leistung 3 Minuten unter dem Schwellwert) entsteht die Karte, bei einer **anwesenden** Person, mit Push „Neue Karte für dich"
 - [ ] **Anwesenheit:** Eine Person ist unterwegs. Der Wächter gibt die Karte nur an Personen, die in Home Assistant `home` sind, und wechselt bei mehreren reihum
 - [ ] **Testen:** Im Wächter „Testen: Karte jetzt anlegen": Karte und Push kommen bei der richtigen Person an; im Verlauf der Karte steht der Wächter
 - [ ] **Zähler und Heimkehr (Saugroboter):** Vorlage „Saugroboter: Behälter leeren". An einem Tag, an dem alle weg sind: Nach der dritten Reinigung erscheint die Karte **ohne Zuständige** mit dem Hinweis „Wartet auf die erste Person, die heimkommt". Wer zuerst nach Hause kommt, bekommt sie samt Nachricht. Wird die Karte erledigt, beginnt der Zähler bei 0

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WatcherItem } from '../src/lib/watcher-types';
-import { conditionText, emptyForm, formProblem, fromWatcher, previewSentence, TEMPLATES, toInput, watcherLine, type WatcherForm } from '../src/lib/watchers';
+import { conditionText, emptyForm, formProblem, fromWatcher, previewSentence, TEMPLATES, toInput, watcherLine, watcherTabVisible, type WatcherForm } from '../src/lib/watchers';
 
 const names: Record<string, string> = { a: 'Anna', b: 'Ben' };
 const nameOf = (id: string) => names[id] ?? '?';
@@ -86,7 +86,7 @@ describe('Formular prüfen und umwandeln', () => {
 
   it('Hin und zurück: Wächter → Formular → Eingabe bleibt gleich', () => {
     const input = toInput(filled({ forMin: '3', count: '3', cooldownMin: '15', nudgeAfterMin: '90', categoryIds: ['k1'] }));
-    const w: WatcherItem = { ...input, id: 'w1', status: 'ok', lastFiredAt: null, lastAssignees: [], armed: true, counter: 0, subscribed: true, lastRun: null };
+    const w: WatcherItem = { ...input, id: 'w1', status: 'ok', lastFiredAt: null, lastAssignees: [], armed: true, counter: 0, subscribed: true, lastRun: null, entityState: null, entityName: null, entityUnit: null, openCard: null };
     expect(toInput(fromWatcher(w))).toEqual(input);
   });
 });
@@ -106,6 +106,16 @@ describe('Vorlagen', () => {
   });
 });
 
+describe('Reiter „Wächter"', () => {
+  it('Administratoren sehen ihn immer, alle anderen nur, wenn es Wächter gibt', () => {
+    expect(watcherTabVisible(true, null)).toBe(true);
+    expect(watcherTabVisible(true, { items: [] })).toBe(true);
+    expect(watcherTabVisible(false, null)).toBe(false);
+    expect(watcherTabVisible(false, { items: [] })).toBe(false);
+    expect(watcherTabVisible(false, { items: [{}] })).toBe(true);
+  });
+});
+
 describe('Zeile in der Liste', () => {
   const w = (extra: Partial<WatcherItem> = {}): WatcherItem => ({
     ...toInput(filled()),
@@ -117,6 +127,10 @@ describe('Zeile in der Liste', () => {
     counter: 0,
     subscribed: true,
     lastRun: null,
+    entityState: null,
+    entityName: null,
+    entityUnit: null,
+    openCard: null,
     ...extra,
   });
 

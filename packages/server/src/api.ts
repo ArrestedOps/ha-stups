@@ -3,6 +3,7 @@ import multipart from '@fastify/multipart';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { createAccess, type Access, type AccessResult } from './access.js';
 import type { Directory } from './directory.js';
+import type { Capabilities } from './runtime.js';
 import { AppError, ConflictError, ForbiddenError, NotFoundError, ValidationError } from './errors.js';
 import type { EventBus } from './events.js';
 import { cleanFilename, extensionFor, MAX_FILE_BYTES, MAX_THUMB_BYTES, sniffMime, type FileStore } from './files.js';
@@ -54,6 +55,8 @@ export interface ApiDeps {
   access?: Access;
   /** Vorgabe aus den Add-on-Optionen */
   defaultDashboardPath?: string;
+  /** Was in dieser Betriebsart verfügbar ist (Wächter, Sensoren, Push-Wege); die Oberfläche richtet sich danach */
+  capabilities?: Capabilities;
   /** Ablage für Anhänge, ohne sie gibt es keine Uploads */
   files?: FileStore;
   /** Schreibt Datenbank und Anhänge für den Umzug in eine andere App nach /share */
@@ -90,7 +93,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   });
 
   app.addHook('preHandler', async (req) => {
-    const u = req.haUser;
+    const u = req.principal;
     if (!u) return;
     const result = await access.evaluate({ id: u.id, name: u.name, displayName: u.displayName });
     req.user = result.user;
@@ -167,6 +170,19 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
       recent: store.recentNotifications(15),
       nudges: store.recentNudges(10),
     };
+  });
+  app.get('/api/capabilities', async (): Promise<Capabilities> => {
+    return (
+      deps.capabilities ?? {
+        mode: 'standalone',
+        auth: 'ingress',
+        ha: deps.ha !== undefined,
+        watchers: deps.watchers !== undefined,
+        sensors: false,
+        push: [],
+        publicUrl: null,
+      }
+    );
   });
   app.get('/api/dashboards', async () => {
     try {

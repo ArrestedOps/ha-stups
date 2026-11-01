@@ -1,15 +1,12 @@
 import type { Options } from './config.js';
 import type { NotificationAction } from './ha.js';
+import type { PushGateway, PushMessage } from './push.js';
 import { dayDiff, formatDue, formatLead, localDateKey, minutesOfDay, parseHm } from './time.js';
 import { NUDGE_LATER_MAX, type ClosedNudge, type DueNudge, type NotificationKey, type NotificationKind, type OpenDueCard, type Store } from './store.js';
 
-export interface NotifierHa {
-  callService(domain: string, service: string, data: Record<string, unknown>): Promise<void>;
-}
-
 export interface NotifierDeps {
   store: Store;
-  ha: NotifierHa;
+  push: PushGateway;
   options: Pick<Options, 'dailySummaryTime' | 'overdueNagTime'>;
   now: () => Date;
   timeZone: () => string;
@@ -33,16 +30,11 @@ const NUDGE_PREFIX = 'KANBAN_NUDGE_';
 export const cardTag = (cardId: string) => `stups-card-${cardId}`;
 
 export function createNotifier(deps: NotifierDeps) {
-  const { store, ha, options } = deps;
+  const { store, push, options } = deps;
   const log = deps.log ?? { info: () => undefined, warn: () => undefined };
   const delays = deps.retryDelaysMin ?? [1, 5, 15];
   const retries = new Map<string, { attempts: number; nextAt: number }>();
   let running = false;
-
-  /** Notify-Dienste einer Person, einstellbar in der App unter „Personen & Zugriff" */
-  function servicesFor(userId: string): string[] {
-    return store.userById(userId)?.notifyServices ?? [];
-  }
 
   const warned = new Set<string>();
   /** Einmal pro Start melden, wenn jemand zuständig ist, aber keinen Notify-Dienst hat (sonst bleibt es unsichtbar). */
@@ -52,28 +44,19 @@ export function createNotifier(deps: NotifierDeps) {
     log.warn(`Kein Notify-Dienst für ${store.userById(userId)?.name ?? userId}: keine Push-Nachrichten (einstellbar unter Personen & Zugriff)`);
   }
 
-  async function send(userId: string, payload: Record<string, unknown>): Promise<boolean> {
-    const results = await Promise.allSettled(servicesFor(userId).map((s) => ha.callService('notify', s, payload)));
-    for (const r of results) if (r.status === 'rejected') log.warn(`Push fehlgeschlagen: ${String(r.reason)}`);
-    return results.some((r) => r.status === 'fulfilled');
-  }
+  const send = (userId: string, message: PushMessage): Promise<boolean> => push.send(userId, message);
 
-  function url(cardId?: string): string {
-    const base = store.getSettings().panelPath ?? '/';
-    return cardId ? `${base}?card=${cardId}` : base;
-  }
+  const doneAction = (cardId: string, dueAt: string) => ({ id: `${ACTION_PREFIX}:${cardId}:${dueAt}`, title: 'Erledigt' });
 
-  function cardPayload(card: OpenDueCard, message: string): Record<string, unknown> {
+  function cardPayload(card: OpenDueCard, body: string): PushMessage {
     return {
       title: card.title,
-      message,
-      data: {
-        tag: cardTag(card.id),
-        group: GROUP,
-        url: url(card.id),
-        push: { 'interruption-level': 'time-sensitive' },
-        actions: [{ action: `${ACTION_PREFIX}:${card.id}:${card.dueAt}`, title: 'Erledigt' }],
-      },
+      body,
+      tag: cardTag(card.id),
+      group: GROUP,
+      open: { cardId: card.id },
+      level: 'time-sensitive',
+      actions: [doneAction(card.id, card.dueAt)],
     };
   }
 
@@ -82,19 +65,21 @@ export function createNotifier(deps: NotifierDeps) {
     const nowMs = deps.now().getTime();
     const due = card.dueAt ? ` · fällig ${formatDue(Date.parse(card.dueAt), nowMs, deps.timeZone())}` : '';
     for (const id of userIds) {
-      if (servicesFor(id).length === 0) {
+      if (!push.canReach(id)) {
         warnNoServices(id);
         continue;
       }
-      const data: Record<string, unknown> = {
+      const message: PushMessage = {
+        title: card.title,
+        body: `Neue Karte für dich${due}`,
         tag: cardTag(card.id),
         group: GROUP,
-        url: url(card.id),
-        push: { 'interruption-level': 'time-sensitive' },
+        open: { cardId: card.id },
+        level: 'time-sensitive',
       };
       // „Erledigt" gilt für einen bestimmten Termin; ohne Termin bleibt es beim Öffnen der Karte
-      if (card.dueAt) data.actions = [{ action: `${ACTION_PREFIX}:${card.id}:${card.dueAt}`, title: 'Erledigt' }];
-      if (await send(id, { title: card.title, message: `Neue Karte für dich${due}`, data })) {
+      if (card.dueAt) message.actions = [doneAction(card.id, card.dueAt)];
+      if (await send(id, message)) {
         log.info(`Push (neue Karte) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
       }
     }
@@ -103,20 +88,27 @@ export function createNotifier(deps: NotifierDeps) {
   /** Eine Karte eines Wächters ist nach der eingestellten Zeit noch offen: freundlich erinnern */
   async function notifyStillOpen(card: { id: string; title: string; dueAt: string | null }, userIds: string[]): Promise<void> {
     for (const id of userIds) {
-      if (servicesFor(id).length === 0) {
+      if (!push.canReach(id)) {
         warnNoServices(id);
         continue;
       }
-      const data: Record<string, unknown> = { tag: cardTag(card.id), group: GROUP, url: url(card.id), push: { 'interruption-level': 'time-sensitive' } };
-      if (card.dueAt) data.actions = [{ action: `${ACTION_PREFIX}:${card.id}:${card.dueAt}`, title: 'Erledigt' }];
-      if (await send(id, { title: card.title, message: 'Noch offen: Denkst du dran?', data })) {
+      const message: PushMessage = {
+        title: card.title,
+        body: 'Noch offen: Denkst du dran?',
+        tag: cardTag(card.id),
+        group: GROUP,
+        open: { cardId: card.id },
+        level: 'time-sensitive',
+      };
+      if (card.dueAt) message.actions = [doneAction(card.id, card.dueAt)];
+      if (await send(id, message)) {
         log.info(`Push (noch offen) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
       }
     }
   }
 
   /** true, wenn tatsächlich gesendet wurde */
-  async function deliver(k: NotificationKey, payload: Record<string, unknown>): Promise<boolean> {
+  async function deliver(k: NotificationKey, payload: PushMessage): Promise<boolean> {
     const nowMs = deps.now().getTime();
     const retryKey = JSON.stringify(k);
     const retry = retries.get(retryKey);
@@ -125,7 +117,7 @@ export function createNotifier(deps: NotifierDeps) {
 
     if (await send(k.userId, payload)) {
       retries.delete(retryKey);
-      log.info(`Push (${k.kind}) „${String(payload.title)}" an ${store.userById(k.userId)?.name ?? k.userId} gesendet`);
+      log.info(`Push (${k.kind}) „${payload.title}" an ${store.userById(k.userId)?.name ?? k.userId} gesendet`);
       return true;
     }
     store.releaseNotification(k);
@@ -148,7 +140,7 @@ export function createNotifier(deps: NotifierDeps) {
     let sent = 0;
 
     for (const person of store.people()) {
-      if (servicesFor(person.id).length === 0) continue;
+      if (!push.canReach(person.id)) continue;
       const k: NotificationKey = { cardId: 'summary', userId: person.id, kind: 'summary', key: date };
       const mine = cards.filter((c) => c.assigneeIds.includes(person.id));
       const overdue = mine.filter((c) => Date.parse(c.dueAt) < nowMs);
@@ -164,10 +156,13 @@ export function createNotifier(deps: NotifierDeps) {
         .map((c) => `• ${c.title} (${formatDue(Date.parse(c.dueAt), nowMs, tz)})`);
       const more = overdue.length + today.length - lines.length;
       if (more > 0) lines.push(`… und ${more} weitere`);
-      const payload = {
+      const payload: PushMessage = {
         title: 'Stups',
-        message: [`Heute fällig: ${today.length} · Überfällig: ${overdue.length}`, ...lines].join('\n'),
-        data: { tag: 'stups-summary', group: GROUP, url: url(), push: { 'interruption-level': 'active' } },
+        body: [`Heute fällig: ${today.length} · Überfällig: ${overdue.length}`, ...lines].join('\n'),
+        tag: 'stups-summary',
+        group: GROUP,
+        open: {},
+        level: 'active',
       };
       if (await deliver(k, payload)) sent += 1;
     }
@@ -188,7 +183,7 @@ export function createNotifier(deps: NotifierDeps) {
         const dueMs = Date.parse(card.dueAt);
         const due = formatDue(dueMs, nowMs, tz);
         for (const userId of card.assigneeIds) {
-          if (servicesFor(userId).length === 0) {
+          if (!push.canReach(userId)) {
             warnNoServices(userId);
             continue;
           }
@@ -239,39 +234,43 @@ export function createNotifier(deps: NotifierDeps) {
         return;
       }
     }
-    const payload = { message: 'clear_notification', data: { tag: cardTag(cardId) } };
     // Auch wer nur einen Stups zu dieser Karte bekommen hat, soll die Nachricht los werden
     const everyone = [...new Set([...ids, ...store.nudgeRecipients(cardId)])];
-    await Promise.allSettled(everyone.flatMap((id) => servicesFor(id).map((s) => ha.callService('notify', s, payload))));
+    await Promise.allSettled(everyone.map((id) => push.clear(id, cardTag(cardId))));
   }
 
   /** „Erledigt · nächste Karte Sa 10:00" statt der Erinnerung: gleiches Tag ersetzt die alte Nachricht, ohne Button und ohne Ton. */
   async function confirmRepeat(cardId: string, title: string, assigneeIds: string[], nextDueAt: string): Promise<void> {
-    const payload = {
+    const payload: PushMessage = {
       title,
-      message: `Erledigt · nächste Karte ${formatDue(Date.parse(nextDueAt), deps.now().getTime(), deps.timeZone())}`,
-      data: { tag: cardTag(cardId), group: GROUP, push: { 'interruption-level': 'passive' } },
+      body: `Erledigt · nächste Karte ${formatDue(Date.parse(nextDueAt), deps.now().getTime(), deps.timeZone())}`,
+      tag: cardTag(cardId),
+      group: GROUP,
+      level: 'passive',
     };
     const everyone = [...new Set([...assigneeIds, ...store.nudgeRecipients(cardId)])];
-    await Promise.allSettled(everyone.flatMap((id) => servicesFor(id).map((s) => ha.callService('notify', s, payload))));
+    await Promise.allSettled(everyone.map((id) => push.send(id, payload)));
   }
 
   // ---------- Stupse ----------
 
   const nameOf = (userId: string | null): string => (userId ? (store.userById(userId)?.displayName ?? 'Jemand') : 'Jemand');
 
-  function nudgePayload(n: DueNudge): Record<string, unknown> {
+  function nudgePayload(n: DueNudge): PushMessage {
     const actions = [
-      { action: `${NUDGE_PREFIX}DONE:${n.id}`, title: 'Erledigt' },
-      { action: `${NUDGE_PREFIX}ACK:${n.id}`, title: 'Mach ich' },
+      { id: `${NUDGE_PREFIX}DONE:${n.id}`, title: 'Erledigt' },
+      { id: `${NUDGE_PREFIX}ACK:${n.id}`, title: 'Mach ich' },
       // nach dem dritten „Später" gibt es den Knopf nicht mehr
-      ...(n.laterCount < NUDGE_LATER_MAX ? [{ action: `${NUDGE_PREFIX}LATER:${n.id}`, title: 'Später' }] : []),
+      ...(n.laterCount < NUDGE_LATER_MAX ? [{ id: `${NUDGE_PREFIX}LATER:${n.id}`, title: 'Später' }] : []),
     ];
     return {
       title: `${n.fromName} stupst dich`,
-      message: `${n.cardTitle} · ${n.text}`,
-      // Normale Stufe (nicht „time-sensitive"): ein Stups soll freundlich sein und nicht durch den Fokus brechen
-      data: { tag: cardTag(n.cardId), group: GROUP, url: url(n.cardId), actions },
+      body: `${n.cardTitle} · ${n.text}`,
+      tag: cardTag(n.cardId),
+      group: GROUP,
+      open: { cardId: n.cardId },
+      // Keine Stufe gesetzt, also normal (nicht „time-sensitive"): ein Stups soll freundlich sein und nicht durch den Fokus brechen
+      actions,
     };
   }
 
@@ -290,7 +289,7 @@ export function createNotifier(deps: NotifierDeps) {
         sent += 1;
         continue;
       }
-      if (servicesFor(n.toId).length === 0) {
+      if (!push.canReach(n.toId)) {
         retries.delete(retryKey);
         log.warn(`Stups „${n.cardTitle}": ${nameOf(n.toId)} hat kein Push-Gerät, nicht zugestellt`);
         continue; // bleibt vorgemerkt, es gibt nichts zu wiederholen
@@ -310,12 +309,15 @@ export function createNotifier(deps: NotifierDeps) {
 
   /** Leise Rückmeldung an den Absender; eigenes Tag je Stups, damit sie sich nicht gegenseitig ersetzen. */
   async function feedback(toId: string, nudgeId: string, cardId: string, title: string, message: string): Promise<void> {
-    const payload = {
+    const payload: PushMessage = {
       title,
-      message,
-      data: { tag: `${NUDGE_PREFIX.toLowerCase().replace(/_/g, '-')}${nudgeId}`, group: GROUP, url: url(cardId), push: { 'interruption-level': 'passive' } },
+      body: message,
+      tag: `${NUDGE_PREFIX.toLowerCase().replace(/_/g, '-')}${nudgeId}`,
+      group: GROUP,
+      open: { cardId },
+      level: 'passive',
     };
-    await Promise.allSettled(servicesFor(toId).map((s) => ha.callService('notify', s, payload)));
+    await Promise.allSettled([push.send(toId, payload)]);
   }
 
   const inflight = new Set<Promise<void>>();

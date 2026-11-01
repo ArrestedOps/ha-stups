@@ -3,14 +3,16 @@ import { fileURLToPath } from 'node:url';
 import fastifyStatic from '@fastify/static';
 import Fastify from 'fastify';
 import { apiRoutes } from './api.js';
-import { loadOptions, type Options } from './config.js';
+import type { Options } from './config.js';
+import { resolveRuntime, type Capabilities } from './runtime.js';
+import { createHaNotifyPush } from './push.js';
 import { openDb } from './db.js';
 import { exportData, importTransfer } from './transfer.js';
 import { createEventBus } from './events.js';
 import { createFileStore } from './files.js';
 import { HaClient } from './ha.js';
 import { createAccess } from './access.js';
-import { createDirectory } from './directory.js';
+import { createDirectory, createStaticDirectory } from './directory.js';
 import { ingressAuth } from './ingress.js';
 import { repairShortMapsLinks } from './linkRepair.js';
 import { createNotifier } from './notifications.js';
@@ -22,20 +24,17 @@ import { spikeRoutes } from './spike.js';
 import { createStore, type ClosedNudge } from './store.js';
 import { ensureWebsocket } from './ws.js';
 
-const optionsPath = process.env.OPTIONS_PATH ?? '/data/options.json';
-const dataDir = process.env.DATA_DIR ?? '/data';
-const port = Number(process.env.PORT ?? 8099);
-const options = loadOptions(optionsPath);
+const runtime = resolveRuntime(process.env);
+const { dataDir, shareDir, port, options } = runtime;
 
 const app = Fastify({ logger: { level: options.logLevel } });
 
-const shareDir = process.env.SHARE_DIR ?? '/share';
 const dbPath = `${dataDir}/stups.sqlite`;
 // Neue App ohne eigene Daten: Datenbank und Anhänge aus einem Export der alten App übernehmen (Einstellungen › Umzug)
 if (importTransfer(dbPath, `${dataDir}/files`, shareDir)) app.log.info('Daten aus dem Umzug (/share/stups-umzug) übernommen');
 const db = openDb(dbPath, { backupDir: `${dataDir}/backups` });
 // Wird nach dem Start von Home Assistant übernommen, bis dahin gilt dieser Wert.
-let timeZone = process.env.TZ ?? 'Europe/Berlin';
+let timeZone = runtime.timeZone;
 // Der Store meldet geschlossene Stupse, der Notifier (weiter unten gebaut) schickt die Rückmeldung an die Absender
 let nudgesClosed: ((list: ClosedNudge[]) => void) | null = null;
 const store = createStore(db, { timeZone: () => timeZone, onNudgesClosed: (list) => nudgesClosed?.(list) });
@@ -54,16 +53,24 @@ store.ensurePlannedColumns();
 
 const bus = createEventBus();
 const files = createFileStore(`${dataDir}/files`);
-const token = process.env.SUPERVISOR_TOKEN ?? '';
+// Verbindung zu Home Assistant: im Add-on über den Supervisor, sonst nur mit Adresse und Long-Lived-Token
+const token = runtime.ha?.token ?? '';
 const ha = new HaClient({
-  baseUrl: process.env.HA_URL ?? 'http://supervisor/core',
+  baseUrl: runtime.ha?.baseUrl ?? 'http://supervisor/core',
   token,
+  wsUrl: runtime.ha?.wsUrl,
 });
 const log = { info: (m: string) => app.log.info(m), warn: (m: string) => app.log.warn(m) };
 
+const push = createHaNotifyPush({
+  ha,
+  servicesFor: (userId) => store.userById(userId)?.notifyServices ?? [],
+  panelPath: () => store.getSettings().panelPath ?? '/',
+  log,
+});
 const notifier = createNotifier({
   store,
-  ha,
+  push,
   options,
   now: () => new Date(),
   timeZone: () => timeZone,
@@ -129,26 +136,34 @@ setInterval(syncPlanned, 5 * 60 * 1000).unref();
 // Alte Google-Kurzlinks im Hintergrund durch die Maps-URL ersetzen (braucht Netz, darum nicht blockierend)
 void repairShortMapsLinks(store, undefined, log).catch((err) => app.log.warn(err, 'Maps-Links: Reparatur fehlgeschlagen'));
 
-const devName = process.env.DEV_USER;
 await ensureWebsocket(app); // einmal für den ganzen Server, nicht je Routen-Gruppe
+// Anmeldung: im Add-on über Ingress (weitere Wege kommen für den Betrieb ohne Supervisor)
 await app.register(ingressAuth, {
-  enforceIp: process.env.ENFORCE_INGRESS_IP !== 'false',
-  devUser: devName ? { id: `dev-${devName}`, name: devName, displayName: devName } : undefined,
+  enforceIp: runtime.identity.enforceIngressIp,
+  devUser: runtime.identity.devUser,
 });
 
 // Ohne Verbindung zu Home Assistant (lokale Entwicklung, Tests) gibt es kein Verzeichnis: Personen gelten als Administratoren.
 // Nur dort lässt sich mit DEV_ADMINS (Kennungen, durch Komma getrennt) eine feste Administratorenliste vorgeben.
-const devAdmins = process.env.ENFORCE_INGRESS_IP === 'false' ? process.env.DEV_ADMINS : undefined;
-const directory = token
+const directory = runtime.ha
   ? createDirectory({ ha })
-  : devAdmins !== undefined
-    ? { isAdmin: async (id: string) => devAdmins.split(',').includes(id), persons: async () => [] }
+  : runtime.identity.devAdmins
+    ? createStaticDirectory(runtime.identity.devAdmins)
     : undefined;
 const access = createAccess({ store, directory });
+const capabilities: Capabilities = {
+  mode: runtime.mode,
+  auth: 'ingress',
+  ha: runtime.ha !== null,
+  watchers: watchers !== undefined,
+  sensors: runtime.ha !== null,
+  push: ['ha-notify'],
+  publicUrl: runtime.publicUrl,
+};
 // Die Diagnose-Seite liegt außerhalb der API-Routen und braucht dieselbe Sperre
 app.addHook('onRequest', async (req, reply) => {
-  if (!req.url.startsWith('/api/spike') || !req.haUser) return;
-  const r = await access.evaluate({ id: req.haUser.id, name: req.haUser.name, displayName: req.haUser.displayName });
+  if (!req.url.startsWith('/api/spike') || !req.principal) return;
+  const r = await access.evaluate({ id: req.principal.id, name: req.principal.name, displayName: req.principal.displayName });
   if (!r.allowed) return reply.code(403).send({ error: 'Kein Zugriff' });
 });
 
@@ -166,6 +181,7 @@ await app.register(apiRoutes, {
   directory,
   access,
   defaultDashboardPath: options.dashboardPath,
+  capabilities,
   files,
   watchers,
   watcherData: watchers ? watcherData : undefined,
@@ -216,11 +232,12 @@ if (token) {
     }
   }, 5000).unref();
 } else {
-  app.log.warn('SUPERVISOR_TOKEN fehlt: Verbindung zu Home Assistant ist deaktiviert');
+  app.log.warn('Keine Verbindung zu Home Assistant konfiguriert (SUPERVISOR_TOKEN oder HA_URL und HA_TOKEN fehlen): Verbindung ist deaktiviert');
 }
 
 await app.listen({ host: '0.0.0.0', port });
 app.log.info(`Stups läuft auf Port ${port}`);
+app.log.info(`Betriebsart: ${runtime.mode}`);
 
 const shutdown = async () => {
   ha.close();

@@ -5,7 +5,7 @@ import { ingressAuth } from '../src/ingress.js';
 async function build(enforceIp = true) {
   const app = Fastify();
   await app.register(ingressAuth, { enforceIp });
-  app.get('/whoami', async (req) => req.haUser);
+  app.get('/whoami', async (req) => req.principal);
   return app;
 }
 
@@ -67,7 +67,7 @@ describe('ingressAuth', () => {
       enforceIp: false,
       devUser: { id: 'dev-rene', name: 'rene', displayName: 'René' },
     });
-    dev.get('/whoami', async (req) => req.haUser);
+    dev.get('/whoami', async (req) => req.principal);
     const res = await dev.inject({ url: '/whoami', remoteAddress: '127.0.0.1' });
     expect(res.statusCode).toBe(200);
     expect(res.json().name).toBe('rene');
@@ -79,7 +79,7 @@ describe('ingressAuth', () => {
       enforceIp: true,
       devUser: { id: 'dev-rene', name: 'rene', displayName: 'René' },
     });
-    prod.get('/whoami', async (req) => req.haUser);
+    prod.get('/whoami', async (req) => req.principal);
     const res = await prod.inject({ url: '/whoami', remoteAddress: '172.30.32.2' });
     expect(res.statusCode).toBe(401);
   });

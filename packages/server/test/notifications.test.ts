@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { openDb } from '../src/db.js';
 import { createNotifier } from '../src/notifications.js';
+import { createHaNotifyPush } from '../src/push.js';
 import { parseOptions } from '../src/config.js';
 import { createStore, type ClosedNudge, type Store } from '../src/store.js';
 
@@ -31,16 +32,21 @@ const optionsWith = (summaryTime: string) =>
 // Verbindet den Store mit dem jeweils zuletzt gebauten Notifier (wie in main.ts)
 let hook: ((list: ClosedNudge[]) => void) | null = null;
 
-function makeNotifier(extra: { onChange?: () => void; summaryTime?: string } = {}) {
+function makeNotifier(extra: { onChange?: () => void; summaryTime?: string; log?: { info: (m: string) => void; warn: (m: string) => void } } = {}) {
   const options = optionsWith(extra.summaryTime ?? '23:59');
   const notifier = createNotifier({
     store,
-    ha: {
-      callService: async (_d: string, service: string, data: Record<string, unknown>) => {
-        if (failing.has(service)) throw new Error('HA nicht erreichbar');
-        calls.push({ service, data });
+    push: createHaNotifyPush({
+      ha: {
+        callService: async (_d: string, service: string, data: Record<string, unknown>) => {
+          if (failing.has(service)) throw new Error('HA nicht erreichbar');
+          calls.push({ service, data });
+        },
       },
-    },
+      servicesFor: (userId) => store.userById(userId)?.notifyServices ?? [],
+      panelPath: () => store.getSettings().panelPath ?? '/',
+      log: extra.log,
+    }),
     options,
     now: () => now,
     timeZone: () => TZ,

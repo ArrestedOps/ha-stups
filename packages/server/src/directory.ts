@@ -1,14 +1,20 @@
-export interface HaPerson {
+export interface DirectoryPerson {
   name: string;
-  /** Home-Assistant-Benutzer dieser Person, falls sie einen hat */
+  /** Benutzer dieser Person (in Home Assistant), falls sie einen hat */
   userId: string | null;
 }
 
+/** Port: Personen und Administratoren. Adapter: Home Assistant (unten), feste Liste (Entwicklung und Tests). */
 export interface Directory {
-  /** null = Home Assistant liefert die Benutzerliste nicht (dann entscheidet der Rückfall in access.ts) */
-  isAdmin(haUserId: string): Promise<boolean | null>;
+  /** null = die Quelle liefert die Benutzerliste nicht (dann entscheidet der Rückfall in access.ts) */
+  isAdmin(userId: string): Promise<boolean | null>;
   /** null = nicht abfragbar */
-  persons(): Promise<HaPerson[] | null>;
+  persons(): Promise<DirectoryPerson[] | null>;
+}
+
+/** Feste Administratorenliste ohne Personen: für die lokale Entwicklung und Tests ohne Home Assistant. */
+export function createStaticDirectory(adminIds: string[]): Directory {
+  return { isAdmin: async (id) => adminIds.includes(id), persons: async () => [] };
 }
 
 interface DirectoryDeps {

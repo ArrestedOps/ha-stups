@@ -43,8 +43,8 @@ export async function spikeRoutes(app: FastifyInstance, deps: SpikeDeps): Promis
       ha.getConfig().catch(() => null),
     ]);
     return {
-      user: req.haUser,
-      ingressPath: req.haUser?.ingressPath ?? '',
+      user: req.principal,
+      ingressPath: req.principal?.ingressPath ?? '',
       timeZone: config?.time_zone ?? null,
       dashboardPath: options.dashboardPath,
       notifyServices: services ?? [],

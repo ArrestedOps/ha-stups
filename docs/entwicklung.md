@@ -67,6 +67,19 @@ pnpm e2e           # Browser-Tests (einmal: pnpm exec playwright install webkit)
 node e2e/screenshots.mjs   # Screenshots nach docs/images (nach pnpm build)
 ```
 
+### Ports und Adapter
+
+Die Fachlogik (Store, Wiederholungen, Wächter-Regeln, Stupsen) kennt Home Assistant nicht. Was von außen kommt, hängt an kleinen Schnittstellen in `packages/server/src`:
+
+| Port | Datei | Adapter |
+|---|---|---|
+| Betriebsart und Einstellungen | `runtime.ts` | `resolveRuntime`: Add-on (Supervisor-Token), Standalone mit HA (`HA_URL` + `HA_TOKEN`), Standalone ohne HA; `options.json`, `STUPS_*` |
+| Anmeldung (`Identity`) | `identity.ts` | `ingress.ts` (Ingress-Kopfzeilen von 172.30.32.2) |
+| Personen und Administratoren (`Directory`) | `directory.ts` | Home Assistant, feste Liste für Entwicklung |
+| Push (`PushGateway`) | `push.ts` | Notify-Dienste von Home Assistant |
+
+`main.ts` erkennt die Betriebsart und verdrahtet die Adapter; `GET /api/capabilities` sagt der Oberfläche, was es gibt.
+
 Lokal ohne HA starten: `DEV_USER=anna ENFORCE_INGRESS_IP=false DATA_DIR=<Ordner> OPTIONS_PATH=<options.json> node packages/server/dist/main.js`. Ohne `SUPERVISOR_TOKEN` ist die Verbindung zu HA aus.
 
 ### Neue Version veröffentlichen

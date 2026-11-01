@@ -77,6 +77,29 @@ export function createNotifier(deps: NotifierDeps) {
     };
   }
 
+  /** Eine Karte ist (von einem Wächter) jemandem zugewiesen worden: gleich Bescheid sagen, ohne auf die Fälligkeit zu warten */
+  async function notifyAssigned(card: { id: string; title: string; dueAt: string | null }, userIds: string[]): Promise<void> {
+    const nowMs = deps.now().getTime();
+    const due = card.dueAt ? ` · fällig ${formatDue(Date.parse(card.dueAt), nowMs, deps.timeZone())}` : '';
+    for (const id of userIds) {
+      if (servicesFor(id).length === 0) {
+        warnNoServices(id);
+        continue;
+      }
+      const data: Record<string, unknown> = {
+        tag: cardTag(card.id),
+        group: GROUP,
+        url: url(card.id),
+        push: { 'interruption-level': 'time-sensitive' },
+      };
+      // „Erledigt" gilt für einen bestimmten Termin; ohne Termin bleibt es beim Öffnen der Karte
+      if (card.dueAt) data.actions = [{ action: `${ACTION_PREFIX}:${card.id}:${card.dueAt}`, title: 'Erledigt' }];
+      if (await send(id, { title: card.title, message: `Neue Karte für dich${due}`, data })) {
+        log.info(`Push (neue Karte) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
+      }
+    }
+  }
+
   /** true, wenn tatsächlich gesendet wurde */
   async function deliver(k: NotificationKey, payload: Record<string, unknown>): Promise<boolean> {
     const nowMs = deps.now().getTime();
@@ -375,7 +398,7 @@ export function createNotifier(deps: NotifierDeps) {
     return 'completed';
   }
 
-  return { tick, handleAction, clearFor, nudgesClosed, idle };
+  return { tick, handleAction, clearFor, nudgesClosed, notifyAssigned, idle };
 }
 
 export type Notifier = ReturnType<typeof createNotifier>;

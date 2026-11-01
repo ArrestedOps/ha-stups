@@ -219,6 +219,8 @@ export interface Card {
   openNudges: OpenNudge[];
   /** Karte, aus deren Wiederholung diese entstanden ist */
   repeatedFrom: string | null;
+  /** Wächter, aus dem die Karte entstanden ist */
+  watcherId: string | null;
   assigneeIds: string[];
   categoryIds: string[];
   checklist: { done: number; total: number };
@@ -1208,6 +1210,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
       carryOver: resolveCarry(r.carry_over),
       openNudges: nudges.get(r.id) ?? [],
       repeatedFrom: r.repeated_from ?? null,
+      watcherId: r.watcher_id ?? null,
       assigneeIds: assignees.get(r.id) ?? [],
       categoryIds: categories.get(r.id) ?? [],
       checklist: checklist.get(r.id) ?? { done: 0, total: 0 },
@@ -1395,7 +1398,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     const unique = [...new Set(ids as string[])];
     for (const uid of unique) {
       if (!one('select 1 as ok from users where id = ? and is_person = 1', uid)) {
-        throw new ValidationError('Zuweisung nur an René oder Conny möglich');
+        throw new ValidationError('Zugewiesen werden können nur Personen aus Stups');
       }
     }
     return unique;
@@ -1463,7 +1466,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     });
   }
 
-  /** Karte nach „Geplant" oder zurück nach „Offen", je nach Termin (nur zwischen diesen beiden Spalten). */
+  /** Karte in die Spalte für Termine nach heute oder zurück in die erste offene Spalte, je nach Termin. */
   function syncPlannedCard(id: string): void {
     const card = one('select * from cards where id = ? and deleted_at is null', id);
     if (!card || card.completed_at !== null || card.archived_at !== null) return;
@@ -1478,6 +1481,35 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
       placeCard(id, inbox, null);
       touchCard(id);
     }
+  }
+
+  /** Markiert eine Karte als vom Wächter angelegt (für die Doppelkarten-Regel und den Verlauf) */
+  function setCardOrigin(id: string, origin: { watcherId?: string | null; dedupeKey?: string | null }): void {
+    visibleCardRow(id);
+    run('update cards set watcher_id = ?, dedupe_key = ? where id = ?', origin.watcherId ?? null, origin.dedupeKey ?? null, id);
+  }
+
+  /** Offene Karte (nicht erledigt, nicht gelöscht, nicht archiviert) eines Wächters */
+  function openCardOfWatcher(watcherId: string): Card | undefined {
+    const r = one(
+      'select id from cards where watcher_id = ? and completed_at is null and deleted_at is null and archived_at is null order by created_at desc, rowid desc',
+      watcherId,
+    );
+    return r ? getCard(r.id) : undefined;
+  }
+
+  /** Wurde eine Karte dieses Wächters seit diesem Zeitpunkt erledigt? (setzt den Zähler zurück) */
+  function watcherCardCompletedSince(watcherId: string, sinceIso: string): boolean {
+    return !!one('select 1 as ok from cards where watcher_id = ? and completed_at is not null and completed_at >= ?', watcherId, sinceIso);
+  }
+
+  /** Offene Karte mit diesem Schlüssel (für Automationen über das Ereignis stups_create_card) */
+  function openCardByDedupeKey(key: string): Card | undefined {
+    const r = one(
+      'select id from cards where dedupe_key = ? and completed_at is null and deleted_at is null and archived_at is null order by created_at desc, rowid desc',
+      key,
+    );
+    return r ? getCard(r.id) : undefined;
   }
 
   function updateCard(id: string, patch: CardPatch, by: string | null = null): CardDetail {
@@ -2680,6 +2712,11 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     getAccessMode,
     setAccessMode,
     importLegacyPeople,
+    transaction: tx,
+    setCardOrigin,
+    openCardOfWatcher,
+    watcherCardCompletedSince,
+    openCardByDedupeKey,
     applyManagedPeople,
     isManaged,
     clearManaged,

@@ -240,4 +240,64 @@ export const migrations: Migration[] = [
       alter table users add column nudge_quiet_off integer not null default 0;
     `,
   },
+  {
+    version: 10,
+    // Wächter: Karten entstehen automatisch aus Zuständen in Home Assistant.
+    // Auslöser, Kartenvorlage und Zuweisung stehen als JSON (werden beim Speichern geprüft). Läufe halten die letzten 50
+    // je Wächter und liefern auch den Verlauf der Karte, damit card_events (mit check-Einschränkung) nicht umgebaut werden muss.
+    sql: `
+      create table watchers (
+        id             text primary key,
+        name           text not null,
+        active         integer not null default 1,
+        position       integer not null default 0,
+        trigger_json   text not null,
+        card_json      text not null,
+        assign_json    text not null,
+        done_json      text,
+        cooldown_min   integer not null default 10,
+        dedupe         integer not null default 1,
+        nudge_after_min integer,
+        status         text not null default 'ok' check (status in ('ok', 'entity_missing', 'target_missing')),
+        last_fired_at  text,
+        last_assignees text not null default '[]',
+        created_at     text not null,
+        updated_at     text not null
+      );
+
+      create table watcher_state (
+        watcher_id    text primary key references watchers(id) on delete cascade,
+        armed         integer not null default 1,
+        met_since     text,
+        counter       integer not null default 0,
+        counter_since text,
+        last_person   text,
+        last_fire_at  text
+      );
+
+      create table watcher_runs (
+        id          text primary key,
+        watcher_id  text not null references watchers(id) on delete cascade,
+        at          text not null,
+        result      text not null check (result in
+                      ('created', 'retriggered', 'counted', 'cooldown', 'waiting', 'assigned', 'auto_done', 'test', 'error')),
+        card_id     text,
+        assigned_to text not null default '[]',
+        note        text
+      );
+      create index ix_watcher_runs on watcher_runs(watcher_id, at);
+
+      create table watcher_waiting (
+        card_id           text primary key references cards(id) on delete cascade,
+        watcher_id        text not null references watchers(id) on delete cascade,
+        since             text not null,
+        first_assigned_at text
+      );
+
+      alter table cards add column watcher_id text;
+      alter table cards add column dedupe_key text;
+      create index ix_cards_watcher on cards(watcher_id) where watcher_id is not null;
+      create index ix_cards_dedupe on cards(dedupe_key) where dedupe_key is not null;
+    `,
+  },
 ];

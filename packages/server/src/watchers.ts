@@ -1,0 +1,655 @@
+import type { HaState } from './ha.js';
+import { fromLocal, toLocal } from './recurrence.js';
+import type { Card, Store, User } from './store.js';
+import type { Waiting, Watcher, WatcherData } from './watcher-data.js';
+import {
+  conditionMet,
+  WAITING_MARKER,
+  type AssignRule,
+  type CardTemplate,
+  type DoneTrigger,
+  type TriggerKind,
+  type WatchTrigger,
+} from './watcher-types.js';
+
+/** Was die Auswertung von Home Assistant braucht (HaClient bringt es mit, die Tests setzen eine Attrappe ein) */
+export interface WatcherHa {
+  subscribe(key: string, payload: Record<string, unknown>, onEvent: (event: Record<string, any>) => void, onResult?: (ok: boolean, error?: string) => void): () => void;
+  unsubscribe(key: string): void;
+  getStates(): Promise<HaState[]>;
+  onConnected(cb: () => void): void;
+  activeSubscriptions?(): string[];
+}
+
+export interface WatcherDeps {
+  store: Store;
+  data: WatcherData;
+  ha: WatcherHa;
+  now: () => Date;
+  timeZone: () => string;
+  /** Karte ist (jetzt) jemandem zugewiesen: hier geht die Push-Nachricht raus */
+  onAssigned?: (card: Card, userIds: string[]) => void;
+  /** Etwas hat sich geändert (Live-Sync) */
+  onChange?: () => void;
+  log?: { info(m: string): void; warn(m: string): void };
+}
+
+/** Wer nach der ersten Heimkehr noch dazukommen darf */
+const JOIN_WINDOW_MS = 2 * 60_000;
+/** So lange wartet eine Karte auf die erste heimkehrende Person */
+const WAIT_LIMIT_MS = 24 * 3_600_000;
+const TEST_NOTE = 'Test';
+
+interface Seen {
+  state: string;
+  lastChanged: string | null;
+}
+
+interface Presence {
+  /** Home-Assistant-Entität je Person, soweit zuzuordnen */
+  entityOf: Map<string, string>;
+  home: Set<string>;
+}
+
+const minutes = (n: number) => n * 60_000;
+
+export function createWatchers(deps: WatcherDeps) {
+  const { store, data, ha, now, timeZone } = deps;
+  const log = deps.log ?? { info: () => undefined, warn: () => undefined };
+
+  /** Zuletzt gesehene Zustände beobachteter Entitäten */
+  const seen = new Map<string, Seen>();
+  /** Abos, die gerade angelegt sind (Schlüssel → Beschreibung des Auslösers, um Änderungen zu erkennen) */
+  const subscribed = new Map<string, string>();
+  let persons: HaState[] = [];
+  let personsAt = 0;
+
+  // ---------- Warteschlange: eine Auswertung nach der anderen ----------
+
+  let chain: Promise<unknown> = Promise.resolve();
+  function enqueue<T>(fn: () => Promise<T> | T): Promise<T> {
+    const next = chain.then(fn, fn);
+    chain = next.catch(() => undefined);
+    return next;
+  }
+  /** Wartet, bis alles Eingereihte abgearbeitet ist (für Tests und sauberes Beenden) */
+  const idle = (): Promise<void> => chain.then(() => undefined);
+
+  function guarded(what: string, fn: () => Promise<void> | void): Promise<void> {
+    return enqueue(async () => {
+      try {
+        await fn();
+      } catch (err) {
+        log.warn(`Wächter: ${what}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    });
+  }
+
+  // ---------- Hilfen ----------
+
+  const seenOf = (entityId: string): Seen | null => seen.get(entityId) ?? null;
+
+  function toSeen(s: { state?: unknown; last_changed?: unknown } | null | undefined): Seen | null {
+    if (!s || typeof s.state !== 'string') return null;
+    return { state: s.state, lastChanged: typeof s.last_changed === 'string' ? s.last_changed : null };
+  }
+
+  /** Seit wann gilt die Bedingung? Beim Zustandswechsel genau seit dem Wechsel, sonst ab jetzt */
+  function metSinceOf(kind: TriggerKind, s: Seen, nowMs: number): string {
+    const changed = s.lastChanged ? Date.parse(s.lastChanged) : NaN;
+    return new Date(kind === 'state' && Number.isFinite(changed) ? Math.min(changed, nowMs) : nowMs).toISOString();
+  }
+
+  async function personStates(maxAgeMs = 15_000): Promise<HaState[]> {
+    if (now().getTime() - personsAt < maxAgeMs && persons.length > 0) return persons;
+    const states = await ha.getStates();
+    for (const s of states) {
+      const v = toSeen(s);
+      if (v) seen.set(s.entity_id, v);
+    }
+    persons = states.filter((s) => s.entity_id.startsWith('person.'));
+    personsAt = now().getTime();
+    return persons;
+  }
+
+  /** Wer ist zu Hause? Zuordnung über den Benutzer der HA-Person, sonst über den Namen */
+  async function presence(): Promise<Presence> {
+    const states = await personStates();
+    const entityOf = new Map<string, string>();
+    const home = new Set<string>();
+    for (const p of store.people()) {
+      const names = [p.name, p.displayName].map((n) => n.trim().toLowerCase());
+      const match =
+        (p.haUserId ? states.find((s) => s.attributes?.user_id === p.haUserId) : undefined) ??
+        states.find((s) => names.includes(String(s.attributes?.friendly_name ?? '').trim().toLowerCase()));
+      if (!match) continue;
+      entityOf.set(p.id, match.entity_id);
+      if (match.state === 'home') home.add(p.id);
+    }
+    return { entityOf, home };
+  }
+
+  // ---------- Zuweisung ----------
+
+  interface Decision {
+    ids: string[];
+    waiting: boolean;
+    /** zuletzt gewählte Person für die Rotation */
+    last?: string;
+  }
+
+  /** Nächste Person nach `last` in der Reihenfolge des Kreises; mit `only` nur unter diesen */
+  function nextOf(pool: string[], last: string | null, only?: Set<string>): string | undefined {
+    if (pool.length === 0) return undefined;
+    const start = last ? pool.indexOf(last) : -1;
+    for (let i = 1; i <= pool.length; i += 1) {
+      const id = pool[(start + i + pool.length) % pool.length]!;
+      if (!only || only.has(id)) return id;
+    }
+    return undefined;
+  }
+
+  function decide(rule: AssignRule, people: User[], home: Set<string>, last: string | null): Decision {
+    const eligible = new Set(people.map((p) => p.id));
+    const order = rule.personIds.length > 0 ? rule.personIds : people.map((p) => p.id);
+    const pool = order.filter((id) => eligible.has(id));
+    const fallback = (): Decision => {
+      if (rule.fallback === 'all') return { ids: pool, waiting: false };
+      if (rule.fallback === 'none') return { ids: [], waiting: false };
+      if (rule.fallback === 'fixed') {
+        return { ids: rule.fallbackPersonId && eligible.has(rule.fallbackPersonId) ? [rule.fallbackPersonId] : [], waiting: false };
+      }
+      const next = nextOf(pool, last);
+      return next ? { ids: [next], waiting: false, last: next } : { ids: [], waiting: false };
+    };
+    const present = new Set(pool.filter((id) => home.has(id)));
+
+    switch (rule.mode) {
+      case 'none':
+        return { ids: [], waiting: false };
+      case 'fixed':
+        return { ids: pool, waiting: false };
+      case 'rotation': {
+        const next = nextOf(pool, last);
+        return next ? { ids: [next], waiting: false, last: next } : { ids: [], waiting: false };
+      }
+      case 'all_present':
+        return present.size > 0 ? { ids: pool.filter((id) => present.has(id)), waiting: false } : fallback();
+      case 'rotation_present':
+      case 'first_home': {
+        if (present.size > 0) {
+          const next = nextOf(pool, last, present);
+          return next ? { ids: [next], waiting: false, last: next } : { ids: [], waiting: false };
+        }
+        return rule.mode === 'first_home' ? { ids: [], waiting: true } : fallback();
+      }
+    }
+  }
+
+  // ---------- Fälligkeit und Spalte ----------
+
+  function dueFor(t: CardTemplate, nowMs: number): string | null {
+    if (t.due.kind === 'none') return null;
+    if (t.due.kind === 'in') return new Date(nowMs + minutes(t.due.minutes)).toISOString();
+    const tz = timeZone();
+    const l = toLocal(nowMs, tz);
+    const base = new Date(Date.UTC(l.y, l.m - 1, l.d + (t.due.day === 'tomorrow' ? 1 : 0)));
+    const [h, mi] = t.due.time.split(':').map(Number) as [number, number];
+    return new Date(
+      fromLocal({ y: base.getUTCFullYear(), m: base.getUTCMonth() + 1, d: base.getUTCDate(), h, mi, s: 0 }, tz),
+    ).toISOString();
+  }
+
+  /** „Geplant" nimmt nur Karten mit Termin nach heute; sonst die erste offene Spalte */
+  function columnFor(t: CardTemplate, dueAt: string | null, nowMs: number): string {
+    const cols = store.getBoardView(t.boardId).columns;
+    const chosen = cols.find((c) => c.id === t.columnId);
+    if (!chosen) throw new Error('Die Spalte gibt es nicht mehr');
+    if (!chosen.isPlanned) return chosen.id;
+    const future = dueAt !== null && Date.parse(dueAt) >= tomorrowStart(nowMs);
+    return future ? chosen.id : (cols.find((c) => !c.isDone && !c.isPlanned)?.id ?? chosen.id);
+  }
+
+  function tomorrowStart(nowMs: number): number {
+    const tz = timeZone();
+    const l = toLocal(nowMs, tz);
+    const next = new Date(Date.UTC(l.y, l.m - 1, l.d + 1));
+    return fromLocal({ y: next.getUTCFullYear(), m: next.getUTCMonth() + 1, d: next.getUTCDate(), h: 0, mi: 0, s: 0 }, tz);
+  }
+
+  // ---------- Zähler ----------
+
+  /** Aktueller Zählerstand; wurde seit dem Zählen eine Karte des Wächters erledigt, beginnt er von vorn */
+  function counterOf(id: string): number {
+    const st = data.getState(id);
+    if (st.counter > 0 && st.counterSince && store.watcherCardCompletedSince(id, st.counterSince)) {
+      data.patchState(id, { counter: 0, counterSince: null });
+      return 0;
+    }
+    return st.counter;
+  }
+
+  // ---------- Auslösen ----------
+
+  function note(w: Watcher, counter: number): string | undefined {
+    return w.trigger.count > 1 ? `${counter} Auslösungen seit dem letzten Zurücksetzen` : undefined;
+  }
+
+  async function fire(w: Watcher, test = false): Promise<void> {
+    const nowMs = now().getTime();
+    const nowIso = new Date(nowMs).toISOString();
+    const st = data.getState(w.id);
+
+    if (!test) {
+      // Sperrzeit (gilt auch für den Zähler)
+      if (st.lastFireAt && nowMs - Date.parse(st.lastFireAt) < minutes(w.cooldownMin)) {
+        data.patchState(w.id, { armed: false });
+        data.addRun({ watcherId: w.id, result: 'cooldown', note: `Sperrzeit ${w.cooldownMin} Min.` });
+        deps.onChange?.();
+        return;
+      }
+      data.patchState(w.id, { armed: false, lastFireAt: nowIso });
+
+      // Zähler: erst beim N-ten Mal
+      let counter = 0;
+      if (w.trigger.count > 1) {
+        counter = counterOf(w.id) + 1;
+        data.patchState(w.id, { counter, counterSince: counter === 1 ? nowIso : (st.counterSince ?? nowIso) });
+        if (counter < w.trigger.count) {
+          data.addRun({ watcherId: w.id, result: 'counted', note: `${counter} von ${w.trigger.count}` });
+          deps.onChange?.();
+          return;
+        }
+      }
+
+      // keine Doppelkarten
+      const open = store.openCardOfWatcher(w.id);
+      if (open && w.dedupe) {
+        data.addRun({ watcherId: w.id, result: 'retriggered', cardId: open.id, note: note(w, counter) ?? 'erneut ausgelöst' });
+        data.markFired(w.id, w.lastAssignees);
+        deps.onChange?.();
+        return;
+      }
+    }
+
+    await createCard(w, nowMs, test);
+  }
+
+  async function createCard(w: Watcher, nowMs: number, test: boolean): Promise<void> {
+    const people = store.people();
+    const needsPresence = w.assign.mode === 'rotation_present' || w.assign.mode === 'all_present' || w.assign.mode === 'first_home';
+    const home = needsPresence ? (await presence()).home : new Set<string>();
+    const decision = decide(w.assign, people, home, data.getState(w.id).lastPerson);
+
+    let card: Card;
+    try {
+      const dueAt = decision.waiting ? null : dueFor(w.card, nowMs);
+      const description = [w.card.description, decision.waiting ? WAITING_MARKER : null, test ? `(${TEST_NOTE})` : null]
+        .filter(Boolean)
+        .join('\n\n');
+      card = store.transaction(() => {
+        const created = store.createCard(
+          w.card.boardId,
+          {
+            columnId: columnFor(w.card, dueAt, nowMs),
+            title: w.card.title,
+            description: description || null,
+            priority: w.card.priority,
+            dueAt,
+            assigneeIds: decision.ids,
+            categoryIds: w.card.categoryIds,
+          },
+          null,
+        );
+        store.setCardOrigin(created.id, { watcherId: w.id });
+        if (decision.waiting) data.addWaiting(created.id, w.id);
+        if (decision.last) data.patchState(w.id, { lastPerson: decision.last });
+        data.markFired(w.id, decision.ids);
+        data.addRun({
+          watcherId: w.id,
+          result: test ? 'test' : decision.waiting ? 'waiting' : 'created',
+          cardId: created.id,
+          assignedTo: decision.ids,
+          note: w.trigger.count > 1 && !test ? note(w, data.getState(w.id).counter) : undefined,
+        });
+        return created;
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      // Board oder Spalte gibt es nicht mehr: der Wächter pausiert und sagt warum
+      if (/nicht gefunden|gibt es nicht mehr/i.test(message)) {
+        data.setStatus(w.id, 'target_missing');
+        data.setActive(w.id, false);
+        unsubscribeWatcher(w.id);
+      }
+      data.addRun({ watcherId: w.id, result: 'error', note: message });
+      deps.onChange?.();
+      throw err;
+    }
+    if (decision.waiting) syncPresenceSubscription();
+    deps.onChange?.();
+    if (decision.ids.length > 0) deps.onAssigned?.(card, decision.ids);
+  }
+
+  // ---------- Bedingung prüfen ----------
+
+  /** Neuer Zustand der beobachteten Entität (live, nach dem Verbinden oder beim Anlegen) */
+  async function evaluate(w: Watcher, s: Seen | null): Promise<void> {
+    if (!w.active) return;
+    if (!s) {
+      if (w.status === 'ok') data.setStatus(w.id, 'entity_missing');
+      return;
+    }
+    if (w.status === 'entity_missing') data.setStatus(w.id, 'ok');
+    const nowMs = now().getTime();
+    const st = data.getState(w.id);
+
+    if (!conditionMet(w.trigger, s.state)) {
+      if (!st.armed || st.metSince) data.patchState(w.id, { armed: true, metSince: null });
+      return;
+    }
+    const metSince = st.metSince ?? metSinceOf(w.trigger.kind, s, nowMs);
+    if (!st.metSince) data.patchState(w.id, { metSince });
+    if (!st.armed) return;
+    if (nowMs - Date.parse(metSince) < minutes(w.trigger.forMin)) return; // wartet noch, der Takt prüft später
+    await fire(w);
+  }
+
+  /** „Erledigt sich selbst, wenn …": nur bei einem Wechsel im laufenden Betrieb */
+  async function checkDone(w: Watcher, d: DoneTrigger, s: Seen): Promise<void> {
+    if (!w.active || !conditionMet(d, s.state)) return;
+    const open = store.openCardOfWatcher(w.id);
+    if (!open) return;
+    store.completeCard(open.id, { by: null, source: 'app' });
+    data.removeWaiting(open.id);
+    data.addRun({ watcherId: w.id, result: 'auto_done', cardId: open.id, note: 'erledigt, weil die Bedingung eingetreten ist' });
+    deps.onChange?.();
+  }
+
+  // ---------- Abos ----------
+
+  function unsubscribeWatcher(id: string): void {
+    for (const key of [`w:${id}:fire`, `w:${id}:done`]) {
+      ha.unsubscribe(key);
+      subscribed.delete(key);
+    }
+  }
+
+  const stateOfEvent = (ev: Record<string, any>): Seen | null => toSeen(ev.variables?.trigger?.to_state);
+
+  function subscribeWatcher(w: Watcher): void {
+    const t = w.trigger;
+    const fireKey = `w:${w.id}:fire`;
+    const fireSig = `${t.entityId}`;
+    if (subscribed.get(fireKey) !== fireSig) {
+      subscribed.set(fireKey, fireSig);
+      ha.subscribe(fireKey, { type: 'subscribe_trigger', trigger: { platform: 'state', entity_id: t.entityId } }, (ev) => {
+        const s = stateOfEvent(ev);
+        if (s) seen.set(t.entityId, s);
+        void guarded(`Auslöser „${w.name}"`, () => evaluate(data.get(w.id), s));
+      });
+    }
+    const doneKey = `w:${w.id}:done`;
+    if (w.done) {
+      const d = w.done;
+      const sig = `${d.entityId}|${d.kind}|${d.to}|${d.value}`;
+      if (subscribed.get(doneKey) !== sig) {
+        subscribed.set(doneKey, sig);
+        ha.subscribe(doneKey, { type: 'subscribe_trigger', trigger: { platform: 'state', entity_id: d.entityId } }, (ev) => {
+          const s = stateOfEvent(ev);
+          if (s) void guarded(`Erledigen „${w.name}"`, () => checkDone(data.get(w.id), d, s));
+        });
+      }
+    } else if (subscribed.has(doneKey)) {
+      ha.unsubscribe(doneKey);
+      subscribed.delete(doneKey);
+    }
+  }
+
+  /** Abos an den aktuellen Stand der Wächter anpassen (nach Anlegen, Ändern, Löschen, Pausieren) */
+  function syncSubscriptions(): void {
+    const active = data.list().filter((w) => w.active);
+    const wanted = new Set(active.map((w) => w.id));
+    for (const key of [...subscribed.keys()]) {
+      const id = key.split(':')[1]!;
+      if (key.startsWith('w:') && !wanted.has(id)) {
+        ha.unsubscribe(key);
+        subscribed.delete(key);
+      }
+    }
+    for (const w of active) subscribeWatcher(w);
+    syncPresenceSubscription();
+  }
+
+  // ---------- Heimkehr ----------
+
+  let presenceSig = '';
+  function syncPresenceSubscription(): void {
+    const waiting = data.listWaiting();
+    if (waiting.length === 0) {
+      if (presenceSig) ha.unsubscribe('presence');
+      presenceSig = '';
+      return;
+    }
+    const entities = persons.map((p) => p.entity_id).sort();
+    const sig = entities.join(',');
+    if (entities.length === 0 || sig === presenceSig) return;
+    presenceSig = sig;
+    ha.subscribe('presence', { type: 'subscribe_trigger', trigger: { platform: 'state', entity_id: entities, to: 'home' } }, (ev) => {
+      const entityId = ev.variables?.trigger?.entity_id;
+      if (typeof entityId === 'string') void guarded('Heimkehr', () => arrival(entityId));
+    });
+  }
+
+  const stripMarker = (d: string | null): string | null => {
+    const t = (d ?? '').replace(WAITING_MARKER, '').replace(/\n{3,}/g, '\n\n').trim();
+    return t === '' ? null : t;
+  };
+
+  async function assign(row: Waiting, w: Watcher, ids: string[], nowMs: number): Promise<void> {
+    const card = store.getCard(row.cardId);
+    store.transaction(() => {
+      const first = row.firstAssignedAt === null;
+      const merged = [...new Set([...card.assigneeIds, ...ids])];
+      store.updateCard(card.id, {
+        assigneeIds: merged,
+        ...(first ? { dueAt: dueFor(w.card, nowMs), description: stripMarker(card.description) } : {}),
+      });
+      if (first) data.markFirstAssigned(card.id);
+      data.markFired(w.id, merged);
+      data.addRun({ watcherId: w.id, result: 'assigned', cardId: card.id, assignedTo: ids, note: first ? 'erste Person zu Hause' : 'kurz danach auch zu Hause' });
+    });
+    deps.onChange?.();
+    deps.onAssigned?.(store.getCard(card.id), ids);
+  }
+
+  /** Eine Person ist heimgekommen */
+  async function arrival(entityId: string): Promise<void> {
+    const nowMs = now().getTime();
+    const states = await personStates(0);
+    const entity = states.find((s) => s.entity_id === entityId);
+    const people = store.people();
+    const who = people.find((p) => {
+      const names = [p.name, p.displayName].map((n) => n.trim().toLowerCase());
+      return (
+        (!!p.haUserId && entity?.attributes?.user_id === p.haUserId) ||
+        names.includes(String(entity?.attributes?.friendly_name ?? '').trim().toLowerCase())
+      );
+    });
+    if (!who) return;
+
+    for (const row of data.listWaiting()) {
+      let w: Watcher;
+      let card: Card;
+      try {
+        w = data.get(row.watcherId);
+        card = store.getCard(row.cardId);
+      } catch {
+        data.removeWaiting(row.cardId);
+        continue;
+      }
+      if (card.completedAt) {
+        data.removeWaiting(row.cardId);
+        continue;
+      }
+      if (row.firstAssignedAt === null && card.assigneeIds.length > 0) {
+        data.removeWaiting(row.cardId); // von Hand zugewiesen
+        continue;
+      }
+      if (row.firstAssignedAt !== null && nowMs - Date.parse(row.firstAssignedAt) > JOIN_WINDOW_MS) {
+        data.removeWaiting(row.cardId);
+        continue;
+      }
+      const inCircle = w.assign.personIds.length === 0 || w.assign.personIds.includes(who.id);
+      if (!inCircle || card.assigneeIds.includes(who.id)) continue;
+      await assign(row, w, [who.id], nowMs);
+    }
+    syncPresenceSubscription();
+  }
+
+  /** Nach 24 Stunden ohne Heimkehr: Rückfall; abgelaufene Fristen aufräumen */
+  function checkWaiting(nowMs: number): void {
+    for (const row of data.listWaiting()) {
+      if (row.firstAssignedAt !== null) {
+        if (nowMs - Date.parse(row.firstAssignedAt) > JOIN_WINDOW_MS) data.removeWaiting(row.cardId);
+        continue;
+      }
+      if (nowMs - Date.parse(row.since) < WAIT_LIMIT_MS) continue;
+      let w: Watcher;
+      let card: Card;
+      try {
+        w = data.get(row.watcherId);
+        card = store.getCard(row.cardId);
+      } catch {
+        data.removeWaiting(row.cardId);
+        continue;
+      }
+      data.removeWaiting(row.cardId);
+      if (card.completedAt || card.assigneeIds.length > 0) continue;
+      const people = store.people();
+      const ids =
+        w.assign.waitFallback === 'all'
+          ? people.filter((p) => w.assign.personIds.length === 0 || w.assign.personIds.includes(p.id)).map((p) => p.id)
+          : w.assign.waitFallback === 'fixed' && w.assign.fallbackPersonId && people.some((p) => p.id === w.assign.fallbackPersonId)
+            ? [w.assign.fallbackPersonId]
+            : [];
+      store.transaction(() => {
+        store.updateCard(card.id, { assigneeIds: ids, description: stripMarker(card.description), ...(ids.length ? { dueAt: dueFor(w.card, nowMs) } : {}) });
+        data.addRun({ watcherId: w.id, result: 'assigned', cardId: card.id, assignedTo: ids, note: 'nach 24 Stunden niemand heimgekommen' });
+      });
+      deps.onChange?.();
+      if (ids.length > 0) deps.onAssigned?.(store.getCard(card.id), ids);
+    }
+  }
+
+  // ---------- Anlegen und Abgleich ----------
+
+  /** Nach dem Anlegen oder Ändern: Startzustand prüfen (kein Auslösen, wenn die Bedingung schon erfüllt ist) und abonnieren */
+  async function onSaved(id: string): Promise<void> {
+    await guarded('Speichern', async () => {
+      const w = data.get(id);
+      let states: HaState[];
+      try {
+        states = await ha.getStates();
+      } catch {
+        // Home Assistant nicht erreichbar: vorsichtig sein, erst nach einer Zeit ohne erfüllte Bedingung wieder scharf
+        data.patchState(id, { armed: false, metSince: null });
+        syncSubscriptions();
+        return;
+      }
+      for (const x of states) {
+        const v = toSeen(x);
+        if (v) seen.set(x.entity_id, v);
+      }
+      persons = states.filter((x) => x.entity_id.startsWith('person.'));
+      personsAt = now().getTime();
+      const s = seenOf(w.trigger.entityId);
+      if (!s) {
+        data.setStatus(id, 'entity_missing');
+        data.patchState(id, { armed: true, metSince: null });
+      } else {
+        const met = conditionMet(w.trigger, s.state);
+        data.patchState(id, { armed: !met, metSince: met ? metSinceOf(w.trigger.kind, s, now().getTime()) : null });
+        if (w.status === 'entity_missing') data.setStatus(id, 'ok');
+      }
+      syncSubscriptions();
+      deps.onChange?.();
+    });
+  }
+
+  /** Nach (Wieder-)Verbinden: Zustände abgleichen, damit ein verpasster Übergang genau einmal auslöst */
+  async function snapshot(): Promise<void> {
+    await guarded('Abgleich', async () => {
+      const states = await ha.getStates();
+      const bySeen = new Map<string, Seen>();
+      for (const x of states) {
+        const v = toSeen(x);
+        if (v) {
+          bySeen.set(x.entity_id, v);
+          seen.set(x.entity_id, v);
+        }
+      }
+      persons = states.filter((x) => x.entity_id.startsWith('person.'));
+      personsAt = now().getTime();
+      for (const w of data.list()) {
+        if (!w.active) continue;
+        await evaluate(w, bySeen.get(w.trigger.entityId) ?? null);
+      }
+      syncSubscriptions();
+    });
+  }
+
+  /** Takt (alle 30 Sekunden): Wartezeiten abwarten, Rückfall nach 24 Stunden */
+  async function tick(): Promise<void> {
+    await guarded('Takt', async () => {
+      const nowMs = now().getTime();
+      for (const w of data.list()) {
+        if (!w.active) continue;
+        const st = data.getState(w.id);
+        if (!st.armed || !st.metSince) continue;
+        const s = seenOf(w.trigger.entityId);
+        if (!s || !conditionMet(w.trigger, s.state)) continue;
+        if (nowMs - Date.parse(st.metSince) >= minutes(w.trigger.forMin)) await fire(w);
+      }
+      checkWaiting(nowMs);
+    });
+  }
+
+  function start(): void {
+    ha.onConnected(() => void snapshot());
+    syncSubscriptions();
+  }
+
+  /** „Testen": legt die Karte einmal sofort an, ohne Sperrzeit, Zähler und Doppelkarten-Regel */
+  async function test(id: string): Promise<void> {
+    await enqueue(async () => {
+      await fire(data.get(id), true);
+    });
+  }
+
+  function resetCounter(id: string): void {
+    data.get(id);
+    data.patchState(id, { counter: 0, counterSince: null });
+    deps.onChange?.();
+  }
+
+  /** Für die Oberfläche: Wächter mit Zustand, Zählerstand, Abo und letztem Lauf */
+  function view() {
+    const active = new Set(ha.activeSubscriptions?.() ?? []);
+    return data.list().map((w) => {
+      const st = data.getState(w.id);
+      return {
+        ...w,
+        armed: st.armed,
+        counter: w.trigger.count > 1 ? counterOf(w.id) : 0,
+        subscribed: w.active ? active.has(`w:${w.id}:fire`) : false,
+        lastRun: data.runs(w.id, 1)[0] ?? null,
+      };
+    });
+  }
+
+  return { start, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
+}
+
+export type Watchers = ReturnType<typeof createWatchers>;
+export type { WatchTrigger };

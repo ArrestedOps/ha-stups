@@ -71,6 +71,35 @@ beforeEach(() => {
 const card = (extra: object) =>
   store.createCard(boardId, { columnId: openCol, title: 'Bad putzen', ...extra }, rene.id);
 
+describe('Neue Karte von einem Wächter', () => {
+  it('sagt der zugewiesenen Person gleich Bescheid, mit „Erledigt", wenn die Karte einen Termin hat', async () => {
+    const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [rene.id] });
+    await makeNotifier().notifyAssigned(c, [rene.id]);
+    expect(calls.map((x) => x.service).sort()).toEqual(['svc_rene', 'svc_rene_ipad']);
+    expect(calls[0]!.data).toMatchObject({
+      title: 'Bad putzen',
+      message: 'Neue Karte für dich · fällig heute 10:00',
+      data: { actions: [{ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, title: 'Erledigt' }] },
+    });
+  });
+
+  it('ohne Termin gibt es keinen „Erledigt"-Knopf, nur die Karte zum Öffnen', async () => {
+    const c = card({ assigneeIds: [conny.id] });
+    await makeNotifier().notifyAssigned(c, [conny.id]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.data.message).toBe('Neue Karte für dich');
+    expect(calls[0]!.data.data.actions).toBeUndefined();
+    expect(calls[0]!.data.data.url).toContain(`?card=${c.id}`);
+  });
+
+  it('wer kein Push-Gerät hat, wird übersprungen, die anderen bekommen es trotzdem', async () => {
+    store.setNotifyServices(rene.id, []);
+    const c = card({ assigneeIds: [rene.id, conny.id] });
+    await makeNotifier().notifyAssigned(c, [rene.id, conny.id]);
+    expect(calls.map((x) => x.service)).toEqual(['svc_conny']);
+  });
+});
+
 describe('Fälligkeit', () => {
   it('sendet genau zum Termin an die zugewiesene Person, mit allen ihren Geräten', async () => {
     card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [rene.id] }); // 10:00 Berlin

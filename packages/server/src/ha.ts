@@ -6,6 +6,23 @@ export interface NotificationAction {
   userId?: string;
 }
 
+/** Zustand einer Entität, wie ihn `get_states` liefert */
+export interface HaState {
+  entity_id: string;
+  state: string;
+  last_changed?: string;
+  attributes?: Record<string, any>;
+}
+
+interface Sub {
+  key: string;
+  payload: Record<string, unknown>;
+  onEvent: (event: Record<string, any>) => void;
+  onResult?: (ok: boolean, error?: string) => void;
+  id?: number;
+  active?: boolean;
+}
+
 export interface ProbeStep {
   ok: boolean;
   error?: string;
@@ -54,6 +71,11 @@ export class HaClient {
   private readonly wsUrl: string;
   private readonly reconnectDelayMs: number;
   private readonly listeners: ((a: NotificationAction) => void)[] = [];
+  private readonly subs = new Map<string, Sub>();
+  private readonly byId = new Map<number, Sub>();
+  private readonly connectedListeners: (() => void)[] = [];
+  private ready = false;
+  private nextId = 2;
   private socket: WebSocket | undefined;
   private timer: NodeJS.Timeout | undefined;
   private closed = false;
@@ -235,6 +257,52 @@ export class HaClient {
     this.listeners.push(cb);
   }
 
+  /** Alle Zustände (für die Suche und für den Abgleich nach einem Verbindungsabbruch) */
+  async getStates(): Promise<HaState[]> {
+    return (await this.wsCommand<HaState[]>('get_states', {}, 15_000)) ?? [];
+  }
+
+  /**
+   * Abo auf der dauerhaften Verbindung, z. B. `{ type: 'subscribe_trigger', trigger: { … } }` oder
+   * `{ type: 'subscribe_events', event_type: '…' }`. Es wird nach jedem Verbindungsabbruch von selbst neu angelegt.
+   * Unter demselben Schlüssel ersetzt ein neues Abo das alte. Gibt eine Funktion zum Beenden zurück.
+   */
+  subscribe(key: string, payload: Record<string, unknown>, onEvent: (event: Record<string, any>) => void, onResult?: (ok: boolean, error?: string) => void): () => void {
+    this.unsubscribe(key);
+    const sub: Sub = { key, payload, onEvent, onResult };
+    this.subs.set(key, sub);
+    this.startSub(sub);
+    return () => this.unsubscribe(key);
+  }
+
+  unsubscribe(key: string): void {
+    const sub = this.subs.get(key);
+    if (!sub) return;
+    this.subs.delete(key);
+    if (sub.id !== undefined) {
+      this.byId.delete(sub.id);
+      if (this.ready) this.socket?.send(JSON.stringify({ id: this.nextId++, type: 'unsubscribe_events', subscription: sub.id }));
+    }
+  }
+
+  /** Läuft nach jeder (Wieder-)Verbindung, wenn alle Abos wieder angelegt sind */
+  onConnected(cb: () => void): void {
+    this.connectedListeners.push(cb);
+  }
+
+  /** Schlüssel der Abos, die Home Assistant gerade bestätigt hat */
+  activeSubscriptions(): string[] {
+    return [...this.subs.values()].filter((s) => s.active).map((s) => s.key);
+  }
+
+  private startSub(sub: Sub): void {
+    if (!this.ready || !this.socket) return;
+    sub.id = this.nextId++;
+    sub.active = false;
+    this.byId.set(sub.id, sub);
+    this.socket.send(JSON.stringify({ id: sub.id, ...sub.payload }));
+  }
+
   connect(): void {
     this.closed = false;
     const ws = new WebSocket(this.wsUrl);
@@ -242,6 +310,22 @@ export class HaClient {
 
     ws.on('message', (raw) => {
       const msg = JSON.parse(raw.toString()) as Record<string, any>;
+      const sub = typeof msg.id === 'number' ? this.byId.get(msg.id) : undefined;
+      if (sub) {
+        if (msg.type === 'result') {
+          sub.active = msg.success === true;
+          const error = msg.success === true ? undefined : `${msg.error?.message ?? 'abgelehnt'}`;
+          if (error) this.state.lastError = `Abo „${sub.key}" fehlgeschlagen: ${error}`;
+          sub.onResult?.(msg.success === true, error);
+        } else if (msg.type === 'event') {
+          try {
+            sub.onEvent(msg.event ?? {});
+          } catch (err) {
+            this.state.lastError = `Abo „${sub.key}": ${err instanceof Error ? err.message : String(err)}`;
+          }
+        }
+        return;
+      }
       if (msg.type === 'auth_required') {
         ws.send(JSON.stringify({ type: 'auth', access_token: this.opts.token }));
       } else if (msg.type === 'auth_ok') {
@@ -254,6 +338,18 @@ export class HaClient {
             event_type: 'mobile_app_notification_action',
           }),
         );
+        // alle angemeldeten Abos neu anlegen (die Nummern gelten nur je Verbindung)
+        this.ready = true;
+        this.nextId = 2;
+        this.byId.clear();
+        for (const s of this.subs.values()) this.startSub(s);
+        for (const cb of this.connectedListeners) {
+          try {
+            cb();
+          } catch (err) {
+            this.state.lastError = `Nach dem Verbinden: ${err instanceof Error ? err.message : String(err)}`;
+          }
+        }
       } else if (msg.type === 'auth_invalid') {
         this.state.lastError = `Anmeldung abgelehnt: ${msg.message ?? 'unbekannt'}`;
       } else if (msg.type === 'result' && msg.id === 1) {
@@ -279,6 +375,12 @@ export class HaClient {
     ws.on('close', () => {
       this.state.connected = false;
       this.state.subscribed = false;
+      this.ready = false;
+      for (const s of this.subs.values()) {
+        s.active = false;
+        s.id = undefined;
+      }
+      this.byId.clear();
       if (this.closed) return;
       this.timer = setTimeout(() => this.connect(), this.reconnectDelayMs);
     });

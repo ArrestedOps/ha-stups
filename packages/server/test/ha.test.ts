@@ -360,4 +360,89 @@ describe('HaClient WebSocket events', () => {
     await waitFor(() => connections >= 2);
     expect(connections).toBeGreaterThanOrEqual(2);
   });
+
+  describe('Abos für Wächter', () => {
+    const TRIGGER = { platform: 'state', entity_id: 'sensor.x', to: 'off' };
+
+    it('legt ein Abo an, liefert seine Ereignisse und beendet es wieder', async () => {
+      const seen: Record<string, any>[] = [];
+      let subId = 0;
+      const port = startServer((ws, msg) => {
+        seen.push(msg);
+        if (msg.type === 'auth') ws.send(JSON.stringify({ type: 'auth_ok' }));
+        if (msg.type === 'subscribe_trigger') {
+          subId = msg.id as number;
+          ws.send(JSON.stringify({ id: msg.id, type: 'result', success: true }));
+          ws.send(JSON.stringify({ id: msg.id, type: 'event', event: { variables: { trigger: { to_state: { state: 'off' } } } } }));
+        }
+      });
+      ha = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}` });
+      const events: Record<string, any>[] = [];
+      const results: [boolean, string | undefined][] = [];
+      ha.subscribe('w1', { type: 'subscribe_trigger', trigger: TRIGGER }, (e) => events.push(e), (ok, err) => results.push([ok, err]));
+      ha.connect();
+      await waitFor(() => events.length === 1);
+      expect(events[0]!.variables.trigger.to_state.state).toBe('off');
+      expect(results).toEqual([[true, undefined]]);
+      expect(ha.activeSubscriptions()).toEqual(['w1']);
+
+      ha.unsubscribe('w1');
+      await waitFor(() => seen.some((m) => m.type === 'unsubscribe_events'));
+      expect(seen.find((m) => m.type === 'unsubscribe_events')!.subscription).toBe(subId);
+      expect(ha.activeSubscriptions()).toEqual([]);
+    });
+
+    it('legt Abos nach einem Verbindungsabbruch von selbst neu an', async () => {
+      let connections = 0;
+      const triggers: number[] = [];
+      wss = new WebSocketServer({ port: 0 });
+      wss.on('connection', (ws) => {
+        connections += 1;
+        const n = connections;
+        ws.send(JSON.stringify({ type: 'auth_required' }));
+        ws.on('message', (raw) => {
+          const msg = JSON.parse(raw.toString());
+          if (msg.type === 'auth') ws.send(JSON.stringify({ type: 'auth_ok' }));
+          if (msg.type === 'subscribe_trigger') {
+            triggers.push(n);
+            ws.send(JSON.stringify({ id: msg.id, type: 'result', success: true }));
+            if (n === 1) setTimeout(() => ws.terminate(), 20);
+            else ws.send(JSON.stringify({ id: msg.id, type: 'event', event: { variables: { n } } }));
+          }
+        });
+      });
+      const port = (wss.address() as AddressInfo).port;
+      ha = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}`, reconnectDelayMs: 20 });
+      let connected = 0;
+      ha.onConnected(() => (connected += 1));
+      const got: Record<string, any>[] = [];
+      ha.subscribe('w1', { type: 'subscribe_trigger', trigger: TRIGGER }, (e) => got.push(e));
+      ha.connect();
+      await waitFor(() => got.length === 1);
+      expect(triggers).toEqual([1, 2]);
+      expect(got[0]!.variables.n).toBe(2);
+      expect(connected).toBe(2);
+    });
+
+    it('ein Abo unter demselben Schlüssel ersetzt das alte, ein abgelehntes meldet den Grund', async () => {
+      const seen: Record<string, any>[] = [];
+      const port = startServer((ws, msg) => {
+        seen.push(msg);
+        if (msg.type === 'auth') ws.send(JSON.stringify({ type: 'auth_ok' }));
+        if (msg.type === 'subscribe_trigger') {
+          ws.send(JSON.stringify({ id: msg.id, type: 'result', success: false, error: { message: 'Ungültiger Auslöser' } }));
+        }
+      });
+      ha = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}` });
+      const results: [boolean, string | undefined][] = [];
+      ha.subscribe('w1', { type: 'subscribe_trigger', trigger: { platform: 'state', entity_id: 'a.b' } }, () => undefined);
+      ha.subscribe('w1', { type: 'subscribe_trigger', trigger: TRIGGER }, () => undefined, (ok, err) => results.push([ok, err]));
+      ha.connect();
+      await waitFor(() => results.length === 1);
+      expect(results).toEqual([[false, 'Ungültiger Auslöser']]);
+      expect(seen.filter((m) => m.type === 'subscribe_trigger')).toHaveLength(1);
+      expect(ha.status().lastError).toMatch(/Ungültiger Auslöser/);
+      expect(ha.activeSubscriptions()).toEqual([]);
+    });
+  });
 });

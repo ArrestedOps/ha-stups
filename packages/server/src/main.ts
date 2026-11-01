@@ -14,6 +14,8 @@ import { createDirectory } from './directory.js';
 import { ingressAuth } from './ingress.js';
 import { repairShortMapsLinks } from './linkRepair.js';
 import { createNotifier } from './notifications.js';
+import { createWatcherData } from './watcher-data.js';
+import { createWatchers } from './watchers.js';
 import { createSensors } from './sensors.js';
 import { spikeRoutes } from './spike.js';
 import { createStore, type ClosedNudge } from './store.js';
@@ -68,6 +70,21 @@ const notifier = createNotifier({
   log,
 });
 nudgesClosed = (list) => void notifier.nudgesClosed(list);
+
+// Wächter: Karten automatisch aus Zuständen in Home Assistant (nur mit Verbindung dorthin)
+const watcherData = createWatcherData(db);
+const watchers = token
+  ? createWatchers({
+      store,
+      data: watcherData,
+      ha,
+      now: () => new Date(),
+      timeZone: () => timeZone,
+      onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Karte fehlgeschlagen')),
+      onChange: () => bus.emit({ by: null }),
+      log,
+    })
+  : undefined;
 const sensors = createSensors({ store, ha, options, now: () => new Date(), timeZone: () => timeZone, log });
 
 function housekeeping() {
@@ -137,6 +154,8 @@ await app.register(apiRoutes, {
   access,
   defaultDashboardPath: options.dashboardPath,
   files,
+  watchers,
+  watcherData: watchers ? watcherData : undefined,
   exportData: () => exportData(db, dataDir, shareDir),
 });
 const here = dirname(fileURLToPath(import.meta.url));
@@ -147,6 +166,7 @@ await app.register(fastifyStatic, {
 
 if (token) {
   ha.connect();
+  watchers?.start();
   ha.onNotificationAction((a) => {
     notifier.handleAction(a).catch((err) => app.log.error(err, 'Push-Aktion fehlgeschlagen'));
   });
@@ -165,6 +185,7 @@ if (token) {
   const tick = () => notifier.tick().catch((err) => app.log.error(err, 'Erinnerungen fehlgeschlagen'));
   void tick();
   setInterval(tick, 30_000).unref();
+  if (watchers) setInterval(() => void watchers.tick(), 30_000).unref();
 
   // Sensoren: beim Start, bei Änderungen (gebündelt) und alle 5 Minuten (HA vergisst sie bei einem eigenen Neustart)
   void sensors.publish();

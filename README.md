@@ -5,6 +5,11 @@
 Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haushalt, die Familie oder die WG: Aufgaben auf Boards, wiederkehrende Termine, Fotos und Links, Push-Erinnerungen mit „Erledigt"-Knopf über die Companion App und ein freundlicher **Stups** an die, die etwas vergessen haben. Fürs iPhone gebaut, mit Dunkel- und Hellmodus.
 
 <p align="center">
+  <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FArrestedOps%2Fha-stups"><img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Zu Home Assistant hinzufügen"></a>
+  <br><sub>Öffnet in deinem Home Assistant den Dialog mit vorausgefüllter Repository-Adresse. Das Hinzufügen und die Installation bestätigst du dort selbst.</sub>
+</p>
+
+<p align="center">
   <img src="docs/images/board-dunkel.png" alt="Board, dunkel" width="23%">
   <img src="docs/images/agenda-dunkel.png" alt="Agenda, dunkel" width="23%">
   <img src="docs/images/kalender-woche-dunkel.png" alt="Kalender, Woche, dunkel" width="23%">
@@ -38,6 +43,8 @@ Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haus
 - Alles bleibt bei dir: SQLite im Add-on-Speicher, Teil des normalen HA-Backups.
 
 ## Installation
+
+Am einfachsten über den Knopf oben („Zu Home Assistant hinzufügen"). Von Hand:
 
 1. In Home Assistant: **Einstellungen → Apps → App-Store → ⋮ → Repositories**
 2. `https://github.com/ArrestedOps/ha-stups` hinzufügen

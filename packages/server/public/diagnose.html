@@ -72,6 +72,14 @@
   <small>Öffnet sich Safari bzw. die Maps-App – oder bleibt es in der Companion App?</small>
 </div>
 
+<h2>6 · Wächter-Test (nur Administratoren)</h2>
+<div class="card">
+  <input id="probeEntity" placeholder="Entität, z. B. sensor.waschmaschine_leistung (leer = erste Person)" />
+  <div class="row"><button id="probeBtn">Wächter-Test starten</button></div>
+  <pre id="probeOut">–</pre>
+  <small>Prüft nur lesend: Darf Stups alle Zustände lesen und Auslöser (Zustandswechsel und Zahlenwert, jeweils mit Wartezeit) bei Home Assistant abonnieren? Das Abo wird sofort wieder beendet.</small>
+</div>
+
 <script>
 const $ = (id) => document.getElementById(id);
 const show = (id, v) => { $(id).textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2); };
@@ -119,6 +127,27 @@ $('wsBtn').onclick = () => {
 $('pushBtn').onclick = async () => { try { show('pushOut', await post('test-push', { person: $('person').value, url: $('pushUrl').value })); } catch (e) { show('pushOut', 'Fehler: ' + e.message); } };
 $('clearBtn').onclick = async () => { try { show('pushOut', await post('clear', { person: $('person').value })); } catch (e) { show('pushOut', 'Fehler: ' + e.message); } };
 $('actionsBtn').onclick = async () => { try { show('actionsOut', await api('actions')); } catch (e) { show('actionsOut', 'Fehler: ' + e.message); } };
+
+$('probeBtn').onclick = async () => {
+  show('probeOut', 'läuft …');
+  try {
+    const entityId = $('probeEntity').value.trim();
+    const r = await fetch('./api/admin/watcher-probe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(entityId ? { entityId } : {}) });
+    const p = await r.json();
+    if (!r.ok) throw new Error(r.status + ' ' + (p.error || ''));
+    const mark = (s) => (s.ok ? '✓ geht' : '✗ ' + (s.error || 'geht nicht'));
+    const lines = [
+      'Alle Zustände lesen: ' + mark(p.states) + (p.states.count !== undefined ? ' (' + p.states.count + ' Entitäten)' : ''),
+      'Auslöser auf „' + p.triggerEntity + '“:',
+      '  Zustandswechsel mit Wartezeit: ' + mark(p.stateTrigger),
+      '  Zahlenwert mit Wartezeit: ' + mark(p.numericTrigger),
+      p.entity ? 'Entität: ' + p.entity.entityId + ' = ' + p.entity.state + (p.entity.unit ? ' ' + p.entity.unit : '') + ' (seit ' + p.entity.lastChanged + ')' : (entityId ? 'Entität „' + entityId + '“ gibt es nicht.' : ''),
+      'Personen in Home Assistant:',
+      ...p.persons.map((x) => '  ' + x.entityId + ' · ' + x.name + ' · ' + x.state + ' · Benutzer ' + (x.userId || 'keiner')),
+    ].filter(Boolean);
+    show('probeOut', lines.join('\n'));
+  } catch (e) { show('probeOut', 'Fehler: ' + e.message); }
+};
 
 $('back1').onclick = () => {
   try {

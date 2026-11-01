@@ -9,6 +9,7 @@ import { cleanFilename, extensionFor, MAX_FILE_BYTES, MAX_THUMB_BYTES, sniffMime
 import { fetchPageTitle, normalizeUrl, resolveMapsLink as resolveShortMapsLink } from './links.js';
 import { ensureWebsocket } from './ws.js';
 import { NUDGE_TEMPLATES, NUDGE_TEXT_MAX, type Store, type TrashType, type User } from './store.js';
+import type { WatcherProbe } from './ha.js';
 import type { ExportResult } from './transfer.js';
 
 declare module 'fastify' {
@@ -35,6 +36,7 @@ export interface ApiDeps {
   ha?: {
     listDashboards(): Promise<{ title: string; path: string }[]>;
     listNotifyServices?(): Promise<string[]>;
+    probeWatchers?(entityId?: string): Promise<WatcherProbe>;
   };
   /** Personen und Administratoren aus Home Assistant; ohne sie gelten Personen als Administratoren */
   directory?: Directory;
@@ -400,6 +402,21 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
     setImmediate(() => void deps.notifier?.tick?.().catch(() => undefined));
     return reply.code(201).send(r);
   });
+  // ----- Wächter-Test für die Diagnose-Seite (nur Administratoren, nur lesend) -----
+  app.post('/api/admin/watcher-probe', async (req) => {
+    requireAdmin(req);
+    if (!deps.ha?.probeWatchers) throw new ValidationError('Nicht verfügbar (keine Verbindung zu Home Assistant)');
+    const entityId = body(req).entityId;
+    if (entityId !== undefined && (typeof entityId !== 'string' || !/^[a-z0-9_]+\.[a-z0-9_]+$/.test(entityId))) {
+      throw new ValidationError('Die Entität muss die Form domain.name haben');
+    }
+    try {
+      return await deps.ha.probeWatchers(entityId);
+    } catch (err) {
+      throw new ValidationError(err instanceof Error ? err.message : 'Test fehlgeschlagen');
+    }
+  });
+
   // ----- Umzug in eine andere App (nur Administratoren) -----
   app.post('/api/admin/export', async (req) => {
     requireAdmin(req);

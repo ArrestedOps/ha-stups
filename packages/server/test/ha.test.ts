@@ -142,6 +142,83 @@ describe('HaClient: Zustände und Dashboards', () => {
   });
 });
 
+describe('HaClient: Wächter-Test', () => {
+  let wss: WebSocketServer | undefined;
+  afterEach(async () => {
+    await new Promise<void>((r) => (wss ? wss.close(() => r()) : r()));
+    wss = undefined;
+  });
+
+  function server(handler: (ws: WebSocket, msg: Record<string, any>) => void) {
+    wss = new WebSocketServer({ port: 0 });
+    wss.on('connection', (ws) => {
+      ws.send(JSON.stringify({ type: 'auth_required' }));
+      ws.on('message', (raw) => {
+        const msg = JSON.parse(raw.toString());
+        if (msg.type === 'auth') ws.send(JSON.stringify({ type: 'auth_ok' }));
+        else handler(ws, msg);
+      });
+    });
+    return (wss.address() as AddressInfo).port;
+  }
+  const ok = (ws: WebSocket, id: number, result: unknown = null) => ws.send(JSON.stringify({ id, type: 'result', success: true, result }));
+  const no = (ws: WebSocket, id: number, message: string) => ws.send(JSON.stringify({ id, type: 'result', success: false, error: { message } }));
+
+  it('meldet, was geht: Zustände, Personen, beide Auslöser, und beendet die Abos wieder', async () => {
+    const seen: Record<string, any>[] = [];
+    const port = server((ws, msg) => {
+      seen.push(msg);
+      if (msg.type === 'get_states') {
+        ok(ws, msg.id, [
+          { entity_id: 'person.anna', state: 'home', attributes: { friendly_name: 'Anna', user_id: 'u1' } },
+          { entity_id: 'person.ben', state: 'not_home', attributes: { friendly_name: 'Ben' } },
+          { entity_id: 'sensor.waschmaschine', state: '3.2', last_changed: '2026-11-01T10:00:00Z', attributes: { unit_of_measurement: 'W' } },
+        ]);
+      } else ok(ws, msg.id);
+    });
+    const ha = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}` });
+    const probe = await ha.probeWatchers('sensor.waschmaschine');
+
+    expect(probe.states).toEqual({ ok: true, count: 3 });
+    expect(probe.persons).toEqual([
+      { entityId: 'person.anna', name: 'Anna', state: 'home', userId: 'u1' },
+      { entityId: 'person.ben', name: 'Ben', state: 'not_home', userId: null },
+    ]);
+    expect(probe.entity).toEqual({ entityId: 'sensor.waschmaschine', state: '3.2', unit: 'W', lastChanged: '2026-11-01T10:00:00Z' });
+    expect(probe.stateTrigger).toEqual({ ok: true });
+    expect(probe.numericTrigger).toEqual({ ok: true });
+
+    const triggers = seen.filter((m) => m.type === 'subscribe_trigger').map((m) => m.trigger);
+    expect(triggers).toEqual([
+      { platform: 'state', entity_id: 'sensor.waschmaschine', to: 'on', for: { minutes: 1 } },
+      { platform: 'numeric_state', entity_id: 'sensor.waschmaschine', below: 5, for: { minutes: 3 } },
+    ]);
+    // jedes Abo wird sofort beendet
+    const subs = seen.filter((m) => m.type === 'subscribe_trigger').map((m) => m.id);
+    expect(seen.filter((m) => m.type === 'unsubscribe_events').map((m) => m.subscription)).toEqual(subs);
+  });
+
+  it('zeigt die Absage von Home Assistant, wenn Auslöser nicht erlaubt sind', async () => {
+    const port = server((ws, msg) => {
+      if (msg.type === 'get_states') ok(ws, msg.id, []);
+      else if (msg.type === 'subscribe_trigger') no(ws, msg.id, 'Unauthorized');
+      else ok(ws, msg.id);
+    });
+    const ha = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}` });
+    const probe = await ha.probeWatchers();
+    expect(probe.states.ok).toBe(true);
+    expect(probe.triggerEntity).toBe('sun.sun');
+    expect(probe.stateTrigger).toEqual({ ok: false, error: 'Unauthorized' });
+    expect(probe.numericTrigger).toEqual({ ok: false, error: 'Unauthorized' });
+  });
+
+  it('meldet, wenn die Zustände nicht lesbar sind', async () => {
+    const port = server((ws, msg) => (msg.type === 'get_states' ? no(ws, msg.id, 'Nicht erlaubt') : ok(ws, msg.id)));
+    const ha = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}` });
+    expect((await ha.probeWatchers()).states).toEqual({ ok: false, error: 'Nicht erlaubt' });
+  });
+});
+
 describe('HaClient WebSocket events', () => {
   let wss: WebSocketServer | undefined;
   let ha: HaClient | undefined;

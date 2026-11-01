@@ -77,7 +77,9 @@
         <p class="mt-1 text-[15px] text-fg2">
           Ein Wächter beobachtet zum Beispiel die Waschmaschine und legt von selbst die Karte „ausräumen" an, für jemanden, der gerade zu Hause ist.
         </p>
-        {#if admin}
+        {#if !admin}
+          <p class="mt-3 text-[15px]" data-testid="watchers-empty-member">Ein Administrator von Home Assistant kann Wächter einrichten. Sobald es welche gibt, siehst du sie hier.</p>
+        {:else}
           <p class="mt-4 mb-2 text-[13px] font-semibold tracking-wide text-fg2 uppercase">Mit einer Vorlage starten</p>
           <div class="flex flex-col gap-2">
             {#each TEMPLATES as t (t.id)}

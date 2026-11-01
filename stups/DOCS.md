@@ -121,7 +121,7 @@ Ein Wächter beobachtet eine Entität in Home Assistant und legt **von selbst ei
 
 ![Der Reiter Wächter](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-liste-dunkel.png)
 
-**Der Reiter „Wächter":** Er steht als vierter Reiter in der Leiste unten. Er zeigt jeden Wächter mit seiner Bedingung, dem aktuellen Zustand der Entität, dem Zählerstand (bei „erst beim N-ten Mal"), der offenen Karte (ein Tipp öffnet sie) und was zuletzt ausgelöst hat. Darunter steht die **letzte Aktivität** über alle Wächter. **Administratoren** sehen den Reiter immer und können dort Wächter anlegen, ändern und pausieren. **Alle anderen** sehen ihn nur, wenn es Wächter gibt, und nur lesend. Ohne Verbindung zu Home Assistant erklärt der Reiter, warum es nichts zu sehen gibt.
+**Der Reiter „Wächter":** Er steht als vierter Reiter in der Leiste unten. Er zeigt jeden Wächter mit seiner Bedingung, dem aktuellen Zustand der Entität, dem Zählerstand (bei „erst beim N-ten Mal"), der offenen Karte (ein Tipp öffnet sie) und was zuletzt ausgelöst hat. Darunter steht die **letzte Aktivität** über alle Wächter. **Alle** sehen den Reiter. **Administratoren** legen dort Wächter an, ändern und pausieren sie; alle anderen sehen nur, was passiert (gibt es noch keinen Wächter, steht dort ein Hinweis). Ohne Verbindung zu Home Assistant erklärt der Reiter, warum es nichts zu sehen gibt.
 
 **Einrichten (ohne YAML):** Reiter „Wächter" › „+" (ohne Wächter stehen die Vorlagen gleich da). Eine **Vorlage** füllt das Formular vor (Waschmaschine, Spülmaschine, Trockner, Filter, Batterie, Saugroboter), alles bleibt änderbar. Oben steht immer ein Satz, der zusammenfasst, was der Wächter tut.
 

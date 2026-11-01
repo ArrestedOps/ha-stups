@@ -103,7 +103,7 @@ Zwei Personen, jede mit dem eigenen Handy.
 
 Zuerst Einstellungen › Diagnose-Seite › „Wächter-Test": Alle Zustände lesen und beide Auslöser müssen „geht" zeigen.
 
-- [ ] **Reiter:** In der Leiste unten gibt es „Wächter" (als Administrator immer). Er zeigt je Wächter Bedingung, aktuellen Zustand, offene Karte und die letzte Aktivität. Ein Mitglied (kein Administrator) sieht den Reiter nur, wenn es Wächter gibt, und kann nichts ändern
+- [ ] **Reiter:** In der Leiste unten gibt es „Wächter" (als Administrator immer). Er zeigt je Wächter Bedingung, aktuellen Zustand, offene Karte und die letzte Aktivität. Ein Mitglied (kein Administrator) sieht den Reiter ebenfalls (ohne Wächter mit einem Hinweis), kann aber nichts ändern: kein „+", keine Schalter
 - [ ] **Waschmaschine:** Reiter „Wächter" › „+" › Vorlage „Waschmaschine fertig", den Leistungs-Sensor wählen, Board und Titel prüfen, Speichern. Ein echter Waschgang: Nach dem Ende (Leistung 3 Minuten unter dem Schwellwert) entsteht die Karte, bei einer **anwesenden** Person, mit Push „Neue Karte für dich"
 - [ ] **Anwesenheit:** Eine Person ist unterwegs. Der Wächter gibt die Karte nur an Personen, die in Home Assistant `home` sind, und wechselt bei mehreren reihum
 - [ ] **Testen:** Im Wächter „Testen: Karte jetzt anlegen": Karte und Push kommen bei der richtigen Person an; im Verlauf der Karte steht der Wächter

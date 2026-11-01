@@ -272,13 +272,6 @@ export function fromWatcher(w: WatcherItem, entities: Map<string, HaEntity> = ne
   };
 }
 
-/**
- * Erscheint der Reiter „Wächter"? Administratoren sehen ihn immer (dort richten sie ein),
- * alle anderen nur, wenn es Wächter gibt (dann sehen sie, was im Haus automatisch passiert).
- */
-export const watcherTabVisible = (isAdmin: boolean, watchers: { items: unknown[] } | null): boolean =>
-  isAdmin || (watchers?.items.length ?? 0) > 0;
-
 // ---------- Texte ----------
 
 const forText = (min: number) => (min <= 0 ? '' : min === 1 ? '1 Minute ' : `${min} Minuten `);

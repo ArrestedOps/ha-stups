@@ -1,17 +1,15 @@
 <script lang="ts">
-  import { currentTab, selectTab, ui, type Tab } from '../lib/store.svelte';
-  import { watcherTabVisible } from '../lib/watchers';
+  import { selectTab, ui, type Tab } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
-  const all: { id: Tab; label: string; icon: string }[] = [
+  const tabs: { id: Tab; label: string; icon: string }[] = [
     { id: 'boards', label: 'Boards', icon: 'columns' },
     { id: 'agenda', label: 'Agenda', icon: 'list' },
     { id: 'calendar', label: 'Kalender', icon: 'calendar' },
     { id: 'watchers', label: 'Wächter', icon: 'eye' },
   ];
-  // „Wächter" erscheint für Administratoren immer, für alle anderen nur, wenn es Wächter gibt
-  const tabs = $derived(all.filter((t) => t.id !== 'watchers' || watcherTabVisible(ui.isAdmin, ui.watchers)));
-  const active = $derived(currentTab());
+  // Alle sehen alle vier Reiter; nur Administratoren ändern im Reiter „Wächter" etwas
+  const active = $derived(ui.tab);
 </script>
 
 <!-- schwebende Leiste mit Abstand zum Rand: überdeckt nichts, die Listen lassen unten Platz (pb-tabbar) -->

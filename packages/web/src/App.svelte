@@ -26,7 +26,7 @@
   import { catClass } from './lib/colors';
   import { deviceTz, formatCost } from './lib/datetime';
   import { costTotals, countByColumn, dueStats, filterCards } from './lib/filters';
-  import { currentTab, goToDashboard, init, openSheet, ui } from './lib/store.svelte';
+  import { goToDashboard, init, openSheet, ui } from './lib/store.svelte';
 
   onMount(init);
 
@@ -40,7 +40,7 @@
   });
   const desktop = $derived(ui.desktop);
 
-  const tab = $derived(currentTab());
+  const tab = $derived(ui.tab);
   const view = $derived(ui.view);
   const columns = $derived(view?.columns ?? []);
   const board = $derived(ui.boards.find((b) => b.id === ui.boardId));

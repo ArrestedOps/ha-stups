@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WatcherItem } from '../src/lib/watcher-types';
-import { conditionText, emptyForm, formProblem, fromWatcher, previewSentence, TEMPLATES, toInput, watcherLine, watcherTabVisible, type WatcherForm } from '../src/lib/watchers';
+import { conditionText, emptyForm, formProblem, fromWatcher, previewSentence, TEMPLATES, toInput, watcherLine, type WatcherForm } from '../src/lib/watchers';
 
 const names: Record<string, string> = { a: 'Anna', b: 'Ben' };
 const nameOf = (id: string) => names[id] ?? '?';
@@ -103,16 +103,6 @@ describe('Vorlagen', () => {
   it('Saugroboter: Zähler 3, wer zuerst nach Hause kommt', () => {
     const f = TEMPLATES.find((t) => t.id === 'vacuum')!.apply(emptyForm('b', 'c'));
     expect(f).toMatchObject({ kind: 'state', count: '3', assignMode: 'first_home', dueKind: 'none' });
-  });
-});
-
-describe('Reiter „Wächter"', () => {
-  it('Administratoren sehen ihn immer, alle anderen nur, wenn es Wächter gibt', () => {
-    expect(watcherTabVisible(true, null)).toBe(true);
-    expect(watcherTabVisible(true, { items: [] })).toBe(true);
-    expect(watcherTabVisible(false, null)).toBe(false);
-    expect(watcherTabVisible(false, { items: [] })).toBe(false);
-    expect(watcherTabVisible(false, { items: [{}] })).toBe(true);
   });
 });
 

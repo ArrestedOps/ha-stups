@@ -12,7 +12,6 @@ import {
 import { formatDue } from './datetime';
 import { applyHeaderHiding } from './hideHaHeader';
 import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
-import { watcherTabVisible } from './watchers';
 import { swipeTarget } from './swipe';
 import { startSync } from './sync';
 
@@ -210,8 +209,6 @@ export async function init(): Promise<void> {
     if (ui.boardId) ui.view = await api.board(ui.boardId);
     ensureColumn();
     ui.watchers = await api.watchers().catch(() => null);
-    // Ein gemerkter Reiter „Wächter" gilt nur, solange er für diese Person überhaupt erscheint
-    if (ui.tab === 'watchers' && !watcherTabVisible(ui.isAdmin, ui.watchers)) ui.tab = 'boards';
     ui.ready = true;
   } catch (e) {
     ui.fatal = errorText(e);
@@ -311,8 +308,6 @@ function restoreView(): void {
   }
 }
 
-/** Der Reiter, der gerade gilt: „Wächter" nur, wenn er für diese Person erscheint */
-export const currentTab = (): Tab => (ui.tab === 'watchers' && !watcherTabVisible(ui.isAdmin, ui.watchers) ? 'boards' : ui.tab);
 
 export function selectTab(tab: Tab): void {
   ui.tab = tab;

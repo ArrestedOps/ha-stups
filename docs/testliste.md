@@ -99,6 +99,21 @@ Zwei Personen, jede mit dem eigenen Handy.
 
 - [ ] **Konfiguration in Home Assistant:** Unter Apps › Stups › Konfiguration bei `users` zwei Personen mit ihren `mobile_app_…`-Diensten und `access_mode` eintragen, App neu starten. In Stups steht unter Personen & Zugriff der Hinweis „… in der Konfiguration verwaltet", Personen und Geräte stimmen, Zugriff ist gesperrt (nicht änderbar), Anzeigename und Ruhezeit lassen sich ändern. `users` wieder leeren und neu starten: Alles ist in der App wieder änderbar
 
+## 9b · Wächter (echtes System nötig)
+
+Zuerst Einstellungen › Diagnose-Seite › „Wächter-Test": Alle Zustände lesen und beide Auslöser müssen „geht" zeigen.
+
+- [ ] **Waschmaschine:** Einstellungen › Wächter › Hinzufügen › Vorlage „Waschmaschine fertig", den Leistungs-Sensor wählen, Board und Titel prüfen, Speichern. Ein echter Waschgang: Nach dem Ende (Leistung 3 Minuten unter dem Schwellwert) entsteht die Karte, bei einer **anwesenden** Person, mit Push „Neue Karte für dich"
+- [ ] **Anwesenheit:** Eine Person ist unterwegs. Der Wächter gibt die Karte nur an Personen, die in Home Assistant `home` sind, und wechselt bei mehreren reihum
+- [ ] **Testen:** Im Wächter „Testen: Karte jetzt anlegen": Karte und Push kommen bei der richtigen Person an; im Verlauf der Karte steht der Wächter
+- [ ] **Zähler und Heimkehr (Saugroboter):** Vorlage „Saugroboter: Behälter leeren". An einem Tag, an dem alle weg sind: Nach der dritten Reinigung erscheint die Karte **ohne Zuständige** mit dem Hinweis „Wartet auf die erste Person, die heimkommt". Wer zuerst nach Hause kommt, bekommt sie samt Nachricht. Wird die Karte erledigt, beginnt der Zähler bei 0
+- [ ] **Vergleich:** Eure bestehende Automation mit dem Zähler-Helfer zum Saugroboter läuft parallel mit; beide liefern dasselbe. Ob sie danach abgeschaltet wird, besprechen wir gemeinsam (Stups ändert nichts daran)
+- [ ] **Keine Doppelkarten:** Solange die Karte offen ist, entsteht keine zweite; im Verlauf der Karte steht „Erneut ausgelöst"
+- [ ] **Erledigt sich selbst:** Mit „Erledigt sich selbst, wenn …" (z. B. Tür der Waschmaschine) wird die Karte erledigt
+- [ ] **Neustart:** App neu starten, während eine Bedingung erfüllt ist: keine zweite Karte. Wächter beim Anlegen mit schon erfüllter Bedingung: keine Karte, erst beim nächsten Mal
+- [ ] **Eigene Automation:** Das Beispiel aus der Anleitung (`stups_create_card`) in einer Automation auslösen: Karte erscheint, ein zweites Auslösen mit demselben `dedupe_key` nicht; die Diagnose-Seite zeigt beide Ereignisse
+- [ ] **Sensor:** `sensor.stups_waechter_offen` zählt die offenen Wächter-Karten
+
 ## 10 · Zwei Geräte
 
 - [ ] Änderungen am einen Gerät erscheinen am anderen sofort und umgekehrt

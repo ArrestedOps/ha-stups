@@ -11,6 +11,7 @@ import { ensureWebsocket } from './ws.js';
 import { NUDGE_TEMPLATES, NUDGE_TEXT_MAX, type Store, type TrashType, type User } from './store.js';
 import type { HaState, WatcherProbe } from './ha.js';
 import type { ExportResult } from './transfer.js';
+import type { AutomationEntry } from './automation-cards.js';
 import type { WatcherData } from './watcher-data.js';
 import { parseWatcher, type WatcherConfig } from './watcher-types.js';
 import type { Watchers } from './watchers.js';
@@ -45,6 +46,8 @@ export interface ApiDeps {
   /** Wächter (nur mit Verbindung zu Home Assistant) */
   watchers?: Pick<Watchers, 'view' | 'onSaved' | 'test' | 'resetCounter' | 'syncSubscriptions'>;
   watcherData?: WatcherData;
+  /** Letzte Ereignisse stups_create_card mit Ergebnis (für die Diagnose) */
+  automationLog?: () => AutomationEntry[];
   /** Personen und Administratoren aus Home Assistant; ohne sie gelten Personen als Administratoren */
   directory?: Directory;
   /** Zugriffsregeln; Vorgabe ergibt sich aus Store und Verzeichnis */
@@ -511,6 +514,11 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
     const { engine } = watcherEngine();
     engine.resetCounter(req.params.id);
     return watcherView(req.params.id);
+  });
+
+  app.get('/api/admin/automation-log', async (req) => {
+    requireAdmin(req);
+    return deps.automationLog?.() ?? [];
   });
 
   /** Suche in den Entitäten von Home Assistant, für das Anlegen eines Wächters */

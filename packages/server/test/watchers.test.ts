@@ -235,6 +235,16 @@ describe('Sperrzeit, Doppelkarten, Zähler', () => {
     expect(data.runsOfCard(cards()[0]!.id).map((r) => r.result)).toEqual(['created', 'retriggered']);
   });
 
+  it('der Verlauf der Karte nennt den Wächter und was er danach getan hat', async () => {
+    const w = await create({ cooldownMin: 0 });
+    await done(w);
+    await running(w);
+    await done(w);
+    const activity = store.getCard(cards()[0]!.id).activity;
+    expect(activity.find((a) => a.kind === 'created')!.byName).toBe('Wächter „Waschmaschine fertig“');
+    expect(activity.find((a) => a.kind === 'watcher')).toMatchObject({ text: 'Erneut ausgelöst' });
+  });
+
   it('ist die Karte erledigt, entsteht beim nächsten Mal wieder eine', async () => {
     const w = await create({ cooldownMin: 0 });
     await done(w);
@@ -575,6 +585,78 @@ describe('Fälligkeit, Spalte und Test', () => {
     expect(cards()[0]!.description).toContain('(Test)');
     expect(data.runs(w.id)[0]!.result).toBe('test');
     expect(engine.counterOf(w.id)).toBe(0);
+  });
+});
+
+describe('Nach Wartezeit erinnern', () => {
+  let nudged: { card: Card; ids: string[] }[];
+  beforeEach(() => {
+    nudged = [];
+    engine = createWatchers({
+      store,
+      data,
+      ha,
+      now: () => new Date(t),
+      timeZone: () => 'Europe/Berlin',
+      onAssigned: (card, ids) => assigned.push({ card, ids }),
+      onNudge: (card, ids) => nudged.push({ card, ids }),
+    });
+    engine.start();
+  });
+
+  it('erinnert einmal, wenn die Karte nach der Zeit noch offen ist', async () => {
+    const w = await create({ nudgeAfterMin: 60 });
+    await done(w);
+    advance(59);
+    await engine.tick();
+    expect(nudged).toHaveLength(0);
+    advance(2);
+    await engine.tick();
+    expect(nudged.map((n) => [n.card.title, n.ids])).toEqual([['Waschmaschine ausräumen', [anna]]]);
+    advance(120);
+    await engine.tick();
+    expect(nudged).toHaveLength(1);
+    expect(data.runs(w.id)[0]!.result).toBe('nudged');
+    expect(store.getCard(cards()[0]!.id).activity.some((a) => a.kind === 'watcher' && /Erinnerung gesendet/.test(a.text ?? ''))).toBe(true);
+  });
+
+  it('nichts, wenn die Karte erledigt oder niemandem zugewiesen ist', async () => {
+    const w = await create({ nudgeAfterMin: 5, cooldownMin: 0 });
+    await done(w);
+    store.completeCard(cards()[0]!.id, { by: anna, source: 'app' });
+    advance(10);
+    await engine.tick();
+    expect(nudged).toHaveLength(0);
+
+    const w2 = await create({ nudgeAfterMin: 5, assign: { mode: 'none' }, name: 'Zweiter' });
+    await running(w2);
+    await done(w2);
+    advance(10);
+    await engine.tick();
+    expect(nudged).toHaveLength(0);
+  });
+
+  it('bei der ersten Heimkehr zählt die Zeit ab der Zuweisung', async () => {
+    ha.set('vacuum.s7', 'cleaning');
+    const w = await create({ trigger: { entityId: 'vacuum.s7', kind: 'state', to: 'docked' }, assign: { mode: 'first_home', personIds: [] }, nudgeAfterMin: 30 });
+    ha.emit(fireKey(w), 'docked');
+    await engine.idle();
+    advance(600); // lange nichts
+    await engine.tick();
+    expect(nudged).toHaveLength(0);
+    ha.arrive('person.ben');
+    await engine.idle();
+    advance(31);
+    await engine.tick();
+    expect(nudged.map((n) => n.ids)).toEqual([[ben]]);
+  });
+});
+
+describe('Anwesende', () => {
+  it('liefert, wer zu Hause ist (für Automationen mit assignees: present)', async () => {
+    home('ben', true);
+    home('conny', true);
+    expect((await engine.presentPersonIds()).sort()).toEqual([ben, conny].sort());
   });
 });
 

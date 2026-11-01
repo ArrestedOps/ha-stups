@@ -80,6 +80,13 @@
   <small>Prüft nur lesend: Darf Stups alle Zustände lesen und Auslöser (Zustandswechsel und Zahlenwert, jeweils mit Wartezeit) bei Home Assistant abonnieren? Das Abo wird sofort wieder beendet.</small>
 </div>
 
+<h2>7 · Automationen (Ereignis stups_create_card)</h2>
+<div class="card">
+  <div class="row"><button id="autoBtn" class="secondary">Protokoll laden</button></div>
+  <pre id="autoOut">–</pre>
+  <small>Die letzten 20 Ereignisse von eigenen Home-Assistant-Automationen mit Ergebnis (Karte angelegt, doppelt, Fehler).</small>
+</div>
+
 <script>
 const $ = (id) => document.getElementById(id);
 const show = (id, v) => { $(id).textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2); };
@@ -147,6 +154,15 @@ $('probeBtn').onclick = async () => {
     ].filter(Boolean);
     show('probeOut', lines.join('\n'));
   } catch (e) { show('probeOut', 'Fehler: ' + e.message); }
+};
+
+$('autoBtn').onclick = async () => {
+  try {
+    const r = await fetch('./api/admin/automation-log');
+    const list = await r.json();
+    if (!r.ok) throw new Error(r.status + ' ' + (list.error || ''));
+    show('autoOut', list.length ? list.map((e) => e.at + ' · ' + e.result + ' · ' + (e.title || '–') + ' · ' + e.note).join('\n') : 'Noch kein Ereignis empfangen.');
+  } catch (e) { show('autoOut', 'Fehler: ' + e.message); }
 };
 
 $('back1').onclick = () => {

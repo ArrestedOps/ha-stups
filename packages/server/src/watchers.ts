@@ -29,6 +29,8 @@ export interface WatcherDeps {
   timeZone: () => string;
   /** Karte ist (jetzt) jemandem zugewiesen: hier geht die Push-Nachricht raus */
   onAssigned?: (card: Card, userIds: string[]) => void;
+  /** Die Karte ist nach der eingestellten Zeit noch offen: an die Zuständigen erinnern */
+  onNudge?: (card: Card, userIds: string[]) => void;
   /** Etwas hat sich geändert (Live-Sync) */
   onChange?: () => void;
   log?: { info(m: string): void; warn(m: string): void };
@@ -265,7 +267,7 @@ export function createWatchers(deps: WatcherDeps) {
       // keine Doppelkarten
       const open = store.openCardOfWatcher(w.id);
       if (open && w.dedupe) {
-        data.addRun({ watcherId: w.id, result: 'retriggered', cardId: open.id, note: note(w, counter) ?? 'erneut ausgelöst' });
+        data.addRun({ watcherId: w.id, result: 'retriggered', cardId: open.id, note: note(w, counter) });
         data.markFired(w.id, w.lastAssignees);
         deps.onChange?.();
         return;
@@ -599,6 +601,27 @@ export function createWatchers(deps: WatcherDeps) {
     });
   }
 
+  /** „Nach X Minuten stupsen, wenn noch offen": einmal je Karte, gerechnet ab dem Anlegen bzw. der Zuweisung */
+  function checkNudges(nowMs: number): void {
+    for (const w of data.list()) {
+      if (!w.active || w.nudgeAfterMin === null) continue;
+      const card = store.openCardOfWatcher(w.id);
+      if (!card || card.assigneeIds.length === 0) continue;
+      const runs = data.runsOfCard(card.id);
+      const start = [...runs].reverse().find((r) => r.result === 'created' || r.result === 'assigned');
+      if (!start || runs.some((r) => r.result === 'nudged' && r.at >= start.at)) continue;
+      if (nowMs - Date.parse(start.at) < minutes(w.nudgeAfterMin)) continue;
+      data.addRun({ watcherId: w.id, result: 'nudged', cardId: card.id, assignedTo: card.assigneeIds, note: `nach ${w.nudgeAfterMin} Min.` });
+      deps.onChange?.();
+      deps.onNudge?.(card, card.assigneeIds);
+    }
+  }
+
+  /** Personen, die gerade zu Hause sind (auch für Automationen über stups_create_card) */
+  async function presentPersonIds(): Promise<string[]> {
+    return [...(await presence()).home];
+  }
+
   /** Takt (alle 30 Sekunden): Wartezeiten abwarten, Rückfall nach 24 Stunden */
   async function tick(): Promise<void> {
     await guarded('Takt', async () => {
@@ -612,6 +635,7 @@ export function createWatchers(deps: WatcherDeps) {
         if (nowMs - Date.parse(st.metSince) >= minutes(w.trigger.forMin)) await fire(w);
       }
       checkWaiting(nowMs);
+      checkNudges(nowMs);
     });
   }
 
@@ -648,7 +672,7 @@ export function createWatchers(deps: WatcherDeps) {
     });
   }
 
-  return { start, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
+  return { start, presentPersonIds, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
 }
 
 export type Watchers = ReturnType<typeof createWatchers>;

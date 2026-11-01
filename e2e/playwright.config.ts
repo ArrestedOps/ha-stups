@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 18400;
+const HA_PORT = 18410;
 
 // Läuft gegen den gebauten Server (pnpm build zuerst), in WebKit mit iPhone-Ansicht wie die Companion App.
 export default defineConfig({
@@ -20,15 +21,27 @@ export default defineConfig({
   },
   // Die Companion App folgt dem Hell/Dunkel des iPhones, beide Themes werden geprüft
   projects: [
-    { name: 'dunkel', use: { colorScheme: 'dark' } },
-    { name: 'hell', use: { colorScheme: 'light' } },
+    { name: 'dunkel', testIgnore: /waechter/, use: { colorScheme: 'dark' } },
+    { name: 'hell', testIgnore: /waechter/, use: { colorScheme: 'light' } },
+    // Wächter brauchen Home Assistant: eigener Server mit nachgebautem Home Assistant (e2e/server-ha.mjs)
+    { name: 'waechter', testMatch: /waechter/, use: { colorScheme: 'dark', baseURL: `http://127.0.0.1:${HA_PORT}` } },
   ],
-  webServer: {
-    command: 'node e2e/server.mjs',
-    cwd: '..',
-    url: `http://127.0.0.1:${PORT}/healthz`,
-    env: { PORT: String(PORT) },
-    reuseExistingServer: false,
-    timeout: 60_000,
-  },
+  webServer: [
+    {
+      command: 'node e2e/server.mjs',
+      cwd: '..',
+      url: `http://127.0.0.1:${PORT}/healthz`,
+      env: { PORT: String(PORT) },
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      command: 'node e2e/server-ha.mjs',
+      cwd: '..',
+      url: `http://127.0.0.1:${HA_PORT}/healthz`,
+      env: { PORT: String(HA_PORT) },
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+  ],
 });

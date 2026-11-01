@@ -24,6 +24,7 @@ export type Sheet =
   | { type: 'boardSettings' }
   | { type: 'settings' }
   | { type: 'people' }
+  | { type: 'watcher'; id: string | null }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
   | { type: 'archive' };

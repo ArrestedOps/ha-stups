@@ -239,7 +239,9 @@
         </div>
       {/if}
 
-      <p class="mt-2.5 text-[12px] text-fg2" data-testid="card-created">Angelegt {formatCreated(card.createdAt)}</p>
+      <p class="mt-2.5 flex items-center gap-1.5 text-[12px] text-fg2" data-testid="card-created">
+        {#if card.watcherId}<span title="Von einem Wächter angelegt" aria-label="Von einem Wächter angelegt" data-testid="card-watcher"><Icon name="eye" size={13} /></span>{/if}Angelegt {formatCreated(card.createdAt)}
+      </p>
     </button>
 
     <button

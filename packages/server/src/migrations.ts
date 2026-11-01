@@ -280,7 +280,7 @@ export const migrations: Migration[] = [
         watcher_id  text not null references watchers(id) on delete cascade,
         at          text not null,
         result      text not null check (result in
-                      ('created', 'retriggered', 'counted', 'cooldown', 'waiting', 'assigned', 'auto_done', 'test', 'error')),
+                      ('created', 'retriggered', 'counted', 'cooldown', 'waiting', 'assigned', 'auto_done', 'nudged', 'test', 'error')),
         card_id     text,
         assigned_to text not null default '[]',
         note        text

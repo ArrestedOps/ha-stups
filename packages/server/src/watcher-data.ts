@@ -25,7 +25,7 @@ export interface WatcherState {
   lastFireAt: string | null;
 }
 
-export type RunResult = 'created' | 'retriggered' | 'counted' | 'cooldown' | 'waiting' | 'assigned' | 'auto_done' | 'test' | 'error';
+export type RunResult = 'created' | 'retriggered' | 'counted' | 'cooldown' | 'waiting' | 'assigned' | 'auto_done' | 'nudged' | 'test' | 'error';
 
 export interface WatcherRun {
   id: string;

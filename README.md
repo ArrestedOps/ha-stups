@@ -17,12 +17,20 @@ Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haus
   <img src="docs/images/stupsen-hell.png" alt="Stupsen, hell" width="23%">
 </p>
 
+<p align="center">
+  <img src="docs/images/waechter-liste-dunkel.png" alt="Wächter, dunkel" width="23%">
+  <img src="docs/images/waechter-bearbeiten-dunkel.png" alt="Wächter bearbeiten, dunkel" width="23%">
+  <img src="docs/images/waechter-karte-dunkel.png" alt="Karte von einem Wächter, dunkel" width="23%">
+  <img src="docs/images/personen-dunkel.png" alt="Personen und Zugriff, dunkel" width="23%">
+</p>
+
 ## Was kann es?
 
 - **Boards** mit eigenen Spalten und Kategorien, Karten mit Zuständigen, Termin, Priorität, Kosten, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt Karten, ein Farbbalken zeigt die Dringlichkeit.
 - **Agenda:** alle Karten mit Termin aus allen Boards, nach Tagen, Überfälliges zuerst. Filter nach Personen und Boards.
 - **Kalender:** Tag, Woche und Monat. Auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an.
 - **Wiederkehrende Aufgaben:** fester Rhythmus oder ab Erledigung; die erledigte Karte bleibt samt Verlauf erhalten, die nächste entsteht neu.
+- **Wächter:** Stups beobachtet Entitäten in Home Assistant und legt von selbst Karten an: „Die Waschmaschine ist fertig, also bekommt eine Person, die zu Hause ist, die Karte ‚ausräumen'." Mit Zähler (Saugroboter: nach 3 Reinigungen) und „wer zuerst nach Hause kommt". Einrichtung ohne YAML.
 - **Push über die Companion App:** zur Fälligkeit, vorab, nachhaken, Tageszusammenfassung. „Erledigt" direkt in der Nachricht.
 - **Stupsen:** einer anderen Person zu ihrer Karte einen Stups schicken („Denkst du dran?"). Mit Sperrzeit und Ruhezeit pro Person, damit niemand genervt wird.
 - **Mehrere Personen:** Zugriff steuerst du unter Einstellungen › Personen & Zugriff. Wer Administrator in Home Assistant ist, stellt ein; alle freigegebenen Personen dürfen Boards, Karten und Kategorien anlegen.

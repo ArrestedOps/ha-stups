@@ -1,4 +1,5 @@
 import type { Recurrence } from './recurrence';
+import type { HaEntity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
 
 export type Priority = 'low' | 'medium' | 'high';
 
@@ -96,6 +97,8 @@ export interface Card {
   carryOver: CarryField[];
   /** Die Karte, aus deren Wiederholung diese entstanden ist */
   repeatedFrom: string | null;
+  /** Wächter, aus dem die Karte entstanden ist */
+  watcherId: string | null;
   /** offene Stupse zu dieser Karte */
   openNudges: OpenNudge[];
   assigneeIds: string[];
@@ -132,7 +135,7 @@ export interface Completion {
 }
 export interface ActivityEntry {
   id: string;
-  kind: 'created' | 'repeated' | 'completed' | 'moved' | 'reopened' | 'due' | 'nudged' | 'nudge_reply';
+  kind: 'created' | 'repeated' | 'completed' | 'moved' | 'reopened' | 'due' | 'nudged' | 'nudge_reply' | 'watcher';
   at: string;
   byName: string | null;
   /** bei „nudged" die Nachricht, bei „nudge_reply" die Antwort */
@@ -334,6 +337,15 @@ export const api = {
     return get<ScheduleCard[]>(`schedule${p.size ? `?${p}` : ''}`);
   },
 
+  watchers: () => get<{ available: boolean; items: WatcherItem[] }>('watchers'),
+  createWatcher: (b: WatcherInput) => post<WatcherItem>('watchers', b),
+  updateWatcher: (id: string, b: Partial<WatcherInput>) => patch<WatcherItem>(`watchers/${id}`, b),
+  deleteWatcher: (id: string) => del(`watchers/${id}`),
+  testWatcher: (id: string) => post<WatcherItem>(`watchers/${id}/test`),
+  resetWatcherCounter: (id: string) => post<WatcherItem>(`watchers/${id}/reset-counter`),
+  watcherRuns: (id: string) => get<WatcherRun[]>(`watchers/${id}/runs`),
+  haEntities: (q: string, domain?: string) =>
+    get<HaEntity[]>(`ha/entities?q=${encodeURIComponent(q)}${domain ? `&domain=${encodeURIComponent(domain)}` : ''}`),
   exportData: () => post<{ dir: string; bytes: number; files: boolean }>('admin/export'),
 
   nudgeInfo: (cardId: string) => get<NudgeInfo>(`cards/${cardId}/nudges`),
@@ -381,6 +393,8 @@ export interface NudgeInfo {
   templates: Record<NudgeTemplate, string>;
   people: NudgeTarget[];
 }
+
+export type { HaEntity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
 
 export interface NudgeResult {
   sent: { nudgeId: string; to: string; status: 'sent' | 'queued'; deliverAt: string }[];

@@ -41,10 +41,10 @@ const server = spawn(process.execPath, [join(root, 'packages', 'server', 'dist',
 const stop = () => server.kill();
 process.on('exit', stop);
 
-async function waitUp() {
+async function waitUp(url = base) {
   for (let i = 0; i < 60; i++) {
     try {
-      if ((await fetch(`${base}/healthz`)).ok) return;
+      if ((await fetch(`${url}/healthz`)).ok) return;
     } catch {
       /* noch nicht da */
     }
@@ -137,13 +137,13 @@ const shot = async (page, name, scheme) => {
   console.log('geschrieben:', `${name}-${scheme}.png`);
 };
 
-export async function capture(screens) {
+export async function capture(screens, baseUrl = base) {
   const browser = await webkit.launch();
   for (const scheme of ['dunkel', 'hell']) {
     const context = await browser.newContext({ ...phone, locale: 'de-DE', timezoneId: 'Europe/Berlin', colorScheme: scheme === 'dunkel' ? 'dark' : 'light' });
     const page = await context.newPage();
     for (const [name, run] of screens) {
-      await page.goto(base + '/');
+      await page.goto(baseUrl + '/');
       await page.evaluate(() => localStorage.clear()); // gemerkte Ansicht und Filter wegräumen
       await page.reload();
       await nav(page, 'Boards').waitFor();
@@ -201,9 +201,83 @@ const screens = [
     await page.getByRole('dialog').getByText('Wer darf Stups öffnen?').waitFor();
   }],
 ];
+// ---------- Wächter: eigener Server mit nachgebautem Home Assistant (e2e/server-ha.mjs), erfundene Namen ----------
+const HA_PORT = 18510;
+const haBase = `http://127.0.0.1:${HA_PORT}`;
+const mock = `http://127.0.0.1:${HA_PORT + 1}`;
+const haServer = spawn(process.execPath, [join(root, 'e2e', 'server-ha.mjs')], {
+  env: { ...process.env, PORT: String(HA_PORT), MOCK_NAMES: 'anna,ben' },
+  stdio: 'ignore',
+});
+process.on('exit', () => haServer.kill());
+
+async function seedWatchers() {
+  await waitUp(haBase);
+  const call = async (method, path, body) => {
+    const res = await fetch(`${haBase}/api/${path}`, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : method === 'POST' ? '{}' : undefined });
+    if (!res.ok) throw new Error(`${method} ${path}: ${res.status} ${await res.text()}`);
+    return res.status === 204 ? null : res.json();
+  };
+  const setState = (entityId, state, attributes = {}) =>
+    fetch(`${mock}/mock/state`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ entityId, state, attributes }) });
+  await setState('vacuum.s7', 'cleaning', { friendly_name: 'Saugroboter S7' });
+  await setState('sensor.spuelmaschine_leistung', '80', { friendly_name: 'Spülmaschine Leistung', unit_of_measurement: 'W' });
+
+  const people = await call('GET', 'people');
+  for (const p of people) await call('PATCH', `access/people/${p.id}`, { notifyServices: [`mobile_app_${p.name.toLowerCase()}_e2e`], quietOff: true });
+  const [board] = await call('GET', 'boards');
+  const view = await call('GET', `boards/${board.id}`);
+  const columnId = view.columns.find((c) => c.name === 'Offen').id;
+  const card = (title, due) => ({ boardId: board.id, columnId, title, due });
+  const wash = await call('POST', 'watchers', {
+    name: 'Waschmaschine fertig',
+    trigger: { entityId: 'sensor.waschmaschine_leistung', kind: 'below', value: 5, forMin: 3 },
+    card: card('Waschmaschine ausräumen', { kind: 'in', minutes: 30 }),
+    assign: { mode: 'rotation_present', personIds: [] },
+    done: { entityId: 'binary_sensor.waschmaschine_tuer', kind: 'state', to: 'on' },
+  });
+  await call('POST', 'watchers', {
+    name: 'Saugroboter: Behälter leeren',
+    trigger: { entityId: 'vacuum.s7', kind: 'state', to: 'docked', count: 3 },
+    card: card('Staubbehälter leeren', { kind: 'none' }),
+    assign: { mode: 'first_home', personIds: [] },
+  });
+  await call('POST', 'watchers', {
+    name: 'Spülmaschine fertig',
+    active: false,
+    trigger: { entityId: 'sensor.spuelmaschine_leistung', kind: 'below', value: 5, forMin: 3 },
+    card: card('Spülmaschine ausräumen', { kind: 'in', minutes: 30 }),
+    assign: { mode: 'rotation_present', personIds: [] },
+  });
+  await call('POST', `watchers/${wash.id}/test`);
+}
+
+const watcherScreens = [
+  ['waechter-liste', async (page) => {
+    await nav(page, 'Boards').click();
+    await page.getByRole('button', { name: 'Board wechseln' }).click();
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: /Wächter Waschmaschine fertig bearbeiten/ }).scrollIntoViewIfNeeded();
+  }],
+  ['waechter-bearbeiten', async (page) => {
+    await nav(page, 'Boards').click();
+    await page.getByRole('button', { name: 'Board wechseln' }).click();
+    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    await page.getByRole('button', { name: /Wächter Waschmaschine fertig bearbeiten/ }).click();
+    await page.getByTestId('watcher-preview').waitFor();
+  }],
+  ['waechter-karte', async (page) => {
+    await nav(page, 'Boards').click();
+    await page.getByRole('tab', { name: /^Offen/ }).click();
+    await page.getByTestId('card-watcher').first().waitFor();
+  }],
+];
 try {
   await capture(screens);
+  await seedWatchers();
+  await capture(watcherScreens, haBase);
 } finally {
   stop();
+  haServer.kill();
 }
 console.log('fertig', seeded.haushalt ? '' : '');

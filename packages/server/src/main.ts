@@ -14,6 +14,7 @@ import { createDirectory } from './directory.js';
 import { ingressAuth } from './ingress.js';
 import { repairShortMapsLinks } from './linkRepair.js';
 import { createNotifier } from './notifications.js';
+import { createAutomationCards } from './automation-cards.js';
 import { createWatcherData } from './watcher-data.js';
 import { createWatchers } from './watchers.js';
 import { createSensors } from './sensors.js';
@@ -81,8 +82,20 @@ const watchers = token
       now: () => new Date(),
       timeZone: () => timeZone,
       onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Karte fehlgeschlagen')),
+      onNudge: (card, ids) => void notifier.notifyStillOpen(card, ids).catch((err) => app.log.warn(err, 'Erinnerung zur offenen Karte fehlgeschlagen')),
       onChange: () => bus.emit({ by: null }),
       log,
+    })
+  : undefined;
+// Eigene Automationen in Home Assistant: das Ereignis stups_create_card legt eine Karte an
+const automation = watchers
+  ? createAutomationCards({
+      store,
+      ha,
+      now: () => new Date(),
+      presentPersonIds: () => watchers.presentPersonIds(),
+      onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Karte fehlgeschlagen')),
+      onChange: () => bus.emit({ by: null }),
     })
   : undefined;
 const sensors = createSensors({ store, ha, options, now: () => new Date(), timeZone: () => timeZone, log });
@@ -156,6 +169,7 @@ await app.register(apiRoutes, {
   files,
   watchers,
   watcherData: watchers ? watcherData : undefined,
+  automationLog: automation ? () => automation.log() : undefined,
   exportData: () => exportData(db, dataDir, shareDir),
 });
 const here = dirname(fileURLToPath(import.meta.url));
@@ -167,6 +181,7 @@ await app.register(fastifyStatic, {
 if (token) {
   ha.connect();
   watchers?.start();
+  automation?.start();
   ha.onNotificationAction((a) => {
     notifier.handleAction(a).catch((err) => app.log.error(err, 'Push-Aktion fehlgeschlagen'));
   });

@@ -20,6 +20,8 @@ export function describeActivity(
       return { title: `${e.text ?? 'Antwort'}`, detail };
     case 'repeated':
       return { title: 'Aus Wiederholung angelegt', detail };
+    case 'watcher':
+      return { title: e.text ?? 'Wächter', detail };
     case 'completed':
       return { title: 'Erledigt', detail };
     case 'moved':

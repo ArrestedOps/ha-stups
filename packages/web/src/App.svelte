@@ -21,6 +21,7 @@
   import SettingsSheet from './components/SettingsSheet.svelte';
   import Toasts from './components/Toasts.svelte';
   import TrashSheet from './components/TrashSheet.svelte';
+  import WatcherSheet from './components/WatcherSheet.svelte';
   import { catClass } from './lib/colors';
   import { deviceTz, formatCost } from './lib/datetime';
   import { costTotals, countByColumn, dueStats, filterCards } from './lib/filters';
@@ -245,6 +246,8 @@
     <SettingsSheet />
   {:else if ui.sheet?.type === 'people'}
     <PeopleSheet />
+  {:else if ui.sheet?.type === 'watcher'}
+    {#key ui.sheet.id ?? 'neu'}<WatcherSheet id={ui.sheet.id} />{/key}
   {:else if ui.sheet?.type === 'nudge'}
     {#key ui.sheet.id}<NudgeSheet id={ui.sheet.id} />{/key}
   {:else if ui.sheet?.type === 'trash'}

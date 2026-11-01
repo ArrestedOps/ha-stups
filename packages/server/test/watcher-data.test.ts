@@ -23,16 +23,18 @@ describe('Migration 10', () => {
     const file = join(dir, 'k.sqlite');
     const old = openDb(file, { migrations: migrations.filter((m) => m.version <= 9) });
     old.exec(`insert into users (id, name, display_name, is_person, color, created_at, notify_services) values ('u1','anna','Anna',1,'#fff','2026-01-01T00:00:00Z','["svc"]')`);
-    const s0 = createStore(old);
-    const board = s0.createBoard({ name: 'Haushalt' });
-    const col = s0.getBoardView(board.id).columns[0]!;
-    s0.createCard(board.id, { columnId: col.id, title: 'Müll' }, 'u1');
+    // der alte Stand kennt die Wächter-Tabellen noch nicht, darum Zeilen von Hand statt über den Store
+    old.exec(`
+      insert into boards (id, name, position, created_at, updated_at) values ('b1', 'Haushalt', 'a0', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');
+      insert into columns (id, board_id, name, position) values ('c1', 'b1', 'Offen', 'a0');
+      insert into cards (id, board_id, column_id, position, title, created_at, updated_at) values ('k1', 'b1', 'c1', 'a0', 'Müll', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');
+    `);
     old.close();
 
     const db = openDb(file, { backupDir: join(dir, 'backups') });
     const s = createStore(db);
     expect(s.people().map((p) => [p.name, p.notifyServices])).toEqual([['anna', ['svc']]]);
-    const cards = s.getBoardView(board.id).cards;
+    const cards = s.getBoardView('b1').cards;
     expect(cards.map((c) => [c.title, c.watcherId])).toEqual([['Müll', null]]);
     expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(migrations.at(-1)!.version);
     for (const t of ['watchers', 'watcher_state', 'watcher_runs', 'watcher_waiting']) {

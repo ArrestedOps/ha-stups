@@ -73,6 +73,14 @@ export function createSensors(deps: SensorDeps) {
         icon: 'mdi:hand-wave-outline',
       }),
     );
+    // Offene Karten, die ein Wächter angelegt hat
+    writes.push(
+      ha.setState('sensor.stups_waechter_offen', String(store.openWatcherCardCount()), {
+        friendly_name: 'Stups offene Wächter-Karten',
+        unit_of_measurement: 'Karten',
+        icon: 'mdi:eye-outline',
+      }),
+    );
     for (const person of store.people()) {
       writes.push(
         ha.setState(`sensor.stups_gestupst_${slugify(person.name)}`, String(nudges.byUser[person.id] ?? 0), {

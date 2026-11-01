@@ -100,6 +100,21 @@ export function createNotifier(deps: NotifierDeps) {
     }
   }
 
+  /** Eine Karte eines Wächters ist nach der eingestellten Zeit noch offen: freundlich erinnern */
+  async function notifyStillOpen(card: { id: string; title: string; dueAt: string | null }, userIds: string[]): Promise<void> {
+    for (const id of userIds) {
+      if (servicesFor(id).length === 0) {
+        warnNoServices(id);
+        continue;
+      }
+      const data: Record<string, unknown> = { tag: cardTag(card.id), group: GROUP, url: url(card.id), push: { 'interruption-level': 'time-sensitive' } };
+      if (card.dueAt) data.actions = [{ action: `${ACTION_PREFIX}:${card.id}:${card.dueAt}`, title: 'Erledigt' }];
+      if (await send(id, { title: card.title, message: 'Noch offen: Denkst du dran?', data })) {
+        log.info(`Push (noch offen) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
+      }
+    }
+  }
+
   /** true, wenn tatsächlich gesendet wurde */
   async function deliver(k: NotificationKey, payload: Record<string, unknown>): Promise<boolean> {
     const nowMs = deps.now().getTime();
@@ -398,7 +413,7 @@ export function createNotifier(deps: NotifierDeps) {
     return 'completed';
   }
 
-  return { tick, handleAction, clearFor, nudgesClosed, notifyAssigned, idle };
+  return { tick, handleAction, clearFor, nudgesClosed, notifyAssigned, notifyStillOpen, idle };
 }
 
 export type Notifier = ReturnType<typeof createNotifier>;

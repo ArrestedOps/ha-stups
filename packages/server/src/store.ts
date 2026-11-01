@@ -314,7 +314,7 @@ export interface CardLink {
   position: string;
 }
 
-export type ActivityKind = 'created' | 'repeated' | 'completed' | 'moved' | 'reopened' | 'due' | 'nudged' | 'nudge_reply';
+export type ActivityKind = 'created' | 'repeated' | 'completed' | 'moved' | 'reopened' | 'due' | 'nudged' | 'nudge_reply' | 'watcher';
 
 /**
  * Ein Eintrag im Verlauf einer Karte. Bei „due" sind from/to ISO-Zeiten, bei „moved"/„reopened" Spaltennamen,
@@ -1277,10 +1277,42 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     );
   }
 
+  /** Was ein Wächter mit der Karte gemacht hat (Läufe), ohne das Anlegen selbst (das steht schon im Eintrag „Angelegt") */
+  function watcherActivity(cardId: string): ActivityEntry[] {
+    const out: ActivityEntry[] = [];
+    for (const r of all(`select * from watcher_runs where card_id = ? and result not in ('created', 'test') order by at, rowid`, cardId)) {
+      const names = (JSON.parse(r.assigned_to) as string[])
+        .map((id) => one('select display_name from users where id = ?', id)?.display_name)
+        .filter(Boolean)
+        .join(', ');
+      const note = r.note ? ` · ${r.note}` : '';
+      const text =
+        r.result === 'retriggered'
+          ? `Erneut ausgelöst${note}`
+          : r.result === 'waiting'
+            ? 'Wartet auf die erste Person, die heimkommt'
+            : r.result === 'assigned'
+              ? `Zugewiesen: ${names}${note}`
+              : r.result === 'auto_done'
+                ? 'Automatisch erledigt, weil die Bedingung eingetreten ist'
+                : r.result === 'nudged'
+                  ? `Erinnerung gesendet, weil die Karte noch offen war${note}`
+                  : null;
+      if (text) out.push({ id: r.id, kind: 'watcher', at: r.at, byName: null, text });
+    }
+    return out;
+  }
+
   function listActivity(cardId: string, card: Card, limit = 50): ActivityEntry[] {
     const created = card.createdBy ? one('select display_name from users where id = ?', card.createdBy) : undefined;
+    const watcher = card.watcherId ? one('select name from watchers where id = ?', card.watcherId) : undefined;
     const entries: ActivityEntry[] = [
-      { id: `created-${cardId}`, kind: card.repeatedFrom ? 'repeated' : 'created', at: card.createdAt, byName: created?.display_name ?? null },
+      {
+        id: `created-${cardId}`,
+        kind: card.repeatedFrom ? 'repeated' : 'created',
+        at: card.createdAt,
+        byName: watcher ? `Wächter „${watcher.name}“` : (created?.display_name ?? null),
+      },
     ];
     for (const c of listCompletions(cardId, limit)) {
       entries.push({ id: c.id, kind: 'completed', at: c.completedAt, byName: c.completedByName, source: c.source });
@@ -1294,6 +1326,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
       entries.push({ id: r.id, kind: r.kind, at: r.at, byName: r.by_name, from: r.from_v, to: r.to_v });
     }
     entries.push(...nudgeActivity(cardId));
+    entries.push(...watcherActivity(cardId));
     // Neueste zuerst; „angelegt" steht bei gleicher Zeit ganz unten
     const isStart = (e: ActivityEntry) => e.kind === 'created' || e.kind === 'repeated';
     return entries
@@ -1501,6 +1534,13 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
   /** Wurde eine Karte dieses Wächters seit diesem Zeitpunkt erledigt? (setzt den Zähler zurück) */
   function watcherCardCompletedSince(watcherId: string, sinceIso: string): boolean {
     return !!one('select 1 as ok from cards where watcher_id = ? and completed_at is not null and completed_at >= ?', watcherId, sinceIso);
+  }
+
+  /** Wie viele offene Karten ein Wächter angelegt hat (Sensor) */
+  function openWatcherCardCount(): number {
+    return (
+      one('select count(*) as n from cards where watcher_id is not null and completed_at is null and deleted_at is null and archived_at is null')?.n ?? 0
+    );
   }
 
   /** Offene Karte mit diesem Schlüssel (für Automationen über das Ereignis stups_create_card) */
@@ -2716,6 +2756,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     setCardOrigin,
     openCardOfWatcher,
     watcherCardCompletedSince,
+    openWatcherCardCount,
     openCardByDedupeKey,
     applyManagedPeople,
     isManaged,

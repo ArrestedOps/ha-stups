@@ -112,8 +112,9 @@ describe('Sensoren', () => {
   it('veröffentlicht auch bei leerem Stand Nullen', async () => {
     await make().publish();
     expect(states['sensor.stups_ueberfaellig']!.state).toBe('0');
-    // überfällig und heute fällig (gesamt und je Person) plus offene Stupse (gesamt und je Person)
-    expect(Object.keys(states)).toHaveLength(2 + 2 * 2 + 1 + 2);
+    // überfällig und heute fällig (gesamt und je Person), offene Stupse (gesamt und je Person), offene Wächter-Karten
+    expect(Object.keys(states)).toHaveLength(2 + 2 * 2 + 1 + 2 + 1);
+    expect(states['sensor.stups_waechter_offen']!.state).toBe('0');
     expect(states['sensor.stups_stupse_offen']!.state).toBe('0');
   });
 
@@ -150,6 +151,6 @@ describe('Sensoren', () => {
     sensors.publishSoon();
     sensors.publishSoon();
     await new Promise((r) => setTimeout(r, 80));
-    expect(calls).toBe(9); // 9 Sensoren, einmal
+    expect(calls).toBe(10); // 10 Sensoren, einmal
   });
 });

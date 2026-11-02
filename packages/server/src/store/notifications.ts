@@ -1,9 +1,8 @@
 import { type OpenDueCard, type RecentNotification, type NotificationKey } from './types.js';
-import { lazy, type Ctx } from './context.js';
-import type { Internals } from './internals.js';
+import type { Ctx } from './context.js';
 
 /** Benachrichtigungen (Sendeprotokoll) */
-export function createNotifications(c: Ctx, s: Internals) {
+export function createNotifications(c: Ctx) {
   const { iso, all, run } = c;
 
   function openDueCards(): OpenDueCard[] {

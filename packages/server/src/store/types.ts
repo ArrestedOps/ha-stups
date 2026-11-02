@@ -1,6 +1,6 @@
-import { type LinkKind } from './links.js';
-import { type QuietWindow } from './quiet.js';
-import { type Recurrence } from './recurrence.js';
+import { type LinkKind } from '../links.js';
+import { type QuietWindow } from '../quiet.js';
+import { type Recurrence } from '../recurrence.js';
 
 export type Priority = 'low' | 'medium' | 'high';
 

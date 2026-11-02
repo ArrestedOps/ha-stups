@@ -7,7 +7,9 @@ import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 
 /** Stupsen */
-export function createNudgesPart(c: Ctx, s: Internals) {
+export function createNudgesPart(c: Ctx, late: unknown) {
+  // Erst hier auf den vollen Typ gebracht: stünde Internals schon im Kopf, hinge sein Typ von sich selbst ab
+  const s = late as Internals;
   const { now, timeZone, iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
   const { quietOf, toUser, userRow, visibleCardRow } = lazy(s, ['quietOf', 'toUser', 'userRow', 'visibleCardRow'] as const);

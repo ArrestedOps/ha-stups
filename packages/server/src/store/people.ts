@@ -1,13 +1,15 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { NotFoundError, ValidationError } from '../errors.js';
 import { DEFAULT_QUIET, type QuietWindow } from '../quiet.js';
-import { type User, type AccessMode, type Settings, type DEFAULT_DUE_TIME, type Row } from './types.js';
+import { type User, type AccessMode, type Settings, DEFAULT_DUE_TIME, type Row } from './types.js';
 import { PERSON_COLORS, NTFY_TOPIC_RE } from './constants.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 
 /** Personen, Zugriff und Einstellungen */
-export function createPeople(c: Ctx, s: Internals) {
+export function createPeople(c: Ctx, late: unknown) {
+  // Erst hier auf den vollen Typ gebracht: stünde Internals schon im Kopf, hinge sein Typ von sich selbst ab
+  const s = late as Internals;
   const { iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
   const { closeNudgesOfUser } = lazy(s, ['closeNudgesOfUser'] as const);

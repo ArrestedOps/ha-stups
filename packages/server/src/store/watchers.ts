@@ -3,7 +3,9 @@ import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 
 /** Karten der Wächter */
-export function createWatcherCards(c: Ctx, s: Internals) {
+export function createWatcherCards(c: Ctx, late: unknown) {
+  // Erst hier auf den vollen Typ gebracht: stünde Internals schon im Kopf, hinge sein Typ von sich selbst ab
+  const s = late as Internals;
   const { one, all, run } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
   const { getCard, visibleCardRow } = lazy(s, ['getCard', 'visibleCardRow'] as const);

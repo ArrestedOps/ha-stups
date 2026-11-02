@@ -8,7 +8,9 @@ import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 
 /** Anhänge, Kommentare, Checkliste und Links einer Karte */
-export function createCardExtras(c: Ctx, s: Internals) {
+export function createCardExtras(c: Ctx, late: unknown) {
+  // Erst hier auf den vollen Typ gebracht: stünde Internals schon im Kopf, hinge sein Typ von sich selbst ab
+  const s = late as Internals;
   const { iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
   const { lastPos, toItem, toLink, touchCard, visibleCardRow } = lazy(s, ['lastPos', 'toItem', 'toLink', 'touchCard', 'visibleCardRow'] as const);

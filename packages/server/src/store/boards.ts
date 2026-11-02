@@ -8,7 +8,9 @@ import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 
 /** Boards, Spalten, „Geplant" und Kategorien */
-export function createBoards(c: Ctx, s: Internals) {
+export function createBoards(c: Ctx, late: unknown) {
+  // Erst hier auf den vollen Typ gebracht: stünde Internals schon im Kopf, hinge sein Typ von sich selbst ab
+  const s = late as Internals;
   const { now, timeZone, iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
   const { loadCards, placeCard, touchCard } = lazy(s, ['loadCards', 'placeCard', 'touchCard'] as const);

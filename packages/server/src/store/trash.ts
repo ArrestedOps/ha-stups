@@ -6,8 +6,10 @@ import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 
 /** Papierkorb */
-export function createTrash(c: Ctx, s: Internals) {
-  const { now, iso, one, run, tx } = c;
+export function createTrash(c: Ctx, late: unknown) {
+  // Erst hier auf den vollen Typ gebracht: stünde Internals schon im Kopf, hinge sein Typ von sich selbst ab
+  const s = late as Internals;
+  const { now, iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
   const { lastPos, visibleColumns } = lazy(s, ['lastPos', 'visibleColumns'] as const);
 

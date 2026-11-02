@@ -740,4 +740,17 @@ export const en: Catalog = {
   'Sperrzeit {n} Min.': 'Lock time {n} min',
   '{n} Auslösungen seit dem letzten Zurücksetzen': '{n} triggers since the last reset',
   'nach {n} Min.': 'after {n} min',
+  // Nachträge: Beschriftungen mit Platzhaltern
+  'Tag {day} öffnen': 'Open day {day}',
+  'Neue Karte am {day}': 'New card on {day}',
+  'Wiederholt: {label}': 'Repeats: {label}',
+  'Checkliste {done} von {total}': 'Checklist {done} of {total}',
+  '{n} Kommentar': ['{n} comment', '{n} comments'],
+  '{n} Link': ['{n} link', '{n} links'],
+  '{n} Anhang': ['{n} attachment', '{n} attachments'],
+  'Kategorien: {names}': 'Categories: {names}',
+  'Menü für „{title}“': 'Menu for “{title}”',
+  '{name} ansehen ({size})': 'View {name} ({size})',
+  '{name} entfernen': 'Remove {name}',
+  'Neue Karte in {name}': 'New card in {name}',
 };

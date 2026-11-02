@@ -153,7 +153,7 @@
       <button class="min-h-9 rounded-xl border border-line px-3 text-[14px] font-semibold" onclick={() => (day = todayKey())}>{t('Heute')}</button>
     </div>
 
-    <div class="mt-2 grid grid-cols-3 gap-1 rounded-xl bg-surface2 p-1" role="group" aria-label="Ansicht">
+    <div class="mt-2 grid grid-cols-3 gap-1 rounded-xl bg-surface2 p-1" role="group" aria-label={t('Ansicht')}>
       {#each MODES as m (m.id)}
         <button
           class="min-h-9 rounded-lg text-[15px] {mode === m.id ? 'bg-surface font-semibold shadow-sm' : 'text-fg2'}"
@@ -201,7 +201,7 @@
   {:else}
     <div class="mt-3 flex shrink-0 pr-[1px] pl-10" aria-hidden={mode === 'day'}>
       {#each days as d (d)}
-        <button class="flex flex-1 flex-col items-center py-1 text-[12px] text-fg2" onclick={() => openDay(d)} aria-label="Tag {dayLabel(d)} öffnen">
+        <button class="flex flex-1 flex-col items-center py-1 text-[12px] text-fg2" onclick={() => openDay(d)} aria-label={t('Tag {day} öffnen', { day: dayLabel(d) })}>
           {weekdayShort(d)}
           <span class="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-[15px] font-bold {d === today ? 'bg-accent text-on-accent' : 'text-fg'}">{dayNumber(d)}</span>
         </button>
@@ -221,7 +221,7 @@
           {/each}
           {#each days as d (d)}
             <div class="relative flex-1 border-r border-line/50 last:border-r-0">
-              <button class="absolute inset-0 w-full cursor-pointer" aria-label="Neue Karte am {dayLabel(d)}" onclick={(e) => tapSlot(e, d)}></button>
+              <button class="absolute inset-0 w-full cursor-pointer" aria-label={t('Neue Karte am {day}', { day: dayLabel(d) })} onclick={(e) => tapSlot(e, d)}></button>
               {#if d === today}
                 <div class="pointer-events-none absolute inset-x-0 z-[3] border-t-2 border-accent" style:top="{nowTop}px" aria-hidden="true">
                   <span class="absolute -top-[5px] -left-1 h-2 w-2 rounded-full bg-accent"></span>

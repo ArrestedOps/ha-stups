@@ -2,72 +2,79 @@
 
 # Stups
 
-Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haushalt, die Familie oder die WG: Aufgaben auf Boards, wiederkehrende Termine, Fotos und Links, Push-Erinnerungen mit „Erledigt"-Knopf über die Companion App und ein freundlicher **Stups** an die, die etwas vergessen haben. Fürs iPhone gebaut, mit Dunkel- und Hellmodus.
+> 🇩🇪 [Deutsche Fassung](README.de.md). This English version is the authoritative one.
+
+A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your household, family or flat share: tasks on boards, recurring due dates, photos and links, push reminders with a "Done" button through the Companion App, and a friendly **nudge** for the person who forgot. Built for the iPhone, with dark and light mode, in English and German.
 
 <p align="center">
-  <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FArrestedOps%2Fha-stups"><img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Zu Home Assistant hinzufügen"></a>
-  <br><sub>Öffnet in deinem Home Assistant den Dialog mit vorausgefüllter Repository-Adresse. Das Hinzufügen und die Installation bestätigst du dort selbst.</sub>
+  <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FArrestedOps%2Fha-stups"><img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Add to Home Assistant"></a>
+  <br><sub>Opens the dialog in your Home Assistant with the repository address filled in. You confirm adding and installing there yourself.</sub>
 </p>
 
 <p align="center">
-  <img src="docs/images/board-dunkel.png" alt="Board, dunkel" width="23%">
-  <img src="docs/images/agenda-dunkel.png" alt="Agenda, dunkel" width="23%">
-  <img src="docs/images/kalender-woche-dunkel.png" alt="Kalender, Woche, dunkel" width="23%">
-  <img src="docs/images/stupsen-dunkel.png" alt="Stupsen, dunkel" width="23%">
-</p>
-<p align="center">
-  <img src="docs/images/board-hell.png" alt="Board, hell" width="23%">
-  <img src="docs/images/agenda-hell.png" alt="Agenda, hell" width="23%">
-  <img src="docs/images/kalender-woche-hell.png" alt="Kalender, Woche, hell" width="23%">
-  <img src="docs/images/stupsen-hell.png" alt="Stupsen, hell" width="23%">
+  <img src="docs/images/demo.en.gif" alt="Stups in action: quick entry, completing a card, agenda" width="30%">
 </p>
 
 <p align="center">
-  <img src="docs/images/waechter-liste-dunkel.png" alt="Wächter, dunkel" width="23%">
-  <img src="docs/images/waechter-bearbeiten-dunkel.png" alt="Wächter bearbeiten, dunkel" width="23%">
-  <img src="docs/images/waechter-karte-dunkel.png" alt="Karte von einem Wächter, dunkel" width="23%">
-  <img src="docs/images/personen-dunkel.png" alt="Personen und Zugriff, dunkel" width="23%">
+  <img src="docs/images/en/board-dunkel.png" alt="Board, dark" width="23%">
+  <img src="docs/images/en/agenda-dunkel.png" alt="Agenda, dark" width="23%">
+  <img src="docs/images/en/kalender-woche-dunkel.png" alt="Calendar, week, dark" width="23%">
+  <img src="docs/images/en/stupsen-dunkel.png" alt="Nudging, dark" width="23%">
+</p>
+<p align="center">
+  <img src="docs/images/en/board-hell.png" alt="Board, light" width="23%">
+  <img src="docs/images/en/agenda-hell.png" alt="Agenda, light" width="23%">
+  <img src="docs/images/en/kalender-woche-hell.png" alt="Calendar, week, light" width="23%">
+  <img src="docs/images/en/stupsen-hell.png" alt="Nudging, light" width="23%">
 </p>
 
-## Was kann es?
+<p align="center">
+  <img src="docs/images/en/waechter-liste-dunkel.png" alt="Watchers, dark" width="23%">
+  <img src="docs/images/en/waechter-bearbeiten-dunkel.png" alt="Edit a watcher, dark" width="23%">
+  <img src="docs/images/en/waechter-karte-dunkel.png" alt="Card from a watcher, dark" width="23%">
+  <img src="docs/images/en/personen-dunkel.png" alt="People and access, dark" width="23%">
+</p>
 
-- **Boards** mit eigenen Spalten und Kategorien, Karten mit Zuständigen, Termin, Priorität, Kosten, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt Karten, ein Farbbalken zeigt die Dringlichkeit.
-- **Schnell-Eingabe:** Eine Zeile wie `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` wird zur fertigen Karte mit Termin, Zuständigem, Kategorie, Wiederholung und Priorität.
-- **Agenda:** alle Karten mit Termin aus allen Boards, nach Tagen, Überfälliges zuerst. Filter nach Personen und Boards.
-- **Kalender:** Tag, Woche und Monat. Auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an.
-- **Wiederkehrende Aufgaben:** fester Rhythmus oder ab Erledigung; die erledigte Karte bleibt samt Verlauf erhalten, die nächste entsteht neu.
-- **Wächter:** Stups beobachtet Entitäten in Home Assistant und legt von selbst Karten an: „Die Waschmaschine ist fertig, also bekommt eine Person, die zu Hause ist, die Karte ‚ausräumen'." Mit Zähler (Saugroboter: nach 3 Reinigungen) und „wer zuerst nach Hause kommt". Einrichtung ohne YAML.
-- **Push über die Companion App:** zur Fälligkeit, vorab, nachhaken, Tageszusammenfassung. „Erledigt" direkt in der Nachricht.
-- **Stupsen:** einer anderen Person zu ihrer Karte einen Stups schicken („Denkst du dran?"). Mit Sperrzeit und Ruhezeit pro Person, damit niemand genervt wird.
-- **Mehrere Personen:** Zugriff steuerst du unter Einstellungen › Personen & Zugriff. Wer Administrator in Home Assistant ist, stellt ein; alle freigegebenen Personen dürfen Boards, Karten und Kategorien anlegen.
-- **Sensoren** für Home Assistant: überfällige und heute fällige Karten, gesamt und je Person, offene Stupse.
-- Alles bleibt bei dir: SQLite im Add-on-Speicher, Teil des normalen HA-Backups.
+## What can it do?
+
+- **Boards** with their own columns and categories; cards with assignees, due date, priority, cost, description, checklist, links, photos/PDFs and comments. Swiping moves cards, a colour bar shows urgency.
+- **Quick entry:** a line like `Take out trash tomorrow 7pm @Ben #Home every week !!` becomes a finished card with due date, assignee, category, repeat and priority.
+- **Agenda:** all cards with a due date from all boards, by day, overdue first. Filter by people and boards.
+- **Calendar:** day, week and month. Tapping a free slot creates a card with that due date.
+- **Recurring tasks:** a fixed rhythm or counted from completion; the completed card stays with its history, the next one is created.
+- **Watchers:** Stups observes entities in Home Assistant and creates cards by itself: "The washing machine is done, so whoever is at home gets the card 'empty it'." With a counter (robot vacuum: after 3 cleanings) and "whoever gets home first". Set up without YAML.
+- **Push through the Companion App:** when due, in advance, as a follow-up, and a daily summary. "Done" right in the message.
+- **Nudging:** send another person a nudge for their card ("Are you on it?"). With lock time and quiet time per person so nobody gets annoyed.
+- **Several people:** you control access under Settings › People & Access. Home Assistant administrators set things up; all approved people may create boards, cards and categories.
+- **English and German:** the app follows your device language; Settings › Language switches it for you on all your devices, push messages included.
+- **Sensors** for Home Assistant: overdue and due-today cards, in total and per person, open nudges.
+- Everything stays with you: SQLite in the add-on storage, part of the normal HA backup.
 
 ## Installation
 
-Am einfachsten über den Knopf oben („Zu Home Assistant hinzufügen"). Von Hand:
+The easiest way is the button above ("Add to Home Assistant"). By hand:
 
-1. In Home Assistant: **Einstellungen → Apps → App-Store → ⋮ → Repositories**
-2. `https://github.com/ArrestedOps/ha-stups` hinzufügen
-3. **Stups** installieren, Personen und Notify-Dienste in den Optionen eintragen, starten.
+1. In Home Assistant: **Settings → Apps → App Store → ⋮ → Repositories**
+2. Add `https://github.com/ArrestedOps/ha-stups`
+3. Install **Stups**, enter people and notify services in the options, start it.
 
-Bedienung und Optionen: [stups/DOCS.md](stups/DOCS.md). Änderungen: [stups/CHANGELOG.md](stups/CHANGELOG.md).
+Usage and options: [stups/DOCS.md](stups/DOCS.md). Changes: [stups/CHANGELOG.md](stups/CHANGELOG.md).
 
-### Beta testen
+### Trying the beta
 
-Neue Versionen erscheinen zuerst als **Stups (Beta)**, einer zweiten App mit eigenen Daten, und erst nach dem Test in der normalen App. Wer früh ausprobieren will, fügt in Home Assistant unter **Einstellungen › Apps › App-Store › ⋮ › Repositories** diese Adresse hinzu:
+New versions appear first as **Stups (Beta)**, a second app with its own data, and only after testing in the normal app. If you want to try things early, add this address in Home Assistant under **Settings › Apps › App Store › ⋮ › Repositories**:
 
 ```
 https://github.com/ArrestedOps/ha-stups#beta
 ```
 
-Dort erscheint **Stups (Beta)** (mit „BETA"-Symbol). Aus dieser Adresse erscheint auch ein zweites „Stups": das nicht installieren. In der Beta sind Push und Wächter zunächst aus, damit niemand Nachrichten doppelt bekommt; über **Einstellungen › Umzug** lassen sich echte Daten einmal hineinkopieren. Alles dazu: [stups-beta/DOCS.md](stups-beta/DOCS.md).
+**Stups (Beta)** appears there (with a "BETA" icon). From this address a second "Stups" also appears: do not install that one. In the beta, push and watchers are off at first so nobody gets messages twice; **Settings › Move** copies real data into it once. Everything about it: [stups-beta/DOCS.md](stups-beta/DOCS.md).
 
-### Ohne Home Assistant (Docker, Beta)
+### Without Home Assistant (Docker, beta)
 
-> **Beta.** Der eigene Container ist noch eine Beta: Er funktioniert und wird getestet, bekommt aber vorerst keine neuen Funktionen, bis die App in Home Assistant veröffentlicht ist. **Sicherheit:** Stelle ihn nie ohne HTTPS und einen Reverse-Proxy ins Internet und aktualisiere ihn regelmäßig (Einzelheiten in [docs/docker.md](docs/docker.md)).
+> **Beta.** The standalone container is still a beta: it works and is tested, but gets no new features of its own until the app is published in Home Assistant. **Security:** never put it on the internet without HTTPS and a reverse proxy, and update it regularly (details in [docs/docker.md](docs/docker.md)).
 
-Stups läuft auch als eigener Container, zum Beispiel auf einer Synology-NAS, mit eigenen Konten statt Home Assistant:
+Stups also runs as a standalone container, for example on a Synology NAS, with its own accounts instead of Home Assistant:
 
 ```yaml
 services:
@@ -77,39 +84,42 @@ services:
     ports: ["8099:8099"]
     environment:
       TZ: Europe/Berlin
-    volumes: ["./stups-daten:/data"]
+    volumes: ["./stups-data:/data"]
 ```
 
-Beim ersten Start zeigt das Protokoll (`docker logs stups`) einen Code für die Einrichtung des ersten Administrators. Hinter einer https-Adresse (`STUPS_PUBLIC_URL`) meldest du dich auch mit **Passkey** an (Fingerabdruck oder Gesicht statt Passwort). Boards, Agenda, Kalender, Wiederholungen und Stupsen funktionieren wie in der App. Wächter und Sensoren brauchen Home Assistant: Mit `HA_URL` und `HA_TOKEN` (Long-Lived-Token) verbindet sich auch der Container damit. Push-Nachrichten kommen dort über [ntfy](https://ntfy.sh) (`STUPS_NTFY_URL`), mit Knöpfen wie „Erledigt" direkt in der Nachricht. Alles Weitere (Synology, HTTPS, ntfy einrichten, Einstellungen, Umzug): [docs/docker.md](docs/docker.md).
+On first start the log (`docker logs stups`) shows a code for setting up the first administrator. Behind an https address (`STUPS_PUBLIC_URL`) you can also sign in with a **passkey** (fingerprint or face instead of a password). Boards, agenda, calendar, repeats and nudging work as in the app. Watchers and sensors need Home Assistant: with `HA_URL` and `HA_TOKEN` (long-lived token) the container connects to it too. Push messages arrive via [ntfy](https://ntfy.sh) (`STUPS_NTFY_URL`), with buttons such as "Done" right in the message. Everything else (Synology, HTTPS, setting up ntfy, settings, moving): [docs/docker.md](docs/docker.md).
 
-## Dokumentation
+## Documentation
 
 | | |
 |---|---|
-| [stups/DOCS.md](stups/DOCS.md) | Bedienung und Optionen (steht auch in Home Assistant unter „Dokumentation") |
-| [docs/docker.md](docs/docker.md) | Stups ohne Home Assistant: Docker, Synology, Anmeldung, Einstellungen |
-| [docs/entwicklung.md](docs/entwicklung.md) | Betrieb, Fehlersuche und Entwicklung |
-| [docs/testliste.md](docs/testliste.md) | Was am iPhone zu prüfen ist |
+| [stups/DOCS.md](stups/DOCS.md) | Usage and options (also shown in Home Assistant under "Documentation") |
+| [docs/docker.md](docs/docker.md) | Stups without Home Assistant: Docker, Synology, sign-in, settings |
+| [docs/entwicklung.md](docs/entwicklung.md) | Operation, troubleshooting and development (German) |
+| [docs/testliste.md](docs/testliste.md) | What to check on the iPhone (German) |
 
-## Entwicklung
+Every document with a German counterpart links to it at the top (`*.de.md`).
+
+## Development
 
 ```bash
 pnpm install
 pnpm lint && pnpm typecheck && pnpm test && pnpm build
-pnpm exec playwright install webkit   # einmalig
-pnpm e2e                              # Browser-Tests (WebKit, iPhone-Ansicht)
-node e2e/screenshots.mjs              # Screenshots für diese Seite (docs/images)
+pnpm exec playwright install webkit   # once
+pnpm e2e                              # browser tests (WebKit, iPhone view)
+node e2e/screenshots.mjs              # screenshots for this page (docs/images), German
+node e2e/screenshots.mjs --lang en    # the same in English (docs/images/en)
 ```
 
-Details und der Ablauf für neue Versionen stehen in [docs/entwicklung.md](docs/entwicklung.md).
+Details and the procedure for new versions are in [docs/entwicklung.md](docs/entwicklung.md) (German).
 
-## Lizenz
+## License
 
-Stups steht unter der [PolyForm Strict License 1.0.0](LICENSE). Der Quelltext ist einsehbar, aber **nicht frei**:
+Stups is under the [PolyForm Strict License 1.0.0](LICENSE). The source code is viewable, but **not free**:
 
-- **Erlaubt:** Stups für **nicht-kommerzielle Zwecke** nutzen (privat, Haushalt, Familie, WG, Hobby, auch gemeinnützige Organisationen) und den Code lesen. Dass Home Assistant oder Docker das Repository für die Installation und Updates herunterladen, gehört dazu.
-- **Nicht erlaubt:** **Weitergeben** (auch Hochladen in ein anderes Repository), **Verändern** und abgeleitete Werke, Unterlizenzieren. **Kommerzielle Nutzung** (zum Beispiel in einer Firma) braucht meine ausdrückliche Genehmigung.
-- **GitHub:** Die Nutzungsbedingungen von GitHub erlauben jedem, ein öffentliches Repository innerhalb von GitHub zu forken. Die Lizenz gibt dafür keine weiteren Rechte: Ein Fork darf nicht zum Weitergeben oder Verändern benutzt werden.
-- **Frühere Versionen:** Stups 1.9.0 und alle früheren Versionen standen unter der MIT-Lizenz; für diese Versionen, so wie sie damals veröffentlicht wurden, gilt sie weiter.
+- **Allowed:** using Stups for **non-commercial purposes** (private, household, family, flat share, hobby, also non-profit organisations) and reading the code. That Home Assistant or Docker download the repository for installation and updates is part of this.
+- **Not allowed:** **distributing** it (including uploading it to another repository), **modifying** it and making derivative works, sublicensing. **Commercial use** (for example in a company) needs my explicit permission.
+- **GitHub:** GitHub's terms of service let anyone fork a public repository within GitHub. The license grants no further rights for that: a fork must not be used to distribute or modify.
+- **Earlier versions:** Stups 1.9.0 and all earlier versions were under the MIT license; for those versions, as they were published at the time, it continues to apply.
 
-Der Lizenztext ist der unveränderte englische Standardtext von [PolyForm](https://polyformproject.org/licenses/strict/1.0.0).
+The license text is the unmodified English standard text from [PolyForm](https://polyformproject.org/licenses/strict/1.0.0).

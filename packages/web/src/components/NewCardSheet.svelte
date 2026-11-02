@@ -270,7 +270,7 @@
       ></textarea>
     </Group>
 
-    <Group title="Checkliste {items.length ? `· ${items.length}` : ''}">
+    <Group title={`${t('Checkliste')} ${items.length ? `· ${items.length}` : ''}`}>
       {#each items as item, i (i)}
         <div class="flex min-h-[46px] items-center gap-3 px-4">
           <Icon name="check" size={16} />

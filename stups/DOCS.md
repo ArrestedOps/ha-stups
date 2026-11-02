@@ -1,222 +1,229 @@
 # Stups
 
-Kanban-Board für den Haushalt, direkt in Home Assistant (Ingress, kein eigener Login). Mehrere Boards, wiederkehrende Aufgaben, Push-Erinnerungen mit „Erledigt"-Button und Live-Sync zwischen allen Geräten.
+> 🇩🇪 [Deutsche Fassung](DOCS.de.md). This English version is the authoritative one.
 
-## Einrichtung
+A Kanban board for the household, right inside Home Assistant (Ingress, no separate login). Several boards, recurring tasks, push reminders with a "Done" button and live sync between all devices.
 
-1. App starten und in der Seitenleiste **Stups** öffnen.
-2. **Board-Wechsler › Einstellungen › Personen & Zugriff** öffnen:
-   - **Personen hinzufügen:** Die Personen aus Home Assistant (Einstellungen › Personen) stehen zur Auswahl. Wer hinzugefügt ist, kann zugewiesen werden und bekommt Push-Nachrichten.
-   - **Push-Geräte wählen:** Pro Person die Geräte ankreuzen, auf denen die Nachrichten ankommen sollen. Es erscheinen die Geräte, auf denen die Home-Assistant-Companion-App angemeldet ist. Jede Person wählt ihre Geräte selbst, ein Administrator kann es auch für andere tun.
-   - **Zugriff festlegen:** *Alle in Home Assistant* (jeder Home-Assistant-Benutzer darf die App öffnen) oder *Nur diese Personen* (nur die Liste und Administratoren; wer sonst öffnet, sieht „Kein Zugriff" und steht für Administratoren unter „Wartet auf Freigabe").
-3. Unter **Einstellungen › Zurück zum Dashboard** das Dashboard für den Zurück-Button wählen.
+## Setup
 
-### Rollen
+1. Start the app and open **Stups** in the sidebar.
+2. Open **Board switcher › Settings › People & Access**:
+   - **Add people:** the people from Home Assistant (Settings › People) are offered. Whoever is added can be assigned cards and receives push messages.
+   - **Choose push devices:** tick, per person, the devices that should receive the messages. The devices where the Home Assistant Companion App is signed in appear. Everyone chooses their own devices; an administrator can also do it for others.
+   - **Set access:** *Everyone in Home Assistant* (every Home Assistant user may open the app) or *Only these people* (only the list and administrators; anyone else who opens it sees "No access" and appears for administrators under "Waiting for approval").
+3. Under **Settings › Back to the dashboard** choose the dashboard for the back button.
+4. **Settings › Language:** Automatic (follows the device), German or English. The choice applies to you on all your devices, push messages included.
 
-- **Administrator** ist, wer es in Home Assistant ist. Administratoren ändern Personen, Zugriff und Dashboard und kommen immer hinein.
-- **Mitglieder** benutzen die App und wählen ihre eigenen Push-Geräte.
-- Wer aus der Liste entfernt wird, verliert Zuweisungen und Nachrichten, die Karten bleiben unverändert. Kommt die Person zurück, gilt alles wieder.
+### Roles
 
-### Optionen des Add-ons (Konfiguration in Home Assistant)
+- **Administrator** is whoever is one in Home Assistant. Administrators change people, access and the dashboard and always get in.
+- **Members** use the app and choose their own push devices.
+- Whoever is removed from the list loses assignments and messages; the cards stay unchanged. If the person comes back, everything applies again.
 
-Alles lässt sich auch in Home Assistant einstellen, unter **Einstellungen › Apps › Stups › Konfiguration**:
+### Add-on options (configuration in Home Assistant)
+
+You can also set everything in Home Assistant, under **Settings › Apps › Stups › Configuration**:
 
 ```yaml
-users:                       # Wer Stups nutzt und wohin die Push-Nachrichten gehen
-  - name: Anna               # Name wie in Home Assistant (Einstellungen › Personen)
-    notify:                  # Notify-Dienste der Companion App, ohne "notify."
+users:                       # Who uses Stups and where the push messages go
+  - name: Anna               # Name as in Home Assistant (Settings › People)
+    notify:                  # Notify services of the Companion App, without "notify."
       - mobile_app_annas_iphone
   - name: Ben
     notify:
       - mobile_app_bens_iphone
       - mobile_app_bens_ipad
-access_mode: selected        # selected = nur diese Personen und Administratoren, everyone = alle Home-Assistant-Benutzer
-dashboard_path: /            # Vorgabe für den Zurück-Button, später in der App änderbar
-daily_summary_time: "08:00"  # Tageszusammenfassung
-overdue_nag_time: "18:00"    # Nachhaken bei Überfälligkeit
+access_mode: selected        # selected = only these people and administrators, everyone = all Home Assistant users
+dashboard_path: /            # Default for the back button, can be changed later in the app
+daily_summary_time: "08:00"  # Daily summary
+overdue_nag_time: "18:00"    # Follow-up for overdue cards
 ```
 
-Die Namen der Geräte findest du in Home Assistant unter Entwicklerwerkzeuge › Aktionen (Dienste `notify.mobile_app_…`); in der App zeigt Einstellungen › Personen & Zugriff, welche Geräte Home Assistant kennt.
+You find the device names in Home Assistant under Developer tools › Actions (services `notify.mobile_app_…`); in the app, Settings › People & Access shows which devices Home Assistant knows.
 
-**Zwei Wege, ein Ergebnis:** Ist unter `users` mindestens eine Person eingetragen, **gilt diese Liste** (bei jedem Start der App): Die genannten Personen werden angelegt und bekommen ihre Geräte, wer nicht in der Liste steht, ist keine Person mehr (seine Karten behalten die Zuweisung), der Zugriff folgt `access_mode`. In der App sind Personen, Geräte und Zugriff dann gesperrt und nur zu sehen; Anzeigename und Ruhezeit lassen sich weiter ändern. Nach einer Änderung der Konfiguration die App neu starten. Bleibt `users` leer, pflegst du alles in der App unter Einstellungen › Personen & Zugriff, und ohne Auswahl gilt „Alle in Home Assistant".
+**Two ways, one result:** if at least one person is entered under `users`, **this list applies** (at every start of the app): the people named are created and get their devices, whoever is not on the list is no longer a person (their cards keep the assignment), and access follows `access_mode`. In the app, people, devices and access are then locked and can only be viewed; display name and quiet time can still be changed. Restart the app after changing the configuration. If `users` stays empty, you manage everything in the app under Settings › People & Access, and without a choice "Everyone in Home Assistant" applies.
 
-## Benutzung
+## Usage
 
-- **Boards** wechseln über den Titel oben. Jedes Board hat eigene Spalten und Kategorien. Kategorien legst du am einfachsten direkt an der Karte an (Feld „Kategorie" › „Neue Kategorie"); Umbenennen, Umfärben und Löschen geht unter Board-Wechsler › Board-Einstellungen.
-- **Karten** haben Titel, Spalte, Zuständige, Fälligkeit (immer mit Uhrzeit), Wiederholung, Erinnerung, Priorität, Kategorien, Kosten, Beschreibung, Checkliste, Links, Anhänge und Kommentare.
-- **Erledigen**: Kreis links an der Karte, „Erledigt" oben im Karten-Fenster oder aus der Push-Nachricht. Einen Moment lang gibt es „Rückgängig".
-- **Wischen**: Finger nach links schiebt die Karte in den nächsten Status, nach rechts in den vorigen. Hinter der Karte steht, wohin sie springt. „Geplant" wird übersprungen.
-- **Verschieben und mehr**: über „⋯" an der Karte (Verschieben nach …, Erledigt, Duplizieren, Details, Löschen). Auf großen Bildschirmen lassen sich Karten mit der Maus ziehen.
-- **Geplant**: Karten mit Termin nach heute stehen in „Geplant" und rücken am Tag der Fälligkeit nach „Offen". So bleibt „Offen" übersichtlich. Pro Board lässt sich einstellen, welche Spalte „Geplant" und welche „Erledigt" ist.
+- **Boards** are switched by the title at the top. Each board has its own columns and categories. The easiest way to create categories is directly on the card (field "Category" › "New category"); renaming, recolouring and deleting works under Board switcher › Board settings. A new board gets the columns "Open", "Planned", "In progress" and "Done" in your language.
+- **Cards** have a title, column, assignees, due date (always with a time), repeat, reminder, priority, categories, cost, description, checklist, links, attachments and comments.
+- **Completing:** the circle on the left of the card, "Mark as done" at the top of the card window, or from the push message. For a moment there is "Undo".
+- **Swiping:** swiping a card to the left moves it to the next status, to the right to the previous one. Behind the card it says where it will jump. "Planned" is skipped.
+- **Moving and more:** via "⋯" on the card (Move to …, Mark as done, Duplicate, Details, Delete). On large screens cards can be dragged with the mouse.
+- **Planned:** cards with a due date after today sit in "Planned" and move to "Open" on the due date. This keeps "Open" tidy. Per board you can choose which column is "Planned" and which is "Done".
+- **Settings** are behind the **gear at the top right** of every tab.
 
-### Karten schnell anlegen
+### Creating cards quickly
 
-Im Fenster **Neue Karte** genügt eine Zeile. Stups liest Datum, Uhrzeit, Wiederholung, Personen, Kategorie und Priorität heraus, der Rest ist der Titel:
+In the **New card** window a single line is enough. Stups reads date, time, repeat, people, category and priority out of it; the rest is the title:
 
 ```
-Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!
+Take out trash tomorrow 7pm @Ben #Home every week !!
 ```
 
-ergibt die Karte „Müll raus", fällig morgen 19:00, zuständig Ben, Kategorie Haushalt, jede Woche, Priorität hoch. Erkannte Teile sind im Text farbig hinterlegt, darunter zeigen **Chips**, was verstanden wurde. **Ein Tipp auf einen Chip nimmt ihn zurück** (der Text bleibt dann im Titel, zum Beispiel wenn „Montag" zum Titel gehört). Was du unter dem Titel von Hand änderst, überschreibt die Zeile nicht mehr.
+gives the card "Take out trash", due tomorrow 19:00, assigned to Ben, category Home, every week, high priority. Recognised parts are highlighted in colour in the text, and **chips** below show what was understood. **Tapping a chip undoes it** (the text then stays in the title, for example when "Monday" is part of the title). What you change by hand below the title no longer overwrites the line.
 
-| Was | Beispiele |
+| What | Examples (English) |
 |---|---|
-| Datum | `heute`, `morgen`, `übermorgen`, `Freitag`, `nächsten Montag`, `in 3 Tagen`, `in 2 Wochen`, `in einem Monat`, `1.12.`, `1.12.2027`, `1. Dezember`, `am 24. März` |
-| Uhrzeit | `19 Uhr`, `19:30`, `um 19`. Steht nur ein Datum da, gilt die **Standard-Uhrzeit** (Einstellungen › Vorgaben, Vorgabe 09:00) |
-| Wiederholung | `jeden Tag`, `täglich`, `jede Woche`, `wöchentlich`, `alle 2 Tage`, `alle 3 Wochen`, `jeden Montag`, `monatlich`, `jährlich` |
-| Person | `@Ben` (ein eindeutiger Anfang genügt: `@be`) |
-| Kategorie | `#Haushalt` (aus dem aktuellen Board; eine neue wird nach Rückfrage angelegt) |
-| Priorität | `!` mittel, `!!` oder `wichtig` hoch (`!` nur als eigenes Wort: „Achtung!" bleibt Titel) |
+| Date | `today`, `tomorrow`, `Friday`, `next Monday`, `on Friday`, `in 3 days`, `in 2 weeks`, `in a month`, `1 December`, `1st Dec`, `Dec 1`, `December 1st 2027`, `1.12.` |
+| Time | `7pm`, `7:30pm`, `19:30`, `at 7`. If only a date is given, the **default time** applies (Settings › Defaults, default 09:00) |
+| Repeat | `every day`, `daily`, `every week`, `weekly`, `every 2 days`, `every 3 weeks`, `every Monday`, `monthly`, `yearly` |
+| Person | `@Ben` (a unique beginning is enough: `@be`) |
+| Category | `#Home` (from the current board; a new one is created after confirmation) |
+| Priority | `!` medium, `!!` or `important` / `urgent` high (`!` only as a word of its own: "Warning!" stays a title) |
 
-Gut zu wissen: Ein **Wochentag** allein meint den nächsten nach heute (ist heute Montag, ist „Montag" der Montag in einer Woche). Ein **Datum ohne Jahr** meint die nächste Wiederkehr. Schreibst du nur „heute" und die Standard-Uhrzeit ist schon vorbei, bekommt der Termin die nächste volle Stunde. Passt eine `@Person` nicht (unbekannt oder mehrdeutig), wartet das Anlegen, bis du den Namen änderst oder den Chip antippst, weil sonst keine Erinnerung käme.
+In German the words are `morgen`, `19 Uhr`, `jede Woche`, `wichtig` and so on; the recognised words follow the language of the app.
 
-### Aussehen
+Good to know: a **weekday** on its own means the next one after today (if today is Monday, "Monday" is the Monday in a week). A **date without a year** means the next occurrence. If you only write "today" and the default time has already passed, the due date gets the next full hour. If an `@person` does not fit (unknown or ambiguous), creating waits until you change the name or tap the chip, because otherwise no reminder would come.
 
-Dunkel und hell folgen dem iPhone (oder dem Gerät). Ein farbiger **Balken links** an jeder Karte zeigt die Dringlichkeit: rot überfällig, orange heute, gelb in den nächsten zwei Tagen, grau später. Die Karte zeigt den Titel (höchstens zwei Zeilen) und **eine Zeile** mit dem Wichtigsten: Termin (rot, wenn überfällig), Wiederholung, Priorität als Flagge (orange mittel, rot hoch), Checkliste („1/2"), Kommentare, Links, Anhänge und Kosten. **Kategorien** stehen als kleine farbige Punkte rechts. Wann die Karte entstanden ist („Angelegt …"), steht im Karten-Fenster mit Uhrzeit und Person.
+### Appearance
+
+Dark and light follow the iPhone (or the device). A coloured **bar on the left** of every card shows urgency: red overdue, orange today, yellow in the next two days, grey later. The card shows the title (at most two lines) and **one line** with the most important things: due date (red when overdue), repeat, priority as a flag (orange medium, red high), checklist ("1/2"), comments, links, attachments and cost. **Categories** appear as small coloured dots on the right. When the card was created ("Created …") is shown in the card window with time and person.
 
 ### Agenda
 
-Die Leiste unten wechselt zwischen **Boards** und **Agenda**. Die Agenda zeigt alle Karten mit Termin aus allen Boards, nach Tagen sortiert: zuerst **Überfällig**, dann Heute, Morgen und jeder weitere Tag, an dem etwas ansteht. Mit dem Kreis links erledigst du eine Karte, ein Tipp öffnet sie.
+The bar at the bottom switches between **Boards** and **Agenda**. The agenda shows all cards with a due date from all boards, sorted by day: first **Overdue**, then Today, Tomorrow and every further day with something due. The circle on the left completes a card, a tap opens it.
 
-Oben filterst du, was du sehen willst:
+At the top you filter what you want to see:
 
-- **Personen:** „Alle", du selbst („Ich"), jede weitere Person und „Niemand" (Karten ohne Zuständige). Du kannst mehrere wählen; eine Karte erscheint, sobald eine der gewählten Personen zuständig ist. Die Zahl am Chip sagt, wie viele Karten dazugehören.
-- **Boards:** ein Chip je Board (mit Boardfarbe). Auch hier mehrere möglich.
-- **Erledigte** blendet die in den letzten sieben Tagen erledigten Karten ein. „Zurücksetzen" löscht alle Filter. Der Filter wird auf dem Gerät gemerkt.
+- **People:** "All", yourself ("Me"), every other person and "Nobody" (cards without assignees). You can choose several; a card appears as soon as one of the chosen people is assigned. The number on the chip says how many cards belong to it.
+- **Boards:** one chip per board (with board colour). Several are possible here too.
+- **Completed** shows the cards completed in the last seven days. "Reset" clears all filters. The filter is remembered on the device.
 
-Die Agenda lädt die nächsten 60 Tage. Liegt in dieser Zeit nichts an, schaut sie gleich ein Jahr voraus; weiter entfernte Karten holt **„Weitere 60 Tage laden"** (auch bei einer leeren Liste).
+The agenda loads the next 60 days. If nothing is due in that time, it looks a year ahead right away; cards further away are fetched by **"Load 60 more days"** (also with an empty list).
 
-### Kalender
+### Calendar
 
-Der dritte Reiter unten zeigt die Karten mit Termin im Kalender, wahlweise als **Tag**, **Woche** oder **Monat**. Mit den Pfeilen blätterst du, „Heute" springt zurück.
+The third tab at the bottom shows the cards with a due date in a calendar, as **Day**, **Week** or **Month**. The arrows page through, "Today" jumps back.
 
-- **Tag und Woche** zeigen ein Zeitraster. Eine Karte steht zur Uhrzeit ihres Termins in der Farbe ihres Boards; Karten zur selben Zeit stehen nebeneinander. Ein Tipp öffnet die Karte, ein Tipp auf die Tageszahl in der Wochenansicht öffnet den Tag.
-- **Monat:** Punkte (am großen Bildschirm die Titel) zeigen, wo etwas ansteht. Ein Tipp auf einen Tag öffnet die Tagesansicht.
-- **Karte anlegen:** Auf einen freien Zeitpunkt im Raster tippen. Es öffnet sich ein kurzes Formular mit dem Termin: Titel, Board und Zuständige wählen, „Anlegen". Ist im Filter genau ein Board oder eine Person gewählt, sind sie vorbelegt. „Alle Felder …" öffnet das volle Formular.
-- **Filter:** Der Knopf „Filter" oben rechts zeigt dieselben Personen- und Board-Filter wie die Agenda.
+- **Day and week** show a time grid. A card sits at the time of its due date in the colour of its board; cards at the same time sit side by side. A tap opens the card, a tap on the day number in the week view opens the day.
+- **Month:** dots (on a large screen the titles) show where something is due. A tap on a day opens the day view.
+- **Creating a card:** tap a free time in the grid. A short form opens with the due date: choose title, board and assignees, "Create". If exactly one board or person is chosen in the filter, they are preset. "All fields …" opens the full form.
+- **Filter:** the "Filter" button at the top right shows the same people and board filters as the agenda.
 
-### Wiederkehrende Aufgaben
+### Recurring tasks
 
-- **Fester Rhythmus** (z. B. jeden Samstag): Der nächste Termin richtet sich nach dem Plan, nicht nach dem Erledigen. Wer am Montag erledigt, was am Samstag fällig war, bekommt den nächsten Samstag.
-- **Nach Erledigung** (z. B. Filter alle 3 Monate): Der nächste Termin ist das Erledigungsdatum plus Intervall.
-- **Beim Erledigen** (in der App, per Wischen, durch Ziehen nach „Erledigt" oder aus der Push-Nachricht) bleibt die Karte **in „Erledigt"** und wiederholt sich nicht mehr. Dort steht, wann sie erledigt wurde, und sie behält alles: Kommentare, Fotos, Checkliste und Verlauf. Gleichzeitig entsteht eine **neue Karte** mit dem nächsten Termin, oben in „Offen" oder, bei einem Termin nach heute, in „Geplant". Im Verlauf der neuen Karte steht „Aus Wiederholung angelegt".
-- **Was die neue Karte übernimmt:** Titel, Zuständige, Kategorien, Priorität, Wiederholung und Erinnerungen immer. Beschreibung, Checkliste (alle Einträge wieder offen), Links, Kosten, Fotos und PDFs sowie Kommentare lassen sich pro Karte im Feld **Wiederholen** unter „Für die nächste Karte übernehmen" ein- oder ausschalten. Ohne eigene Wahl werden Beschreibung, Checkliste, Links und Kosten mitgenommen, Fotos und Kommentare nicht. Übernommene Fotos teilen sich die Datei mit der erledigten Karte.
-- **„Rückgängig"** (kurz nach dem Erledigen) macht beides wieder gut: Die Karte ist wieder offen, die neue verschwindet. Das geht nicht mehr, sobald die neue Karte selbst erledigt wurde.
-- Ein Hinweis zur Wiederholung: Nach dem Erledigen liegt der nächste Termin auf der **neuen** Karte. Wer den Termin ändern will, tut das dort, nicht an der erledigten Karte.
+- **Fixed rhythm** (e.g. every Saturday): the next due date follows the plan, not the completion. Whoever completes on Monday what was due on Saturday gets the next Saturday.
+- **After completion** (e.g. filter every 3 months): the next due date is the completion date plus the interval.
+- **On completion** (in the app, by swiping, by dragging to "Done" or from the push message) the card stays **in "Done"** and no longer repeats. It shows when it was completed and keeps everything: comments, photos, checklist and history. At the same time a **new card** with the next due date is created, at the top of "Open" or, for a due date after today, in "Planned". The history of the new card says "Created from a repeat".
+- **What the new card carries over:** title, assignees, categories, priority, repeat and reminders always. Description, checklist (all items open again), links, cost, photos and PDFs, and comments can be switched on or off per card in the **Repeat** field under "Carry over to the next card". Without your own choice, description, checklist, links and cost are carried over, photos and comments are not. Photos carried over share the file with the completed card.
+- **"Undo"** (shortly after completing) reverses both: the card is open again, the new one disappears. This is no longer possible once the new card itself has been completed.
+- A note on repeats: after completing, the next due date is on the **new** card. If you want to change the due date, do it there, not on the completed card.
 
-### Benachrichtigungen
+### Notifications
 
-Empfänger sind immer die **zugewiesenen** Personen. Karten ohne Zuweisung oder ohne Fälligkeit melden sich nicht. Beim Anlegen einer neuen Karte ist deshalb die anlegende Person vorausgewählt, und wer bei einer Karte ohne Zuständige einen Termin setzt, bekommt einen Hinweis mit „Mir zuweisen". Ob für eine Karte eine Nachricht kommt, zeigt Einstellungen › Benachrichtigungen › „Stand anzeigen".
+Recipients are always the **assigned** people. Cards without assignment or without a due date do not notify. When creating a new card, the creating person is therefore preselected, and whoever sets a due date on a card without assignees gets a hint with "Assign to me". Whether a message comes for a card is shown by Settings › Notifications › "Show status".
 
-- zur Fälligkeit, optional vorab (15 Min. bis 2 Tage vorher) und täglich nachhaken, solange überfällig
-- jeden Morgen eine Zusammenfassung mit den eigenen Aufgaben
-- Auf dem iPhone erscheint der Button **„Erledigt"**, wenn man die Nachricht aufklappt (nach links wischen und „Ansicht", herunterziehen oder lange drücken)
-- Nach einem Neustart werden verpasste Erinnerungen bis 12 Stunden zurück nachgeholt, ohne Doppelungen
+- when due, optionally in advance (15 minutes to 2 days before) and a daily follow-up while overdue
+- a summary with your own tasks every morning
+- on the iPhone the **"Done"** button appears when you expand the message (swipe left and "View", pull down, or long-press)
+- after a restart, missed reminders up to 12 hours back are caught up, without duplicates
+- Messages arrive **in the language of the person**: the language their device last reported (or their choice in Settings). Until a device has reported one, push stays in German.
 
-### Stupsen
+### Nudging
 
-Mit **Stupsen** gibst du einer anderen Person zu einer Karte einen freundlichen Stups („Denkst du dran?"). Der Knopf steht im Karten-Fenster und im Menü „⋯" jeder Karte. Das gilt für alle Personen, die unter Einstellungen › Personen & Zugriff stehen.
+With **Nudge** you give another person a friendly nudge for a card ("Are you on it?"). The button is in the card window and in the "⋯" menu of every card. It applies to all people listed under Settings › People & Access.
 
-1. **An wen:** Zuständige der Karte (außer dir) sind vorausgewählt. Gibt es keine, wählst du selbst. Wer kein Push-Gerät hat, steht ausgegraut mit Hinweis.
-2. **Nachricht:** eine der vier Vorlagen oder ein eigener Text mit bis zu 120 Zeichen (er ersetzt die Vorlage).
-3. **Stups senden.** Die Karte hüpft kurz, ein Hinweis bestätigt es.
+1. **To whom:** the card's assignees (except you) are preselected. If there are none, you choose. Whoever has no push device appears greyed out with a hint.
+2. **Message:** one of the four templates or your own text of up to 120 characters (it replaces the template).
+3. **Send nudge.** The card hops briefly, a hint confirms it.
 
-Die Person bekommt eine Push-Nachricht mit drei Knöpfen (auf dem iPhone die Nachricht aufklappen):
+The person gets a push message with three buttons (on the iPhone expand the message):
 
-- **Erledigt** erledigt die Karte wie der bekannte „Erledigt"-Knopf, bei einer Wiederholung entsteht die neue Karte.
-- **Mach ich** schickt dem Absender „macht's 👍".
-- **Später** stellt den Stups in einer Stunde noch einmal zu, höchstens dreimal. Danach fehlt der Knopf. Der Absender erfährt davon nichts, im Verlauf der Karte steht es.
+- **Done** completes the card like the familiar "Done" button; for a repeat the new card is created.
+- **On it** sends the sender "… is on it 👍".
+- **Later** delivers the nudge again in an hour, at most three times. After that the button is gone. The sender is not told, the card's history shows it.
 
-Erledigt jemand die Karte (egal wo), bekommt jeder Absender eines offenen Stupses „… hat erledigt ✓", außer er hat sie selbst erledigt. Rückmeldungen kommen leise.
+If someone completes the card (wherever), every sender of an open nudge gets "… has done it ✓", unless they completed it themselves. Feedback arrives quietly. A nudge with a template arrives **in the recipient's language**; your own text stays as written.
 
-**Damit es nie nervt:**
+**So that it never annoys:**
 
-- Pro Karte, Absender und Empfänger geht höchstens **ein Stups alle 30 Minuten**. Das Sheet zeigt „wieder ab 14:32".
-- **Ruhezeit** (Vorgabe 22:00 bis 07:00): Stupse an eine Person in ihrer Ruhezeit werden zum Ende zugestellt. Der Absender sieht „wird um 07:00 zugestellt". Jede Person stellt ihre Ruhezeit selbst ein (Einstellungen › Personen & Zugriff, auf die Person tippen) oder schaltet sie aus. Die Ruhezeit gilt nur für Stupse, nicht für Erinnerungen zur Fälligkeit.
-- Wird die Karte erledigt oder gelöscht, bevor ein wartender Stups zugestellt ist, entfällt er.
-- Man kann sich nicht selbst stupsen. Dafür gibt es Fälligkeit und Vorab-Erinnerung.
+- Per card, sender and recipient at most **one nudge every 30 minutes**. The sheet shows "again from 14:32".
+- **Quiet time** (default 22:00 to 07:00): nudges to a person during their quiet time are delivered at the end. The sender sees "delivered at 07:00". Everyone sets their own quiet time (Settings › People & Access, tap the person) or switches it off. The quiet time only applies to nudges, not to reminders when due.
+- If the card is completed or deleted before a waiting nudge is delivered, it lapses.
+- You cannot nudge yourself. That is what the due date and advance reminder are for.
 
-An der Karte zeigt ein orangefarbenes Abzeichen „Conny stupst dich", wenn dich jemand gestupst hat, und ein dezenter Hinweis „Du hast Conny gestupst" bei deinen eigenen. Der Filter **Gestupst** über der Liste zeigt die Karten mit einem offenen Stups an dich. „Stand anzeigen" in den Einstellungen listet die Stupse mit ihrem Stand.
+On the card an orange badge "Conny nudges you" shows when someone nudged you, and a subtle hint "You nudged Conny" for your own. The **Nudged** filter above the list shows the cards with an open nudge to you. "Show status" in the settings lists the nudges with their state.
 
-### Wächter: Karten automatisch aus Home Assistant
+### Watchers: cards created automatically from Home Assistant
 
-Ein Wächter beobachtet eine Entität in Home Assistant und legt **von selbst eine Karte an und weist sie zu**, sobald etwas passiert. Das Standardbeispiel: Die Waschmaschine ist fertig, und eine Person, die gerade zu Hause ist, bekommt die Karte „Waschmaschine ausräumen" (fällig in 30 Minuten) samt Push-Nachricht. Wächter einrichten und ändern dürfen nur **Administratoren** von Home Assistant, alle Personen sehen sie.
+A watcher observes an entity in Home Assistant and **creates a card and assigns it by itself** as soon as something happens. The standard example: the washing machine is done, and a person who is at home gets the card "Empty the washing machine" (due in 30 minutes) along with a push message. Only Home Assistant **administrators** may set up and change watchers; everyone sees them.
 
-![Der Reiter Wächter](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-liste-dunkel.png)
+![The Watchers tab](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/waechter-liste-dunkel.png)
 
-**Der Reiter „Wächter":** Er steht als vierter Reiter in der Leiste unten. Er zeigt jeden Wächter mit seiner Bedingung, dem aktuellen Zustand der Entität, dem Zählerstand (bei „erst beim N-ten Mal"), der offenen Karte (ein Tipp öffnet sie) und was zuletzt ausgelöst hat. Darunter steht die **letzte Aktivität** über alle Wächter. **Alle** sehen den Reiter. **Administratoren** legen dort Wächter an, ändern und pausieren sie; alle anderen sehen nur, was passiert (gibt es noch keinen Wächter, steht dort ein Hinweis). Ohne Verbindung zu Home Assistant erklärt der Reiter, warum es nichts zu sehen gibt.
+**The "Watchers" tab:** it is the fourth tab in the bar at the bottom. It shows every watcher with its condition, the current state of the entity, the counter (for "only the Nth time"), the open card (a tap opens it) and what triggered last. Below it is the **latest activity** across all watchers. **Everyone** sees the tab. **Administrators** create, change and pause watchers there; everyone else only sees what happens (if there is no watcher yet, a hint appears). Without a connection to Home Assistant the tab explains why there is nothing to see.
 
-**Einrichten (ohne YAML):** Reiter „Wächter" › „+" (ohne Wächter stehen die Vorlagen gleich da). Eine **Vorlage** füllt das Formular vor (Waschmaschine, Spülmaschine, Trockner, Filter, Batterie, Saugroboter), alles bleibt änderbar. Oben steht immer ein Satz, der zusammenfasst, was der Wächter tut.
+**Setting up (without YAML):** Watchers tab › "+" (without watchers the templates are right there). A **template** pre-fills the form (washing machine, dishwasher, dryer, filter, battery, robot vacuum), everything stays editable. At the top there is always a sentence summarising what the watcher does.
 
-![Wächter bearbeiten](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-bearbeiten-dunkel.png)
+![Edit a watcher](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/waechter-bearbeiten-dunkel.png)
 
-1. **Wenn:** Entität suchen (mit aktuellem Zustand), dann die Bedingung:
-   - *Wert fällt unter* oder *steigt über* eine Zahl, zum Beispiel die Leistung der Waschmaschine unter 5 W.
-   - *Zustand wechselt zu* einem Wert, zum Beispiel `docked` beim Saugroboter.
-   - **Für mindestens … Minuten:** Die Bedingung muss so lange ununterbrochen gelten (Vorgabe bei Zahlenwerten 3 Minuten, damit kurze Einbrüche nichts auslösen).
-   - **Erst beim N-ten Mal:** Stups zählt selbst und legt die Karte erst beim N-ten Auslösen an (Saugroboter: nach 3 Reinigungen). Der Stand steht im Wächter („2 von 3"). Wird die Karte erledigt, beginnt die Zählung von vorn; „Zurücksetzen" macht das von Hand.
-2. **Dann Karte:** Board, Spalte, Titel, Beschreibung, Kategorien, Priorität und Fälligkeit (keine, „in … Minuten" oder „heute/morgen um …").
-3. **An wen:**
-   - *Abwechselnd unter den Anwesenden*: reihum, wer in Home Assistant gerade `home` ist. Ist niemand zu Hause, entscheidet der Rückfall (nächste Person, alle, feste Person, niemand).
-   - *Wer zuerst nach Hause kommt*: Ist schon jemand da, geht die Karte wie bei „abwechselnd unter den Anwesenden" sofort an eine anwesende Person. Sonst erscheint sie **ohne Zuständige und ohne Push** mit dem Hinweis „Wartet auf die erste Person, die heimkommt". Wer als Erstes heimkommt, bekommt sie und die Nachricht, die Fälligkeit zählt ab dann. Kommen mehrere innerhalb von 2 Minuten, bekommen alle die Karte. Kommt 24 Stunden lang niemand, bleibt die Karte unzugewiesen (einstellbar: an alle oder an eine feste Person).
-   - *Alle Anwesenden*, *Abwechselnd (egal, wer da ist)*, *Feste Person(en)* oder *Niemand*.
-   - Welche Person zu welcher Home-Assistant-Person gehört, erkennt Stups am Benutzer der Person, sonst am Namen. Ist die Zuordnung unklar, gilt die Person als nicht anwesend.
-4. **Erledigt sich selbst, wenn …** (optional): zweite Entität und Bedingung, zum Beispiel die Tür der Waschmaschine geht auf. Die offene Karte des Wächters wird dann erledigt.
+1. **When:** search for the entity (with its current state), then the condition:
+   - *Value drops below* or *rises above* a number, for example the washing machine's power below 5 W.
+   - *State changes to* a value, for example `docked` for the robot vacuum.
+   - **For at least … minutes:** the condition must hold uninterrupted for that long (default 3 minutes for numeric values so short dips trigger nothing).
+   - **Only the Nth time:** Stups counts by itself and only creates the card on the Nth trigger (robot vacuum: after 3 cleanings). The state is shown on the watcher ("2 of 3"). Once the card is completed, counting starts over; "Reset" does that by hand.
+2. **Then card:** board, column, title, description, categories, priority and due date (none, "in … minutes" or "today/tomorrow at …").
+3. **To whom:**
+   - *In turn among those present*: in rotation, whoever is currently `home` in Home Assistant. If nobody is home, the fallback decides (next person, everyone, fixed person, nobody).
+   - *Whoever gets home first*: if someone is already there, the card goes at once to a present person as with "in turn among those present". Otherwise it appears **without assignees and without push** with the note "Waiting for the first person to get home". Whoever gets home first receives it and the message, and the due date counts from then. If several come within 2 minutes, all of them get the card. If nobody comes for 24 hours, the card stays unassigned (configurable: to everyone or to a fixed person).
+   - *Everyone present*, *In turn (whoever is there)*, *Fixed person(s)* or *Nobody*.
+   - Which person belongs to which Home Assistant person is recognised by Stups from the person's user, otherwise by name. If the match is unclear, the person counts as not present.
+4. **Completes itself when …** (optional): a second entity and condition, for example the washing machine door opens. The watcher's open card is then completed.
 
-**Regeln:**
-- Eine **Sperrzeit** (Vorgabe 10 Minuten) fängt flatternde Sensoren ab. Sie gilt auch für den Zähler.
-- Solange die Karte des Wächters **offen** ist, entsteht keine zweite; im Verlauf der Karte steht „Erneut ausgelöst". Das lässt sich abschalten.
-- **Nach … Minuten stupsen** (optional): Ist die Karte dann noch offen, bekommen die Zuständigen einmal eine Erinnerung.
-- Beim **Anlegen** löst ein Wächter nicht aus, auch wenn die Bedingung schon erfüllt ist. Nach einem Neustart von Stups oder Home Assistant wird der aktuelle Zustand abgeglichen: Ein verpasster Übergang löst **genau einmal** aus, nie doppelt. Die Angabe „von" bei Zustandswechseln lässt sich nach einem Neustart nicht mehr prüfen.
-- Fehlt die Entität in Home Assistant, steht „Entität fehlt" beim Wächter, er wird nicht gelöscht. Gibt es Board oder Spalte nicht mehr, pausiert der Wächter mit Hinweis.
-- Die Karte ist eine ganz normale Karte (Fälligkeits-Push, Erinnerungen, Stupsen), mit einem Auge-Symbol und dem Eintrag „Angelegt von Wächter …" im Verlauf.
-- **Testen** legt die Karte einmal sofort an (Vermerk „Test"), damit du Push und Zuweisung prüfen kannst.
+**Rules:**
+- A **lock time** (default 10 minutes) catches flapping sensors. It also applies to the counter.
+- As long as the watcher's card is **open**, no second one is created; the card's history says "Triggered again". This can be switched off.
+- **Nudge after … minutes** (optional): if the card is still open by then, the assignees get one reminder.
+- When **creating**, a watcher does not trigger even if the condition is already met. After a restart of Stups or Home Assistant the current state is reconciled: a missed transition triggers **exactly once**, never twice. The "from" value of state changes cannot be checked after a restart.
+- If the entity is missing in Home Assistant, the watcher shows "Entity missing", it is not deleted. If the board or column no longer exists, the watcher pauses with a hint.
+- The card is an entirely normal card (due push, reminders, nudging), with an eye symbol and the entry "Created by watcher …" in the history.
+- **Test** creates the card once immediately (marked "Test") so you can check push and assignment.
 
-![Karte von einem Wächter](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-karte-dunkel.png)
+![Card from a watcher](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/waechter-karte-dunkel.png)
 
-**Hinweis zu Waschmaschine und Trockner:** Hängen beide an derselben Steckdose, unterscheidet die Leistung allein sie nicht. Dann hilft ein eigener Sensor je Gerät (zum Beispiel ein Template-Sensor oder eine zweite Steckdose).
+**A note on washing machine and dryer:** if both are on the same socket, power alone cannot tell them apart. A separate sensor per appliance helps then (for example a template sensor or a second socket).
 
-#### Eigene Automationen: Ereignis `stups_create_card`
+#### Your own automations: event `stups_create_card`
 
-Wer lieber eigene Automationen in Home Assistant baut, kann damit direkt Karten anlegen. Stups reagiert auf das Ereignis `stups_create_card`:
+If you prefer building your own automations in Home Assistant, you can create cards directly with them. Stups reacts to the event `stups_create_card`:
 
 ```yaml
 automation:
-  - alias: Luftreiniger-Filter wechseln
+  - alias: Replace air purifier filter
     triggers:
       - trigger: numeric_state
-        entity_id: sensor.luftreiniger_filter
+        entity_id: sensor.air_purifier_filter
         below: 10
     actions:
       - event: stups_create_card
         event_data:
-          board: Haushalt              # Name oder Kennung; ohne Angabe das erste Board
-          column: Offen                # Name oder Kennung; ohne Angabe die erste offene Spalte
-          title: Filter wechseln
-          description: Luftreiniger im Wohnzimmer
-          assignees: present           # Namen der Personen oder "present" für alle, die zu Hause sind
+          board: Household             # Name or ID; without it the first board
+          column: Open                 # Name or ID; without it the first open column
+          title: Replace filter
+          description: Air purifier in the living room
+          assignees: present           # Names of the people, or "present" for everyone at home
           due_in_minutes: 60           # optional
-          dedupe_key: luftreiniger     # optional: keine zweite Karte, solange diese offen ist
+          dedupe_key: air-purifier     # optional: no second card while this one is open
 ```
 
-Fehler (unbekanntes Board, fehlender Titel, doppelter `dedupe_key`) gehen nicht verloren: Die letzten 20 Ereignisse mit Ergebnis stehen für Administratoren auf der Diagnose-Seite (Einstellungen › Diagnose-Seite) unter „Automationen". Eigene Automationen sind so vertrauenswürdig wie Home Assistant selbst: Wer Automationen anlegen darf, kann Karten anlegen.
+Errors (unknown board, missing title, duplicate `dedupe_key`) are not lost: the last 20 events with their result are shown to administrators on the diagnostics page (Settings › Diagnostics page) under "Automations". Your own automations are as trustworthy as Home Assistant itself: whoever may create automations can create cards.
 
-### Sensoren
+### Sensors
 
-Für Dashboard und Automationen: `sensor.stups_ueberfaellig`, `sensor.stups_heute_faellig` sowie je Person `sensor.stups_ueberfaellig_<name>` und `sensor.stups_heute_faellig_<name>`. Die Attribute `tasks` enthalten Titel, Termin und Board. Dazu `sensor.stups_stupse_offen` (alle offenen Stupse) und je Person `sensor.stups_gestupst_<name>` (offene Stupse an diese Person, mit Karte, Absender und Zeitpunkt als Attribut). `sensor.stups_waechter_offen` zählt die offenen Karten, die ein Wächter angelegt hat.
+For dashboards and automations: `sensor.stups_ueberfaellig` (overdue), `sensor.stups_heute_faellig` (due today) and per person `sensor.stups_ueberfaellig_<name>` and `sensor.stups_heute_faellig_<name>`. The `tasks` attributes contain title, due date and board. Also `sensor.stups_stupse_offen` (all open nudges) and per person `sensor.stups_gestupst_<name>` (open nudges to this person, with card, sender and time as attributes). `sensor.stups_waechter_offen` counts the open cards created by a watcher. The sensor names stay German for now.
 
-### Archiv und Papierkorb
+### Archive and trash
 
-- Erledigte Karten werden nach der Archivfrist des Boards (Standard 7 Tage) archiviert, auch die erledigten Durchgänge einer wiederkehrenden Karte. Die offene, wiederkehrende Karte wird nie archiviert.
-- Gelöschtes liegt 30 Tage im Papierkorb.
+- Completed cards are archived after the board's archive period (default 7 days), including the completed rounds of a recurring card. The open, recurring card is never archived.
+- Deleted items stay in the trash for 30 days.
 
-### Anhänge
+### Attachments
 
-Fotos werden vor dem Hochladen auf höchstens 2048 Pixel verkleinert, als JPEG gespeichert und von Standortdaten befreit. PDFs bis 20 MB gehen unverändert hoch.
+Photos are reduced to at most 2048 pixels before uploading, stored as JPEG and stripped of location data. PDFs up to 20 MB are uploaded unchanged.
 
-## Dashboard-Button (Bubble Card)
+## Dashboard button (Bubble Card)
 
-Den Pfad zeigt die App unter Einstellungen. Beispiel:
+The app shows the path under Settings. Example:
 
 ```yaml
 type: custom:bubble-card
@@ -229,26 +236,26 @@ tap_action:
   navigation_path: /XXXXXXXX_stups
 ```
 
-## Daten umziehen
+## Moving data
 
-Zieht Stups in Home Assistant auf eine andere Adresse um (anderes Repository = andere App), bleiben die Daten nicht automatisch erhalten. Sie wandern über einen Export:
+If Stups moves to another address in Home Assistant (another repository = another app), the data does not carry over automatically. It travels through an export:
 
-1. In der bisherigen App: **Einstellungen › Umzug › Daten exportieren** (nur für Administratoren). Datenbank und Anhänge liegen danach in `/share/stups-umzug`.
-2. Die neue Stups-App installieren und **zum ersten Mal starten**. Sie übernimmt den Export von selbst, im Log steht „Daten aus dem Umzug übernommen". Eine App, die schon eigene Daten hat, übernimmt nichts.
-3. Prüfen, ob Boards, Karten, Personen und Fotos da sind. Der Dashboard-Button der neuen App hat einen eigenen Panel-Pfad (`/<Kennung>_stups`).
-4. Erst danach die bisherige App deaktivieren. Bis dahin bleibt sie als Rückfallebene bestehen.
+1. In the previous app: **Settings › Move › Export data** (administrators only). Database and attachments are then in `/share/stups-umzug`.
+2. Install the new Stups app and **start it for the first time**. It takes over the export by itself, the log says "Daten aus dem Umzug übernommen". An app that already has its own data takes nothing over.
+3. Check that boards, cards, people and photos are there. The dashboard button of the new app has its own panel path (`/<id>_stups`).
+4. Only then deactivate the previous app. Until then it stays as a fallback.
 
-## Datensicherung
+## Backup
 
-Datenbank und Anhänge liegen im Add-on-Verzeichnis `/data` und sind Teil des normalen Home-Assistant-Backups. Vor jeder Datenbank-Aktualisierung legt die App eine Kopie unter `/data/backups` an (die letzten 5 bleiben).
+Database and attachments live in the add-on directory `/data` and are part of the normal Home Assistant backup. Before every database update the app makes a copy under `/data/backups` (the last 5 are kept).
 
-## Aktualisieren
+## Updating
 
-Neue Versionen erscheinen im App-Store, sobald sie auf GitHub liegen. Das Docker-Image wird danach noch einige Minuten gebaut. Erst aktualisieren, wenn der letzte Lauf unter „Actions" des Repositorys grün ist, sonst meldet Home Assistant „manifest unknown 404". Aktualisieren, **nicht** deinstallieren: Beim Deinstallieren werden alle Daten der App gelöscht.
+New versions appear in the app store as soon as they are on GitHub. The Docker image is then still built for a few minutes. Only update when the last run under "Actions" of the repository is green, otherwise Home Assistant reports "manifest unknown 404". Update, **do not** uninstall: uninstalling deletes all data of the app.
 
-## Fehlersuche
+## Troubleshooting
 
-- **Diagnose-Seite:** `…/diagnose.html` im Panel (Einstellungen › Diagnose-Seite) zeigt erkannten Nutzer, Verbindung zu Home Assistant und Test-Push.
-- **Push kommt nicht an:** Ist unter Einstellungen › Personen & Zugriff bei der Person ein Gerät angekreuzt? „Stand anzeigen" in den Einstellungen zeigt, wer für welche Karte eine Nachricht bekommt. Die Diagnose-Seite markiert Dienste, die es nicht mehr gibt.
-- **„Kein Zugriff" beim Öffnen:** Der Zugriff steht auf „Nur diese Personen", und du bist nicht dabei. Ein Administrator gibt dich unter Einstellungen › Personen & Zugriff frei.
-- **Panel öffnet auf dem Handy nichts:** Dann ist das Panel nur für Administratoren sichtbar. Stups gibt das Panel für alle Benutzer frei; fehlt es trotzdem, in Home Assistant bei der App „In der Seitenleiste anzeigen" prüfen.
+- **Diagnostics page:** `…/diagnose.html` in the panel (Settings › Diagnostics page) shows the detected user, the connection to Home Assistant and a test push.
+- **Push does not arrive:** is a device ticked for the person under Settings › People & Access? "Show status" in the settings shows who gets a message for which card. The diagnostics page marks services that no longer exist.
+- **"No access" when opening:** access is set to "Only these people" and you are not among them. An administrator approves you under Settings › People & Access.
+- **The panel opens nothing on the phone:** then the panel is only visible to administrators. Stups releases the panel to all users; if it is missing anyway, check "Show in sidebar" on the app in Home Assistant.

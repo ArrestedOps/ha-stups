@@ -104,6 +104,13 @@ Stups spricht Deutsch und Englisch. **Der deutsche Text steht im Quelltext und i
 - **Sprache wählen:** Einstellungen › Sprache (je Person, gilt auf allen Geräten): „Automatisch“ (Gerät: beginnt eine bevorzugte Sprache mit „de“, dann Deutsch, sonst Englisch), „Deutsch“, „English“. Der Browser merkt die Wahl zusätzlich in `localStorage` (`stups.language`), damit schon die Anmeldeseite stimmt. Jede Anfrage trägt `X-Stups-Language`. Der Server speichert die zuletzt gemeldete Sprache (`users.language`) und die Wahl (`users.language_choice`, `null` = Automatisch), Migration 14; `PUT /api/me/language`.
 - **Tests:** `test/setup.ts` stellt vor jedem Web-Test Deutsch ein (die bestehenden Tests prüfen deutsche Texte); Englisch stellt ein Test selbst ein (`setLanguage('en')`).
 
+### Dokumentation, Screenshots, Demo-GIF (seit 1.15.0)
+
+- **Zwei Sprachen:** `README.md`, `stups/DOCS.md`, `stups-beta/DOCS.md` und `docs/docker.md` sind **englisch und maßgeblich**; die deutschen Fassungen stehen daneben (`*.de.md`). Beide verweisen oben aufeinander (ein Test in `addon-files.test.ts` prüft das und dass die englischen Dateien nicht deutsch geblieben sind). Wer eine Datei ändert, ändert beide. `docs/entwicklung.md`, `docs/testliste.md` und die Spec-Dokumente bleiben deutsch (nur für die Entwicklung).
+- **Screenshots:** `node e2e/screenshots.mjs` (deutsch, `docs/images`) und `node e2e/screenshots.mjs --lang en` (englisch, `docs/images/en`). Beide nach `pnpm build`. Das README zeigt die englischen, `README.de.md` die deutschen.
+- **Demo-GIF:** `node e2e/demo.mjs --lang en` und `--lang de` schreiben `docs/images/demo.<sprache>.gif` (iPhone-Ansicht, erfundene Daten, Einzelbilder per Screenshot, zusammengesetzt mit `gifenc`). Ein Test (`demo-gif.test.ts`) hält Größe (unter 3 MB) und Format fest.
+- **Ankündigungen:** Entwürfe in `docs/announcements/` (nicht veröffentlicht; den Text prüft und postet der Mensch).
+
 ### Live-Sync mit Änderungen (seit 1.13.0)
 
 Jede Änderung löst eine Meldung über den WebSocket (`/api/events`) aus. Neu: Die Meldung sagt, was sich geändert hat, und der Client holt nur das nach.

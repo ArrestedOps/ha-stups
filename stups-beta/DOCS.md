@@ -1,30 +1,32 @@
 # Stups (Beta)
 
-Das ist die **Beta-Version** von Stups: dieselbe App wie „Stups", aber mit **eigenen Daten** und mit neuen Funktionen, bevor sie veröffentlicht werden. Sie ist zum Ausprobieren da, nicht für den Alltag.
+> 🇩🇪 [Deutsche Fassung](DOCS.de.md). This English version is the authoritative one.
 
-## Was ist anders als in der normalen App
+This is the **beta version** of Stups: the same app as "Stups", but with **its own data** and with new features before they are released. It is meant for trying things out, not for everyday use.
 
-- **Eigene Daten.** Die Beta hat ihren eigenen Speicher. Boards und Karten der normalen App sind nicht darin, außer du kopierst sie einmal hinein (siehe unten).
-- **Push und Wächter sind zunächst aus.** Sonst bekäme die Familie Erinnerungen doppelt. Unter **Einstellungen › Beta** schaltet ein Administrator beides gezielt ein, zum Beispiel Push nur für sich.
-- **Eigene Namen.** Push-Titel beginnen mit „Beta ·", Sensoren heißen `sensor.stups_beta_…`, das Ereignis für Automationen heißt `stups_beta_create_card`, die Knöpfe in Nachrichten gehören nur der Beta.
-- **Eigenes Symbol** („BETA") und eigener Eintrag in der Seitenleiste („Stups Beta").
+## What is different from the normal app
 
-## Echte Daten zum Testen kopieren
+- **Its own data.** The beta has its own storage. Boards and cards of the normal app are not in it, unless you copy them in once (see below).
+- **Push and watchers are off at first.** Otherwise the family would get reminders twice. Under **Settings › Beta** an administrator switches both on selectively, for example push only for themselves.
+- **Its own names.** Push titles begin with "Beta ·", sensors are called `sensor.stups_beta_…`, the event for automations is called `stups_beta_create_card`, and the buttons in messages belong to the beta only.
+- **Its own icon** ("BETA") and its own entry in the sidebar ("Stups Beta").
 
-1. In der **normalen** Stups-App: **Einstellungen › Umzug › Exportieren**. Die Daten landen in `/share/stups-umzug`.
-2. **Erst danach** die Beta zum ersten Mal starten. Sie übernimmt den Export beim ersten Start, aber nur dann, wenn sie noch keine eigenen Daten hat.
-3. Die Beta nimmt die Daten **als Kopie**; die normale App bleibt unberührt.
+## Copying real data to test with
 
-Neue Kopie nötig? Die **Beta** (und nur die Beta, erkennbar am Namen) deinstallieren, in der normalen App neu exportieren und die Beta neu installieren. Die normale App wird nie deinstalliert.
+1. In the **normal** Stups app: **Settings › Move › Export**. The data lands in `/share/stups-umzug`.
+2. **Only afterwards** start the beta for the first time. It takes over the export on first start, but only if it has no data of its own yet.
+3. The beta takes the data **as a copy**; the normal app stays untouched.
 
-## Beta installieren
+Need a new copy? Uninstall the **beta** (and only the beta, recognisable by its name), export again in the normal app and reinstall the beta. The normal app is never uninstalled.
 
-In Home Assistant unter **Einstellungen › Apps › App-Store › ⋮ › Repositories** diese Adresse hinzufügen:
+## Installing the beta
+
+In Home Assistant, under **Settings › Apps › App Store › ⋮ › Repositories**, add this address:
 
 ```
 https://github.com/ArrestedOps/ha-stups#beta
 ```
 
-Dort erscheint **Stups (Beta)**. Aus dieser Adresse erscheint auch ein zweites „Stups": das **nicht** installieren, es ist nicht die normale App und hätte eigene, leere Daten.
+**Stups (Beta)** appears there. From this address a second "Stups" also appears: **do not** install that one, it is not the normal app and would have its own, empty data.
 
-Bedienung und Optionen sind wie in der normalen App ([Dokumentation von Stups](https://github.com/ArrestedOps/ha-stups/blob/main/stups/DOCS.md)).
+Usage and options are as in the normal app ([Stups documentation](https://github.com/ArrestedOps/ha-stups/blob/main/stups/DOCS.md)).

@@ -6,12 +6,18 @@ import { expect, test, type Page } from '@playwright/test';
 /** Deutsche Wörter, die in den Kernabläufen nicht mehr auftauchen dürfen (die Spaltennamen sind Daten und stehen hier nicht zur Prüfung) */
 const GERMAN = /\b(Karte|Karten|Speichern|Abbrechen|Einstellungen|Löschen|Neue|Neues|Fertig|Heute|Morgen|überfällig|Wächter|Kalender|Zuständig|Wiederholung|Beschreibung|Anlegen|Zurück|Weiter|Suchen|Lädt|Rückgängig|Schließen)\b/;
 
-async function noGerman(page: Page, where: string) {
-  const text = await page.evaluate(() => {
-    const clone = document.body.cloneNode(true) as HTMLElement;
-    clone.querySelectorAll('[role=tablist]').forEach((e) => e.remove()); // Spaltennamen sind Daten
-    return clone.innerText;
-  });
+/** `scope`: nur diesen Teil prüfen (Agenda und Kalender zeigen auch Karten anderer Tests, das sind Daten) */
+async function noGerman(page: Page, where: string, scope = 'body') {
+  const text = await page.evaluate((selector) => {
+    const parts = [...document.querySelectorAll<HTMLElement>(selector)];
+    return parts
+      .map((part) => {
+        const clone = part.cloneNode(true) as HTMLElement;
+        clone.querySelectorAll('[role=tablist]').forEach((e) => e.remove()); // Spaltennamen sind Daten
+        return clone.innerText;
+      })
+      .join('\n');
+  }, scope);
   expect(text.match(GERMAN)?.[0] ?? null, `deutsches Wort (${where})`).toBeNull();
 }
 
@@ -69,13 +75,13 @@ test('Englisches Gerät: Agenda, Kalender, Einstellungen, Karten-Fenster', async
   await nav.getByRole('button', { name: 'Agenda' }).click();
   await expect(page.getByRole('heading', { name: 'Agenda' })).toBeVisible();
   await expect(page.getByText('All cards with a due date, by day')).toBeVisible();
-  await noGerman(page, 'Agenda');
+  await noGerman(page, 'Agenda', 'header, nav');
   await noSideScroll(page);
 
   await nav.getByRole('button', { name: 'Calendar' }).click();
   await expect(page.getByRole('heading', { name: 'Calendar' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Week', exact: true })).toBeVisible();
-  await noGerman(page, 'Kalender');
+  await noGerman(page, 'Kalender', 'header, nav');
   await noSideScroll(page);
 
   await nav.getByRole('button', { name: 'Watchers' }).click();

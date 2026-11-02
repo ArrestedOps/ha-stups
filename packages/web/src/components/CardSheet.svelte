@@ -327,7 +327,7 @@
             <div class="relative">
               <button
                 class="block aspect-square w-full overflow-hidden rounded-xl bg-surface2"
-                aria-label="{a.filename} ansehen ({formatBytes(a.size)})"
+                aria-label={t('{name} ansehen ({size})', { name: a.filename, size: formatBytes(a.size) })}
                 onclick={() => openViewer(card!.attachments, card!.attachments.indexOf(a))}
               >
                 {#if a.hasThumb}
@@ -341,7 +341,7 @@
               </button>
               <button
                 class="absolute top-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white"
-                aria-label="{a.filename} entfernen"
+                aria-label={t('{name} entfernen', { name: a.filename })}
                 onclick={() => act(() => api.deleteAttachment(a.id))}
               >
                 <Icon name="x" size={14} />

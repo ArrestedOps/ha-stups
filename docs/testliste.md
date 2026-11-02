@@ -256,7 +256,18 @@ Am iPhone, in der Beta zuerst. Zum Ausprobieren: iPhone-Sprache auf Englisch ste
 - [ ] **Schnell-Eingabe auf Englisch:** `Take out trash tomorrow 7pm @Ben #Home every week !!` ergibt die richtigen Chips; auch `in 3 days`, `next Monday`, `Dec 1`, `at 18:30`, `every 2 weeks`, `important`
 - [ ] **Sprache wechseln:** Einstellungen › Sprache › Deutsch: sofort deutsch, ohne Neuladen. Wieder auf „Automatisch“: folgt dem Gerät. Die Wahl gilt auch am zweiten Gerät derselben Person
 - [ ] **Wiederholungen und Wächter-Texte** (Beschreibung, Vorlagen, „When washing machine power is below 5 W …“) sind englisch und verständlich
-- [ ] Noch deutsch, bis 1.15.0: Push-Nachrichten, Fehlermeldungen vom Server und die Namen der Standard-Spalten neuer Boards
+- [ ] **Push auf Englisch** (Push in der Beta einschalten, Einstellungen › Beta): Eine fällige Karte kommt mit „Due: today 19:00 · Board“ und dem Knopf „Done“; die Tageszusammenfassung („Due today: 1 · Overdue: 0“), „Nudged“-Nachrichten („… nudges you“, Knöpfe „Done“, „On it“, „Later“) und die Antwort „… is on it 👍“
+- [ ] **Deutsches Gerät in der Familie:** Wer nie Englisch hatte, bekommt weiter deutsche Push-Nachrichten. Ein Stups mit Vorlage kommt beim Empfänger in seiner Sprache an, auch wenn der Absender eine andere hat
+- [ ] **Fehlermeldungen vom Server** (zum Beispiel eine zu lange Stups-Nachricht, ein leerer Titel über die Schnell-Eingabe) erscheinen in der Sprache der Oberfläche
+- [ ] **Neues Board** auf einem englischen Gerät: Spalten „Open“, „Planned“, „In progress“, „Done“. Auf einem deutschen Gerät wie bisher „Offen“ … „Erledigt“
+- [ ] Home Assistant: Einstellungen › Apps › Stups (Beta) › Konfiguration zeigt die Optionen auf Englisch, wenn Home Assistant auf Englisch steht
+- [ ] Bleibt deutsch (bekannt): Namen der Sensoren, Protokollzeilen im Add-on-Log, die Zeile „Wartet auf die erste Person …“ in der Beschreibung einer Wächter-Karte
+
+## 23 · Dokumentation und Auftritt (seit 1.15.0)
+
+- [ ] **README auf GitHub** (englisch): Das Demo-GIF läuft, die Bilder sind englisch, die Knöpfe „Zu Home Assistant hinzufügen“ und die Beta-Adresse stimmen. Oben der Link zur deutschen Fassung; `README.de.md` zeigt deutsche Bilder
+- [ ] **Home Assistant › Stups › Dokumentation** (englisch, mit Link zur deutschen Fassung) liest sich verständlich; die Menüwege in der Anleitung („Settings › People & Access“) gibt es genau so in der englischen Oberfläche
+- [ ] **Ankündigungsentwürfe** in `docs/announcements/` gegenlesen (HA-Forum, Reddit, GitHub-Release, deutsches Forum): stimmen Versionsnummer und Links, ist die Aussage zur Lizenz so gewollt? Nichts wird von selbst veröffentlicht
 
 ## Bekannte Lücken
 

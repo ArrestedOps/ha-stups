@@ -207,7 +207,7 @@
             <section class="flex w-[320px] shrink-0 flex-col" aria-label={col.name}>
               <div class="mb-3 flex items-center justify-between px-1">
                 <h2 class="text-[15px] font-semibold text-fg2">{col.name} · {counts[col.id] ?? 0}</h2>
-                <button class="flex h-9 w-9 items-center justify-center rounded-xl text-fg2 hover:bg-surface" aria-label="Neue Karte in {col.name}" onclick={() => openSheet({ type: 'new', columnId: col.id })}>
+                <button class="flex h-9 w-9 items-center justify-center rounded-xl text-fg2 hover:bg-surface" aria-label={t('Neue Karte in {name}', { name: col.name })} onclick={() => openSheet({ type: 'new', columnId: col.id })}>
                   <Icon name="plus" size={18} />
                 </button>
               </div>

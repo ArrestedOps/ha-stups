@@ -100,6 +100,7 @@ test('Person hinzufügen, Push-Geräte-Hinweis, umbenennen und mit Bestätigung 
 });
 
 test('Nur freigegebene: Fremder sieht „Kein Zugriff", der Administrator gibt ihn frei', async ({ page, browser }, info) => {
+  test.setTimeout(60_000); // mehrere Seiten und Anmeldungen: im vollen Lauf reichen 30 Sekunden auf einem ausgelasteten Rechner nicht
   const baseURL = String(info.project.use.baseURL);
   await openPeople(page);
   await mode(page, 'Nur diese Personen').click();

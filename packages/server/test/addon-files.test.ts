@@ -53,6 +53,34 @@ describe('Add-on-Dateien für Home Assistant', () => {
   });
 });
 
+describe('Dokumentation auf Englisch und Deutsch', () => {
+  const pairs: [string, string][] = [
+    ['README.md', 'README.de.md'],
+    ['stups/DOCS.md', 'stups/DOCS.de.md'],
+    ['stups-beta/DOCS.md', 'stups-beta/DOCS.de.md'],
+    ['docs/docker.md', 'docs/docker.de.md'],
+  ];
+  const head = (f: string) => readFileSync(join(root, f), 'utf8').split('\n').slice(0, 12).join('\n');
+
+  it('jede englische Datei verweist oben auf ihre deutsche und umgekehrt (die englische ist maßgeblich)', () => {
+    for (const [en, de] of pairs) {
+      expect(existsSync(join(root, en)), en).toBe(true);
+      expect(existsSync(join(root, de)), de).toBe(true);
+      expect(head(en), en).toContain(`(${de.split('/').pop()})`);
+      expect(head(de), de).toContain(`(${en.split('/').pop()})`);
+      expect(head(de), de).toContain('maßgeblich');
+    }
+  });
+
+  it('die englischen Fassungen sind wirklich englisch (kein deutscher Fließtext geblieben)', () => {
+    for (const [en] of pairs) {
+      const text = readFileSync(join(root, en), 'utf8').replace(/```[\s\S]*?```/g, '');
+      const german = text.match(/\b(und|oder|nicht|für|werden|wird|eine|einen|dein|deine|ist)\b/g) ?? [];
+      expect(german.length, `${en}: ${german.slice(0, 5).join(',')}`).toBeLessThan(8);
+    }
+  });
+});
+
 describe('Add-on-Dateien der Beta', () => {
   const stable = () => load('stups/config.yaml');
   const beta = () => load('stups-beta/config.yaml');

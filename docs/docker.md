@@ -1,27 +1,29 @@
-# Stups ohne Home Assistant (Docker)
+# Stups without Home Assistant (Docker)
 
-> **Beta.** Der eigene Container ist noch eine Beta. Er läuft und wird bei jedem Release getestet (Konten, Passkeys, ntfy, Verbindung zu Home Assistant), bekommt aber **vorerst keine neuen Funktionen**, bis die App in Home Assistant veröffentlicht ist und Nutzer hat. Neue Funktionen der App erscheinen im Container nur, soweit sie ohne Zusatzaufwand mitlaufen; was dort nicht geht, blendet die Oberfläche aus.
+> 🇩🇪 [Deutsche Fassung](docker.de.md). This English version is the authoritative one.
+
+> **Beta.** The standalone container is still a beta. It runs and is tested with every release (accounts, passkeys, ntfy, connection to Home Assistant), but gets **no new features of its own for now**, until the app is published in Home Assistant and has users. New features of the app only appear in the container as far as they run without extra effort; what does not work there, the interface hides.
 >
-> **Sicherheit.** Stelle ihn **nie ohne HTTPS und einen Reverse-Proxy** ins Internet (siehe „Sicherheit" weiter unten), gib den Port 8099 nicht direkt frei, **aktualisiere regelmäßig** (`docker compose pull && docker compose up -d`) und sichere den Datenordner.
+> **Security.** **Never** put it on the internet without HTTPS and a reverse proxy (see "Security" below), do not expose port 8099 directly, **update regularly** (`docker compose pull && docker compose up -d`) and back up the data folder.
 
-Stups läuft nicht nur als Home-Assistant-App, sondern auch als eigener Docker-Container, zum Beispiel auf einer Synology-NAS. Es ist dasselbe Image und dieselbe Datenbank.
+Stups runs not only as a Home Assistant app but also as a standalone Docker container, for example on a Synology NAS. It is the same image and the same database.
 
-| | Home-Assistant-App | Eigener Container ohne Home Assistant |
+| | Home Assistant app | Standalone container without Home Assistant |
 |---|---|---|
-| Anmeldung | die Benutzer von Home Assistant | eigene Konten mit Passwort |
-| Personen | aus Home Assistant | in Stups gepflegt (jeder Benutzer ist eine Person) |
-| Boards, Agenda, Kalender, Wiederholungen, Stupsen | ja | ja |
-| Wächter und Sensoren | ja | nur mit Verbindung zu Home Assistant (siehe unten), sonst in der Oberfläche ausgeblendet |
-| Push-Nachrichten | Companion App | über [ntfy](https://ntfy.sh), mit Verbindung zu Home Assistant auch über die Companion App |
+| Sign-in | the Home Assistant users | own accounts with a password |
+| People | from Home Assistant | maintained in Stups (every user is a person) |
+| Boards, agenda, calendar, repeats, nudging | yes | yes |
+| Watchers and sensors | yes | only with a connection to Home Assistant (see below), otherwise hidden in the interface |
+| Push messages | Companion App | via [ntfy](https://ntfy.sh), with a connection to Home Assistant also via the Companion App |
 
-Der Container läuft in einer von zwei Arten, je nachdem, ob `HA_URL` und `HA_TOKEN` gesetzt sind:
+The container runs in one of two ways, depending on whether `HA_URL` and `HA_TOKEN` are set:
 
-- **Ohne Home Assistant** (Vorgabe): alles bis auf Wächter und Sensoren.
-- **Mit Home Assistant**: Stups verbindet sich über Adresse und Zugangs-Token mit deinem Home Assistant und bietet dann auch Wächter, Sensoren und Push über die Companion App an. Angemeldet wird weiter mit den Konten in Stups (siehe „Mit Home Assistant verbinden").
+- **Without Home Assistant** (default): everything except watchers and sensors.
+- **With Home Assistant**: Stups connects to your Home Assistant with an address and an access token and then also offers watchers, sensors and push via the Companion App. Sign-in still uses the accounts in Stups (see "Connecting to Home Assistant").
 
-## Schnellstart
+## Quick start
 
-Datei `docker-compose.yml`:
+File `docker-compose.yml`:
 
 ```yaml
 services:
@@ -33,10 +35,10 @@ services:
       - "8099:8099"
     environment:
       TZ: Europe/Berlin
-      # Adresse, unter der du Stups im Browser öffnest. Beginnt sie mit https://, wird das Anmelde-Cookie nur über HTTPS gesendet.
+      # Address under which you open Stups in the browser. If it starts with https://, the sign-in cookie is only sent over HTTPS.
       STUPS_PUBLIC_URL: "http://192.168.1.20:8099"
     volumes:
-      - ./stups-daten:/data
+      - ./stups-data:/data
 ```
 
 ```bash
@@ -44,98 +46,98 @@ docker compose up -d
 docker logs stups
 ```
 
-Beim ersten Start steht im Protokoll eine Zeile wie
+On first start the log shows a line like
 
 ```
 Einrichtung: Öffne http://192.168.1.20:8099 und gib diesen Code ein: K7Q4-MX2P
 ```
 
-Öffne die Adresse im Browser, gib den Code ein und lege den ersten Administrator an (Benutzername, Name, Passwort mit mindestens 10 Zeichen). Danach ist die Einrichtung für immer geschlossen. Weitere Benutzer legst du unter **Einstellungen › Personen & Zugriff › Benutzer anlegen** an.
+(setup: open the address and enter this code). Open the address in the browser, enter the code and create the first administrator (username, name, password with at least 10 characters). After that, setup is closed for good. You create more users under **Settings › People & Access › Create user**.
 
-Statt des Codes kannst du den ersten Administrator auch gleich in die Compose-Datei schreiben (nimm danach das Passwort wieder heraus, es wird nur beim allerersten Start gebraucht):
+Instead of the code you can also put the first administrator right into the compose file (take the password out again afterwards, it is only needed at the very first start):
 
 ```yaml
     environment:
       STUPS_ADMIN_USER: "anna"
-      STUPS_ADMIN_PASSWORD: "mindestens-zehn-zeichen"
+      STUPS_ADMIN_PASSWORD: "at-least-ten-characters"
 ```
 
-## Einstellungen
+## Settings
 
-Alle Einstellungen sind Umgebungsvariablen. Ohne Angabe gelten die Vorgaben.
+All settings are environment variables. Without a value, the defaults apply.
 
-| Variable | Vorgabe | Bedeutung |
+| Variable | Default | Meaning |
 |---|---|---|
-| `STUPS_DATA_DIR` | `/data` | Ordner für Datenbank, Anhänge und Sicherungen (im Container; mit `volumes` nach außen legen) |
-| `STUPS_PORT` | `8099` | Port im Container |
-| `STUPS_SHARE_DIR` | `/share` | Ordner, aus dem ein Umzug (`stups-umzug`) beim ersten Start übernommen wird |
-| `STUPS_PUBLIC_URL` | – | Adresse, unter der Stups erreichbar ist. `https://…` schaltet das Secure-Cookie ein und, mit einem Namen statt einer IP-Adresse, die Passkeys (siehe „Anmelden mit Passkey") |
-| `STUPS_ADMIN_USER`, `STUPS_ADMIN_PASSWORD` | – | erster Administrator, nur beide zusammen. Gilt nur, solange es noch kein Konto gibt |
-| `HA_URL` | – | Adresse deines Home Assistant, zum Beispiel `http://homeassistant.local:8123` (siehe „Mit Home Assistant verbinden") |
-| `HA_TOKEN` | – | Long-Lived-Zugangs-Token aus Home Assistant. Nur zusammen mit `HA_URL` |
-| `STUPS_NTFY_URL` | – | Adresse des ntfy-Servers, schaltet Push ein (siehe unten) |
-| `STUPS_NTFY_TOKEN` | – | Zugriffstoken (`tk_…`) für einen Server mit Anmeldung |
-| `STUPS_NTFY_USER`, `STUPS_NTFY_PASSWORD` | – | statt des Tokens: Benutzer und Passwort, nur beide zusammen |
-| `STUPS_DAILY_SUMMARY_TIME` | `08:00` | Uhrzeit der Tageszusammenfassung (HH:MM) |
-| `STUPS_OVERDUE_NAG_TIME` | `18:00` | ab wann an Überfälliges erinnert wird (HH:MM) |
+| `STUPS_DATA_DIR` | `/data` | Folder for database, attachments and backups (inside the container; map it outside with `volumes`) |
+| `STUPS_PORT` | `8099` | Port in the container |
+| `STUPS_SHARE_DIR` | `/share` | Folder from which a move (`stups-umzug`) is taken over on first start |
+| `STUPS_PUBLIC_URL` | – | Address under which Stups is reachable. `https://…` switches the secure cookie on and, with a name instead of an IP address, passkeys (see "Signing in with a passkey") |
+| `STUPS_ADMIN_USER`, `STUPS_ADMIN_PASSWORD` | – | first administrator, only both together. Only applies while there is no account yet |
+| `HA_URL` | – | Address of your Home Assistant, for example `http://homeassistant.local:8123` (see "Connecting to Home Assistant") |
+| `HA_TOKEN` | – | Long-lived access token from Home Assistant. Only together with `HA_URL` |
+| `STUPS_NTFY_URL` | – | Address of the ntfy server, switches push on (see below) |
+| `STUPS_NTFY_TOKEN` | – | Access token (`tk_…`) for a server with sign-in |
+| `STUPS_NTFY_USER`, `STUPS_NTFY_PASSWORD` | – | instead of the token: user and password, only both together |
+| `STUPS_DAILY_SUMMARY_TIME` | `08:00` | Time of the daily summary (HH:MM) |
+| `STUPS_OVERDUE_NAG_TIME` | `18:00` | From when overdue cards are followed up (HH:MM) |
 | `STUPS_LOG_LEVEL` | `info` | `error`, `warn`, `info`, `debug` |
-| `STUPS_CONFIG` | `<Datenordner>/options.json` | JSON-Datei mit denselben Einstellungen wie die Add-on-Optionen, falls du lieber eine Datei nimmst |
-| `TZ` | `Europe/Berlin` | Zeitzone |
+| `STUPS_CONFIG` | `<data folder>/options.json` | JSON file with the same settings as the add-on options, if you prefer a file |
+| `TZ` | `Europe/Berlin` | Time zone |
 
-Umgebungsvariablen gehen vor der Datei. In der Home-Assistant-App gelten sie nicht; dort stellt man alles unter Konfiguration ein.
+Environment variables take precedence over the file. In the Home Assistant app they do not apply; there you set everything under Configuration.
 
-## Anmelden mit Passkey
+## Signing in with a passkey
 
-Statt das Passwort zu tippen, meldest du dich mit Fingerabdruck, Gesicht oder der Bildschirmsperre deines Geräts an (iPhone, Android, Windows Hello, Passwort-Manager mit Passkeys). Das Passwort bleibt als Rückfall.
+Instead of typing the password, you sign in with the fingerprint, face or screen lock of your device (iPhone, Android, Windows Hello, password managers with passkeys). The password remains as a fallback.
 
-**Voraussetzung:** `STUPS_PUBLIC_URL` ist eine `https://`-Adresse mit einem Namen, zum Beispiel `https://stups.example.org`. Passkeys gehören zu einer Domain; Browser erlauben sie nur über HTTPS (oder `localhost`) und nie für eine IP-Adresse wie `http://192.168.1.20:8099`. Stimmt die Adresse nicht, sind Passkeys aus, und das Protokoll sagt es beim Start. Aus dieser Adresse, nicht aus Kopfzeilen der Anfrage, nimmt Stups die Domain für die Prüfung.
+**Requirement:** `STUPS_PUBLIC_URL` is an `https://` address with a name, for example `https://stups.example.org`. Passkeys belong to a domain; browsers only allow them over HTTPS (or `localhost`) and never for an IP address like `http://192.168.1.20:8099`. If the address does not fit, passkeys are off, and the log says so at start. Stups takes the domain for verification from this address, not from request headers.
 
-**Einrichten:** Einstellungen › Passkeys › **Passkey hinzufügen**, Namen vergeben (zum Beispiel „iPhone von Anna"), das Gerät fragt nach Fingerabdruck oder Gesicht. Auf jedem Gerät, das du nutzt, einmal wiederholen. Danach zeigt die Anmeldeseite **Mit Passkey anmelden**, ganz ohne Benutzernamen.
+**Setting up:** Settings › Passkeys › **Add passkey**, give it a name (for example "Anna's iPhone"), the device asks for fingerprint or face. Repeat once on every device you use. After that the sign-in page shows **Sign in with passkey**, without a username at all.
 
-**Wichtig**
+**Important**
 
-- **Die Domain darf sich nicht ändern.** Ein Passkey gilt nur für die Domain, unter der er angelegt wurde. Wechselst du auf eine andere Adresse, legst du neue an (mit dem Passwort kommst du jederzeit hinein).
-- **Das Gerät wird immer bestätigt.** Stups verlangt Fingerabdruck, Gesicht oder PIN; ein bloßes Berühren des Schlüssels genügt nicht.
-- **Entfernen** geht unter Einstellungen › Passkeys. Das löscht ihn nur in Stups. Auf dem Gerät bleibt der Passkey liegen, bis du ihn dort löschst. Wird ein Konto gelöscht, verschwinden seine Passkeys mit.
-- **Sicher aufbewahrt:** In der Datenbank liegt nur der öffentliche Schlüssel, der nicht geheim ist. Falsche Versuche zählen wie falsche Passwörter und führen zur gleichen Wartezeit.
-- Die Home-Assistant-App nutzt keine Passkeys: Dort meldet Home Assistant an.
+- **The domain must not change.** A passkey only applies to the domain it was created under. If you switch to another address, you create new ones (with the password you can always get in).
+- **The device is always confirmed.** Stups requires fingerprint, face or PIN; merely touching the key is not enough.
+- **Removing** works under Settings › Passkeys. That deletes it only in Stups. On the device the passkey stays until you delete it there. If an account is deleted, its passkeys disappear with it.
+- **Stored safely:** the database holds only the public key, which is not secret. Wrong attempts count like wrong passwords and lead to the same waiting time.
+- The Home Assistant app does not use passkeys: there, Home Assistant signs you in.
 
-## Push-Nachrichten über ntfy
+## Push messages via ntfy
 
-Ohne Home Assistant gibt es keine Companion App. Stups schickt Erinnerungen, Stupse und die Tageszusammenfassung stattdessen über [ntfy](https://ntfy.sh), eine freie Push-Lösung mit Apps für Android und iPhone. Jede Person abonniert in der ntfy-App ein eigenes **Thema**; Stups veröffentlicht ihre Nachrichten dort. Es funktioniert mit einem eigenen ntfy-Server und mit dem öffentlichen `https://ntfy.sh`.
+Without Home Assistant there is no Companion App. Stups sends reminders, nudges and the daily summary through [ntfy](https://ntfy.sh) instead, a free push solution with apps for Android and iPhone. Each person subscribes to their own **topic** in the ntfy app; Stups publishes their messages there. It works with your own ntfy server and with the public `https://ntfy.sh`.
 
-**Einrichten**
+**Setting up**
 
-1. Einen ntfy-Server haben (selbst betrieben oder `https://ntfy.sh`) und die ntfy-App auf den Handys installieren.
-2. In der Compose-Datei eintragen:
+1. Have an ntfy server (self-hosted or `https://ntfy.sh`) and install the ntfy app on the phones.
+2. Enter in the compose file:
 
 ```yaml
     environment:
       STUPS_PUBLIC_URL: "https://stups.example.org"
       STUPS_NTFY_URL: "https://ntfy.example.org"
-      # nur, wenn der ntfy-Server eine Anmeldung verlangt (eines von beiden):
+      # only if the ntfy server requires sign-in (one of the two):
       # STUPS_NTFY_TOKEN: "tk_abc123"
       # STUPS_NTFY_USER: "stups"
       # STUPS_NTFY_PASSWORD: "…"
 ```
 
-3. In Stups unter **Einstellungen › Personen & Zugriff** die Person öffnen und bei **Push über ntfy** ein Thema eintragen (**Zufälliges Thema** erzeugt eines). In der ntfy-App denselben Server verwenden und dieses Thema abonnieren.
-4. Unter **Einstellungen › Benachrichtigungen › An mich senden** eine Test-Nachricht schicken.
+3. In Stups, under **Settings › People & Access**, open the person and enter a topic under **Push via ntfy** (**Random topic** creates one). In the ntfy app use the same server and subscribe to this topic.
+4. Under **Settings › Notifications › Send to me** send a test message.
 
-**Wichtig**
+**Important**
 
-- **Das Thema ist das Passwort.** Auf einem offenen Server (wie `ntfy.sh`) kann jeder, der das Thema kennt, mitlesen und Nachrichten schicken. Nimm ein zufälliges Thema und gib es nicht weiter. Mit einem ntfy-Server, der Anmeldung verlangt, ist das weniger heikel. Stups zeigt das Thema nur der Person selbst und den Administratoren.
-- **`STUPS_PUBLIC_URL` muss vom Handy aus erreichbar sein** (WLAN, VPN oder Reverse Proxy). Davon hängen zwei Dinge ab: der Link, der beim Tippen auf die Nachricht die Karte öffnet, und die **Knöpfe** („Erledigt" bei Fälligkeit; „Erledigt", „Mach ich", „Später" beim Stups). Ohne die Adresse kommen die Nachrichten ohne Link und ohne Knöpfe an. Stups sagt das in der App und im Protokoll.
-- **Wie die Knöpfe arbeiten.** Sie sind ntfy-Knöpfe vom Typ „HTTP" (Android, iPhone und Web-App). Die ntfy-App ruft beim Tippen `STUPS_PUBLIC_URL/api/push/action` auf. Jede Nachricht trägt dafür ein Token: Person, Aktion und Ablaufzeit (14 Tage), mit einem Geheimnis aus der Datenbank signiert. Damit lässt sich genau diese eine Aktion für genau diese Person auslösen, ohne Anmeldung, und nichts sonst. Veränderte oder abgelaufene Tokens werden abgewiesen; ein Token zu erraten ist aussichtslos (HMAC-SHA-256). Mit **Rückweg prüfen** in der Test-Nachricht siehst du unter **Stand anzeigen**, ob der Weg vom Handy zu Stups frei ist.
-- **Nachrichten ersetzen und entfernen.** Stups vergibt jeder Nachricht eine Kennung. Neuere ntfy-Server (ab Version 2.16) ersetzen damit eine ältere Nachricht und löschen erledigte Nachrichten vom Handy. Ältere Server legen stattdessen eine neue an und lassen die alte stehen; tippt man dort danach auf „Erledigt", meldet Stups „schon erledigt", und die Nachricht verschwindet.
-- **Stups sendet nur, was du eingetragen hast.** Wer kein Thema hat, bekommt nichts; die Übersicht unter **Benachrichtigungen › Stand anzeigen** zeigt, wer erreichbar ist.
+- **The topic is the password.** On an open server (like `ntfy.sh`) anyone who knows the topic can read along and send messages. Take a random topic and do not pass it on. With an ntfy server that requires sign-in this is less delicate. Stups shows the topic only to the person themselves and to administrators.
+- **`STUPS_PUBLIC_URL` must be reachable from the phone** (Wi-Fi, VPN or reverse proxy). Two things depend on it: the link that opens the card when you tap the message, and the **buttons** ("Done" when due; "Done", "On it", "Later" for a nudge). Without the address the messages arrive without a link and without buttons. Stups says so in the app and in the log.
+- **How the buttons work.** They are ntfy buttons of the type "HTTP" (Android, iPhone and web app). When tapped, the ntfy app calls `STUPS_PUBLIC_URL/api/push/action`. Every message carries a token for this: person, action and expiry (14 days), signed with a secret from the database. With it exactly this one action can be triggered for exactly this person, without signing in, and nothing else. Altered or expired tokens are rejected; guessing a token is hopeless (HMAC-SHA-256). With **Check return path** in the test message you see under **Show status** whether the path from the phone to Stups is open.
+- **Replacing and removing messages.** Stups gives every message an identifier. Newer ntfy servers (version 2.16 and up) use it to replace an older message and to remove completed messages from the phone. Older servers create a new one instead and leave the old one; if you tap "Done" there afterwards, Stups reports "already done" and the message disappears.
+- **Stups only sends what you entered.** Whoever has no topic gets nothing; the overview under **Notifications › Show status** shows who is reachable.
 
-## Mit Home Assistant verbinden
+## Connecting to Home Assistant
 
-Läuft Home Assistant bei dir (oder bei jemandem, dem du vertraust), kann der Container es nutzen, ohne selbst eine Home-Assistant-App zu sein.
+If Home Assistant runs at your place (or at someone you trust), the container can use it without being a Home Assistant app itself.
 
-1. In Home Assistant: **Profil (unten links) › Sicherheit › Langlebige Zugangs-Tokens › Token erstellen**, Name zum Beispiel „Stups". Das Token wird nur einmal angezeigt.
-2. In die Compose-Datei:
+1. In Home Assistant: **Profile (bottom left) › Security › Long-lived access tokens › Create token**, name for example "Stups". The token is shown only once.
+2. In the compose file:
 
 ```yaml
     environment:
@@ -144,48 +146,48 @@ Läuft Home Assistant bei dir (oder bei jemandem, dem du vertraust), kann der Co
       STUPS_PUBLIC_URL: "https://stups.example.org"
 ```
 
-3. Neu starten. Im Protokoll steht „Verbindung zu Home Assistant: …". In der Oberfläche erscheint der Reiter **Wächter**.
+3. Restart. The log says "Verbindung zu Home Assistant: …" (connection to Home Assistant). The **Watchers** tab appears in the interface.
 
-**Was damit geht**
+**What this enables**
 
-- **Wächter und Sensoren** wie in der App: Stups beobachtet Entitäten und legt Karten an, und es schreibt `sensor.stups_…` nach Home Assistant. Das Token entscheidet, was Stups darf: Es hat die Rechte des Benutzers, dem es gehört.
-- **Personen als Vorschläge.** Unter **Personen & Zugriff › Aus Home Assistant** erscheinen die Personen aus Home Assistant; mit **Hinzufügen** werden sie Personen in Stups. Für die Wächter („wer ist zu Hause", „wer zuerst nach Hause kommt") gilt: **Der Name in Stups muss zum Namen der Person in Home Assistant passen.** Eine über die Vorschläge hinzugefügte Person ist gleich verknüpft.
-- **Push über die Companion App**, zusätzlich zu ntfy: Bei jeder Person lassen sich die Handys ankreuzen, auf denen die Companion App angemeldet ist. Tippt man auf die Nachricht, öffnet sie Stups unter `STUPS_PUBLIC_URL`. „Erledigt" in der Nachricht kommt über die Verbindung zu Home Assistant zurück, ohne dass Stups aus dem Netz erreichbar sein muss.
-- **Wer Administrator ist**, bestimmt weiter das Konto in Stups, nie Home Assistant.
+- **Watchers and sensors** as in the app: Stups observes entities and creates cards, and it writes `sensor.stups_…` to Home Assistant. The token decides what Stups may do: it has the rights of the user it belongs to.
+- **People as suggestions.** Under **People & Access › From Home Assistant** the people from Home Assistant appear; with **Add** they become people in Stups. For watchers ("who is at home", "whoever gets home first") this applies: **the name in Stups must match the name of the person in Home Assistant.** A person added via the suggestions is linked right away.
+- **Push via the Companion App**, in addition to ntfy: for every person you can tick the phones where the Companion App is signed in. Tapping the message opens Stups at `STUPS_PUBLIC_URL`. "Done" in the message comes back through the connection to Home Assistant, without Stups having to be reachable from outside.
+- **Who is an administrator** is still decided by the account in Stups, never by Home Assistant.
 
-**Hinweise**
+**Notes**
 
-- **Adresse mit https und eigenem Zertifikat:** Node (und damit Stups) kennt es nicht. Binde die Zertifikatsdatei ein und setze `NODE_EXTRA_CA_CERTS: /pfad/zur/ca.pem`.
-- **Erreichbarkeit:** Der Container muss Home Assistant erreichen (Port 8123). Home Assistant braucht Stups nicht zu erreichen.
-- **Zeitzone:** Sie kommt von Home Assistant, sobald die Verbindung steht.
-- Das Token gibt Zugriff auf deinen Home Assistant. Behandle die Compose-Datei wie ein Passwort und nimm für Stups einen eigenen Benutzer, wenn du ihm weniger erlauben willst.
+- **Address with https and your own certificate:** Node (and with it Stups) does not know it. Mount the certificate file and set `NODE_EXTRA_CA_CERTS: /path/to/ca.pem`.
+- **Reachability:** the container must reach Home Assistant (port 8123). Home Assistant does not need to reach Stups.
+- **Time zone:** it comes from Home Assistant as soon as the connection is up.
+- The token gives access to your Home Assistant. Treat the compose file like a password, and use a user of its own for Stups if you want to allow it less.
 
 ## Synology (Container Manager)
 
-1. **Container Manager** installieren (Paketzentrum). Eine DS218+ ist ein Intel-Gerät und läuft mit dem vorhandenen Image.
-2. Ordner anlegen, zum Beispiel `/volume1/docker/stups` mit dem Unterordner `data`.
-3. Im Container Manager unter **Projekt › Erstellen** die `docker-compose.yml` von oben einfügen, den Pfad anpassen (`/volume1/docker/stups/data:/data`) und starten.
-4. Den Einrichtungscode unter **Container › stups › Protokoll** ablesen.
-5. Von außen nur über HTTPS erreichbar machen (siehe unten), nicht den Port 8099 ins Internet freigeben.
+1. Install **Container Manager** (Package Center). A DS218+ is an Intel device and runs the existing image.
+2. Create a folder, for example `/volume1/docker/stups` with the subfolder `data`.
+3. In Container Manager under **Project › Create** paste the `docker-compose.yml` from above, adjust the path (`/volume1/docker/stups/data:/data`) and start.
+4. Read the setup code under **Container › stups › Log**.
+5. Make it reachable from outside only via HTTPS (see below), do not expose port 8099 to the internet.
 
-Aktualisieren: `docker compose pull && docker compose up -d`; im Container Manager das Image neu herunterladen und das Projekt danach neu starten. Die Datenbank wird beim Start selbst auf den neuen Stand gebracht; vorher legt Stups eine Sicherung unter `data/backups` ab.
+Updating: `docker compose pull && docker compose up -d`; in Container Manager download the image again and restart the project afterwards. The database brings itself up to date on start; before that Stups makes a backup under `data/backups`.
 
-## Sicherheit
+## Security
 
-- **HTTPS.** Passwörter und das Sitzungs-Cookie sollten nie unverschlüsselt durchs Internet gehen. Stelle einen Reverse Proxy mit Zertifikat davor (bei Synology: **Systemsteuerung › Anmeldeportal › Erweitert › Reverse Proxy**, Ziel `http://localhost:8099`) und trage die https-Adresse als `STUPS_PUBLIC_URL` ein. Für WebSockets (Live-Sync) muss der Proxy die Kopfzeilen `Upgrade` und `Connection` durchreichen; bei Synology unter **Benutzerdefinierte Kopfzeile › WebSocket**.
-- **Anmeldung.** Passwörter werden mit scrypt gespeichert, Sitzungen laufen 30 Tage und verlängern sich bei Nutzung. Nach fünf Fehlversuchen wartet man eine Minute, jeder weitere Fehlversuch verdoppelt die Wartezeit (höchstens 30 Minuten). Ändert jemand sein Passwort, melden sich seine anderen Geräte ab (Passkeys bleiben bestehen). Passkeys: siehe „Anmelden mit Passkey".
-- **Kopfzeilen.** Anmelde-Kopfzeilen von Home Assistant oder einem Proxy werden im eigenen Container nie beachtet.
-- **Offen ist nur ein Weg ohne Anmeldung:** `/api/push/action` für die Knöpfe in ntfy-Nachrichten, und nur mit gültigem, signiertem Token.
-- **Datensicherung.** Alles liegt im Datenordner (`stups.sqlite`, `files`, `backups`). Eine Kopie dieses Ordners genügt.
+- **HTTPS.** Passwords and the session cookie should never travel unencrypted across the internet. Put a reverse proxy with a certificate in front (on Synology: **Control Panel › Login Portal › Advanced › Reverse Proxy**, target `http://localhost:8099`) and enter the https address as `STUPS_PUBLIC_URL`. For WebSockets (live sync) the proxy must pass on the `Upgrade` and `Connection` headers; on Synology under **Custom header › WebSocket**.
+- **Sign-in.** Passwords are stored with scrypt, sessions last 30 days and extend with use. After five failed attempts you wait a minute, every further failed attempt doubles the waiting time (at most 30 minutes). If someone changes their password, their other devices are signed out (passkeys stay). Passkeys: see "Signing in with a passkey".
+- **Headers.** Sign-in headers from Home Assistant or a proxy are never considered in the standalone container.
+- **Only one path is open without sign-in:** `/api/push/action` for the buttons in ntfy messages, and only with a valid, signed token.
+- **Backup.** Everything lives in the data folder (`stups.sqlite`, `files`, `backups`). A copy of this folder is enough.
 
-## Von der Home-Assistant-App umziehen
+## Moving from the Home Assistant app
 
-In der App unter **Einstellungen › Umzug** die Daten exportieren; sie landen in `/share/stups-umzug` von Home Assistant. Kopiere diesen Ordner `stups-umzug` in einen Ordner auf der NAS (zum Beispiel `./share`) und binde ihn beim ersten Start des neuen Containers ein:
+In the app, export the data under **Settings › Move**; it lands in `/share/stups-umzug` of Home Assistant. Copy this folder `stups-umzug` into a folder on the NAS (for example `./share`) and mount it on the first start of the new container:
 
 ```yaml
     volumes:
-      - ./stups-daten:/data
+      - ./stups-data:/data
       - ./share:/share:ro
 ```
 
-Ist der Datenordner noch leer, übernimmt Stups Datenbank und Anhänge daraus. Die Personen kommen mit, ihre Anmeldung nicht. Richte den ersten Administrator wie oben ein; gibst du ihm als Namen den einer vorhandenen Person, bekommt diese Person das Konto, ihre Karten bleiben ihr. Für jede weitere Person legst du unter **Personen & Zugriff** eine Anmeldung an.
+If the data folder is still empty, Stups takes over database and attachments from it. The people come along, their sign-in does not. Set up the first administrator as above; if you give them the name of an existing person, that person gets the account and keeps their cards. For every other person you create a sign-in under **People & Access**.

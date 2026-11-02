@@ -1,5 +1,6 @@
 // Erzeugt die Screenshots für README und Anleitung (docs/images) aus dem gebauten Server mit erfundenen Beispieldaten.
-// Aufruf im Repository-Ordner (nach pnpm build): node e2e/screenshots.mjs
+// Aufruf im Repository-Ordner (nach pnpm build): node e2e/screenshots.mjs [--lang en]
+//   ohne Angabe: deutsch nach docs/images, mit --lang en: englisch nach docs/images/en
 import { spawn } from 'node:child_process';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -7,8 +8,14 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { devices, webkit } from '@playwright/test';
 
+const lang = process.argv.includes('--lang') ? process.argv[process.argv.indexOf('--lang') + 1] : 'de';
+if (lang !== 'de' && lang !== 'en') throw new Error('--lang muss de oder en sein');
+const EN = lang === 'en';
+/** Text in der Sprache der Aufnahme */
+const x = (de, en) => (EN ? en : de);
+
 const root = join(import.meta.dirname, '..');
-const out = join(root, 'docs', 'images');
+const out = EN ? join(root, 'docs', 'images', 'en') : join(root, 'docs', 'images');
 mkdirSync(out, { recursive: true });
 const PORT = 18500;
 const base = `http://127.0.0.1:${PORT}`;
@@ -42,7 +49,7 @@ const stop = () => server.kill();
 process.on('exit', stop);
 
 async function waitUp(url = base) {
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 120; i++) {
     try {
       if ((await fetch(`${url}/healthz`)).ok) return;
     } catch {
@@ -53,8 +60,9 @@ async function waitUp(url = base) {
   throw new Error('Server startet nicht');
 }
 
+const headers = { 'content-type': 'application/json', 'x-stups-language': lang };
 const api = async (method, path, body) => {
-  const res = await fetch(`${base}/api/${path}`, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : method === 'POST' ? '{}' : undefined });
+  const res = await fetch(`${base}/api/${path}`, { method, headers, body: body ? JSON.stringify(body) : method === 'POST' ? '{}' : undefined });
   if (!res.ok) throw new Error(`${method} ${path}: ${res.status} ${await res.text()}`);
   return res.status === 204 ? null : res.json();
 };
@@ -68,6 +76,36 @@ const dayAt = (days, hour, min = 0) => {
   d.setDate(d.getDate() + days);
   d.setHours(hour, min, 0, 0);
   return d.toISOString();
+};
+
+// Alle Texte der Beispieldaten, deutsch und englisch
+const S = {
+  trash: x('Müll rausbringen', 'Take out the trash'),
+  tax: x('Steuererklärung abgeben', 'File tax return'),
+  windows: x('Fenster putzen', 'Clean the windows'),
+  gift: x('Geburtstagsgeschenk für Mama', 'Birthday gift for Mum'),
+  heating: x('Heizung entlüften', 'Bleed the radiators'),
+  smoke: x('Rauchmelder prüfen', 'Check smoke detectors'),
+  basement: x('Keller aufräumen', 'Tidy the basement'),
+  paper: x('Altpapier entsorgt', 'Paper recycling done'),
+  receipts: x('Belege sortieren', 'Sort receipts'),
+  form: x('Formular ausfüllen', 'Fill in the form'),
+  florist: x('Blumen Beck', 'Beck Florist'),
+  electrician: x('Elektriker Termin', 'Electrician appointment'),
+  tiles: x('Fliesen bestellen', 'Order tiles'),
+  kitchen: x('Angebot Küche prüfen', 'Review kitchen quote'),
+  parcel: x('Paket abholen', 'Pick up parcel'),
+  wrapping: x('Geschenkpapier kaufen', 'Buy wrapping paper'),
+  dentist: x('Zahnarzt anrufen', 'Call the dentist'),
+  boardReno: x('Umbau', 'Renovation'),
+  boardShop: x('Einkauf', 'Shopping'),
+  catCleaning: x('Putzen', 'Cleaning'),
+  catFamily: x('Familie', 'Family'),
+  catFinance: x('Finanzen', 'Finance'),
+  catTech: x('Technik', 'Tech'),
+  open: x('Offen', 'Open'),
+  planned: x('Geplant', 'Planned'),
+  doing: x('In Arbeit', 'In progress'),
 };
 
 async function seed() {
@@ -86,41 +124,41 @@ async function seed() {
   const view = await api('GET', `boards/${haushalt.id}`);
   const col = Object.fromEntries(view.columns.map((c) => [c.name, c.id]));
   const cat = {};
-  for (const [name, color] of [['Putzen', 'blue'], ['Familie', 'pink'], ['Finanzen', 'yellow'], ['Technik', 'mint']]) {
-    cat[name] = (await api('POST', `boards/${haushalt.id}/categories`, { name, color })).id;
+  for (const [key, name, color] of [['cleaning', S.catCleaning, 'blue'], ['family', S.catFamily, 'pink'], ['finance', S.catFinance, 'yellow'], ['tech', S.catTech, 'mint']]) {
+    cat[key] = (await api('POST', `boards/${haushalt.id}/categories`, { name, color })).id;
   }
   const mk = (boardId, columnId, data) => api('POST', `boards/${boardId}/cards`, { columnId, ...data });
 
-  const open = col['Offen'];
-  const c1 = await mk(haushalt.id, open, { title: 'Müll rausbringen', dueAt: at(-2 * H), recurrence: { type: 'fixed', freq: 'daily', every: 2 }, assigneeIds: [anna.id], priority: 'high' });
-  const c2 = await mk(haushalt.id, open, { title: 'Steuererklärung abgeben', dueAt: dayAt(0, 23, 0), assigneeIds: [ben.id], categoryIds: [cat.Finanzen], costCents: 12000 });
-  await api('POST', `cards/${c2.id}/checklist`, { text: 'Belege sortieren' });
-  const ck = await api('POST', `cards/${c2.id}/checklist`, { text: 'Formular ausfüllen' });
+  const open = col[S.open];
+  const c1 = await mk(haushalt.id, open, { title: S.trash, dueAt: at(-2 * H), recurrence: { type: 'fixed', freq: 'daily', every: 2 }, assigneeIds: [anna.id], priority: 'high' });
+  const c2 = await mk(haushalt.id, open, { title: S.tax, dueAt: dayAt(0, 23, 0), assigneeIds: [ben.id], categoryIds: [cat.finance], costCents: 12000 });
+  await api('POST', `cards/${c2.id}/checklist`, { text: S.receipts });
+  const ck = await api('POST', `cards/${c2.id}/checklist`, { text: S.form });
   await api('PATCH', `checklist/${ck.id}`, { done: true });
-  await mk(haushalt.id, open, { title: 'Fenster putzen', dueAt: dayAt(1, 10, 0), assigneeIds: [anna.id, ben.id], categoryIds: [cat.Putzen] });
-  const c4 = await mk(haushalt.id, open, { title: 'Geburtstagsgeschenk für Mama', dueAt: dayAt(3, 14, 0), assigneeIds: [ben.id], categoryIds: [cat.Familie], costCents: 4990 });
-  await api('POST', `cards/${c4.id}/links`, { url: 'https://maps.google.com/?q=Blumen+Beck', title: 'Blumen Beck' }).catch(() => undefined);
-  await mk(haushalt.id, open, { title: 'Heizung entlüften', categoryIds: [cat.Technik] });
-  await mk(haushalt.id, col['Geplant'], { title: 'Rauchmelder prüfen', dueAt: dayAt(9, 10, 0), assigneeIds: [anna.id], categoryIds: [cat.Technik] });
-  await mk(haushalt.id, col['In Arbeit'], { title: 'Keller aufräumen', assigneeIds: [ben.id], categoryIds: [cat.Putzen] });
-  const done = await mk(haushalt.id, open, { title: 'Altpapier entsorgt', dueAt: at(-30 * H), assigneeIds: [anna.id] });
+  await mk(haushalt.id, open, { title: S.windows, dueAt: dayAt(1, 10, 0), assigneeIds: [anna.id, ben.id], categoryIds: [cat.cleaning] });
+  const c4 = await mk(haushalt.id, open, { title: S.gift, dueAt: dayAt(3, 14, 0), assigneeIds: [ben.id], categoryIds: [cat.family], costCents: 4990 });
+  await api('POST', `cards/${c4.id}/links`, { url: 'https://maps.google.com/?q=Blumen+Beck', title: S.florist }).catch(() => undefined);
+  await mk(haushalt.id, open, { title: S.heating, categoryIds: [cat.tech] });
+  await mk(haushalt.id, col[S.planned], { title: S.smoke, dueAt: dayAt(9, 10, 0), assigneeIds: [anna.id], categoryIds: [cat.tech] });
+  await mk(haushalt.id, col[S.doing], { title: S.basement, assigneeIds: [ben.id], categoryIds: [cat.cleaning] });
+  const done = await mk(haushalt.id, open, { title: S.paper, dueAt: at(-30 * H), assigneeIds: [anna.id] });
   await api('POST', `cards/${done.id}/complete`);
 
   // weitere Boards für Agenda und Kalender
-  const umbau = await api('POST', 'boards', { name: 'Umbau' });
+  const umbau = await api('POST', 'boards', { name: S.boardReno });
   const uv = await api('GET', `boards/${umbau.id}`);
   const uo = uv.columns[0].id;
-  await mk(umbau.id, uo, { title: 'Elektriker Termin', dueAt: dayAt(2, 9, 0), assigneeIds: [ben.id] });
-  await mk(umbau.id, uo, { title: 'Fliesen bestellen', dueAt: dayAt(2, 12, 30), assigneeIds: [ben.id], costCents: 84000 });
-  await mk(umbau.id, uo, { title: 'Angebot Küche prüfen', dueAt: dayAt(5, 17, 0), assigneeIds: [anna.id] });
-  const einkauf = await api('POST', 'boards', { name: 'Einkauf' });
+  await mk(umbau.id, uo, { title: S.electrician, dueAt: dayAt(2, 9, 0), assigneeIds: [ben.id] });
+  await mk(umbau.id, uo, { title: S.tiles, dueAt: dayAt(2, 12, 30), assigneeIds: [ben.id], costCents: 84000 });
+  await mk(umbau.id, uo, { title: S.kitchen, dueAt: dayAt(5, 17, 0), assigneeIds: [anna.id] });
+  const einkauf = await api('POST', 'boards', { name: S.boardShop });
   const ev = await api('GET', `boards/${einkauf.id}`);
-  await mk(einkauf.id, ev.columns[0].id, { title: 'Paket abholen', dueAt: dayAt(0, 16, 30), assigneeIds: [anna.id] });
-  await mk(einkauf.id, ev.columns[0].id, { title: 'Geschenkpapier kaufen', dueAt: dayAt(1, 18, 0) });
+  await mk(einkauf.id, ev.columns[0].id, { title: S.parcel, dueAt: dayAt(0, 16, 30), assigneeIds: [anna.id] });
+  await mk(einkauf.id, ev.columns[0].id, { title: S.wrapping, dueAt: dayAt(1, 18, 0) });
 
   // Anlegedaten streuen, damit „Angelegt …" nicht überall „heute" heißt
   const db = new DatabaseSync(join(dir, 'stups.sqlite'));
-  const back = { 'Müll rausbringen': 3, 'Steuererklärung abgeben': 9, 'Fenster putzen': 1, 'Geburtstagsgeschenk für Mama': 5, 'Heizung entlüften': 21 };
+  const back = { [S.trash]: 3, [S.tax]: 9, [S.windows]: 1, [S.gift]: 5, [S.heating]: 21 };
   for (const [title, days] of Object.entries(back)) {
     db.prepare('update cards set created_at = ? where title = ?').run(at(-days * D), title);
   }
@@ -140,7 +178,7 @@ const shot = async (page, name, scheme) => {
 export async function capture(screens, baseUrl = base) {
   const browser = await webkit.launch();
   for (const scheme of ['dunkel', 'hell']) {
-    const context = await browser.newContext({ ...phone, locale: 'de-DE', timezoneId: 'Europe/Berlin', colorScheme: scheme === 'dunkel' ? 'dark' : 'light' });
+    const context = await browser.newContext({ ...phone, locale: x('de-DE', 'en-GB'), timezoneId: 'Europe/Berlin', colorScheme: scheme === 'dunkel' ? 'dark' : 'light' });
     const page = await context.newPage();
     for (const [name, run] of screens) {
       await page.goto(baseUrl + '/');
@@ -158,47 +196,48 @@ export async function capture(screens, baseUrl = base) {
 await waitUp();
 const seeded = await seed();
 
-const nav = (page, name) => page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name });
-const mode = (page, name) => page.getByRole('group', { name: 'Ansicht' }).getByRole('button', { name }).click();
+const nav = (page, name) => page.getByRole('navigation', { name: x('Ansicht', 'View') }).getByRole('button', { name });
+const mode = (page, name) => page.getByRole('group', { name: x('Ansicht', 'View') }).getByRole('button', { name }).click();
 const chip = (page, group, name) => page.getByRole('group', { name: group }).getByRole('button', { name }).click();
+const re = (s) => new RegExp(`^${s}`);
 
 const screens = [
-  ['board', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: /^Offen/ }).click(); }],
-  ['karte', async (page) => { await nav(page, 'Boards').click(); await page.getByText('Steuererklärung abgeben').first().click(); await page.getByTestId('created-note').waitFor(); }],
-  ['neue-karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: 'Neue Karte', exact: true }).click(); await page.getByLabel('Titel').fill('Zahnarzt anrufen'); }],
+  ['board', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: re(S.open) }).click(); }],
+  ['karte', async (page) => { await nav(page, 'Boards').click(); await page.getByText(S.tax).first().click(); await page.getByTestId('created-note').waitFor(); }],
+  ['neue-karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Karte', 'New card'), exact: true }).click(); await page.getByLabel(x('Titel', 'Title')).fill(S.dentist); }],
   ['stupsen', async (page) => {
     await nav(page, 'Boards').click();
-    await page.getByRole('tab', { name: /^Geplant/ }).click();
-    await page.getByText('Fenster putzen').first().click();
-    await page.getByRole('button', { name: 'Stupsen' }).click();
-    await page.getByRole('radio', { name: /Heute noch/ }).click();
+    await page.getByRole('tab', { name: re(S.planned) }).click();
+    await page.getByText(S.windows).first().click();
+    await page.getByRole('button', { name: x('Stupsen', 'Nudge') }).click();
+    await page.getByRole('radio', { name: x(/Heute noch/, /Today still/) }).click();
   }],
-  ['agenda', async (page) => { await nav(page, 'Agenda').click(); await page.getByTestId('agenda').getByText('Fenster putzen').waitFor(); }],
+  ['agenda', async (page) => { await nav(page, 'Agenda').click(); await page.getByTestId('agenda').getByText(S.windows).waitFor(); }],
   ['agenda-gefiltert', async (page) => {
     await nav(page, 'Agenda').click();
-    await chip(page, 'Personen', /Ben/);
-    await chip(page, 'Boards', /Umbau/);
-    await page.getByTestId('agenda').getByText('Elektriker Termin').waitFor();
+    await chip(page, x('Personen', 'People'), /Ben/);
+    await chip(page, 'Boards', new RegExp(S.boardReno));
+    await page.getByTestId('agenda').getByText(S.electrician).waitFor();
   }],
-  ['kalender-woche', async (page) => { await nav(page, 'Kalender').click(); await mode(page, 'Woche'); if (new Date().getDay() === 0) await page.getByRole('button', { name: 'Weiter' }).click(); /* sonntags liegt morgen in der nächsten Woche */ await page.getByRole('button', { name: /^Fenster putzen/ }).waitFor(); }],
-  ['kalender-tag', async (page) => { await nav(page, 'Kalender').click(); await mode(page, 'Tag'); await page.getByRole('button', { name: /^Paket abholen/ }).waitFor(); }],
-  ['kalender-monat', async (page) => { await nav(page, 'Kalender').click(); await mode(page, 'Monat'); await page.locator('[data-today]').waitFor(); }],
+  ['kalender-woche', async (page) => { await nav(page, x('Kalender', 'Calendar')).click(); await mode(page, x('Woche', 'Week')); if (new Date().getDay() === 0) await page.getByRole('button', { name: x('Weiter', 'Next') }).click(); /* sonntags liegt morgen in der nächsten Woche */ await page.getByRole('button', { name: re(S.windows) }).waitFor(); }],
+  ['kalender-tag', async (page) => { await nav(page, x('Kalender', 'Calendar')).click(); await mode(page, x('Tag', 'Day')); await page.getByRole('button', { name: re(S.parcel) }).waitFor(); }],
+  ['kalender-monat', async (page) => { await nav(page, x('Kalender', 'Calendar')).click(); await mode(page, x('Monat', 'Month')); await page.locator('[data-today]').waitFor(); }],
   ['kalender-neue-karte', async (page) => {
-    await nav(page, 'Kalender').click();
-    await mode(page, 'Tag');
-    await page.getByRole('button', { name: /^Paket abholen/ }).waitFor();
+    await nav(page, x('Kalender', 'Calendar')).click();
+    await mode(page, x('Tag', 'Day'));
+    await page.getByRole('button', { name: re(S.parcel) }).waitFor();
     const grid = page.getByTestId('calendar-grid');
     await grid.evaluate((el) => (el.scrollTop = 11 * 56));
-    const box = await page.getByRole('button', { name: /^Neue Karte am/ }).boundingBox();
+    const box = await page.getByRole('button', { name: x(/^Neue Karte am/, /^New card on/) }).boundingBox();
     await page.mouse.click(box.x + box.width / 2, box.y + 12 * 56 + 20);
-    await page.getByLabel('Titel').fill('Zahnarzt anrufen');
+    await page.getByLabel(x('Titel', 'Title')).fill(S.dentist);
   }],
   ['personen', async (page) => {
     await nav(page, 'Boards').click();
-    await page.getByRole('button', { name: 'Board wechseln' }).click();
-    await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
-    await page.getByRole('button', { name: /Personen & Zugriff/ }).click();
-    await page.getByRole('dialog').getByText('Wer darf Stups öffnen?').waitFor();
+    await page.getByRole('button', { name: x('Board wechseln', 'Switch board') }).click();
+    await page.getByRole('button', { name: x('Einstellungen', 'Settings'), exact: true }).click();
+    await page.getByRole('button', { name: x(/Personen & Zugriff/, /People & Access/) }).click();
+    await page.getByRole('dialog').getByText(x('Wer darf Stups öffnen?', 'Who may open Stups?')).waitFor();
   }],
 ];
 // ---------- Wächter: eigener Server mit nachgebautem Home Assistant (e2e/server-ha.mjs), erfundene Namen ----------
@@ -211,42 +250,51 @@ const haServer = spawn(process.execPath, [join(root, 'e2e', 'server-ha.mjs')], {
 });
 process.on('exit', () => haServer.kill());
 
+const W = {
+  washer: x('Waschmaschine fertig', 'Washing machine done'),
+  washerCard: x('Waschmaschine ausräumen', 'Empty the washing machine'),
+  vacuum: x('Saugroboter: Behälter leeren', 'Robot vacuum: empty the bin'),
+  vacuumCard: x('Staubbehälter leeren', 'Empty the dust bin'),
+  dish: x('Spülmaschine fertig', 'Dishwasher done'),
+  dishCard: x('Spülmaschine ausräumen', 'Empty the dishwasher'),
+};
+
 async function seedWatchers() {
   await waitUp(haBase);
   const call = async (method, path, body) => {
-    const res = await fetch(`${haBase}/api/${path}`, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : method === 'POST' ? '{}' : undefined });
+    const res = await fetch(`${haBase}/api/${path}`, { method, headers, body: body ? JSON.stringify(body) : method === 'POST' ? '{}' : undefined });
     if (!res.ok) throw new Error(`${method} ${path}: ${res.status} ${await res.text()}`);
     return res.status === 204 ? null : res.json();
   };
   const setState = (entityId, state, attributes = {}) =>
     fetch(`${mock}/mock/state`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ entityId, state, attributes }) });
-  await setState('vacuum.s7', 'cleaning', { friendly_name: 'Saugroboter S7' });
-  await setState('sensor.spuelmaschine_leistung', '80', { friendly_name: 'Spülmaschine Leistung', unit_of_measurement: 'W' });
+  await setState('vacuum.s7', 'cleaning', { friendly_name: x('Saugroboter S7', 'Robot vacuum S7') });
+  await setState('sensor.spuelmaschine_leistung', '80', { friendly_name: x('Spülmaschine Leistung', 'Dishwasher power'), unit_of_measurement: 'W' });
 
   const people = await call('GET', 'people');
   for (const p of people) await call('PATCH', `access/people/${p.id}`, { notifyServices: [`mobile_app_${p.name.toLowerCase()}_e2e`], quietOff: true });
   const [board] = await call('GET', 'boards');
   const view = await call('GET', `boards/${board.id}`);
-  const columnId = view.columns.find((c) => c.name === 'Offen').id;
+  const columnId = view.columns.find((c) => c.name === S.open).id;
   const card = (title, due) => ({ boardId: board.id, columnId, title, due });
   const wash = await call('POST', 'watchers', {
-    name: 'Waschmaschine fertig',
+    name: W.washer,
     trigger: { entityId: 'sensor.waschmaschine_leistung', kind: 'below', value: 5, forMin: 3 },
-    card: card('Waschmaschine ausräumen', { kind: 'in', minutes: 30 }),
+    card: card(W.washerCard, { kind: 'in', minutes: 30 }),
     assign: { mode: 'rotation_present', personIds: [] },
     done: { entityId: 'binary_sensor.waschmaschine_tuer', kind: 'state', to: 'on' },
   });
   await call('POST', 'watchers', {
-    name: 'Saugroboter: Behälter leeren',
+    name: W.vacuum,
     trigger: { entityId: 'vacuum.s7', kind: 'state', to: 'docked', count: 3 },
-    card: card('Staubbehälter leeren', { kind: 'none' }),
+    card: card(W.vacuumCard, { kind: 'none' }),
     assign: { mode: 'first_home', personIds: [] },
   });
   await call('POST', 'watchers', {
-    name: 'Spülmaschine fertig',
+    name: W.dish,
     active: false,
     trigger: { entityId: 'sensor.spuelmaschine_leistung', kind: 'below', value: 5, forMin: 3 },
-    card: card('Spülmaschine ausräumen', { kind: 'in', minutes: 30 }),
+    card: card(W.dishCard, { kind: 'in', minutes: 30 }),
     assign: { mode: 'rotation_present', personIds: [] },
   });
   await call('POST', `watchers/${wash.id}/test`);
@@ -254,19 +302,19 @@ async function seedWatchers() {
 
 const watcherScreens = [
   ['waechter-liste', async (page) => {
-    await nav(page, 'Wächter').click();
+    await nav(page, x('Wächter', 'Watchers')).click();
     await page.getByTestId('watcher-card').first().waitFor();
     await page.getByTestId('watcher-activity').waitFor();
   }],
   ['waechter-bearbeiten', async (page) => {
     await nav(page, 'Boards').click();
-    await nav(page, 'Wächter').click();
-    await page.getByRole('button', { name: /Wächter Waschmaschine fertig bearbeiten/ }).click();
+    await nav(page, x('Wächter', 'Watchers')).click();
+    await page.getByRole('button', { name: x(/Wächter Waschmaschine fertig bearbeiten/, /Edit watcher Washing machine done/) }).click();
     await page.getByTestId('watcher-preview').waitFor();
   }],
   ['waechter-karte', async (page) => {
     await nav(page, 'Boards').click();
-    await page.getByRole('tab', { name: /^Offen/ }).click();
+    await page.getByRole('tab', { name: re(S.open) }).click();
     await page.getByTestId('card-watcher').first().waitFor();
   }],
 ];

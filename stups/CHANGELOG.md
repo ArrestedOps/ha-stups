@@ -1,5 +1,19 @@
 # Änderungen
 
+## 1.13.0
+
+Diese Version fasst die Versionen 1.10.0 bis 1.13.0 zusammen, die zuvor in der Beta-App liefen.
+
+- **Schnell-Eingabe (neu).** Im Fenster „Neue Karte" wird aus einer Zeile eine fertige Karte: `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` ergibt Titel „Müll raus", fällig morgen 19:00, zuständig Ben, Kategorie Haushalt, wöchentlich, Priorität hoch. Erkannte Teile sind im Text farbig hinterlegt, darunter zeigen Chips, was Stups verstanden hat; ein Tipp auf einen Chip nimmt ihn zurück. Erkannt werden Datum (heute, morgen, Wochentage, „in 3 Tagen", „1.12.", „1. Dezember"), Uhrzeit, Wiederholung („jede Woche", „alle 2 Tage", „monatlich" …), `@Person`, `#Kategorie` und Priorität (`!`, `!!`, „wichtig")
+- Eine unbekannte Person sperrt das Anlegen (sonst gäbe es keine Erinnerung); eine neue Kategorie wird nach Rückfrage angelegt. Neue Einstellung **Standard-Uhrzeit für Termine** (Einstellungen › Vorgaben, Vorgabe 09:00) für ein Datum ohne Uhrzeit
+- **Kompakte Karten im Board.** Titel (höchstens zwei Zeilen) und eine Zeile mit allem Wichtigen: Termin (rot, wenn überfällig), Wiederholung, Priorität, Checkliste, Kommentare, Links, Anhänge und Kosten; Kategorien als kleine Punkte. Auf einem iPhone passen so meist fünf Karten auf den Bildschirm
+- Der „+"-Knopf verdeckt nichts mehr, Spalten-Tabs und Filter-Chips zeigen mit einem Verlauf am Rand, dass man wischen kann, und im Karten-Fenster heißt der Knopf oben rechts „Fertig" statt „Speichern". Auswahlfelder sehen überall gleich aus
+- **Agenda:** Karten, die weiter als 60 Tage entfernt sind, fehlten. Jetzt gibt es auch bei leerer Liste den Knopf „Weitere 60 Tage laden", und liegt im ersten Zeitraum nichts an, schaut die Agenda gleich ein Jahr voraus
+- **Live-Sync schlanker.** Ändert jemand eine Karte, holen die anderen Geräte nur diese Karte nach statt das ganze Board: bei 300 Karten 1,1 KB statt 210 KB je Änderung. Bei allem anderen (Boards, Spalten, Kategorien, Personen, Stupse, Wächter, Kosten) und nach einem Verbindungsabbruch wird wie bisher alles neu geladen
+- Unter der Haube nach Themen aufgeteilt (Datenteil und Schnittstelle in kleinere Dateien), ohne Änderung im Verhalten
+- **Lizenz:** Stups steht ab dieser Version unter der PolyForm Strict License 1.0.0 (Nutzen und Lesen ja, Weitergeben und Verändern nein). Für 1.9.0 und früher gilt weiter die MIT-Lizenz
+- Keine Migration der Datenbank
+
 ## 1.9.0
 
 - **Neue Beta-App „Stups (Beta)".** Neue Versionen erscheinen künftig zuerst dort und erst nach dem Test in dieser App. Die Beta hat **eigene Daten** (echte Daten lassen sich einmal über Einstellungen › Umzug hineinkopieren), ein eigenes Symbol mit „BETA"-Band und einen eigenen Eintrag in der Seitenleiste. Installation: Repository `https://github.com/ArrestedOps/ha-stups#beta` in Home Assistant hinzufügen (Anleitung im README)

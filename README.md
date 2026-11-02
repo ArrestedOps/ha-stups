@@ -32,6 +32,7 @@ Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haus
 ## Was kann es?
 
 - **Boards** mit eigenen Spalten und Kategorien, Karten mit Zuständigen, Termin, Priorität, Kosten, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt Karten, ein Farbbalken zeigt die Dringlichkeit.
+- **Schnell-Eingabe:** Eine Zeile wie `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` wird zur fertigen Karte mit Termin, Zuständigem, Kategorie, Wiederholung und Priorität.
 - **Agenda:** alle Karten mit Termin aus allen Boards, nach Tagen, Überfälliges zuerst. Filter nach Personen und Boards.
 - **Kalender:** Tag, Woche und Monat. Auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an.
 - **Wiederkehrende Aufgaben:** fester Rhythmus oder ab Erledigung; die erledigte Karte bleibt samt Verlauf erhalten, die nächste entsteht neu.

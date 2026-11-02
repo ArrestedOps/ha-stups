@@ -205,9 +205,11 @@ test('Neue Karte: alle Felder gleich beim Anlegen (Priorität, Beschreibung, Che
   await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
   await page.getByLabel('Titel').fill(title);
 
-  await page.getByRole('button', { name: 'Priorität' }).click();
+  // Karten in der Liste tragen „Priorität hoch" im Namen: darum nur unter den Eigenschaften suchen
+  const props = page.getByRole('group', { name: 'Eigenschaften' });
+  await props.getByRole('button', { name: 'Priorität' }).click();
   await page.getByRole('group', { name: 'Priorität' }).getByRole('button', { name: 'Hoch' }).click();
-  await page.getByRole('button', { name: 'Kosten' }).click();
+  await props.getByRole('button', { name: 'Kosten' }).click();
   await page.getByLabel('Kosten in Euro').fill('49,90');
   await page.getByLabel('Beschreibung').fill('Tisch für zwei reservieren');
 

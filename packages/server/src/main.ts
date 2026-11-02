@@ -63,7 +63,7 @@ if (options.users.some((u) => u.name !== '')) {
 store.ensureDefaultBoard();
 store.ensurePlannedColumns();
 
-const bus = createEventBus();
+const bus = createEventBus({ changes: () => store.takeChanges() });
 const files = createFileStore(`${dataDir}/files`);
 // Verbindung zu Home Assistant: im Add-on über den Supervisor, sonst nur mit Adresse und Long-Lived-Token
 const token = runtime.ha?.token ?? '';
@@ -117,7 +117,7 @@ const notifier = createNotifier({
 nudgesClosed = (list) => void notifier.nudgesClosed(list);
 
 // Wächter: Karten automatisch aus Zuständen in Home Assistant (nur mit Verbindung dorthin)
-const watcherData = createWatcherData(db);
+const watcherData = createWatcherData(db, undefined, () => store.markAllChanged());
 const watchers = token
   ? createWatchers({
       store,

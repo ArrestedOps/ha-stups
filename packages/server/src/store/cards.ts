@@ -139,6 +139,12 @@ export function createCards(c: Ctx, late: unknown) {
     position: r.position,
   });
 
+  /** Mehrere Karten auf einmal, so wie die Board-Ansicht sie liefert (sichtbar, nicht archiviert); Unbekannte, Gelöschte und Archivierte fehlen */
+  function getCards(ids: string[]): Card[] {
+    if (ids.length === 0) return [];
+    return loadCards(`id in (${ids.map(() => '?').join(', ')}) and deleted_at is null and archived_at is null`, ...ids);
+  }
+
   function getCard(id: string): CardDetail {
     visibleCardRow(id);
     const [card] = loadCards('id = ?', id);
@@ -560,6 +566,7 @@ export function createCards(c: Ctx, late: unknown) {
     toItem,
     toLink,
     getCard,
+    getCards,
     logEvent,
     listActivity,
     checkAssignees,

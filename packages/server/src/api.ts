@@ -64,7 +64,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   app.get('/api/events', { websocket: true }, (socket) => {
     const bus = deps.bus;
     socket.send(JSON.stringify({ type: 'hello', seq: bus?.seq ?? 0 }));
-    const off = bus?.subscribe((e) => socket.send(JSON.stringify({ type: 'changed', seq: e.seq, by: e.by })));
+    const off = bus?.subscribe((e) => socket.send(JSON.stringify({ type: 'changed', seq: e.seq, by: e.by, changes: e.changes })));
     const ping = setInterval(() => socket.ping(), 25_000);
     socket.on('close', () => {
       off?.();

@@ -2,6 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import { ValidationError } from '../errors.js';
 import { type ApiKit, type Params } from './kit.js';
 
+const MAX_IDS = 50;
+
 /** Karten, Termine über alle Boards, Erledigen und Archiv */
 export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
   const { deps, store, body, noContent } = k;
@@ -28,6 +30,12 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
       req.user?.id ?? null,
     );
     return reply.code(201).send(card);
+  });
+  // Mehrere Karten in einem Aufruf (für den Live-Sync: nur holen, was sich geändert hat). Unbekannte und gelöschte fehlen.
+  app.get<{ Querystring: { ids?: string } }>('/api/cards', async (req) => {
+    const ids = [...new Set((req.query.ids ?? '').split(',').filter((x) => x !== ''))];
+    if (ids.length > MAX_IDS) throw new ValidationError(`Höchstens ${MAX_IDS} Karten auf einmal`);
+    return store.getCards(ids);
   });
   app.get<{ Params: Params }>('/api/cards/:id', async (req) => store.getCard(req.params.id));
   app.patch<{ Params: Params }>('/api/cards/:id', async (req) => {

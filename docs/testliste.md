@@ -227,6 +227,18 @@ Am iPhone, in der Beta zuerst, dunkel und hell.
 - [ ] Ein ganz normaler Titel („Kauf 2 Kisten Wasser") bleibt ohne Chips und unverändert
 - [ ] **Agenda:** Eine Karte, die mehr als 60 Tage entfernt ist, steht in der Agenda (die Agenda schaut gleich ein Jahr voraus, wenn sonst nichts anliegt) oder ist über „Weitere 60 Tage laden" erreichbar, auch bei einer leeren Liste (Board-Filter auf ein Board mit nur fernen Karten)
 
+## 20 · Live-Sync mit Änderungen (seit 1.13.0)
+
+Zwei Geräte (zum Beispiel iPhone und Mac), beide in der Beta.
+
+- [ ] Am einen Gerät den Titel einer Karte ändern: Am anderen erscheint er sofort, die Ansicht springt nicht (Scrollposition und offene Spalte bleiben)
+- [ ] Eine Karte am einen Gerät in eine andere Spalte schieben, erledigen, löschen: Am anderen ist es sofort zu sehen
+- [ ] Ein Board anlegen, eine Spalte oder Kategorie umbenennen, eine Person umbenennen: Am anderen Gerät stimmt danach alles (hier lädt die App wie früher alles neu)
+- [ ] Eine Wiederholung erledigen: Am anderen Gerät ist die alte Karte erledigt und die nächste da
+- [ ] Am anderen Gerät eine Karte ziehen, während am ersten etwas geändert wird: Die Karte springt nicht weg; nach dem Loslassen stimmt der Stand
+- [ ] App im Hintergrund, am anderen Gerät mehrere Karten ändern, wieder öffnen: aktueller Stand
+- [ ] Flugmodus kurz an und wieder aus, am anderen Gerät währenddessen etwas ändern: Nach dem Verbinden stimmt der Stand
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

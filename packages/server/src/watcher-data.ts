@@ -50,11 +50,15 @@ const KEEP_RUNS = 50;
 
 type Row = Record<string, any>;
 
-export function createWatcherData(db: DatabaseSync, now: () => Date = () => new Date()) {
+/** `onWrite` meldet jeden Schreibzugriff (der Store schreibt mit, was sich für den Live-Sync geändert hat: bei Wächtern „alles") */
+export function createWatcherData(db: DatabaseSync, now: () => Date = () => new Date(), onWrite: () => void = () => undefined) {
   const iso = () => now().toISOString();
   const one = (sql: string, ...p: unknown[]) => db.prepare(sql).get(...(p as never[])) as Row | undefined;
   const all = (sql: string, ...p: unknown[]) => db.prepare(sql).all(...(p as never[])) as Row[];
-  const run = (sql: string, ...p: unknown[]) => db.prepare(sql).run(...(p as never[]));
+  const run = (sql: string, ...p: unknown[]) => {
+    onWrite();
+    return db.prepare(sql).run(...(p as never[]));
+  };
 
   const toWatcher = (r: Row): Watcher => ({
     id: r.id,

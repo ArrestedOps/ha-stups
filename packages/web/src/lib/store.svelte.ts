@@ -16,7 +16,8 @@ import { applyHeaderHiding } from './hideHaHeader';
 import { passkeysSupported } from './passkeys';
 import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
 import { swipeTarget } from './swipe';
-import { startSync } from './sync';
+import { applyCards, deltaIds } from './delta';
+import { startSync, type SyncInfo } from './sync';
 
 export type Sheet =
   | null
@@ -183,12 +184,22 @@ export async function act<T>(fn: () => Promise<T>): Promise<T | undefined> {
 let refreshing: Promise<void> | null = null;
 let again = false;
 let pendingRefresh = false;
+/** Was noch nachzuladen ist: alles, oder einzelne Karten (mehrere Meldungen während des Ladens fließen zusammen) */
+const todo = { full: false, ids: new Set<string>() };
 
-export function refresh(): Promise<void> {
+/** Lädt nach: ohne Angabe alles, mit der Meldung des Servers nur die geänderten Karten (wenn der Server das sagen kann) */
+export function refresh(info?: SyncInfo): Promise<void> {
+  const ids = info ? deltaIds(info.changes, info.gap) : null;
+  if (ids === null) todo.full = true;
+  else for (const id of ids) todo.ids.add(id);
   if (ui.dragging) {
     pendingRefresh = true; // erst nach dem Loslassen, sonst springt die Karte unter dem Finger weg
     return Promise.resolve();
   }
+  return flush();
+}
+
+function flush(): Promise<void> {
   if (refreshing) {
     again = true;
     return refreshing;
@@ -196,7 +207,12 @@ export function refresh(): Promise<void> {
   refreshing = (async () => {
     do {
       again = false;
-      await load();
+      const full = todo.full;
+      const ids = [...todo.ids];
+      todo.full = false;
+      todo.ids.clear();
+      if (full) await load();
+      else await loadCards(ids);
     } while (again);
   })().finally(() => {
     refreshing = null;
@@ -208,7 +224,7 @@ export function setDragging(on: boolean): void {
   ui.dragging = on;
   if (!on && pendingRefresh) {
     pendingRefresh = false;
-    void refresh();
+    void flush(); // was sich währenddessen angesammelt hat (nur Karten oder alles)
   }
 }
 
@@ -236,6 +252,27 @@ async function load(): Promise<void> {
     if (e instanceof ApiError && e.status === 0) ui.online = false;
     else if (e instanceof ApiError && e.status === 403) ui.allowed = false; // Zugriff wurde entzogen
     else toast(errorText(e), { tone: 'error' });
+  }
+}
+
+/**
+ * Nur die gemeldeten Karten nachladen (statt Board, Personen, Wächter und alle Karten). Alles, was dabei nicht
+ * eindeutig ist (Kosten, anderes Board, Fehler), lädt wie bisher alles neu.
+ */
+async function loadCards(ids: string[]): Promise<void> {
+  if (ids.length === 0) return; // geändert hat sich nichts, was eine Ansicht zeigt
+  const view = ui.view;
+  if (!view) return load();
+  try {
+    const [boards, fetched] = await Promise.all([api.boards(), api.cardsByIds(ids)]);
+    const next = ui.view === view && boards.some((b) => b.id === ui.boardId) ? applyCards(view, ids, fetched) : null;
+    if (!next) return load();
+    ui.boards = boards;
+    ui.view = next;
+    ui.rev += 1;
+    ui.online = true;
+  } catch {
+    return load(); // meldet Fehler und Verbindungsabbruch wie gewohnt
   }
 }
 
@@ -297,7 +334,7 @@ export async function init(): Promise<void> {
   if (cardId) ui.sheet = { type: 'card', id: cardId };
   reportPanelPath();
   startSync(
-    () => void refresh(),
+    (info) => void refresh(info),
     (online) => (ui.online = online),
   );
 }

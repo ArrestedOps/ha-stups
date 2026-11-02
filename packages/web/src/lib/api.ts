@@ -352,6 +352,8 @@ export const api = {
   removePerson: (id: string) => del(`access/people/${id}`),
   boards: () => get<BoardSummary[]>('boards'),
   board: (id: string) => get<BoardView>(`boards/${id}`),
+  /** Einzelne Karten (für den Live-Sync); gelöschte und archivierte fehlen in der Antwort */
+  cardsByIds: (ids: string[]) => get<Card[]>(`cards?ids=${ids.map(encodeURIComponent).join(',')}`),
   createBoard: (name: string) => post<Board>('boards', { name }),
   updateBoard: (id: string, b: Partial<{ name: string; archiveAfterDays: number }>) => patch<Board>(`boards/${id}`, b),
   deleteBoard: (id: string) => del(`boards/${id}`),

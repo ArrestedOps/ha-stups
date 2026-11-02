@@ -93,6 +93,15 @@ Die Teile sind Funktionen `createX(c: Ctx, late)`. Rufen sie Funktionen anderer 
 
 **Absicherung:** `test/shape.test.ts` vergleicht die Namen aller Store-Methoden und alle Routen (mit allen Teilen, die nur mit bestimmten Abhängigkeiten existieren) mit `test/fixtures/*.json`. Eine Methode oder Route verschwindet oder kommt dazu, ohne dass jemand es merkt, geht damit nicht mehr. Bewusst ändern: `UPDATE_SHAPE=1 pnpm test` und die Dateien mitcommitten.
 
+### Live-Sync mit Änderungen (seit 1.13.0)
+
+Jede Änderung löst eine Meldung über den WebSocket (`/api/events`) aus. Neu: Die Meldung sagt, was sich geändert hat, und der Client holt nur das nach.
+
+- **Server:** `Ctx.run` (`store/context.ts`) schreibt bei jedem Schreibzugriff mit, welche Tabelle betroffen ist. Karten werden über ihre Kennung gemerkt (neu: erster Parameter; ändern: letzter Parameter bei `where id = ?`), Teile einer Karte (Checkliste, Links, Kommentare, Anhänge, Zuständige, Kategorien, Verlauf) zählen als Änderung dieser Karte, Sitzungen und Sendeprotokoll als nichts, **alles andere heißt „alles neu laden"**. Der Bus (`events.ts`) holt bei jeder Meldung `store.takeChanges()` ab und hängt `changes: { full, cards }` an. Was der Server nicht eindeutig einer Karte zuordnen kann, wird zu `full: true`; im Zweifel lädt der Client lieber zu viel. **Wer an `run` vorbei in die Datenbank schreibt, muss `store.markAllChanged()` aufrufen** (so tut es `watcher-data.ts`), sonst bleibt die Änderung unsichtbar.
+- **Route:** `GET /api/cards?ids=a,b,c` (höchstens 50, Reihenfolge nach Position, gelöschte und archivierte fehlen).
+- **Client:** `lib/sync.ts` prüft die Nummerierung (`seq`); fehlt eine Meldung oder wurde neu verbunden, gilt „alles". `lib/delta.ts` (rein, mit Tests) entscheidet, welche Karten nachgeladen werden, und setzt sie in die Ansicht ein. Kosten (die Summe steht nur im ganzen Board), ein anderes Board oder ein Fehler führen zum vollen Laden wie vorher. Eigene Aktionen (`act`) laden weiter alles. Meldungen, die während des Ladens oder Ziehens eintreffen, fließen zusammen.
+- **Messen:** `e2e/4-perf.spec.ts` (Board mit 300 Karten, eine Änderung auf einem zweiten Gerät). Vorher: 214.692 Byte in vier Aufrufen; jetzt: 1.157 Byte in zwei (Boards-Liste und die eine Karte).
+
 ### Ports und Adapter
 
 Die Fachlogik (Store, Wiederholungen, Wächter-Regeln, Stupsen) kennt Home Assistant nicht. Was von außen kommt, hängt an kleinen Schnittstellen in `packages/server/src`:
@@ -161,5 +170,5 @@ Die CI bricht ab, wenn die Version nicht zum Branch passt (eine Beta-Version ohn
 - Das Wischen und die Tastatur-Anpassung sind in den Browser-Tests nur mit Zeiger-Ereignissen bzw. per Rechenfunktion abgedeckt. Echtes Touch und die echte Bildschirmtastatur lassen sich nur am iPhone prüfen.
 - Spalten werden mit Pfeilen sortiert, nicht per Ziehen.
 - Erinnerungen gibt es als „Vorab" (15 Minuten bis 2 Tage) und „Nachhaken" (tägliche Uhrzeit aus den Optionen), keine freien Zeiten pro Karte.
-- Live-Sync lädt nach jeder Änderung neu. Das ist bei dieser Datenmenge schnell, wäre aber bei sehr großen Boards ein Ansatzpunkt für Optimierung.
+- Live-Sync holt bei Änderungen an Karten nur diese Karten (seit 1.13.0, siehe „Live-Sync mit Änderungen"). Alles andere (Boards, Spalten, Kategorien, Personen, Stupse, Wächter) und Kosten laden wie vorher alles neu. Agenda, Kalender und Karten-Fenster holen ihre eigenen Daten weiterhin bei jeder Meldung neu.
 - Die Browser-Tests laufen in WebKit unter Linux (CI), nicht in der Companion App.

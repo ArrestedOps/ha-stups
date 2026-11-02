@@ -5,6 +5,7 @@ import { dayNumber, rangeTitle, weekdayShort } from '../src/lib/calendar';
 import { formatCost, formatCreated, formatDue, formatLead, parseCost } from '../src/lib/datetime';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
 import { sentMessage, targetHint } from '../src/lib/nudge';
+import { noteText } from '../src/lib/watchers';
 import { dayLabel, groupByDay } from '../src/lib/schedule';
 
 const TZ = 'Europe/Berlin';
@@ -112,6 +113,22 @@ describe('Verlauf auf Englisch', () => {
     expect(d({ kind: 'due', from: null, to: '2026-11-03T18:00:00Z' }).title).toBe('Due date set: tomorrow 19:00');
     expect(d({ kind: 'due', from: '2026-11-03T18:00:00Z', to: null }).title).toBe('Due date removed');
     expect(d({ kind: 'reopened', to: 'Open' }).title).toBe('Reopened: Open');
+  });
+});
+
+describe('Notizen der Läufe', () => {
+  it('bekannte Notizen werden übersetzt, alte und fremde bleiben, wie sie sind', () => {
+    setLanguage('en');
+    expect(noteText('erste Person zu Hause')).toBe('first person at home');
+    expect(noteText('Sperrzeit 10 Min.')).toBe('Lock time 10 min');
+    expect(noteText('2 von 3')).toBe('2 of 3');
+    expect(noteText('3 Auslösungen seit dem letzten Zurücksetzen')).toBe('3 triggers since the last reset');
+    expect(noteText('nach 60 Min.')).toBe('after 60 min');
+    expect(noteText('Zeitüberschreitung bei Home Assistant')).toBe('Zeitüberschreitung bei Home Assistant');
+    expect(noteText(null)).toBe('');
+    setLanguage('de');
+    expect(noteText('erste Person zu Hause')).toBe('erste Person zu Hause');
+    expect(noteText('2 von 3')).toBe('2 von 3');
   });
 });
 

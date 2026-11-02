@@ -2,19 +2,20 @@ import { ValidationError } from '../errors.js';
 import { type Recurrence } from '../recurrence.js';
 import { CARRY_FIELDS, DEFAULT_CARRY, type CarryField, type Priority } from './types.js';
 import { DUE_RE, PRIORITIES } from './constants.js';
+import { t } from '../i18n/index.js';
 
 // Prüfung von Eingaben: wirft ValidationError mit einer verständlichen Meldung
 export function cleanText(value: unknown, what: string, max: number): string {
-  if (typeof value !== 'string' || value.trim() === '') throw new ValidationError(`${what} fehlt`);
-  const t = value.trim();
-  if (t.length > max) throw new ValidationError(`${what} ist zu lang (höchstens ${max} Zeichen)`);
-  return t;
+  if (typeof value !== 'string' || value.trim() === '') throw new ValidationError(t('{what} fehlt', { what }));
+  const text = value.trim();
+  if (text.length > max) throw new ValidationError(t('{what} ist zu lang (höchstens {max} Zeichen)', { what, max }));
+  return text;
 }
 
 export function parseDue(value: unknown): string | null {
   if (value === null || value === undefined) return null;
   if (typeof value !== 'string' || !DUE_RE.test(value) || Number.isNaN(Date.parse(value))) {
-    throw new ValidationError('Die Fälligkeit braucht Datum und Uhrzeit mit Zeitzone');
+    throw new ValidationError(t('Die Fälligkeit braucht Datum und Uhrzeit mit Zeitzone'));
   }
   return new Date(value).toISOString();
 }
@@ -22,7 +23,7 @@ export function parseDue(value: unknown): string | null {
 export function parsePriority(value: unknown): Priority | null {
   if (value === null || value === undefined) return null;
   if (typeof value !== 'string' || !PRIORITIES.includes(value)) {
-    throw new ValidationError('Priorität muss low, medium oder high sein');
+    throw new ValidationError(t('Priorität muss low, medium oder high sein'));
   }
   return value as Priority;
 }
@@ -30,7 +31,7 @@ export function parsePriority(value: unknown): Priority | null {
 export function parseRemind(value: unknown): number | null {
   if (value === null || value === undefined) return null;
   if (!Number.isInteger(value) || (value as number) < 1 || (value as number) > 43_200) {
-    throw new ValidationError('Die Vorab-Erinnerung muss zwischen 1 Minute und 30 Tagen liegen');
+    throw new ValidationError(t('Die Vorab-Erinnerung muss zwischen 1 Minute und 30 Tagen liegen'));
   }
   return value as number;
 }
@@ -38,7 +39,7 @@ export function parseRemind(value: unknown): number | null {
 export function parseCost(value: unknown): number | null {
   if (value === null || value === undefined) return null;
   if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > 1_000_000_000) {
-    throw new ValidationError('Die Kosten müssen eine nicht negative Zahl in Cent sein');
+    throw new ValidationError(t('Die Kosten müssen eine nicht negative Zahl in Cent sein'));
   }
   return value as number;
 }
@@ -46,11 +47,11 @@ export function parseCost(value: unknown): number | null {
 /** undefined = nicht angegeben, null = Voreinstellung, sonst eine geprüfte Liste ohne Doppelte */
 export function parseCarryOver(value: unknown): CarryField[] | null | undefined {
   if (value === undefined || value === null) return value;
-  if (!Array.isArray(value)) throw new ValidationError('Die Übernahme-Felder müssen eine Liste sein');
+  if (!Array.isArray(value)) throw new ValidationError(t('Die Übernahme-Felder müssen eine Liste sein'));
   const out: CarryField[] = [];
   for (const v of value) {
     if (typeof v !== 'string' || !(CARRY_FIELDS as readonly string[]).includes(v)) {
-      throw new ValidationError('Unbekanntes Feld bei der Wiederholung');
+      throw new ValidationError(t('Unbekanntes Feld bei der Wiederholung'));
     }
     if (!out.includes(v as CarryField)) out.push(v as CarryField);
   }
@@ -70,7 +71,7 @@ export function resolveCarry(raw: string | null | undefined): CarryField[] {
 
 export function parseBool(value: unknown, what: string): boolean {
   if (value === undefined) return false;
-  if (typeof value !== 'boolean') throw new ValidationError(`${what} muss wahr oder falsch sein`);
+  if (typeof value !== 'boolean') throw new ValidationError(t('{what} muss wahr oder falsch sein', { what }));
   return value;
 }
 
@@ -81,7 +82,7 @@ export function isPosInt(n: unknown): n is number {
 export function parseRecurrence(value: unknown): Recurrence | null {
   if (value === null || value === undefined) return null;
   const r = value as Record<string, unknown>;
-  const bad = () => new ValidationError('Die Wiederholung ist ungültig');
+  const bad = () => new ValidationError(t('Die Wiederholung ist ungültig'));
   if (typeof r !== 'object') throw bad();
   if (r.type === 'fixed') {
     if (!['daily', 'weekly', 'monthly', 'yearly'].includes(r.freq as string) || !isPosInt(r.every)) throw bad();

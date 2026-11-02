@@ -6,6 +6,7 @@ import { type Attachment, type StoredAttachment, type Comment, type ChecklistIte
 import { cleanText } from './validate.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
+import { t } from '../i18n/index.js';
 
 /** Anhänge, Kommentare, Checkliste und Links einer Karte */
 export function createCardExtras(c: Ctx, late: unknown) {
@@ -64,7 +65,7 @@ export function createCardExtras(c: Ctx, late: unknown) {
       `select a.* from attachments a join cards c on c.id = a.card_id where a.id = ? and c.deleted_at is null`,
       id,
     );
-    if (!r) throw new NotFoundError('Anhang nicht gefunden');
+    if (!r) throw new NotFoundError(t('Anhang nicht gefunden'));
     return toStored(r);
   }
 
@@ -103,13 +104,13 @@ export function createCardExtras(c: Ctx, late: unknown) {
       `select c.*, u.display_name as author_name from comments c left join users u on u.id = c.author_id where c.id = ?`,
       id,
     );
-    if (!r) throw new NotFoundError('Kommentar nicht gefunden');
+    if (!r) throw new NotFoundError(t('Kommentar nicht gefunden'));
     return r;
   };
 
   function addComment(cardId: string, authorId: string | null, text: string): Comment {
     visibleCardRow(cardId);
-    const clean = cleanText(text, 'Der Kommentar', 2000);
+    const clean = cleanText(text, t('Der Kommentar'), 2000);
     const id = randomUUID();
     run('insert into comments (id, card_id, author_id, text, created_at) values (?, ?, ?, ?, ?)', id, cardId, authorId, clean, iso());
     touchCard(cardId);
@@ -127,7 +128,7 @@ export function createCardExtras(c: Ctx, late: unknown) {
 
   function updateComment(id: string, text: string): Comment {
     const c = commentRow(id);
-    run('update comments set text = ?, edited_at = ? where id = ?', cleanText(text, 'Der Kommentar', 2000), iso(), id);
+    run('update comments set text = ?, edited_at = ? where id = ?', cleanText(text, t('Der Kommentar'), 2000), iso(), id);
     touchCard(c.card_id);
     return toComment(commentRow(id));
   }
@@ -140,7 +141,7 @@ export function createCardExtras(c: Ctx, late: unknown) {
 
   function addChecklistItem(cardId: string, text: string): ChecklistItem {
     visibleCardRow(cardId);
-    const clean = cleanText(text, 'Der Text', 200);
+    const clean = cleanText(text, t('Der Text'), 200);
     return tx(() => {
       const id = randomUUID();
       run(
@@ -160,7 +161,7 @@ export function createCardExtras(c: Ctx, late: unknown) {
       `select i.* from checklist_items i join cards c on c.id = i.card_id where i.id = ? and c.deleted_at is null`,
       id,
     );
-    if (!r) throw new NotFoundError('Eintrag nicht gefunden');
+    if (!r) throw new NotFoundError(t('Eintrag nicht gefunden'));
     return r;
   }
 
@@ -168,7 +169,7 @@ export function createCardExtras(c: Ctx, late: unknown) {
     const item = itemRow(id);
     return tx(() => {
       if (patch.text !== undefined) {
-        run('update checklist_items set text = ? where id = ?', cleanText(patch.text, 'Der Text', 200), id);
+        run('update checklist_items set text = ? where id = ?', cleanText(patch.text, t('Der Text'), 200), id);
       }
       if (patch.done !== undefined) run('update checklist_items set done = ? where id = ?', patch.done ? 1 : 0, id);
       touchCard(item.card_id);
@@ -204,7 +205,7 @@ export function createCardExtras(c: Ctx, late: unknown) {
 
   function linkRow(id: string): Row {
     const r = one('select l.* from links l join cards c on c.id = l.card_id where l.id = ? and c.deleted_at is null', id);
-    if (!r) throw new NotFoundError('Link nicht gefunden');
+    if (!r) throw new NotFoundError(t('Link nicht gefunden'));
     return r;
   }
 

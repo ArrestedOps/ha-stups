@@ -1,3 +1,4 @@
+import { t, withLanguage, type Lang } from './i18n/index.js';
 import type { Options } from './config.js';
 import type { NotificationAction } from './ha.js';
 import type { PushGateway, PushMessage } from './push.js';
@@ -37,6 +38,9 @@ const NUDGE_PREFIX = 'KANBAN_NUDGE_';
 
 export const cardTag = (cardId: string) => `stups-card-${cardId}`;
 
+/** Sprache der Push-Nachrichten einer Person: die zuletzt gemeldete; solange keine bekannt ist, Deutsch (so war es bisher) */
+export const pushLanguage = (store: Pick<Store, 'languageOf'>, userId: string): Lang => store.languageOf(userId) ?? 'de';
+
 export function createNotifier(deps: NotifierDeps) {
   const { store, push, options } = deps;
   const log = deps.log ?? { info: () => undefined, warn: () => undefined };
@@ -54,8 +58,10 @@ export function createNotifier(deps: NotifierDeps) {
   }
 
   const send = (userId: string, message: PushMessage): Promise<boolean> => push.send(userId, message);
+  /** Baut die Nachricht in der Sprache des Empfängers */
+  const inLang = <T>(userId: string, build: () => T): T => withLanguage(pushLanguage(store, userId), build);
 
-  const doneAction = (cardId: string, dueAt: string) => ({ id: `${aPrefix}${ACTION_PREFIX}:${cardId}:${dueAt}`, title: 'Erledigt' });
+  const doneAction = (cardId: string, dueAt: string) => ({ id: `${aPrefix}${ACTION_PREFIX}:${cardId}:${dueAt}`, title: t('Erledigt') });
 
   function cardPayload(card: OpenDueCard, body: string): PushMessage {
     return {
@@ -72,22 +78,25 @@ export function createNotifier(deps: NotifierDeps) {
   /** Eine Karte ist (von einem Wächter) jemandem zugewiesen worden: gleich Bescheid sagen, ohne auf die Fälligkeit zu warten */
   async function notifyAssigned(card: { id: string; title: string; dueAt: string | null }, userIds: string[]): Promise<void> {
     const nowMs = deps.now().getTime();
-    const due = card.dueAt ? ` · fällig ${formatDue(Date.parse(card.dueAt), nowMs, deps.timeZone())}` : '';
     for (const id of userIds) {
       if (!push.canReach(id)) {
         warnNoServices(id);
         continue;
       }
-      const message: PushMessage = {
-        title: card.title,
-        body: `Neue Karte für dich${due}`,
-        tag: cardTag(card.id),
-        group: GROUP,
-        open: { cardId: card.id },
-        level: 'time-sensitive',
-      };
-      // „Erledigt" gilt für einen bestimmten Termin; ohne Termin bleibt es beim Öffnen der Karte
-      if (card.dueAt) message.actions = [doneAction(card.id, card.dueAt)];
+      const message = inLang(id, (): PushMessage => {
+        const due = card.dueAt ? formatDue(Date.parse(card.dueAt), nowMs, deps.timeZone()) : '';
+        const m: PushMessage = {
+          title: card.title,
+          body: card.dueAt ? t('Neue Karte für dich · fällig {due}', { due }) : t('Neue Karte für dich'),
+          tag: cardTag(card.id),
+          group: GROUP,
+          open: { cardId: card.id },
+          level: 'time-sensitive',
+        };
+        // „Erledigt" gilt für einen bestimmten Termin; ohne Termin bleibt es beim Öffnen der Karte
+        if (card.dueAt) m.actions = [doneAction(card.id, card.dueAt)];
+        return m;
+      });
       if (await send(id, message)) {
         log.info(`Push (neue Karte) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
       }
@@ -101,15 +110,18 @@ export function createNotifier(deps: NotifierDeps) {
         warnNoServices(id);
         continue;
       }
-      const message: PushMessage = {
-        title: card.title,
-        body: 'Noch offen: Denkst du dran?',
-        tag: cardTag(card.id),
-        group: GROUP,
-        open: { cardId: card.id },
-        level: 'time-sensitive',
-      };
-      if (card.dueAt) message.actions = [doneAction(card.id, card.dueAt)];
+      const message = inLang(id, (): PushMessage => {
+        const m: PushMessage = {
+          title: card.title,
+          body: t('Noch offen: Denkst du dran?'),
+          tag: cardTag(card.id),
+          group: GROUP,
+          open: { cardId: card.id },
+          level: 'time-sensitive',
+        };
+        if (card.dueAt) m.actions = [doneAction(card.id, card.dueAt)];
+        return m;
+      });
       if (await send(id, message)) {
         log.info(`Push (noch offen) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
       }
@@ -160,19 +172,19 @@ export function createNotifier(deps: NotifierDeps) {
         store.claimNotification(k, 'skipped'); // heute nichts mehr nachholen
         continue;
       }
-      const lines = [...overdue, ...today]
-        .slice(0, 5)
-        .map((c) => `• ${c.title} (${formatDue(Date.parse(c.dueAt), nowMs, tz)})`);
-      const more = overdue.length + today.length - lines.length;
-      if (more > 0) lines.push(`… und ${more} weitere`);
-      const payload: PushMessage = {
-        title: 'Stups',
-        body: [`Heute fällig: ${today.length} · Überfällig: ${overdue.length}`, ...lines].join('\n'),
-        tag: 'stups-summary',
-        group: GROUP,
-        open: {},
-        level: 'active',
-      };
+      const payload = inLang(person.id, (): PushMessage => {
+        const lines = [...overdue, ...today].slice(0, 5).map((c) => `• ${c.title} (${formatDue(Date.parse(c.dueAt), nowMs, tz)})`);
+        const more = overdue.length + today.length - lines.length;
+        if (more > 0) lines.push(t('… und {n} weitere', { n: more }));
+        return {
+          title: 'Stups',
+          body: [t('Heute fällig: {today} · Überfällig: {overdue}', { today: today.length, overdue: overdue.length }), ...lines].join('\n'),
+          tag: 'stups-summary',
+          group: GROUP,
+          open: {},
+          level: 'active',
+        };
+      });
       if (await deliver(k, payload)) sent += 1;
     }
     return sent;
@@ -190,8 +202,8 @@ export function createNotifier(deps: NotifierDeps) {
 
       for (const card of cards) {
         const dueMs = Date.parse(card.dueAt);
-        const due = formatDue(dueMs, nowMs, tz);
         for (const userId of card.assigneeIds) {
+          const due = inLang(userId, () => formatDue(dueMs, nowMs, tz));
           if (!push.canReach(userId)) {
             warnNoServices(userId);
             continue;
@@ -199,8 +211,8 @@ export function createNotifier(deps: NotifierDeps) {
           const key = (kind: NotificationKind, k: string): NotificationKey => ({ cardId: card.id, userId, kind, key: k });
 
           if (card.remindBeforeMin && nowMs >= dueMs - card.remindBeforeMin * MINUTE && nowMs < dueMs) {
-            const msg = `In ${formatLead(card.remindBeforeMin)} fällig: ${due} · ${card.boardName}`;
-            if (await deliver(key('reminder', card.dueAt), cardPayload(card, msg))) sent += 1;
+            const payload = inLang(userId, () => cardPayload(card, t('In {lead} fällig: {due} · {board}', { lead: formatLead(card.remindBeforeMin!), due, board: card.boardName })));
+            if (await deliver(key('reminder', card.dueAt), payload)) sent += 1;
           }
 
           if (nowMs >= dueMs) {
@@ -210,8 +222,8 @@ export function createNotifier(deps: NotifierDeps) {
                 log.info(`Push (due) „${card.title}" übersprungen: Termin liegt mehr als 12 Stunden zurück`);
               }
             } else {
-              const msg = `Fällig: ${due} · ${card.boardName}${late > LATE_NOTE_MS ? ' (verspätet)' : ''}`;
-              if (await deliver(key('due', card.dueAt), cardPayload(card, msg))) sent += 1;
+              const payload = inLang(userId, () => cardPayload(card, `${t('Fällig: {due} · {board}', { due, board: card.boardName })}${late > LATE_NOTE_MS ? ` ${t('(verspätet)')}` : ''}`));
+              if (await deliver(key('due', card.dueAt), payload)) sent += 1;
             }
           }
 
@@ -220,8 +232,8 @@ export function createNotifier(deps: NotifierDeps) {
             dayDiff(dueMs, nowMs, tz) < 0 &&
             minutesOfDay(nowMs, tz) >= parseHm(options.overdueNagTime)
           ) {
-            const msg = `Überfällig seit ${due} · ${card.boardName}`;
-            if (await deliver(key('nag', localDateKey(nowMs, tz)), cardPayload(card, msg))) sent += 1;
+            const payload = inLang(userId, () => cardPayload(card, t('Überfällig seit {due} · {board}', { due, board: card.boardName })));
+            if (await deliver(key('nag', localDateKey(nowMs, tz)), payload)) sent += 1;
           }
         }
       }
@@ -250,31 +262,36 @@ export function createNotifier(deps: NotifierDeps) {
 
   /** „Erledigt · nächste Karte Sa 10:00" statt der Erinnerung: gleiches Tag ersetzt die alte Nachricht, ohne Button und ohne Ton. */
   async function confirmRepeat(cardId: string, title: string, assigneeIds: string[], nextDueAt: string): Promise<void> {
-    const payload: PushMessage = {
-      title,
-      body: `Erledigt · nächste Karte ${formatDue(Date.parse(nextDueAt), deps.now().getTime(), deps.timeZone())}`,
-      tag: cardTag(cardId),
-      group: GROUP,
-      level: 'passive',
-    };
+    const payload = (id: string): PushMessage =>
+      inLang(id, () => ({
+        title,
+        body: t('Erledigt · nächste Karte {when}', { when: formatDue(Date.parse(nextDueAt), deps.now().getTime(), deps.timeZone()) }),
+        tag: cardTag(cardId),
+        group: GROUP,
+        level: 'passive',
+      }));
     const everyone = [...new Set([...assigneeIds, ...store.nudgeRecipients(cardId)])];
-    await Promise.allSettled(everyone.map((id) => push.send(id, payload)));
+    await Promise.allSettled(everyone.map((id) => push.send(id, payload(id))));
   }
 
   // ---------- Stupse ----------
 
-  const nameOf = (userId: string | null): string => (userId ? (store.userById(userId)?.displayName ?? 'Jemand') : 'Jemand');
+  /** Die Texte der Schnellauswahl (die Vorlagen stehen deutsch in der Datenbank-Konstante; hier werden sie übersetzt) */
+  const templateText = (tpl: NonNullable<DueNudge['template']>): string =>
+    ({ think: t('Denkst du dran?'), today: t('Heute noch?'), help: t('Brauch deine Hilfe'), thanks: t('Danke dir! ❤️') })[tpl];
+
+  const nameOf = (userId: string | null): string => (userId ? (store.userById(userId)?.displayName ?? t('Jemand')) : t('Jemand'));
 
   function nudgePayload(n: DueNudge): PushMessage {
     const actions = [
-      { id: `${aPrefix}${NUDGE_PREFIX}DONE:${n.id}`, title: 'Erledigt' },
-      { id: `${aPrefix}${NUDGE_PREFIX}ACK:${n.id}`, title: 'Mach ich' },
+      { id: `${aPrefix}${NUDGE_PREFIX}DONE:${n.id}`, title: t('Erledigt') },
+      { id: `${aPrefix}${NUDGE_PREFIX}ACK:${n.id}`, title: t('Mach ich') },
       // nach dem dritten „Später" gibt es den Knopf nicht mehr
-      ...(n.laterCount < NUDGE_LATER_MAX ? [{ id: `${aPrefix}${NUDGE_PREFIX}LATER:${n.id}`, title: 'Später' }] : []),
+      ...(n.laterCount < NUDGE_LATER_MAX ? [{ id: `${aPrefix}${NUDGE_PREFIX}LATER:${n.id}`, title: t('Später') }] : []),
     ];
     return {
-      title: `${n.fromName} stupst dich`,
-      body: `${n.cardTitle} · ${n.text}`,
+      title: t('{name} stupst dich', { name: n.fromName }),
+      body: `${n.cardTitle} · ${n.template ? templateText(n.template) : n.text}`,
       tag: cardTag(n.cardId),
       group: GROUP,
       open: { cardId: n.cardId },
@@ -292,7 +309,7 @@ export function createNotifier(deps: NotifierDeps) {
       if (retry && retry.nextAt > nowMs) continue;
       if (!store.claimNudge(n.id, n.round)) continue; // schon zugestellt (auch vor einem Neustart)
 
-      if (await send(n.toId, nudgePayload(n))) {
+      if (await send(n.toId, inLang(n.toId, () => nudgePayload(n)))) {
         retries.delete(retryKey);
         log.info(`Stups „${n.cardTitle}" von ${n.fromName} an ${nameOf(n.toId)} gesendet`);
         sent += 1;
@@ -342,7 +359,7 @@ export function createNotifier(deps: NotifierDeps) {
       (async () => {
         for (const c of list) {
           if (c.byId !== null && c.byId === c.fromId) continue; // der Absender hat selbst erledigt
-          await feedback(c.fromId, c.nudgeId, c.cardId, c.cardTitle, `${nameOf(c.byId)} hat erledigt ✓`);
+          await feedback(c.fromId, c.nudgeId, c.cardId, c.cardTitle, inLang(c.fromId, () => t('{name} hat erledigt ✓', { name: nameOf(c.byId) })));
         }
         deps.onChange?.();
       })(),
@@ -388,7 +405,7 @@ export function createNotifier(deps: NotifierDeps) {
     // Die Nachricht verschwindet vom Gerät: bei „Später" kommt sie später neu
     await clearFor(card.id, []);
     if (kind === 'ACK') {
-      await feedback(nudge.fromId, nudge.id, card.id, card.title, `${user.displayName} macht's 👍`);
+      await feedback(nudge.fromId, nudge.id, card.id, card.title, inLang(nudge.fromId, () => t('{name} macht\'s 👍', { name: user.displayName })));
     }
     deps.onChange?.();
     return kind === 'ACK' ? 'acked' : 'postponed';

@@ -33,6 +33,19 @@ describe('Add-on-Dateien für Home Assistant', () => {
     for (const key of translated) expect(options).toContain(key);
   });
 
+  it('Englisch übersetzt genau dieselben Optionen wie Deutsch, mit Name und Beschreibung', () => {
+    for (const app of ['stups', 'stups-beta']) {
+      const de = (load(`${app}/translations/de.yaml`).configuration ?? {}) as Record<string, { name: string; description: string }>;
+      const en = (load(`${app}/translations/en.yaml`).configuration ?? {}) as Record<string, { name: string; description: string }>;
+      expect(Object.keys(en).sort(), app).toEqual(Object.keys(de).sort());
+      for (const [key, v] of Object.entries(en)) {
+        expect(v.name, `${app} ${key} name`).toBeTypeOf('string');
+        expect(v.description, `${app} ${key} description`).toBeTypeOf('string');
+        expect(v.name, `${app} ${key}`).not.toBe(de[key]!.name);
+      }
+    }
+  });
+
   it('die normale App zeigt auf ihre eigenen Bilder, nie auf die der Beta', () => {
     const image = load('stups/config.yaml').image as string;
     expect(image).toBe('ghcr.io/arrestedops/ha-stups-{arch}');
@@ -77,10 +90,11 @@ describe('Add-on-Dateien der Beta', () => {
 
   it('die Übersetzung stimmt mit der normalen App überein', () => {
     expect(load('stups-beta/translations/de.yaml')).toEqual(load('stups/translations/de.yaml'));
+    expect(load('stups-beta/translations/en.yaml')).toEqual(load('stups/translations/en.yaml'));
   });
 
   it('alle Dateien sind da: Symbol, Logo, Dokumentation, Changelog', () => {
-    for (const f of ['icon.png', 'logo.png', 'DOCS.md', 'CHANGELOG.md', 'translations/de.yaml']) {
+    for (const f of ['icon.png', 'logo.png', 'DOCS.md', 'CHANGELOG.md', 'translations/de.yaml', 'translations/en.yaml']) {
       expect(existsSync(join(root, 'stups-beta', f)), f).toBe(true);
     }
   });

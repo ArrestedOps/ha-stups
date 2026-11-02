@@ -15,6 +15,7 @@ import type { Store, User } from '../store.js';
 import type { ExportResult } from '../transfer.js';
 import type { WatcherData } from '../watcher-data.js';
 import type { Watchers } from '../watchers.js';
+import { t } from '../i18n/index.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -73,7 +74,7 @@ export type Params = { id: string };
 export function body(req: FastifyRequest): Record<string, any> {
   const b = req.body;
   if (b === undefined || b === null) return {};
-  if (typeof b !== 'object' || Array.isArray(b)) throw new ValidationError('Der Inhalt der Anfrage muss ein Objekt sein');
+  if (typeof b !== 'object' || Array.isArray(b)) throw new ValidationError(t('Der Inhalt der Anfrage muss ein Objekt sein'));
   return b as Record<string, any>;
 }
 

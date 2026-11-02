@@ -4,6 +4,7 @@ import { type TrashType, type TrashItem, type Row } from './types.js';
 import { TRASH_DAYS } from './constants.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
+import { t } from '../i18n/index.js';
 
 /** Papierkorb */
 export function createTrash(c: Ctx, late: unknown) {
@@ -37,19 +38,19 @@ export function createTrash(c: Ctx, late: unknown) {
 
   function restoreFromTrash(type: TrashType, id: string): void {
     const table = { board: 'boards', column: 'columns', category: 'categories', card: 'cards' }[type];
-    if (!table) throw new ValidationError('Unbekannter Typ');
+    if (!table) throw new ValidationError(t('Unbekannter Typ'));
     const row = one(`select * from ${table} where id = ? and deleted_at is not null`, id);
-    if (!row) throw new NotFoundError('Nicht im Papierkorb');
+    if (!row) throw new NotFoundError(t('Nicht im Papierkorb'));
     tx(() => {
       if (type !== 'board') {
         const board = one('select deleted_at from boards where id = ?', row.board_id);
-        if (board?.deleted_at) throw new ConflictError('Das Board ist gelöscht. Bitte zuerst das Board wiederherstellen');
+        if (board?.deleted_at) throw new ConflictError(t('Das Board ist gelöscht. Bitte zuerst das Board wiederherstellen'));
       }
       if (type === 'card') {
         const col = one('select deleted_at from columns where id = ?', row.column_id);
         if (col?.deleted_at) {
           const first = visibleColumns(row.board_id)[0];
-          if (!first) throw new ConflictError('Das Board hat keine Spalte');
+          if (!first) throw new ConflictError(t('Das Board hat keine Spalte'));
           run('update cards set column_id = ?, position = ? where id = ?', first.id, generateKeyBetween(lastPos('cards', 'column_id = ?', first.id), null), id);
         }
         run('update cards set deleted_at = null, updated_at = ?, version = version + 1 where id = ?', iso(), id);

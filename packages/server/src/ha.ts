@@ -1,3 +1,4 @@
+import { t } from './i18n/index.js';
 import WebSocket from 'ws';
 
 export interface NotificationAction {
@@ -137,7 +138,7 @@ export class HaClient {
   wsCommand<T>(type: string, payload: Record<string, unknown> = {}, timeoutMs = 8000): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const ws = new WebSocket(this.wsUrl);
-      const timer = setTimeout(() => finish(new Error('Zeitüberschreitung bei Home Assistant')), timeoutMs);
+      const timer = setTimeout(() => finish(new Error(t('Zeitüberschreitung bei Home Assistant'))), timeoutMs);
       let settled = false;
       const finish = (err: Error | null, value?: T) => {
         if (settled) return;
@@ -154,11 +155,11 @@ export class HaClient {
         else if (msg.type === 'auth_invalid') finish(new Error(`Anmeldung abgelehnt: ${msg.message ?? ''}`));
         else if (msg.type === 'result' && msg.id === 1) {
           if (msg.success) finish(null, msg.result as T);
-          else finish(new Error(msg.error?.message ?? 'Befehl fehlgeschlagen'));
+          else finish(new Error(msg.error?.message ?? t('Befehl fehlgeschlagen')));
         }
       });
       ws.on('error', (err) => finish(err));
-      ws.on('close', () => finish(new Error('Verbindung zu Home Assistant geschlossen')));
+      ws.on('close', () => finish(new Error(t('Verbindung zu Home Assistant geschlossen'))));
     });
   }
 
@@ -169,7 +170,7 @@ export class HaClient {
   async probeWatchers(entityId?: string, timeoutMs = 10_000): Promise<WatcherProbe> {
     return new Promise<WatcherProbe>((resolve, reject) => {
       const ws = new WebSocket(this.wsUrl);
-      const timer = setTimeout(() => finish(new Error('Zeitüberschreitung bei Home Assistant')), timeoutMs);
+      const timer = setTimeout(() => finish(new Error(t('Zeitüberschreitung bei Home Assistant'))), timeoutMs);
       let settled = false;
       let nextId = 1;
       const waiting = new Map<number, (m: Record<string, any>) => void>();
@@ -240,7 +241,7 @@ export class HaClient {
         else if (msg.type === 'result') waiting.get(msg.id)?.(msg);
       });
       ws.on('error', (err) => finish(err));
-      ws.on('close', () => finish(new Error('Verbindung zu Home Assistant geschlossen')));
+      ws.on('close', () => finish(new Error(t('Verbindung zu Home Assistant geschlossen'))));
     });
   }
 

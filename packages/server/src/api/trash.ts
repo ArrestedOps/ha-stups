@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { ValidationError } from '../errors.js';
 import { type TrashType } from '../store.js';
 import { type ApiKit } from './kit.js';
+import { t } from '../i18n/index.js';
 
 /** Papierkorb */
 export function registerTrashRoutes(app: FastifyInstance, k: ApiKit): void {
@@ -11,7 +12,7 @@ export function registerTrashRoutes(app: FastifyInstance, k: ApiKit): void {
   app.get('/api/trash', async () => store.listTrash());
   app.post<{ Params: { type: string; id: string } }>('/api/trash/:type/:id/restore', async (req, reply) => {
     const { type, id } = req.params;
-    if (!['board', 'column', 'category', 'card'].includes(type)) throw new ValidationError('Unbekannter Typ');
+    if (!['board', 'column', 'category', 'card'].includes(type)) throw new ValidationError(t('Unbekannter Typ'));
     store.restoreFromTrash(type as TrashType, id);
     return noContent(reply);
   });

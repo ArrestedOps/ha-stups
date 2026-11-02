@@ -2,7 +2,7 @@
   import { t } from '../lib/i18n/index.svelte';
   import { api, ApiError, type WatcherActivity, type WatcherItem } from '../lib/api';
   import { formatDue } from '../lib/datetime';
-  import { conditionText, RUN_TEXT, TEMPLATES, watcherLine } from '../lib/watchers';
+  import { conditionText, noteText, RUN_TEXT, TEMPLATES, watcherLine } from '../lib/watchers';
   import { openCardAnywhere, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
   import SettingsButton from './SettingsButton.svelte';
@@ -174,7 +174,7 @@
             <li class="px-4 py-2.5">
               <p class="text-[15px] font-medium">{r.watcherName} · {RUN_TEXT[r.result] ?? r.result}</p>
               <p class="text-[13px] text-fg2">
-                {formatDue(r.at)}{r.assignedTo.length ? ` · ${r.assignedTo.map(personName).join(', ')}` : ''}{r.note ? ` · ${r.note}` : ''}
+                {formatDue(r.at)}{r.assignedTo.length ? ` · ${r.assignedTo.map(personName).join(', ')}` : ''}{r.note ? ` · ${noteText(r.note)}` : ''}
               </p>
             </li>
           {/each}

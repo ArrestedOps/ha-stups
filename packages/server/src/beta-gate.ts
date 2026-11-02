@@ -1,5 +1,6 @@
 import { ConflictError, ValidationError } from './errors.js';
 import type { PushGateway } from './push.js';
+import { t } from './i18n/index.js';
 
 /**
  * In der Beta sind Push und Wächter zunächst aus. Die Beta bekommt per Umzug die Daten der normalen App; ohne dieses Tor
@@ -52,7 +53,7 @@ export function createBetaGate(deps: BetaGateDeps) {
   };
 
   function set(patch: { push?: BetaPush; watchers?: boolean }): BetaState {
-    if (!deps.enabled) throw new ConflictError('Diese Einstellung gibt es nur in der Beta');
+    if (!deps.enabled) throw new ConflictError(t('Diese Einstellung gibt es nur in der Beta'));
     // Erst alles prüfen, dann schreiben: ein Fehler ändert nichts
     let push: string | undefined;
     if (patch.push !== undefined) {
@@ -60,11 +61,11 @@ export function createBetaGate(deps: BetaGateDeps) {
       if (p.mode === 'off') push = 'off';
       else if (p.mode === 'all') push = 'all';
       else if (p.mode === 'only') {
-        if (typeof p.personId !== 'string' || !deps.people().includes(p.personId)) throw new ValidationError('Person nicht gefunden');
+        if (typeof p.personId !== 'string' || !deps.people().includes(p.personId)) throw new ValidationError(t('Person nicht gefunden'));
         push = `${ONLY}${p.personId}`;
-      } else throw new ValidationError('Push in der Beta: „aus", „nur für eine Person" oder „an"');
+      } else throw new ValidationError(t('Push in der Beta: „aus", „nur für eine Person" oder „an"'));
     }
-    if (patch.watchers !== undefined && typeof patch.watchers !== 'boolean') throw new ValidationError('Wächter in der Beta: an oder aus');
+    if (patch.watchers !== undefined && typeof patch.watchers !== 'boolean') throw new ValidationError(t('Wächter in der Beta: an oder aus'));
 
     if (push !== undefined) deps.settings.put(PUSH_KEY, push);
     if (patch.watchers !== undefined) {

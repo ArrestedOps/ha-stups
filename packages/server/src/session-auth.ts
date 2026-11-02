@@ -5,6 +5,7 @@ import { AppError, ConflictError, ValidationError } from './errors.js';
 import type { Identity } from './identity.js';
 import type { Passkeys } from './passkeys.js';
 import { PUSH_ACTION_PATH } from './push.js';
+import { t } from './i18n/index.js';
 
 export const COOKIE = 'stups_session';
 /** Jede ändernde Anfrage trägt diese Kopfzeile: ein fremdes Formular oder eine fremde Seite kann sie nicht setzen */
@@ -187,7 +188,7 @@ export interface AuthRoutesDeps {
 function body(req: FastifyRequest): Record<string, unknown> {
   const b = req.body;
   if (b === undefined || b === null) return {};
-  if (typeof b !== 'object' || Array.isArray(b)) throw new ValidationError('Der Inhalt der Anfrage muss ein Objekt sein');
+  if (typeof b !== 'object' || Array.isArray(b)) throw new ValidationError(t('Der Inhalt der Anfrage muss ein Objekt sein'));
   return b as Record<string, unknown>;
 }
 
@@ -270,7 +271,7 @@ export async function authRoutes(app: FastifyInstance, deps: AuthRoutesDeps): Pr
 
   let settingUp = false; // zwei gleichzeitige Einrichtungen dürfen nicht beide gelingen
   app.post('/api/auth/setup', async (req, reply) => {
-    if (!setup.required() || settingUp) throw new ConflictError('Stups ist schon eingerichtet');
+    if (!setup.required() || settingUp) throw new ConflictError(t('Stups ist schon eingerichtet'));
     const b = body(req);
     const keys = [`setup:${req.ip}`];
     const wait = limiter.wait(keys);

@@ -65,7 +65,11 @@ if (options.users.some((u) => u.name !== '')) {
   store.clearManaged();
   if (store.importLegacyPeople(options.users)) app.log.info(`Zugriff: ${store.getAccessMode()}`);
 }
-store.ensureDefaultBoard();
+// Das erste Board entsteht mit der ersten Anfrage der App, in der Sprache dieser Person (der Haken läuft nach dem Sprachhaken von oben)
+app.addHook('onRequest', (req, _reply, done) => {
+  if (req.method === 'GET' && (req.url.startsWith('/api/boards') || req.url.startsWith('/api/me'))) store.ensureDefaultBoard();
+  done();
+});
 store.ensurePlannedColumns();
 
 const bus = createEventBus({ changes: () => store.takeChanges() });

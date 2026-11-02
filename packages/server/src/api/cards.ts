@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import type { FastifyInstance } from 'fastify';
 import { ValidationError } from '../errors.js';
 import { type ApiKit, type Params } from './kit.js';
@@ -34,7 +35,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
   // Mehrere Karten in einem Aufruf (für den Live-Sync: nur holen, was sich geändert hat). Unbekannte und gelöschte fehlen.
   app.get<{ Querystring: { ids?: string } }>('/api/cards', async (req) => {
     const ids = [...new Set((req.query.ids ?? '').split(',').filter((x) => x !== ''))];
-    if (ids.length > MAX_IDS) throw new ValidationError(`Höchstens ${MAX_IDS} Karten auf einmal`);
+    if (ids.length > MAX_IDS) throw new ValidationError(t('Höchstens {max} Karten auf einmal', { max: MAX_IDS }));
     return store.getCards(ids);
   });
   app.get<{ Params: Params }>('/api/cards/:id', async (req) => store.getCard(req.params.id));
@@ -77,7 +78,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     const q = req.query;
     const time = (v: string | undefined, what: string): string | undefined => {
       if (v === undefined || v === '') return undefined;
-      if (!/^\d{4}-\d{2}-\d{2}T/.test(v) || Number.isNaN(Date.parse(v))) throw new ValidationError(`„${what}" braucht Datum und Uhrzeit`);
+      if (!/^\d{4}-\d{2}-\d{2}T/.test(v) || Number.isNaN(Date.parse(v))) throw new ValidationError(t('„{what}" braucht Datum und Uhrzeit', { what }));
       return new Date(v).toISOString();
     };
     const boardIds = q.boards ? q.boards.split(',').filter(Boolean) : undefined;

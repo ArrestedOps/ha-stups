@@ -1,7 +1,6 @@
+import { dayOfMonth, names } from './i18n/names.js';
+import { t, tn } from './i18n/index.js';
 import { fromLocal, toLocal } from './recurrence.js';
-
-const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -44,23 +43,23 @@ export function formatDue(ms: number, nowMs: number, tz: string): string {
   const l = toLocal(ms, tz);
   const time = `${pad(l.h)}:${pad(l.mi)}`;
   const diff = dayDiff(ms, nowMs, tz);
-  if (diff === 0) return `heute ${time}`;
-  if (diff === 1) return `morgen ${time}`;
-  if (diff === -1) return `gestern ${time}`;
+  if (diff === 0) return t('heute {time}', { time });
+  if (diff === 1) return t('morgen {time}', { time });
+  if (diff === -1) return t('gestern {time}', { time });
   if (diff >= 2 && diff <= 6) {
-    const wd = WEEKDAYS[new Date(Date.UTC(l.y, l.m - 1, l.d)).getUTCDay()]!;
+    const wd = names().weekdaysShort[new Date(Date.UTC(l.y, l.m - 1, l.d)).getUTCDay()]!;
     return `${wd} ${time}`;
   }
   const sameYear = l.y === toLocal(nowMs, tz).y;
-  return `${l.d}. ${MONTHS[l.m - 1]}${sameYear ? '' : ` ${l.y}`} ${time}`;
+  return `${dayOfMonth(l.d)} ${names().monthsShort[l.m - 1]}${sameYear ? '' : ` ${l.y}`} ${time}`;
 }
 
 /** 30 → "30 Min.", 60 → "1 Std.", 1440 → "1 Tag", 2880 → "2 Tage" */
 export function formatLead(min: number): string {
   if (min % 1440 === 0) {
     const d = min / 1440;
-    return d === 1 ? '1 Tag' : `${d} Tage`;
+    return tn('{n} Tag', '{n} Tage', d);
   }
-  if (min % 60 === 0) return `${min / 60} Std.`;
-  return `${min} Min.`;
+  if (min % 60 === 0) return t('{n} Std.', { n: min / 60 });
+  return t('{n} Min.', { n: min });
 }

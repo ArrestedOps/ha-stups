@@ -1,4 +1,5 @@
 import { ValidationError } from './errors.js';
+import { t } from './i18n/index.js';
 
 export type TriggerKind = 'state' | 'above' | 'below';
 
@@ -83,129 +84,129 @@ export const DEFAULT_FOR_MIN = { state: 0, above: 3, below: 3 } as const;
 export const WAITING_MARKER = '⏳ Wartet auf die erste Person, die heimkommt.';
 
 const obj = (raw: unknown, what: string): Record<string, unknown> => {
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) throw new ValidationError(`${what} fehlt oder ist ungültig`);
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) throw new ValidationError(t('{what} fehlt oder ist ungültig', { what }));
   return raw as Record<string, unknown>;
 };
 
 function text(raw: unknown, what: string, max: number, required = true): string | null {
   if (raw === undefined || raw === null || raw === '') {
-    if (required) throw new ValidationError(`${what} fehlt`);
+    if (required) throw new ValidationError(t('{what} fehlt', { what }));
     return null;
   }
-  if (typeof raw !== 'string') throw new ValidationError(`${what} muss ein Text sein`);
-  const t = raw.trim();
-  if (t === '') {
-    if (required) throw new ValidationError(`${what} fehlt`);
+  if (typeof raw !== 'string') throw new ValidationError(t('{what} muss ein Text sein', { what }));
+  const value = raw.trim();
+  if (value === '') {
+    if (required) throw new ValidationError(t('{what} fehlt', { what }));
     return null;
   }
-  if (t.length > max) throw new ValidationError(`${what} ist zu lang (höchstens ${max} Zeichen)`);
-  return t;
+  if (value.length > max) throw new ValidationError(t('{what} ist zu lang (höchstens {max} Zeichen)', { what, max }));
+  return value;
 }
 
 function int(raw: unknown, what: string, min: number, max: number, fallback: number): number {
   if (raw === undefined || raw === null || raw === '') return fallback;
   if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < min || raw > max) {
-    throw new ValidationError(`${what} muss eine ganze Zahl von ${min} bis ${max} sein`);
+    throw new ValidationError(t('{what} muss eine ganze Zahl von {min} bis {max} sein', { what, min, max }));
   }
   return raw;
 }
 
 function entity(raw: unknown): string {
-  const id = text(raw, 'Die Entität', 255)!;
-  if (!ENTITY_RE.test(id)) throw new ValidationError('Die Entität muss die Form domain.name haben');
+  const id = text(raw, t('Die Entität'), 255)!;
+  if (!ENTITY_RE.test(id)) throw new ValidationError(t('Die Entität muss die Form domain.name haben'));
   return id;
 }
 
 function strings(raw: unknown, what: string): string[] {
   if (raw === undefined || raw === null) return [];
-  if (!Array.isArray(raw) || raw.some((x) => typeof x !== 'string')) throw new ValidationError(`${what} müssen eine Liste sein`);
+  if (!Array.isArray(raw) || raw.some((x) => typeof x !== 'string')) throw new ValidationError(t('{what} müssen eine Liste sein', { what }));
   return [...new Set(raw as string[])];
 }
 
 function kindOf(raw: unknown): TriggerKind {
-  if (raw !== 'state' && raw !== 'above' && raw !== 'below') throw new ValidationError('Die Bedingung ist unbekannt');
+  if (raw !== 'state' && raw !== 'above' && raw !== 'below') throw new ValidationError(t('Die Bedingung ist unbekannt'));
   return raw;
 }
 
 function bound(kind: TriggerKind, o: Record<string, unknown>): { to: string | null; value: number | null } {
-  if (kind === 'state') return { to: text(o.to, 'Der Zielzustand', 255)!, value: null };
-  if (typeof o.value !== 'number' || !Number.isFinite(o.value)) throw new ValidationError('Der Schwellwert muss eine Zahl sein');
+  if (kind === 'state') return { to: text(o.to, t('Der Zielzustand'), 255)!, value: null };
+  if (typeof o.value !== 'number' || !Number.isFinite(o.value)) throw new ValidationError(t('Der Schwellwert muss eine Zahl sein'));
   return { to: null, value: o.value };
 }
 
 export function parseTrigger(raw: unknown): WatchTrigger {
-  const o = obj(raw, 'Der Auslöser');
+  const o = obj(raw, t('Der Auslöser'));
   const kind = kindOf(o.kind);
   return {
     entityId: entity(o.entityId),
     kind,
     ...bound(kind, o),
-    forMin: int(o.forMin, 'Die Wartezeit', 0, 1440, DEFAULT_FOR_MIN[kind]),
-    count: int(o.count, 'Die Anzahl', 1, 100, 1),
+    forMin: int(o.forMin, t('Die Wartezeit'), 0, 1440, DEFAULT_FOR_MIN[kind]),
+    count: int(o.count, t('Die Anzahl'), 1, 100, 1),
   };
 }
 
 export function parseDone(raw: unknown): DoneTrigger | null {
   if (raw === undefined || raw === null) return null;
-  const o = obj(raw, 'Die Bedingung zum Erledigen');
+  const o = obj(raw, t('Die Bedingung zum Erledigen'));
   const kind = kindOf(o.kind);
   return { entityId: entity(o.entityId), kind, ...bound(kind, o) };
 }
 
 function parseDue(raw: unknown): DueRule {
   if (raw === undefined || raw === null) return { kind: 'none' };
-  const o = obj(raw, 'Die Fälligkeit');
+  const o = obj(raw, t('Die Fälligkeit'));
   if (o.kind === 'none') return { kind: 'none' };
-  if (o.kind === 'in') return { kind: 'in', minutes: int(o.minutes, 'Die Minuten', 0, 60 * 24 * 14, 0) };
+  if (o.kind === 'in') return { kind: 'in', minutes: int(o.minutes, t('Die Minuten'), 0, 60 * 24 * 14, 0) };
   if (o.kind === 'at') {
-    if (o.day !== 'today' && o.day !== 'tomorrow') throw new ValidationError('Die Fälligkeit muss heute oder morgen sein');
-    if (typeof o.time !== 'string' || !HM_RE.test(o.time)) throw new ValidationError('Die Uhrzeit muss die Form HH:MM haben');
+    if (o.day !== 'today' && o.day !== 'tomorrow') throw new ValidationError(t('Die Fälligkeit muss heute oder morgen sein'));
+    if (typeof o.time !== 'string' || !HM_RE.test(o.time)) throw new ValidationError(t('Die Uhrzeit muss die Form HH:MM haben'));
     return { kind: 'at', day: o.day, time: o.time };
   }
-  throw new ValidationError('Die Fälligkeit ist unbekannt');
+  throw new ValidationError(t('Die Fälligkeit ist unbekannt'));
 }
 
 export function parseTemplate(raw: unknown): CardTemplate {
-  const o = obj(raw, 'Die Karte');
+  const o = obj(raw, t('Die Karte'));
   return {
-    boardId: text(o.boardId, 'Das Board', 100)!,
-    columnId: text(o.columnId, 'Die Spalte', 100)!,
-    title: text(o.title, 'Der Titel', 200)!,
-    description: text(o.description, 'Die Beschreibung', 5000, false),
-    categoryIds: strings(o.categoryIds, 'Kategorien'),
-    priority: text(o.priority, 'Die Priorität', 20, false),
+    boardId: text(o.boardId, t('Das Board'), 100)!,
+    columnId: text(o.columnId, t('Die Spalte'), 100)!,
+    title: text(o.title, t('Der Titel'), 200)!,
+    description: text(o.description, t('Die Beschreibung'), 5000, false),
+    categoryIds: strings(o.categoryIds, t('Kategorien')),
+    priority: text(o.priority, t('Die Priorität'), 20, false),
     due: parseDue(o.due),
   };
 }
 
 export function parseAssign(raw: unknown): AssignRule {
-  const o = obj(raw, 'Die Zuweisung');
+  const o = obj(raw, t('Die Zuweisung'));
   const mode = o.mode as AssignMode;
-  if (!MODES.includes(mode)) throw new ValidationError('Die Art der Zuweisung ist unbekannt');
+  if (!MODES.includes(mode)) throw new ValidationError(t('Die Art der Zuweisung ist unbekannt'));
   const fallback = (o.fallback ?? 'next') as Fallback;
-  if (!['next', 'all', 'none', 'fixed'].includes(fallback)) throw new ValidationError('Der Rückfall ist unbekannt');
+  if (!['next', 'all', 'none', 'fixed'].includes(fallback)) throw new ValidationError(t('Der Rückfall ist unbekannt'));
   const waitFallback = (o.waitFallback ?? 'none') as WaitFallback;
-  if (!['all', 'none', 'fixed'].includes(waitFallback)) throw new ValidationError('Der Rückfall nach 24 Stunden ist unbekannt');
-  const personIds = strings(o.personIds, 'Personen');
-  const fallbackPersonId = text(o.fallbackPersonId, 'Die Person für den Rückfall', 100, false);
-  if (mode === 'fixed' && personIds.length === 0) throw new ValidationError('Wähle mindestens eine Person');
-  if ((fallback === 'fixed' || waitFallback === 'fixed') && !fallbackPersonId) throw new ValidationError('Wähle die Person für den Rückfall');
+  if (!['all', 'none', 'fixed'].includes(waitFallback)) throw new ValidationError(t('Der Rückfall nach 24 Stunden ist unbekannt'));
+  const personIds = strings(o.personIds, t('Personen'));
+  const fallbackPersonId = text(o.fallbackPersonId, t('Die Person für den Rückfall'), 100, false);
+  if (mode === 'fixed' && personIds.length === 0) throw new ValidationError(t('Wähle mindestens eine Person'));
+  if ((fallback === 'fixed' || waitFallback === 'fixed') && !fallbackPersonId) throw new ValidationError(t('Wähle die Person für den Rückfall'));
   return { mode, personIds, fallback, waitFallback, fallbackPersonId };
 }
 
 /** Prüft und normalisiert die Eingabe der Oberfläche (Anlegen und Ändern) */
 export function parseWatcher(raw: unknown): WatcherConfig {
-  const o = obj(raw, 'Der Wächter');
+  const o = obj(raw, t('Der Wächter'));
   return {
-    name: text(o.name, 'Der Name', 80)!,
+    name: text(o.name, t('Der Name'), 80)!,
     active: o.active === undefined ? true : o.active === true,
     trigger: parseTrigger(o.trigger),
     card: parseTemplate(o.card),
     assign: parseAssign(o.assign),
     done: parseDone(o.done),
-    cooldownMin: int(o.cooldownMin, 'Die Sperrzeit', 0, 1440, 10),
+    cooldownMin: int(o.cooldownMin, t('Die Sperrzeit'), 0, 1440, 10),
     dedupe: o.dedupe === undefined ? true : o.dedupe === true,
-    nudgeAfterMin: o.nudgeAfterMin === undefined || o.nudgeAfterMin === null ? null : int(o.nudgeAfterMin, 'Das Stupsen nach', 5, 1440, 60),
+    nudgeAfterMin: o.nudgeAfterMin === undefined || o.nudgeAfterMin === null ? null : int(o.nudgeAfterMin, t('Das Stupsen nach'), 5, 1440, 60),
   };
 }
 

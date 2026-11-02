@@ -9,6 +9,7 @@ import type {
 } from '@simplewebauthn/server';
 import type { Account, Accounts } from './accounts.js';
 import { ConflictError, NotFoundError, ValidationError } from './errors.js';
+import { t } from './i18n/index.js';
 
 // Erst beim ersten Gebrauch laden: das Add-on und Container ohne Passkeys brauchen die Bibliothek (und ihre Node-Warnungen) nie
 let webauthn: Promise<typeof import('@simplewebauthn/server')> | null = null;
@@ -87,7 +88,7 @@ export function createPasskeys(deps: { db: DatabaseSync; accounts: Accounts; con
     const c = typeof id === 'string' ? ceremonies.get(id) : undefined;
     if (typeof id === 'string') ceremonies.delete(id);
     if (!c || c.kind !== kind || c.userId !== userId || c.expires <= now().getTime()) {
-      throw new ValidationError('Die Anfrage ist abgelaufen. Bitte noch einmal versuchen.');
+      throw new ValidationError(t('Die Anfrage ist abgelaufen. Bitte noch einmal versuchen.'));
     }
     return c.challenge;
   }
@@ -97,7 +98,7 @@ export function createPasskeys(deps: { db: DatabaseSync; accounts: Accounts; con
 
   async function registrationOptions(account: Account): Promise<{ ceremonyId: string; options: PublicKeyCredentialCreationOptionsJSON }> {
     const existing = all('select credential_id, transports from passkeys where user_id = ?', account.userId);
-    if (existing.length >= PASSKEYS_PER_ACCOUNT) throw new ConflictError(`Mehr als ${PASSKEYS_PER_ACCOUNT} Passkeys gehen nicht`);
+    if (existing.length >= PASSKEYS_PER_ACCOUNT) throw new ConflictError(t('Mehr als {max} Passkeys gehen nicht', { max: PASSKEYS_PER_ACCOUNT }));
     const options = await (await lib()).generateRegistrationOptions({
       rpName: config.rpName,
       rpID: config.rpID,
@@ -114,7 +115,7 @@ export function createPasskeys(deps: { db: DatabaseSync; accounts: Accounts; con
 
   async function register(account: Account, ceremonyId: unknown, response: unknown, name: unknown): Promise<PasskeyInfo> {
     const challenge = take(ceremonyId, 'register', account.userId);
-    if (!response || typeof response !== 'object') throw new ValidationError('Die Antwort des Geräts fehlt');
+    if (!response || typeof response !== 'object') throw new ValidationError(t('Die Antwort des Geräts fehlt'));
     const { verifyRegistrationResponse } = await lib();
     let verified: Awaited<ReturnType<typeof verifyRegistrationResponse>>;
     try {
@@ -126,13 +127,13 @@ export function createPasskeys(deps: { db: DatabaseSync; accounts: Accounts; con
         requireUserVerification: true,
       });
     } catch {
-      throw new ValidationError('Der Passkey konnte nicht geprüft werden');
+      throw new ValidationError(t('Der Passkey konnte nicht geprüft werden'));
     }
-    if (!verified.verified) throw new ValidationError('Der Passkey konnte nicht geprüft werden');
+    if (!verified.verified) throw new ValidationError(t('Der Passkey konnte nicht geprüft werden'));
     const { credential } = verified.registrationInfo;
-    if (one('select 1 as x from passkeys where credential_id = ?', credential.id)) throw new ConflictError('Dieser Passkey ist schon eingetragen');
+    if (one('select 1 as x from passkeys where credential_id = ?', credential.id)) throw new ConflictError(t('Dieser Passkey ist schon eingetragen'));
     if ((one('select count(*) as n from passkeys where user_id = ?', account.userId)?.n as number) >= PASSKEYS_PER_ACCOUNT) {
-      throw new ConflictError(`Mehr als ${PASSKEYS_PER_ACCOUNT} Passkeys gehen nicht`);
+      throw new ConflictError(t('Mehr als {max} Passkeys gehen nicht', { max: PASSKEYS_PER_ACCOUNT }));
     }
     const label = typeof name === 'string' && name.trim() !== '' ? name.trim().slice(0, NAME_MAX) : 'Passkey';
     const id = randomUUID();
@@ -191,7 +192,7 @@ export function createPasskeys(deps: { db: DatabaseSync; accounts: Accounts; con
   }
 
   function remove(userId: string, id: string): void {
-    if (Number(run('delete from passkeys where id = ? and user_id = ?', id, userId).changes) === 0) throw new NotFoundError('Passkey nicht gefunden');
+    if (Number(run('delete from passkeys where id = ? and user_id = ?', id, userId).changes) === 0) throw new NotFoundError(t('Passkey nicht gefunden'));
   }
 
   return { config, list, registrationOptions, register, authenticationOptions, authenticate, remove };

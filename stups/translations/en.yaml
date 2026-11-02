@@ -1,0 +1,26 @@
+configuration:
+  users:
+    name: People and push devices
+    description: >-
+      Who may use Stups and on which devices the push messages arrive. One entry per person: the person's name (as in
+      Home Assistant, under Settings › People) and the notify services of the Companion App without "notify."
+      (e.g. mobile_app_annas_iphone). If at least one person is entered here, this list applies, and people, devices
+      and access are locked in the app. If the list stays empty, you manage everything in the app under
+      Settings › People & Access.
+  access_mode:
+    name: Access
+    description: >-
+      Only applies if people are entered above. "selected" = only these people and Home Assistant administrators may
+      open Stups, "everyone" = every Home Assistant user.
+  dashboard_path:
+    name: Dashboard path
+    description: Target of the back button, e.g. /lovelace/0 or /dashboard-mobile/start.
+  daily_summary_time:
+    name: Time of the daily summary
+    description: Format HH:MM.
+  overdue_nag_time:
+    name: Time for the overdue follow-up
+    description: Format HH:MM.
+  log_level:
+    name: Log level
+    description: Level of detail of the logs in the add-on log.

@@ -6,6 +6,7 @@ import { type CompletionSource, type Completion, type CompleteResult, type CardD
 import { resolveCarry } from './validate.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
+import { t } from '../i18n/index.js';
 
 /** Erledigen und Wiederholen */
 export function createCompletion(c: Ctx, late: unknown) {
@@ -166,7 +167,7 @@ export function createCompletion(c: Ctx, late: unknown) {
   function firstOpenColumn(boardId: string): Row {
     const cols = visibleColumns(boardId);
     const col = cols.find((c) => c.is_done !== 1 && c.is_planned !== 1) ?? cols.find((c) => c.is_done !== 1) ?? cols[0];
-    if (!col) throw new ConflictError('Das Board hat keine Spalte');
+    if (!col) throw new ConflictError(t('Das Board hat keine Spalte'));
     return col;
   }
 
@@ -204,20 +205,20 @@ export function createCompletion(c: Ctx, late: unknown) {
 
   function undoCompletion(completionId: string): CardDetail {
     const c = one('select * from completions where id = ?', completionId);
-    if (!c) throw new NotFoundError('Erledigung nicht gefunden');
+    if (!c) throw new NotFoundError(t('Erledigung nicht gefunden'));
     const latest = one(
       'select id from completions where card_id = ? order by completed_at desc, rowid desc limit 1',
       c.card_id,
     );
-    if (latest?.id !== c.id) throw new ConflictError('Nur die letzte Erledigung lässt sich rückgängig machen');
-    if (!c.snapshot) throw new ConflictError('Diese Erledigung lässt sich nicht rückgängig machen');
+    if (latest?.id !== c.id) throw new ConflictError(t('Nur die letzte Erledigung lässt sich rückgängig machen'));
+    if (!c.snapshot) throw new ConflictError(t('Diese Erledigung lässt sich nicht rückgängig machen'));
     const card = visibleCardRow(c.card_id);
     const snap = JSON.parse(c.snapshot) as Snapshot;
     return tx(() => {
       // Die bei der Wiederholung angelegte Karte verschwindet wieder, solange niemand mit ihr gearbeitet hat
       if (snap.spawnedId) {
         if (one('select 1 as x from completions where card_id = ?', snap.spawnedId)) {
-          throw new ConflictError('Die nächste Karte wurde schon erledigt, deshalb lässt sich das nicht mehr rückgängig machen');
+          throw new ConflictError(t('Die nächste Karte wurde schon erledigt, deshalb lässt sich das nicht mehr rückgängig machen'));
         }
         run('delete from cards where id = ?', snap.spawnedId);
       }
@@ -262,9 +263,9 @@ export function createCompletion(c: Ctx, late: unknown) {
 
   function restoreArchived(cardId: string, columnId: string, by: string | null = null): CardDetail {
     const card = visibleCardRow(cardId);
-    if (card.archived_at === null) throw new ConflictError('Die Karte ist nicht archiviert');
+    if (card.archived_at === null) throw new ConflictError(t('Die Karte ist nicht archiviert'));
     const col = visibleColumn(columnId);
-    if (col.board_id !== card.board_id) throw new ValidationError('Die Spalte gehört nicht zu diesem Board');
+    if (col.board_id !== card.board_id) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
     return tx(() => {
       placeCard(cardId, col, null);
       run('update cards set archived_at = null, completed_at = null where id = ?', cardId);

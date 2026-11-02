@@ -54,8 +54,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
     if (!u) return;
     const result = await access.evaluate({ id: u.id, name: u.name, displayName: u.displayName });
     req.user = result.user;
-    req.access = result;
-    if (!result.allowed && !OPEN_PATHS.has(req.url.split('?')[0] ?? '')) {
+    req.access = result;    if (!result.allowed && !OPEN_PATHS.has(req.url.split('?')[0] ?? '')) {
       throw new ForbiddenError(t('Kein Zugriff: Bitte einen Administrator, dich freizugeben'));
     }
   });

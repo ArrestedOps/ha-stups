@@ -3,6 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '.
 import { TEST_ACTION } from '../push.js';
 import { type Capabilities } from '../runtime.js';
 import { type ApiKit } from './kit.js';
+import { t } from '../i18n/index.js';
 
 /** Einstellungen, Beta, Push-Übersicht, Fähigkeiten, Dashboards und Umzug */
 export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
@@ -24,11 +25,11 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
   });
   // Beta: Push und Wächter sind zunächst aus (siehe beta-gate.ts). Jeder sieht den Stand, Administratoren ändern ihn.
   app.get('/api/beta', async () => {
-    if (!deps.betaGate?.enabled) throw new NotFoundError('Gibt es nur in der Beta');
+    if (!deps.betaGate?.enabled) throw new NotFoundError(t('Gibt es nur in der Beta'));
     return deps.betaGate.state();
   });
   app.put('/api/beta', async (req) => {
-    if (!deps.betaGate?.enabled) throw new NotFoundError('Gibt es nur in der Beta');
+    if (!deps.betaGate?.enabled) throw new NotFoundError(t('Gibt es nur in der Beta'));
     requireAdmin(req);
     const b = body(req);
     return deps.betaGate.set({ push: b.push, watchers: b.watchers });
@@ -75,8 +76,8 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
   // Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (mit ntfy zusätzlich ein Knopf, der den Rückweg prüft)
   app.post('/api/push/test', async (req) => {
     const me = req.user;
-    if (!me || !deps.push) throw new ForbiddenError('Push ist hier nicht eingerichtet');
-    if (!deps.push.canReach(me.id)) throw new ConflictError('Für dich ist noch kein Push-Weg eingetragen (Einstellungen › Personen & Zugriff)');
+    if (!me || !deps.push) throw new ForbiddenError(t('Push ist hier nicht eingerichtet'));
+    if (!deps.push.canReach(me.id)) throw new ConflictError(t('Für dich ist noch kein Push-Weg eingetragen (Einstellungen › Personen & Zugriff)'));
     const sent = await deps.push.send(me.id, {
       title: 'Stups: Test',
       body: deps.ntfy ? 'Das Handy ist erreichbar. Tippe auf den Knopf, um den Rückweg zu prüfen.' : 'Das Handy ist erreichbar.',
@@ -85,7 +86,7 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
       open: {},
       actions: deps.ntfy ? [{ id: TEST_ACTION, title: 'Rückweg prüfen' }] : undefined,
     });
-    if (!sent) throw new ConflictError('Die Nachricht ist nicht angekommen. Mehr steht im Protokoll.');
+    if (!sent) throw new ConflictError(t('Die Nachricht ist nicht angekommen. Mehr steht im Protokoll.'));
     return { sent: true };
   });
   app.get('/api/capabilities', async (): Promise<Capabilities> => {
@@ -114,11 +115,11 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
   // ----- Umzug in eine andere App (nur Administratoren) -----
   app.post('/api/admin/export', async (req) => {
     requireAdmin(req);
-    if (!deps.exportData) throw new ValidationError('Der Export ist hier nicht verfügbar');
+    if (!deps.exportData) throw new ValidationError(t('Der Export ist hier nicht verfügbar'));
     try {
       return deps.exportData();
     } catch (err) {
-      throw new ValidationError(err instanceof Error ? err.message : 'Export fehlgeschlagen');
+      throw new ValidationError(err instanceof Error ? err.message : t('Export fehlgeschlagen'));
     }
   });
 }

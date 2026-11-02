@@ -3,6 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '.
 import { sessionToken } from '../session-auth.js';
 import { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { type ApiKit, type Params } from './kit.js';
+import { t } from '../i18n/index.js';
 
 /** Anmeldung, Personen, Zugriff und Konten */
 export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
@@ -23,7 +24,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
   app.put('/api/me/language', async (req, reply) => {
     const b = body(req);
     const choices = ['auto', 'de', 'en'];
-    if (!choices.includes(b.choice) || !['de', 'en'].includes(b.effective)) throw new ValidationError('Die Sprache muss „de" oder „en" sein');
+    if (!choices.includes(b.choice) || !['de', 'en'].includes(b.effective)) throw new ValidationError(t('Die Sprache muss „de" oder „en" sein'));
     if (!req.user) throw new ForbiddenError();
     store.setLanguage(req.user.id, { choice: b.choice, effective: b.effective });
     return noContent(reply);
@@ -71,7 +72,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
   // Steht eine Personenliste in der Add-on-Konfiguration, gilt sie: Personen, Geräte und Zugriff sind in der App gesperrt
   const notManaged = () => {
     if (store.isManaged()) {
-      throw new ConflictError('Das wird in der Add-on-Konfiguration von Home Assistant verwaltet (Einstellungen › Apps › Stups › Konfiguration)');
+      throw new ConflictError(t('Das wird in der Add-on-Konfiguration von Home Assistant verwaltet (Einstellungen › Apps › Stups › Konfiguration)'));
     }
   };
   app.put('/api/access/mode', async (req) => {
@@ -91,12 +92,12 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
     const own = req.user?.id === req.params.id;
     if (b.displayName !== undefined || !own) requireAdmin(req);
     let person = store.userById(req.params.id);
-    if (!person) throw new NotFoundError('Person nicht gefunden');
+    if (!person) throw new NotFoundError(t('Person nicht gefunden'));
     if (b.notifyServices !== undefined) notManaged();
     if (b.displayName !== undefined) person = store.renamePerson(person.id, b.displayName);
     if (b.notifyServices !== undefined) person = store.setNotifyServices(person.id, b.notifyServices);
     if (b.ntfyTopic !== undefined) {
-      if (!deps.ntfy) throw new ConflictError('ntfy ist nicht eingerichtet (STUPS_NTFY_URL)');
+      if (!deps.ntfy) throw new ConflictError(t('ntfy ist nicht eingerichtet (STUPS_NTFY_URL)'));
       person = store.setNtfyTopic(person.id, b.ntfyTopic);
     }
     if (b.quietStart !== undefined || b.quietEnd !== undefined || b.quietOff !== undefined) {
@@ -125,10 +126,10 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
       requireAdmin(req);
       const b = body(req);
       let account = accounts.byUserId(req.params.id);
-      if (!account) throw new NotFoundError('Benutzer nicht gefunden');
+      if (!account) throw new NotFoundError(t('Benutzer nicht gefunden'));
       if (b.isAdmin !== undefined) {
-        if (typeof b.isAdmin !== 'boolean') throw new ValidationError('isAdmin muss wahr oder falsch sein');
-        if (account.userId === req.user?.id && !b.isAdmin) throw new ConflictError('Du kannst dir die Administratorrechte nicht selbst nehmen');
+        if (typeof b.isAdmin !== 'boolean') throw new ValidationError(t('isAdmin muss wahr oder falsch sein'));
+        if (account.userId === req.user?.id && !b.isAdmin) throw new ConflictError(t('Du kannst dir die Administratorrechte nicht selbst nehmen'));
         account = accounts.setAdmin(account.userId, b.isAdmin);
       }
       if (b.password !== undefined) await accounts.setPassword(account.userId, b.password);
@@ -136,7 +137,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
     });
     app.delete<{ Params: Params }>('/api/auth/users/:id', async (req, reply) => {
       requireAdmin(req);
-      if (req.params.id === req.user?.id) throw new ConflictError('Du kannst dich nicht selbst löschen');
+      if (req.params.id === req.user?.id) throw new ConflictError(t('Du kannst dich nicht selbst löschen'));
       accounts.remove(req.params.id);
       return noContent(reply);
     });
@@ -144,8 +145,8 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
     app.post('/api/auth/password', async (req, reply) => {
       const b = body(req);
       const me = req.user ? accounts.byUserId(req.user.id) : null;
-      if (!me) throw new ForbiddenError('Nur mit einem Konto möglich');
-      if (!(await accounts.verify(me.username, b.current))) throw new ForbiddenError('Das aktuelle Passwort stimmt nicht');
+      if (!me) throw new ForbiddenError(t('Nur mit einem Konto möglich'));
+      if (!(await accounts.verify(me.username, b.current))) throw new ForbiddenError(t('Das aktuelle Passwort stimmt nicht'));
       await accounts.setPassword(me.userId, b.next, sessionToken(req.headers));
       return noContent(reply);
     });
@@ -154,7 +155,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
     if (passkeys) {
       const mine = (req: FastifyRequest): Account => {
         const me = req.user ? accounts.byUserId(req.user.id) : null;
-        if (!me) throw new ForbiddenError('Nur mit einem Konto möglich');
+        if (!me) throw new ForbiddenError(t('Nur mit einem Konto möglich'));
         return me;
       };
       app.get('/api/passkeys', async (req) => passkeys.list(mine(req).userId));
@@ -172,7 +173,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
   app.delete<{ Params: Params }>('/api/access/people/:id', async (req, reply) => {
     requireAdmin(req);
     notManaged();
-    if (req.params.id === req.user?.id && accounts) throw new ConflictError('Du kannst dich nicht selbst entfernen');
+    if (req.params.id === req.user?.id && accounts) throw new ConflictError(t('Du kannst dich nicht selbst entfernen'));
     // Mit der Person verschwindet auch ihr Konto (Anmeldung), sonst käme sie weiter hinein
     if (accounts?.byUserId(req.params.id)) accounts.remove(req.params.id);
     store.removePerson(req.params.id);

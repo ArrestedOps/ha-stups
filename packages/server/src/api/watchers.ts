@@ -3,6 +3,7 @@ import { ConflictError, ValidationError } from '../errors.js';
 import { type HaState } from '../ha.js';
 import { parseWatcher, type WatcherConfig } from '../watcher-types.js';
 import { type ApiKit, type Params } from './kit.js';
+import { t } from '../i18n/index.js';
 
 /** Wächter und Diagnose */
 export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
@@ -11,20 +12,20 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   // ----- Wächter-Test für die Diagnose-Seite (nur Administratoren, nur lesend) -----
   app.post('/api/admin/watcher-probe', async (req) => {
     requireAdmin(req);
-    if (!deps.ha?.probeWatchers) throw new ValidationError('Nicht verfügbar (keine Verbindung zu Home Assistant)');
+    if (!deps.ha?.probeWatchers) throw new ValidationError(t('Nicht verfügbar (keine Verbindung zu Home Assistant)'));
     const entityId = body(req).entityId;
     if (entityId !== undefined && (typeof entityId !== 'string' || !/^[a-z0-9_]+\.[a-z0-9_]+$/.test(entityId))) {
-      throw new ValidationError('Die Entität muss die Form domain.name haben');
+      throw new ValidationError(t('Die Entität muss die Form domain.name haben'));
     }
     try {
       return await deps.ha.probeWatchers(entityId);
     } catch (err) {
-      throw new ValidationError(err instanceof Error ? err.message : 'Test fehlgeschlagen');
+      throw new ValidationError(err instanceof Error ? err.message : t('Test fehlgeschlagen'));
     }
   });
   // ----- Wächter: alle sehen sie, nur Administratoren ändern sie -----
   const watcherEngine = () => {
-    if (!deps.watchers || !deps.watcherData) throw new ConflictError('Wächter brauchen die Verbindung zu Home Assistant');
+    if (!deps.watchers || !deps.watcherData) throw new ConflictError(t('Wächter brauchen die Verbindung zu Home Assistant'));
     return { engine: deps.watchers, data: deps.watcherData };
   };
   /** Board, Spalte, Kategorien und Personen müssen es geben (sonst entstünde nie eine Karte) */
@@ -33,14 +34,14 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     try {
       view = store.getBoardView(c.card.boardId);
     } catch {
-      throw new ValidationError('Das Board gibt es nicht');
+      throw new ValidationError(t('Das Board gibt es nicht'));
     }
-    if (!view.columns.some((x) => x.id === c.card.columnId)) throw new ValidationError('Die Spalte gehört nicht zu diesem Board');
+    if (!view.columns.some((x) => x.id === c.card.columnId)) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
     const cats = new Set(view.categories.map((x) => x.id));
-    if (c.card.categoryIds.some((id) => !cats.has(id))) throw new ValidationError('Eine Kategorie gehört nicht zu diesem Board');
+    if (c.card.categoryIds.some((id) => !cats.has(id))) throw new ValidationError(t('Eine Kategorie gehört nicht zu diesem Board'));
     const people = new Set(store.people().map((p) => p.id));
     const ids = [...c.assign.personIds, ...(c.assign.fallbackPersonId ? [c.assign.fallbackPersonId] : [])];
-    if (ids.some((id) => !people.has(id))) throw new ValidationError('Eine gewählte Person gibt es in Stups nicht');
+    if (ids.some((id) => !people.has(id))) throw new ValidationError(t('Eine gewählte Person gibt es in Stups nicht'));
   }
   const watcherView = (id: string) => deps.watchers!.view().find((w) => w.id === id);
   app.get('/api/watchers', async () => ({ available: !!deps.watchers, items: deps.watchers?.view() ?? [] }));
@@ -93,7 +94,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     try {
       await engine.test(req.params.id);
     } catch (err) {
-      throw new ValidationError(err instanceof Error ? err.message : 'Test fehlgeschlagen');
+      throw new ValidationError(err instanceof Error ? err.message : t('Test fehlgeschlagen'));
     }
     return watcherView(req.params.id);
   });
@@ -110,14 +111,14 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   /** Suche in den Entitäten von Home Assistant, für das Anlegen eines Wächters */
   app.get<{ Querystring: { q?: string; domain?: string } }>('/api/ha/entities', async (req) => {
     requireAdmin(req);
-    if (!deps.ha?.getStates) throw new ConflictError('Keine Verbindung zu Home Assistant');
+    if (!deps.ha?.getStates) throw new ConflictError(t('Keine Verbindung zu Home Assistant'));
     const q = (req.query.q ?? '').trim().toLowerCase();
     const domains = (req.query.domain ?? '').split(',').filter(Boolean);
     let states: HaState[];
     try {
       states = await deps.ha.getStates();
     } catch (err) {
-      throw new ValidationError(err instanceof Error ? err.message : 'Home Assistant antwortet nicht');
+      throw new ValidationError(err instanceof Error ? err.message : t('Home Assistant antwortet nicht'));
     }
     const name = (s: HaState) => String(s.attributes?.friendly_name ?? s.entity_id);
     const words = q.split(/\s+/).filter(Boolean);

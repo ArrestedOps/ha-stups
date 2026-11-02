@@ -103,6 +103,8 @@ export interface DueNudge {
   fromName: string;
   toId: string;
   text: string;
+  /** Die Vorlage, aus der der Text stammt (dann wird er in der Sprache des Empfängers gebildet); null bei eigenem Text */
+  template: NudgeTemplate | null;
   /** 0 = erste Zustellung, 1 bis 3 = nach „Später" */
   round: number;
   laterCount: number;

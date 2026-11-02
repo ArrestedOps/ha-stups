@@ -5,6 +5,7 @@ import { NUDGE_TEMPLATES, NUDGE_TEXT_MAX, NUDGE_COOLDOWN_MS, NUDGE_LATER_MS, NUD
 import { OPEN_CARD } from './constants.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
+import { t } from '../i18n/index.js';
 
 /** Stupsen */
 export function createNudgesPart(c: Ctx, late: unknown) {
@@ -56,27 +57,27 @@ export function createNudgesPart(c: Ctx, late: unknown) {
     input: { to: unknown; template?: unknown; text?: unknown },
   ): { sent: NudgeSent[]; skipped: NudgeSkipped[] } {
     const sender = one('select * from users where id = ?', fromId);
-    if (!sender || sender.is_person !== 1) throw new ForbiddenError('Nur Personen von Stups können stupsen');
+    if (!sender || sender.is_person !== 1) throw new ForbiddenError(t('Nur Personen von Stups können stupsen'));
     const card = visibleCardRow(cardId);
-    if (card.completed_at !== null || card.archived_at !== null) throw new ConflictError('Die Karte ist schon erledigt');
+    if (card.completed_at !== null || card.archived_at !== null) throw new ConflictError(t('Die Karte ist schon erledigt'));
 
     if (input.text !== undefined && input.text !== null && typeof input.text !== 'string') {
-      throw new ValidationError('Der Text muss aus Zeichen bestehen');
+      throw new ValidationError(t('Der Text muss aus Zeichen bestehen'));
     }
     const custom = typeof input.text === 'string' ? input.text.trim() : '';
     let template: NudgeTemplate | null = null;
     let text: string;
     if (custom) {
-      if (custom.length > NUDGE_TEXT_MAX) throw new ValidationError(`Der Text ist zu lang (höchstens ${NUDGE_TEXT_MAX} Zeichen)`);
+      if (custom.length > NUDGE_TEXT_MAX) throw new ValidationError(t('Der Text ist zu lang (höchstens {max} Zeichen)', { max: NUDGE_TEXT_MAX }));
       text = custom;
     } else {
       if (typeof input.template !== 'string' || !(input.template in NUDGE_TEMPLATES)) {
-        throw new ValidationError('Bitte eine Nachricht wählen oder schreiben');
+        throw new ValidationError(t('Bitte eine Nachricht wählen oder schreiben'));
       }
       template = input.template as NudgeTemplate;
       text = NUDGE_TEMPLATES[template];
     }
-    if (!Array.isArray(input.to) || input.to.length === 0) throw new ValidationError('Bitte mindestens eine Person wählen');
+    if (!Array.isArray(input.to) || input.to.length === 0) throw new ValidationError(t('Bitte mindestens eine Person wählen'));
     const recipients = [...new Set(input.to as string[])];
 
     return tx(() => {
@@ -172,6 +173,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
       fromName: r.from_name,
       toId: r.to_user,
       text: r.text,
+      template: r.template ?? null,
       round: r.later_count,
       laterCount: r.later_count,
     }));
@@ -294,15 +296,15 @@ export function createNudgesPart(c: Ctx, late: unknown) {
   function setNudgeQuiet(userId: string, patch: { start?: unknown; end?: unknown; off?: unknown }): User {
     userRow(userId);
     if (patch.start !== undefined) {
-      if (!isHm(patch.start)) throw new ValidationError('Der Beginn der Ruhezeit braucht die Form HH:MM');
+      if (!isHm(patch.start)) throw new ValidationError(t('Der Beginn der Ruhezeit braucht die Form HH:MM'));
       run('update users set nudge_quiet_start = ? where id = ?', patch.start, userId);
     }
     if (patch.end !== undefined) {
-      if (!isHm(patch.end)) throw new ValidationError('Das Ende der Ruhezeit braucht die Form HH:MM');
+      if (!isHm(patch.end)) throw new ValidationError(t('Das Ende der Ruhezeit braucht die Form HH:MM'));
       run('update users set nudge_quiet_end = ? where id = ?', patch.end, userId);
     }
     if (patch.off !== undefined) {
-      if (typeof patch.off !== 'boolean') throw new ValidationError('„Ruhezeit aus" muss wahr oder falsch sein');
+      if (typeof patch.off !== 'boolean') throw new ValidationError(t('„Ruhezeit aus" muss wahr oder falsch sein'));
       run('update users set nudge_quiet_off = ? where id = ?', patch.off ? 1 : 0, userId);
     }
     return toUser(userRow(userId));

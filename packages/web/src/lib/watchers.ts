@@ -362,6 +362,33 @@ export function watcherLine(w: WatcherItem, personName: (id: string) => string, 
   return parts.join(' · ');
 }
 
+/**
+ * Die Notizen der Läufe stehen als deutscher Text in der Datenbank (so waren sie schon immer, auch in alten Läufen).
+ * Hier erscheinen die bekannten in der Sprache der Oberfläche; alles andere (etwa Fehlertexte) bleibt, wie es ist.
+ */
+export function noteText(note: string | null | undefined): string {
+  if (!note) return '';
+  const fixed: Record<string, () => string> = {
+    'erledigt, weil die Bedingung eingetreten ist': () => t('erledigt, weil die Bedingung eingetreten ist'),
+    'erste Person zu Hause': () => t('erste Person zu Hause'),
+    'kurz danach auch zu Hause': () => t('kurz danach auch zu Hause'),
+    'nach 24 Stunden niemand heimgekommen': () => t('nach 24 Stunden niemand heimgekommen'),
+    'Die Spalte gibt es nicht mehr': () => t('Die Spalte gibt es nicht mehr'),
+    Test: () => t('Test'),
+  };
+  const f = fixed[note];
+  if (f) return f();
+  let m = /^Sperrzeit (\d+) Min\.$/.exec(note);
+  if (m) return t('Sperrzeit {n} Min.', { n: m[1]! });
+  m = /^(\d+) von (\d+)$/.exec(note);
+  if (m) return t('{n} von {total}', { n: m[1]!, total: m[2]! });
+  m = /^(\d+) Auslösungen seit dem letzten Zurücksetzen$/.exec(note);
+  if (m) return t('{n} Auslösungen seit dem letzten Zurücksetzen', { n: m[1]! });
+  m = /^nach (\d+) Min\.$/.exec(note);
+  if (m) return t('nach {n} Min.', { n: m[1]! });
+  return note;
+}
+
 export const RUN_TEXT: Record<string, string> = {
   get created() {
     return t('Karte angelegt');

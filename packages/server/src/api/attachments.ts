@@ -4,6 +4,7 @@ import multipart from '@fastify/multipart';
 import { type FastifyInstance, type FastifyReply } from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { type ApiKit, type Params } from './kit.js';
+import { t } from '../i18n/index.js';
 
 /** Anhänge */
 export async function registerAttachmentRoutes(app: FastifyInstance, k: ApiKit): Promise<void> {
@@ -13,7 +14,7 @@ export async function registerAttachmentRoutes(app: FastifyInstance, k: ApiKit):
   await app.register(multipart, { limits: { fileSize: MAX_FILE_BYTES, files: 2, fields: 5 } });
   app.post<{ Params: Params }>('/api/cards/:id/attachments', async (req, reply) => {
     const files = deps.files;
-    if (!files) throw new AppError('Die Dateiablage ist nicht verfügbar', 501);
+    if (!files) throw new AppError(t('Die Dateiablage ist nicht verfügbar'), 501);
     store.getCard(req.params.id); // unbekannte Karte: sofort 404
 
     let file: { name: string; data: Buffer } | null = null;
@@ -24,13 +25,13 @@ export async function registerAttachmentRoutes(app: FastifyInstance, k: ApiKit):
       if (part.fieldname === 'file') file = { name: part.filename, data };
       else if (part.fieldname === 'thumb') thumb = data;
     }
-    if (!file) throw new ValidationError('Es fehlt die Datei');
+    if (!file) throw new ValidationError(t('Es fehlt die Datei'));
 
     const mime = sniffMime(file.data);
-    if (!mime) throw new ValidationError('Dieser Dateityp ist nicht erlaubt. Erlaubt sind Bilder und PDF');
+    if (!mime) throw new ValidationError(t('Dieser Dateityp ist nicht erlaubt. Erlaubt sind Bilder und PDF'));
     const thumbMime = thumb ? sniffMime(thumb) : null;
     if (thumb && (!thumbMime || !thumbMime.startsWith('image/') || thumb.length > MAX_THUMB_BYTES)) {
-      throw new ValidationError('Das Vorschaubild ist ungültig');
+      throw new ValidationError(t('Das Vorschaubild ist ungültig'));
     }
 
     const id = randomUUID();

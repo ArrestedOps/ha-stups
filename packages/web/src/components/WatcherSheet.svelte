@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { api, ApiError, type BoardView, type HaEntity, type WatcherItem, type WatcherRun } from '../lib/api';
   import { clock } from '../lib/nudge';
-  import { emptyForm, formProblem, fromWatcher, previewSentence, RUN_TEXT, TEMPLATES, toInput, type WatcherForm, type WatcherTemplate } from '../lib/watchers';
+  import { emptyForm, formProblem, fromWatcher, noteText, previewSentence, RUN_TEXT, TEMPLATES, toInput, type WatcherForm, type WatcherTemplate } from '../lib/watchers';
   import { catClass } from '../lib/colors';
   import { closeSheet, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
@@ -464,7 +464,7 @@
         </Row>
         {#each runs.slice(0, 8) as r (r.id)}
           <Row stack>
-            <p class="text-[15px]">{RUN_TEXT[r.result] ?? r.result}{r.note ? ` · ${r.note}` : ''}</p>
+            <p class="text-[15px]">{RUN_TEXT[r.result] ?? r.result}{r.note ? ` · ${noteText(r.note)}` : ''}</p>
             <p class="text-[13px] text-fg2">{t('{time} Uhr', { time: clock(r.at) })}{r.assignedTo.length ? ` · ${r.assignedTo.map(personName).join(', ')}` : ''}</p>
           </Row>
         {:else}

@@ -6,6 +6,7 @@ import { type Board, type BoardSummary, type Column, type Category, type BoardVi
 import { cleanText } from './validate.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
+import { t } from '../i18n/index.js';
 
 /** Boards, Spalten, „Geplant" und Kategorien */
 export function createBoards(c: Ctx, late: unknown) {
@@ -26,7 +27,7 @@ export function createBoards(c: Ctx, late: unknown) {
 
   function visibleBoard(id: string): Row {
     const r = one('select * from boards where id = ? and deleted_at is null', id);
-    if (!r) throw new NotFoundError('Board nicht gefunden');
+    if (!r) throw new NotFoundError(t('Board nicht gefunden'));
     return r;
   }
 
@@ -40,10 +41,10 @@ export function createBoards(c: Ctx, late: unknown) {
     /** Spalte „Geplant" gleich mit anlegen (Standard der App) */
     withPlanned?: boolean;
   }): Board {
-    const name = cleanText(input.name, 'Der Name', 80);
+    const name = cleanText(input.name, t('Der Name'), 80);
     return tx(() => {
       const id = randomUUID();
-      const t = iso();
+      const stamp = iso();
       run(
         'insert into boards (id, name, icon, color, position, archive_after_days, created_at, updated_at) values (?, ?, ?, ?, ?, 7, ?, ?)',
         id,
@@ -51,14 +52,14 @@ export function createBoards(c: Ctx, late: unknown) {
         input.icon ?? null,
         input.color ?? null,
         generateKeyBetween(lastPos('boards', '1 = 1'), null),
-        t,
-        t,
+        stamp,
+        stamp,
       );
       const defaults: { name: string; done?: boolean; planned?: boolean }[] = [
-        { name: 'Offen' },
-        ...(input.withPlanned ? [{ name: 'Geplant', planned: true }] : []),
-        { name: 'In Arbeit' },
-        { name: 'Erledigt', done: true },
+        { name: t('Offen') },
+        ...(input.withPlanned ? [{ name: t('Geplant'), planned: true }] : []),
+        { name: t('In Arbeit') },
+        { name: t('Erledigt'), done: true },
       ];
       const positions = generateNKeysBetween(null, null, defaults.length);
       defaults.forEach((col, i) => {
@@ -97,7 +98,7 @@ export function createBoards(c: Ctx, late: unknown) {
     const params: unknown[] = [];
     if (patch.name !== undefined) {
       sets.push('name = ?');
-      params.push(cleanText(patch.name, 'Der Name', 80));
+      params.push(cleanText(patch.name, t('Der Name'), 80));
     }
     if (patch.icon !== undefined) {
       sets.push('icon = ?');
@@ -109,7 +110,7 @@ export function createBoards(c: Ctx, late: unknown) {
     }
     if (patch.archiveAfterDays !== undefined) {
       if (!Number.isInteger(patch.archiveAfterDays) || patch.archiveAfterDays < 0 || patch.archiveAfterDays > 3650) {
-        throw new ValidationError('Die Archivfrist muss zwischen 0 und 3650 Tagen liegen');
+        throw new ValidationError(t('Die Archivfrist muss zwischen 0 und 3650 Tagen liegen'));
       }
       sets.push('archive_after_days = ?');
       params.push(patch.archiveAfterDays);
@@ -140,7 +141,7 @@ export function createBoards(c: Ctx, late: unknown) {
        where c.id = ? and c.deleted_at is null and b.deleted_at is null`,
       id,
     );
-    if (!r) throw new NotFoundError('Spalte nicht gefunden');
+    if (!r) throw new NotFoundError(t('Spalte nicht gefunden'));
     return r;
   }
 
@@ -149,9 +150,9 @@ export function createBoards(c: Ctx, late: unknown) {
 
   function addColumn(boardId: string, input: { name: string; isDone?: boolean; isPlanned?: boolean }): Column {
     visibleBoard(boardId);
-    const name = cleanText(input.name, 'Der Name', 60);
+    const name = cleanText(input.name, t('Der Name'), 60);
     if (input.isDone && input.isPlanned) {
-      throw new ValidationError('Eine Spalte kann nicht gleichzeitig „Erledigt" und „Geplant" sein');
+      throw new ValidationError(t('Eine Spalte kann nicht gleichzeitig „Erledigt" und „Geplant" sein'));
     }
     return tx(() => {
       const id = randomUUID();
@@ -175,13 +176,13 @@ export function createBoards(c: Ctx, late: unknown) {
     const col = visibleColumn(id);
     return tx(() => {
       if (patch.name !== undefined) {
-        run('update columns set name = ? where id = ?', cleanText(patch.name, 'Der Name', 60), id);
+        run('update columns set name = ? where id = ?', cleanText(patch.name, t('Der Name'), 60), id);
       }
       if (patch.isDone === true && (col.is_planned === 1 || patch.isPlanned === true)) {
-        throw new ValidationError('Eine Spalte kann nicht gleichzeitig „Erledigt" und „Geplant" sein');
+        throw new ValidationError(t('Eine Spalte kann nicht gleichzeitig „Erledigt" und „Geplant" sein'));
       }
       if (patch.isPlanned === true && col.is_done === 1 && patch.isDone !== false) {
-        throw new ValidationError('Eine Spalte kann nicht gleichzeitig „Erledigt" und „Geplant" sein');
+        throw new ValidationError(t('Eine Spalte kann nicht gleichzeitig „Erledigt" und „Geplant" sein'));
       }
       if (patch.isDone === true) {
         run('update columns set is_done = 0 where board_id = ? and is_done = 1 and id <> ?', col.board_id, id);
@@ -282,7 +283,7 @@ export function createBoards(c: Ctx, late: unknown) {
     if (afterId === undefined) return { prev: items.at(-1)?.position ?? null, next: null };
     if (afterId === null) return { prev: null, next: items[0]?.position ?? null };
     const i = items.findIndex((x) => x.id === afterId);
-    if (i < 0) throw new ValidationError('Die Bezugsposition liegt nicht in dieser Liste');
+    if (i < 0) throw new ValidationError(t('Die Bezugsposition liegt nicht in dieser Liste'));
     return { prev: items[i]!.position, next: items[i + 1]?.position ?? null };
   }
 
@@ -298,7 +299,7 @@ export function createBoards(c: Ctx, late: unknown) {
     const col = visibleColumn(id);
     tx(() => {
       if (visibleColumns(col.board_id).length <= 1) {
-        throw new ConflictError('Die letzte Spalte kann nicht gelöscht werden');
+        throw new ConflictError(t('Die letzte Spalte kann nicht gelöscht werden'));
       }
       const cards = all(
         'select id from cards where column_id = ? and deleted_at is null order by position, id',
@@ -306,11 +307,11 @@ export function createBoards(c: Ctx, late: unknown) {
       );
       if (cards.length > 0) {
         if (!moveToColumnId) {
-          throw new ConflictError('Die Spalte enthält Karten. Bitte eine Spalte zum Verschieben wählen');
+          throw new ConflictError(t('Die Spalte enthält Karten. Bitte eine Spalte zum Verschieben wählen'));
         }
         const target = visibleColumn(moveToColumnId);
         if (target.board_id !== col.board_id || target.id === id) {
-          throw new ValidationError('Die Zielspalte ist ungültig');
+          throw new ValidationError(t('Die Zielspalte ist ungültig'));
         }
         let prev = lastPos('cards', 'column_id = ?', target.id);
         for (const c of cards) {
@@ -333,14 +334,14 @@ export function createBoards(c: Ctx, late: unknown) {
 
   function visibleCategory(id: string): Row {
     const r = one('select * from categories where id = ? and deleted_at is null', id);
-    if (!r) throw new NotFoundError('Kategorie nicht gefunden');
+    if (!r) throw new NotFoundError(t('Kategorie nicht gefunden'));
     return r;
   }
 
   function addCategory(boardId: string, input: { name: string; color: string }): Category {
     visibleBoard(boardId);
-    const name = cleanText(input.name, 'Der Name', 40);
-    const color = cleanText(input.color, 'Die Farbe', 32);
+    const name = cleanText(input.name, t('Der Name'), 40);
+    const color = cleanText(input.color, t('Die Farbe'), 32);
     const id = randomUUID();
     run(
       'insert into categories (id, board_id, name, color, position) values (?, ?, ?, ?, ?)',
@@ -355,8 +356,8 @@ export function createBoards(c: Ctx, late: unknown) {
 
   function updateCategory(id: string, patch: { name?: string; color?: string }): Category {
     visibleCategory(id);
-    if (patch.name !== undefined) run('update categories set name = ? where id = ?', cleanText(patch.name, 'Der Name', 40), id);
-    if (patch.color !== undefined) run('update categories set color = ? where id = ?', cleanText(patch.color, 'Die Farbe', 32), id);
+    if (patch.name !== undefined) run('update categories set name = ? where id = ?', cleanText(patch.name, t('Der Name'), 40), id);
+    if (patch.color !== undefined) run('update categories set color = ? where id = ?', cleanText(patch.color, t('Die Farbe'), 32), id);
     return toCategory(one('select * from categories where id = ?', id)!);
   }
 
@@ -385,7 +386,7 @@ export function createBoards(c: Ctx, late: unknown) {
   }
 
   function ensureDefaultBoard(): void {
-    if (one('select count(*) as n from boards')!.n === 0) createBoard({ name: 'Haushalt', withPlanned: true });
+    if (one('select count(*) as n from boards')!.n === 0) createBoard({ name: t('Haushalt'), withPlanned: true });
   }
 
   return {

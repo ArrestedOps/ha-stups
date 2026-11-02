@@ -5,6 +5,7 @@ import { type User, type AccessMode, type Settings, DEFAULT_DUE_TIME, type Row }
 import { PERSON_COLORS, NTFY_TOPIC_RE } from './constants.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
+import { t } from '../i18n/index.js';
 
 /** Personen, Zugriff und Einstellungen */
 export function createPeople(c: Ctx, late: unknown) {
@@ -45,19 +46,19 @@ export function createPeople(c: Ctx, late: unknown) {
   /** Dienstnamen bereinigen: ohne „notify.", ohne Leere und Doppelte. strict: Unsinn ablehnen statt überspringen. */
   function cleanServices(raw: unknown, strict: boolean): string[] {
     if (!Array.isArray(raw)) {
-      if (strict) throw new ValidationError('Die Dienste müssen eine Liste sein');
+      if (strict) throw new ValidationError(t('Die Dienste müssen eine Liste sein'));
       return [];
     }
     const out: string[] = [];
     for (const item of raw) {
       if (typeof item !== 'string') {
-        if (strict) throw new ValidationError('Ein Dienstname ist kein Text');
+        if (strict) throw new ValidationError(t('Ein Dienstname ist kein Text'));
         continue;
       }
       const name = item.trim().replace(/^notify\./, '');
       if (name === '') continue;
       if (!/^[A-Za-z0-9_]+$/.test(name)) {
-        if (strict) throw new ValidationError(`„${name}" ist kein gültiger Dienstname`);
+        if (strict) throw new ValidationError(t('„{name}" ist kein gültiger Dienstname', { name }));
         continue;
       }
       if (!out.includes(name)) out.push(name);
@@ -129,14 +130,14 @@ export function createPeople(c: Ctx, late: unknown) {
 
   const userRow = (id: string): Row => {
     const r = one('select * from users where id = ?', id);
-    if (!r) throw new NotFoundError('Person nicht gefunden');
+    if (!r) throw new NotFoundError(t('Person nicht gefunden'));
     return r;
   };
 
   function cleanPersonName(raw: unknown): string {
-    if (typeof raw !== 'string' || raw.trim() === '') throw new ValidationError('Der Name fehlt');
+    if (typeof raw !== 'string' || raw.trim() === '') throw new ValidationError(t('Der Name fehlt'));
     const name = raw.trim();
-    if (name.length > 60) throw new ValidationError('Der Name ist zu lang (höchstens 60 Zeichen)');
+    if (name.length > 60) throw new ValidationError(t('Der Name ist zu lang (höchstens 60 Zeichen)'));
     return name;
   }
 
@@ -203,7 +204,7 @@ export function createPeople(c: Ctx, late: unknown) {
     let topic: string | null = null;
     if (raw !== null && raw !== undefined && !(typeof raw === 'string' && raw.trim() === '')) {
       if (typeof raw !== 'string' || !NTFY_TOPIC_RE.test(raw.trim())) {
-        throw new ValidationError('Das Thema darf 1 bis 64 Zeichen haben: Buchstaben, Ziffern, Minus und Unterstrich');
+        throw new ValidationError(t('Das Thema darf 1 bis 64 Zeichen haben: Buchstaben, Ziffern, Minus und Unterstrich'));
       }
       topic = raw.trim();
     }
@@ -251,7 +252,7 @@ export function createPeople(c: Ctx, late: unknown) {
   }
 
   function setAccessMode(mode: unknown): AccessMode {
-    if (mode !== 'everyone' && mode !== 'selected') throw new ValidationError('Unbekannter Zugriffsmodus');
+    if (mode !== 'everyone' && mode !== 'selected') throw new ValidationError(t('Unbekannter Zugriffsmodus'));
     putSetting('accessMode', mode);
     return mode;
   }
@@ -314,15 +315,15 @@ export function createPeople(c: Ctx, late: unknown) {
         continue;
       }
       if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || value.length > 200) {
-        throw new ValidationError('Der Pfad muss mit / beginnen');
+        throw new ValidationError(t('Der Pfad muss mit / beginnen'));
       }
       run('insert into settings (key, value) values (?, ?) on conflict(key) do update set value = excluded.value', key, value);
     }
     if (patch.defaultDueTime !== undefined) {
-      const t = patch.defaultDueTime;
-      if (t === null) run('delete from settings where key = ?', 'defaultDueTime');
-      else if (typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t)) putSetting('defaultDueTime', t);
-      else throw new ValidationError('Die Uhrzeit muss die Form HH:MM haben, zum Beispiel 09:00');
+      const time = patch.defaultDueTime;
+      if (time === null) run('delete from settings where key = ?', 'defaultDueTime');
+      else if (typeof time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)) putSetting('defaultDueTime', time);
+      else throw new ValidationError(t('Die Uhrzeit muss die Form HH:MM haben, zum Beispiel 09:00'));
     }
     return getSettings();
   }

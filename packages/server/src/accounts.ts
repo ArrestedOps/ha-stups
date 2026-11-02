@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID, scrypt, timingSafeEqual } from 'no
 import type { DatabaseSync } from 'node:sqlite';
 import { ConflictError, NotFoundError, ValidationError } from './errors.js';
 import type { Store } from './store.js';
+import { t } from './i18n/index.js';
 
 /** Konten für den Betrieb ohne Home Assistant: Passwort, Sitzungen. Jedes Konto gehört zu einer Person. */
 export interface Account {
@@ -57,17 +58,17 @@ let dummyHash: Promise<string> | null = null;
 const sha256 = (s: string): string => createHash('sha256').update(s).digest('hex');
 
 export function checkPassword(raw: unknown): string {
-  if (typeof raw !== 'string') throw new ValidationError('Das Passwort fehlt');
-  if (raw.length < PASSWORD_MIN) throw new ValidationError(`Das Passwort ist zu kurz (mindestens ${PASSWORD_MIN} Zeichen)`);
-  if (raw.length > PASSWORD_MAX) throw new ValidationError(`Das Passwort ist zu lang (höchstens ${PASSWORD_MAX} Zeichen)`);
+  if (typeof raw !== 'string') throw new ValidationError(t('Das Passwort fehlt'));
+  if (raw.length < PASSWORD_MIN) throw new ValidationError(t('Das Passwort ist zu kurz (mindestens {min} Zeichen)', { min: PASSWORD_MIN }));
+  if (raw.length > PASSWORD_MAX) throw new ValidationError(t('Das Passwort ist zu lang (höchstens {max} Zeichen)', { max: PASSWORD_MAX }));
   return raw;
 }
 
 export function checkUsername(raw: unknown): string {
-  if (typeof raw !== 'string' || raw.trim() === '') throw new ValidationError('Der Benutzername fehlt');
+  if (typeof raw !== 'string' || raw.trim() === '') throw new ValidationError(t('Der Benutzername fehlt'));
   const name = raw.trim();
   if (!USERNAME_RE.test(name)) {
-    throw new ValidationError('Der Benutzername darf 2 bis 32 Zeichen haben: Buchstaben, Ziffern, Punkt, Minus und Unterstrich');
+    throw new ValidationError(t('Der Benutzername darf 2 bis 32 Zeichen haben: Buchstaben, Ziffern, Punkt, Minus und Unterstrich'));
   }
   return name;
 }
@@ -100,7 +101,7 @@ export function createAccounts(db: DatabaseSync, store: Store, opts: { now?: () 
   };
   const accountOrThrow = (userId: string): Account => {
     const a = byUserId(userId);
-    if (!a) throw new NotFoundError('Benutzer nicht gefunden');
+    if (!a) throw new NotFoundError(t('Benutzer nicht gefunden'));
     return a;
   };
 
@@ -111,7 +112,7 @@ export function createAccounts(db: DatabaseSync, store: Store, opts: { now?: () 
     const hash = await hashPassword(password);
     return store.transaction(() => {
       if (one('select 1 as x from local_accounts where username = ?', username)) {
-        throw new ConflictError('Diesen Benutzernamen gibt es schon');
+        throw new ConflictError(t('Diesen Benutzernamen gibt es schon'));
       }
       // Eine Person gleichen Namens ohne Konto (zum Beispiel aus einem Umzug) bekommt das Konto, statt doppelt zu entstehen
       const name = displayName.trim().toLowerCase();
@@ -147,10 +148,10 @@ export function createAccounts(db: DatabaseSync, store: Store, opts: { now?: () 
     const hash = await hashPassword(password);
     return store.transaction(() => {
       const user = store.userById(userId);
-      if (!user) throw new NotFoundError('Person nicht gefunden');
-      if (byUserId(userId)) throw new ConflictError('Diese Person hat schon ein Konto');
+      if (!user) throw new NotFoundError(t('Person nicht gefunden'));
+      if (byUserId(userId)) throw new ConflictError(t('Diese Person hat schon ein Konto'));
       if (one('select 1 as x from local_accounts where username = ?', username)) {
-        throw new ConflictError('Diesen Benutzernamen gibt es schon');
+        throw new ConflictError(t('Diesen Benutzernamen gibt es schon'));
       }
       if (!user.haUserId) {
         run('update users set ha_user_id = ? where id = ?', `${LOCAL_PREFIX}${randomUUID()}`, userId);
@@ -190,7 +191,7 @@ export function createAccounts(db: DatabaseSync, store: Store, opts: { now?: () 
 
   function setAdmin(userId: string, isAdmin: boolean): Account {
     const a = accountOrThrow(userId);
-    if (a.isAdmin && !isAdmin && adminCount() <= 1) throw new ConflictError('Das ist der letzte Administrator');
+    if (a.isAdmin && !isAdmin && adminCount() <= 1) throw new ConflictError(t('Das ist der letzte Administrator'));
     run('update local_accounts set is_admin = ? where user_id = ?', isAdmin ? 1 : 0, userId);
     return accountOrThrow(userId);
   }
@@ -198,7 +199,7 @@ export function createAccounts(db: DatabaseSync, store: Store, opts: { now?: () 
   /** Löscht das Konto (Passwort und Sitzungen). Die Person bleibt, ihre Karten und Zuweisungen auch. */
   function remove(userId: string): void {
     const a = accountOrThrow(userId);
-    if (a.isAdmin && adminCount() <= 1) throw new ConflictError('Das ist der letzte Administrator');
+    if (a.isAdmin && adminCount() <= 1) throw new ConflictError(t('Das ist der letzte Administrator'));
     store.transaction(() => {
       run('delete from sessions where user_id = ?', userId);
       run('delete from passkeys where user_id = ?', userId);

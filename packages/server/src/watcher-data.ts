@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
 import { NotFoundError } from './errors.js';
 import type { AssignRule, CardTemplate, DoneTrigger, WatchTrigger, WatcherConfig, WatcherStatus } from './watcher-types.js';
+import { t } from './i18n/index.js';
 
 export interface Watcher extends WatcherConfig {
   id: string;
@@ -83,7 +84,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
 
   function get(id: string): Watcher {
     const r = one('select * from watchers where id = ?', id);
-    if (!r) throw new NotFoundError('Wächter nicht gefunden');
+    if (!r) throw new NotFoundError(t('Wächter nicht gefunden'));
     return toWatcher(r);
   }
 

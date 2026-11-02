@@ -6,6 +6,7 @@ import { type OpenNudge, type Card, type ScheduleCard, type ChecklistItem, type 
 import { cleanText, parseDue, parsePriority, parseRemind, parseCost, parseCarryOver, resolveCarry, parseBool, parseRecurrence } from './validate.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
+import { t } from '../i18n/index.js';
 
 /** Karten */
 export function createCards(c: Ctx, late: unknown) {
@@ -118,7 +119,7 @@ export function createCards(c: Ctx, late: unknown) {
 
   function visibleCardRow(id: string): Row {
     const r = one('select * from cards where id = ? and deleted_at is null', id);
-    if (!r) throw new NotFoundError('Karte nicht gefunden');
+    if (!r) throw new NotFoundError(t('Karte nicht gefunden'));
     return r;
   }
 
@@ -209,22 +210,22 @@ export function createCards(c: Ctx, late: unknown) {
   }
 
   function checkAssignees(ids: unknown): string[] {
-    if (!Array.isArray(ids)) throw new ValidationError('Zuständige müssen eine Liste sein');
+    if (!Array.isArray(ids)) throw new ValidationError(t('Zuständige müssen eine Liste sein'));
     const unique = [...new Set(ids as string[])];
     for (const uid of unique) {
       if (!one('select 1 as ok from users where id = ? and is_person = 1', uid)) {
-        throw new ValidationError('Zugewiesen werden können nur Personen aus Stups');
+        throw new ValidationError(t('Zugewiesen werden können nur Personen aus Stups'));
       }
     }
     return unique;
   }
 
   function checkCategories(boardId: string, ids: unknown): string[] {
-    if (!Array.isArray(ids)) throw new ValidationError('Kategorien müssen eine Liste sein');
+    if (!Array.isArray(ids)) throw new ValidationError(t('Kategorien müssen eine Liste sein'));
     const unique = [...new Set(ids as string[])];
     for (const cid of unique) {
       if (!one('select 1 as ok from categories where id = ? and board_id = ? and deleted_at is null', cid, boardId)) {
-        throw new ValidationError('Die Kategorie gehört nicht zu diesem Board');
+        throw new ValidationError(t('Die Kategorie gehört nicht zu diesem Board'));
       }
     }
     return unique;
@@ -233,19 +234,19 @@ export function createCards(c: Ctx, late: unknown) {
   function createCard(boardId: string, input: CardInput, createdBy: string | null): CardDetail {
     visibleBoard(boardId);
     const col = visibleColumn(input.columnId);
-    if (col.board_id !== boardId) throw new ValidationError('Die Spalte gehört nicht zu diesem Board');
-    const title = cleanText(input.title, 'Der Titel', 200);
+    if (col.board_id !== boardId) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
+    const title = cleanText(input.title, t('Der Titel'), 200);
     const priority = parsePriority(input.priority);
     const dueAt = parseDue(input.dueAt);
     const recurrence = parseRecurrence(input.recurrence);
-    if (recurrence && !dueAt) throw new ValidationError('Eine Wiederholung braucht eine Fälligkeit');
+    if (recurrence && !dueAt) throw new ValidationError(t('Eine Wiederholung braucht eine Fälligkeit'));
     const remind = parseRemind(input.remindBeforeMin);
     const cost = parseCost(input.costCents);
     const carry = parseCarryOver(input.carryOver);
-    const nag = parseBool(input.overdueNag, 'Nachhaken');
-    if (remind !== null && !dueAt) throw new ValidationError('Eine Vorab-Erinnerung braucht eine Fälligkeit');
+    const nag = parseBool(input.overdueNag, t('Nachhaken'));
+    if (remind !== null && !dueAt) throw new ValidationError(t('Eine Vorab-Erinnerung braucht eine Fälligkeit'));
     if (col.is_planned === 1 && !isFutureDue(dueAt)) {
-      throw new ValidationError('In „Geplant" kommen nur Karten mit einem Termin nach heute');
+      throw new ValidationError(t('In „Geplant" kommen nur Karten mit einem Termin nach heute'));
     }
 
     return tx(() => {
@@ -305,7 +306,7 @@ export function createCards(c: Ctx, late: unknown) {
       const params: unknown[] = [];
       if (patch.title !== undefined) {
         sets.push('title = ?');
-        params.push(cleanText(patch.title, 'Der Titel', 200));
+        params.push(cleanText(patch.title, t('Der Titel'), 200));
       }
       if (patch.description !== undefined) {
         sets.push('description = ?');
@@ -322,7 +323,7 @@ export function createCards(c: Ctx, late: unknown) {
           : card.recurrence
             ? (JSON.parse(card.recurrence) as Recurrence)
             : null;
-      if (recurrence && !dueAt) throw new ValidationError('Eine Wiederholung braucht eine Fälligkeit');
+      if (recurrence && !dueAt) throw new ValidationError(t('Eine Wiederholung braucht eine Fälligkeit'));
       if (patch.dueAt !== undefined) {
         sets.push('due_at = ?');
         params.push(dueAt);
@@ -339,13 +340,13 @@ export function createCards(c: Ctx, late: unknown) {
       }
       if (patch.remindBeforeMin !== undefined) {
         const remind = parseRemind(patch.remindBeforeMin);
-        if (remind !== null && !dueAt) throw new ValidationError('Eine Vorab-Erinnerung braucht eine Fälligkeit');
+        if (remind !== null && !dueAt) throw new ValidationError(t('Eine Vorab-Erinnerung braucht eine Fälligkeit'));
         sets.push('remind_before_min = ?');
         params.push(remind);
       }
       if (patch.overdueNag !== undefined) {
         sets.push('overdue_nag = ?');
-        params.push(parseBool(patch.overdueNag, 'Nachhaken') ? 1 : 0);
+        params.push(parseBool(patch.overdueNag, t('Nachhaken')) ? 1 : 0);
       }
       if (patch.costCents !== undefined) {
         sets.push('cost_cents = ?');
@@ -475,7 +476,7 @@ export function createCards(c: Ctx, late: unknown) {
   ): CardDetail {
     const card = visibleCardRow(id);
     const col = visibleColumn(to.columnId);
-    if (col.board_id !== card.board_id) throw new ValidationError('Die Spalte gehört nicht zu diesem Board');
+    if (col.board_id !== card.board_id) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
     return tx(() => {
       // „Geplant" nimmt nur Karten mit Termin nach heute, und solche Karten gehören nicht nach „Offen":
       // Wer dort ablegt, was nicht passt, landet in der passenden Nachbarspalte.

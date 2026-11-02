@@ -1,4 +1,5 @@
 import { ValidationError } from './errors.js';
+import { t } from './i18n/index.js';
 
 export type LinkKind = 'web' | 'maps';
 
@@ -7,17 +8,17 @@ const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:\/\//i;
 
 export function normalizeUrl(input: string): string {
   const raw = input.trim();
-  if (!raw) throw new ValidationError('Die Adresse fehlt');
-  if (BAD_SCHEMES.test(raw)) throw new ValidationError('Nur Adressen mit http oder https sind erlaubt');
+  if (!raw) throw new ValidationError(t('Die Adresse fehlt'));
+  if (BAD_SCHEMES.test(raw)) throw new ValidationError(t('Nur Adressen mit http oder https sind erlaubt'));
   const withScheme = HAS_SCHEME.test(raw) ? raw : `https://${raw}`;
   let url: URL;
   try {
     url = new URL(withScheme);
   } catch {
-    throw new ValidationError('Das ist keine gültige Adresse');
+    throw new ValidationError(t('Das ist keine gültige Adresse'));
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw new ValidationError('Nur Adressen mit http oder https sind erlaubt');
+    throw new ValidationError(t('Nur Adressen mit http oder https sind erlaubt'));
   }
   return url.toString();
 }

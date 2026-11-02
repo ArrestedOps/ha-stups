@@ -731,4 +731,13 @@ export const en: Catalog = {
   'Einstellungen öffnen': 'Open settings',
   // Erledigen als Aktion
   'Aktion|Erledigt': 'Mark as done',
+  // Notizen der Läufe
+  'erledigt, weil die Bedingung eingetreten ist': 'completed because the condition occurred',
+  'erste Person zu Hause': 'first person at home',
+  'kurz danach auch zu Hause': 'also at home shortly after',
+  'nach 24 Stunden niemand heimgekommen': 'nobody got home within 24 hours',
+  'Die Spalte gibt es nicht mehr': 'The column no longer exists',
+  'Sperrzeit {n} Min.': 'Lock time {n} min',
+  '{n} Auslösungen seit dem letzten Zurücksetzen': '{n} triggers since the last reset',
+  'nach {n} Min.': 'after {n} min',
 };

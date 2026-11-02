@@ -48,7 +48,10 @@ Das Add-on-Log ist knapp gehalten und meldet jeden Push-Versand, fehlende Notify
 ### Aufbau
 
 ```
-packages/server   Fastify, node:sqlite, Vitest   (store.ts = Datenschicht, notifications.ts = Push, recurrence.ts = Wiederholungen)
+packages/server   Fastify, node:sqlite, Vitest
+  src/store.ts    setzt die Datenschicht zusammen; die Themen stehen in src/store/ (siehe unten)
+  src/api.ts      Einrichtung, Zugriffsprüfung, Live-Sync; die Routen stehen in src/api/ (siehe unten)
+  src/notifications.ts (Push), recurrence.ts (Wiederholungen), watchers.ts (Wächter), …
 packages/web      Svelte 5, Vite, Tailwind 4, Vitest
 e2e/              Playwright (WebKit, iPhone-Ansicht), startet den gebauten Server
 stups/            Add-on: config.yaml, Dockerfile, DOCS.md, CHANGELOG.md, Übersetzungen
@@ -66,6 +69,29 @@ pnpm build         # baut die Oberfläche nach packages/server/web
 pnpm e2e           # Browser-Tests (einmal: pnpm exec playwright install webkit)
 node e2e/screenshots.mjs   # Screenshots nach docs/images (nach pnpm build)
 ```
+
+### Store und API in Teilen (seit 1.12.0)
+
+**`src/store/`** (der Store, alle Daten in SQLite). `createStore` in `store.ts` baut aus dem Kontext (`context.ts`: Datenbank, Uhr, Zeitzone, Abfragen, Transaktion) die Teile zusammen und bietet nach außen **dieselben Methoden wie vorher**:
+
+| Datei | Thema |
+|---|---|
+| `people.ts` | Personen, Zugriff (alle/ausgewählte), Einstellungen (`settings`), ntfy-Thema, Push-Geheimnis |
+| `boards.ts` | Boards, Spalten, „Geplant", Kategorien, Board-Ansicht |
+| `cards.ts` | Karten anlegen, ändern, verschieben, duplizieren, Termine über alle Boards, Archivliste |
+| `card-extras.ts` | Anhänge, Kommentare, Checkliste, Links einer Karte |
+| `completion.ts` | Erledigen, Rückgängig, Wiederholen (nächste Karte), Archivieren |
+| `notifications.ts` | Sendeprotokoll der Benachrichtigungen |
+| `nudges.ts` | Stupse |
+| `watchers.ts` | Karten der Wächter (Herkunft, Doppelkarten-Schutz) |
+| `trash.ts` | Papierkorb |
+| `types.ts`, `validate.ts`, `constants.ts` | Typen, Prüfung von Eingaben, gemeinsame Konstanten |
+
+Die Teile sind Funktionen `createX(c: Ctx, late)`. Rufen sie Funktionen anderer Teile auf, geht das über `lazy(s, [...])` (siehe `context.ts`): Der Aufruf schlägt erst beim Gebrauch nach, denn beim Aufbau sind die anderen Teile noch nicht da. Dadurch blieben die Funktionsrümpfe beim Aufteilen unverändert. Ein neues Thema = neue Datei, in `store.ts` in die Liste der Teile, in `internals.ts` in den Typ; **die Methoden, die nach außen sichtbar sind, stehen im Rückgabeobjekt von `createStore`.**
+
+**`src/api/`** (die Routen): `api.ts` richtet Fehlerbehandlung, Zugriffsprüfung, Live-Sync ein und ruft die Registrierungen der Dateien auf (`settings`, `access`, `boards`, `cards`, `nudges`, `watchers`, `attachments`, `card-extras`, `trash`). Jede Datei bekommt ein kleines Paket gemeinsamer Hilfen (`ApiKit` in `api/kit.ts`: Abhängigkeiten, `body`, `requireAdmin`, `noContent`, …).
+
+**Absicherung:** `test/shape.test.ts` vergleicht die Namen aller Store-Methoden und alle Routen (mit allen Teilen, die nur mit bestimmten Abhängigkeiten existieren) mit `test/fixtures/*.json`. Eine Methode oder Route verschwindet oder kommt dazu, ohne dass jemand es merkt, geht damit nicht mehr. Bewusst ändern: `UPDATE_SHAPE=1 pnpm test` und die Dateien mitcommitten.
 
 ### Ports und Adapter
 

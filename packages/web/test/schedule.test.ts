@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AGENDA_STEP_DAYS,
+  agendaHorizonAfterLoad,
   boardColorKey,
   boardCounts,
   dayLabel,
@@ -138,5 +140,17 @@ describe('dayLabel und Boardfarbe', () => {
     expect(boardColorKey(null, 1)).toBe('blue');
     expect(boardColorKey('quatsch', 2)).toBe('mint');
     expect(boardColorKey(null, 8)).toBe('orange'); // fängt wieder von vorn an
+  });
+});
+
+describe('Zeitraum der Agenda', () => {
+  it('ist nichts im Zeitraum, schaut die Agenda gleich ein Jahr voraus (sonst wäre die Liste leer, obwohl später Karten anstehen)', () => {
+    expect(agendaHorizonAfterLoad(0, AGENDA_STEP_DAYS)).toBe(365);
+  });
+
+  it('sonst bleibt der Zeitraum, wie er ist', () => {
+    expect(agendaHorizonAfterLoad(3, AGENDA_STEP_DAYS)).toBeNull();
+    expect(agendaHorizonAfterLoad(0, 120)).toBeNull(); // schon erweitert
+    expect(agendaHorizonAfterLoad(0, 365)).toBeNull();
   });
 });

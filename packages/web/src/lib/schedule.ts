@@ -15,6 +15,17 @@ export interface ScheduleFilter {
   showDone: boolean;
 }
 
+/** So viele Tage lädt die Agenda zuerst und bei „Weitere Tage laden" jeweils dazu */
+export const AGENDA_STEP_DAYS = 60;
+const AGENDA_FIRST_LOOKAHEAD_DAYS = 365;
+
+/**
+ * Ist im ersten Zeitraum keine einzige Karte mit Termin, schaut die Agenda gleich ein Jahr voraus: Sonst bliebe sie leer,
+ * obwohl später Karten anstehen (die man im Kalender sieht). Gibt die neue Zahl der Tage zurück, oder null, wenn nichts zu tun ist.
+ */
+export const agendaHorizonAfterLoad = (loaded: number, days: number): number | null =>
+  loaded === 0 && days === AGENDA_STEP_DAYS ? AGENDA_FIRST_LOOKAHEAD_DAYS : null;
+
 export const DEFAULT_FILTER: ScheduleFilter = { personIds: [], unassigned: false, boardIds: [], showDone: false };
 
 export const personFilterActive = (f: ScheduleFilter): boolean => f.personIds.length > 0 || f.unassigned;

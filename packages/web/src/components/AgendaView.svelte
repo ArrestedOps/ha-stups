@@ -1,7 +1,7 @@
 <script lang="ts">
   import { api } from '../lib/api';
   import { clock } from '../lib/nudge';
-  import { boardColorKey, filterSchedule, groupByDay, type ScheduleCard } from '../lib/schedule';
+  import { AGENDA_STEP_DAYS, agendaHorizonAfterLoad, boardColorKey, filterSchedule, groupByDay, type ScheduleCard } from '../lib/schedule';
   import { completeCard, openCardAnywhere, personById, ui } from '../lib/store.svelte';
   import { urgency, urgencyColor } from '../lib/urgency';
   import Avatar from './Avatar.svelte';
@@ -9,12 +9,11 @@
   import ScheduleFilterBar from './ScheduleFilterBar.svelte';
 
   const DAY = 86_400_000;
-  const STEP_DAYS = 60;
 
   let loaded = $state<ScheduleCard[]>([]);
   let loading = $state(true);
   let failed = $state(false);
-  let days = $state(STEP_DAYS);
+  let days = $state(AGENDA_STEP_DAYS);
   let request = 0;
 
   // Neu laden, wenn sich etwas geändert hat (ui.rev), Erledigte zu- oder abgeschaltet werden oder der Zeitraum wächst
@@ -31,6 +30,9 @@
         const weekAgo = Date.now() - 7 * DAY;
         loaded = list.filter((c) => !c.completedAt || Date.parse(c.completedAt) >= weekAgo);
         failed = false;
+        // nichts im ersten Zeitraum: gleich weiter vorausschauen, statt eine leere Agenda zu zeigen
+        const wider = agendaHorizonAfterLoad(loaded.length, horizon);
+        if (wider !== null) days = wider;
       })
       .catch(() => {
         if (mine === request) failed = true;
@@ -43,6 +45,8 @@
   const shown = $derived(filterSchedule(loaded, ui.sf));
   const sections = $derived(groupByDay(shown));
   const boardIndex = (id: string) => ui.boards.findIndex((b) => b.id === id);
+  /** bis wohin geladen ist, für den Hinweis bei leerer Liste */
+  const horizonLabel = $derived(new Date(Date.now() + days * DAY).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }));
 </script>
 
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
@@ -61,7 +65,11 @@
       <div class="flex flex-col items-center gap-2 py-12 text-center text-fg2">
         <Icon name="calendar" size={32} />
         <p class="text-[17px] font-semibold text-fg">Keine Termine</p>
-        <p>Mit diesem Filter gibt es keine Karte mit Termin.</p>
+        <p>Bis {horizonLabel} gibt es mit diesem Filter keine Karte mit Termin.</p>
+        <!-- Auch hier: Karten, die weiter in der Zukunft liegen, sind nur einen Tipp entfernt -->
+        <button class="mt-3 min-h-11 w-full max-w-[320px] rounded-xl border border-line text-[15px] text-fg" onclick={() => (days += AGENDA_STEP_DAYS)}>
+          Weitere {AGENDA_STEP_DAYS} Tage laden
+        </button>
       </div>
     {:else}
       {#each sections as s (s.key)}
@@ -106,8 +114,8 @@
           </ul>
         </section>
       {/each}
-      <button class="mb-6 min-h-11 w-full rounded-xl border border-line text-[15px] text-fg2" onclick={() => (days += STEP_DAYS)}>
-        Weitere {STEP_DAYS} Tage laden
+      <button class="mb-6 min-h-11 w-full rounded-xl border border-line text-[15px] text-fg2" onclick={() => (days += AGENDA_STEP_DAYS)}>
+        Weitere {AGENDA_STEP_DAYS} Tage laden
       </button>
     {/if}
   </div>

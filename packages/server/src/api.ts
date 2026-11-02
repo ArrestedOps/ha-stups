@@ -3,6 +3,7 @@ import multipart from '@fastify/multipart';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { createAccess, type Access, type AccessResult } from './access.js';
 import type { Account, Accounts } from './accounts.js';
+import type { BetaGate } from './beta-gate.js';
 import type { Passkeys } from './passkeys.js';
 import { sessionToken } from './session-auth.js';
 import type { Directory } from './directory.js';
@@ -62,6 +63,8 @@ export interface ApiDeps {
   /** Eigene Konten mit Passwort (Betrieb ohne Home Assistant); ohne sie gibt es keine Routen für die Benutzerverwaltung */
   accounts?: Accounts;
   passkeys?: Passkeys;
+  /** Schalter für Push und Wächter in der Beta (in der normalen App nicht gesetzt oder ohne Wirkung) */
+  betaGate?: BetaGate;
   /** Was in dieser Betriebsart verfügbar ist (Wächter, Sensoren, Push-Wege); die Oberfläche richtet sich danach */
   capabilities?: Capabilities;
   /** Push-Weg der Betriebsart; für Test-Nachricht und den Stand der Zustellung */
@@ -147,6 +150,17 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
     store.setSettings({ dashboardPath: b.dashboardPath, panelPath: b.panelPath });
     return effectiveSettings();
   });
+  // Beta: Push und Wächter sind zunächst aus (siehe beta-gate.ts). Jeder sieht den Stand, Administratoren ändern ihn.
+  app.get('/api/beta', async () => {
+    if (!deps.betaGate?.enabled) throw new NotFoundError('Gibt es nur in der Beta');
+    return deps.betaGate.state();
+  });
+  app.put('/api/beta', async (req) => {
+    if (!deps.betaGate?.enabled) throw new NotFoundError('Gibt es nur in der Beta');
+    requireAdmin(req);
+    const b = body(req);
+    return deps.betaGate.set({ push: b.push, watchers: b.watchers });
+  });
   // Zeigt, warum (k)eine Push-Nachricht ankommt: Dienste je Person und das Sendeprotokoll
   app.get('/api/notifications/status', async (req) => {
     const services = await deps.ha?.listNotifyServices?.().catch(() => null);
@@ -206,6 +220,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
     return (
       deps.capabilities ?? {
         mode: 'standalone',
+        channel: 'stable',
         auth: 'ingress',
         ha: deps.ha !== undefined,
         watchers: deps.watchers !== undefined,

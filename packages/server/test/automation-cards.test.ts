@@ -45,6 +45,20 @@ describe('Ereignis stups_create_card', () => {
     expect(ha.subs.get(EVENT_TYPE)!.payload).toEqual({ type: 'subscribe_events', event_type: EVENT_TYPE });
   });
 
+  it('Beta: hört nur auf stups_beta_create_card und nicht auf das Ereignis der normalen App', () => {
+    const betaHa = new FakeHa();
+    createAutomationCards({
+      store,
+      ha: betaHa,
+      now: () => new Date(t0),
+      presentPersonIds: async () => [],
+      eventType: 'stups_beta_create_card',
+    }).start();
+    expect(betaHa.subs.has('stups_beta_create_card')).toBe(true);
+    expect(betaHa.subs.has(EVENT_TYPE)).toBe(false);
+    expect(betaHa.subs.get('stups_beta_create_card')!.payload).toEqual({ type: 'subscribe_events', event_type: 'stups_beta_create_card' });
+  });
+
   it('legt eine Karte an: Board und Spalte über den Namen, Personen über den Namen, Fälligkeit in Minuten', async () => {
     const auto = engine();
     await auto.handle({ board: 'haushalt', column: 'Offen', title: 'Müll rausbringen', description: 'Gelber Sack', assignees: ['anna', 'Ben'], due_in_minutes: 45 });

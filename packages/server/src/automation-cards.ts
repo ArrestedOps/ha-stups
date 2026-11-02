@@ -12,6 +12,8 @@ export interface AutomationDeps {
   presentPersonIds: () => Promise<string[]>;
   onAssigned?: (card: Card, userIds: string[]) => void;
   onChange?: () => void;
+  /** Ereignis, auf das gehört wird (Vorgabe stups_create_card; die Beta hat ein eigenes, siehe channel.ts) */
+  eventType?: string;
 }
 
 export interface AutomationEntry {
@@ -105,9 +107,10 @@ export function createAutomationCards(deps: AutomationDeps) {
   }
 
   function start(): void {
+    const eventType = deps.eventType ?? EVENT_TYPE;
     deps.ha.subscribe(
-      EVENT_TYPE,
-      { type: 'subscribe_events', event_type: EVENT_TYPE },
+      eventType,
+      { type: 'subscribe_events', event_type: eventType },
       (ev) => void handle((ev.data ?? {}) as Record<string, unknown>),
     );
   }

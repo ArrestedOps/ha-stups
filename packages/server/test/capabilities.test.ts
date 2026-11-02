@@ -17,7 +17,7 @@ async function build(capabilities?: Capabilities) {
 
 describe('GET /api/capabilities', () => {
   it('liefert, was die Betriebsart bietet', async () => {
-    const caps: Capabilities = { mode: 'addon', auth: 'ingress', ha: true, watchers: true, sensors: true, push: ['ha-notify'], publicUrl: null, passkeys: false };
+    const caps: Capabilities = { mode: 'addon', channel: 'stable', auth: 'ingress', ha: true, watchers: true, sensors: true, push: ['ha-notify'], publicUrl: null, passkeys: false };
     const res = await (await build(caps)).inject({ url: '/api/capabilities', headers });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual(caps);
@@ -25,7 +25,7 @@ describe('GET /api/capabilities', () => {
 
   it('ohne Angabe: Standalone ohne Home Assistant, ohne Wächter und Sensoren', async () => {
     const res = await (await build()).inject({ url: '/api/capabilities', headers });
-    expect(res.json()).toEqual({ mode: 'standalone', auth: 'ingress', ha: false, watchers: false, sensors: false, push: [], publicUrl: null, passkeys: false });
+    expect(res.json()).toEqual({ mode: 'standalone', channel: 'stable', auth: 'ingress', ha: false, watchers: false, sensors: false, push: [], publicUrl: null, passkeys: false });
   });
 
   it('verlangt eine Anmeldung', async () => {

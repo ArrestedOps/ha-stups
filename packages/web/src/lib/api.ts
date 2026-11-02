@@ -234,6 +234,8 @@ export class ApiError extends Error {
 /** Was die Betriebsart bietet (GET api/capabilities) */
 export interface Capabilities {
   mode: 'addon' | 'standalone-ha' | 'standalone';
+  /** normale App oder Beta */
+  channel: 'stable' | 'beta';
   /** ingress: Anmeldung über Home Assistant; session: eigenes Konto mit Passwort */
   auth: 'ingress' | 'session';
   ha: boolean;
@@ -243,6 +245,13 @@ export interface Capabilities {
   publicUrl: string | null;
   /** Anmeldung mit Passkey ist eingerichtet (eigene Konten, STUPS_PUBLIC_URL mit HTTPS) */
   passkeys: boolean;
+}
+
+/** Beta: Push und Wächter sind zunächst aus, ein Administrator schaltet sie ein */
+export type BetaPush = { mode: 'off' } | { mode: 'only'; personId: string } | { mode: 'all' };
+export interface BetaState {
+  push: BetaPush;
+  watchers: boolean;
 }
 
 export interface PasskeyInfo {
@@ -315,6 +324,8 @@ export const api = {
   logout: () => post<void>('auth/logout'),
   setup: (b: { code: string; username: string; displayName: string; password: string }) => post<AuthStatus>('auth/setup', b),
   changePassword: (current: string, next: string) => post<void>('auth/password', { current, next }),
+  beta: () => get<BetaState>('beta'),
+  setBeta: (patch: Partial<BetaState>) => put<BetaState>('beta', patch),
   passkeyLoginOptions: () => post<PasskeyCeremony>('auth/passkey/options'),
   passkeyLogin: (ceremonyId: string, response: unknown) => post<AuthStatus>('auth/passkey/login', { ceremonyId, response }),
   passkeys: () => get<PasskeyInfo[]>('passkeys'),

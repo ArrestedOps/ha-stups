@@ -185,6 +185,19 @@ Nach dem Abschnitt „Anmelden mit Passkey" in `docs/docker.md`. Dieser Ablauf l
 - [ ] Passwort ändern: Passkeys bleiben, die anderen Geräte melden sich ab und kommen mit ihrem Passkey wieder hinein
 - [ ] Zweite Person (Ben): sieht und entfernt nur ihre eigenen Passkeys
 
+## 17 · Beta-App „Stups (Beta)" (seit 1.9.0)
+
+Nach `stups-beta/DOCS.md`. Die normale App bleibt in diesem Abschnitt unberührt: nichts davon darf ihre Daten, Nachrichten oder Sensoren verändern.
+
+- [ ] In Home Assistant die Adresse `https://github.com/ArrestedOps/ha-stups#beta` unter Repositories hinzufügen: **Stups (Beta)** mit „BETA"-Symbol erscheint. Daneben ein zweites „Stups" aus dieser Adresse: **nicht** installieren
+- [ ] In der **normalen** App Einstellungen › Umzug › Exportieren, **danach** Stups (Beta) installieren und starten: Die Daten sind da (Boards, Karten, Personen). In der Seitenleiste steht „Stups Beta" neben „Stups"
+- [ ] Beta › Einstellungen: oben das Band „Beta" mit „Push-Nachrichten: Aus" und „Wächter" aus
+- [ ] Mit Push **Aus** und einer Karte, die gleich fällig wird: **keine** Nachricht, auch nicht „Beta ·". Die normale App meldet sich wie gewohnt
+- [ ] Push auf **Nur für mich**: Eine fällige Karte, die dir zugewiesen ist, schickt „Beta · …" nur an dich, nicht an die anderen Personen. Der Knopf „Erledigt" erledigt die Karte in der Beta, **nicht** in der normalen App (dort bleibt sie offen)
+- [ ] In der normalen App auf „Erledigt" einer normalen Nachricht tippen: Die Karte in der Beta bleibt offen (eigene Daten, eigene Knöpfe)
+- [ ] Wächter in der Beta einschalten: Sie legen danach Karten an (nur in der Beta), vorher nicht. Sensoren heißen `sensor.stups_beta_…`, die der normalen App bleiben unverändert
+- [ ] Nach einer neuen Beta-Version in Home Assistant: „Nach Updates suchen" zeigt sie in der Beta-Adresse, **ohne** dass die normale App ein Update bekommt
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

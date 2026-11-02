@@ -49,6 +49,7 @@ async function build(opts: { ntfy: boolean }) {
     ntfy: opts.ntfy ? { url: 'https://ntfy.example.org', roundTrip: (id) => roundTrips.last(id) } : undefined,
     capabilities: {
       mode: 'standalone',
+      channel: 'stable',
       auth: 'ingress',
       ha: false,
       watchers: false,

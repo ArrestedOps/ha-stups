@@ -15,6 +15,8 @@ export interface NotifierDeps {
   log?: { info: (msg: string) => void; warn: (msg: string) => void };
   /** Wartezeiten vor erneuten Versuchen in Minuten */
   retryDelaysMin?: number[];
+  /** Steht vor der Kennung jedes Knopfs (die Beta: BETA_), damit sich normale App und Beta nicht in die Quere kommen */
+  actionPrefix?: string;
 }
 
 /** Ein Tipp auf einen Knopf: aus Home Assistant (userId) oder über ntfy (personId, schon geprüft) */
@@ -39,6 +41,7 @@ export function createNotifier(deps: NotifierDeps) {
   const { store, push, options } = deps;
   const log = deps.log ?? { info: () => undefined, warn: () => undefined };
   const delays = deps.retryDelaysMin ?? [1, 5, 15];
+  const aPrefix = deps.actionPrefix ?? '';
   const retries = new Map<string, { attempts: number; nextAt: number }>();
   let running = false;
 
@@ -52,7 +55,7 @@ export function createNotifier(deps: NotifierDeps) {
 
   const send = (userId: string, message: PushMessage): Promise<boolean> => push.send(userId, message);
 
-  const doneAction = (cardId: string, dueAt: string) => ({ id: `${ACTION_PREFIX}:${cardId}:${dueAt}`, title: 'Erledigt' });
+  const doneAction = (cardId: string, dueAt: string) => ({ id: `${aPrefix}${ACTION_PREFIX}:${cardId}:${dueAt}`, title: 'Erledigt' });
 
   function cardPayload(card: OpenDueCard, body: string): PushMessage {
     return {
@@ -264,10 +267,10 @@ export function createNotifier(deps: NotifierDeps) {
 
   function nudgePayload(n: DueNudge): PushMessage {
     const actions = [
-      { id: `${NUDGE_PREFIX}DONE:${n.id}`, title: 'Erledigt' },
-      { id: `${NUDGE_PREFIX}ACK:${n.id}`, title: 'Mach ich' },
+      { id: `${aPrefix}${NUDGE_PREFIX}DONE:${n.id}`, title: 'Erledigt' },
+      { id: `${aPrefix}${NUDGE_PREFIX}ACK:${n.id}`, title: 'Mach ich' },
       // nach dem dritten „Später" gibt es den Knopf nicht mehr
-      ...(n.laterCount < NUDGE_LATER_MAX ? [{ id: `${NUDGE_PREFIX}LATER:${n.id}`, title: 'Später' }] : []),
+      ...(n.laterCount < NUDGE_LATER_MAX ? [{ id: `${aPrefix}${NUDGE_PREFIX}LATER:${n.id}`, title: 'Später' }] : []),
     ];
     return {
       title: `${n.fromName} stupst dich`,
@@ -393,9 +396,9 @@ export function createNotifier(deps: NotifierDeps) {
 
   /** Reagiert auf das Tippen von „Erledigt" in einer Push-Nachricht. */
   async function handleAction(a: PushAction): Promise<ActionResult> {
-    const nm = new RegExp(`^${NUDGE_PREFIX}(DONE|ACK|LATER):(.+)$`).exec(a.action);
+    const nm = new RegExp(`^${aPrefix}${NUDGE_PREFIX}(DONE|ACK|LATER):(.+)$`).exec(a.action);
     if (nm) return handleNudgeAction(nm[1]!, nm[2]!, a);
-    const m = new RegExp(`^${ACTION_PREFIX}:([^:]+):(.+)$`).exec(a.action);
+    const m = new RegExp(`^${aPrefix}${ACTION_PREFIX}:([^:]+):(.+)$`).exec(a.action);
     if (!m) return 'ignored';
     const [, cardId, key] = m as unknown as [string, string, string];
 

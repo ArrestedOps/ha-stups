@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, beta]
   pull_request:
 
 permissions:
@@ -36,9 +36,10 @@ jobs:
           path: e2e/test-results
           retention-days: 7
 
+  # main baut die normale App (ha-stups-{arch}), beta baut die Beta-App (ha-stups-beta-{arch}): nie die Bilder der jeweils anderen
   image:
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta')
     strategy:
       matrix:
         include:
@@ -52,9 +53,25 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
-      - name: Version aus config.yaml lesen
+      - name: Kanal und Version bestimmen
         id: version
-        run: echo "value=$(grep '^version:' stups/config.yaml | tr -d '\"' | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+        run: |
+          if [ "$GITHUB_REF" = "refs/heads/beta" ]; then
+            channel=beta; config=stups-beta/config.yaml; image=ha-stups-beta
+          else
+            channel=stable; config=stups/config.yaml; image=ha-stups
+          fi
+          version=$(grep '^version:' "$config" | tr -d '\"' | awk '{print $2}')
+          # Schutz: Eine Beta-Version trägt „-beta.", eine normale nie ein „-". Sonst würde das falsche Bild unter dem falschen Namen veröffentlicht.
+          case "$channel:$version" in
+            beta:*-beta.[0-9]*) ;;
+            stable:*-*) echo "::error::Die Version der normalen App darf kein Suffix haben: $version"; exit 1 ;;
+            stable:[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::Unerwartete Version für $channel: $version"; exit 1 ;;
+          esac
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "value=$version" >> "$GITHUB_OUTPUT"
       - name: Owner kleinschreiben
         id: owner
         run: echo "value=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
@@ -68,13 +85,15 @@ jobs:
         with:
           context: .
           file: stups/Dockerfile
+          build-args: |
+            STUPS_CHANNEL=${{ steps.version.outputs.channel }}
           push: true
           # verknüpft das Paket mit dem Repository (Sichtbarkeit und Rechte kommen von dort)
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
           tags: |
-            ghcr.io/${{ steps.owner.outputs.value }}/ha-stups-${{ matrix.arch }}:${{ steps.version.outputs.value }}
-            ghcr.io/${{ steps.owner.outputs.value }}/ha-stups-${{ matrix.arch }}:latest
+            ghcr.io/${{ steps.owner.outputs.value }}/${{ steps.version.outputs.image }}-${{ matrix.arch }}:${{ steps.version.outputs.value }}
+            ghcr.io/${{ steps.owner.outputs.value }}/${{ steps.version.outputs.image }}-${{ matrix.arch }}:latest
 
   # Ein Name für beide Architekturen, für Docker ohne Home Assistant (docker compose, Synology):
   # ghcr.io/<owner>/stups:<version> und :latest. Das Add-on nutzt weiter die Bilder mit Architektur im Namen.

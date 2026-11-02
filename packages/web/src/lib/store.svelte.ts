@@ -115,6 +115,10 @@ export const feat = {
   get ha(): boolean {
     return ui.caps?.ha ?? !this.standalone;
   },
+  /** Die Beta-App (mit eigenen Daten; Push und Wächter sind dort zunächst aus) */
+  get beta(): boolean {
+    return ui.caps?.channel === 'beta';
+  },
   /** Anmeldung mit Passkey: vom Server eingerichtet und vom Browser unterstützt */
   get passkeys(): boolean {
     return this.standalone && (ui.caps?.passkeys ?? false) && passkeysSupported();

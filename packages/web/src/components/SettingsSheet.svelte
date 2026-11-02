@@ -3,6 +3,7 @@
   import { api, ApiError, type PushStatus } from '../lib/api';
   import { applyHeaderHiding, isHeaderHidingWanted, setHeaderHidingWanted, showHaHeader } from '../lib/hideHaHeader';
   import { act, closeSheet, feat, logout, openSheet, selectTab, toast, ui } from '../lib/store.svelte';
+  import BetaSettings from './BetaSettings.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
   import PasskeySettings from './PasskeySettings.svelte';
@@ -139,6 +140,7 @@ tap_action:
 </script>
 
 <Sheet title="Einstellungen" onclose={closeSheet}>
+  {#if feat.beta}<BetaSettings />{/if}
   <Group title="Personen" hint="Wer Stups nutzen darf, wer Karten zugewiesen bekommt und auf welchen Geräten die Push-Nachrichten ankommen.">
     <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => openSheet({ type: 'people' })}>
       <Icon name="user" size={20} /><span class="flex-1">Personen &amp; Zugriff</span><Icon name="chevron-right" size={18} />

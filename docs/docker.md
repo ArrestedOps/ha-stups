@@ -1,5 +1,9 @@
 # Stups ohne Home Assistant (Docker)
 
+> **Beta.** Der eigene Container ist noch eine Beta. Er läuft und wird bei jedem Release getestet (Konten, Passkeys, ntfy, Verbindung zu Home Assistant), bekommt aber **vorerst keine neuen Funktionen**, bis die App in Home Assistant veröffentlicht ist und Nutzer hat. Neue Funktionen der App erscheinen im Container nur, soweit sie ohne Zusatzaufwand mitlaufen; was dort nicht geht, blendet die Oberfläche aus.
+>
+> **Sicherheit.** Stelle ihn **nie ohne HTTPS und einen Reverse-Proxy** ins Internet (siehe „Sicherheit" weiter unten), gib den Port 8099 nicht direkt frei, **aktualisiere regelmäßig** (`docker compose pull && docker compose up -d`) und sichere den Datenordner.
+
 Stups läuft nicht nur als Home-Assistant-App, sondern auch als eigener Docker-Container, zum Beispiel auf einer Synology-NAS. Es ist dasselbe Image und dieselbe Datenbank.
 
 | | Home-Assistant-App | Eigener Container ohne Home Assistant |

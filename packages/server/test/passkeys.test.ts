@@ -1,6 +1,6 @@
 import { generateKeyPairSync } from 'node:crypto';
 import Fastify, { type FastifyInstance } from 'fastify';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createAccess } from '../src/access.js';
 import { createAccounts, type Accounts } from '../src/accounts.js';
 import { apiRoutes } from '../src/api.js';
@@ -16,6 +16,11 @@ const PW = 'ein-langes-passwort';
 const ORIGIN = 'https://stups.example.org';
 const RP = 'stups.example.org';
 const CLIENT = { 'x-stups-client': '1' };
+
+// Die Bibliothek wird erst beim ersten Gebrauch geladen; bei vielen parallelen Testdateien dauert das einmal länger
+beforeAll(async () => {
+  await import('@simplewebauthn/server');
+}, 120_000);
 
 let app: FastifyInstance;
 let accounts: Accounts;

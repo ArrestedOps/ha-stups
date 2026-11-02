@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { channelNames } from '../src/channel.js';
 import { parseOptions } from '../src/config.js';
 import { openDb } from '../src/db.js';
 import { createEventBus } from '../src/events.js';
@@ -92,6 +93,34 @@ describe('Sensoren', () => {
     expect(states['sensor.stups_heute_faellig_conny']!.state).toBe('1');
     expect(states['sensor.stups_ueberfaellig_rene']!.state).toBe('0');
     expect(states['sensor.stups_heute_faellig_rene']!.state).toBe('2');
+  });
+
+  it('Beta: eigene Namen (sensor.stups_beta_…, „Stups Beta …"), nichts davon heißt wie bei der normalen App', async () => {
+    const b = store.createBoard({ name: 'Haushalt' });
+    const col = store.getBoardView(b.id).columns[0]!.id;
+    store.createCard(b.id, { columnId: col, title: 'Steuer', dueAt: '2026-10-31T10:00:00Z', assigneeIds: [conny.id] }, rene.id);
+    await createSensors({
+      store,
+      ha: { setState: async (id: string, state: string, attributes: Record<string, unknown>) => void (states[id] = { state, attributes }) },
+      options,
+      now: () => now,
+      timeZone: () => 'Europe/Berlin',
+      names: channelNames('beta'),
+    }).publish();
+    const ids = Object.keys(states);
+    expect(ids.length).toBeGreaterThan(5);
+    for (const id of ids) expect(id.startsWith('sensor.stups_beta_'), id).toBe(true);
+    expect(states['sensor.stups_beta_ueberfaellig']!.state).toBe('1');
+    expect(states['sensor.stups_beta_ueberfaellig']!.attributes.friendly_name).toBe('Stups Beta überfällig');
+    expect(states['sensor.stups_beta_ueberfaellig_conny']!.attributes.friendly_name).toBe('Stups Beta überfällig (Conny)');
+    expect(states['sensor.stups_beta_stupse_offen']!.attributes.friendly_name).toBe('Stups Beta offene Stupse');
+    expect(states['sensor.stups_beta_waechter_offen']!.attributes.friendly_name).toBe('Stups Beta offene Wächter-Karten');
+    expect(states['sensor.stups_beta_gestupst_conny']!.attributes.friendly_name).toBe('Stups Beta gestupst (Conny)');
+    // die normale App schreibt weiter ihre eigenen Namen
+    states = {};
+    await make().publish();
+    expect(Object.keys(states).every((id) => id.startsWith('sensor.stups_') && !id.startsWith('sensor.stups_beta_'))).toBe(true);
+    expect(states['sensor.stups_ueberfaellig']!.attributes.friendly_name).toBe('Stups überfällig');
   });
 
   it('liefert Titel und Termine als Attribute, mit Einheit und Symbol', async () => {

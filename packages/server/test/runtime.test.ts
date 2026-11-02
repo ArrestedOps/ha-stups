@@ -170,3 +170,16 @@ describe('ntfy', () => {
     expect(resolveRuntime({ SUPERVISOR_TOKEN: 'abc', STUPS_NTFY_URL: 'https://n' }, files()).ntfy).toBeNull();
   });
 });
+
+describe('Kanal (normale App oder Beta)', () => {
+  it('ohne Angabe ist es die normale App', () => {
+    expect(resolveRuntime({}, files()).channel).toBe('stable');
+    expect(resolveRuntime({ SUPERVISOR_TOKEN: 'abc' }, files()).channel).toBe('stable');
+  });
+
+  it('STUPS_CHANNEL=beta gilt in jeder Betriebsart, auch im Add-on (es kommt mit dem Image, nicht aus den Optionen)', () => {
+    expect(resolveRuntime({ SUPERVISOR_TOKEN: 'abc', STUPS_CHANNEL: 'beta' }, files())).toMatchObject({ mode: 'addon', channel: 'beta' });
+    expect(resolveRuntime({ STUPS_CHANNEL: 'beta' }, files()).channel).toBe('beta');
+    expect(resolveRuntime({ HA_URL: 'http://ha:8123', HA_TOKEN: 'x', STUPS_CHANNEL: 'beta' }, files())).toMatchObject({ mode: 'standalone-ha', channel: 'beta' });
+  });
+});

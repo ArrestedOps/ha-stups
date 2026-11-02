@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url';
 import fastifyStatic from '@fastify/static';
 import Fastify from 'fastify';
 import { apiRoutes } from './api.js';
+import { createBetaGate } from './beta-gate.js';
+import { channelNames, withChannel } from './channel.js';
 import type { Options } from './config.js';
 import { resolveRuntime, type Capabilities } from './runtime.js';
 import { combinePush, createHaNotifyPush, type PushGateway } from './push.js';
@@ -70,6 +72,18 @@ const ha = new HaClient({
 });
 const log = { info: (m: string) => app.log.info(m), warn: (m: string) => app.log.warn(m) };
 
+// Normale App oder Beta: die Beta hat eigene Namen für alles Sichtbare und startet mit ausgeschaltetem Push und ausgeschalteten Wächtern
+const names = channelNames(runtime.channel);
+const betaGate = createBetaGate({
+  enabled: names.channel === 'beta',
+  settings: { get: (key) => store.rawSetting(key), put: (key, value) => store.putRawSetting(key, value) },
+  people: () => store.people().map((p) => p.id),
+});
+if (betaGate.enabled) {
+  const s = betaGate.state();
+  app.log.info('Kanal: Beta (Push: ' + (s.push.mode === 'off' ? 'aus' : s.push.mode === 'all' ? 'an' : 'nur eine Person') + ', Wächter: ' + (s.watchers ? 'an' : 'aus') + ')');
+}
+
 // Push-Wege: Companion App über Home Assistant, ntfy (Standalone), oder beides nebeneinander
 const actionTokens = createActionTokens({ secret: () => store.pushSecret() });
 const roundTrips = createRoundTrips();
@@ -87,13 +101,14 @@ const gateways = [
     ? createNtfyPush({ config: runtime.ntfy, topicFor: (userId) => store.ntfyTopic(userId), publicUrl: runtime.publicUrl, tokens: actionTokens, log })
     : null,
 ].filter((g): g is PushGateway => g !== null);
-const push = combinePush(gateways);
+const push = withChannel(betaGate.gatePush(combinePush(gateways)), names);
 const notifier = createNotifier({
   store,
   push,
   options,
   now: () => new Date(),
   timeZone: () => timeZone,
+  actionPrefix: names.actionPrefix,
   onChange: () => bus.emit({ by: null }),
   log,
 });
@@ -108,6 +123,7 @@ const watchers = token
       ha,
       now: () => new Date(),
       timeZone: () => timeZone,
+      enabled: () => betaGate.watchersEnabled(),
       onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Karte fehlgeschlagen')),
       onNudge: (card, ids) => void notifier.notifyStillOpen(card, ids).catch((err) => app.log.warn(err, 'Erinnerung zur offenen Karte fehlgeschlagen')),
       onChange: () => bus.emit({ by: null }),
@@ -121,11 +137,16 @@ const automation = watchers
       ha,
       now: () => new Date(),
       presentPersonIds: () => watchers.presentPersonIds(),
+      eventType: names.eventType,
       onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Karte fehlgeschlagen')),
       onChange: () => bus.emit({ by: null }),
     })
   : undefined;
-const sensors = createSensors({ store, ha, options, now: () => new Date(), timeZone: () => timeZone, log });
+const sensors = createSensors({ store, ha, options, now: () => new Date(), timeZone: () => timeZone, log, names });
+// Wer die Wächter in der Beta einschaltet, bekommt sofort den aktuellen Stand abgeglichen
+betaGate.onWatchers((on) => {
+  if (on) void watchers?.snapshot();
+});
 
 function housekeeping() {
   const purged = store.purgeTrash();
@@ -196,6 +217,7 @@ const directory = accounts
 const access = createAccess({ store, directory });
 const capabilities: Capabilities = {
   mode: runtime.mode,
+  channel: runtime.channel,
   auth: accounts ? 'session' : 'ingress',
   ha: runtime.ha !== null,
   watchers: watchers !== undefined,
@@ -231,6 +253,7 @@ await app.register(apiRoutes, {
   defaultDashboardPath: options.dashboardPath,
   accounts,
   passkeys,
+  betaGate,
   capabilities,
   push,
   ntfy: runtime.ntfy ? { url: runtime.ntfy.url, roundTrip: (personId) => roundTrips.last(personId) } : undefined,

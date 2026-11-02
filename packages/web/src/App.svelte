@@ -26,6 +26,7 @@
   import TrashSheet from './components/TrashSheet.svelte';
   import WatcherSheet from './components/WatcherSheet.svelte';
   import WatchersView from './components/WatchersView.svelte';
+  import { columnForNew } from './lib/calendar';
   import { catClass } from './lib/colors';
   import { deviceTz, formatCost } from './lib/datetime';
   import { costTotals, countByColumn, dueStats, filterCards } from './lib/filters';
@@ -47,6 +48,8 @@
   const tab = $derived(ui.tab);
   const view = $derived(ui.view);
   const columns = $derived(view?.columns ?? []);
+  // Der Plus-Button legt immer in der ersten offenen Spalte an (mit Termin nach heute in „Geplant"), egal welche Spalte gerade zu sehen ist
+  const newCardColumn = $derived(columnForNew(columns, false));
   const board = $derived(ui.boards.find((b) => b.id === ui.boardId));
   const stats = $derived(
     dueStats(
@@ -69,7 +72,7 @@
   );
   const budget = $derived(
     costs.open || costs.done
-      ? [costs.open ? `${formatCost(costs.open)} offen` : '', costs.done ? `${formatCost(costs.done)} erledigt` : ''].filter(Boolean).join(' · ')
+      ? [costs.open ? t('{amount} offen', { amount: formatCost(costs.open) }) : '', costs.done ? t('{amount} erledigt', { amount: formatCost(costs.done) }) : ''].filter(Boolean).join(' · ')
       : '',
   );
 
@@ -207,9 +210,6 @@
             <section class="flex w-[320px] shrink-0 flex-col" aria-label={col.name}>
               <div class="mb-3 flex items-center justify-between px-1">
                 <h2 class="text-[15px] font-semibold text-fg2">{col.name} · {counts[col.id] ?? 0}</h2>
-                <button class="flex h-9 w-9 items-center justify-center rounded-xl text-fg2 hover:bg-surface" aria-label={t('Neue Karte in {name}', { name: col.name })} onclick={() => openSheet({ type: 'new', columnId: col.id })}>
-                  <Icon name="plus" size={18} />
-                </button>
               </div>
               <div class="min-h-0 flex-1 overflow-y-auto pb-4"><ColumnList columnId={col.id} /></div>
             </section>
@@ -236,11 +236,11 @@
     <WatchersView />
   {/if}
 
-  {#if tab === 'boards' && view && ui.columnId && !desktop}
+  {#if tab === 'boards' && view && newCardColumn}
     <button
       class="fixed right-5 bottom-[calc(max(10px,var(--safe-bottom))+80px)] z-30 flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-accent-grad"
       aria-label={t('Neue Karte')}
-      onclick={() => openSheet({ type: 'new', columnId: ui.columnId! })}
+      onclick={() => openSheet({ type: 'new', columnId: newCardColumn! })}
     >
       <Icon name="plus" size={26} stroke={2.8} />
     </button>

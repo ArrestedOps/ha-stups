@@ -55,7 +55,7 @@
     e.preventDefault();
     const p = custom.trim();
     if (!p.startsWith('/')) {
-      toast('Der Pfad muss mit / beginnen, zum Beispiel /dashboard-handy/start', { tone: 'error' });
+      toast(t('Der Pfad muss mit / beginnen, zum Beispiel /dashboard-handy/start'), { tone: 'error' });
       return;
     }
     await save(p);

@@ -16,7 +16,7 @@
 
   async function restore(item: TrashItem) {
     const ok = await act(() => api.restore(item.type, item.id).then(() => true));
-    if (ok) toast(`${LABEL[item.type]} „${item.title}“ wiederhergestellt`);
+    if (ok) toast(t('{type} „{title}“ wiederhergestellt', { type: LABEL[item.type], title: item.title }));
     await load();
   }
 </script>

@@ -89,25 +89,26 @@ test('Termin nach heute: die Karte landet von selbst in „Geplant"', async ({ p
   await expect(card(page, title)).toBeVisible();
 });
 
-test('In „Geplant" angelegt, aber Termin heute: die Karte kommt nach „Offen" statt eines Fehlers', async ({ page }) => {
+test('Plus-Knopf: legt in „Offen" an, auch wenn gerade „Erledigt" oder „Geplant" zu sehen ist', async ({ page }) => {
+  for (const reiter of ['Erledigt', 'Geplant']) {
+    const title = uniqueTitle(`Von ${reiter}`);
+    await tab(page, reiter).click();
+    await addCard(page, title);
+    await expect(card(page, title)).toHaveCount(0); // nicht in dem Reiter, in dem man stand
+    await tab(page, 'Offen').click();
+    await expect(card(page, title)).toBeVisible();
+  }
+});
+
+test('Termin auf heute gestellt: die Karte bleibt in „Offen", ohne Fehler', async ({ page }) => {
   // Kein Datumswort im Titel („heute" würde die Schnell-Eingabe als Termin lesen)
-  const title = uniqueTitle('Statt geplant sofort');
+  const title = uniqueTitle('Sofort dran');
   const today = await page.evaluate(() => {
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T23:30`;
   });
-  await tab(page, 'Geplant').click();
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
-  await page.getByLabel('Titel').fill(title);
-  // In Geplant ist morgen 09:00 vorbelegt; der Termin wird auf heute geändert
-  await page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /morgen 09:00/ }).click();
-  await page.getByLabel('Fälligkeit mit Datum und Uhrzeit').fill(today);
-  await page.getByLabel('Fälligkeit mit Datum und Uhrzeit').blur(); // das Feld meldet die Änderung beim Verlassen
-  await expect(page.getByRole('status').filter({ hasText: 'Termin heute oder keiner' })).toBeVisible();
-  await page.getByRole('button', { name: 'Anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
-  await tab(page, 'Offen').click();
+  await addCard(page, title, today);
   await expect(card(page, title)).toBeVisible();
 });
 

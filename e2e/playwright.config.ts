@@ -21,13 +21,16 @@ export default defineConfig({
     locale: 'de-DE',
     timezoneId: 'Europe/Berlin',
     trace: 'retain-on-failure',
+    // Die Tests legen Daten über die API an (Boards, Karten): ohne Angabe antwortet der Server Englisch, und neue Boards hießen „Open", „Planned" …
+    // Die Seite selbst sendet ihre eigene Sprache; das englische Projekt stellt es auf Englisch um.
+    extraHTTPHeaders: { 'x-stups-language': 'de' },
   },
   // Die Companion App folgt dem Hell/Dunkel des iPhones, beide Themes werden geprüft
   projects: [
     { name: 'dunkel', testIgnore: /waechter|standalone|beta|english/, use: { colorScheme: 'dark' } },
     { name: 'hell', testIgnore: /waechter|standalone|beta|english/, use: { colorScheme: 'light' } },
     // Ein Gerät, das Englisch meldet: Oberfläche, Schnell-Eingabe und Sprachwahl (gleicher Server wie dunkel und hell)
-    { name: 'english', testMatch: /18-english\.spec\.ts$/, use: { colorScheme: 'dark', locale: 'en-GB' } },
+    { name: 'english', testMatch: /18-english\.spec\.ts$/, use: { colorScheme: 'dark', locale: 'en-GB', extraHTTPHeaders: { 'x-stups-language': 'en' } } },
     // Wächter brauchen Home Assistant: eigener Server mit nachgebautem Home Assistant (e2e/server-ha.mjs)
     { name: 'waechter', testMatch: /waechter/, use: { colorScheme: 'dark', baseURL: `http://127.0.0.1:${HA_PORT}` } },
     // Eigener Container ohne Home Assistant, Anmeldung mit Konto (e2e/server-standalone.mjs)

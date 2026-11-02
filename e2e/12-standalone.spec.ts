@@ -244,7 +244,7 @@ test('ntfy: ein Stups kommt mit drei Knöpfen an, „Erledigt" erledigt die Kart
   const view = (await (await page.request.get(`/api/boards/${boards[0]!.id}`)).json()) as { columns: { id: string }[] };
 
   // Ben richtet sein Thema selbst ein, Anna (Administratorin) hätte es auch gekonnt
-  const bens = await (await page.request.patch(`/api/access/people/${ben.id}`, { headers: API, data: { ntfyTopic: 'ben-e2e-topf' } })).json();
+  const bens = await (await page.request.patch(`/api/access/people/${ben.id}`, { headers: API, data: { ntfyTopic: 'ben-e2e-topf', quietOff: true } })).json(); // ohne Ruhezeit, sonst hält der Server Stupse zwischen 22 und 7 Uhr zurück
   expect(bens.ntfy).toBe(true);
   expect(bens.ntfyTopic).toBeUndefined();
 

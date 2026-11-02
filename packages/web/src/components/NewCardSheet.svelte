@@ -8,6 +8,7 @@
   import { formatBytes, prepareUpload, uploadProblem } from '../lib/image';
   import { parseQuickAdd } from '../lib/quickadd';
   import { blockingProblem } from '../lib/quickadd/labels';
+  import { columnForNew } from '../lib/calendar';
   import { columnForDue } from '../lib/swipe';
   import { act, closeSheet, openSheet, toast, ui } from '../lib/store.svelte';
   import CardProps, { type CardFields } from './CardProps.svelte';
@@ -22,7 +23,14 @@
 
   const columns = $derived(ui.view?.columns ?? []);
   // „Geplant" sortiert sich nach dem Termin von selbst, darum steht es nur zur Wahl, wenn man dort anlegt
-  const choices = $derived(columns.filter((c) => !c.isPlanned || c.id === columnId));
+  const choices = $derived(columns.filter((c) => !c.isPlanned || c.id === fields.columnId));
+  // Ohne eigene Wahl richtet sich die Spalte nach dem Termin: nach heute → „Geplant", sonst „Offen"
+  let columnPicked = false;
+  const followDue = () => {
+    if (columnPicked) return;
+    const target = columnForNew(columns, isFuture(fields.dueAt));
+    if (target) fields.columnId = target;
+  };
 
   // Wer in „Geplant" anlegt, braucht einen Termin nach heute: Morgen 09:00 ist vorbelegt
   const tomorrowNine = () => {
@@ -80,6 +88,7 @@
         fields.assigneeIds = ids.length ? ids : [...defaults.assigneeIds];
       }
       if (!manual.includes('categoryIds')) fields.categoryIds = r.categories.flatMap((c) => (c.categoryId ? [c.categoryId] : []));
+      followDue();
     });
   });
   const dropToken = (id: string) => {
@@ -102,20 +111,22 @@
       if (key in patch && !manual.includes(key)) manual = [...manual, key];
     }
     // „Geplant" gilt nur mit einem Termin nach heute: Wer den Termin auf heute stellt oder entfernt, landet in „Offen"
-    if (patch.dueAt !== undefined) {
+    if (patch.dueAt !== undefined) followDue();
+    if (patch.dueAt !== undefined && columnPicked) {
       const wanted = columnForDue(columns, fields.columnId, isFuture(fields.dueAt));
       if (wanted !== fields.columnId) {
         fields.columnId = wanted;
-        toast(`Termin heute oder keiner: Die Karte kommt nach „${columns.find((c) => c.id === wanted)?.name ?? 'Offen'}".`);
+        toast(t('Termin heute oder keiner: Die Karte kommt nach „{column}".', { column: columns.find((c) => c.id === wanted)?.name ?? t('Offen') }));
       }
     }
     return { dueAt: fields.dueAt };
   }
 
   function pickColumn(id: string) {
+    columnPicked = true;
     const fitting = columnForDue(columns, id, isFuture(fields.dueAt));
     fields.columnId = fitting;
-    if (fitting !== id) toast('„Geplant" nimmt nur Karten mit einem Termin nach heute. Stell zuerst den Termin ein.');
+    if (fitting !== id) toast(t('„Geplant" nimmt nur Karten mit einem Termin nach heute. Stell zuerst den Termin ein.'));
   }
 
   function addItem(e: Event) {
@@ -163,7 +174,7 @@
         used.push(made.color);
         ids.push(made.id);
       } catch (err) {
-        toast(err instanceof ApiError ? err.message : `Kategorie „${c.name}“ konnte nicht angelegt werden`, { tone: 'error' });
+        toast(err instanceof ApiError ? err.message : t('Kategorie „{name}“ konnte nicht angelegt werden', { name: c.name }), { tone: 'error' });
         return null;
       }
     }
@@ -189,6 +200,7 @@
     if (newLink.trim()) addLink(new Event('submit'));
 
     // Zur Sicherheit noch einmal, falls Spalte oder Termin anders gesetzt wurden: kein Fehler, sondern „Offen"
+    followDue();
     fields.columnId = columnForDue(columns, fields.columnId, isFuture(fields.dueAt));
     busy = true;
     const newCategoryIds = confirmedCategories ? await createCategories() : [];

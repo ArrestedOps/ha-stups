@@ -35,6 +35,7 @@ export const en: Catalog = {
   'Aus Wiederholung angelegt': 'Created from a repeat',
   'Wächter': 'Watchers',
   'Erledigt': 'Done',
+  'Offen': 'Open',
   'Verschoben: {from} → {to}': 'Moved: {from} → {to}',
   'Wieder geöffnet: {to}': 'Reopened: {to}',
   'Wieder geöffnet': 'Reopened',
@@ -752,5 +753,12 @@ export const en: Catalog = {
   'Menü für „{title}“': 'Menu for “{title}”',
   '{name} ansehen ({size})': 'View {name} ({size})',
   '{name} entfernen': 'Remove {name}',
-  'Neue Karte in {name}': 'New card in {name}',
+  // Nachträge: Schablonen-Texte in Hinweisen
+  'Termin heute oder keiner: Die Karte kommt nach „{column}".': 'Due today or none: the card goes to “{column}”.',
+  '„Geplant" nimmt nur Karten mit einem Termin nach heute. Stell zuerst den Termin ein.': '“Planned” only takes cards with a due date after today. Set the due date first.',
+  'Kategorie „{name}“ konnte nicht angelegt werden': 'Category “{name}” could not be created',
+  'Der Pfad muss mit / beginnen, zum Beispiel /dashboard-handy/start': 'The path must start with /, for example /dashboard-mobile/start',
+  '{type} „{title}“ wiederhergestellt': '{type} “{title}” restored',
+  '{amount} offen': '{amount} open',
+  '{amount} erledigt': '{amount} done',
 };

@@ -4,10 +4,12 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { applyPalette, GIFEncoder, quantize } from 'gifenc';
-import { PNG } from 'pngjs';
+import gifenc from 'gifenc';
+import pngjs from 'pngjs';
 import { devices, webkit } from '@playwright/test';
 
+const { applyPalette, GIFEncoder, quantize } = gifenc;
+const { PNG } = pngjs;
 const lang = process.argv.includes('--lang') ? process.argv[process.argv.indexOf('--lang') + 1] : 'en';
 if (lang !== 'de' && lang !== 'en') throw new Error('--lang muss de oder en sein');
 const EN = lang === 'en';

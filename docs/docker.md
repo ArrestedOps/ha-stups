@@ -8,7 +8,7 @@ Stups läuft nicht nur als Home-Assistant-App, sondern auch als eigener Docker-C
 | Personen | aus Home Assistant | in Stups gepflegt (jeder Benutzer ist eine Person) |
 | Boards, Agenda, Kalender, Wiederholungen, Stupsen | ja | ja |
 | Wächter und Sensoren | ja | nein, in der Oberfläche ausgeblendet |
-| Push-Nachrichten | Companion App | folgt mit Version 1.6 (ntfy) |
+| Push-Nachrichten | Companion App | über [ntfy](https://ntfy.sh) (siehe unten) |
 
 Ein eigener Container **mit** Verbindung zu Home Assistant (Wächter und Sensoren über eine Adresse und ein Zugangs-Token) folgt mit Version 1.7. `HA_URL` und `HA_TOKEN` werden bis dahin noch nicht genutzt.
 
@@ -64,6 +64,9 @@ Alle Einstellungen sind Umgebungsvariablen. Ohne Angabe gelten die Vorgaben.
 | `STUPS_SHARE_DIR` | `/share` | Ordner, aus dem ein Umzug (`stups-umzug`) beim ersten Start übernommen wird |
 | `STUPS_PUBLIC_URL` | – | Adresse, unter der Stups erreichbar ist. `https://…` schaltet das Secure-Cookie ein |
 | `STUPS_ADMIN_USER`, `STUPS_ADMIN_PASSWORD` | – | erster Administrator, nur beide zusammen. Gilt nur, solange es noch kein Konto gibt |
+| `STUPS_NTFY_URL` | – | Adresse des ntfy-Servers, schaltet Push ein (siehe unten) |
+| `STUPS_NTFY_TOKEN` | – | Zugriffstoken (`tk_…`) für einen Server mit Anmeldung |
+| `STUPS_NTFY_USER`, `STUPS_NTFY_PASSWORD` | – | statt des Tokens: Benutzer und Passwort, nur beide zusammen |
 | `STUPS_DAILY_SUMMARY_TIME` | `08:00` | Uhrzeit der Tageszusammenfassung (HH:MM) |
 | `STUPS_OVERDUE_NAG_TIME` | `18:00` | ab wann an Überfälliges erinnert wird (HH:MM) |
 | `STUPS_LOG_LEVEL` | `info` | `error`, `warn`, `info`, `debug` |
@@ -71,6 +74,36 @@ Alle Einstellungen sind Umgebungsvariablen. Ohne Angabe gelten die Vorgaben.
 | `TZ` | `Europe/Berlin` | Zeitzone |
 
 Umgebungsvariablen gehen vor der Datei. In der Home-Assistant-App gelten sie nicht; dort stellt man alles unter Konfiguration ein.
+
+## Push-Nachrichten über ntfy
+
+Ohne Home Assistant gibt es keine Companion App. Stups schickt Erinnerungen, Stupse und die Tageszusammenfassung stattdessen über [ntfy](https://ntfy.sh), eine freie Push-Lösung mit Apps für Android und iPhone. Jede Person abonniert in der ntfy-App ein eigenes **Thema**; Stups veröffentlicht ihre Nachrichten dort. Es funktioniert mit einem eigenen ntfy-Server und mit dem öffentlichen `https://ntfy.sh`.
+
+**Einrichten**
+
+1. Einen ntfy-Server haben (selbst betrieben oder `https://ntfy.sh`) und die ntfy-App auf den Handys installieren.
+2. In der Compose-Datei eintragen:
+
+```yaml
+    environment:
+      STUPS_PUBLIC_URL: "https://stups.example.org"
+      STUPS_NTFY_URL: "https://ntfy.example.org"
+      # nur, wenn der ntfy-Server eine Anmeldung verlangt (eines von beiden):
+      # STUPS_NTFY_TOKEN: "tk_abc123"
+      # STUPS_NTFY_USER: "stups"
+      # STUPS_NTFY_PASSWORD: "…"
+```
+
+3. In Stups unter **Einstellungen › Personen & Zugriff** die Person öffnen und bei **Push über ntfy** ein Thema eintragen (**Zufälliges Thema** erzeugt eines). In der ntfy-App denselben Server verwenden und dieses Thema abonnieren.
+4. Unter **Einstellungen › Benachrichtigungen › An mich senden** eine Test-Nachricht schicken.
+
+**Wichtig**
+
+- **Das Thema ist das Passwort.** Auf einem offenen Server (wie `ntfy.sh`) kann jeder, der das Thema kennt, mitlesen und Nachrichten schicken. Nimm ein zufälliges Thema und gib es nicht weiter. Mit einem ntfy-Server, der Anmeldung verlangt, ist das weniger heikel. Stups zeigt das Thema nur der Person selbst und den Administratoren.
+- **`STUPS_PUBLIC_URL` muss vom Handy aus erreichbar sein** (WLAN, VPN oder Reverse Proxy). Davon hängen zwei Dinge ab: der Link, der beim Tippen auf die Nachricht die Karte öffnet, und die **Knöpfe** („Erledigt" bei Fälligkeit; „Erledigt", „Mach ich", „Später" beim Stups). Ohne die Adresse kommen die Nachrichten ohne Link und ohne Knöpfe an. Stups sagt das in der App und im Protokoll.
+- **Wie die Knöpfe arbeiten.** Sie sind ntfy-Knöpfe vom Typ „HTTP" (Android, iPhone und Web-App). Die ntfy-App ruft beim Tippen `STUPS_PUBLIC_URL/api/push/action` auf. Jede Nachricht trägt dafür ein Token: Person, Aktion und Ablaufzeit (14 Tage), mit einem Geheimnis aus der Datenbank signiert. Damit lässt sich genau diese eine Aktion für genau diese Person auslösen, ohne Anmeldung, und nichts sonst. Veränderte oder abgelaufene Tokens werden abgewiesen; ein Token zu erraten ist aussichtslos (HMAC-SHA-256). Mit **Rückweg prüfen** in der Test-Nachricht siehst du unter **Stand anzeigen**, ob der Weg vom Handy zu Stups frei ist.
+- **Nachrichten ersetzen und entfernen.** Stups vergibt jeder Nachricht eine Kennung. Neuere ntfy-Server (ab Version 2.16) ersetzen damit eine ältere Nachricht und löschen erledigte Nachrichten vom Handy. Ältere Server legen stattdessen eine neue an und lassen die alte stehen; tippt man dort danach auf „Erledigt", meldet Stups „schon erledigt", und die Nachricht verschwindet.
+- **Stups sendet nur, was du eingetragen hast.** Wer kein Thema hat, bekommt nichts; die Übersicht unter **Benachrichtigungen › Stand anzeigen** zeigt, wer erreichbar ist.
 
 ## Synology (Container Manager)
 
@@ -87,6 +120,7 @@ Aktualisieren: `docker compose pull && docker compose up -d`; im Container Manag
 - **HTTPS.** Passwörter und das Sitzungs-Cookie sollten nie unverschlüsselt durchs Internet gehen. Stelle einen Reverse Proxy mit Zertifikat davor (bei Synology: **Systemsteuerung › Anmeldeportal › Erweitert › Reverse Proxy**, Ziel `http://localhost:8099`) und trage die https-Adresse als `STUPS_PUBLIC_URL` ein. Für WebSockets (Live-Sync) muss der Proxy die Kopfzeilen `Upgrade` und `Connection` durchreichen; bei Synology unter **Benutzerdefinierte Kopfzeile › WebSocket**.
 - **Anmeldung.** Passwörter werden mit scrypt gespeichert, Sitzungen laufen 30 Tage und verlängern sich bei Nutzung. Nach fünf Fehlversuchen wartet man eine Minute, jeder weitere Fehlversuch verdoppelt die Wartezeit (höchstens 30 Minuten). Ändert jemand sein Passwort, melden sich seine anderen Geräte ab.
 - **Kopfzeilen.** Anmelde-Kopfzeilen von Home Assistant oder einem Proxy werden im eigenen Container nie beachtet.
+- **Offen ist nur ein Weg ohne Anmeldung:** `/api/push/action` für die Knöpfe in ntfy-Nachrichten, und nur mit gültigem, signiertem Token.
 - **Datensicherung.** Alles liegt im Datenordner (`stups.sqlite`, `files`, `backups`). Eine Kopie dieses Ordners genügt.
 
 ## Von der Home-Assistant-App umziehen

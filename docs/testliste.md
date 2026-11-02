@@ -140,12 +140,25 @@ Zuerst Einstellungen › Diagnose-Seite › „Wächter-Test": Alle Zustände le
 Nach `docs/docker.md` aufgebaut, zum Beispiel auf der NAS.
 
 - [ ] Erster Start: `docker logs stups` zeigt „Einrichtung: … Code". Im Browser erscheint die Einrichtung, ein falscher Code wird abgelehnt, mit dem richtigen entsteht der Administrator und man ist gleich drin. Danach lässt sich die Einrichtung nicht mehr öffnen
-- [ ] Drei Reiter (Boards, Agenda, Kalender), kein „Dashboard"-Button, in den Einstellungen nichts von Home Assistant, Wächtern oder Benachrichtigungen
+- [ ] Drei Reiter (Boards, Agenda, Kalender), kein „Dashboard"-Button, in den Einstellungen nichts von Home Assistant oder Wächtern (Benachrichtigungen nur, wenn ntfy eingerichtet ist, siehe 14)
 - [ ] Personen & Zugriff › Benutzer anlegen: Ben bekommt ein Konto, meldet sich auf seinem Handy an und sieht die gemeinsamen Boards. Er sieht keine Benutzerverwaltung
 - [ ] Neu laden bzw. App schließen und wieder öffnen: man bleibt angemeldet. Einstellungen › Abmelden führt zur Anmeldung
 - [ ] Passwort ändern: danach melden sich die anderen Geräte der Person ab
 - [ ] Hinter dem Reverse Proxy mit https: Anmeldung, Live-Sync zwischen zwei Geräten (WebSocket) und Fotos hochladen funktionieren
 - [ ] Container neu starten (oder `docker compose pull && up -d`): Daten und Anmeldungen sind noch da, unter `data/backups` liegt nach einem Versionswechsel eine Sicherung
+
+## 14 · Push über ntfy im Container (nur wenn du ntfy nutzt)
+
+Nach dem Abschnitt „Push-Nachrichten über ntfy" in `docs/docker.md`: `STUPS_NTFY_URL` und `STUPS_PUBLIC_URL` gesetzt, ntfy-App auf dem Handy.
+
+- [ ] Personen & Zugriff › deine Person › „Push über ntfy": „Zufälliges Thema" erzeugen, speichern, in der ntfy-App denselben Server und dasselbe Thema abonnieren. Unter der Person steht „Push über ntfy"
+- [ ] Einstellungen › Benachrichtigungen › „An mich senden": Die Nachricht „Stups: Test" kommt auf dem Handy an (nicht nur im Protokoll)
+- [ ] Auf den Knopf „Rückweg prüfen" tippen, dann „Stand anzeigen": Dort steht „Rückweg der Knöpfe zuletzt geprüft: …". Steht dort stattdessen ein Hinweis zu `STUPS_PUBLIC_URL`, fehlt die Adresse oder das Handy erreicht sie nicht
+- [ ] Karte mit Termin in ein paar Minuten, dir zugewiesen: zur Fälligkeit kommt die Nachricht mit „Erledigt". Tippen auf den Knopf erledigt die Karte, die Nachricht verschwindet (neuere ntfy-Server) oder bleibt stehen (ältere)
+- [ ] Tippen auf die Nachricht selbst öffnet die Karte in Stups (Anmeldung nötig, falls abgemeldet)
+- [ ] Zweites Handy/zweite Person: Stups an die Person schicken. Sie sieht drei Knöpfe („Erledigt", „Mach ich", „Später"); „Mach ich" meldet dem Absender „… macht's 👍" zurück
+- [ ] Person ohne Thema: Beim Stupsen heißt es „kein Push-Gerät", unter „Stand anzeigen" steht „kein Thema eingetragen"
+- [ ] Tageszusammenfassung zur eingestellten Uhrzeit kommt an (Variable `STUPS_DAILY_SUMMARY_TIME`)
 
 ## Bekannte Lücken
 

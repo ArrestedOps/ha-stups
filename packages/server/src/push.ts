@@ -21,6 +21,33 @@ export interface PushGateway {
   clear(userId: string, tag: string): Promise<void>;
 }
 
+/** Pfad, an den Knöpfe in Nachrichten ohne Home Assistant zurückmelden (siehe push-action.ts) */
+export const PUSH_ACTION_PATH = '/api/push/action';
+
+/** Aktion, mit der die Test-Nachricht prüft, ob Knöpfe Stups erreichen */
+export const TEST_ACTION = 'STUPS_TEST';
+
+/** Kein Weg eingerichtet: niemand ist erreichbar */
+export function createNoPush(): PushGateway {
+  return { canReach: () => false, send: async () => false, clear: async () => undefined };
+}
+
+/** Mehrere Wege nebeneinander: erreichbar über einen von ihnen, gesendet über alle, die die Person kennen */
+export function combinePush(gateways: PushGateway[]): PushGateway {
+  if (gateways.length === 0) return createNoPush();
+  if (gateways.length === 1) return gateways[0]!;
+  return {
+    canReach: (userId) => gateways.some((g) => g.canReach(userId)),
+    async send(userId, message) {
+      const results = await Promise.all(gateways.filter((g) => g.canReach(userId)).map((g) => g.send(userId, message)));
+      return results.some(Boolean);
+    },
+    async clear(userId, tag) {
+      await Promise.allSettled(gateways.map((g) => g.clear(userId, tag)));
+    },
+  };
+}
+
 export interface HaNotifyDeps {
   ha: { callService(domain: string, service: string, data: Record<string, unknown>): Promise<void> };
   /** Notify-Dienste einer Person (ohne Vorsilbe `notify.`) */

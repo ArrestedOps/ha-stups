@@ -6,6 +6,7 @@ import type { Account, Accounts } from './accounts.js';
 import { sessionToken } from './session-auth.js';
 import type { Directory } from './directory.js';
 import type { Capabilities } from './runtime.js';
+import { TEST_ACTION, type PushGateway } from './push.js';
 import { AppError, ConflictError, ForbiddenError, NotFoundError, ValidationError } from './errors.js';
 import type { EventBus } from './events.js';
 import { cleanFilename, extensionFor, MAX_FILE_BYTES, MAX_THUMB_BYTES, sniffMime, type FileStore } from './files.js';
@@ -61,6 +62,10 @@ export interface ApiDeps {
   accounts?: Accounts;
   /** Was in dieser Betriebsart verfügbar ist (Wächter, Sensoren, Push-Wege); die Oberfläche richtet sich danach */
   capabilities?: Capabilities;
+  /** Push-Weg der Betriebsart; für Test-Nachricht und den Stand der Zustellung */
+  push?: PushGateway;
+  /** Push über ntfy: Adresse des Servers (für die Anleitung in der App) und wann der Testknopf zuletzt zurückgemeldet hat */
+  ntfy?: { url: string; roundTrip: (personId: string) => string | null };
   /** Ablage für Anhänge, ohne sie gibt es keine Uploads */
   files?: FileStore;
   /** Schreibt Datenbank und Anhänge für den Umzug in eine andere App nach /share */
@@ -141,7 +146,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
     return effectiveSettings();
   });
   // Zeigt, warum (k)eine Push-Nachricht ankommt: Dienste je Person und das Sendeprotokoll
-  app.get('/api/notifications/status', async () => {
+  app.get('/api/notifications/status', async (req) => {
     const services = await deps.ha?.listNotifyServices?.().catch(() => null);
     const people = store.people();
     const byId = new Map(people.map((p) => [p.id, p]));
@@ -160,7 +165,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
           note:
             who.length === 0
               ? 'Niemand zuständig, deshalb keine Nachricht'
-              : who.some((p) => p.notifyServices.length > 0)
+              : who.some((p) => (deps.push ? deps.push.canReach(p.id) : p.notifyServices.length > 0))
                 ? null
                 : 'Kein Push-Gerät eingetragen (Einstellungen › Personen & Zugriff)',
         };
@@ -170,10 +175,30 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
       people: people.map((p) => ({
         name: p.name,
         services: p.notifyServices.map((service) => ({ service, exists: services ? services.includes(service) : null })),
+        ...(deps.ntfy ? { ntfy: p.ntfy } : {}),
       })),
+      ntfy: deps.ntfy
+        ? { url: deps.ntfy.url, buttons: deps.capabilities?.publicUrl != null, roundTrip: req.user ? deps.ntfy.roundTrip(req.user.id) : null }
+        : null,
       recent: store.recentNotifications(15),
       nudges: store.recentNudges(10),
     };
+  });
+  // Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (mit ntfy zusätzlich ein Knopf, der den Rückweg prüft)
+  app.post('/api/push/test', async (req) => {
+    const me = req.user;
+    if (!me || !deps.push) throw new ForbiddenError('Push ist hier nicht eingerichtet');
+    if (!deps.push.canReach(me.id)) throw new ConflictError('Für dich ist noch kein Push-Weg eingetragen (Einstellungen › Personen & Zugriff)');
+    const sent = await deps.push.send(me.id, {
+      title: 'Stups: Test',
+      body: deps.ntfy ? 'Das Handy ist erreichbar. Tippe auf den Knopf, um den Rückweg zu prüfen.' : 'Das Handy ist erreichbar.',
+      tag: 'stups-test',
+      group: 'stups',
+      open: {},
+      actions: deps.ntfy ? [{ id: TEST_ACTION, title: 'Rückweg prüfen' }] : undefined,
+    });
+    if (!sent) throw new ConflictError('Die Nachricht ist nicht angekommen. Mehr steht im Protokoll.');
+    return { sent: true };
   });
   app.get('/api/capabilities', async (): Promise<Capabilities> => {
     return (
@@ -218,8 +243,13 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
       deps.ha?.listNotifyServices?.().catch(() => null),
     ]);
     const people = store.people();
+    // Das ntfy-Thema schützt die Nachrichten: nur die Person selbst und Administratoren sehen es
     const withRole = await Promise.all(
-      people.map(async (p) => ({ ...p, isAdmin: p.haUserId ? ((await deps.directory?.isAdmin(p.haUserId)) ?? false) : false })),
+      people.map(async (p) => ({
+        ...p,
+        isAdmin: p.haUserId ? ((await deps.directory?.isAdmin(p.haUserId)) ?? false) : false,
+        ...(deps.ntfy && (isAdmin || req.user?.id === p.id) ? { ntfyTopic: store.ntfyTopic(p.id) } : {}),
+      })),
     );
     // Wer als Administrator ohnehin hinein darf, wartet auf nichts
     const pending = isAdmin
@@ -240,6 +270,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
       // Personen aus Home Assistant, die noch nicht dabei sind
       haPersons: (haPersons ?? []).filter((p) => (p.userId ? !added.has(p.userId) : !addedNames.has(p.name.toLowerCase()))),
       services: notifyServices ? notifyServices.filter((s) => s.startsWith('mobile_app_')) : null,
+      ntfy: deps.ntfy ? { url: deps.ntfy.url, buttons: deps.capabilities?.publicUrl != null } : null,
       directoryAvailable: isAdmin ? haPersons !== null && haPersons !== undefined : null,
     };
   });
@@ -270,6 +301,10 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
     if (b.notifyServices !== undefined) notManaged();
     if (b.displayName !== undefined) person = store.renamePerson(person.id, b.displayName);
     if (b.notifyServices !== undefined) person = store.setNotifyServices(person.id, b.notifyServices);
+    if (b.ntfyTopic !== undefined) {
+      if (!deps.ntfy) throw new ConflictError('ntfy ist nicht eingerichtet (STUPS_NTFY_URL)');
+      person = store.setNtfyTopic(person.id, b.ntfyTopic);
+    }
     if (b.quietStart !== undefined || b.quietEnd !== undefined || b.quietOff !== undefined) {
       person = store.setNudgeQuiet(person.id, { start: b.quietStart, end: b.quietEnd, off: b.quietOff });
     }

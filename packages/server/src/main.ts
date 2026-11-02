@@ -5,7 +5,9 @@ import Fastify from 'fastify';
 import { apiRoutes } from './api.js';
 import type { Options } from './config.js';
 import { resolveRuntime, type Capabilities } from './runtime.js';
-import { createHaNotifyPush } from './push.js';
+import { combinePush, createHaNotifyPush, type PushGateway } from './push.js';
+import { createActionTokens, createNtfyPush } from './ntfy.js';
+import { createRoundTrips, pushActionRoutes } from './push-action.js';
 import { openDb } from './db.js';
 import { exportData, importTransfer } from './transfer.js';
 import { createEventBus } from './events.js';
@@ -73,12 +75,23 @@ const ha = new HaClient({
 });
 const log = { info: (m: string) => app.log.info(m), warn: (m: string) => app.log.warn(m) };
 
-const push = createHaNotifyPush({
-  ha,
-  servicesFor: (userId) => store.userById(userId)?.notifyServices ?? [],
-  panelPath: () => store.getSettings().panelPath ?? '/',
-  log,
-});
+// Push-Wege: Companion App über Home Assistant, ntfy (Standalone), oder beides nebeneinander
+const actionTokens = createActionTokens({ secret: () => store.pushSecret() });
+const roundTrips = createRoundTrips();
+const gateways = [
+  runtime.ha
+    ? createHaNotifyPush({
+        ha,
+        servicesFor: (userId) => store.userById(userId)?.notifyServices ?? [],
+        panelPath: () => store.getSettings().panelPath ?? '/',
+        log,
+      })
+    : null,
+  runtime.ntfy
+    ? createNtfyPush({ config: runtime.ntfy, topicFor: (userId) => store.ntfyTopic(userId), publicUrl: runtime.publicUrl, tokens: actionTokens, log })
+    : null,
+].filter((g): g is PushGateway => g !== null);
+const push = combinePush(gateways);
 const notifier = createNotifier({
   store,
   push,
@@ -185,9 +198,13 @@ const capabilities: Capabilities = {
   ha: runtime.ha !== null,
   watchers: watchers !== undefined,
   sensors: runtime.ha !== null,
-  push: runtime.ha ? ['ha-notify'] : [],
+  push: [...(runtime.ha ? (['ha-notify'] as const) : []), ...(runtime.ntfy ? (['ntfy'] as const) : [])],
   publicUrl: runtime.publicUrl,
 };
+// Knöpfe in ntfy-Nachrichten melden sich ohne Sitzung zurück; erlaubt ist nur, was das signierte Token trägt
+if (runtime.ntfy) {
+  await app.register(pushActionRoutes, { tokens: actionTokens, notifier, store, roundTrips, log });
+}
 // Die Diagnose-Seite liegt außerhalb der API-Routen und braucht dieselbe Sperre
 app.addHook('onRequest', async (req, reply) => {
   if (!req.url.startsWith('/api/spike') || !req.principal) return;
@@ -211,6 +228,8 @@ await app.register(apiRoutes, {
   defaultDashboardPath: options.dashboardPath,
   accounts,
   capabilities,
+  push,
+  ntfy: runtime.ntfy ? { url: runtime.ntfy.url, roundTrip: (personId) => roundTrips.last(personId) } : undefined,
   files,
   watchers,
   watcherData: watchers ? watcherData : undefined,
@@ -241,10 +260,6 @@ if (token) {
       .catch(() => setTimeout(loadTimeZone, 30_000).unref());
   void loadTimeZone();
 
-  // Erinnerungen: alle 30 Sekunden und gleich beim Start (verpasste nachholen)
-  const tick = () => notifier.tick().catch((err) => app.log.error(err, 'Erinnerungen fehlgeschlagen'));
-  void tick();
-  setInterval(tick, 30_000).unref();
   if (watchers) setInterval(() => void watchers.tick(), 30_000).unref();
 
   // Sensoren: beim Start, bei Änderungen (gebündelt) und alle 5 Minuten (HA vergisst sie bei einem eigenen Neustart)
@@ -262,6 +277,14 @@ if (token) {
   }, 5000).unref();
 } else {
   app.log.warn('Keine Verbindung zu Home Assistant konfiguriert (SUPERVISOR_TOKEN oder HA_URL und HA_TOKEN fehlen): Verbindung ist deaktiviert');
+}
+
+// Erinnerungen: alle 30 Sekunden und gleich beim Start (verpasste nachholen), sobald es einen Push-Weg gibt
+if (gateways.length > 0) {
+  const tick = () => notifier.tick().catch((err) => app.log.error(err, 'Erinnerungen fehlgeschlagen'));
+  void tick();
+  setInterval(tick, 30_000).unref();
+  if (runtime.ntfy) app.log.info(`Push über ntfy: ${runtime.ntfy.url}${runtime.publicUrl ? '' : ' (ohne STUPS_PUBLIC_URL kommen die Nachrichten ohne Link und Knöpfe)'}`);
 }
 
 await app.listen({ host: '0.0.0.0', port });

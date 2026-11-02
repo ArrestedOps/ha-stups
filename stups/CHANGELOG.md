@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.6.0
+
+- **Push über ntfy im eigenen Container.** Ohne Home Assistant gibt es keine Companion App; jetzt kommen Erinnerungen, Stupse und die Tageszusammenfassung über einen ntfy-Server (selbst betrieben oder `ntfy.sh`). Jede Person trägt unter Personen & Zugriff ein eigenes Thema ein und abonniert es in der ntfy-App. Mit Link zur Karte und Knöpfen: „Erledigt" bei Fälligkeit, „Erledigt", „Mach ich" und „Später" beim Stups. Einrichtung und Hinweise: `docs/docker.md`
+- **Knöpfe ohne Anmeldung, aber abgesichert:** Jeder Knopf trägt ein signiertes Token (Person, Aktion, 14 Tage gültig). Damit lässt sich genau diese Aktion auslösen und nichts sonst; Fälschungen werden abgewiesen
+- Test-Nachricht mit „Rückweg prüfen" und ein Stand der Zustellung zeigen, ob ntfy und der Weg zurück zu Stups funktionieren
+- **Für die App in Home Assistant ändert sich nichts:** Push läuft weiter über die Companion App
+- Datenbank: neue Spalte für das ntfy-Thema (Migration 12, vorher wie immer eine Sicherung)
+
 ## 1.5.0
 
 - **Stups läuft jetzt auch ohne Home Assistant**, als eigener Docker-Container (zum Beispiel auf einer Synology-NAS), mit eigenen Konten und Passwort statt Home Assistant. Boards, Agenda, Kalender, Wiederholungen und Stupsen funktionieren dort wie in der App; Wächter und Sensoren bleiben Home Assistant vorbehalten und sind im Container ausgeblendet. Anleitung und Compose-Beispiel: `docs/docker.md` im Repository

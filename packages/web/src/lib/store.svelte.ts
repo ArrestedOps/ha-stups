@@ -98,6 +98,14 @@ export const feat = {
   get push(): boolean {
     return !this.standalone || (ui.caps?.push.length ?? 0) > 0;
   },
+  /** Push über die Companion App (Home Assistant) */
+  get haPush(): boolean {
+    return ui.caps ? ui.caps.push.includes('ha-notify') : !this.standalone;
+  },
+  /** Push über einen ntfy-Server */
+  get ntfy(): boolean {
+    return ui.caps?.push.includes('ntfy') ?? false;
+  },
   /** Dashboard-Button, Kopfzeile von Home Assistant, Bubble Card, Diagnose-Seite */
   get haUi(): boolean {
     return !this.standalone || (ui.caps?.ha ?? false);

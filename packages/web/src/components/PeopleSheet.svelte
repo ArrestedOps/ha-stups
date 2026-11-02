@@ -122,7 +122,33 @@
   }
 
   const deviceLabel = (n: number) => (n === 0 ? 'Kein Push-Gerät' : n === 1 ? '1 Push-Gerät' : `${n} Push-Geräte`);
+  const pushLabel = (p: { notifyServices: string[]; ntfy: boolean }) => {
+    const ha = feat.haPush ? p.notifyServices.length : 0;
+    if (feat.ntfy && p.ntfy) return ha > 0 ? `${deviceLabel(ha)} und ntfy` : 'Push über ntfy';
+    return deviceLabel(ha);
+  };
+  const hasPush = (p: { notifyServices: string[]; ntfy: boolean }) => (feat.haPush && p.notifyServices.length > 0) || (feat.ntfy && p.ntfy);
   const canEdit = (id: string) => admin || ui.me?.id === id;
+
+  // ntfy: Entwurf des Themas je Person, bis gespeichert wird
+  let topicDraft = $state<Record<string, string>>({});
+  const topicOf = (p: { id: string; ntfyTopic?: string | null }) => topicDraft[p.id] ?? p.ntfyTopic ?? '';
+  const TOPIC_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
+  function randomTopic(): string {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const bytes = crypto.getRandomValues(new Uint8Array(20));
+    return `stups-${Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('')}`;
+  }
+
+  function saveTopic(id: string, topic: string) {
+    const value = topic.trim();
+    void run(async () => {
+      await api.updatePerson(id, { ntfyTopic: value });
+      delete topicDraft[id];
+      toast(value ? 'ntfy-Thema gespeichert' : 'ntfy-Thema entfernt');
+    });
+  }
 </script>
 
 <Sheet title="Personen &amp; Zugriff" onclose={closeSheet}>
@@ -180,13 +206,14 @@
               <span class="block truncate text-[17px] font-medium">
                 {p.displayName}{#if p.id === ui.me?.id}<span class="text-fg2"> (du)</span>{/if}
               </span>
-              {#if feat.push}
-                <span class="block text-[13px] {p.notifyServices.length ? 'text-fg2' : 'text-danger'}">
-                  {deviceLabel(p.notifyServices.length)}{p.isAdmin ? ' · Administrator' : ''}
-                </span>
-              {:else}
+              {#if feat.standalone}
                 <span class="block text-[13px] text-fg2">
                   {accountOf(p.id) ? `Benutzername ${accountOf(p.id)?.username}` : 'Ohne Anmeldung'}{p.isAdmin ? ' · Administrator' : ''}
+                </span>
+              {/if}
+              {#if feat.push}
+                <span class="block text-[13px] {hasPush(p) ? 'text-fg2' : 'text-danger'}">
+                  {pushLabel(p)}{p.isAdmin && !feat.standalone ? ' · Administrator' : ''}
                 </span>
               {/if}
             </span>
@@ -250,7 +277,60 @@
                 </div>
               {/if}
 
-              {#if feat.push}
+              {#if feat.ntfy && info.ntfy}
+                <div data-testid="ntfy-{p.id}">
+                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">Push über ntfy</p>
+                  {#if !canEdit(p.id)}
+                    <p class="text-[15px] text-fg2">Das Thema richtet {p.displayName} selbst ein oder ein Administrator.</p>
+                  {:else}
+                    <div class="flex items-center gap-2">
+                      <input
+                        value={topicOf(p)}
+                        oninput={(e) => (topicDraft[p.id] = e.currentTarget.value)}
+                        maxlength="64"
+                        autocomplete="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        placeholder="Thema, zum Beispiel stups-anna-7x2k"
+                        aria-label="ntfy-Thema von {p.displayName}"
+                        class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3"
+                      />
+                      <button
+                        type="button"
+                        class="min-h-11 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-40"
+                        disabled={busy || (topicOf(p) !== '' && !TOPIC_RE.test(topicOf(p).trim())) || topicOf(p).trim() === (p.ntfyTopic ?? '')}
+                        onclick={() => saveTopic(p.id, topicOf(p))}
+                      >
+                        Speichern
+                      </button>
+                    </div>
+                    <div class="mt-1 flex gap-2">
+                      <button type="button" class="min-h-11 text-[15px] font-semibold text-accent-text" onclick={() => (topicDraft[p.id] = randomTopic())}>
+                        Zufälliges Thema
+                      </button>
+                      {#if p.ntfy}
+                        <button type="button" class="min-h-11 text-[15px] font-semibold text-danger" disabled={busy} onclick={() => saveTopic(p.id, '')}>
+                          Entfernen
+                        </button>
+                      {/if}
+                    </div>
+                    {#if topicOf(p) !== '' && !TOPIC_RE.test(topicOf(p).trim())}
+                      <p class="text-[13px] text-danger">Erlaubt sind Buchstaben, Ziffern, Minus und Unterstrich (höchstens 64 Zeichen).</p>
+                    {/if}
+                    <p class="mt-1 text-[13px] text-fg2">
+                      In der ntfy-App den Server <span class="font-semibold">{info.ntfy.url}</span> verwenden und dieses Thema abonnieren.
+                      Wer das Thema kennt, kann die Nachrichten lesen: ein zufälliges ist sicherer als ein Name.
+                    </p>
+                    {#if !info.ntfy.buttons}
+                      <p class="mt-1 text-[13px] text-danger">
+                        Ohne STUPS_PUBLIC_URL im Container kommen die Nachrichten ohne Link zur Karte und ohne Knöpfe.
+                      </p>
+                    {/if}
+                  {/if}
+                </div>
+              {/if}
+
+              {#if feat.haPush}
               <div>
                 <p class="mb-1.5 text-[13px] font-semibold text-fg2">Push-Geräte (Companion App)</p>
                 {#if info.managed}

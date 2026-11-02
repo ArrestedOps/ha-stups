@@ -3,6 +3,7 @@
 // Den Einrichtungscode aus dem Protokoll legt das Skript in eine Datei, damit der Browser-Test ihn lesen kann.
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -19,6 +20,44 @@ Object.assign(env, {
   STUPS_LOG_LEVEL: 'warn',
   STUPS_DAILY_SUMMARY_TIME: '23:59',
   TZ: 'Europe/Berlin',
+});
+
+// Nachgebauter ntfy-Server: nimmt Veröffentlichungen und Löschungen an und zeigt sie unter /__published und /__deleted
+const MAIN_PORT = Number(process.env.PORT ?? 18430);
+const NTFY_PORT = MAIN_PORT + 1;
+const published = [];
+const deleted = [];
+createServer((req, res) => {
+  let raw = '';
+  req.on('data', (c) => (raw += c));
+  req.on('end', () => {
+    const json = (value, status = 200) => {
+      res.writeHead(status, { 'content-type': 'application/json' });
+      res.end(JSON.stringify(value));
+    };
+    if (req.url === '/__published') return json(published);
+    if (req.url === '/__deleted') return json(deleted);
+    if (req.url === '/__reset') {
+      published.length = 0;
+      deleted.length = 0;
+      return json({});
+    }
+    if (req.method === 'POST' && req.url === '/') {
+      published.push({ ...JSON.parse(raw), authorization: req.headers.authorization ?? null });
+      return json({ id: String(published.length) });
+    }
+    if (req.method === 'DELETE') {
+      deleted.push(req.url);
+      return json({});
+    }
+    json({ error: 'nicht gefunden' }, 404);
+  });
+}).listen(NTFY_PORT, '127.0.0.1');
+
+Object.assign(env, {
+  STUPS_NTFY_URL: `http://127.0.0.1:${NTFY_PORT}`,
+  STUPS_NTFY_TOKEN: 'tk_e2e',
+  STUPS_PUBLIC_URL: `http://127.0.0.1:${MAIN_PORT}`,
 });
 
 const child = spawn(process.execPath, [join(import.meta.dirname, '..', 'packages', 'server', 'dist', 'main.js')], {

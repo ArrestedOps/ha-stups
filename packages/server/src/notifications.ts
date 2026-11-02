@@ -17,6 +17,12 @@ export interface NotifierDeps {
   retryDelaysMin?: number[];
 }
 
+/** Ein Tipp auf einen Knopf: aus Home Assistant (userId) oder über ntfy (personId, schon geprüft) */
+export interface PushAction extends NotificationAction {
+  /** interne Kennung der Person, wenn der Weg sie selbst kennt (ntfy-Knöpfe sind für eine Person signiert) */
+  personId?: string;
+}
+
 export type ActionResult = 'completed' | 'acked' | 'postponed' | 'already_done' | 'stale' | 'unknown_card' | 'ignored';
 
 const MINUTE = 60_000;
@@ -41,7 +47,7 @@ export function createNotifier(deps: NotifierDeps) {
   function warnNoServices(userId: string): void {
     if (warned.has(userId)) return;
     warned.add(userId);
-    log.warn(`Kein Notify-Dienst für ${store.userById(userId)?.name ?? userId}: keine Push-Nachrichten (einstellbar unter Personen & Zugriff)`);
+    log.warn(`Kein Push-Gerät für ${store.userById(userId)?.name ?? userId}: keine Push-Nachrichten (einstellbar unter Personen & Zugriff)`);
   }
 
   const send = (userId: string, message: PushMessage): Promise<boolean> => push.send(userId, message);
@@ -346,8 +352,10 @@ export function createNotifier(deps: NotifierDeps) {
   };
 
   /** Tipp auf „Erledigt", „Mach ich" oder „Später" in einem Stups. Nur der Empfänger darf antworten. */
-  async function handleNudgeAction(kind: string, nudgeId: string, a: NotificationAction): Promise<ActionResult> {
-    const user = a.userId ? store.userByHaId(a.userId) : null;
+  const actor = (a: PushAction) => (a.personId ? store.userById(a.personId) : a.userId ? store.userByHaId(a.userId) : null);
+
+  async function handleNudgeAction(kind: string, nudgeId: string, a: PushAction): Promise<ActionResult> {
+    const user = actor(a);
     if (!user) return 'ignored';
     const nudge = store.getNudge(nudgeId);
     if (!nudge) return 'stale';
@@ -384,7 +392,7 @@ export function createNotifier(deps: NotifierDeps) {
   }
 
   /** Reagiert auf das Tippen von „Erledigt" in einer Push-Nachricht. */
-  async function handleAction(a: NotificationAction): Promise<ActionResult> {
+  async function handleAction(a: PushAction): Promise<ActionResult> {
     const nm = new RegExp(`^${NUDGE_PREFIX}(DONE|ACK|LATER):(.+)$`).exec(a.action);
     if (nm) return handleNudgeAction(nm[1]!, nm[2]!, a);
     const m = new RegExp(`^${ACTION_PREFIX}:([^:]+):(.+)$`).exec(a.action);
@@ -400,7 +408,7 @@ export function createNotifier(deps: NotifierDeps) {
     // Nur der Termin, für den die Nachricht gesendet wurde, zählt. Ein alter Tipp erledigt nichts Neues.
     if (!card.dueAt || Date.parse(card.dueAt) !== Date.parse(key)) return 'stale';
 
-    const user = a.userId ? store.userByHaId(a.userId) : null;
+    const user = actor(a);
     const res = store.completeCard(cardId, { by: user?.id ?? null, source: 'push' });
     if (res.completionId === null) return 'already_done';
 

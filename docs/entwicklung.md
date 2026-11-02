@@ -76,11 +76,13 @@ Die Fachlogik (Store, Wiederholungen, Wächter-Regeln, Stupsen) kennt Home Assis
 | Betriebsart und Einstellungen | `runtime.ts` | `resolveRuntime`: Add-on (Supervisor-Token), Standalone mit HA (`HA_URL` + `HA_TOKEN`), Standalone ohne HA; `options.json`, `STUPS_*` |
 | Anmeldung (`Identity`) | `identity.ts` | `ingress.ts` (Ingress-Kopfzeilen von 172.30.32.2), `session-auth.ts` (Sitzungs-Cookie, eigene Konten aus `accounts.ts`) |
 | Personen und Administratoren (`Directory`) | `directory.ts` | Home Assistant, eigene Konten, feste Liste für Entwicklung |
-| Push (`PushGateway`) | `push.ts` | Notify-Dienste von Home Assistant |
+| Push (`PushGateway`) | `push.ts`, `ntfy.ts` | Notify-Dienste von Home Assistant, ntfy-Server (`STUPS_NTFY_URL`); `combinePush` schaltet mehrere Wege zusammen |
 
 `main.ts` erkennt die Betriebsart und verdrahtet die Adapter; `GET /api/capabilities` sagt der Oberfläche, was es gibt. Die Anmeldung wählt `runtime.identity.kind`: Add-on und die Entwicklungs-Schalter (`ENFORCE_INGRESS_IP=false`) nutzen Ingress, alles andere eigene Konten. Die Oberfläche blendet Home-Assistant-Teile nur bei eigener Anmeldung aus (`feat` in `store.svelte.ts`); im Add-on bleibt alles sichtbar, auch wenn Home Assistant gerade nicht antwortet.
 
-Browser-Tests: Projekte `dunkel` und `hell` (Server ohne Home Assistant mit Entwicklungs-Benutzer), `waechter` (nachgebautes Home Assistant) und `standalone` (`e2e/server-standalone.mjs`: eigener Container, Einrichtung mit Code, Anmeldung). Der Einrichtungscode wird aus dem Protokoll in eine Datei geschrieben, die der Test liest.
+Browser-Tests: Projekte `dunkel` und `hell` (Server ohne Home Assistant mit Entwicklungs-Benutzer), `waechter` (nachgebautes Home Assistant) und `standalone` (`e2e/server-standalone.mjs`: eigener Container, Einrichtung mit Code, Anmeldung). Der Einrichtungscode wird aus dem Protokoll in eine Datei geschrieben, die der Test liest. Derselbe Server startet einen nachgebauten ntfy-Server (Port + 1, `/__published` und `/__deleted` zeigen, was ankam): die Tests prüfen Nachricht, Knöpfe und den Rückweg `POST /api/push/action`.
+
+Knöpfe in ntfy-Nachrichten kommen ohne Sitzung zurück. `ntfy.ts` signiert dafür Person, Aktion und Ablaufzeit mit einem Geheimnis aus der Datenbank (`settings.pushSecret`), `push-action.ts` prüft und führt die Aktion über denselben `handleAction` aus wie bei Home Assistant. Der Pfad ist der einzige ohne Anmeldung (und ohne Kopfzeile des Clients) im Container.
 
 Lokal ohne HA starten: `DEV_USER=anna ENFORCE_INGRESS_IP=false DATA_DIR=<Ordner> OPTIONS_PATH=<options.json> node packages/server/dist/main.js`. Ohne `SUPERVISOR_TOKEN` ist die Verbindung zu HA aus.
 

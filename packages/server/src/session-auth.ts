@@ -3,13 +3,14 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { checkPassword, checkUsername, type Account, type Accounts } from './accounts.js';
 import { AppError, ConflictError, ValidationError } from './errors.js';
 import type { Identity } from './identity.js';
+import { PUSH_ACTION_PATH } from './push.js';
 
 export const COOKIE = 'stups_session';
 /** Jede ändernde Anfrage trägt diese Kopfzeile: ein fremdes Formular oder eine fremde Seite kann sie nicht setzen */
 export const CLIENT_HEADER = 'x-stups-client';
 
 /** Pfade, die ohne Anmeldung erreichbar sein müssen, damit die Anmeldeseite laden und sich anmelden kann */
-const PUBLIC_API = new Set(['/api/auth/status', '/api/auth/setup', '/api/auth/login', '/api/auth/logout', '/api/capabilities']);
+const PUBLIC_API = new Set(['/api/auth/status', '/api/auth/setup', '/api/auth/login', '/api/auth/logout', '/api/capabilities', PUSH_ACTION_PATH]);
 
 export function parseCookies(header: string | undefined): Record<string, string> {
   const out: Record<string, string> = {};
@@ -51,6 +52,8 @@ export async function clientGuard(app: FastifyInstance): Promise<void> {
   app.addHook('onRequest', async (req, reply) => {
     if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return;
     if (!req.url.startsWith('/api/')) return;
+    // Die Knöpfe in Push-Nachrichten kommen von der ntfy-App und tragen statt der Kopfzeile ein signiertes Token
+    if (req.url.split('?')[0] === PUSH_ACTION_PATH) return;
     if (!req.headers[CLIENT_HEADER]) return reply.code(403).send({ error: 'Anfrage abgelehnt' });
   });
 }

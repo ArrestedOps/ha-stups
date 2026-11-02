@@ -548,7 +548,7 @@ describe('Protokoll', () => {
     await n.tick();
     await n.tick();
 
-    expect(lines).toEqual(['Kein Notify-Dienst für Gast: keine Push-Nachrichten (einstellbar unter Personen & Zugriff)']);
+    expect(lines).toEqual(['Kein Push-Gerät für Gast: keine Push-Nachrichten (einstellbar unter Personen & Zugriff)']);
     expect(calls).toHaveLength(0);
   });
 

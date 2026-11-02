@@ -15,6 +15,16 @@ export interface HaConnection {
   wsUrl?: string;
 }
 
+/** Ein ntfy-Server (selbst betrieben oder ntfy.sh), über den Push-Nachrichten gehen */
+export interface NtfyConfig {
+  /** Adresse des Servers ohne Pfad, zum Beispiel https://ntfy.example.org */
+  url: string;
+  /** Zugriffstoken (Bearer) oder Benutzer und Passwort (Basic), wenn der Server Anmeldung verlangt */
+  token?: string;
+  username?: string;
+  password?: string;
+}
+
 export interface Runtime {
   mode: Mode;
   dataDir: string;
@@ -25,6 +35,8 @@ export interface Runtime {
   publicUrl: string | null;
   options: Options;
   ha: HaConnection | null;
+  /** Push über ntfy; im Add-on immer null (dort läuft Push über die Companion App) */
+  ntfy: NtfyConfig | null;
   identity: {
     /** Wie sich Benutzer anmelden: über Ingress (Add-on, Entwicklung) oder mit eigenem Konto (Sitzungs-Cookie) */
     kind: 'ingress' | 'session';
@@ -74,6 +86,35 @@ function readJson(path: string): Record<string, unknown> {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') return {};
     throw err;
   }
+}
+
+function ntfyFromEnv(own: (name: string) => string | undefined): NtfyConfig | null {
+  const raw = own('NTFY_URL');
+  const token = own('NTFY_TOKEN');
+  const username = own('NTFY_USER');
+  const password = own('NTFY_PASSWORD');
+  if (raw === undefined) {
+    if (token !== undefined || username !== undefined || password !== undefined) {
+      throw new Error('STUPS_NTFY_TOKEN, STUPS_NTFY_USER und STUPS_NTFY_PASSWORD brauchen STUPS_NTFY_URL');
+    }
+    return null;
+  }
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error(`STUPS_NTFY_URL ist keine Adresse: ${raw}`);
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('STUPS_NTFY_URL muss mit http:// oder https:// beginnen');
+  if ((username === undefined) !== (password === undefined)) {
+    throw new Error('STUPS_NTFY_USER und STUPS_NTFY_PASSWORD gehören zusammen: bitte beide setzen oder beide weglassen');
+  }
+  if (token !== undefined && username !== undefined) {
+    throw new Error('STUPS_NTFY_TOKEN oder STUPS_NTFY_USER mit STUPS_NTFY_PASSWORD: bitte nur eines von beiden');
+  }
+  // Pfad, Suchteil und Raute fallen weg; ein Server unter einem Unterpfad (https://host/ntfy) bleibt erhalten
+  const base = `${url.origin}${url.pathname.replace(/\/+$/, '')}`;
+  return { url: base, token, username, password };
 }
 
 /**
@@ -126,6 +167,7 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
     publicUrl,
     options,
     ha,
+    ntfy: ntfyFromEnv(own),
     identity: {
       kind,
       bootstrap: kind === 'session' && adminUser !== undefined && adminPassword !== undefined ? { username: adminUser, password: adminPassword } : undefined,
@@ -144,6 +186,6 @@ export interface Capabilities {
   watchers: boolean;
   sensors: boolean;
   /** Wege, auf denen Push zugestellt werden kann */
-  push: 'ha-notify'[];
+  push: ('ha-notify' | 'ntfy')[];
   publicUrl: string | null;
 }

@@ -12,6 +12,8 @@ export interface User {
   color: string | null;
   /** Notify-Dienste der Companion App, ohne „notify." davor */
   notifyServices: string[];
+  /** Hat ein ntfy-Thema (das Thema selbst sehen nur die Person und Administratoren, siehe AccessInfo) */
+  ntfy: boolean;
   /** Ruhezeit für Stupse */
   nudgeQuiet: { start: string; end: string; off: boolean };
 }
@@ -33,7 +35,9 @@ export interface AccessInfo {
   /** Personen, Geräte und Zugriff kommen aus der Add-on-Konfiguration und sind in der App gesperrt */
   managed: boolean;
   isAdmin: boolean;
-  people: (User & { isAdmin: boolean })[];
+  people: (User & { isAdmin: boolean; ntfyTopic?: string | null })[];
+  /** Push über ntfy: Adresse des Servers (für die Anleitung) und ob Knöpfe in den Nachrichten möglich sind; null ohne ntfy */
+  ntfy: { url: string; buttons: boolean } | null;
   /** Benutzer, die die App geöffnet haben, aber keine Person sind (nur für Administratoren) */
   pending: User[];
   /** Personen aus Home Assistant, die noch nicht dabei sind (nur für Administratoren) */
@@ -308,7 +312,7 @@ export const api = {
   addPerson: (b: { name: string; haUserId?: string | null }) => post<User>('access/people', b),
   updatePerson: (
     id: string,
-    b: Partial<{ displayName: string; notifyServices: string[]; quietStart: string; quietEnd: string; quietOff: boolean }>,
+    b: Partial<{ displayName: string; notifyServices: string[]; ntfyTopic: string; quietStart: string; quietEnd: string; quietOff: boolean }>,
   ) =>
     patch<User>(`access/people/${id}`, b),
   removePerson: (id: string) => del(`access/people/${id}`),
@@ -375,6 +379,8 @@ export const api = {
   saveSettings: (b: Partial<{ dashboardPath: string | null; panelPath: string | null }>) => put<Settings>('settings', b),
   dashboards: () => get<{ title: string; path: string }[]>('dashboards'),
   testPush: (person: string) => post<{ sent: string[] }>('spike/test-push', { person }),
+  /** Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (Container) */
+  testPushOwn: () => post<{ sent: boolean }>('push/test'),
   pushStatus: () => get<PushStatus>('notifications/status'),
 
   schedule: (q: { from?: string; to?: string; boards?: string[]; done?: boolean }) => {
@@ -405,7 +411,9 @@ export const api = {
 
 export interface PushStatus {
   upcoming: { title: string; dueAt: string; assignees: string[]; note: string | null }[];
-  people: { name: string; services: { service: string; exists: boolean | null }[] }[];
+  people: { name: string; services: { service: string; exists: boolean | null }[]; ntfy?: boolean }[];
+  /** nur mit ntfy: wann der Testknopf zuletzt zurückgemeldet hat (null = noch nie seit dem Start) */
+  ntfy: { url: string; buttons: boolean; roundTrip: string | null } | null;
   recent: { kind: 'due' | 'reminder' | 'nag' | 'summary'; status: 'sent' | 'skipped' | 'failed'; at: string; title: string; user: string }[];
   nudges: { title: string; from: string; to: string; at: string; deliverAt: string; state: 'wartet' | 'offen' | 'beantwortet' | 'geschlossen' }[];
 }

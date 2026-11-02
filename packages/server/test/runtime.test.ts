@@ -132,3 +132,41 @@ describe('Entwicklung und Tests', () => {
     expect(r.identity.devAdmins).toEqual(['dev-rene', 'dev-anna']);
   });
 });
+
+describe('ntfy', () => {
+  it('ohne STUPS_NTFY_URL kein ntfy', () => {
+    expect(resolveRuntime({}, files()).ntfy).toBeNull();
+  });
+
+  it('Adresse ohne Pfad, Schrägstrich am Ende fällt weg; Unterpfad bleibt', () => {
+    expect(resolveRuntime({ STUPS_NTFY_URL: 'https://ntfy.example.org/' }, files()).ntfy).toMatchObject({ url: 'https://ntfy.example.org' });
+    expect(resolveRuntime({ STUPS_NTFY_URL: 'http://192.168.1.5:8080' }, files()).ntfy).toMatchObject({ url: 'http://192.168.1.5:8080' });
+    expect(resolveRuntime({ STUPS_NTFY_URL: 'https://example.org/ntfy/?x=1#y' }, files()).ntfy).toMatchObject({ url: 'https://example.org/ntfy' });
+  });
+
+  it('Zugriffstoken oder Benutzer mit Passwort', () => {
+    expect(resolveRuntime({ STUPS_NTFY_URL: 'https://n', STUPS_NTFY_TOKEN: 'tk_x' }, files()).ntfy).toEqual({
+      url: 'https://n',
+      token: 'tk_x',
+      username: undefined,
+      password: undefined,
+    });
+    expect(resolveRuntime({ STUPS_NTFY_URL: 'https://n', STUPS_NTFY_USER: 'u', STUPS_NTFY_PASSWORD: 'p' }, files()).ntfy).toMatchObject({
+      username: 'u',
+      password: 'p',
+    });
+  });
+
+  it('lehnt Unsinn mit einer verständlichen Meldung ab', () => {
+    expect(() => resolveRuntime({ STUPS_NTFY_URL: 'kein-link' }, files())).toThrow(/keine Adresse/);
+    expect(() => resolveRuntime({ STUPS_NTFY_URL: 'ftp://n' }, files())).toThrow(/http/);
+    expect(() => resolveRuntime({ STUPS_NTFY_TOKEN: 'tk_x' }, files())).toThrow(/STUPS_NTFY_URL/);
+    expect(() => resolveRuntime({ STUPS_NTFY_URL: 'https://n', STUPS_NTFY_USER: 'u' }, files())).toThrow(/gehören zusammen/);
+    expect(() => resolveRuntime({ STUPS_NTFY_URL: 'https://n', STUPS_NTFY_TOKEN: 't', STUPS_NTFY_USER: 'u', STUPS_NTFY_PASSWORD: 'p' }, files())).toThrow(/nur eines/);
+  });
+
+  it('gilt auch mit Home Assistant daneben, im Add-on aber nie', () => {
+    expect(resolveRuntime({ HA_URL: 'http://ha:8123', HA_TOKEN: 'x', STUPS_NTFY_URL: 'https://n' }, files()).ntfy).not.toBeNull();
+    expect(resolveRuntime({ SUPERVISOR_TOKEN: 'abc', STUPS_NTFY_URL: 'https://n' }, files()).ntfy).toBeNull();
+  });
+});

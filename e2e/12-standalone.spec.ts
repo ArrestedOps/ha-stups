@@ -64,9 +64,11 @@ test('Ohne Home Assistant: drei Reiter, kein Dashboard-Button, nichts von Home A
   const dialog = await einstellungen(page);
   await expect(dialog.getByText('Konto', { exact: true })).toBeVisible();
   await expect(dialog.getByText('Angemeldet als')).toBeVisible();
-  for (const weg of ['Zurück zum Dashboard', 'Darstellung', 'Wächter', 'Benachrichtigungen', 'Bubble Card', 'Umzug', 'Diagnose-Seite']) {
+  for (const weg of ['Zurück zum Dashboard', 'Darstellung', 'Wächter', 'Bubble Card', 'Umzug', 'Diagnose-Seite', 'Notify-Dienste']) {
     await expect(dialog.getByText(weg, { exact: false })).toHaveCount(0);
   }
+  // Push gibt es hier über ntfy (der Testserver hat einen eingerichtet)
+  await expect(dialog.getByText('Benachrichtigungen', { exact: true })).toBeVisible();
   // kein Fehler, keine leere Gruppe
   await expect(page.getByRole('alert').filter({ hasText: /\S/ })).toHaveCount(0);
 });
@@ -153,6 +155,176 @@ test('Passwort ändern: das neue gilt, das alte nicht mehr', async ({ browser, b
   }
 });
 
+
+// ---------- Push über ntfy (nachgebauter Server auf PORT+1, siehe server-standalone.mjs) ----------
+
+/** Anmelden und warten, bis die App steht (bevor Tests die API des angemeldeten Browsers aufrufen) */
+async function anmelden(page: Page) {
+  await melden(page, 'anna', PW);
+  await expect(nav(page)).toBeVisible();
+}
+
+const NTFY = 'http://127.0.0.1:18431';
+const API = { 'x-stups-client': 'e2e' };
+
+interface Published {
+  topic: string;
+  title: string;
+  message: string;
+  priority: number;
+  click?: string;
+  sequence_id?: string;
+  authorization: string | null;
+  actions?: { action: string; label: string; url: string; method: string; headers: Record<string, string>; body: string; clear: boolean }[];
+}
+
+const published = async (request: import('@playwright/test').APIRequestContext): Promise<Published[]> => (await request.get(`${NTFY}/__published`)).json();
+
+/** So tippt die ntfy-App auf einen Knopf: die Anfrage steht fertig in der Nachricht, ohne Sitzung und ohne Kopfzeile des Clients */
+async function tap(request: import('@playwright/test').APIRequestContext, button: NonNullable<Published['actions']>[number]) {
+  return request.fetch(button.url, { method: button.method, headers: button.headers, data: button.body });
+}
+
+test('ntfy: Thema eintragen, Test-Nachricht kommt an, der Knopf meldet sich zurück', async ({ page, request }) => {
+  await anmelden(page);
+  const dialog = await einstellungen(page);
+  await dialog.getByRole('button', { name: 'Personen & Zugriff' }).click();
+  await page.getByRole('button', { name: /Anna.*Benutzername anna/ }).click();
+
+  // Thema prüfen und speichern
+  const field = page.getByLabel('ntfy-Thema von Anna');
+  await field.fill('kein gültiges thema');
+  await expect(page.getByText('Erlaubt sind Buchstaben')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Speichern' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Zufälliges Thema' }).click();
+  await expect(field).toHaveValue(/^stups-[a-z0-9]{20}$/);
+  await field.fill('anna-e2e-topf');
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('ntfy-Thema gespeichert')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Anna.*Push über ntfy/ })).toBeVisible();
+  await expect(page.getByText('http://127.0.0.1:18431').first()).toBeVisible(); // die Anleitung nennt den Server
+
+  // Test-Nachricht aus den Einstellungen
+  await request.get(`${NTFY}/__reset`);
+  await page.goto('/');
+  const settings = await einstellungen(page);
+  await settings.getByRole('button', { name: 'An mich senden' }).click();
+  await expect(page.getByText('Test-Nachricht gesendet.')).toBeVisible();
+
+  const [msg] = await published(request);
+  expect(msg).toMatchObject({
+    topic: 'anna-e2e-topf',
+    title: 'Stups: Test',
+    authorization: 'Bearer tk_e2e',
+    click: 'http://127.0.0.1:18430/',
+    actions: [{ action: 'http', label: 'Rückweg prüfen', url: 'http://127.0.0.1:18430/api/push/action', method: 'POST', clear: true }],
+  });
+
+  // Der Knopf funktioniert ohne Anmeldung; ein veränderter nicht
+  expect((await request.fetch(msg!.actions![0]!.url, { method: 'POST', headers: { 'content-type': 'text/plain' }, data: `${msg!.actions![0]!.body}x` })).status()).toBe(403);
+  const ok = await tap(request, msg!.actions![0]!);
+  expect(ok.status()).toBe(200);
+  expect(await ok.json()).toEqual({ result: 'test' });
+
+  await settings.getByRole('button', { name: 'Stand anzeigen' }).click();
+  await expect(settings.getByTestId('ntfy-status')).toContainText('Rückweg der Knöpfe zuletzt geprüft');
+  await expect(settings.getByTestId('ntfy-status')).toContainText('Anna: Thema eingetragen');
+});
+
+test('ntfy: ein Stups kommt mit drei Knöpfen an, „Erledigt" erledigt die Karte und räumt die Nachricht weg', async ({ page, request }) => {
+  await anmelden(page);
+  const people = (await (await page.request.get('/api/people')).json()) as { id: string; name: string }[];
+  const ben = people.find((p) => p.name === 'Ben')!;
+  const boards = (await (await page.request.get('/api/boards')).json()) as { id: string }[];
+  const view = (await (await page.request.get(`/api/boards/${boards[0]!.id}`)).json()) as { columns: { id: string }[] };
+
+  // Ben richtet sein Thema selbst ein, Anna (Administratorin) hätte es auch gekonnt
+  const bens = await (await page.request.patch(`/api/access/people/${ben.id}`, { headers: API, data: { ntfyTopic: 'ben-e2e-topf' } })).json();
+  expect(bens.ntfy).toBe(true);
+  expect(bens.ntfyTopic).toBeUndefined();
+
+  const card = await (
+    await page.request.post(`/api/boards/${boards[0]!.id}/cards`, { headers: API, data: { columnId: view.columns[0]!.id, title: 'Müll rausbringen', assigneeIds: [ben.id] } })
+  ).json();
+  await request.get(`${NTFY}/__reset`);
+  const nudge = await page.request.post(`/api/cards/${card.id}/nudge`, { headers: API, data: { to: [ben.id], template: 'think' } });
+  expect(nudge.status()).toBe(201);
+
+  await expect.poll(async () => (await published(request)).length).toBe(1);
+  const [msg] = await published(request);
+  expect(msg).toMatchObject({
+    topic: 'ben-e2e-topf',
+    title: 'Anna stupst dich',
+    message: 'Müll rausbringen · Denkst du dran?',
+    click: `http://127.0.0.1:18430/?card=${card.id}`,
+    sequence_id: `stups-card-${card.id}`,
+  });
+  expect(msg!.actions!.map((a) => a.label)).toEqual(['Erledigt', 'Mach ich', 'Später']);
+
+  const done = await tap(request, msg!.actions![0]!);
+  expect(await done.json()).toEqual({ result: 'completed' });
+  expect(((await (await page.request.get(`/api/cards/${card.id}`)).json()) as { completedAt: string | null }).completedAt).not.toBeNull();
+  // die Nachricht wird auf dem Gerät entfernt (ältere Server ignorieren das)
+  await expect.poll(async () => (await (await request.get(`${NTFY}/__deleted`)).json()) as string[]).toContain(`/ben-e2e-topf/stups-card-${card.id}`);
+  // ein zweiter Tipp ist kein Fehler
+  expect((await tap(request, msg!.actions![0]!)).status()).toBe(200);
+});
+
+test('ntfy: „Mach ich" meldet dem Absender zurück, und der Link der Nachricht öffnet die Karte', async ({ page, request }) => {
+  await anmelden(page);
+  const people = (await (await page.request.get('/api/people')).json()) as { id: string; name: string }[];
+  const ben = people.find((p) => p.name === 'Ben')!;
+  const boards = (await (await page.request.get('/api/boards')).json()) as { id: string }[];
+  const view = (await (await page.request.get(`/api/boards/${boards[0]!.id}`)).json()) as { columns: { id: string }[] };
+  const card = await (
+    await page.request.post(`/api/boards/${boards[0]!.id}/cards`, { headers: API, data: { columnId: view.columns[0]!.id, title: 'Pfand wegbringen', assigneeIds: [ben.id] } })
+  ).json();
+
+  await request.get(`${NTFY}/__reset`);
+  await page.request.post(`/api/cards/${card.id}/nudge`, { headers: API, data: { to: [ben.id], template: 'today' } });
+  await expect.poll(async () => (await published(request)).length).toBe(1);
+  const [msg] = await published(request);
+  const ack = msg!.actions!.find((a) => a.label === 'Mach ich')!;
+  expect(await (await tap(request, ack)).json()).toEqual({ result: 'acked' });
+
+  // Anna bekommt die leise Rückmeldung auf ihr Thema
+  await expect.poll(async () => (await published(request)).map((m) => m.topic)).toContain('anna-e2e-topf');
+  const feedback = (await published(request)).find((m) => m.topic === 'anna-e2e-topf')!;
+  expect(feedback).toMatchObject({ title: 'Pfand wegbringen', message: "Ben macht's 👍", priority: 2 });
+  expect(feedback.actions).toBeUndefined();
+
+  // Der Link aus der Nachricht öffnet die Karte (angemeldet)
+  await page.goto(msg!.click!);
+  await expect(page.getByRole('dialog').getByLabel('Titel')).toHaveValue('Pfand wegbringen');
+});
+
+test('ntfy: ein Token für eine andere Person oder ohne Token erledigt nichts', async ({ page, request }) => {
+  await anmelden(page);
+  const people = (await (await page.request.get('/api/people')).json()) as { id: string; name: string }[];
+  const ben = people.find((p) => p.name === 'Ben')!;
+  const boards = (await (await page.request.get('/api/boards')).json()) as { id: string }[];
+  const view = (await (await page.request.get(`/api/boards/${boards[0]!.id}`)).json()) as { columns: { id: string }[] };
+  const card = await (
+    await page.request.post(`/api/boards/${boards[0]!.id}/cards`, { headers: API, data: { columnId: view.columns[0]!.id, title: 'Keller aufräumen', assigneeIds: [ben.id] } })
+  ).json();
+  await request.get(`${NTFY}/__reset`);
+  await page.request.post(`/api/cards/${card.id}/nudge`, { headers: API, data: { to: [ben.id], template: 'help' } });
+  await expect.poll(async () => (await published(request)).length).toBe(1);
+  const [msg] = await published(request);
+  const button = msg!.actions![0]!;
+
+  // Inhalt ändern (andere Person), Signatur behalten: abgewiesen
+  const [payload, sig] = button.body.split('.') as [string, string];
+  const parts = JSON.parse(Buffer.from(payload, 'base64url').toString()) as [string, string, number];
+  parts[0] = people.find((p) => p.name === 'Anna')!.id;
+  const forged = `${Buffer.from(JSON.stringify(parts)).toString('base64url')}.${sig}`;
+  expect((await request.fetch(button.url, { method: 'POST', headers: button.headers, data: forged })).status()).toBe(403);
+  expect((await request.fetch(button.url, { method: 'POST', headers: button.headers, data: '' })).status()).toBe(403);
+  expect((await request.fetch(button.url, { method: 'GET' })).status()).not.toBe(200);
+  expect(((await (await page.request.get(`/api/cards/${card.id}`)).json()) as { completedAt: string | null }).completedAt).toBeNull();
+});
+
+// Zuletzt: die Sperre gilt für die Adresse, alle Anmeldungen danach würden warten
 test('Nach fünf Fehlversuchen heißt es warten', async ({ browser, baseURL }) => {
   const ctx = await browser.newContext({ baseURL: String(baseURL), locale: 'de-DE' });
   const page = await ctx.newPage();

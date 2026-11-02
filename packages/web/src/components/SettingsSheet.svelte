@@ -55,8 +55,13 @@
     if (!ui.me || sending) return;
     sending = true;
     try {
-      const res = await api.testPush(ui.me.name);
-      toast(`Test-Nachricht gesendet (${res.sent.length} ${res.sent.length === 1 ? 'Gerät' : 'Geräte'}). Zum Erledigen die Nachricht aufklappen.`);
+      if (feat.standalone) {
+        await api.testPushOwn();
+        toast(feat.ntfy ? 'Test-Nachricht gesendet. Tippe auf „Rückweg prüfen“ und danach unten auf „Stand anzeigen“.' : 'Test-Nachricht gesendet.');
+      } else {
+        const res = await api.testPush(ui.me.name);
+        toast(`Test-Nachricht gesendet (${res.sent.length} ${res.sent.length === 1 ? 'Gerät' : 'Geräte'}). Zum Erledigen die Nachricht aufklappen.`);
+      }
     } catch (e) {
       toast(e instanceof ApiError ? e.message : 'Senden fehlgeschlagen', { tone: 'error' });
     }
@@ -223,7 +228,9 @@ tap_action:
   {#if feat.push}
   <Group
     title="Benachrichtigungen"
-    hint="Auf dem iPhone erscheint „Erledigt“ erst, wenn man die Nachricht aufklappt (nach links wischen und „Ansicht“, herunterziehen oder lange drücken)."
+    hint={feat.haPush
+      ? 'Auf dem iPhone erscheint „Erledigt“ erst, wenn man die Nachricht aufklappt (nach links wischen und „Ansicht“, herunterziehen oder lange drücken).'
+      : 'Die Nachrichten kommen über ntfy. Dein Thema trägst du unter Personen & Zugriff ein.'}
   >
     <Row label="Test-Nachricht">
       <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-40" disabled={sending} onclick={testPush}>
@@ -250,6 +257,7 @@ tap_action:
               <p class="mt-1 text-fg2">Keine offene Karte mit Termin.</p>
             {/each}
           </div>
+          {#if feat.haPush}
           <div>
             <p class="font-semibold">Notify-Dienste</p>
             {#each status.people as p (p.name)}
@@ -265,6 +273,27 @@ tap_action:
               </p>
             {/each}
           </div>
+          {/if}
+          {#if status.ntfy}
+            <div data-testid="ntfy-status">
+              <p class="font-semibold">ntfy</p>
+              <p class="mt-1 text-[13px] text-fg2">Server: {status.ntfy.url}</p>
+              {#each status.people as p (p.name)}
+                <p class="mt-1">
+                  {p.name}: <span class={p.ntfy ? 'text-fg2' : 'text-danger'}>{p.ntfy ? 'Thema eingetragen' : 'kein Thema eingetragen'}</span>
+                </p>
+              {/each}
+              <p class="mt-1 text-[13px] {status.ntfy.buttons ? 'text-fg2' : 'text-danger'}">
+                {#if !status.ntfy.buttons}
+                  STUPS_PUBLIC_URL fehlt: keine Knöpfe und kein Link in den Nachrichten.
+                {:else if status.ntfy.roundTrip}
+                  Rückweg der Knöpfe zuletzt geprüft: {clock(status.ntfy.roundTrip)}
+                {:else}
+                  Rückweg der Knöpfe seit dem Start nicht geprüft (Test-Nachricht senden und auf „Rückweg prüfen“ tippen).
+                {/if}
+              </p>
+            </div>
+          {/if}
           <div>
             <p class="font-semibold">Zuletzt</p>
             {#each status.recent as r, i (i)}

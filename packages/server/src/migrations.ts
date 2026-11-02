@@ -324,4 +324,9 @@ export const migrations: Migration[] = [
       create index ix_sessions_user on sessions(user_id);
     `,
   },
+  {
+    version: 12,
+    // Push über ntfy: das Thema, das die Person in der ntfy-App abonniert. Die Notify-Dienste für Home Assistant bleiben daneben bestehen.
+    sql: `alter table users add column ntfy_topic text;`,
+  },
 ];

@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
 import { generateKeyBetween, generateNKeysBetween } from 'fractional-indexing';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from './errors.js';
@@ -18,6 +18,8 @@ export interface User {
   color: string | null;
   /** Notify-Dienste der Companion App, ohne „notify." davor */
   notifyServices: string[];
+  /** Hat ein ntfy-Thema. Das Thema selbst bleibt draußen: auf einem offenen Server schützt nur es die Nachrichten (store.ntfyTopic). */
+  ntfy: boolean;
   /** Ruhezeit für Stupse */
   nudgeQuiet: QuietWindow;
 }
@@ -537,6 +539,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     isPerson: r.is_person === 1,
     color: r.color,
     notifyServices: JSON.parse(r.notify_services ?? '[]') as string[],
+    ntfy: typeof r.ntfy_topic === 'string' && r.ntfy_topic !== '',
     nudgeQuiet: quietOf(r),
   });
 
@@ -704,10 +707,40 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     return toUser(userRow(id));
   }
 
+  const NTFY_TOPIC_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
+  const ntfyTopic = (id: string): string | null => {
+    const topic = one('select ntfy_topic from users where id = ?', id)?.ntfy_topic as string | null | undefined;
+    return topic ? topic : null;
+  };
+
+  /** Leer oder null entfernt das Thema */
+  function setNtfyTopic(id: string, raw: unknown): User {
+    userRow(id);
+    let topic: string | null = null;
+    if (raw !== null && raw !== undefined && !(typeof raw === 'string' && raw.trim() === '')) {
+      if (typeof raw !== 'string' || !NTFY_TOPIC_RE.test(raw.trim())) {
+        throw new ValidationError('Das Thema darf 1 bis 64 Zeichen haben: Buchstaben, Ziffern, Minus und Unterstrich');
+      }
+      topic = raw.trim();
+    }
+    run('update users set ntfy_topic = ? where id = ?', topic, id);
+    return toUser(userRow(id));
+  }
+
   const getSetting = (key: string): string | null =>
     (one('select value from settings where key = ?', key)?.value as string | undefined) ?? null;
   const putSetting = (key: string, value: string) =>
     run('insert into settings (key, value) values (?, ?) on conflict(key) do update set value = excluded.value', key, value);
+
+  /** Geheimnis, mit dem die Knöpfe in ntfy-Nachrichten signiert werden; entsteht beim ersten Gebrauch und zieht mit der Datenbank um */
+  function pushSecret(): string {
+    const existing = getSetting('pushSecret');
+    if (existing) return existing;
+    const secret = randomBytes(32).toString('base64url');
+    putSetting('pushSecret', secret);
+    return secret;
+  }
 
   function getAccessMode(): AccessMode {
     return getSetting('accessMode') === 'selected' ? 'selected' : 'everyone';
@@ -2268,7 +2301,9 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     return end > nowMs ? end : null;
   }
 
-  const hasDevice = (u: Row): boolean => (JSON.parse(u.notify_services ?? '[]') as string[]).length > 0;
+  /** Ein Notify-Dienst (Home Assistant) oder ein ntfy-Thema: irgendein Weg, auf dem ein Stups ankommen kann */
+  const hasDevice = (u: Row): boolean =>
+    (JSON.parse(u.notify_services ?? '[]') as string[]).length > 0 || (typeof u.ntfy_topic === 'string' && u.ntfy_topic !== '');
 
   /** Frühester Zustellzeitpunkt: sofort, außer der Empfänger hat gerade Ruhezeit */
   const deliverAtFor = (recipient: Row, atMs: number): number => quietEnd(atMs, timeZone(), quietOf(recipient)) ?? atMs;
@@ -2749,6 +2784,9 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     removePerson,
     renamePerson,
     setNotifyServices,
+    ntfyTopic,
+    setNtfyTopic,
+    pushSecret,
     getAccessMode,
     setAccessMode,
     importLegacyPeople,

@@ -66,7 +66,8 @@ test('Englisches Gerät: Agenda, Kalender, Einstellungen, Karten-Fenster', async
   const board = await (await request.post('/api/boards', { data: { name: 'English test 2' } })).json();
   const view = await (await request.get(`/api/boards/${board.id}`)).json();
   await request.post(`/api/boards/${board.id}/cards`, {
-    data: { title: 'Dentist', columnId: view.columns[0].id, dueAt: new Date(Date.now() + 10 * 60_000).toISOString() },
+    // Knapp überfällig statt „in 10 Minuten": ein Termin nach Mitternacht schickt die Karte nach „Planned", und der Test fände sie nicht in „Open"
+    data: { title: 'Dentist', columnId: view.columns[0].id, dueAt: new Date(Date.now() - 60_000).toISOString() },
   });
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
   await page.goto('/');

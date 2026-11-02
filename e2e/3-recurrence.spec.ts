@@ -70,6 +70,38 @@ test('„Rückgängig" nimmt die nächste Karte wieder weg', async ({ page, requ
   await expect.poll(async () => (await cardsWith(request, boardId, title)).length).toBe(1);
 });
 
+test('Wiederholen: zwei schnelle Klicks bei langsamem Server überschreiben sich nicht', async ({ page, request }) => {
+  const { boardId, openId } = await boardIds(request);
+  const title = `Schnell ${Date.now().toString(36)}`;
+  const card = await (
+    await request.post(`/api/boards/${boardId}/cards`, {
+      data: { title, columnId: openId, dueAt: new Date(Date.now() - 60_000).toISOString(), recurrence: { type: 'after_completion', every: 1, unit: 'weeks' } },
+    })
+  ).json();
+
+  await page.goto('/');
+  await page.getByRole('tab', { name: /^Offen/ }).click();
+  await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
+  await page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /jede Woche/ }).click();
+  const fieldset = page.getByRole('group', { name: 'Für die nächste Karte übernehmen' });
+  await expect(fieldset).toBeVisible();
+
+  // Der Server antwortet langsam: Der zweite Klick kommt, bevor der erste gespeichert und neu geladen ist
+  await page.route(`**/api/cards/${card.id}`, async (route) => {
+    if (route.request().method() === 'PATCH') await new Promise((r) => setTimeout(r, 800));
+    await route.continue();
+  });
+  await fieldset.getByLabel('Fotos und PDFs in die nächste Karte übernehmen').check();
+  await fieldset.getByLabel('Beschreibung in die nächste Karte übernehmen').uncheck();
+
+  await expect
+    .poll(async () => ((await (await request.get(`/api/cards/${card.id}`)).json()) as { carryOver: string[] }).carryOver, { timeout: 10_000 })
+    .toEqual(['checklist', 'links', 'cost', 'attachments']);
+  // und die Anzeige stimmt mit dem Gespeicherten überein
+  await expect(fieldset.getByLabel('Fotos und PDFs in die nächste Karte übernehmen')).toBeChecked();
+  await expect(fieldset.getByLabel('Beschreibung in die nächste Karte übernehmen')).not.toBeChecked();
+});
+
 test('Wiederholen: Auswahl, was die nächste Karte übernimmt, wird gespeichert', async ({ page, request }) => {
   const { boardId, openId } = await boardIds(request);
   const title = `Übernahme ${Date.now().toString(36)}`;

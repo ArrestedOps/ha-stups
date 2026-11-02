@@ -24,8 +24,26 @@
     /** Felder, die die nächste Karte übernimmt */
     carryOver: CarryField[];
     onchange: (rule: Recurrence | null) => void;
-    oncarry: (fields: CarryField[]) => void;
+    oncarry: (fields: CarryField[]) => unknown;
   } = $props();
+
+  // Die eigene Wahl gilt, bis das Speichern durch ist: Zwei schnelle Klicks rechnen sonst beide vom alten Stand der Karte, und der zweite
+  // überschreibt den ersten. Gespeichert wird nacheinander, damit die letzte Wahl auch die ist, die der Server behält.
+  let chosen = $state<CarryField[] | null>(null);
+  const shownCarry = $derived(chosen ?? carryOver);
+  let saving: Promise<unknown> = Promise.resolve();
+  let latest = 0;
+  function carry(field: CarryField, on: boolean) {
+    const next = toggleCarry(shownCarry, field, on);
+    const mine = ++latest;
+    chosen = next;
+    saving = saving
+      .then(() => oncarry(next))
+      .catch(() => undefined) // Fehler meldet das Speichern selbst
+      .finally(() => {
+        if (mine === latest) chosen = null;
+      });
+  }
 
   // Der Editor wird feldweise geändert (tiefe Reaktivität), deshalb $state statt writable $derived
   // eslint-disable-next-line svelte/prefer-writable-derived
@@ -150,9 +168,9 @@
             <input
               type="checkbox"
               class="h-5 w-5 accent-[var(--accent)]"
-              checked={carryOver.includes(o.field)}
+              checked={shownCarry.includes(o.field)}
               aria-label={t('{label} in die nächste Karte übernehmen', { label: o.label })}
-              onchange={(e) => oncarry(toggleCarry(carryOver, o.field, e.currentTarget.checked))}
+              onchange={(e) => carry(o.field, e.currentTarget.checked)}
             />
           </label>
         {/each}

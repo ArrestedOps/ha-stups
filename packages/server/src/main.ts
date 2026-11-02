@@ -258,7 +258,9 @@ await app.register(apiRoutes, {
   store,
   bus,
   notifier,
-  ha,
+  // Ohne Verbindung zu Home Assistant gibt es keinen Client: sonst wartet jede Anfrage, die ihn fragt (Personen & Zugriff,
+  // Dashboards), auf die Namensauflösung von „supervisor" und braucht dafür je nach Rechner Sekunden
+  ha: runtime.ha ? ha : undefined,
   directory,
   access,
   defaultDashboardPath: options.dashboardPath,

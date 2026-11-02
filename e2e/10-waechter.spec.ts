@@ -32,7 +32,7 @@ async function setup(request: APIRequestContext) {
 }
 
 const cardsOf = async (request: APIRequestContext, boardId: string) =>
-  ((await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { id: string; title: string; assigneeIds: string[]; completedAt: string | null; dueAt: string | null; watcherId: string | null }[] }).cards;
+  ((await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { id: string; title: string; columnId: string; assigneeIds: string[]; completedAt: string | null; dueAt: string | null; watcherId: string | null }[] }).cards;
 
 const watchersTab = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' });
 
@@ -80,6 +80,10 @@ test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Karte erscheint live 
     expect(card).toMatchObject({ title, assigneeIds: [s.rene.id] });
     expect(card.watcherId).not.toBeNull();
     expect(card.dueAt).not.toBeNull();
+
+    // Die Karte ist „fällig in 30 Min.": kurz vor Mitternacht ist das schon morgen, und sie liegt in „Geplant" statt in „Offen"
+    const columns = ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { columns: { id: string; name: string }[] }).columns;
+    await conny.getByRole('tab', { name: new RegExp(`^${columns.find((c) => c.id === card.columnId)!.name}`) }).click();
 
     await expect(conny.locator('[role=presentation]').filter({ hasText: title }).getByTestId('card-watcher')).toBeVisible({ timeout: 15_000 });
 

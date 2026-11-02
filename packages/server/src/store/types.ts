@@ -21,6 +21,8 @@ export interface User {
   languageChoice: 'auto' | 'de' | 'en';
   /** Die zuletzt von einem Gerät der Person gemeldete Sprache (null: noch keine) */
   language: 'de' | 'en' | null;
+  /** Eigener Farbton der Oberfläche (0–359); null: das Orange der App */
+  accentHue: number | null;
 }
 
 export type NudgeTemplate = 'think' | 'today' | 'help' | 'thanks';

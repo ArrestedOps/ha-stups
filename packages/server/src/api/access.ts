@@ -29,6 +29,13 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
     store.setLanguage(req.user.id, { choice: b.choice, effective: b.effective });
     return noContent(reply);
   });
+  // Eigene Akzentfarbe der Person (Farbton 0–359, null = Orange)
+  app.put('/api/me/accent', async (req, reply) => {
+    const b = body(req);
+    if (!req.user) throw new ForbiddenError();
+    store.setAccentHue(req.user.id, b.hue === null ? null : typeof b.hue === 'number' ? b.hue : Number.NaN);
+    return noContent(reply);
+  });
   app.get('/api/people', async () => store.people());
   // ----- Personen & Zugriff -----
   app.get('/api/access', async (req) => {

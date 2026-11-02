@@ -12,6 +12,8 @@ Kanban-Board für den Haushalt, direkt in Home Assistant (Ingress, kein eigener 
    - **Push-Geräte wählen:** Pro Person die Geräte ankreuzen, auf denen die Nachrichten ankommen sollen. Es erscheinen die Geräte, auf denen die Home-Assistant-Companion-App angemeldet ist. Jede Person wählt ihre Geräte selbst, ein Administrator kann es auch für andere tun.
    - **Zugriff festlegen:** *Alle in Home Assistant* (jeder Home-Assistant-Benutzer darf die App öffnen) oder *Nur diese Personen* (nur die Liste und Administratoren; wer sonst öffnet, sieht „Kein Zugriff" und steht für Administratoren unter „Wartet auf Freigabe").
 3. Unter **Einstellungen › Zurück zum Dashboard** das Dashboard für den Zurück-Button wählen.
+4. **Einstellungen › Sprache:** Automatisch (folgt dem Gerät), Deutsch oder English. Die Wahl gilt für dich auf allen Geräten, auch für Push-Nachrichten.
+5. **Einstellungen › Farbe:** Auf dem Farbkreis den Lieblingsfarbton wählen. Knöpfe, aktiver Reiter und farbige Schrift folgen sofort, es gilt für dich auf allen Geräten. „Orange (Standard)“ stellt das ursprüngliche Aussehen wieder her.
 
 ### Rollen
 

@@ -21,6 +21,8 @@ export interface User {
   languageChoice: LanguageChoice;
   /** Die Sprache, die der Server zuletzt von einem Gerät der Person gemeldet bekam (null: noch keine) */
   language: 'de' | 'en' | null;
+  /** Eigener Farbton der Oberfläche (0–359); null: das Orange der App */
+  accentHue: number | null;
 }
 
 export type AccessMode = 'everyone' | 'selected';
@@ -328,6 +330,7 @@ export const api = {
   capabilities: () => get<Capabilities>('capabilities'),
   /** Wahl der Person und Sprache, die das Gerät gerade zeigt (der Server braucht sie für Push) */
   setLanguage: (choice: LanguageChoice, effective: 'de' | 'en') => put<void>('me/language', { choice, effective }),
+  setAccent: (hue: number | null) => put<void>('me/accent', { hue }),
   authStatus: () => get<AuthStatus>('auth/status'),
   login: (username: string, password: string) => post<AuthStatus>('auth/login', { username, password }),
   logout: () => post<void>('auth/logout'),

@@ -73,6 +73,7 @@
   "resolveUser",
   "restoreArchived",
   "restoreFromTrash",
+  "setAccentHue",
   "setAccessMode",
   "setArchived",
   "setCardOrigin",

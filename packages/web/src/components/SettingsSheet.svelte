@@ -4,6 +4,7 @@
   import { applyHeaderHiding, isHeaderHidingWanted, setHeaderHidingWanted, showHaHeader } from '../lib/hideHaHeader';
   import { type LanguageChoice, numberLocale, t, tn } from '../lib/i18n/index.svelte';
   import { act, changeLanguage, closeSheet, feat, logout, openSheet, selectTab, toast, ui } from '../lib/store.svelte';
+  import AccentPicker from './AccentPicker.svelte';
   import BetaSettings from './BetaSettings.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
@@ -158,6 +159,9 @@ tap_action:
         <option value="en">English</option>
       </SelectField>
     </Row>
+  </Group>
+  <Group title={t('Farbe')} hint={t('Die Farbe der Knöpfe und Reiter. Gilt auf allen deinen Geräten, jede Person wählt ihre eigene.')}>
+    <AccentPicker />
   </Group>
   <Group title={t('Personen')} hint={t('Wer Stups nutzen darf, wer Karten zugewiesen bekommt und auf welchen Geräten die Push-Nachrichten ankommen.')}>
     <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => openSheet({ type: 'people' })}>

@@ -263,7 +263,20 @@ Am iPhone, in der Beta zuerst. Zum Ausprobieren: iPhone-Sprache auf Englisch ste
 - [ ] Home Assistant: Einstellungen › Apps › Stups (Beta) › Konfiguration zeigt die Optionen auf Englisch, wenn Home Assistant auf Englisch steht
 - [ ] Bleibt deutsch (bekannt): Namen der Sensoren, Protokollzeilen im Add-on-Log, die Zeile „Wartet auf die erste Person …“ in der Beschreibung einer Wächter-Karte
 
-## 23 · Dokumentation und Auftritt (seit 1.15.0)
+## 23 · Eigene Farbe und Plus-Knopf (seit 1.15.0)
+
+Am iPhone, in der Beta zuerst.
+
+- [ ] **Farbkreis:** Einstellungen › Farbe zeigt einen Farbkreis mit dem Plus-Knopf als Vorschau in der Mitte. Antippen und Ziehen auf dem Ring ändert die Farbe sofort (Knöpfe, aktiver Reiter, Plus-Knopf, Schrift in Farbe), gespeichert wird beim Loslassen
+- [ ] **Hell und Dunkel:** Gerät auf Hell und auf Dunkel stellen: die Farbe bleibt, wird aber passend hell oder dunkel. Bei hellem Grün oder Türkis ist die Schrift auf dem Knopf dunkel und gut lesbar, bei Rot, Orange, Blau und Violett weiß
+- [ ] **Bleibt:** App schließen und neu öffnen, am zweiten Gerät derselben Person öffnen: die Farbe ist dieselbe, schon auf der Anmeldeseite (Standalone) ohne Aufblitzen in Orange
+- [ ] **Je Person:** Eine zweite Person wählt eine andere Farbe; beide sehen ihre eigene
+- [ ] **Zurück:** „Orange (Standard)“ stellt das bisherige Aussehen her, der Knopf ist ausgegraut, solange nichts gewählt ist
+- [ ] **Dringlichkeit bleibt:** Die Balken links an den Karten (rot, orange, gelb) ändern ihre Farbe nicht mit
+- [ ] **Plus-Knopf:** In „Erledigt“ oder „In Arbeit“ tippen: die neue Karte landet trotzdem in „Offen“. Mit einem Termin nach heute landet sie in „Geplant“, mit Termin heute oder ohne in „Offen“
+- [ ] **Desktop:** Am Computer gibt es nur den einen Plus-Knopf unten rechts, keinen je Spalte
+
+## 24 · Dokumentation und Auftritt (seit 1.15.0)
 
 - [ ] **README auf GitHub** (englisch): Das Demo-GIF läuft, die Bilder sind englisch, die Knöpfe „Zu Home Assistant hinzufügen“ und die Beta-Adresse stimmen. Oben der Link zur deutschen Fassung; `README.de.md` zeigt deutsche Bilder
 - [ ] **Home Assistant › Stups › Dokumentation** (englisch, mit Link zur deutschen Fassung) liest sich verständlich; die Menüwege in der Anleitung („Settings › People & Access“) gibt es genau so in der englischen Oberfläche

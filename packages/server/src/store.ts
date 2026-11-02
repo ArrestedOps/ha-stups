@@ -61,6 +61,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     setNtfyTopic: s.setNtfyTopic,
     languageOf: s.languageOf,
     setLanguage: s.setLanguage,
+    setAccentHue: s.setAccentHue,
     pushSecret: s.pushSecret,
     rawSetting: s.rawSetting,
     putRawSetting: s.putRawSetting,

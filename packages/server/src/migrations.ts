@@ -355,4 +355,11 @@ export const migrations: Migration[] = [
       alter table users add column language_choice text;
     `,
   },
+  {
+    version: 15,
+    // Eigene Akzentfarbe je Person als Farbton 0–359 (null = das Orange der App)
+    sql: `
+      alter table users add column accent_hue integer;
+    `,
+  },
 ];

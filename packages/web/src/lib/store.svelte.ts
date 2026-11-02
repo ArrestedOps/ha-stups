@@ -13,6 +13,7 @@ import {
 } from './api';
 import { formatDue } from './datetime';
 import { applyHeaderHiding } from './hideHaHeader';
+import { applyAccent, hueFromStorage, type Scheme } from './accent';
 import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLanguage, t } from './i18n/index.svelte';
 import { passkeysSupported } from './passkeys';
 import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
@@ -171,6 +172,33 @@ export async function changeLanguage(choice: LanguageChoice): Promise<void> {
   }
 }
 
+// ---------- Akzentfarbe ----------
+
+const ACCENT_KEY = 'stups.accent';
+let accentHue: number | null = null;
+const darkQuery = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
+const currentScheme = (): Scheme => (darkQuery?.matches === false ? 'light' : 'dark');
+// Wechselt das Gerät zwischen Hell und Dunkel, wird die Farbe für das andere Thema neu gerechnet
+darkQuery?.addEventListener('change', () => applyAccent(accentHue, currentScheme()));
+
+/** Wendet den Farbton an (null: Orange) und merkt ihn sich, damit schon die Anmeldeseite stimmt */
+export function applyAccentHue(hue: number | null): void {
+  accentHue = hue;
+  memo.set(ACCENT_KEY, hue === null ? '' : String(hue));
+  applyAccent(hue, currentScheme());
+}
+
+/** Die Person wählt in den Einstellungen eine Farbe */
+export async function changeAccent(hue: number | null): Promise<void> {
+  applyAccentHue(hue);
+  if (ui.me) ui.me = { ...ui.me, accentHue: hue };
+  try {
+    await api.setAccent(hue);
+  } catch (e) {
+    toast(errorText(e), { tone: 'error' });
+  }
+}
+
 // ---------- Hinweise ----------
 
 let toastId = 0;
@@ -313,6 +341,7 @@ export async function logout(): Promise<void> {
 
 export async function init(): Promise<void> {
   applyLanguage(languageFromStorage(memo.get(LANGUAGE_KEY)));
+  applyAccentHue(hueFromStorage(memo.get(ACCENT_KEY)));
   try {
     ui.caps = await api.capabilities().catch(() => null);
     if (ui.caps?.auth === 'session') {
@@ -330,6 +359,7 @@ export async function init(): Promise<void> {
     ui.me = me.user;
     // Die Wahl der Person gilt auf allen Geräten. Meldet dieses Gerät eine andere Sprache als zuletzt, erfährt es der Server (für Push)
     applyLanguage(me.user.languageChoice);
+    applyAccentHue(me.user.accentHue ?? null);
     if (me.allowed && me.user.language !== i18n.lang) void api.setLanguage(me.user.languageChoice, i18n.lang).catch(() => undefined);
     ui.isAdmin = me.isAdmin;
     if (!me.allowed) {

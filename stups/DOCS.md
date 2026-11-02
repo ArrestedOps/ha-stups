@@ -13,6 +13,7 @@ A Kanban board for the household, right inside Home Assistant (Ingress, no separ
    - **Set access:** *Everyone in Home Assistant* (every Home Assistant user may open the app) or *Only these people* (only the list and administrators; anyone else who opens it sees "No access" and appears for administrators under "Waiting for approval").
 3. Under **Settings › Back to the dashboard** choose the dashboard for the back button.
 4. **Settings › Language:** Automatic (follows the device), German or English. The choice applies to you on all your devices, push messages included.
+5. **Settings › Colour:** pick your favourite colour on the colour wheel. Buttons, the active tab and coloured text follow at once; it applies to you on all your devices. "Orange (default)" restores the original look.
 
 ### Roles
 

@@ -64,6 +64,7 @@ export const en: Catalog = {
   'Diese Person hat schon ein Konto': 'This person already has an account',
   'Das ist der letzte Administrator': 'This is the last administrator',
   'Die Sprache muss „de" oder „en" sein': 'The language must be “de” or “en”',
+  'Der Farbton muss eine Zahl von 0 bis 359 sein': 'The hue must be a number from 0 to 359',
   'Das wird in der Add-on-Konfiguration von Home Assistant verwaltet (Einstellungen › Apps › Stups › Konfiguration)': 'This is managed in the add-on configuration in Home Assistant (Settings › Apps › Stups › Configuration)',
   'ntfy ist nicht eingerichtet (STUPS_NTFY_URL)': 'ntfy is not set up (STUPS_NTFY_URL)',
   'isAdmin muss wahr oder falsch sein': 'isAdmin must be true or false',

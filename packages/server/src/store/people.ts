@@ -27,6 +27,7 @@ export function createPeople(c: Ctx, late: unknown) {
     nudgeQuiet: quietOf(r),
     languageChoice: r.language_choice === 'de' || r.language_choice === 'en' ? r.language_choice : 'auto',
     language: r.language === 'de' || r.language === 'en' ? r.language : null,
+    accentHue: typeof r.accent_hue === 'number' ? r.accent_hue : null,
   });
 
   /** Ruhezeit aus den Spalten der Person, mit der Vorgabe für alles, was nicht gesetzt ist */
@@ -224,6 +225,13 @@ export function createPeople(c: Ctx, late: unknown) {
     run('update users set language = ?, language_choice = ? where id = ?', v.effective, v.choice === 'auto' ? null : v.choice, id);
   }
 
+  /** Eigener Farbton der Oberfläche: eine ganze Zahl von 0 bis 359, null = das Orange der App */
+  function setAccentHue(id: string, hue: number | null): void {
+    if (hue !== null && (!Number.isInteger(hue) || hue < 0 || hue > 359)) throw new ValidationError(t('Der Farbton muss eine Zahl von 0 bis 359 sein'));
+    userRow(id);
+    run('update users set accent_hue = ? where id = ?', hue, id);
+  }
+
   const getSetting = (key: string): string | null =>
     (one('select value from settings where key = ?', key)?.value as string | undefined) ?? null;
 
@@ -357,6 +365,7 @@ export function createPeople(c: Ctx, late: unknown) {
     setNtfyTopic,
     languageOf,
     setLanguage,
+    setAccentHue,
     getSetting,
     putSetting,
     rawSetting,

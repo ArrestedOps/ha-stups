@@ -8,6 +8,9 @@ export type Catalog = Record<string, string | [string, string]>;
 export const en: Catalog = {
   // Einstellungen › Sprache
   'Sprache': 'Language',
+  'Akzentfarbe': 'Accent colour',
+  'Orange (Standard)': 'Orange (default)',
+  'Die Farbe der Knöpfe und Reiter. Gilt auf allen deinen Geräten, jede Person wählt ihre eigene.': 'The colour of buttons and tabs. Applies on all your devices; everyone picks their own.',
   'Gilt auf allen deinen Geräten und für Push-Nachrichten. „Automatisch“ folgt der Sprache des Geräts.': 'Applies to all your devices and to push notifications. “Automatic” follows the language of the device.',
   'Automatisch': 'Automatic',
 

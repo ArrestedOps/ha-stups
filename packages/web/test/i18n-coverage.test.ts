@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { en } from '../src/lib/i18n/en';
 import { extract, placeholders, type Found } from './helpers/i18n-extract';
 
-// Alle Quelltexte der Oberfläche als Rohtext (ohne den Katalog selbst)
+// Alle Quelltexte der Oberfläche als Rohtext (ohne den Katalog selbst), auch neu angelegte Dateien
 const sources = import.meta.glob<string>(['../src/**/*.ts', '../src/**/*.svelte', '!../src/lib/i18n/**'], { query: '?raw', import: 'default', eager: true });
 
 const found = new Map<string, Found>();

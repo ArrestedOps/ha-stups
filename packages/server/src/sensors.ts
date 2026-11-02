@@ -1,3 +1,4 @@
+import { channelNames, type ChannelNames } from './channel.js';
 import type { Options } from './config.js';
 import { dayDiff } from './time.js';
 import type { OpenDueCard, Store } from './store.js';
@@ -14,6 +15,8 @@ export interface SensorDeps {
   timeZone: () => string;
   debounceMs?: number;
   log?: { warn: (msg: string) => void };
+  /** Namen der Sensoren: normale App oder Beta (Vorgabe: normale App) */
+  names?: Pick<ChannelNames, 'sensorPrefix' | 'sensorLabel'>;
 }
 
 export function slugify(name: string): string {
@@ -31,6 +34,7 @@ export function slugify(name: string): string {
 
 export function createSensors(deps: SensorDeps) {
   const { store, ha } = deps;
+  const { sensorPrefix, sensorLabel } = deps.names ?? channelNames('stable');
   const warn = deps.log?.warn ?? (() => undefined);
   let timer: NodeJS.Timeout | undefined;
 
@@ -47,7 +51,7 @@ export function createSensors(deps: SensorDeps) {
     const writes: Promise<void>[] = [];
     const put = (entity: string, name: string, icon: string, list: OpenDueCard[]) =>
       writes.push(
-        ha.setState(`sensor.stups_${entity}`, String(list.length), {
+        ha.setState(`${sensorPrefix}${entity}`, String(list.length), {
           friendly_name: name,
           unit_of_measurement: 'Aufgaben',
           icon,
@@ -55,36 +59,36 @@ export function createSensors(deps: SensorDeps) {
         }),
       );
 
-    put('ueberfaellig', 'Stups überfällig', 'mdi:alert-circle-outline', overdue(cards));
-    put('heute_faellig', 'Stups heute fällig', 'mdi:calendar-today', today(cards));
+    put('ueberfaellig', `${sensorLabel} überfällig`, 'mdi:alert-circle-outline', overdue(cards));
+    put('heute_faellig', `${sensorLabel} heute fällig`, 'mdi:calendar-today', today(cards));
     for (const person of store.people()) {
       const slug = slugify(person.name);
       const mine = cards.filter((c) => c.assigneeIds.includes(person.id));
-      put(`ueberfaellig_${slug}`, `Stups überfällig (${person.name})`, 'mdi:alert-circle-outline', overdue(mine));
-      put(`heute_faellig_${slug}`, `Stups heute fällig (${person.name})`, 'mdi:calendar-today', today(mine));
+      put(`ueberfaellig_${slug}`, `${sensorLabel} überfällig (${person.name})`, 'mdi:alert-circle-outline', overdue(mine));
+      put(`heute_faellig_${slug}`, `${sensorLabel} heute fällig (${person.name})`, 'mdi:calendar-today', today(mine));
     }
     // Offene Stupse: gesamt und je Person (die Namen der Sensoren beginnen wie die übrigen mit stups)
     const nudges = store.openNudgeCounts();
     const list = store.openNudgeList();
     writes.push(
-      ha.setState('sensor.stups_stupse_offen', String(nudges.total), {
-        friendly_name: 'Stups offene Stupse',
+      ha.setState(`${sensorPrefix}stupse_offen`, String(nudges.total), {
+        friendly_name: `${sensorLabel} offene Stupse`,
         unit_of_measurement: 'Stupse',
         icon: 'mdi:hand-wave-outline',
       }),
     );
     // Offene Karten, die ein Wächter angelegt hat
     writes.push(
-      ha.setState('sensor.stups_waechter_offen', String(store.openWatcherCardCount()), {
-        friendly_name: 'Stups offene Wächter-Karten',
+      ha.setState(`${sensorPrefix}waechter_offen`, String(store.openWatcherCardCount()), {
+        friendly_name: `${sensorLabel} offene Wächter-Karten`,
         unit_of_measurement: 'Karten',
         icon: 'mdi:eye-outline',
       }),
     );
     for (const person of store.people()) {
       writes.push(
-        ha.setState(`sensor.stups_gestupst_${slugify(person.name)}`, String(nudges.byUser[person.id] ?? 0), {
-          friendly_name: `Stups gestupst (${person.name})`,
+        ha.setState(`${sensorPrefix}gestupst_${slugify(person.name)}`, String(nudges.byUser[person.id] ?? 0), {
+          friendly_name: `${sensorLabel} gestupst (${person.name})`,
           unit_of_measurement: 'Stupse',
           icon: 'mdi:hand-wave-outline',
           nudges: list.filter((n) => n.toId === person.id).map(({ card, from, since }) => ({ card, from, since })),

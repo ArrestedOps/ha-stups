@@ -32,7 +32,7 @@ const optionsWith = (summaryTime: string) =>
 // Verbindet den Store mit dem jeweils zuletzt gebauten Notifier (wie in main.ts)
 let hook: ((list: ClosedNudge[]) => void) | null = null;
 
-function makeNotifier(extra: { onChange?: () => void; summaryTime?: string; log?: { info: (m: string) => void; warn: (m: string) => void } } = {}) {
+function makeNotifier(extra: { onChange?: () => void; summaryTime?: string; actionPrefix?: string; log?:{ info: (m: string) => void; warn: (m: string) => void } } = {}) {
   const options = optionsWith(extra.summaryTime ?? '23:59');
   const notifier = createNotifier({
     store,
@@ -743,5 +743,44 @@ describe('Stupsen', () => {
     const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id] });
     const n = makeNotifier();
     expect(await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'ha-conny' })).toBe('completed');
+  });
+});
+describe('Beta: Aktionen mit eigenem Präfix', () => {
+  const due = '2026-11-01T09:00:00.000Z';
+
+  it('die Knöpfe der Beta tragen BETA_ vor der Aktion', async () => {
+    const c = card({ dueAt: due, assigneeIds: [conny.id] });
+    const n = makeNotifier({ actionPrefix: 'BETA_' });
+    now = new Date(due);
+    await n.tick();
+    expect(calls[0]!.data.data.actions[0].action).toBe(`BETA_KANBAN_DONE:${c.id}:${due}`);
+  });
+
+  it('die Beta führt nur ihre eigenen Aktionen aus; die der normalen App ignoriert sie', async () => {
+    const c = card({ dueAt: due, assigneeIds: [conny.id] });
+    const beta = makeNotifier({ actionPrefix: 'BETA_' });
+    expect(await beta.handleAction({ action: `KANBAN_DONE:${c.id}:${due}`, userId: 'ha-conny' })).toBe('ignored');
+    expect(store.getCard(c.id).completedAt).toBeNull();
+    expect(await beta.handleAction({ action: `BETA_KANBAN_DONE:${c.id}:${due}`, userId: 'ha-conny' })).toBe('completed');
+    expect(store.getCard(c.id).completedAt).not.toBeNull();
+  });
+
+  it('die normale App ignoriert Aktionen der Beta, auch wenn die Karte bei ihr dieselbe Kennung hat (kopierte Daten)', async () => {
+    const c = card({ dueAt: due, assigneeIds: [conny.id] });
+    const stable = makeNotifier();
+    expect(await stable.handleAction({ action: `BETA_KANBAN_DONE:${c.id}:${due}`, userId: 'ha-conny' })).toBe('ignored');
+    expect(await stable.handleAction({ action: 'BETA_KANBAN_NUDGE_ACK:x', userId: 'ha-conny' })).toBe('ignored');
+    expect(store.getCard(c.id).completedAt).toBeNull();
+  });
+
+  it('Stups-Knöpfe der Beta: Erledigt, Mach ich und Später tragen das Präfix und kommen so zurück', async () => {
+    const c = card({ title: 'Mülltonne raus' });
+    const id = store.createNudges(c.id, rene.id, { to: [conny.id], template: 'think' }).sent[0]!.nudgeId;
+    const n = makeNotifier({ actionPrefix: 'BETA_' });
+    await n.tick();
+    const actions = calls.filter((x) => x.data.data?.actions)[0]!.data.data.actions.map((a: { action: string }) => a.action);
+    expect(actions).toEqual([`BETA_KANBAN_NUDGE_DONE:${id}`, `BETA_KANBAN_NUDGE_ACK:${id}`, `BETA_KANBAN_NUDGE_LATER:${id}`]);
+    expect(await n.handleAction({ action: `KANBAN_NUDGE_ACK:${id}`, userId: 'ha-conny' })).toBe('ignored');
+    expect(await n.handleAction({ action: `BETA_KANBAN_NUDGE_ACK:${id}`, userId: 'ha-conny' })).toBe('acked');
   });
 });

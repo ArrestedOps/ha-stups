@@ -25,6 +25,8 @@ const home = (person: 'anna' | 'ben' | 'conny', on: boolean) => ha.set(`person.$
 const cards = (): Card[] => store.getBoardView(boardId).cards;
 const fireKey = (w: Watcher) => `w:${w.id}:fire`;
 
+let enabled: boolean;
+
 function startEngine(): Watchers {
   engine = createWatchers({
     store,
@@ -32,6 +34,7 @@ function startEngine(): Watchers {
     ha,
     now: () => new Date(t),
     timeZone: () => 'Europe/Berlin',
+    enabled: () => enabled,
     onAssigned: (card, ids) => assigned.push({ card, ids }),
   });
   engine.start();
@@ -71,6 +74,7 @@ async function running(w: Watcher, power = '120') {
 
 beforeEach(() => {
   t = Date.parse('2026-11-04T10:00:00Z');
+  enabled = true;
   ha = new FakeHa();
   assigned = [];
   const db = openDb(':memory:');
@@ -87,6 +91,27 @@ beforeEach(() => {
   }
   ha.set(ENTITY, '120');
   startEngine();
+});
+
+describe('Ausgeschaltet (Beta)', () => {
+  it('legt keine Karte an und weist keine zu, solange die Wächter aus sind; danach läuft alles wie sonst', async () => {
+    const w = await create();
+    enabled = false;
+    await done(w);
+    advance(5);
+    await engine.tick();
+    expect(cards()).toHaveLength(0);
+    expect(assigned).toEqual([]);
+    expect(data.runs(w.id)).toEqual([]);
+
+    // wieder an: Abgleich holt den aktuellen Zustand nach, genau einmal
+    enabled = true;
+    ha.set(ENTITY, '120');
+    ha.emit(fireKey(w), '120');
+    await engine.idle();
+    await done(w);
+    expect(cards()).toHaveLength(1);
+  });
 });
 
 describe('Auslösen', () => {

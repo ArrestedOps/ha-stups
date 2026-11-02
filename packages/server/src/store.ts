@@ -733,6 +733,13 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
   const putSetting = (key: string, value: string) =>
     run('insert into settings (key, value) values (?, ?) on conflict(key) do update set value = excluded.value', key, value);
 
+  /** Rohe Einstellung (Tabelle settings), für Dinge, die nicht in Settings gehören, etwa die Schalter der Beta */
+  const rawSetting = (key: string): string | null => getSetting(key);
+  function putRawSetting(key: string, value: string | null): void {
+    if (value === null) run('delete from settings where key = ?', key);
+    else putSetting(key, value);
+  }
+
   /** Geheimnis, mit dem die Knöpfe in ntfy-Nachrichten signiert werden; entsteht beim ersten Gebrauch und zieht mit der Datenbank um */
   function pushSecret(): string {
     const existing = getSetting('pushSecret');
@@ -2787,6 +2794,8 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     ntfyTopic,
     setNtfyTopic,
     pushSecret,
+    rawSetting,
+    putRawSetting,
     getAccessMode,
     setAccessMode,
     importLegacyPeople,

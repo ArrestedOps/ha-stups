@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { channelFromEnv, type Channel } from './channel.js';
 import { parseOptions, type Options } from './config.js';
 
 /**
@@ -27,6 +28,8 @@ export interface NtfyConfig {
 
 export interface Runtime {
   mode: Mode;
+  /** Normale App oder Beta (kommt mit dem Image, siehe channel.ts) */
+  channel: Channel;
   dataDir: string;
   shareDir: string;
   port: number;
@@ -160,6 +163,7 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
 
   return {
     mode,
+    channel: channelFromEnv(env),
     dataDir,
     shareDir: own('SHARE_DIR') ?? set(env.SHARE_DIR) ?? '/share',
     port,
@@ -181,6 +185,8 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
 /** Was die Oberfläche anzeigen darf: ohne Home Assistant entfallen Wächter und Sensoren ohne Fehlermeldung */
 export interface Capabilities {
   mode: Mode;
+  /** normale App oder Beta (die Oberfläche zeigt in der Beta ein Band und die Schalter für Push und Wächter) */
+  channel: Channel;
   auth: 'ingress' | 'session';
   ha: boolean;
   watchers: boolean;

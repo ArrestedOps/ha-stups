@@ -27,6 +27,8 @@ export interface WatcherDeps {
   ha: WatcherHa;
   now: () => Date;
   timeZone: () => string;
+  /** false = ausgeschaltet (Beta): keine Auswertung, keine Karten. Vorgabe: an */
+  enabled?: () => boolean;
   /** Karte ist (jetzt) jemandem zugewiesen: hier geht die Push-Nachricht raus */
   onAssigned?: (card: Card, userIds: string[]) => void;
   /** Die Karte ist nach der eingestellten Zeit noch offen: an die Zuständigen erinnern */
@@ -81,6 +83,8 @@ export function createWatchers(deps: WatcherDeps) {
 
   function guarded(what: string, fn: () => Promise<void> | void): Promise<void> {
     return enqueue(async () => {
+      // Ausgeschaltet (Beta): alle Auswertungen, der Takt und die Heimkehr fallen weg; der Abgleich beim Einschalten holt den Stand nach
+      if (deps.enabled && !deps.enabled()) return;
       try {
         await fn();
       } catch (err) {

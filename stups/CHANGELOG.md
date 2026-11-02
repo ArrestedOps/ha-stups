@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.9.0
+
+- **Neue Beta-App „Stups (Beta)".** Neue Versionen erscheinen künftig zuerst dort und erst nach dem Test in dieser App. Die Beta hat **eigene Daten** (echte Daten lassen sich einmal über Einstellungen › Umzug hineinkopieren), ein eigenes Symbol mit „BETA"-Band und einen eigenen Eintrag in der Seitenleiste. Installation: Repository `https://github.com/ArrestedOps/ha-stups#beta` in Home Assistant hinzufügen (Anleitung im README)
+- In der Beta sind **Push und Wächter zunächst aus**, damit niemand Nachrichten doppelt bekommt; ein Administrator schaltet sie unter Einstellungen › Beta gezielt ein. Push-Titel beginnen mit „Beta ·", Sensoren heißen `sensor.stups_beta_…`, das Ereignis `stups_beta_create_card`
+- **Der eigene Container ist jetzt ausdrücklich als Beta gekennzeichnet**, mit einem Hinweis zur Sicherheit (nie ohne HTTPS und Reverse-Proxy ins Internet, regelmäßig aktualisieren). Er bekommt vorerst keine neuen Funktionen
+- **Für diese App ändert sich nichts**, außer dass die Oberfläche der Beta ein Band zeigt. Keine Migration
+
 ## 1.8.0
 
 - **Anmelden mit Passkey im eigenen Container.** Statt das Passwort zu tippen, genügt Fingerabdruck, Gesicht oder die Bildschirmsperre. Einstellungen › Passkeys › „Passkey hinzufügen", danach zeigt die Anmeldeseite „Mit Passkey anmelden", ohne Benutzername. Das Passwort bleibt als Rückfall. Voraussetzung: `STUPS_PUBLIC_URL` ist eine https-Adresse mit Namen (nicht mit IP-Adresse). Anleitung: `docs/docker.md`

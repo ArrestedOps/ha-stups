@@ -80,7 +80,7 @@ Die Fachlogik (Store, Wiederholungen, Wächter-Regeln, Stupsen) kennt Home Assis
 
 `main.ts` erkennt die Betriebsart und verdrahtet die Adapter; `GET /api/capabilities` sagt der Oberfläche, was es gibt. Die Anmeldung wählt `runtime.identity.kind`: Add-on und die Entwicklungs-Schalter (`ENFORCE_INGRESS_IP=false`) nutzen Ingress, alles andere eigene Konten. Die Oberfläche blendet Home-Assistant-Teile nur bei eigener Anmeldung aus (`feat` in `store.svelte.ts`); im Add-on bleibt alles sichtbar, auch wenn Home Assistant gerade nicht antwortet.
 
-Browser-Tests: Projekte `dunkel` und `hell` (Server ohne Home Assistant mit Entwicklungs-Benutzer), `waechter` (nachgebautes Home Assistant, `e2e/mock-ha.mjs`, wie im Add-on), `standalone-ha` (eigener Container mit `HA_URL` und `HA_TOKEN` gegen dasselbe Nachbau, Websocket unter `/api/websocket`) und `standalone` (`e2e/server-standalone.mjs`: eigener Container, Einrichtung mit Code, Anmeldung). Der Einrichtungscode wird aus dem Protokoll in eine Datei geschrieben, die der Test liest. Derselbe Server startet einen nachgebauten ntfy-Server (Port + 1, `/__published` und `/__deleted` zeigen, was ankam): die Tests prüfen Nachricht, Knöpfe und den Rückweg `POST /api/push/action`.
+Browser-Tests: Projekte `dunkel` und `hell` (Server ohne Home Assistant mit Entwicklungs-Benutzer), `waechter` (nachgebautes Home Assistant, `e2e/mock-ha.mjs`, wie im Add-on), `beta` (Beta-App: `STUPS_CHANNEL=beta`, Push und Wächter zunächst aus, nachgebautes Home Assistant, `e2e/server-beta.mjs`), `standalone-ha` (eigener Container mit `HA_URL` und `HA_TOKEN` gegen dasselbe Nachbau, Websocket unter `/api/websocket`) und `standalone` (`e2e/server-standalone.mjs`: eigener Container, Einrichtung mit Code, Anmeldung). Der Einrichtungscode wird aus dem Protokoll in eine Datei geschrieben, die der Test liest. Derselbe Server startet einen nachgebauten ntfy-Server (Port + 1, `/__published` und `/__deleted` zeigen, was ankam): die Tests prüfen Nachricht, Knöpfe und den Rückweg `POST /api/push/action`.
 
 Knöpfe in ntfy-Nachrichten kommen ohne Sitzung zurück. `ntfy.ts` signiert dafür Person, Aktion und Ablaufzeit mit einem Geheimnis aus der Datenbank (`settings.pushSecret`), `push-action.ts` prüft und führt die Aktion über denselben `handleAction` aus wie bei Home Assistant. Der Pfad ist der einzige ohne Anmeldung (und ohne Kopfzeile des Clients) im Container.
 
@@ -88,12 +88,39 @@ Passkeys (`passkeys.ts`, nur mit eigenen Konten und `STUPS_PUBLIC_URL` mit https
 
 Lokal ohne HA starten: `DEV_USER=anna ENFORCE_INGRESS_IP=false DATA_DIR=<Ordner> OPTIONS_PATH=<options.json> node packages/server/dist/main.js`. Ohne `SUPERVISOR_TOKEN` ist die Verbindung zu HA aus.
 
-### Neue Version veröffentlichen
+### Neue Version veröffentlichen (mit Beta)
 
-1. Änderung machen, `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e` laufen lassen.
-2. `version` in `stups/config.yaml` erhöhen, Eintrag in `stups/CHANGELOG.md`.
-3. Committen und nach `main` pushen. Die CI läuft dieselben Prüfungen und baut danach die Images (amd64, aarch64).
-4. Wenn die CI grün ist: in HA aktualisieren (Abschnitt 2).
+Seit 1.9.0 gibt es neben der normalen App eine zweite App im selben Repository: **Stups (Beta)** (Ordner `stups-beta/`, Slug `stups_beta`, eigene Daten). Jede neue Version geht **zuerst in die Beta** und erst nach Freigabe in die normale App.
+
+| | normale App | Beta |
+|---|---|---|
+| Ordner, Slug | `stups/`, `stups` | `stups-beta/`, `stups_beta` |
+| Branch, aus dem die CI baut | `main` | `beta` |
+| Bilder | `ghcr.io/arrestedops/ha-stups-{arch}` (und `stups` als Manifest) | `ghcr.io/arrestedops/ha-stups-beta-{arch}` |
+| Version | `X.Y.Z` in `stups/config.yaml` | `X.Y.Z-beta.N` in `stups-beta/config.yaml` |
+| Home-Assistant-Adresse | `https://github.com/ArrestedOps/ha-stups` | `https://github.com/ArrestedOps/ha-stups#beta` |
+
+Home Assistant liest die Liste der Apps aus dem Branch der Repository-Adresse. Darum steht die Beta-Version nur dann rechtzeitig im Store, wenn die zweite Adresse mit `#beta` eingetragen ist. Aus ihr erscheint auch ein zweites „Stups" (anderer Hash, leere Daten): nicht installieren.
+
+**Ablauf**
+
+1. Auf Branch `beta` arbeiten, `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e` laufen lassen.
+2. `version` in `stups-beta/config.yaml` erhöhen (`X.Y.Z-beta.N`), Eintrag in `stups-beta/CHANGELOG.md`, nach `beta` pushen. Die CI läuft dieselben Prüfungen und baut danach nur die Beta-Images.
+3. Wenn die CI grün ist: in Home Assistant (Adresse mit `#beta`) „Nach Updates suchen", **Stups (Beta)** aktualisieren und testen (Testliste).
+4. **Nach der Freigabe:** auf `beta` die Version in `stups/config.yaml` auf `X.Y.Z` erhöhen und den Changelog `stups/CHANGELOG.md` schreiben, dann nach `main` mergen (schneller Vorlauf, keine neuen Änderungen). Die CI baut die normalen Images und das Manifest. Zuvor, wenn es eine Migration gibt: Sicherung der normalen App.
+5. Wenn die CI grün ist: in HA aktualisieren (Abschnitt 2). Danach `main` zurück nach `beta` mergen, falls dazwischen etwas auf `main` landete.
+
+Die CI bricht ab, wenn die Version nicht zum Branch passt (eine Beta-Version ohne `-beta.N` auf `beta`, ein Suffix in der Version der normalen App auf `main`): So landet kein falsches Bild unter einem falschen Namen.
+
+**Was die Beta anders macht** (damit sie neben der normalen App laufen kann; das Image bringt `STUPS_CHANNEL=beta` mit, `channel.ts`)
+
+- Push-Titel beginnen mit „Beta ·", Tags und Gruppen der Nachrichten heißen anders, die Knöpfe in Nachrichten tragen `BETA_` vor der Aktion (jede App verarbeitet nur ihre eigenen, auch wenn die Karte in beiden dieselbe Kennung hat).
+- Sensoren heißen `sensor.stups_beta_…` („Stups Beta …"), das Ereignis für Automationen `stups_beta_create_card`.
+- **Push und Wächter sind zunächst aus** (`beta-gate.ts`, Einstellungen › Beta, nur Administratoren): Push „Aus / Nur für mich / An", Wächter „an/aus". Der Server setzt das durch (nicht die Oberfläche): ohne Freigabe wird nichts gesendet, und die Wächter werten nichts aus.
+- **Echte Daten zum Testen:** in der normalen App Einstellungen › Umzug › Exportieren, **danach** die Beta zum ersten Mal starten (sie übernimmt den Export nur, wenn sie noch keine Daten hat). Neue Kopie: die Beta (nur die!) deinstallieren, neu exportieren, neu installieren.
+- Das Symbol mit „BETA"-Band erzeugt `node e2e/make-beta-icon.mjs` aus den Bildern der normalen App.
+
+**Direkt nach `main` (ohne Beta)** geht nur ein Hotfix für einen dringenden Fehler in der normalen App. Danach `main` nach `beta` mergen.
 
 ### Gut zu wissen
 

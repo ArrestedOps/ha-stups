@@ -14,7 +14,10 @@ RUN pnpm -r build
 FROM node:24-alpine
 RUN npm install -g pnpm@12.16.1
 WORKDIR /app
-ENV NODE_ENV=production \
+# Normale App oder Beta: das Image trägt den Kanal (siehe packages/server/src/channel.ts); die CI setzt ihn je Branch
+ARG STUPS_CHANNEL=stable
+ENV STUPS_CHANNEL=$STUPS_CHANNEL \
+    NODE_ENV=production \
     PORT=8099
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/server/package.json packages/server/

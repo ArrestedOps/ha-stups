@@ -11,7 +11,7 @@ import { combinePush, createHaNotifyPush, type PushGateway } from './push.js';
 import { createActionTokens, createNtfyPush } from './ntfy.js';
 import { createRoundTrips, pushActionRoutes } from './push-action.js';
 import { openDb } from './db.js';
-import { exportData, importTransfer } from './transfer.js';
+import { exportData, importTransfer, transferStatus } from './transfer.js';
 import { createEventBus } from './events.js';
 import { createFileStore } from './files.js';
 import { HaClient } from './ha.js';
@@ -39,7 +39,9 @@ const app = Fastify({ logger: { level: options.logLevel } });
 
 const dbPath = `${dataDir}/stups.sqlite`;
 // Neue App ohne eigene Daten: Datenbank und Anhänge aus einem Export der alten App übernehmen (Einstellungen › Umzug)
+const transfer = transferStatus(dbPath, shareDir);
 if (importTransfer(dbPath, `${dataDir}/files`, shareDir)) app.log.info('Daten aus dem Umzug (/share/stups-umzug) übernommen');
+else if (transfer.state === 'none') app.log.info(transfer.text);
 const db = openDb(dbPath, { backupDir: `${dataDir}/backups` });
 // Wird nach dem Start von Home Assistant übernommen, bis dahin gilt dieser Wert.
 let timeZone = runtime.timeZone;

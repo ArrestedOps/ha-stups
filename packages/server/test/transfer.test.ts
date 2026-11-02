@@ -5,7 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { describe, expect, it } from 'vitest';
 import { openDb } from '../src/db.js';
 import { createStore } from '../src/store.js';
-import { exportData, importTransfer, TRANSFER_DIR } from '../src/transfer.js';
+import { exportData, importTransfer, transferStatus, TRANSFER_DIR } from '../src/transfer.js';
 
 const tmp = () => mkdtempSync(join(tmpdir(), 'stups-umzug-'));
 
@@ -74,5 +74,53 @@ describe('Umzug', () => {
   it('meldet, wenn /share nicht eingebunden ist', () => {
     const { dataDir, db } = oldInstall();
     expect(() => exportData(db, dataDir, join(tmp(), 'gibt-es-nicht'))).toThrow(/nicht eingebunden/);
+  });
+
+  describe('Warum findet kein Umzug statt? (Protokollzeile beim Start)', () => {
+    it('ein Export liegt bereit: die App übernimmt ihn', () => {
+      const { dataDir, db } = oldInstall();
+      const share = tmp();
+      exportData(db, dataDir, share);
+      const s = transferStatus(join(tmp(), 'stups.sqlite'), share);
+      expect(s.state).toBe('will-import');
+      expect(s.text).toContain(join(share, TRANSFER_DIR, 'data.sqlite'));
+    });
+
+    it('die App hat schon Daten: nichts zu melden', () => {
+      const { dataDir, db } = oldInstall();
+      const share = tmp();
+      exportData(db, dataDir, share);
+      const other = oldInstall();
+      expect(transferStatus(join(other.dataDir, 'stups.sqlite'), share).state).toBe('has-data');
+    });
+
+    it('kein Export: nennt die gesuchte Datei und was in /share liegt', () => {
+      const share = tmp();
+      mkdirSync(join(share, 'etwas-anderes'));
+      writeFileSync(join(share, 'datei.txt'), 'x');
+      const s = transferStatus(join(tmp(), 'stups.sqlite'), share);
+      expect(s.state).toBe('none');
+      expect(s.text).toContain(join(share, TRANSFER_DIR, 'data.sqlite'));
+      expect(s.text).toContain('etwas-anderes');
+      expect(s.text).toContain('datei.txt');
+      expect(s.text).toMatch(/Exportieren/);
+    });
+
+    it('ein Export-Ordner ohne Datenbank wird erkannt', () => {
+      const share = tmp();
+      mkdirSync(join(share, TRANSFER_DIR));
+      writeFileSync(join(share, TRANSFER_DIR, 'info.json'), '{}');
+      const s = transferStatus(join(tmp(), 'stups.sqlite'), share);
+      expect(s.state).toBe('none');
+      expect(s.text).toContain('data.sqlite');
+      expect(s.text).toContain('info.json');
+    });
+
+    it('/share leer oder nicht eingebunden', () => {
+      expect(transferStatus(join(tmp(), 'stups.sqlite'), tmp()).text).toMatch(/leer/);
+      const s = transferStatus(join(tmp(), 'stups.sqlite'), join(tmp(), 'gibt-es-nicht'));
+      expect(s.state).toBe('none');
+      expect(s.text).toMatch(/nicht eingebunden/);
+    });
   });
 });

@@ -1,90 +1,61 @@
-Stups Source-Available License
+Required Notice: Copyright (c) 2026 René Dobko (https://github.com/ArrestedOps/ha-stups)
 
-Copyright (c) 2026 René Dobko. All rights reserved.
+# PolyForm Strict License 1.0.0
 
-Kurz und unverbindlich (Deutsch): Du darfst Stups installieren, für dich selbst nutzen und den
-Quelltext lesen. Du darfst ihn nicht kopieren, verändern, weitergeben oder irgendwo hochladen
-(auch nicht als Fork oder Kopie in ein anderes Repository). Dass Home Assistant oder Docker das
-Repository oder die Images für die Installation herunterladen, ist erlaubt. Verbindlich ist der
-englische Text unten.
+<https://polyformproject.org/licenses/strict/1.0.0>
 
----------------------------------------------------------------------------------------------------
+## Acceptance
 
-"Software" means everything in this repository: the source code, the Home Assistant apps "Stups"
-and "Stups (Beta)", their documentation, images, icons and the container images published from it
-(ghcr.io/arrestedops/*).
+In order to get any license under these terms, you must agree to them as both strict obligations and conditions to all your licenses.
 
-1. What you may do
+## Copyright License
 
-   You may, free of charge:
+The licensor grants you a copyright license for the software to do everything you might do with the software that would otherwise infringe the licensor's copyright in it for any permitted purpose, other than distributing the software or making changes or new works based on the software.
 
-   a) install and run the unmodified Software as published by the licensor (as a Home Assistant
-      app from https://github.com/ArrestedOps/ha-stups, or as the published container image) for
-      your own use: in your household, or inside your own organisation for its internal
-      purposes. Downloading or cloning the repository or the images by Home Assistant (the
-      Supervisor), Docker or a comparable tool for the purpose of this installation and for
-      updates is part of this permission;
-   b) read the source code, for example to understand how it works, to check its security, or to
-      report a problem to the licensor;
-   c) keep the copies that are technically necessary to run the Software and make backups of your
-      own data (for example the data folder of the app).
+## Patent License
 
-2. What you may not do
+The licensor grants you a patent license for the software that covers patent claims the licensor can license, or becomes able to license, that you would infringe by using the software.
 
-   Without the licensor's prior written permission you may not:
+## Noncommercial Purposes
 
-   a) copy, publish, upload, mirror or otherwise make the Software or parts of it available to
-      others, in any repository, package or image registry, website, archive or other service,
-      public or private (for forks on GitHub see section 3);
-   b) modify the Software, create derivative works, or use parts of the source code, the
-      documentation, the icons or the texts in other projects;
-   c) sell, rent, sublicense or otherwise redistribute the Software, or offer it or its functions
-      to third parties as a hosted or managed service;
-   d) remove or change copyright notices, the name "Stups" or this license;
-   e) use the name, logo or icons in a way that suggests that a copy or a modified version is the
-      original or is approved by the licensor.
+Any noncommercial purpose is a permitted purpose.
 
-3. GitHub
+## Personal Uses
 
-   The repository is public on GitHub. GitHub's Terms of Service give every GitHub user the right
-   to view and to fork a public repository within the GitHub platform. That right comes from
-   GitHub's terms, not from this license, and it is limited to the functions of GitHub itself. It
-   gives no right to copy the Software out of GitHub, to modify it, to publish it elsewhere, or to
-   use a fork to distribute or run modified versions.
+Personal use for research, experiment, and testing for the benefit of public knowledge, personal study, private entertainment, hobby projects, amateur pursuits, or religious observance, without any anticipated commercial application, is use for a permitted purpose.
 
-4. Earlier versions
+## Noncommercial Organizations
 
-   Stups 1.9.0 and all earlier versions, as published before 2 November 2026, were released under
-   the MIT License. Those versions, in the form published at that time, remain available under the
-   MIT License to everyone who received them. This license applies to everything published after
-   that date.
+Use by any charitable organization, educational institution, public research organization, public safety or health organization, environmental protection organization, or government institution is use for a permitted purpose regardless of the source of funding or obligations resulting from the funding.
 
-5. Third-party components
+## Fair Use
 
-   The Software uses open-source components (see package.json and pnpm-lock.yaml). They stay
-   under their own licenses; this license does not change them.
+You may have "fair use" rights for the software under the law. These terms do not limit them.
 
-6. Termination
+## No Other Rights
 
-   If you violate this license, your permissions under section 1 end automatically. You then have
-   to stop using the Software and to delete every copy, fork, mirror or upload you made in
-   violation of this license. Rights under section 4 are not affected.
+These terms do not allow you to sublicense or transfer any of your licenses to anyone else, or prevent the licensor from granting licenses to anyone else.  These terms do not imply any other licenses.
 
-7. No warranty, limitation of liability
+## Patent Defense
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-   BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR ITS USE. Liability that
-   cannot be excluded by law (for example for intent, gross negligence or injury to life, body or
-   health) remains unaffected.
+If you make any written claim that the software infringes or contributes to infringement of any patent, your patent license for the software granted under these terms ends immediately. If your company makes such a claim, your patent license ends immediately for work on behalf of your company.
 
-8. Other uses
+## Violations
 
-   If you want to do something this license does not allow, ask first: contact the licensor
-   through the GitHub profile ArrestedOps. Permission has to be given in writing.
+The first time you are notified in writing that you have violated any of these terms, or done anything with the software not covered by your licenses, your licenses can nonetheless continue if you come into full compliance with these terms, and take practical steps to correct past violations, within 32 days of receiving notice.  Otherwise, all your licenses end immediately.
 
-9. Law
+## No Liability
 
-   This license is governed by the laws of the Federal Republic of Germany, excluding its rules on
-   conflicts of laws.
+***As far as the law allows, the software comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages arising out of these terms or the use or nature of the software, under any kind of legal claim.***
+
+## Definitions
+
+The **licensor** is the individual or entity offering these terms, and the **software** is the software the licensor makes available under these terms.
+
+**You** refers to the individual or entity agreeing to these terms.
+
+**Your company** is any legal entity, sole proprietorship, or other kind of organization that you work for, plus all organizations that have control over, are under the control of, or are under common control with that organization.  **Control** means ownership of substantially all the assets of an entity, or the power to direct its management and policies by vote, contract, or otherwise.  Control can be direct or indirect.
+
+**Your licenses** are all the licenses granted to you for the software under these terms.
+
+**Use** means anything you do with the software requiring one of your licenses.

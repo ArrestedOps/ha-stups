@@ -65,7 +65,17 @@ Auf Branch `beta` entwickeln; `stups-beta/config.yaml` `1.10.0-beta.N`.
 - [ ] **Test** (`packages/web/test/` oder Komponententest im Browser-Projekt): sichtbarer Wert und Chevron, nativer `<select>` darüber (durchsichtig, volle Fläche, gleiche `aria-label`), Änderung ruft `onchange`, deaktiviert, Platzhalter.
 - [ ] `SelectField.svelte` (Props: `value`, `options`, `label`, `onchange`, `disabled`, `align`).
 - [ ] Ersetzen, jeweils mit den vorhandenen Browser-Tests als Netz: `WatcherSheet` (alle), `RecurrenceEditor`, `BoardSettings`, `SettingsSheet` (Dashboard), `CardProps` (Vorab-Erinnerung, Status-Chip).
-- [ ] **Bestandsaufnahme** der Formularelemente in allen Sheets (Tabelle im Plan oder im Commit): native `datetime-local`/`time` bleiben, Checkboxen/Zahlen/Text geprüft; Abweichungen korrigieren.
+- [x] **Bestandsaufnahme** der Formularelemente in allen Sheets (erledigt in 1.10.0):
+
+  | Element | Wo | Ergebnis |
+  |---|---|---|
+  | `<select>` | Wächter (9), Wiederholung (3), Board-Einstellungen, Einstellungen › Dashboard, Erinnerung | **ersetzt** durch `SelectField` (Wert und Pfeil, nativer Picker darüber) |
+  | `<select>` (Status-Chip) | `CardProps` | bleibt: eigenes Chip-Muster, war schon einheitlich |
+  | `datetime-local`, `time` | Fälligkeit, Wächter (Uhrzeit), Personen (Ruhezeit) | **bleiben** nativ (iOS-Rädchen, wirken nativ) |
+  | `number` | Wiederholung (Abstand) | bleibt (Zahlentastatur), gestylt wie die übrigen Felder |
+  | `checkbox` | Einstellungen, Wächter, Beta | bleiben (mit Akzentfarbe) |
+  | Text, Textbereich, Suche | überall | gestylt, nichts zu tun |
+  | Auswahl in Zeilen (Radio, Chips) | Zuweisung, Priorität, Kategorien | eigene Knöpfe, schon einheitlich |
 
 ### B. Kompakte Karten
 

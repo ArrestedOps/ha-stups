@@ -139,7 +139,8 @@ test('Neue Karte: Kategorie direkt anlegen und gleich wählen, ein vorhandener N
 
   await page.getByRole('button', { name: 'Anlegen' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
-  await expect(card(page, title).getByText(cat)).toBeVisible();
+  // in der Liste zeigen Punkte die Kategorie, der Name steht für Vorlese-Programme daran (und im Karten-Fenster)
+  await expect(card(page, title).getByTestId('card-categories')).toHaveAttribute('aria-label', new RegExp(cat));
 });
 
 test('Termin setzen ohne Zuständige: Hinweis, dass keine Erinnerung kommt, mit „Mir zuweisen“', async ({ page, request }) => {
@@ -168,23 +169,26 @@ test('Menü „⋯": Duplizieren legt eine Kopie an', async ({ page }) => {
   await expect(card(page, `${title} (Kopie)`)).toBeVisible();
 });
 
-test('Karten-Fenster: „Erledigt" und „Speichern" oben', async ({ page }) => {
+test('Karten-Fenster: „Erledigt" und „Fertig" oben (alles speichert sofort, „Fertig" schließt nur)', async ({ page }) => {
   const title = uniqueTitle('Fenster');
   await addCard(page, title);
 
   await card(page, title).getByText(title).click();
-  await expect(page.getByRole('button', { name: /Speichern/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Fertig', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Speichern/ })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Erledigt/ }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Fertig', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Fertig', exact: true })).toHaveCount(0);
 });
 
 test('Erledigte Karte: nicht mehr „überfällig", zeigt die Erledigt-Zeit und den Verlauf', async ({ page }) => {
   const title = uniqueTitle('Verlauf');
   await addCard(page, title, '2020-01-15T09:00');
-  await expect(card(page, title).getByText(/Überfällig/)).toBeVisible();
+  await expect(card(page, title).getByTestId('card-due')).toHaveAttribute('data-overdue', 'true');
 
   await page.getByRole('button', { name: `„${title}“ erledigen` }).click();
   await tab(page, 'Erledigt').click();
-  await expect(card(page, title).getByText(/Überfällig/)).toHaveCount(0);
+  await expect(card(page, title).getByTestId('card-due')).toHaveAttribute('data-overdue', 'false');
   await expect(card(page, title).getByTestId('card-done-at')).toContainText('Erledigt heute');
 
   await card(page, title).getByText(title).click();
@@ -228,11 +232,11 @@ test('Neue Karte: alle Felder gleich beim Anlegen (Priorität, Beschreibung, Che
   expect(detail.links.map((l: { url: string }) => l.url)).toEqual(['https://maps.apple.com/?q=Restaurant']);
 });
 
-test('Karte zeigt „Angelegt …“ und einen Farbbalken für die Dringlichkeit', async ({ page }) => {
+test('Karte zeigt einen Farbbalken für die Dringlichkeit; „Angelegt …“ steht nur im Karten-Fenster', async ({ page }) => {
   const title = uniqueTitle('Balken');
   await addCard(page, title, '2020-01-15T09:00'); // längst überfällig
   const row = card(page, title);
-  await expect(row.getByTestId('card-created')).toHaveText('Angelegt heute');
+  await expect(row.getByText(/^Angelegt/)).toHaveCount(0); // nicht mehr in der Liste
   const color = await row.locator('span[aria-hidden=true]').first().evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(color).toMatch(/^rgb\(/); // der Balken ist gefärbt (rot, überfällig)
 

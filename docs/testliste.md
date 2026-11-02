@@ -198,6 +198,20 @@ Nach `stups-beta/DOCS.md`. Die normale App bleibt in diesem Abschnitt unberührt
 - [ ] Wächter in der Beta einschalten: Sie legen danach Karten an (nur in der Beta), vorher nicht. Sensoren heißen `sensor.stups_beta_…`, die der normalen App bleiben unverändert
 - [ ] Nach einer neuen Beta-Version in Home Assistant: „Nach Updates suchen" zeigt sie in der Beta-Adresse, **ohne** dass die normale App ein Update bekommt
 
+## 18 · Kompakte Karten und Feinschliff (seit 1.10.0)
+
+Am iPhone, in der Beta zuerst (Abschnitt 17), dunkel und hell.
+
+- [ ] Board „Offen": **mindestens vier Karten** stehen vollständig über der Leiste (ohne zu scrollen). Titel und Meta-Zeile sind gut lesbar, nichts ist zu klein zum Tippen (Kreis links, Karte, Menü „…")
+- [ ] Karte mit langem Titel: höchstens **zwei Zeilen**, danach „…"
+- [ ] Meta-Zeile: Termin (rot und „heute 15:01", wenn überfällig), Wiederholungs-Symbol, Flagge (orange = mittel, rot = hoch), „1/2" bei einer Checkliste, Zahlen bei Kommentaren, Links und Anhängen, Kosten. Kategorien sind kleine Punkte rechts. Wächter-Karten haben das Auge
+- [ ] „Angelegt vor …" steht **nicht** mehr in der Liste, aber im Karten-Fenster
+- [ ] Wischen nach links/rechts und das Menü „…" gehen wie vorher; der Farbbalken links zeigt die Dringlichkeit
+- [ ] Agenda und Kalender: Zeilen und Ansichten sehen unverändert gut aus
+- [ ] Unten in der Liste die **letzte Karte** nach oben schieben: Sie lässt sich über den „+"-Knopf hinaus scrollen, der Kostenbetrag o. ä. ist nicht verdeckt
+- [ ] Spalten-Tabs („Offen · 3", „Erledigt · 1" …) und Filter-Chips: Am Rand ist ein **Verlauf**, wenn es weitergeht. Wählt man eine halb sichtbare Spalte, rückt sie ins Bild
+- [ ] Karten-Fenster: oben rechts steht **„Fertig"** (nicht „Speichern"). Eine Änderung zeigt in der Mitte kurz „✓ Gespeichert", „Fertig" schließt
+- [ ] Auswahlfelder (Wächter › Bedingung/Board/Spalte/Fälligkeit/Rückfall, Karte › Wiederholung, Erinnerung, Einstellungen › Dashboard, Board-Einstellungen › Spalte löschen): Wert und Pfeil, Antippen öffnet den Picker des Handys, die Wahl ändert die Anzeige
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

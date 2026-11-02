@@ -5,6 +5,7 @@
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
   import Row from './Row.svelte';
+  import SelectField from './SelectField.svelte';
   import Sheet from './Sheet.svelte';
   import SubmitPill from './SubmitPill.svelte';
 
@@ -147,9 +148,9 @@
         {#if deletingColumn === col.id}
           <div class="flex flex-wrap items-center gap-2 bg-surface2 px-4 py-3 text-[15px]">
             <span>{cardsIn(col.id)} Karten verschieben nach</span>
-            <select bind:value={moveTo} class="min-h-10 rounded-xl bg-surface px-2" aria-label="Zielspalte">
+            <SelectField bind:value={moveTo} variant="box" class="!min-h-10 !bg-surface" label="Zielspalte">
               {#each columns.filter((c) => c.id !== col.id) as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
-            </select>
+            </SelectField>
             <button class="min-h-10 rounded-xl bg-danger-bg px-3 font-semibold text-danger" onclick={confirmDelete}>Löschen</button>
             <button class="min-h-10 px-2 text-fg2" onclick={() => (deletingColumn = null)}>Abbrechen</button>
           </div>

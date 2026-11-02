@@ -201,7 +201,23 @@
 .no-scrollbar { scrollbar-width: none; touch-action: pan-x pan-y; }
 /* unten Platz für die schwebende Leiste */
 .pb-tabbar { padding-bottom: calc(max(10px, var(--safe-bottom)) + 100px); }
+/* mit dem „+"-Knopf über der Leiste (60 px hoch, 80 px über dem Rand): auch die letzte Karte lässt sich darüber hinaus scrollen */
+.pb-fab { padding-bottom: calc(max(10px, var(--safe-bottom)) + 164px); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Leisten, die seitlich scrollen: ein Verlauf am Rand zeigt, dass es weitergeht (siehe lib/scrollStrip.ts) */
+.edge-fade[data-fade-start='false'][data-fade-end='true'] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+}
+.edge-fade[data-fade-start='true'][data-fade-end='false'] {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 32px);
+  mask-image: linear-gradient(to right, transparent, #000 32px);
+}
+.edge-fade[data-fade-start='true'][data-fade-end='true'] {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+}
 
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }

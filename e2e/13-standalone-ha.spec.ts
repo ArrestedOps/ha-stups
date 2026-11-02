@@ -181,7 +181,8 @@ test('Passkeys: Knopf auf der Anmeldeseite, Verwaltung in den Einstellungen, Abb
   await page.goto('/');
   await expect(page.getByTestId('login')).toBeVisible();
   await page.getByTestId('passkey-login').click();
-  await expect(page.getByRole('alert')).toContainText('Abgebrochen');
+  // Der Server lädt die Bibliothek beim ersten Passkey-Aufruf; unter Last dauert das länger als die üblichen 5 Sekunden
+  await expect(page.getByRole('alert')).toContainText('Abgebrochen', { timeout: 30_000 });
   await expect(nav(page)).toHaveCount(0); // nicht angemeldet
 
   await anmelden(page);

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SelectField from './SelectField.svelte';
   import type { CarryField } from '../lib/api';
   import { CARRY_OPTIONS, toggleCarry } from '../lib/carry';
   import {
@@ -73,14 +74,9 @@
   <p class="text-[15px] text-fg2">Für eine Wiederholung zuerst eine Fälligkeit setzen.</p>
 {:else}
   <div class="flex flex-col gap-3">
-    <select
-      class="min-h-11 rounded-xl border border-line bg-surface2 px-3"
-      value={editor.mode}
-      onchange={(e) => set('mode', e.currentTarget.value as RecurrenceEditor['mode'])}
-      aria-label="Wiederholung"
-    >
+    <SelectField variant="box" value={editor.mode} onchange={(e) => set('mode', e.currentTarget.value as RecurrenceEditor['mode'])} label="Wiederholung">
       {#each MODES as [mode, label] (mode)}<option value={mode}>{label}</option>{/each}
-    </select>
+    </SelectField>
 
     {#if editor.mode !== 'none'}
       <div class="flex items-center gap-2 text-[15px]">
@@ -96,16 +92,11 @@
           aria-label="Abstand"
         />
         {#if editor.mode === 'after'}
-          <select
-            class="min-h-11 rounded-xl border border-line bg-surface2 px-3"
-            value={editor.unit}
-            onchange={(e) => set('unit', e.currentTarget.value as RecurrenceEditor['unit'])}
-            aria-label="Einheit"
-          >
+          <SelectField variant="box" value={editor.unit} onchange={(e) => set('unit', e.currentTarget.value as RecurrenceEditor['unit'])} label="Einheit">
             <option value="days">Tage</option>
             <option value="weeks">Wochen</option>
             <option value="months">Monate</option>
-          </select>
+          </SelectField>
         {:else}
           <span>{everyUnit}</span>
         {/if}
@@ -132,16 +123,11 @@
     {#if editor.mode === 'monthly'}
       <label class="flex items-center gap-2 text-[15px]">
         <span>am</span>
-        <select
-          class="min-h-11 rounded-xl border border-line bg-surface2 px-3"
-          value={editor.monthDay}
-          onchange={(e) => set('monthDay', Number(e.currentTarget.value))}
-          aria-label="Tag im Monat"
-        >
+        <SelectField variant="box" value={editor.monthDay} onchange={(e) => set('monthDay', Number(e.currentTarget.value))} label="Tag im Monat">
           <option value={0}>Tag des Termins</option>
           {#each Array.from({ length: 31 }, (_, i) => i + 1) as d (d)}<option value={d}>{d}.</option>{/each}
           <option value={-1}>letzten Tag</option>
-        </select>
+        </SelectField>
       </label>
     {/if}
 

@@ -27,6 +27,7 @@
   import { catClass } from './lib/colors';
   import { deviceTz, formatCost } from './lib/datetime';
   import { costTotals, countByColumn, dueStats, filterCards } from './lib/filters';
+  import { scrollStrip } from './lib/scrollStrip';
   import { feat, goToDashboard, init, openSheet, ui } from './lib/store.svelte';
 
   onMount(init);
@@ -77,6 +78,7 @@
   }
 
   const anyFilter = $derived(ui.filter.categoryIds.length > 0 || ui.filter.onlyMine || ui.filter.nudged);
+  const filterKey = $derived(`${ui.filter.categoryIds.join()}|${ui.filter.onlyMine}|${ui.filter.nudged}`);
   // Karten mit einem offenen Stups an mich: der Filter erscheint, sobald es welche gibt
   const nudgedCount = $derived((view?.cards ?? []).filter((c) => c.openNudges.some((n) => n.toId === ui.me?.id)).length);
 
@@ -155,7 +157,7 @@
         />
       {/if}
 
-      <div class="no-scrollbar -mx-4 mt-3.5 flex shrink-0 gap-2 overflow-x-auto px-4" role="group" aria-label="Filter">
+      <div class="no-scrollbar -mx-4 mt-3.5 flex shrink-0 gap-2 overflow-x-auto px-4" role="group" aria-label="Filter" use:scrollStrip={filterKey}>
         <button
           class="min-h-9 shrink-0 rounded-xl border px-3.5 text-[15px] {!anyFilter ? 'border-accent bg-surface2 font-semibold' : 'border-line text-fg2'}"
           aria-pressed={!anyFilter}
@@ -210,7 +212,7 @@
         </div>
       {:else}
         <div class="mt-4 shrink-0"><ColumnTabs /></div>
-        <div class="-mr-4 mt-3.5 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-4 pb-tabbar">
+        <div class="-mr-4 mt-3.5 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-4 pb-fab" data-testid="column-list">
           {#if ui.columnId}<ColumnList columnId={ui.columnId} />{/if}
         </div>
       {/if}

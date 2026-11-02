@@ -161,7 +161,7 @@
   };
 </script>
 
-<!-- Oben wie in iOS: links „Erledigt", mittig kurz „Gespeichert", rechts „Speichern" (schließt). Nichts liegt unten im Weg. -->
+<!-- Oben wie in iOS: links „Erledigt", mittig kurz „Gespeichert", rechts „Fertig" (schließt). Alles speichert sofort, „Fertig" schließt nur. Nichts liegt unten im Weg. -->
 {#snippet doneButton()}
   {#if card}
     <button
@@ -181,7 +181,7 @@
 {/snippet}
 
 {#snippet saveButton()}
-  <button class="min-h-11 px-3 text-[17px] font-semibold text-accent-text" onclick={finish}>Speichern</button>
+  <button class="min-h-11 px-3 text-[17px] font-semibold text-accent-text" onclick={finish}>Fertig</button>
 {/snippet}
 
 <Sheet title={saved ? '✓ Gespeichert' : ''} onclose={closeSheet} left={doneButton} right={saveButton} hideClose>

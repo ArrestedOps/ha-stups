@@ -1,5 +1,6 @@
 <script lang="ts">
   import { boardColorKey, boardCounts, isFiltered, personCounts, personFilterActive, toggleId, DEFAULT_FILTER, type ScheduleCard } from '../lib/schedule';
+  import { scrollStrip } from '../lib/scrollStrip';
   import { setScheduleFilter, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
@@ -19,7 +20,7 @@
 </script>
 
 <div class="space-y-2" role="group" aria-label="Filter">
-  <div class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Personen">
+  <div class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Personen" use:scrollStrip={sf.personIds.join() + sf.unassigned}>
     <button class={chip(!personFilterActive(sf))} aria-pressed={!personFilterActive(sf)} onclick={() => setScheduleFilter({ personIds: [], unassigned: false })}>
       Alle
     </button>
@@ -35,7 +36,7 @@
   </div>
 
   {#if ui.boards.length > 1}
-    <div class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Boards">
+    <div class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Boards" use:scrollStrip={sf.boardIds.join()}>
       {#each ui.boards as b, i (b.id)}
         {@const on = sf.boardIds.includes(b.id)}
         <button class={chip(on)} aria-pressed={on} onclick={() => setScheduleFilter({ boardIds: toggleId(sf.boardIds, b.id) })}>

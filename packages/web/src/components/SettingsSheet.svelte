@@ -8,6 +8,7 @@
   import Icon from './Icon.svelte';
   import PasskeySettings from './PasskeySettings.svelte';
   import Row from './Row.svelte';
+  import SelectField from './SelectField.svelte';
   import Sheet from './Sheet.svelte';
 
   // Die Wächter hält der Store (Reiter „Wächter"); hier nur die Zahl
@@ -180,16 +181,10 @@ tap_action:
       : 'Dieses Dashboard öffnet der Button „‹ Dashboard“ oben links. Die Wahl gilt für alle und ist Administratoren von Home Assistant vorbehalten.'}
   >
     <Row label="Dashboard">
-      <select
-        class="min-h-10 max-w-[220px] rounded-xl bg-transparent text-right text-fg2"
-        value={selected}
-        disabled={!loaded || !ui.isAdmin}
-        aria-label="Dashboard"
-        onchange={(e) => onSelect(e.currentTarget.value)}
-      >
+      <SelectField value={selected} disabled={!loaded || !ui.isAdmin} label="Dashboard" onchange={(e) => onSelect(e.currentTarget.value)}>
         {#each dashboards as d (d.path)}<option value={d.path}>{d.title}</option>{/each}
         <option value={CUSTOM}>Eigener Pfad …</option>
-      </select>
+      </SelectField>
     </Row>
     {#if selected === CUSTOM && ui.isAdmin}
       <form onsubmit={saveCustom} class="flex items-center gap-2 px-4 py-2">

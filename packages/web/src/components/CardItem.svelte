@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { Card } from '../lib/api';
   import { catKey } from '../lib/colors';
-  import { formatCost, formatCreated, formatDue, isOverdue } from '../lib/datetime';
+  import { cardMeta } from '../lib/cardMeta';
+  import { formatCost, formatDue, isOverdue } from '../lib/datetime';
   import { nudgeBadge } from '../lib/nudge';
   import { describeRecurrence } from '../lib/recurrence';
   import { swipeTarget } from '../lib/swipe';
@@ -19,6 +20,7 @@
   const nudge = $derived(nudgeBadge(card, ui.me?.id ?? null));
   const names = (ids: string[]) => [...new Set(ids.map((id) => personById(id)?.displayName ?? 'Jemand'))].join(', ');
   const isDoneColumn = $derived(ui.view?.columns.find((c) => c.id === card.columnId)?.isDone ?? false);
+  const meta = $derived(cardMeta(card, { overdue, isDone: isDoneColumn }, { due: formatDue, cost: formatCost, recurrence: describeRecurrence }));
 
   // Farbbalken links: wie dringend die Karte ist
   const bar = $derived(urgencyColor(urgency(card, isDoneColumn)));
@@ -155,12 +157,9 @@
       </span>
     </button>
 
-    <button
-      class="min-w-0 flex-1 py-4 text-left"
-      onclick={() => !suppressClick && openSheet({ type: 'card', id: card.id })}
-    >
+    <button class="min-w-0 flex-1 py-3 text-left" onclick={() => !suppressClick && openSheet({ type: 'card', id: card.id })}>
       <div class="flex items-start justify-between gap-2">
-        <span class="text-[17px] leading-snug font-semibold {isDoneColumn ? 'line-through' : ''}">{card.title}</span>
+        <span class="line-clamp-2 text-[17px] leading-snug font-semibold {isDoneColumn ? 'line-through' : ''}">{card.title}</span>
         {#if assignees.length}
           <span class="flex shrink-0 gap-1">
             {#each assignees as p (p.id)}<Avatar person={p} />{/each}
@@ -169,81 +168,66 @@
       </div>
 
       {#if nudge.toMe.length}
-        <span class="mt-2 inline-flex items-center gap-1.5 rounded-[9px] bg-accent px-2 py-1 text-[13px] font-bold text-on-accent" data-testid="nudge-to-me">
+        <span class="mt-1.5 inline-flex items-center gap-1.5 rounded-[9px] bg-accent px-2 py-0.5 text-[13px] font-bold text-on-accent" data-testid="nudge-to-me">
           <Icon name="hand" size={14} />{names(nudge.toMe.map((n) => n.fromId))} stupst dich
         </span>
       {:else if nudge.fromMe.length}
-        <span class="mt-2 flex items-center gap-1.5 text-[12px] text-fg2" data-testid="nudge-from-me">
+        <span class="mt-1.5 flex items-center gap-1.5 text-[12px] text-fg2" data-testid="nudge-from-me">
           <Icon name="hand" size={12} />Du hast {names(nudge.fromMe.map((n) => n.toId))} gestupst
         </span>
       {/if}
 
-      {#if card.dueAt || card.completedAt || card.recurrence || card.checklist.total || card.linkCount || card.attachmentCount || card.commentCount || card.costCents !== null}
-        <div class="mt-2.5 flex flex-wrap gap-1.5 text-[13px]">
-          {#if card.dueAt}
-            <span
-              class="flex items-center gap-1 rounded-[9px] px-2 py-1 font-medium {overdue && !isDoneColumn
-                ? 'bg-danger-bg text-danger'
-                : 'bg-surface2 text-fg'}"
-            >
-              <Icon name="clock" size={14} />
-              {overdue && !isDoneColumn ? 'Überfällig · ' : ''}{formatDue(card.dueAt)}
-            </span>
-          {/if}
-          {#if card.completedAt}
-            <span class="flex items-center gap-1 rounded-[9px] bg-surface2 px-2 py-1 font-medium text-fg" data-testid="card-done-at">
-              <Icon name="check" size={14} stroke={2.6} />Erledigt {formatDue(card.completedAt)}
-            </span>
-          {/if}
-          {#if card.recurrence}
-            <span class="flex items-center gap-1 rounded-[9px] bg-surface2 px-2 py-1 text-fg">
-              <Icon name="repeat" size={14} />{describeRecurrence(card.recurrence)}
-            </span>
-          {/if}
-          {#if card.checklist.total}
-            <span class="flex items-center gap-1 rounded-[9px] bg-surface2 px-2 py-1 text-fg">
-              <Icon name="checklist" size={14} />{card.checklist.done}/{card.checklist.total}
-            </span>
-          {/if}
-          {#if card.linkCount}
-            <span class="flex items-center gap-1 rounded-[9px] bg-surface2 px-2 py-1 text-fg" aria-label="{card.linkCount} Links">
-              <Icon name="link" size={14} />{card.linkCount}
-            </span>
-          {/if}
-          {#if card.attachmentCount}
-            <span class="flex items-center gap-1 rounded-[9px] bg-surface2 px-2 py-1 text-fg" aria-label="{card.attachmentCount} Anhänge">
-              <Icon name="paperclip" size={14} />{card.attachmentCount}
-            </span>
-          {/if}
-          {#if card.commentCount}
-            <span class="flex items-center gap-1 rounded-[9px] bg-surface2 px-2 py-1 text-fg" aria-label="{card.commentCount} Kommentare">
-              <Icon name="message" size={14} />{card.commentCount}
-            </span>
-          {/if}
-          {#if card.costCents !== null}
-            <span class="flex items-center gap-1 rounded-[9px] bg-surface2 px-2 py-1 text-fg">
-              <Icon name="euro" size={14} />{formatCost(card.costCents)}
+      <!-- Eine Zeile: Was nicht passt, wird hinten abgeschnitten. Alles Weitere steht im Karten-Fenster. -->
+      {#if meta.length || categories.length}
+        <div class="mt-1.5 flex items-center gap-2 text-[13px]" data-testid="card-meta">
+          <div class="flex min-w-0 flex-1 items-center gap-3 overflow-hidden whitespace-nowrap text-fg2">
+            {#each meta as m (m.kind)}
+              {#if m.kind === 'done'}
+                <span class="flex shrink-0 items-center gap-1 text-fg" data-testid="card-done-at"><Icon name="check" size={13} stroke={2.6} />Erledigt {m.text}</span>
+              {:else if m.kind === 'due'}
+                <span
+                  class="flex shrink-0 items-center gap-1 font-medium {m.overdue ? 'text-danger' : 'text-fg'}"
+                  data-testid="card-due"
+                  data-overdue={m.overdue}
+                  aria-label={m.overdue ? `Überfällig, ${m.text}` : undefined}
+                >
+                  <Icon name="clock" size={13} />{m.text}
+                </span>
+              {:else if m.kind === 'watcher'}
+                <span class="shrink-0" title="Von einem Wächter angelegt" aria-label="Von einem Wächter angelegt" data-testid="card-watcher"><Icon name="eye" size={13} /></span>
+              {:else if m.kind === 'recurrence'}
+                <span class="shrink-0" title={m.label} aria-label="Wiederholt: {m.label}"><Icon name="repeat" size={13} /></span>
+              {:else if m.kind === 'priority'}
+                <span
+                  class="shrink-0"
+                  style:color={m.level === 'high' ? 'var(--c-red-fg)' : 'var(--c-orange-fg)'}
+                  aria-label={m.level === 'high' ? 'Priorität hoch' : 'Priorität mittel'}
+                  data-testid="card-priority"
+                  data-level={m.level}
+                >
+                  <Icon name="flag" size={13} stroke={2.4} />
+                </span>
+              {:else if m.kind === 'checklist'}
+                <span class="flex shrink-0 items-center gap-1" aria-label="Checkliste {m.done} von {m.total}"><Icon name="checklist" size={13} />{m.done}/{m.total}</span>
+              {:else if m.kind === 'comments'}
+                <span class="flex shrink-0 items-center gap-1" aria-label="{m.count} Kommentare"><Icon name="message" size={13} />{m.count}</span>
+              {:else if m.kind === 'links'}
+                <span class="flex shrink-0 items-center gap-1" aria-label="{m.count} Links"><Icon name="link" size={13} />{m.count}</span>
+              {:else if m.kind === 'attachments'}
+                <span class="flex shrink-0 items-center gap-1" aria-label="{m.count} Anhänge"><Icon name="paperclip" size={13} />{m.count}</span>
+              {:else if m.kind === 'cost'}
+                <span class="flex shrink-0 items-center gap-1"><Icon name="euro" size={13} />{m.text}</span>
+              {/if}
+            {/each}
+          </div>
+          {#if categories.length}
+            <span class="flex shrink-0 items-center gap-1" aria-label="Kategorien: {categories.map((c) => c.name).join(', ')}" data-testid="card-categories">
+              {#each categories as c (c.id)}<i class="h-[9px] w-[9px] rounded-full" style:background="var(--c-{catKey(c.color)}-fg)"></i>{/each}
             </span>
           {/if}
         </div>
       {/if}
-
-      {#if categories.length || card.priority === 'high'}
-        <div class="mt-2.5 flex flex-wrap gap-1.5">
-          {#each categories as c (c.id)}
-            <span class="flex items-center gap-1.5 rounded-[9px] bg-surface2 px-2 py-1 text-[12px] font-semibold text-fg">
-              <i class="h-[9px] w-[9px] rounded-full" style:background="var(--c-{catKey(c.color)}-fg)"></i>{c.name}
-            </span>
-          {/each}
-          {#if card.priority === 'high'}<span class="cat cat-red">Hoch</span>{/if}
-        </div>
-      {/if}
-
-      <p class="mt-2.5 flex items-center gap-1.5 text-[12px] text-fg2" data-testid="card-created">
-        {#if card.watcherId}<span title="Von einem Wächter angelegt" aria-label="Von einem Wächter angelegt" data-testid="card-watcher"><Icon name="eye" size={13} /></span>{/if}Angelegt {formatCreated(card.createdAt)}
-      </p>
     </button>
-
     <button
       class="flex w-10 shrink-0 items-start justify-center pt-[18px] text-fg2"
       aria-label="Menü für „{card.title}“"

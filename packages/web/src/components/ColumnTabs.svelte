@@ -1,5 +1,6 @@
 <script lang="ts">
   import { countByColumn, filterCards } from '../lib/filters';
+  import { scrollStrip } from '../lib/scrollStrip';
   import { selectColumn, ui } from '../lib/store.svelte';
 
   const columns = $derived(ui.view?.columns ?? []);
@@ -15,6 +16,7 @@
   class="no-scrollbar flex gap-0.5 overflow-x-auto rounded-[14px] border border-line bg-surface p-[3px]"
   role="tablist"
   aria-label="Spalten"
+  use:scrollStrip={ui.columnId}
 >
   {#each columns as col (col.id)}
     <button

@@ -8,6 +8,7 @@
   import Avatar from './Avatar.svelte';
   import Group from './Group.svelte';
   import Row from './Row.svelte';
+  import SelectField from './SelectField.svelte';
   import Sheet from './Sheet.svelte';
 
   /** id = null: neuer Wächter; template: Kennung einer Vorlage, die gleich angewendet wird */
@@ -257,11 +258,11 @@
         {/if}
       </Row>
       <Row label="Bedingung">
-        <select class="min-h-10 rounded-xl bg-transparent text-right text-fg2" bind:value={form.kind} aria-label="Bedingung">
+        <SelectField bind:value={form.kind} label="Bedingung">
           <option value="below">Wert fällt unter …</option>
           <option value="above">Wert steigt über …</option>
           <option value="state">Zustand wechselt zu …</option>
-        </select>
+        </SelectField>
       </Row>
       <Row label={form.kind === 'state' ? 'Zustand' : `Wert${form.entityUnit ? ` (${form.entityUnit})` : ''}`}>
         {#if form.kind === 'state'}
@@ -280,14 +281,14 @@
 
     <Group title="Dann Karte">
       <Row label="Board">
-        <select class="min-h-10 max-w-[220px] rounded-xl bg-transparent text-right text-fg2" bind:value={form.boardId} aria-label="Board">
+        <SelectField bind:value={form.boardId} label="Board">
           {#each ui.boards as b (b.id)}<option value={b.id}>{b.name}</option>{/each}
-        </select>
+        </SelectField>
       </Row>
       <Row label="Spalte">
-        <select class="min-h-10 max-w-[220px] rounded-xl bg-transparent text-right text-fg2" bind:value={form.columnId} aria-label="Spalte">
+        <SelectField bind:value={form.columnId} label="Spalte">
           {#each view?.columns ?? [] as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
-        </select>
+        </SelectField>
       </Row>
       <div class="p-2"><input class={field} bind:value={form.title} maxlength="200" placeholder="Titel der Karte" aria-label="Titel der Karte" /></div>
       <div class="p-2"><textarea class="{field} py-2" rows="2" bind:value={form.description} placeholder="Beschreibung (optional)" aria-label="Beschreibung"></textarea></div>
@@ -309,11 +310,11 @@
         <input type="checkbox" class="h-6 w-6 accent-[var(--accent)]" checked={form.priority === 'high'} aria-label="Priorität hoch" onchange={(e) => (form.priority = e.currentTarget.checked ? 'high' : '')} />
       </Row>
       <Row label="Fällig">
-        <select class="min-h-10 rounded-xl bg-transparent text-right text-fg2" bind:value={form.dueKind} aria-label="Fälligkeit">
+        <SelectField bind:value={form.dueKind} label="Fälligkeit">
           <option value="none">Ohne Termin</option>
           <option value="in">In … Minuten</option>
           <option value="at">Heute oder morgen um …</option>
-        </select>
+        </SelectField>
       </Row>
       {#if form.dueKind === 'in'}
         <Row label="Minuten">
@@ -322,10 +323,10 @@
       {:else if form.dueKind === 'at'}
         <Row label="Tag und Uhrzeit">
           <div class="flex items-center gap-2">
-            <select class="min-h-10 rounded-xl bg-transparent text-fg2" bind:value={form.dueDay} aria-label="Tag">
+            <SelectField bind:value={form.dueDay} label="Tag">
               <option value="today">heute</option>
               <option value="tomorrow">morgen</option>
-            </select>
+            </SelectField>
             <input type="time" class="min-h-10 rounded-xl bg-surface2 px-3" bind:value={form.dueTime} aria-label="Uhrzeit" />
           </div>
         </Row>
@@ -370,29 +371,29 @@
       {/if}
       {#if form.assignMode === 'rotation_present' || form.assignMode === 'all_present'}
         <Row label="Ist niemand zu Hause">
-          <select class="min-h-10 rounded-xl bg-transparent text-right text-fg2" bind:value={form.fallback} aria-label="Rückfall">
+          <SelectField bind:value={form.fallback} label="Rückfall">
             <option value="next">nächste Person</option>
             <option value="all">alle</option>
             <option value="fixed">feste Person</option>
             <option value="none">niemand</option>
-          </select>
+          </SelectField>
         </Row>
       {/if}
       {#if form.assignMode === 'first_home'}
         <Row label="Nach 24 Stunden ohne Heimkehr">
-          <select class="min-h-10 rounded-xl bg-transparent text-right text-fg2" bind:value={form.waitFallback} aria-label="Rückfall nach 24 Stunden">
+          <SelectField bind:value={form.waitFallback} label="Rückfall nach 24 Stunden">
             <option value="none">unzugewiesen lassen</option>
             <option value="all">an alle</option>
             <option value="fixed">feste Person</option>
-          </select>
+          </SelectField>
         </Row>
       {/if}
       {#if form.fallback === 'fixed' || form.waitFallback === 'fixed'}
         <Row label="Feste Person für den Rückfall">
-          <select class="min-h-10 rounded-xl bg-transparent text-right text-fg2" bind:value={form.fallbackPersonId} aria-label="Person für den Rückfall">
+          <SelectField bind:value={form.fallbackPersonId} label="Person für den Rückfall">
             <option value="">wählen …</option>
             {#each people as p (p.id)}<option value={p.id}>{p.displayName}</option>{/each}
-          </select>
+          </SelectField>
         </Row>
       {/if}
     </Group>
@@ -417,11 +418,11 @@
           {/if}
         </Row>
         <Row label="Bedingung">
-          <select class="min-h-10 rounded-xl bg-transparent text-right text-fg2" bind:value={form.doneKind} aria-label="Bedingung zum Erledigen">
+          <SelectField bind:value={form.doneKind} label="Bedingung zum Erledigen">
             <option value="state">Zustand wechselt zu …</option>
             <option value="below">Wert fällt unter …</option>
             <option value="above">Wert steigt über …</option>
-          </select>
+          </SelectField>
         </Row>
         <Row label={form.doneKind === 'state' ? 'Zustand' : 'Wert'}>
           {#if form.doneKind === 'state'}

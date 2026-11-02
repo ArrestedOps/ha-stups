@@ -30,6 +30,7 @@
   import Icon from './Icon.svelte';
   import PeoplePicker from './PeoplePicker.svelte';
   import RecurrenceEditor from './RecurrenceEditor.svelte';
+  import SelectField from './SelectField.svelte';
 
   let {
     card,
@@ -214,15 +215,16 @@
     {:else if panel === 'rem'}
       <label class="flex items-center justify-between gap-3">
         <span class="text-[16px]">Vorab erinnern</span>
-        <select
-          class="min-h-10 rounded-xl bg-surface2 px-3"
+        <SelectField
+          variant="box"
+          class="!min-h-10"
           value={card.remindBeforeMin ?? ''}
-          aria-label="Vorab-Erinnerung"
+          label="Vorab-Erinnerung"
           onchange={(e) => onsave({ remindBeforeMin: e.currentTarget.value ? Number(e.currentTarget.value) : null })}
         >
           <option value="">Nur zur Fälligkeit</option>
           {#each REMINDERS as m (m)}<option value={m}>{formatLead(m)} vorher</option>{/each}
-        </select>
+        </SelectField>
       </label>
       <label class="mt-3 flex items-center justify-between gap-3">
         <span class="text-[16px]">Täglich nachhaken, solange überfällig</span>

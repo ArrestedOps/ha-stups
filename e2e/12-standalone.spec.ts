@@ -87,10 +87,11 @@ test('Anmelden, Karte anlegen, nach dem Neuladen noch angemeldet; Abmelden sperr
   await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
   await page.getByLabel('Titel').fill('Fenster putzen');
   await page.getByRole('button', { name: 'Anlegen' }).click();
-  await expect(page.getByText('Fenster putzen')).toBeVisible();
+  // in der Liste suchen: Solange das Fenster „Neue Karte" ausblendet, steht der Titel noch einmal im Eingabefeld
+  await expect(page.getByRole('list').getByText('Fenster putzen')).toBeVisible();
 
   await page.reload();
-  await expect(page.getByText('Fenster putzen')).toBeVisible();
+  await expect(page.getByRole('list').getByText('Fenster putzen')).toBeVisible();
 
   const dialog = await einstellungen(page);
   await dialog.getByRole('button', { name: 'Abmelden' }).click();

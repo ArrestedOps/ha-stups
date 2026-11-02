@@ -6,6 +6,7 @@
   import { urgency, urgencyColor } from '../lib/urgency';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
+  import SettingsButton from './SettingsButton.svelte';
   import ScheduleFilterBar from './ScheduleFilterBar.svelte';
 
   const DAY = 86_400_000;
@@ -51,7 +52,10 @@
 
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
   <header class="shrink-0 pt-2">
-    <h1 class="text-[34px] leading-tight font-bold tracking-tight">Agenda</h1>
+    <div class="flex items-center justify-between gap-2">
+      <h1 class="text-[34px] leading-tight font-bold tracking-tight">Agenda</h1>
+      <SettingsButton />
+    </div>
     <p class="mb-3 text-[15px] text-fg2">Alle Karten mit Termin, nach Tagen</p>
     <ScheduleFilterBar cards={loaded} />
   </header>

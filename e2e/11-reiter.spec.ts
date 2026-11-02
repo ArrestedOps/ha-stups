@@ -28,6 +28,23 @@ test('Reiter „Wächter": auch Mitglieder (keine Administratoren) sehen ihn, nu
   }
 });
 
+test('Zahnrad oben rechts: auf jedem Reiter öffnet es die Einstellungen, ohne die Seite zu verbreitern', async ({ page }) => {
+  await page.goto('/');
+  for (const tab of ['Boards', 'Agenda', 'Kalender', 'Wächter']) {
+    await nav(page).getByRole('button', { name: tab }).click();
+    const gear = page.getByRole('button', { name: 'Einstellungen öffnen' });
+    await expect(gear).toBeVisible();
+    const box = (await gear.boundingBox())!;
+    const width = page.viewportSize()!.width;
+    expect(box.x + box.width).toBeLessThanOrEqual(width); // nicht abgeschnitten
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await gear.click();
+    await expect(page.getByRole('dialog').getByText('Einstellungen', { exact: true }).first()).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  }
+});
+
 test('In den Einstellungen führt „Wächter" zum Reiter', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Board wechseln' }).click();

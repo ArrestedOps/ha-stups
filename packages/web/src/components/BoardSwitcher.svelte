@@ -26,7 +26,7 @@
     ['settings', 'Board-Einstellungen', 'boardSettings'],
     ['archive', 'Archiv', 'archive'],
     ['trash', 'Papierkorb', 'trash'],
-    ['settings', 'Einstellungen', 'settings'],
+    ['gear', 'Einstellungen', 'settings'],
   ] as const;
 </script>
 

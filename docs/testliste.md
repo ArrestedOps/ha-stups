@@ -239,6 +239,12 @@ Zwei Geräte (zum Beispiel iPhone und Mac), beide in der Beta.
 - [ ] App im Hintergrund, am anderen Gerät mehrere Karten ändern, wieder öffnen: aktueller Stand
 - [ ] Flugmodus kurz an und wieder aus, am anderen Gerät währenddessen etwas ändern: Nach dem Verbinden stimmt der Stand
 
+## 21 · Zahnrad für die Einstellungen (seit 1.13.1)
+
+- [ ] Oben rechts in der Kopfzeile jedes Reiters (Boards, Agenda, Kalender, Wächter) steht ein Zahnrad. Ein Tipp öffnet die Einstellungen
+- [ ] Das Zahnrad verdeckt nichts: Im Board neben „Dashboard", im Kalender neben „Filter", bei den Wächtern neben „+". Auch mit „Offline"-Hinweis und langem Board-Namen passt alles in die Zeile
+- [ ] Der Weg über den Board-Namen › „Einstellungen" geht weiter
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

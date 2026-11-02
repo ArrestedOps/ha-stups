@@ -4,6 +4,7 @@
   import { conditionText, RUN_TEXT, TEMPLATES, watcherLine } from '../lib/watchers';
   import { openCardAnywhere, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
+  import SettingsButton from './SettingsButton.svelte';
 
   const data = $derived(ui.watchers);
   const items = $derived(data?.items ?? []);
@@ -51,15 +52,18 @@
   <header class="shrink-0 pt-2">
     <div class="flex items-center justify-between gap-2">
       <h1 class="text-[34px] leading-tight font-bold tracking-tight">Wächter</h1>
-      {#if admin && data?.available}
-        <button
-          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-line bg-surface text-accent-text"
-          aria-label="Wächter hinzufügen"
-          onclick={() => openSheet({ type: 'watcher', id: null })}
-        >
-          <Icon name="plus" size={22} stroke={2.6} />
-        </button>
-      {/if}
+      <div class="flex items-center gap-2">
+        {#if admin && data?.available}
+          <button
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-line bg-surface text-accent-text"
+            aria-label="Wächter hinzufügen"
+            onclick={() => openSheet({ type: 'watcher', id: null })}
+          >
+            <Icon name="plus" size={22} stroke={2.6} />
+          </button>
+        {/if}
+        <SettingsButton />
+      </div>
     </div>
     <p class="mb-3 text-[15px] text-fg2">Karten, die von selbst aus Home Assistant entstehen</p>
   </header>

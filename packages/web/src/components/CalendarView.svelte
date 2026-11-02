@@ -19,6 +19,7 @@
   import { boardColorKey, dayKeyOf, filterSchedule, isFiltered, type ScheduleCard } from '../lib/schedule';
   import { openCardAnywhere, openSheet, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
+  import SettingsButton from './SettingsButton.svelte';
   import ScheduleFilterBar from './ScheduleFilterBar.svelte';
 
   const HOUR_PX = 56;
@@ -126,6 +127,7 @@
   <header class="shrink-0 pt-2">
     <div class="flex items-center justify-between gap-2">
       <h1 class="text-[34px] leading-tight font-bold tracking-tight">Kalender</h1>
+      <div class="flex items-center gap-2">
       <button
         class="relative flex h-11 items-center gap-1.5 rounded-[14px] border border-line bg-surface px-3 text-[15px] {isFiltered(ui.sf) ? 'text-accent-text' : 'text-fg2'}"
         aria-pressed={filterOpen}
@@ -133,6 +135,8 @@
       >
         <Icon name="user" size={18} />Filter{#if isFiltered(ui.sf)}<span class="h-2 w-2 rounded-full bg-accent"></span>{/if}
       </button>
+      <SettingsButton />
+      </div>
     </div>
 
     {#if filterOpen}<div class="mt-2"><ScheduleFilterBar cards={loaded} /></div>{/if}

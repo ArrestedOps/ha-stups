@@ -14,6 +14,7 @@
   import ColumnList from './components/ColumnList.svelte';
   import ColumnTabs from './components/ColumnTabs.svelte';
   import Icon from './components/Icon.svelte';
+  import SettingsButton from './components/SettingsButton.svelte';
   import Lightbox from './components/Lightbox.svelte';
   import NewCardSheet from './components/NewCardSheet.svelte';
   import NudgeSheet from './components/NudgeSheet.svelte';
@@ -113,11 +114,14 @@
         {:else}
           <span class="min-h-11"></span>
         {/if}
-        {#if !ui.online}
-          <span class="flex items-center gap-1.5 rounded-full bg-surface2 px-3 py-1 text-[13px] text-fg2" role="status">
-            <Icon name="wifi-off" size={14} />Offline
-          </span>
-        {/if}
+        <div class="flex items-center gap-2">
+          {#if !ui.online}
+            <span class="flex items-center gap-1.5 rounded-full bg-surface2 px-3 py-1 text-[13px] text-fg2" role="status">
+              <Icon name="wifi-off" size={14} />Offline
+            </span>
+          {/if}
+          <SettingsButton />
+        </div>
       </div>
 
       <div class="flex items-center justify-between gap-3">

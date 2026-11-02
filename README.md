@@ -104,4 +104,6 @@ Details und der Ablauf für neue Versionen stehen in [docs/entwicklung.md](docs/
 
 ## Lizenz
 
-[MIT](LICENSE)
+Der Quelltext ist einsehbar, aber **nicht frei**: Du darfst Stups installieren, für dich selbst nutzen und den Code lesen. **Kopieren, Verändern, Weitergeben und Hochladen** (auch als Kopie in ein anderes Repository) ist nicht erlaubt. Dass Home Assistant oder Docker das Repository für die Installation herunterladen, ist ausdrücklich erlaubt. Einzelheiten: [LICENSE](LICENSE).
+
+Stups 1.9.0 und alle früheren Versionen standen unter der MIT-Lizenz; für diese Versionen, so wie sie damals veröffentlicht wurden, gilt sie weiter.

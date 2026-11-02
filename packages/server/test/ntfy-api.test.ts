@@ -55,6 +55,7 @@ async function build(opts: { ntfy: boolean }) {
       sensors: false,
       push: opts.ntfy ? ['ntfy'] : [],
       publicUrl,
+      passkeys: false,
     },
   });
 }

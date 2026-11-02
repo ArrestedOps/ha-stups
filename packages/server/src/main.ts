@@ -18,6 +18,7 @@ import { createAccounts } from './accounts.js';
 import { createDirectory, createLocalDirectory, createStaticDirectory } from './directory.js';
 import { identityAuth } from './identity.js';
 import { ingressAuth } from './ingress.js';
+import { createPasskeys, passkeyConfigFrom, type Passkeys } from './passkeys.js';
 import { authRoutes, clientGuard, createLoginLimiter, createSessionIdentity, createSetup, type Setup } from './session-auth.js';
 import { repairShortMapsLinks } from './linkRepair.js';
 import { createNotifier } from './notifications.js';
@@ -158,16 +159,21 @@ void repairShortMapsLinks(store, undefined, log).catch((err) => app.log.warn(err
 await ensureWebsocket(app); // einmal für den ganzen Server, nicht je Routen-Gruppe
 // Anmeldung: im Add-on über Ingress, sonst mit eigenem Konto (Sitzungs-Cookie)
 let setup: Setup | undefined;
+let passkeys: Passkeys | undefined;
 if (accounts) {
   setup = createSetup({ accounts, log, bootstrap: runtime.identity.bootstrap, publicUrl: runtime.publicUrl });
   await setup.init();
   await app.register(clientGuard);
   await app.register(identityAuth, { identity: createSessionIdentity({ accounts }) });
+  const passkeyConfig = passkeyConfigFrom(runtime.publicUrl);
+  if (passkeyConfig) passkeys = createPasskeys({ db, accounts, config: passkeyConfig });
+  else if (runtime.publicUrl) app.log.info('Passkeys sind aus: STUPS_PUBLIC_URL braucht dafür HTTPS und einen Namen statt einer IP-Adresse');
   await app.register(authRoutes, {
     accounts,
     limiter: createLoginLimiter(),
     setup,
     secureCookie: runtime.publicUrl?.startsWith('https://') ?? false,
+    passkeys,
   });
   setInterval(() => accounts.purgeSessions(), 60 * 60 * 1000).unref();
 } else {
@@ -196,6 +202,7 @@ const capabilities: Capabilities = {
   sensors: runtime.ha !== null,
   push: [...(runtime.ha ? (['ha-notify'] as const) : []), ...(runtime.ntfy ? (['ntfy'] as const) : [])],
   publicUrl: runtime.publicUrl,
+  passkeys: passkeys !== undefined,
 };
 // Knöpfe in ntfy-Nachrichten melden sich ohne Sitzung zurück; erlaubt ist nur, was das signierte Token trägt
 if (runtime.ntfy) {
@@ -223,6 +230,7 @@ await app.register(apiRoutes, {
   access,
   defaultDashboardPath: options.dashboardPath,
   accounts,
+  passkeys,
   capabilities,
   push,
   ntfy: runtime.ntfy ? { url: runtime.ntfy.url, roundTrip: (personId) => roundTrips.last(personId) } : undefined,

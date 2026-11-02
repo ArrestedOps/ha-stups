@@ -71,6 +71,10 @@ test('Ohne Home Assistant: drei Reiter, kein Dashboard-Button, nichts von Home A
   await expect(dialog.getByText('Benachrichtigungen', { exact: true })).toBeVisible();
   // kein Fehler, keine leere Gruppe
   await expect(page.getByRole('alert').filter({ hasText: /\S/ })).toHaveCount(0);
+  // Passkeys gehen nicht mit einer IP-Adresse als STUPS_PUBLIC_URL: weder Verwaltung noch Anmelde-Routen
+  await expect(dialog.getByText('Passkeys', { exact: true })).toHaveCount(0);
+  expect((await page.request.get('/api/capabilities').then((r) => r.json())).passkeys).toBe(false);
+  expect((await page.request.post('/api/auth/passkey/options', { headers: { 'x-stups-client': 'e2e' } })).status()).toBe(404);
 });
 
 test('Anmelden, Karte anlegen, nach dem Neuladen noch angemeldet; Abmelden sperrt wieder', async ({ page }) => {

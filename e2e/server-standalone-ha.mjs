@@ -26,7 +26,8 @@ Object.assign(env, {
   HA_TOKEN,
   STUPS_DATA_DIR: dir,
   STUPS_PORT: String(PORT),
-  STUPS_PUBLIC_URL: `http://127.0.0.1:${PORT}`,
+  // localhost statt 127.0.0.1: nur mit einem Namen sind Passkeys erlaubt (der Server mit IP in server-standalone.mjs zeigt das Gegenteil)
+  STUPS_PUBLIC_URL: `http://localhost:${PORT}`,
   STUPS_LOG_LEVEL: 'warn',
   STUPS_DAILY_SUMMARY_TIME: '23:59',
   TZ: 'Europe/Berlin',

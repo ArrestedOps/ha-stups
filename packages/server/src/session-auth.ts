@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { checkPassword, checkUsername, type Account, type Accounts } from './accounts.js';
 import { AppError, ConflictError, ValidationError } from './errors.js';
 import type { Identity } from './identity.js';
+import type { Passkeys } from './passkeys.js';
 import { PUSH_ACTION_PATH } from './push.js';
 
 export const COOKIE = 'stups_session';
@@ -10,7 +11,16 @@ export const COOKIE = 'stups_session';
 export const CLIENT_HEADER = 'x-stups-client';
 
 /** Pfade, die ohne Anmeldung erreichbar sein müssen, damit die Anmeldeseite laden und sich anmelden kann */
-const PUBLIC_API = new Set(['/api/auth/status', '/api/auth/setup', '/api/auth/login', '/api/auth/logout', '/api/capabilities', PUSH_ACTION_PATH]);
+const PUBLIC_API = new Set([
+  '/api/auth/status',
+  '/api/auth/setup',
+  '/api/auth/login',
+  '/api/auth/logout',
+  '/api/auth/passkey/options',
+  '/api/auth/passkey/login',
+  '/api/capabilities',
+  PUSH_ACTION_PATH,
+]);
 
 export function parseCookies(header: string | undefined): Record<string, string> {
   const out: Record<string, string> = {};
@@ -170,6 +180,8 @@ export interface AuthRoutesDeps {
   setup: Setup;
   /** Cookie nur über HTTPS senden (Secure) */
   secureCookie: boolean;
+  /** Anmeldung mit Passkey, wenn STUPS_PUBLIC_URL dafür taugt */
+  passkeys?: Passkeys;
 }
 
 function body(req: FastifyRequest): Record<string, unknown> {
@@ -225,6 +237,29 @@ export async function authRoutes(app: FastifyInstance, deps: AuthRoutesDeps): Pr
     startSession(reply, account.userId);
     return { authenticated: true, setupRequired: false, user: publicAccount(account) };
   });
+
+  if (deps.passkeys) {
+    const passkeys = deps.passkeys;
+    // Der Speicher für offene Herausforderungen ist begrenzt (die ältesten fallen heraus); eine Sperre gäbe es hier nur für alle
+    app.post('/api/auth/passkey/options', async () => passkeys.authenticationOptions());
+
+    app.post('/api/auth/passkey/login', async (req, reply) => {
+      const b = body(req);
+      const keys = [`ip:${req.ip}`];
+      const wait = limiter.wait(keys);
+      if (wait > 0) {
+        return reply.code(429).header('retry-after', String(wait)).send({ error: `Zu viele Versuche. Bitte in ${wait} Sekunden noch einmal.`, retryAfter: wait });
+      }
+      const account = await passkeys.authenticate(b.ceremonyId, b.response);
+      if (!account) {
+        limiter.fail(keys);
+        return reply.code(401).send({ error: 'Die Anmeldung mit dem Passkey hat nicht geklappt' });
+      }
+      limiter.success(keys);
+      startSession(reply, account.userId);
+      return { authenticated: true, setupRequired: false, user: publicAccount(account) };
+    });
+  }
 
   app.post('/api/auth/logout', async (req, reply) => {
     const token = sessionToken(req.headers);

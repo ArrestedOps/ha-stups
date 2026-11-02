@@ -1,6 +1,7 @@
 <script lang="ts">
   import { api, ApiError } from '../lib/api';
-  import { reloadApp, ui } from '../lib/store.svelte';
+  import { passkeyErrorText, signInWithPasskey } from '../lib/passkeys';
+  import { feat, reloadApp, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
   const setup = $derived(ui.gate === 'setup');
@@ -14,6 +15,19 @@
   let busy = $state(false);
 
   const field = 'min-h-12 w-full rounded-xl border border-line bg-surface px-4 text-[17px]';
+
+  async function withPasskey() {
+    if (busy) return;
+    error = '';
+    busy = true;
+    try {
+      await signInWithPasskey();
+      reloadApp();
+    } catch (err) {
+      error = passkeyErrorText(err);
+      busy = false;
+    }
+  }
 
   async function submit(e: Event) {
     e.preventDefault();
@@ -91,4 +105,19 @@
       {setup ? 'Einrichten' : 'Anmelden'}
     </button>
   </form>
+
+  {#if !setup && feat.passkeys}
+    <div class="flex flex-col gap-3">
+      <p class="text-center text-[13px] text-fg2">oder</p>
+      <button
+        type="button"
+        class="min-h-12 rounded-xl border border-line bg-surface px-5 text-[17px] font-semibold disabled:opacity-60"
+        disabled={busy}
+        data-testid="passkey-login"
+        onclick={withPasskey}
+      >
+        Mit Passkey anmelden
+      </button>
+    </div>
+  {/if}
 </main>

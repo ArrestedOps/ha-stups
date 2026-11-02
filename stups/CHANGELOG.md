@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.8.0
+
+- **Anmelden mit Passkey im eigenen Container.** Statt das Passwort zu tippen, genügt Fingerabdruck, Gesicht oder die Bildschirmsperre. Einstellungen › Passkeys › „Passkey hinzufügen", danach zeigt die Anmeldeseite „Mit Passkey anmelden", ohne Benutzername. Das Passwort bleibt als Rückfall. Voraussetzung: `STUPS_PUBLIC_URL` ist eine https-Adresse mit Namen (nicht mit IP-Adresse). Anleitung: `docs/docker.md`
+- Das Gerät muss die Person immer bestätigen (Fingerabdruck, Gesicht oder PIN). Fehlversuche zählen wie falsche Passwörter. In der Datenbank liegt nur der öffentliche Schlüssel
+- **Für die App in Home Assistant ändert sich nichts:** Dort meldet weiter Home Assistant an, die Oberfläche zeigt keine Passkeys
+- Datenbank: neue Tabelle für Passkeys (Migration 13, vorher wie immer eine Sicherung)
+
 ## 1.7.0
 
 - **Der eigene Container kann sich mit Home Assistant verbinden.** Mit `HA_URL` und `HA_TOKEN` (Long-Lived-Token) bekommt er auch **Wächter, Sensoren und Push über die Companion App**, ohne selbst eine Home-Assistant-App zu sein. Angemeldet wird weiter mit den Konten in Stups. Anleitung: `docs/docker.md`

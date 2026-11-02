@@ -201,6 +201,7 @@ export function createAccounts(db: DatabaseSync, store: Store, opts: { now?: () 
     if (a.isAdmin && adminCount() <= 1) throw new ConflictError('Das ist der letzte Administrator');
     store.transaction(() => {
       run('delete from sessions where user_id = ?', userId);
+      run('delete from passkeys where user_id = ?', userId);
       run('delete from local_accounts where user_id = ?', userId);
     });
   }

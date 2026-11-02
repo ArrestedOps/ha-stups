@@ -5,6 +5,7 @@
   import { act, closeSheet, feat, logout, openSheet, selectTab, toast, ui } from '../lib/store.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
+  import PasskeySettings from './PasskeySettings.svelte';
   import Row from './Row.svelte';
   import Sheet from './Sheet.svelte';
 
@@ -166,6 +167,7 @@ tap_action:
         <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold text-danger" onclick={() => void logout()}>Abmelden</button>
       </Row>
     </Group>
+    {#if feat.passkeys}<PasskeySettings />{/if}
   {/if}
 
   {#if feat.haUi}

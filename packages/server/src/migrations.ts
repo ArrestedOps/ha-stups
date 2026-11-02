@@ -329,4 +329,22 @@ export const migrations: Migration[] = [
     // Push über ntfy: das Thema, das die Person in der ntfy-App abonniert. Die Notify-Dienste für Home Assistant bleiben daneben bestehen.
     sql: `alter table users add column ntfy_topic text;`,
   },
+  {
+    version: 13,
+    // Passkeys für die eigene Anmeldung (nur im Container). Der öffentliche Schlüssel ist nicht geheim.
+    sql: `
+      create table passkeys (
+        id            text primary key,
+        user_id       text not null references users(id) on delete cascade,
+        credential_id text not null unique,
+        public_key    blob not null,
+        counter       integer not null default 0,
+        transports    text,
+        name          text not null,
+        created_at    text not null,
+        last_used_at  text
+      );
+      create index ix_passkeys_user on passkeys(user_id);
+    `,
+  },
 ];

@@ -172,6 +172,19 @@ Nach dem Abschnitt „Mit Home Assistant verbinden" in `docs/docker.md`.
 - [ ] „Erledigt" in der Nachricht der Companion App erledigt die Karte, auch wenn das Handy Stups nicht erreicht (Weg über Home Assistant)
 - [ ] Home Assistant neu starten: Stups verbindet sich von selbst wieder (Wächter lösen danach wieder aus), Sensoren erscheinen spätestens nach 5 Minuten
 
+## 16 · Passkeys im Container (nur wenn `STUPS_PUBLIC_URL` eine https-Adresse mit Namen ist)
+
+Nach dem Abschnitt „Anmelden mit Passkey" in `docs/docker.md`. Dieser Ablauf lässt sich nur am echten Gerät prüfen: die Browser-Tests haben keinen virtuellen Authenticator.
+
+- [ ] Mit einer IP-Adresse (`http://<NAS>:8099`) fehlen in den Einstellungen der Abschnitt „Passkeys" und auf der Anmeldeseite der Knopf. Im Protokoll steht, warum
+- [ ] Über die https-Adresse: Einstellungen › Passkeys › „Passkey hinzufügen", Name „iPhone", das Gerät fragt nach Gesicht bzw. Fingerabdruck, danach steht der Passkey in der Liste („noch nicht benutzt")
+- [ ] Abmelden: Auf der Anmeldeseite erscheint „Mit Passkey anmelden". Tippen, Gerät bestätigen, ohne Benutzername und Passwort bist du drin. In der Liste steht „zuletzt benutzt" mit heutigem Datum
+- [ ] Beim Anmelden das Gerät abbrechen: Meldung „Abgebrochen oder vom Gerät abgelehnt", kein Absturz, Passwort geht weiter
+- [ ] Zweites Gerät (anderes Handy oder Laptop): eigenen Passkey anlegen, beide stehen in der Liste, jeder lässt sich einzeln entfernen
+- [ ] Passkey entfernen, abmelden: Die Anmeldung mit diesem Passkey klappt nicht mehr (das Gerät bietet ihn eventuell noch an), das Passwort geht
+- [ ] Passwort ändern: Passkeys bleiben, die anderen Geräte melden sich ab und kommen mit ihrem Passkey wieder hinein
+- [ ] Zweite Person (Ben): sieht und entfernt nur ihre eigenen Passkeys
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

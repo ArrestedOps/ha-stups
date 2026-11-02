@@ -9,7 +9,7 @@ test.describe.configure({ mode: 'serial', timeout: 60_000 });
 
 const CODE_FILE = join(tmpdir(), 'stups-e2e-standalone-ha-code.txt');
 const MOCK = 'http://127.0.0.1:18441';
-const APP = 'http://127.0.0.1:18440';
+const APP = 'http://localhost:18440'; // STUPS_PUBLIC_URL des Testservers
 const PW = 'ein-langes-passwort';
 const API = { 'x-stups-client': 'e2e' };
 const nav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
@@ -26,7 +26,7 @@ async function anmelden(page: Page) {
   await page.goto('/');
   await page.getByLabel('Benutzername').fill('anna');
   await page.getByLabel('Passwort', { exact: true }).fill(PW);
-  await page.getByRole('button', { name: 'Anmelden' }).click();
+  await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
   await expect(nav(page)).toBeVisible();
 }
 
@@ -165,4 +165,32 @@ test('Sensoren: die Zähler stehen in Home Assistant (Zustände über den Token 
     .poll(async () => ((await (await request.get(`${MOCK}/mock/published`)).json()) as { entityId: string }[]).map((s) => s.entityId), { timeout: 15_000 })
     .toEqual(expect.arrayContaining(['sensor.stups_waechter_offen', 'sensor.stups_stupse_offen']));
   expect(await (await request.get(`${MOCK}/mock/wrong-tokens`)).json()).toEqual({ count: 0 });
+});
+
+// ---------- Passkeys ----------
+// WebKit unter Linux hat keinen virtuellen Authenticator: hier prüfen wir nur, was die Oberfläche zeigt und wie sie
+// auf ein abgelehntes Gerät reagiert. Den Ablauf mit Server und Signaturen prüfen die Server-Tests, den echten am Handy die Testliste.
+test('Passkeys: Knopf auf der Anmeldeseite, Verwaltung in den Einstellungen, Abbrechen am Gerät ist kein Fehler', async ({ page, request }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'PublicKeyCredential', { value: class {}, configurable: true, writable: true });
+    const abort = () => Promise.reject(new DOMException('abgebrochen', 'NotAllowedError'));
+    Object.defineProperty(navigator, 'credentials', { value: { get: abort, create: abort }, configurable: true });
+  });
+  expect((await (await request.get('/api/capabilities')).json()).passkeys).toBe(true);
+
+  await page.goto('/');
+  await expect(page.getByTestId('login')).toBeVisible();
+  await page.getByTestId('passkey-login').click();
+  await expect(page.getByRole('alert')).toContainText('Abgebrochen');
+  await expect(nav(page)).toHaveCount(0); // nicht angemeldet
+
+  await anmelden(page);
+  const dialog = await einstellungen(page);
+  await expect(dialog.getByText('Passkeys', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Noch kein Passkey')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Passkey hinzufügen' }).click();
+  await page.getByLabel('Name des Passkeys').fill('iPhone von Anna');
+  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByText('Abgebrochen oder vom Gerät abgelehnt')).toBeVisible();
+  expect(await (await page.request.get('/api/passkeys')).json()).toEqual([]);
 });

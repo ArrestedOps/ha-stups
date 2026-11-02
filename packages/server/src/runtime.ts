@@ -188,4 +188,6 @@ export interface Capabilities {
   /** Wege, auf denen Push zugestellt werden kann */
   push: ('ha-notify' | 'ntfy')[];
   publicUrl: string | null;
+  /** Anmeldung mit Passkey (eigene Konten und STUPS_PUBLIC_URL mit HTTPS) */
+  passkeys: boolean;
 }

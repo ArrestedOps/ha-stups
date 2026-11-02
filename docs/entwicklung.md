@@ -84,6 +84,8 @@ Browser-Tests: Projekte `dunkel` und `hell` (Server ohne Home Assistant mit Entw
 
 Knöpfe in ntfy-Nachrichten kommen ohne Sitzung zurück. `ntfy.ts` signiert dafür Person, Aktion und Ablaufzeit mit einem Geheimnis aus der Datenbank (`settings.pushSecret`), `push-action.ts` prüft und führt die Aktion über denselben `handleAction` aus wie bei Home Assistant. Der Pfad ist der einzige ohne Anmeldung (und ohne Kopfzeile des Clients) im Container.
 
+Passkeys (`passkeys.ts`, nur mit eigenen Konten und `STUPS_PUBLIC_URL` mit https und Name): `@simplewebauthn/server` wird erst beim ersten Gebrauch geladen, damit Add-on und Container ohne Passkeys die Bibliothek und ihre Node-Warnungen nie sehen. Domain und Adresse der Prüfung kommen aus `STUPS_PUBLIC_URL`, nie aus Kopfzeilen. Herausforderungen liegen im Speicher (einmal, fünf Minuten, höchstens 1000). Tabelle `passkeys` (Migration 13). Die Server-Tests prüfen den ganzen Ablauf mit einem Software-Authenticator (`test/helpers/authenticator.ts`, ES256). In den Browser-Tests gibt es keinen: WebKit unter Linux hat keinen virtuellen Authenticator (den hat nur Chromium über CDP), dort wird `navigator.credentials` ersetzt und nur die Oberfläche geprüft.
+
 Lokal ohne HA starten: `DEV_USER=anna ENFORCE_INGRESS_IP=false DATA_DIR=<Ordner> OPTIONS_PATH=<options.json> node packages/server/dist/main.js`. Ohne `SUPERVISOR_TOKEN` ist die Verbindung zu HA aus.
 
 ### Neue Version veröffentlichen

@@ -241,6 +241,21 @@ export interface Capabilities {
   sensors: boolean;
   push: string[];
   publicUrl: string | null;
+  /** Anmeldung mit Passkey ist eingerichtet (eigene Konten, STUPS_PUBLIC_URL mit HTTPS) */
+  passkeys: boolean;
+}
+
+export interface PasskeyInfo {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
+/** Herausforderung für ein Gerät; options geht unverändert an den Browser */
+export interface PasskeyCeremony {
+  ceremonyId: string;
+  options: any;
 }
 
 export interface AuthStatus {
@@ -300,6 +315,12 @@ export const api = {
   logout: () => post<void>('auth/logout'),
   setup: (b: { code: string; username: string; displayName: string; password: string }) => post<AuthStatus>('auth/setup', b),
   changePassword: (current: string, next: string) => post<void>('auth/password', { current, next }),
+  passkeyLoginOptions: () => post<PasskeyCeremony>('auth/passkey/options'),
+  passkeyLogin: (ceremonyId: string, response: unknown) => post<AuthStatus>('auth/passkey/login', { ceremonyId, response }),
+  passkeys: () => get<PasskeyInfo[]>('passkeys'),
+  passkeyRegistrationOptions: () => post<PasskeyCeremony>('passkeys/options'),
+  addPasskey: (b: { ceremonyId: string; response: unknown; name: string }) => post<PasskeyInfo>('passkeys', b),
+  deletePasskey: (id: string) => del(`passkeys/${id}`),
   accounts: () => get<Account[]>('auth/users'),
   createAccount: (b: { username: string; displayName?: string; password: string; isAdmin?: boolean; userId?: string }) =>
     post<Account>('auth/users', b),

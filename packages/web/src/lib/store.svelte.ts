@@ -13,6 +13,7 @@ import {
 } from './api';
 import { formatDue } from './datetime';
 import { applyHeaderHiding } from './hideHaHeader';
+import { passkeysSupported } from './passkeys';
 import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
 import { swipeTarget } from './swipe';
 import { startSync } from './sync';
@@ -113,6 +114,10 @@ export const feat = {
   /** Verbindung zu Home Assistant besteht (App oder eigener Container mit Adresse und Token): Personen als Vorschläge */
   get ha(): boolean {
     return ui.caps?.ha ?? !this.standalone;
+  },
+  /** Anmeldung mit Passkey: vom Server eingerichtet und vom Browser unterstützt */
+  get passkeys(): boolean {
+    return this.standalone && (ui.caps?.passkeys ?? false) && passkeysSupported();
   },
   /** Umzug zwischen zwei Add-ons */
   get migration(): boolean {

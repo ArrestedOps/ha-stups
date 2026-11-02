@@ -3,6 +3,7 @@ import multipart from '@fastify/multipart';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { createAccess, type Access, type AccessResult } from './access.js';
 import type { Account, Accounts } from './accounts.js';
+import type { Passkeys } from './passkeys.js';
 import { sessionToken } from './session-auth.js';
 import type { Directory } from './directory.js';
 import type { Capabilities } from './runtime.js';
@@ -60,6 +61,7 @@ export interface ApiDeps {
   defaultDashboardPath?: string;
   /** Eigene Konten mit Passwort (Betrieb ohne Home Assistant); ohne sie gibt es keine Routen für die Benutzerverwaltung */
   accounts?: Accounts;
+  passkeys?: Passkeys;
   /** Was in dieser Betriebsart verfügbar ist (Wächter, Sensoren, Push-Wege); die Oberfläche richtet sich danach */
   capabilities?: Capabilities;
   /** Push-Weg der Betriebsart; für Test-Nachricht und den Stand der Zustellung */
@@ -210,6 +212,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
         sensors: false,
         push: [],
         publicUrl: null,
+        passkeys: false,
       }
     );
   });
@@ -355,6 +358,25 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
       await accounts.setPassword(me.userId, b.next, sessionToken(req.headers));
       return noContent(reply);
     });
+    // Passkeys: jede Person verwaltet nur ihre eigenen
+    const passkeys = deps.passkeys;
+    if (passkeys) {
+      const mine = (req: FastifyRequest): Account => {
+        const me = req.user ? accounts.byUserId(req.user.id) : null;
+        if (!me) throw new ForbiddenError('Nur mit einem Konto möglich');
+        return me;
+      };
+      app.get('/api/passkeys', async (req) => passkeys.list(mine(req).userId));
+      app.post('/api/passkeys/options', async (req) => passkeys.registrationOptions(mine(req)));
+      app.post('/api/passkeys', async (req, reply) => {
+        const b = body(req);
+        return reply.code(201).send(await passkeys.register(mine(req), b.ceremonyId, b.response, b.name));
+      });
+      app.delete<{ Params: Params }>('/api/passkeys/:id', async (req, reply) => {
+        passkeys.remove(mine(req).userId, req.params.id);
+        return noContent(reply);
+      });
+    }
   }
 
   app.delete<{ Params: Params }>('/api/access/people/:id', async (req, reply) => {

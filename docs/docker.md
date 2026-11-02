@@ -65,7 +65,7 @@ Alle Einstellungen sind Umgebungsvariablen. Ohne Angabe gelten die Vorgaben.
 | `STUPS_DATA_DIR` | `/data` | Ordner für Datenbank, Anhänge und Sicherungen (im Container; mit `volumes` nach außen legen) |
 | `STUPS_PORT` | `8099` | Port im Container |
 | `STUPS_SHARE_DIR` | `/share` | Ordner, aus dem ein Umzug (`stups-umzug`) beim ersten Start übernommen wird |
-| `STUPS_PUBLIC_URL` | – | Adresse, unter der Stups erreichbar ist. `https://…` schaltet das Secure-Cookie ein |
+| `STUPS_PUBLIC_URL` | – | Adresse, unter der Stups erreichbar ist. `https://…` schaltet das Secure-Cookie ein und, mit einem Namen statt einer IP-Adresse, die Passkeys (siehe „Anmelden mit Passkey") |
 | `STUPS_ADMIN_USER`, `STUPS_ADMIN_PASSWORD` | – | erster Administrator, nur beide zusammen. Gilt nur, solange es noch kein Konto gibt |
 | `HA_URL` | – | Adresse deines Home Assistant, zum Beispiel `http://homeassistant.local:8123` (siehe „Mit Home Assistant verbinden") |
 | `HA_TOKEN` | – | Long-Lived-Zugangs-Token aus Home Assistant. Nur zusammen mit `HA_URL` |
@@ -79,6 +79,22 @@ Alle Einstellungen sind Umgebungsvariablen. Ohne Angabe gelten die Vorgaben.
 | `TZ` | `Europe/Berlin` | Zeitzone |
 
 Umgebungsvariablen gehen vor der Datei. In der Home-Assistant-App gelten sie nicht; dort stellt man alles unter Konfiguration ein.
+
+## Anmelden mit Passkey
+
+Statt das Passwort zu tippen, meldest du dich mit Fingerabdruck, Gesicht oder der Bildschirmsperre deines Geräts an (iPhone, Android, Windows Hello, Passwort-Manager mit Passkeys). Das Passwort bleibt als Rückfall.
+
+**Voraussetzung:** `STUPS_PUBLIC_URL` ist eine `https://`-Adresse mit einem Namen, zum Beispiel `https://stups.example.org`. Passkeys gehören zu einer Domain; Browser erlauben sie nur über HTTPS (oder `localhost`) und nie für eine IP-Adresse wie `http://192.168.1.20:8099`. Stimmt die Adresse nicht, sind Passkeys aus, und das Protokoll sagt es beim Start. Aus dieser Adresse, nicht aus Kopfzeilen der Anfrage, nimmt Stups die Domain für die Prüfung.
+
+**Einrichten:** Einstellungen › Passkeys › **Passkey hinzufügen**, Namen vergeben (zum Beispiel „iPhone von Anna"), das Gerät fragt nach Fingerabdruck oder Gesicht. Auf jedem Gerät, das du nutzt, einmal wiederholen. Danach zeigt die Anmeldeseite **Mit Passkey anmelden**, ganz ohne Benutzernamen.
+
+**Wichtig**
+
+- **Die Domain darf sich nicht ändern.** Ein Passkey gilt nur für die Domain, unter der er angelegt wurde. Wechselst du auf eine andere Adresse, legst du neue an (mit dem Passwort kommst du jederzeit hinein).
+- **Das Gerät wird immer bestätigt.** Stups verlangt Fingerabdruck, Gesicht oder PIN; ein bloßes Berühren des Schlüssels genügt nicht.
+- **Entfernen** geht unter Einstellungen › Passkeys. Das löscht ihn nur in Stups. Auf dem Gerät bleibt der Passkey liegen, bis du ihn dort löschst. Wird ein Konto gelöscht, verschwinden seine Passkeys mit.
+- **Sicher aufbewahrt:** In der Datenbank liegt nur der öffentliche Schlüssel, der nicht geheim ist. Falsche Versuche zählen wie falsche Passwörter und führen zur gleichen Wartezeit.
+- Die Home-Assistant-App nutzt keine Passkeys: Dort meldet Home Assistant an.
 
 ## Push-Nachrichten über ntfy
 
@@ -153,7 +169,7 @@ Aktualisieren: `docker compose pull && docker compose up -d`; im Container Manag
 ## Sicherheit
 
 - **HTTPS.** Passwörter und das Sitzungs-Cookie sollten nie unverschlüsselt durchs Internet gehen. Stelle einen Reverse Proxy mit Zertifikat davor (bei Synology: **Systemsteuerung › Anmeldeportal › Erweitert › Reverse Proxy**, Ziel `http://localhost:8099`) und trage die https-Adresse als `STUPS_PUBLIC_URL` ein. Für WebSockets (Live-Sync) muss der Proxy die Kopfzeilen `Upgrade` und `Connection` durchreichen; bei Synology unter **Benutzerdefinierte Kopfzeile › WebSocket**.
-- **Anmeldung.** Passwörter werden mit scrypt gespeichert, Sitzungen laufen 30 Tage und verlängern sich bei Nutzung. Nach fünf Fehlversuchen wartet man eine Minute, jeder weitere Fehlversuch verdoppelt die Wartezeit (höchstens 30 Minuten). Ändert jemand sein Passwort, melden sich seine anderen Geräte ab.
+- **Anmeldung.** Passwörter werden mit scrypt gespeichert, Sitzungen laufen 30 Tage und verlängern sich bei Nutzung. Nach fünf Fehlversuchen wartet man eine Minute, jeder weitere Fehlversuch verdoppelt die Wartezeit (höchstens 30 Minuten). Ändert jemand sein Passwort, melden sich seine anderen Geräte ab (Passkeys bleiben bestehen). Passkeys: siehe „Anmelden mit Passkey".
 - **Kopfzeilen.** Anmelde-Kopfzeilen von Home Assistant oder einem Proxy werden im eigenen Container nie beachtet.
 - **Offen ist nur ein Weg ohne Anmeldung:** `/api/push/action` für die Knöpfe in ntfy-Nachrichten, und nur mit gültigem, signiertem Token.
 - **Datensicherung.** Alles liegt im Datenordner (`stups.sqlite`, `files`, `backups`). Eine Kopie dieses Ordners genügt.

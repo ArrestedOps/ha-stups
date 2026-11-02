@@ -1,21 +1,90 @@
-MIT License
+Stups Source-Available License
 
-Copyright (c) 2026 René Dobko
+Copyright (c) 2026 René Dobko. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Kurz und unverbindlich (Deutsch): Du darfst Stups installieren, für dich selbst nutzen und den
+Quelltext lesen. Du darfst ihn nicht kopieren, verändern, weitergeben oder irgendwo hochladen
+(auch nicht als Fork oder Kopie in ein anderes Repository). Dass Home Assistant oder Docker das
+Repository oder die Images für die Installation herunterladen, ist erlaubt. Verbindlich ist der
+englische Text unten.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+---------------------------------------------------------------------------------------------------
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+"Software" means everything in this repository: the source code, the Home Assistant apps "Stups"
+and "Stups (Beta)", their documentation, images, icons and the container images published from it
+(ghcr.io/arrestedops/*).
+
+1. What you may do
+
+   You may, free of charge:
+
+   a) install and run the unmodified Software as published by the licensor (as a Home Assistant
+      app from https://github.com/ArrestedOps/ha-stups, or as the published container image) for
+      your own use: in your household, or inside your own organisation for its internal
+      purposes. Downloading or cloning the repository or the images by Home Assistant (the
+      Supervisor), Docker or a comparable tool for the purpose of this installation and for
+      updates is part of this permission;
+   b) read the source code, for example to understand how it works, to check its security, or to
+      report a problem to the licensor;
+   c) keep the copies that are technically necessary to run the Software and make backups of your
+      own data (for example the data folder of the app).
+
+2. What you may not do
+
+   Without the licensor's prior written permission you may not:
+
+   a) copy, publish, upload, mirror or otherwise make the Software or parts of it available to
+      others, in any repository, package or image registry, website, archive or other service,
+      public or private (for forks on GitHub see section 3);
+   b) modify the Software, create derivative works, or use parts of the source code, the
+      documentation, the icons or the texts in other projects;
+   c) sell, rent, sublicense or otherwise redistribute the Software, or offer it or its functions
+      to third parties as a hosted or managed service;
+   d) remove or change copyright notices, the name "Stups" or this license;
+   e) use the name, logo or icons in a way that suggests that a copy or a modified version is the
+      original or is approved by the licensor.
+
+3. GitHub
+
+   The repository is public on GitHub. GitHub's Terms of Service give every GitHub user the right
+   to view and to fork a public repository within the GitHub platform. That right comes from
+   GitHub's terms, not from this license, and it is limited to the functions of GitHub itself. It
+   gives no right to copy the Software out of GitHub, to modify it, to publish it elsewhere, or to
+   use a fork to distribute or run modified versions.
+
+4. Earlier versions
+
+   Stups 1.9.0 and all earlier versions, as published before 2 November 2026, were released under
+   the MIT License. Those versions, in the form published at that time, remain available under the
+   MIT License to everyone who received them. This license applies to everything published after
+   that date.
+
+5. Third-party components
+
+   The Software uses open-source components (see package.json and pnpm-lock.yaml). They stay
+   under their own licenses; this license does not change them.
+
+6. Termination
+
+   If you violate this license, your permissions under section 1 end automatically. You then have
+   to stop using the Software and to delete every copy, fork, mirror or upload you made in
+   violation of this license. Rights under section 4 are not affected.
+
+7. No warranty, limitation of liability
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+   BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR ITS USE. Liability that
+   cannot be excluded by law (for example for intent, gross negligence or injury to life, body or
+   health) remains unaffected.
+
+8. Other uses
+
+   If you want to do something this license does not allow, ask first: contact the licensor
+   through the GitHub profile ArrestedOps. Permission has to be given in writing.
+
+9. Law
+
+   This license is governed by the laws of the Federal Republic of Germany, excluding its rules on
+   conflicts of laws.

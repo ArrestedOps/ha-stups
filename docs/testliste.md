@@ -245,6 +245,19 @@ Zwei Geräte (zum Beispiel iPhone und Mac), beide in der Beta.
 - [ ] Das Zahnrad verdeckt nichts: Im Board neben „Dashboard", im Kalender neben „Filter", bei den Wächtern neben „+". Auch mit „Offline"-Hinweis und langem Board-Namen passt alles in die Zeile
 - [ ] Der Weg über den Board-Namen › „Einstellungen" geht weiter
 
+## 22 · Englisch (seit 1.14.0)
+
+Am iPhone, in der Beta zuerst. Zum Ausprobieren: iPhone-Sprache auf Englisch stellen (oder in Stups unter Einstellungen › Sprache „English“ wählen).
+
+- [ ] **Deutsches iPhone, nichts eingestellt:** Stups ist wie bisher deutsch. Nichts ist plötzlich englisch (Boards, Karten, Agenda, Kalender, Einstellungen)
+- [ ] **Englisches Gerät:** Oberfläche durchgehend englisch: Board, Karten-Fenster, „New card“, Agenda, Calendar, Watchers, Settings, Hinweise („Done“, „Undo“). Kein deutsches Wort dazwischen (Spaltennamen alter Boards und eigene Texte sind deutsch, das ist richtig)
+- [ ] **Layout:** Die kompakten Karten, Chips, Spalten-Tabs und der Kopf passen auf iPhone-Breite, nichts läuft über den Rand, kein waagerechtes Wischen der ganzen Seite
+- [ ] **Zeiten:** „today 19:00“, „tomorrow 09:00“, „Mon 18:30“, „5 Dec“; Kalender: Wochenbeginn Montag, Kopfzeile „2–8 Nov 2026“
+- [ ] **Schnell-Eingabe auf Englisch:** `Take out trash tomorrow 7pm @Ben #Home every week !!` ergibt die richtigen Chips; auch `in 3 days`, `next Monday`, `Dec 1`, `at 18:30`, `every 2 weeks`, `important`
+- [ ] **Sprache wechseln:** Einstellungen › Sprache › Deutsch: sofort deutsch, ohne Neuladen. Wieder auf „Automatisch“: folgt dem Gerät. Die Wahl gilt auch am zweiten Gerät derselben Person
+- [ ] **Wiederholungen und Wächter-Texte** (Beschreibung, Vorlagen, „When washing machine power is below 5 W …“) sind englisch und verständlich
+- [ ] Noch deutsch, bis 1.15.0: Push-Nachrichten, Fehlermeldungen vom Server und die Namen der Standard-Spalten neuer Boards
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

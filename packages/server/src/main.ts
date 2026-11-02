@@ -19,6 +19,8 @@ import { createAccess } from './access.js';
 import { createAccounts } from './accounts.js';
 import { createDirectory, createLocalDirectory, createStaticDirectory } from './directory.js';
 import { identityAuth } from './identity.js';
+import { registerLanguageHook } from './i18n/hook.js';
+import { setDefaultLanguage } from './i18n/index.js';
 import { ingressAuth } from './ingress.js';
 import { createPasskeys, passkeyConfigFrom, type Passkeys } from './passkeys.js';
 import { authRoutes, clientGuard, createLoginLimiter, createSessionIdentity, createSetup, type Setup } from './session-auth.js';
@@ -36,6 +38,9 @@ const runtime = resolveRuntime(process.env);
 const { dataDir, shareDir, port, options } = runtime;
 
 const app = Fastify({ logger: { level: options.logLevel } });
+// Sprache der Meldungen: je Anfrage aus den Kopfzeilen (die App sendet X-Stups-Language), sonst Englisch
+setDefaultLanguage('en');
+registerLanguageHook(app);
 
 const dbPath = `${dataDir}/stups.sqlite`;
 // Neue App ohne eigene Daten: Datenbank und Anhänge aus einem Export der alten App übernehmen (Einstellungen › Umzug)

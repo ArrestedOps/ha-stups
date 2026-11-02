@@ -93,6 +93,17 @@ Die Teile sind Funktionen `createX(c: Ctx, late)`. Rufen sie Funktionen anderer 
 
 **Absicherung:** `test/shape.test.ts` vergleicht die Namen aller Store-Methoden und alle Routen (mit allen Teilen, die nur mit bestimmten Abhängigkeiten existieren) mit `test/fixtures/*.json`. Eine Methode oder Route verschwindet oder kommt dazu, ohne dass jemand es merkt, geht damit nicht mehr. Bewusst ändern: `UPDATE_SHAPE=1 pnpm test` und die Dateien mitcommitten.
 
+### Sprachen (seit 1.14.0)
+
+Stups spricht Deutsch und Englisch. **Der deutsche Text steht im Quelltext und ist der Schlüssel:** `t('Karte löschen?')`. Der englische Text steht in `packages/web/src/lib/i18n/en.ts`.
+
+- **Schreiben:** `t('Text {name}', { name })` für Texte (Platzhalter in geschweiften Klammern, Werte werden in einem Durchgang ersetzt, ein Wert wie `{x}` bleibt, wie er ist), `tn('{n} Karte', '{n} Karten', n)` für Mehrzahlen (im Katalog ein Paar `[eins, andere]`), `tx('Kontext', 'Text')` wenn dasselbe deutsche Wort zwei englische Bedeutungen hat (Katalogschlüssel `Kontext|Text`). Namen von Wochentagen und Monaten stehen in `lib/i18n/names.ts`, Datumsformate folgen `numberLocale()`.
+- **Dinge, die nicht übersetzt werden:** Eingaben von Menschen (Titel, Namen, Kommentare, eigene Stups-Texte), Namen aus Home Assistant. Fehlt ein englischer Eintrag, erscheint der deutsche Text.
+- **Abdeckungstest** (`test/i18n-coverage.test.ts`, läuft in `pnpm test`): Jeder Text in `t()`, `tn()`, `tx()` hat einen englischen Eintrag, kein Eintrag ist verwaist, die Platzhalter stimmen überein. Er liest den Quelltext; Texte, die gar nicht in `t()` stehen, findet er nicht. Dafür gibt es das Browser-Projekt `english` (`e2e/18-english.spec.ts`, prüft die Kernabläufe auf deutsche Wörter und auf Überlauf).
+- **Wörter in Objekten:** Labels in Listen oder Objekten, die einmal beim Laden gebaut werden, müssen sich beim Wechseln der Sprache ändern: als `$derived(...)` oder als `get label() { return t('…'); }` schreiben (Beispiele: `lib/carry.ts`, `components/TabBar.svelte`).
+- **Sprache wählen:** Einstellungen › Sprache (je Person, gilt auf allen Geräten): „Automatisch“ (Gerät: beginnt eine bevorzugte Sprache mit „de“, dann Deutsch, sonst Englisch), „Deutsch“, „English“. Der Browser merkt die Wahl zusätzlich in `localStorage` (`stups.language`), damit schon die Anmeldeseite stimmt. Jede Anfrage trägt `X-Stups-Language`. Der Server speichert die zuletzt gemeldete Sprache (`users.language`) und die Wahl (`users.language_choice`, `null` = Automatisch), Migration 14; `PUT /api/me/language`.
+- **Tests:** `test/setup.ts` stellt vor jedem Web-Test Deutsch ein (die bestehenden Tests prüfen deutsche Texte); Englisch stellt ein Test selbst ein (`setLanguage('en')`).
+
 ### Live-Sync mit Änderungen (seit 1.13.0)
 
 Jede Änderung löst eine Meldung über den WebSocket (`/api/events`) aus. Neu: Die Meldung sagt, was sich geändert hat, und der Client holt nur das nach.

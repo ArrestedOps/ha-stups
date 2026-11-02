@@ -56,7 +56,7 @@
 
 {#snippet createButton()}
   <button class="min-h-11 px-3 text-[17px] font-semibold text-accent-text disabled:opacity-40" disabled={!title.trim() || busy} onclick={() => create()}>
-    {busy ? 'Lege an …' : 'Anlegen'}
+    {busy ? t('Lege an …') : t('Anlegen')}
   </button>
 {/snippet}
 

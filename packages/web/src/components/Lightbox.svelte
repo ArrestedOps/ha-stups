@@ -75,7 +75,7 @@
         {#key item.id}
           <button
             class="block {zoomed ? 'w-[250%]' : 'h-full w-full'}"
-            aria-label={zoomed ? 'Verkleinern' : 'Vergrößern'}
+            aria-label={zoomed ? t('Verkleinern') : t('Vergrößern')}
             onclick={() => (zoomed = !zoomed)}
           >
             <img

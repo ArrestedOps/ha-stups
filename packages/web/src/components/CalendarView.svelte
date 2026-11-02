@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from '../lib/i18n/index.svelte';
+  import { t, tn } from '../lib/i18n/index.svelte';
   import { tick } from 'svelte';
   import { api } from '../lib/api';
   import {
@@ -178,7 +178,7 @@
           {@const list = byDay.get(d) ?? []}
           <button
             class="flex min-h-[72px] flex-col items-stretch gap-0.5 bg-surface p-1 text-left sm:min-h-[104px] {inMonth(d, day) ? '' : 'opacity-45'}"
-            aria-label="{dayLabel(d)}, {list.length} {list.length === 1 ? 'Karte' : 'Karten'}"
+            aria-label={`${dayLabel(d)}, ${tn('{n} Karte', '{n} Karten', list.length)}`}
             data-today={d === today ? '' : undefined}
             onclick={() => openDay(d)}
           >

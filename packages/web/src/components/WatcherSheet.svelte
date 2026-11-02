@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, ApiError, type BoardView, type HaEntity, type WatcherItem, type WatcherRun } from '../lib/api';
   import { clock } from '../lib/nudge';
@@ -52,7 +53,7 @@
         }
       }
     } catch (e) {
-      toast(e instanceof ApiError ? e.message : 'Konnte den Wächter nicht laden', { tone: 'error' });
+      toast(e instanceof ApiError ? e.message : t('Konnte den Wächter nicht laden'), { tone: 'error' });
     }
     loading = false;
     const wanted = !id && template ? TEMPLATES.find((t) => t.id === template) : undefined;
@@ -95,7 +96,7 @@
         results = await api.haEntities(q, domain || undefined);
         searchError = '';
       } catch (e) {
-        searchError = e instanceof ApiError ? e.message : 'Home Assistant antwortet nicht';
+        searchError = e instanceof ApiError ? e.message : t('Home Assistant antwortet nicht');
         results = [];
       }
     }, 250);
@@ -142,10 +143,10 @@
     try {
       if (id) await api.updateWatcher(id, toInput(form));
       else await api.createWatcher(toInput(form));
-      toast('Wächter gespeichert');
+      toast(t('Wächter gespeichert'));
       back();
     } catch (e) {
-      toast(e instanceof ApiError ? e.message : 'Speichern fehlgeschlagen', { tone: 'error' });
+      toast(e instanceof ApiError ? e.message : t('Speichern fehlgeschlagen'), { tone: 'error' });
     }
     busy = false;
   }
@@ -155,10 +156,10 @@
     busy = true;
     try {
       await api.testWatcher(id);
-      toast('Testkarte angelegt');
+      toast(t('Testkarte angelegt'));
       runs = await api.watcherRuns(id).catch(() => runs);
     } catch (e) {
-      toast(e instanceof ApiError ? e.message : 'Test fehlgeschlagen', { tone: 'error' });
+      toast(e instanceof ApiError ? e.message : t('Test fehlgeschlagen'), { tone: 'error' });
     }
     busy = false;
   }
@@ -167,9 +168,9 @@
     if (!id) return;
     try {
       item = await api.resetWatcherCounter(id);
-      toast('Zähler zurückgesetzt');
+      toast(t('Zähler zurückgesetzt'));
     } catch (e) {
-      toast(e instanceof ApiError ? e.message : 'Zurücksetzen fehlgeschlagen', { tone: 'error' });
+      toast(e instanceof ApiError ? e.message : t('Zurücksetzen fehlgeschlagen'), { tone: 'error' });
     }
   }
 
@@ -178,25 +179,25 @@
     try {
       item = await api.updateWatcher(id, { active: !form.active });
       form.active = item.active;
-      toast(item.active ? 'Wächter ist wieder aktiv' : 'Wächter pausiert');
+      toast(item.active ? t('Wächter ist wieder aktiv') : t('Wächter pausiert'));
     } catch (e) {
-      toast(e instanceof ApiError ? e.message : 'Änderung fehlgeschlagen', { tone: 'error' });
+      toast(e instanceof ApiError ? e.message : t('Änderung fehlgeschlagen'), { tone: 'error' });
     }
   }
 
   function askRemove() {
     if (!id) return;
     ui.confirm = {
-      title: 'Wächter löschen?',
-      text: `„${form.name}“ legt danach keine Karten mehr an. Bereits angelegte Karten bleiben.`,
-      label: 'Löschen',
+      title: t('Wächter löschen?'),
+      text: t('„{name}“ legt danach keine Karten mehr an. Bereits angelegte Karten bleiben.', { name: form.name }),
+      label: t('Löschen'),
       run: async () => {
         try {
           await api.deleteWatcher(id!);
-          toast('Wächter gelöscht');
+          toast(t('Wächter gelöscht'));
           back();
         } catch (e) {
-          toast(e instanceof ApiError ? e.message : 'Löschen fehlgeschlagen', { tone: 'error' });
+          toast(e instanceof ApiError ? e.message : t('Löschen fehlgeschlagen'), { tone: 'error' });
         }
       },
     };
@@ -206,94 +207,94 @@
   const usesCircle = $derived(form.assignMode !== 'none');
   const needsPeople = $derived(form.assignMode === 'fixed' || form.assignMode === 'rotation');
 
-  const MODES: [WatcherForm['assignMode'], string][] = [
-    ['rotation_present', 'Abwechselnd unter den Anwesenden'],
-    ['first_home', 'Wer zuerst nach Hause kommt'],
-    ['all_present', 'Alle Anwesenden'],
-    ['rotation', 'Abwechselnd (egal, wer da ist)'],
-    ['fixed', 'Feste Person(en)'],
-    ['none', 'Niemand (Karte bleibt offen)'],
-  ];
+  const MODES: [WatcherForm['assignMode'], string][] = $derived([
+    ['rotation_present', t('Abwechselnd unter den Anwesenden')],
+    ['first_home', t('Wer zuerst nach Hause kommt')],
+    ['all_present', t('Alle Anwesenden')],
+    ['rotation', t('Abwechselnd (egal, wer da ist)')],
+    ['fixed', t('Feste Person(en)')],
+    ['none', t('Niemand (Karte bleibt offen)')],
+  ]);
 </script>
 
 {#snippet saveButton()}
   <button class="min-h-11 px-3 text-[17px] font-semibold text-accent-text disabled:opacity-40" disabled={busy || loading} onclick={save}>
-    {busy ? 'Speichert …' : 'Speichern'}
+    {busy ? t('Speichert …') : t('Speichern')}
   </button>
 {/snippet}
 
-<Sheet title={id ? 'Wächter' : 'Neuer Wächter'} onclose={back} right={saveButton}>
+<Sheet title={id ? t('Wächter') : t('Neuer Wächter')} onclose={back} right={saveButton}>
   {#if loading}
-    <p class="py-10 text-center text-fg2">Lädt …</p>
+    <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
     <p class="mt-3 rounded-2xl bg-surface2 px-4 py-3 text-[15px]" data-testid="watcher-preview">{preview}</p>
 
     {#if !id}
-      <Group title="Vorlage" hint="Füllt das Formular vor, alles bleibt änderbar. Danach noch die Entität wählen.">
+      <Group title={t('Vorlage')} hint={t('Füllt das Formular vor, alles bleibt änderbar. Danach noch die Entität wählen.')}>
         <div class="flex flex-wrap gap-2 p-3">
-          {#each TEMPLATES as t (t.id)}
-            <button type="button" class={chip(false)} title={t.hint} onclick={() => applyTemplate(t)}>{t.title}</button>
+          {#each TEMPLATES as tpl (tpl.id)}
+            <button type="button" class={chip(false)} title={tpl.hint} onclick={() => applyTemplate(tpl)}>{tpl.title}</button>
           {/each}
         </div>
       </Group>
     {/if}
 
     <Group title="Name">
-      <div class="p-2"><input class={field} bind:value={form.name} maxlength="80" placeholder="z. B. Waschmaschine fertig" aria-label="Name des Wächters" /></div>
+      <div class="p-2"><input class={field} bind:value={form.name} maxlength="80" placeholder={t('z. B. Waschmaschine fertig')} aria-label={t('Name des Wächters')} /></div>
     </Group>
 
-    <Group title="Wenn" hint="Stups beobachtet die Entität in Home Assistant und prüft die Bedingung selbst.">
+    <Group title={t('Wenn')} hint={t('Stups beobachtet die Entität in Home Assistant und prüft die Bedingung selbst.')}>
       <Row stack>
         <div class="flex items-center gap-2">
           <div class="min-w-0 flex-1">
-            <p class="truncate text-[17px] font-semibold">{form.entityName || 'Noch keine Entität gewählt'}</p>
+            <p class="truncate text-[17px] font-semibold">{form.entityName || t('Noch keine Entität gewählt')}</p>
             {#if form.entityId}<p class="truncate text-[13px] text-fg2">{form.entityId}</p>{/if}
           </div>
           <button type="button" class="min-h-10 shrink-0 rounded-xl bg-surface2 px-4 font-semibold" onclick={() => startPicking('trigger')}>
-            {form.entityId ? 'Ändern' : 'Wählen'}
+            {form.entityId ? t('Ändern') : t('Wählen')}
           </button>
         </div>
         {#if picking === 'trigger'}
           {@render picker()}
         {/if}
       </Row>
-      <Row label="Bedingung">
-        <SelectField bind:value={form.kind} label="Bedingung">
-          <option value="below">Wert fällt unter …</option>
-          <option value="above">Wert steigt über …</option>
-          <option value="state">Zustand wechselt zu …</option>
+      <Row label={t('Bedingung')}>
+        <SelectField bind:value={form.kind} label={t('Bedingung')}>
+          <option value="below">{t('Wert fällt unter …')}</option>
+          <option value="above">{t('Wert steigt über …')}</option>
+          <option value="state">{t('Zustand wechselt zu …')}</option>
         </SelectField>
       </Row>
-      <Row label={form.kind === 'state' ? 'Zustand' : `Wert${form.entityUnit ? ` (${form.entityUnit})` : ''}`}>
+      <Row label={form.kind === 'state' ? t('Zustand') : `${t('Wert')}${form.entityUnit ? ` (${form.entityUnit})` : ''}`}>
         {#if form.kind === 'state'}
-          <input class="min-h-10 w-40 rounded-xl bg-surface2 px-3 text-right" bind:value={form.to} placeholder="z. B. off" aria-label="Zielzustand" />
+          <input class="min-h-10 w-40 rounded-xl bg-surface2 px-3 text-right" bind:value={form.to} placeholder={t('z. B. off')} aria-label={t('Zielzustand')} />
         {:else}
-          <input class="min-h-10 w-28 rounded-xl bg-surface2 px-3 text-right" inputmode="decimal" bind:value={form.value} placeholder="z. B. 5" aria-label="Schwellwert" />
+          <input class="min-h-10 w-28 rounded-xl bg-surface2 px-3 text-right" inputmode="decimal" bind:value={form.value} placeholder={t('z. B. 5')} aria-label={t('Schwellwert')} />
         {/if}
       </Row>
-      <Row label="Für mindestens (Minuten)">
-        <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.forMin} placeholder={form.kind === 'state' ? '0' : '3'} aria-label="Wartezeit in Minuten" />
+      <Row label={t('Für mindestens (Minuten)')}>
+        <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.forMin} placeholder={form.kind === 'state' ? '0' : '3'} aria-label={t('Wartezeit in Minuten')} />
       </Row>
-      <Row label="Erst beim N-ten Mal">
-        <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.count} placeholder="1" aria-label="Anzahl" />
+      <Row label={t('Erst beim N-ten Mal')}>
+        <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.count} placeholder="1" aria-label={t('Anzahl')} />
       </Row>
     </Group>
 
-    <Group title="Dann Karte">
+    <Group title={t('Dann Karte')}>
       <Row label="Board">
         <SelectField bind:value={form.boardId} label="Board">
           {#each ui.boards as b (b.id)}<option value={b.id}>{b.name}</option>{/each}
         </SelectField>
       </Row>
-      <Row label="Spalte">
-        <SelectField bind:value={form.columnId} label="Spalte">
+      <Row label={t('Spalte')}>
+        <SelectField bind:value={form.columnId} label={t('Spalte')}>
           {#each view?.columns ?? [] as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
         </SelectField>
       </Row>
-      <div class="p-2"><input class={field} bind:value={form.title} maxlength="200" placeholder="Titel der Karte" aria-label="Titel der Karte" /></div>
-      <div class="p-2"><textarea class="{field} py-2" rows="2" bind:value={form.description} placeholder="Beschreibung (optional)" aria-label="Beschreibung"></textarea></div>
+      <div class="p-2"><input class={field} bind:value={form.title} maxlength="200" placeholder={t('Titel der Karte')} aria-label={t('Titel der Karte')} /></div>
+      <div class="p-2"><textarea class="{field} py-2" rows="2" bind:value={form.description} placeholder={t('Beschreibung (optional)')} aria-label={t('Beschreibung')}></textarea></div>
       {#if view?.categories.length}
-        <div class="flex flex-wrap gap-2 p-3" role="group" aria-label="Kategorien">
+        <div class="flex flex-wrap gap-2 p-3" role="group" aria-label={t('Kategorien')}>
           {#each view.categories as c (c.id)}
             <button
               type="button"
@@ -306,42 +307,42 @@
           {/each}
         </div>
       {/if}
-      <Row label="Priorität hoch">
-        <input type="checkbox" class="h-6 w-6 accent-[var(--accent)]" checked={form.priority === 'high'} aria-label="Priorität hoch" onchange={(e) => (form.priority = e.currentTarget.checked ? 'high' : '')} />
+      <Row label={t('Priorität hoch')}>
+        <input type="checkbox" class="h-6 w-6 accent-[var(--accent)]" checked={form.priority === 'high'} aria-label={t('Priorität hoch')} onchange={(e) => (form.priority = e.currentTarget.checked ? 'high' : '')} />
       </Row>
-      <Row label="Fällig">
-        <SelectField bind:value={form.dueKind} label="Fälligkeit">
-          <option value="none">Ohne Termin</option>
-          <option value="in">In … Minuten</option>
-          <option value="at">Heute oder morgen um …</option>
+      <Row label={t('Fällig')}>
+        <SelectField bind:value={form.dueKind} label={t('Fälligkeit')}>
+          <option value="none">{t('Ohne Termin')}</option>
+          <option value="in">{t('In … Minuten')}</option>
+          <option value="at">{t('Heute oder morgen um …')}</option>
         </SelectField>
       </Row>
       {#if form.dueKind === 'in'}
-        <Row label="Minuten">
-          <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.dueMinutes} aria-label="Minuten bis zur Fälligkeit" />
+        <Row label={t('Minuten')}>
+          <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.dueMinutes} aria-label={t('Minuten bis zur Fälligkeit')} />
         </Row>
       {:else if form.dueKind === 'at'}
-        <Row label="Tag und Uhrzeit">
+        <Row label={t('Tag und Uhrzeit')}>
           <div class="flex items-center gap-2">
-            <SelectField bind:value={form.dueDay} label="Tag">
-              <option value="today">heute</option>
-              <option value="tomorrow">morgen</option>
+            <SelectField bind:value={form.dueDay} label={t('Tag')}>
+              <option value="today">{t('heute')}</option>
+              <option value="tomorrow">{t('morgen')}</option>
             </SelectField>
-            <input type="time" class="min-h-10 rounded-xl bg-surface2 px-3" bind:value={form.dueTime} aria-label="Uhrzeit" />
+            <input type="time" class="min-h-10 rounded-xl bg-surface2 px-3" bind:value={form.dueTime} aria-label={t('Uhrzeit')} />
           </div>
         </Row>
       {/if}
     </Group>
 
     <Group
-      title="An wen"
+      title={t('An wen')}
       hint={form.assignMode === 'first_home'
-        ? 'Ist niemand zu Hause, erscheint die Karte ohne Zuständige und ohne Push. Wer als Erstes heimkommt, bekommt sie (die Fälligkeit zählt ab dann).'
+        ? t('Ist niemand zu Hause, erscheint die Karte ohne Zuständige und ohne Push. Wer als Erstes heimkommt, bekommt sie (die Fälligkeit zählt ab dann).')
         : form.assignMode === 'rotation_present' || form.assignMode === 'all_present'
-          ? 'Anwesend heißt: Die Person in Home Assistant ist zu Hause.'
+          ? t('Anwesend heißt: Die Person in Home Assistant ist zu Hause.')
           : undefined}
     >
-      <div class="flex flex-col" role="radiogroup" aria-label="Zuweisung">
+      <div class="flex flex-col" role="radiogroup" aria-label={t('Zuweisung')}>
         {#each MODES as [mode, label] (mode)}
           <button
             type="button"
@@ -359,8 +360,8 @@
       </div>
       {#if usesCircle}
         <div class="p-3">
-          <p class="mb-2 text-[13px] font-semibold text-fg2">{needsPeople ? 'Personen' : 'Kreis (leer = alle Personen)'}</p>
-          <div class="flex flex-wrap gap-2" role="group" aria-label="Personen">
+          <p class="mb-2 text-[13px] font-semibold text-fg2">{needsPeople ? t('Personen') : t('Kreis (leer = alle Personen)')}</p>
+          <div class="flex flex-wrap gap-2" role="group" aria-label={t('Personen')}>
             {#each people as p (p.id)}
               <button type="button" class={chip(form.personIds.includes(p.id))} aria-pressed={form.personIds.includes(p.id)} onclick={() => (form.personIds = toggle(form.personIds, p.id))}>
                 <Avatar person={p} size={20} />{p.displayName}
@@ -370,111 +371,111 @@
         </div>
       {/if}
       {#if form.assignMode === 'rotation_present' || form.assignMode === 'all_present'}
-        <Row label="Ist niemand zu Hause">
-          <SelectField bind:value={form.fallback} label="Rückfall">
-            <option value="next">nächste Person</option>
-            <option value="all">alle</option>
-            <option value="fixed">feste Person</option>
-            <option value="none">niemand</option>
+        <Row label={t('Ist niemand zu Hause')}>
+          <SelectField bind:value={form.fallback} label={t('Rückfall')}>
+            <option value="next">{t('nächste Person')}</option>
+            <option value="all">{t('alle')}</option>
+            <option value="fixed">{t('feste Person')}</option>
+            <option value="none">{t('niemand')}</option>
           </SelectField>
         </Row>
       {/if}
       {#if form.assignMode === 'first_home'}
-        <Row label="Nach 24 Stunden ohne Heimkehr">
-          <SelectField bind:value={form.waitFallback} label="Rückfall nach 24 Stunden">
-            <option value="none">unzugewiesen lassen</option>
-            <option value="all">an alle</option>
-            <option value="fixed">feste Person</option>
+        <Row label={t('Nach 24 Stunden ohne Heimkehr')}>
+          <SelectField bind:value={form.waitFallback} label={t('Rückfall nach 24 Stunden')}>
+            <option value="none">{t('unzugewiesen lassen')}</option>
+            <option value="all">{t('an alle')}</option>
+            <option value="fixed">{t('feste Person')}</option>
           </SelectField>
         </Row>
       {/if}
       {#if form.fallback === 'fixed' || form.waitFallback === 'fixed'}
-        <Row label="Feste Person für den Rückfall">
-          <SelectField bind:value={form.fallbackPersonId} label="Person für den Rückfall">
-            <option value="">wählen …</option>
+        <Row label={t('Feste Person für den Rückfall')}>
+          <SelectField bind:value={form.fallbackPersonId} label={t('Person für den Rückfall')}>
+            <option value="">{t('wählen …')}</option>
             {#each people as p (p.id)}<option value={p.id}>{p.displayName}</option>{/each}
           </SelectField>
         </Row>
       {/if}
     </Group>
 
-    <Group title="Erledigt sich selbst, wenn …" hint="Zum Beispiel: Die Tür der Waschmaschine geht auf. Die offene Karte dieses Wächters wird dann erledigt.">
-      <Row label="Automatisch erledigen">
-        <input type="checkbox" class="h-6 w-6 accent-[var(--accent)]" bind:checked={form.doneOn} aria-label="Automatisch erledigen" />
+    <Group title={t('Erledigt sich selbst, wenn …')} hint={t('Zum Beispiel: Die Tür der Waschmaschine geht auf. Die offene Karte dieses Wächters wird dann erledigt.')}>
+      <Row label={t('Automatisch erledigen')}>
+        <input type="checkbox" class="h-6 w-6 accent-[var(--accent)]" bind:checked={form.doneOn} aria-label={t('Automatisch erledigen')} />
       </Row>
       {#if form.doneOn}
         <Row stack>
           <div class="flex items-center gap-2">
             <div class="min-w-0 flex-1">
-              <p class="truncate text-[17px] font-semibold">{form.doneEntityName || 'Noch keine Entität gewählt'}</p>
+              <p class="truncate text-[17px] font-semibold">{form.doneEntityName || t('Noch keine Entität gewählt')}</p>
               {#if form.doneEntityId}<p class="truncate text-[13px] text-fg2">{form.doneEntityId}</p>{/if}
             </div>
             <button type="button" class="min-h-10 shrink-0 rounded-xl bg-surface2 px-4 font-semibold" onclick={() => startPicking('done')}>
-              {form.doneEntityId ? 'Ändern' : 'Wählen'}
+              {form.doneEntityId ? t('Ändern') : t('Wählen')}
             </button>
           </div>
           {#if picking === 'done'}
             {@render picker()}
           {/if}
         </Row>
-        <Row label="Bedingung">
-          <SelectField bind:value={form.doneKind} label="Bedingung zum Erledigen">
-            <option value="state">Zustand wechselt zu …</option>
-            <option value="below">Wert fällt unter …</option>
-            <option value="above">Wert steigt über …</option>
+        <Row label={t('Bedingung')}>
+          <SelectField bind:value={form.doneKind} label={t('Bedingung zum Erledigen')}>
+            <option value="state">{t('Zustand wechselt zu …')}</option>
+            <option value="below">{t('Wert fällt unter …')}</option>
+            <option value="above">{t('Wert steigt über …')}</option>
           </SelectField>
         </Row>
-        <Row label={form.doneKind === 'state' ? 'Zustand' : 'Wert'}>
+        <Row label={form.doneKind === 'state' ? t('Zustand') : t('Wert')}>
           {#if form.doneKind === 'state'}
-            <input class="min-h-10 w-40 rounded-xl bg-surface2 px-3 text-right" bind:value={form.doneTo} placeholder="z. B. on" aria-label="Zustand zum Erledigen" />
+            <input class="min-h-10 w-40 rounded-xl bg-surface2 px-3 text-right" bind:value={form.doneTo} placeholder={t('z. B. on')} aria-label={t('Zustand zum Erledigen')} />
           {:else}
-            <input class="min-h-10 w-28 rounded-xl bg-surface2 px-3 text-right" inputmode="decimal" bind:value={form.doneValue} aria-label="Schwellwert zum Erledigen" />
+            <input class="min-h-10 w-28 rounded-xl bg-surface2 px-3 text-right" inputmode="decimal" bind:value={form.doneValue} aria-label={t('Schwellwert zum Erledigen')} />
           {/if}
         </Row>
       {/if}
     </Group>
 
-    <Group title="Weitere Einstellungen">
-      <Row label="Sperrzeit (Minuten)">
-        <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.cooldownMin} placeholder="10" aria-label="Sperrzeit in Minuten" />
+    <Group title={t('Weitere Einstellungen')}>
+      <Row label={t('Sperrzeit (Minuten)')}>
+        <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.cooldownMin} placeholder="10" aria-label={t('Sperrzeit in Minuten')} />
       </Row>
-      <Row label="Keine zweite Karte, solange eine offen ist">
-        <input type="checkbox" class="h-6 w-6 accent-[var(--accent)]" bind:checked={form.dedupe} aria-label="Keine Doppelkarten" />
+      <Row label={t('Keine zweite Karte, solange eine offen ist')}>
+        <input type="checkbox" class="h-6 w-6 accent-[var(--accent)]" bind:checked={form.dedupe} aria-label={t('Keine Doppelkarten')} />
       </Row>
-      <Row label="Nach … Minuten stupsen, wenn offen">
-        <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.nudgeAfterMin} placeholder="nie" aria-label="Stupsen nach Minuten" />
+      <Row label={t('Nach … Minuten stupsen, wenn offen')}>
+        <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.nudgeAfterMin} placeholder={t('nie')} aria-label={t('Stupsen nach Minuten')} />
       </Row>
     </Group>
 
     {#if id && item}
-      <Group title="Status">
-        <Row label="Zähler">
+      <Group title={t('Status')}>
+        <Row label={t('Zähler')}>
           <span class="flex items-center gap-3">
-            <span>{item.trigger.count > 1 ? `${item.counter} von ${item.trigger.count}` : 'nicht aktiv'}</span>
+            <span>{item.trigger.count > 1 ? t('{n} von {total}', { n: item.counter, total: item.trigger.count }) : t('nicht aktiv')}</span>
             {#if item.trigger.count > 1}
-              <button type="button" class="min-h-9 rounded-xl bg-surface2 px-3 text-[14px] font-semibold" onclick={resetCounter}>Zurücksetzen</button>
+              <button type="button" class="min-h-9 rounded-xl bg-surface2 px-3 text-[14px] font-semibold" onclick={resetCounter}>{t('Zurücksetzen')}</button>
             {/if}
           </span>
         </Row>
-        <Row label="Verbindung">
+        <Row label={t('Verbindung')}>
           <span class={item.subscribed || !item.active ? 'text-fg2' : 'text-danger'}>
-            {!item.active ? 'pausiert' : item.status === 'entity_missing' ? 'Entität fehlt' : item.status === 'target_missing' ? 'Board oder Spalte fehlt' : item.subscribed ? 'aktiv' : 'Abo nicht aktiv'}
+            {!item.active ? t('pausiert') : item.status === 'entity_missing' ? t('Entität fehlt') : item.status === 'target_missing' ? t('Board oder Spalte fehlt') : item.subscribed ? t('aktiv') : t('Abo nicht aktiv')}
           </span>
         </Row>
         {#each runs.slice(0, 8) as r (r.id)}
           <Row stack>
             <p class="text-[15px]">{RUN_TEXT[r.result] ?? r.result}{r.note ? ` · ${r.note}` : ''}</p>
-            <p class="text-[13px] text-fg2">{clock(r.at)} Uhr{r.assignedTo.length ? ` · ${r.assignedTo.map(personName).join(', ')}` : ''}</p>
+            <p class="text-[13px] text-fg2">{t('{time} Uhr', { time: clock(r.at) })}{r.assignedTo.length ? ` · ${r.assignedTo.map(personName).join(', ')}` : ''}</p>
           </Row>
         {:else}
-          <Row stack><p class="text-[15px] text-fg2">Noch keine Läufe.</p></Row>
+          <Row stack><p class="text-[15px] text-fg2">{t('Noch keine Läufe.')}</p></Row>
         {/each}
       </Group>
 
       <div class="mt-5 flex flex-col gap-2">
-        <button type="button" class="min-h-12 rounded-2xl bg-surface2 font-semibold disabled:opacity-40" disabled={busy} onclick={test}>Testen: Karte jetzt anlegen</button>
-        <button type="button" class="min-h-12 rounded-2xl bg-surface2 font-semibold" onclick={togglePause}>{form.active ? 'Pausieren' : 'Wieder aktivieren'}</button>
-        <button type="button" class="min-h-12 rounded-2xl bg-danger-bg font-semibold text-danger" onclick={askRemove}>Wächter löschen</button>
+        <button type="button" class="min-h-12 rounded-2xl bg-surface2 font-semibold disabled:opacity-40" disabled={busy} onclick={test}>{t('Testen: Karte jetzt anlegen')}</button>
+        <button type="button" class="min-h-12 rounded-2xl bg-surface2 font-semibold" onclick={togglePause}>{form.active ? t('Pausieren') : t('Wieder aktivieren')}</button>
+        <button type="button" class="min-h-12 rounded-2xl bg-danger-bg font-semibold text-danger" onclick={askRemove}>{t('Wächter löschen')}</button>
       </div>
     {/if}
   {/if}
@@ -482,7 +483,7 @@
 
 {#snippet picker()}
   <div class="mt-2 space-y-2">
-    <input class={field} bind:value={query} placeholder="Entität suchen, z. B. waschmaschine" aria-label="Entität suchen" />
+    <input class={field} bind:value={query} placeholder={t('Entität suchen, z. B. waschmaschine')} aria-label={t('Entität suchen')} />
     {#if searchError}<p class="text-[14px] text-danger">{searchError}</p>{/if}
     <ul class="max-h-64 divide-y divide-line overflow-y-auto rounded-xl border border-line">
       {#each results as e (e.entityId)}
@@ -496,9 +497,9 @@
           </button>
         </li>
       {:else}
-        <li class="px-3 py-3 text-[14px] text-fg2">Nichts gefunden.</li>
+        <li class="px-3 py-3 text-[14px] text-fg2">{t('Nichts gefunden.')}</li>
       {/each}
     </ul>
-    <button type="button" class="min-h-9 text-[14px] text-accent-text" onclick={() => (picking = null)}>Suche schließen</button>
+    <button type="button" class="min-h-9 text-[14px] text-accent-text" onclick={() => (picking = null)}>{t('Suche schließen')}</button>
   </div>
 {/snippet}

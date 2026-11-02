@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from '../lib/i18n/index.svelte';
+  import { t, tx } from '../lib/i18n/index.svelte';
   import { api, ApiError, type CardDetail, type Comment } from '../lib/api';
   import { formatBytes, prepareUpload, uploadProblem } from '../lib/image';
   import { autogrow } from '../lib/autogrow';
@@ -176,7 +176,7 @@
         closeSheet();
       }}
     >
-      <Icon name={done ? 'undo' : 'check'} size={16} stroke={2.6} />{done ? 'Wieder öffnen' : 'Erledigt'}
+      <Icon name={done ? 'undo' : 'check'} size={16} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
     </button>
   {/if}
 {/snippet}
@@ -251,7 +251,7 @@
       ></textarea>
     </Group>
 
-    <Group title="Checkliste {card.checklist.total ? `· ${card.checklist.done} von ${card.checklist.total}` : ''}">
+    <Group title={`${t('Checkliste')} ${card.checklist.total ? `· ${t('{n} von {total}', { n: card.checklist.done, total: card.checklist.total })}` : ''}`}>
       {#each card.checklistItems as item (item.id)}
         <div class="flex min-h-[46px] items-center gap-3 px-4">
           <input
@@ -264,7 +264,7 @@
           <input
             class="min-w-0 flex-1 bg-transparent py-2 {item.done ? 'text-fg2 line-through' : ''}"
             value={item.text}
-            aria-label="Eintrag"
+            aria-label={t('Eintrag')}
             onchange={(e) => {
               const t = e.currentTarget.value.trim();
               if (t) void act(() => api.updateChecklist(item.id, { text: t }));
@@ -296,7 +296,7 @@
             </span>
             <span class="min-w-0 flex-1">
               <span class="block truncate text-[16px] font-semibold">{link.title ?? host(link.url)}</span>
-              <span class="block truncate text-[13px] text-fg2">{link.kind === 'maps' ? 'In Karten öffnen · ' : ''}{host(link.url)}</span>
+              <span class="block truncate text-[13px] text-fg2">{link.kind === 'maps' ? `${t('In Karten öffnen')} · ` : ''}{host(link.url)}</span>
             </span>
             <Icon name="external" size={16} />
           </a>
@@ -334,7 +334,7 @@
                   <img src="api/attachments/{a.id}/thumb" alt={a.filename} loading="lazy" class="h-full w-full object-cover" />
                 {:else}
                   <span class="flex h-full flex-col items-center justify-center gap-1 p-2 text-center text-[12px]">
-                    <span class="text-[15px] font-bold text-danger">{a.mime === 'application/pdf' ? 'PDF' : 'Datei'}</span>
+                    <span class="text-[15px] font-bold text-danger">{a.mime === 'application/pdf' ? 'PDF' : t('Datei')}</span>
                     <span class="line-clamp-2 break-all text-fg2">{a.filename}</span>
                   </span>
                 {/if}
@@ -353,7 +353,7 @@
       <div class="px-4 py-1.5">
         <input bind:this={fileInput} type="file" accept="image/*,application/pdf" multiple class="hidden" onchange={onFiles} />
         <button class="flex min-h-11 w-full items-center gap-3 text-left text-[17px] text-accent-text disabled:opacity-50" disabled={uploading > 0} onclick={() => fileInput?.click()}>
-          <Icon name="camera" size={18} />{uploading > 0 ? 'Lädt hoch …' : 'Foto oder PDF hinzufügen'}
+          <Icon name="camera" size={18} />{uploading > 0 ? t('Lädt hoch …') : t('Foto oder PDF hinzufügen')}
         </button>
       </div>
     </Group>
@@ -373,7 +373,7 @@
       <form onsubmit={addComment} class="flex min-h-[46px] items-center gap-3 px-4">
         <Icon name="message" size={18} />
         <input bind:value={newComment} placeholder={t('Kommentar schreiben')} enterkeyhint="send" class="min-w-0 flex-1 bg-transparent py-2" aria-label={t('Neuer Kommentar')} />
-        <SubmitPill show={!!newComment.trim()} label="Senden" />
+        <SubmitPill show={!!newComment.trim()} label={t('Senden')} />
       </form>
     </Group>
 

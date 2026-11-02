@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, type PasskeyInfo } from '../lib/api';
   import { createPasskey, passkeyErrorText } from '../lib/passkeys';
@@ -27,10 +28,10 @@
     if (busy) return;
     busy = true;
     try {
-      const created = await createPasskey(name.trim() || 'Dieses Gerät');
+      const created = await createPasskey(name.trim() || t('Dieses Gerät'));
       list = [...(list ?? []), created];
       adding = false;
-      toast('Passkey angelegt. Beim nächsten Mal genügt „Mit Passkey anmelden“.');
+      toast(t('Passkey angelegt. Beim nächsten Mal genügt „Mit Passkey anmelden“.'));
     } catch (err) {
       toast(passkeyErrorText(err), { tone: 'error' });
     }
@@ -39,9 +40,9 @@
 
   function remove(p: PasskeyInfo) {
     ui.confirm = {
-      title: 'Passkey entfernen?',
-      text: `„${p.name}“ kann sich danach nicht mehr anmelden. Das Passwort bleibt. Auf dem Gerät selbst bleibt der Passkey liegen, bis du ihn dort löschst.`,
-      label: 'Entfernen',
+      title: t('Passkey entfernen?'),
+      text: t('„{name}“ kann sich danach nicht mehr anmelden. Das Passwort bleibt. Auf dem Gerät selbst bleibt der Passkey liegen, bis du ihn dort löschst.', { name: p.name }),
+      label: t('Entfernen'),
       run: async () => {
         try {
           await api.deletePasskey(p.id);
@@ -56,38 +57,38 @@
 
 <Group
   title="Passkeys"
-  hint="Mit einem Passkey meldest du dich mit Fingerabdruck, Gesicht oder Bildschirmsperre an, ohne Passwort zu tippen. Das Passwort bleibt als Rückfall."
+  hint={t('Mit einem Passkey meldest du dich mit Fingerabdruck, Gesicht oder Bildschirmsperre an, ohne Passwort zu tippen. Das Passwort bleibt als Rückfall.')}
 >
   {#each list ?? [] as p (p.id)}
     <div class="flex min-h-[52px] items-center gap-3 px-4 py-1.5" data-testid="passkey-row">
       <div class="min-w-0 flex-1">
         <div class="truncate text-[17px]">{p.name}</div>
         <div class="text-[13px] text-fg2">
-          angelegt {day(p.createdAt)}, {p.lastUsedAt ? `zuletzt benutzt ${day(p.lastUsedAt)}` : 'noch nicht benutzt'}
+          {t('angelegt {when}', { when: day(p.createdAt) })}, {p.lastUsedAt ? t('zuletzt benutzt {when}', { when: day(p.lastUsedAt) }) : t('noch nicht benutzt')}
         </div>
       </div>
-      <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold text-danger" aria-label={`Passkey ${p.name} entfernen`} onclick={() => remove(p)}>
-        Entfernen
+      <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold text-danger" aria-label={t('Passkey {name} entfernen', { name: p.name })} onclick={() => remove(p)}>
+        {t('Entfernen')}
       </button>
     </div>
   {/each}
   {#if adding}
-    <form onsubmit={add} class="space-y-2 px-4 py-3" aria-label="Passkey anlegen">
+    <form onsubmit={add} class="space-y-2 px-4 py-3" aria-label={t('Passkey anlegen')}>
       <input
         bind:value={name}
         maxlength="60"
-        placeholder="Name, zum Beispiel iPhone von Anna"
-        aria-label="Name des Passkeys"
+        placeholder={t('Name, zum Beispiel iPhone von Anna')}
+        aria-label={t('Name des Passkeys')}
         class="min-h-11 w-full rounded-xl bg-surface2 px-3"
       />
       <div class="flex gap-2">
-        <button class="min-h-11 flex-1 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-60" disabled={busy}>Anlegen</button>
-        <button type="button" class="min-h-11 flex-1 rounded-xl bg-surface2 font-semibold" onclick={() => (adding = false)}>Abbrechen</button>
+        <button class="min-h-11 flex-1 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-60" disabled={busy}>{t('Anlegen')}</button>
+        <button type="button" class="min-h-11 flex-1 rounded-xl bg-surface2 font-semibold" onclick={() => (adding = false)}>{t('Abbrechen')}</button>
       </div>
     </form>
   {:else if list !== null}
-    <Row label={list.length === 0 ? 'Noch kein Passkey' : undefined}>
-      <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold" onclick={startAdding}>Passkey hinzufügen</button>
+    <Row label={list.length === 0 ? t('Noch kein Passkey') : undefined}>
+      <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold" onclick={startAdding}>{t('Passkey hinzufügen')}</button>
     </Row>
   {/if}
 </Group>

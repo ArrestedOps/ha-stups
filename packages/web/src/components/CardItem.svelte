@@ -122,7 +122,7 @@
       <span class="flex items-center gap-2 text-[16px] font-bold">
         {#if dx < 0}<Icon name="arrow-left" size={20} stroke={2.6} />{/if}
         {#if target.isDone}<Icon name="check" size={20} stroke={3} />{/if}
-        {target.isDone ? 'Erledigt' : target.name}
+        {target.isDone ? t('Erledigt') : target.name}
         {#if dx > 0 && !target.isDone}<Icon name="arrow-right" size={20} stroke={2.6} />{/if}
       </span>
     </div>
@@ -143,7 +143,7 @@
     {#if bar}<span class="absolute inset-y-0 left-0 w-[5px]" style:background={bar} aria-hidden="true"></span>{/if}
     <button
       class="flex min-h-14 w-11 shrink-0 items-start justify-center pt-[17px]"
-      aria-label={isDoneColumn ? 'Bereits erledigt' : `„${card.title}“ erledigen`}
+      aria-label={isDoneColumn ? t('Bereits erledigt') : t('„{title}“ erledigen', { title: card.title })}
       disabled={isDoneColumn}
       onclick={() => !suppressClick && completeCard(card)}
     >
@@ -190,7 +190,7 @@
                   class="flex shrink-0 items-center gap-1 font-medium {m.overdue ? 'text-danger' : 'text-fg'}"
                   data-testid="card-due"
                   data-overdue={m.overdue}
-                  aria-label={m.overdue ? `Überfällig, ${m.text}` : undefined}
+                  aria-label={m.overdue ? t('Überfällig, {text}', { text: m.text }) : undefined}
                 >
                   <Icon name="clock" size={13} />{m.text}
                 </span>
@@ -202,7 +202,7 @@
                 <span
                   class="shrink-0"
                   style:color={m.level === 'high' ? 'var(--c-red-fg)' : 'var(--c-orange-fg)'}
-                  aria-label={m.level === 'high' ? 'Priorität hoch' : 'Priorität mittel'}
+                  aria-label={m.level === 'high' ? t('Priorität hoch') : t('Priorität mittel')}
                   data-testid="card-priority"
                   data-level={m.level}
                 >

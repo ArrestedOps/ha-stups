@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t, tn } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, ApiError, type AccessInfo, type AccessMode, type Account } from '../lib/api';
   import { closeSheet, feat, refresh, toast, ui } from '../lib/store.svelte';
@@ -32,7 +33,7 @@
       if (feat.standalone && info.isAdmin) accounts = await api.accounts().catch(() => accounts);
       loadError = '';
     } catch (e) {
-      loadError = e instanceof ApiError ? e.message : 'Konnte die Personen nicht laden';
+      loadError = e instanceof ApiError ? e.message : t('Konnte die Personen nicht laden');
     }
   }
   onMount(load);
@@ -50,7 +51,7 @@
       try {
         await fn();
       } catch (e) {
-        toast(e instanceof ApiError ? e.message : 'Etwas ist schiefgelaufen', { tone: 'error' });
+        toast(e instanceof ApiError ? e.message : t('Etwas ist schiefgelaufen'), { tone: 'error' });
       }
       await Promise.all([load(), refresh()]);
       pendingRuns -= 1;
@@ -96,7 +97,7 @@
     void run(async () => {
       await api.createAccount({ userId, username, password });
       acctUser = acctPw = '';
-      toast('Konto angelegt');
+      toast(t('Konto angelegt'));
     });
   }
 
@@ -106,7 +107,7 @@
     void run(async () => {
       await api.updateAccount(a.userId, { password });
       acctPw = '';
-      toast(`Neues Passwort für ${a.username} gesetzt. Seine Geräte melden sich neu an.`);
+      toast(t('Neues Passwort für {name} gesetzt. Seine Geräte melden sich neu an.', { name: a.username }));
     });
   }
 
@@ -121,10 +122,10 @@
     });
   }
 
-  const deviceLabel = (n: number) => (n === 0 ? 'Kein Push-Gerät' : n === 1 ? '1 Push-Gerät' : `${n} Push-Geräte`);
+  const deviceLabel = (n: number) => (n === 0 ? t('Kein Push-Gerät') : tn('{n} Push-Gerät', '{n} Push-Geräte', n));
   const pushLabel = (p: { notifyServices: string[]; ntfy: boolean }) => {
     const ha = feat.haPush ? p.notifyServices.length : 0;
-    if (feat.ntfy && p.ntfy) return ha > 0 ? `${deviceLabel(ha)} und ntfy` : 'Push über ntfy';
+    if (feat.ntfy && p.ntfy) return ha > 0 ? t('{devices} und ntfy', { devices: deviceLabel(ha) }) : t('Push über ntfy');
     return deviceLabel(ha);
   };
   const hasPush = (p: { notifyServices: string[]; ntfy: boolean }) => (feat.haPush && p.notifyServices.length > 0) || (feat.ntfy && p.ntfy);
@@ -146,33 +147,32 @@
     void run(async () => {
       await api.updatePerson(id, { ntfyTopic: value });
       delete topicDraft[id];
-      toast(value ? 'ntfy-Thema gespeichert' : 'ntfy-Thema entfernt');
+      toast(value ? t('ntfy-Thema gespeichert') : t('ntfy-Thema entfernt'));
     });
   }
 </script>
 
-<Sheet title="Personen &amp; Zugriff" onclose={closeSheet}>
+<Sheet title={t('Personen & Zugriff')} onclose={closeSheet}>
   {#if loadError}
     <p class="py-10 text-center text-danger">{loadError}</p>
   {:else if !info}
-    <p class="py-10 text-center text-fg2">Lädt …</p>
+    <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
     {#if info.managed}
       <p class="mb-3 rounded-2xl bg-surface2 px-4 py-3 text-[15px]" data-testid="managed-note">
-        Personen, Push-Geräte und Zugriff werden in der Konfiguration der App in Home Assistant verwaltet
-        (Einstellungen › Apps › Stups › Konfiguration). Hier sind sie nur zu sehen. Anzeigename und Ruhezeit lassen sich weiter ändern.
+        {t('Personen, Push-Geräte und Zugriff werden in der Konfiguration der App in Home Assistant verwaltet (Einstellungen › Apps › Stups › Konfiguration). Hier sind sie nur zu sehen. Anzeigename und Ruhezeit lassen sich weiter ändern.')}
       </p>
     {/if}
     {#if !feat.standalone}
     <Group
-      title="Wer darf Stups öffnen?"
+      title={t('Wer darf Stups öffnen?')}
       hint={info.mode === 'everyone'
-        ? 'Jeder Home-Assistant-Benutzer kann die App öffnen. Zugewiesen und benachrichtigt werden nur die Personen unten.'
-        : 'Nur die Personen unten und Administratoren von Home Assistant kommen hinein. Wer sonst öffnet, erscheint unter „Wartet auf Freigabe“.'}
+        ? t('Jeder Home-Assistant-Benutzer kann die App öffnen. Zugewiesen und benachrichtigt werden nur die Personen unten.')
+        : t('Nur die Personen unten und Administratoren von Home Assistant kommen hinein. Wer sonst öffnet, erscheint unter „Wartet auf Freigabe“.')}
     >
       <Row stack>
-        <div class="flex gap-2" role="radiogroup" aria-label="Zugriff">
-          {#each [['everyone', 'Alle in Home Assistant'], ['selected', 'Nur diese Personen']] as [mode, label] (mode)}
+        <div class="flex gap-2" role="radiogroup" aria-label={t('Zugriff')}>
+          {#each [['everyone', t('Alle in Home Assistant')], ['selected', t('Nur diese Personen')]] as [mode, label] (mode)}
             <button
               type="button"
               role="radio"
@@ -187,12 +187,12 @@
             </button>
           {/each}
         </div>
-        {#if !admin && !info.managed}<p class="mt-2 text-[13px] text-fg2">Das ändern nur Administratoren von Home Assistant.</p>{/if}
+        {#if !admin && !info.managed}<p class="mt-2 text-[13px] text-fg2">{t('Das ändern nur Administratoren von Home Assistant.')}</p>{/if}
       </Row>
     </Group>
     {/if}
 
-    <Group title="Personen" hint="Diese Personen kann man Karten zuweisen, und sie bekommen die Push-Nachrichten.">
+    <Group title={t('Personen')} hint={t('Diese Personen kann man Karten zuweisen, und sie bekommen die Push-Nachrichten.')}>
       {#each info.people as p (p.id)}
         <div>
           <button
@@ -204,16 +204,16 @@
             <Avatar person={p} size={32} />
             <span class="min-w-0 flex-1">
               <span class="block truncate text-[17px] font-medium">
-                {p.displayName}{#if p.id === ui.me?.id}<span class="text-fg2"> (du)</span>{/if}
+                {p.displayName}{#if p.id === ui.me?.id}<span class="text-fg2"> ({t('du')})</span>{/if}
               </span>
               {#if feat.standalone}
                 <span class="block text-[13px] text-fg2">
-                  {accountOf(p.id) ? `Benutzername ${accountOf(p.id)?.username}` : 'Ohne Anmeldung'}{p.isAdmin ? ' · Administrator' : ''}
+                  {accountOf(p.id) ? t('Benutzername {name}', { name: accountOf(p.id)?.username ?? '' }) : t('Ohne Anmeldung')}{p.isAdmin ? ` · ${t('Administrator')}` : ''}
                 </span>
               {/if}
               {#if feat.push}
                 <span class="block text-[13px] {hasPush(p) ? 'text-fg2' : 'text-danger'}">
-                  {pushLabel(p)}{p.isAdmin && !feat.standalone ? ' · Administrator' : ''}
+                  {pushLabel(p)}{p.isAdmin && !feat.standalone ? ` · ${t('Administrator')}` : ''}
                 </span>
               {/if}
             </span>
@@ -224,12 +224,12 @@
             <div class="space-y-4 px-4 pb-4">
               {#if admin}
                 <label class="flex flex-col gap-1.5">
-                  <span class="text-[13px] font-semibold text-fg2">Anzeigename</span>
+                  <span class="text-[13px] font-semibold text-fg2">{t('Anzeigename')}</span>
                   <input
                     class="min-h-11 rounded-xl bg-surface2 px-3"
                     value={p.displayName}
                     maxlength="60"
-                    aria-label="Anzeigename von {p.displayName}"
+                    aria-label={t('Anzeigename von {name}', { name: p.displayName })}
                     onblur={(e) => rename(p.id, p.displayName, e.currentTarget.value)}
                   />
                 </label>
@@ -238,16 +238,16 @@
               {#if feat.standalone && admin}
                 {@const acct = accountOf(p.id)}
                 <div data-testid="account-{p.id}">
-                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">Anmeldung</p>
+                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Anmeldung')}</p>
                   {#if acct}
                     <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
-                      <span>Administrator</span>
+                      <span>{t('Administrator')}</span>
                       <input
                         type="checkbox"
                         class="h-5 w-5 accent-[var(--accent)]"
                         checked={acct.isAdmin}
                         disabled={busy || acct.userId === ui.me?.id}
-                        aria-label="{p.displayName} ist Administrator"
+                        aria-label={t('{name} ist Administrator', { name: p.displayName })}
                         onchange={(e) => run(() => api.updateAccount(acct.userId, { isAdmin: e.currentTarget.checked }))}
                       />
                     </label>
@@ -256,21 +256,21 @@
                         type="password"
                         bind:value={acctPw}
                         autocomplete="new-password"
-                        placeholder="Neues Passwort"
-                        aria-label="Neues Passwort für {p.displayName}"
+                        placeholder={t('Neues Passwort')}
+                        aria-label={t('Neues Passwort für {name}', { name: p.displayName })}
                         class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3"
                       />
                       <button type="button" class="min-h-11 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-40" disabled={busy || acctPw.length < 10} onclick={() => resetPassword(acct)}>
-                        Setzen
+                        {t('Setzen')}
                       </button>
                     </div>
                   {:else}
-                    <p class="mb-2 text-[13px] text-fg2">{p.displayName} hat noch keine Anmeldung (wird nur zugewiesen).</p>
+                    <p class="mb-2 text-[13px] text-fg2">{t('{name} hat noch keine Anmeldung (wird nur zugewiesen).', { name: p.displayName })}</p>
                     <div class="flex flex-col gap-2">
-                      <input bind:value={acctUser} autocomplete="off" autocapitalize="none" placeholder="Benutzername" aria-label="Benutzername für {p.displayName}" class="min-h-11 rounded-xl bg-surface2 px-3" />
-                      <input type="password" bind:value={acctPw} autocomplete="new-password" placeholder="Passwort (mindestens 10 Zeichen)" aria-label="Passwort für {p.displayName}" class="min-h-11 rounded-xl bg-surface2 px-3" />
+                      <input bind:value={acctUser} autocomplete="off" autocapitalize="none" placeholder={t('Benutzername')} aria-label={t('Benutzername für {name}', { name: p.displayName })} class="min-h-11 rounded-xl bg-surface2 px-3" />
+                      <input type="password" bind:value={acctPw} autocomplete="new-password" placeholder={t('Passwort (mindestens 10 Zeichen)')} aria-label={t('Passwort für {name}', { name: p.displayName })} class="min-h-11 rounded-xl bg-surface2 px-3" />
                       <button type="button" class="min-h-11 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-40" disabled={busy || !acctUser.trim() || acctPw.length < 10} onclick={() => createAccountFor(p.id)}>
-                        Anmeldung anlegen
+                        {t('Anmeldung anlegen')}
                       </button>
                     </div>
                   {/if}
@@ -279,9 +279,9 @@
 
               {#if feat.ntfy && info.ntfy}
                 <div data-testid="ntfy-{p.id}">
-                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">Push über ntfy</p>
+                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Push über ntfy')}</p>
                   {#if !canEdit(p.id)}
-                    <p class="text-[15px] text-fg2">Das Thema richtet {p.displayName} selbst ein oder ein Administrator.</p>
+                    <p class="text-[15px] text-fg2">{t('Das Thema richtet {name} selbst ein oder ein Administrator.', { name: p.displayName })}</p>
                   {:else}
                     <div class="flex items-center gap-2">
                       <input
@@ -291,8 +291,8 @@
                         autocomplete="off"
                         autocapitalize="none"
                         spellcheck="false"
-                        placeholder="Thema, zum Beispiel stups-anna-7x2k"
-                        aria-label="ntfy-Thema von {p.displayName}"
+                        placeholder={t('Thema, zum Beispiel stups-anna-7x2k')}
+                        aria-label={t('ntfy-Thema von {name}', { name: p.displayName })}
                         class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3"
                       />
                       <button
@@ -301,29 +301,28 @@
                         disabled={busy || (topicOf(p) !== '' && !TOPIC_RE.test(topicOf(p).trim())) || topicOf(p).trim() === (p.ntfyTopic ?? '')}
                         onclick={() => saveTopic(p.id, topicOf(p))}
                       >
-                        Speichern
+                        {t('Speichern')}
                       </button>
                     </div>
                     <div class="mt-1 flex gap-2">
                       <button type="button" class="min-h-11 text-[15px] font-semibold text-accent-text" onclick={() => (topicDraft[p.id] = randomTopic())}>
-                        Zufälliges Thema
+                        {t('Zufälliges Thema')}
                       </button>
                       {#if p.ntfy}
                         <button type="button" class="min-h-11 text-[15px] font-semibold text-danger" disabled={busy} onclick={() => saveTopic(p.id, '')}>
-                          Entfernen
+                          {t('Entfernen')}
                         </button>
                       {/if}
                     </div>
                     {#if topicOf(p) !== '' && !TOPIC_RE.test(topicOf(p).trim())}
-                      <p class="text-[13px] text-danger">Erlaubt sind Buchstaben, Ziffern, Minus und Unterstrich (höchstens 64 Zeichen).</p>
+                      <p class="text-[13px] text-danger">{t('Erlaubt sind Buchstaben, Ziffern, Minus und Unterstrich (höchstens 64 Zeichen).')}</p>
                     {/if}
                     <p class="mt-1 text-[13px] text-fg2">
-                      In der ntfy-App den Server <span class="font-semibold">{info.ntfy.url}</span> verwenden und dieses Thema abonnieren.
-                      Wer das Thema kennt, kann die Nachrichten lesen: ein zufälliges ist sicherer als ein Name.
+                      {t('In der ntfy-App den Server {url} verwenden und dieses Thema abonnieren. Wer das Thema kennt, kann die Nachrichten lesen: ein zufälliges ist sicherer als ein Name.', { url: info.ntfy.url })}
                     </p>
                     {#if !info.ntfy.buttons}
                       <p class="mt-1 text-[13px] text-danger">
-                        Ohne STUPS_PUBLIC_URL im Container kommen die Nachrichten ohne Link zur Karte und ohne Knöpfe.
+                        {t('Ohne STUPS_PUBLIC_URL im Container kommen die Nachrichten ohne Link zur Karte und ohne Knöpfe.')}
                       </p>
                     {/if}
                   {/if}
@@ -332,19 +331,19 @@
 
               {#if feat.haPush}
               <div>
-                <p class="mb-1.5 text-[13px] font-semibold text-fg2">Push-Geräte (Companion App)</p>
+                <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Push-Geräte (Companion App)')}</p>
                 {#if info.managed}
                   {#each p.notifyServices as s (s)}
                     {@const missing = info.services !== null && !info.services.includes(s)}
                     <p class="flex min-h-9 items-center gap-3 text-[15px]">
                       <span class="min-w-0 flex-1 truncate">{s.replace(/^mobile_app_/, '')}</span>
-                      {#if missing}<span class="text-[13px] text-danger">gibt es nicht</span>{/if}
+                      {#if missing}<span class="text-[13px] text-danger">{t('gibt es nicht')}</span>{/if}
                     </p>
                   {:else}
-                    <p class="text-[15px] text-danger">Kein Gerät in der Konfiguration eingetragen.</p>
+                    <p class="text-[15px] text-danger">{t('Kein Gerät in der Konfiguration eingetragen.')}</p>
                   {/each}
                 {:else if !canEdit(p.id)}
-                  <p class="text-[15px] text-fg2">Die Geräte wählt {p.displayName} selbst oder ein Administrator.</p>
+                  <p class="text-[15px] text-fg2">{t('Die Geräte wählt {name} selbst oder ein Administrator.', { name: p.displayName })}</p>
                 {:else}
                   {#each [...new Set([...(info.services ?? []), ...p.notifyServices])].sort() as s (s)}
                     {@const on = p.notifyServices.includes(s)}
@@ -358,11 +357,11 @@
                         onchange={(e) => toggleService(p.id, p.notifyServices, s, e.currentTarget.checked)}
                       />
                       <span class="min-w-0 flex-1 truncate">{s.replace(/^mobile_app_/, '')}</span>
-                      {#if missing}<span class="text-[13px] text-danger">gibt es nicht mehr</span>{/if}
+                      {#if missing}<span class="text-[13px] text-danger">{t('gibt es nicht mehr')}</span>{/if}
                     </label>
                   {:else}
                     <p class="text-[15px] text-fg2">
-                      Home Assistant meldet keine Geräte. Die Companion App muss auf dem Handy angemeldet sein.
+                      {t('Home Assistant meldet keine Geräte. Die Companion App muss auf dem Handy angemeldet sein.')}
                     </p>
                   {/each}
                 {/if}
@@ -371,15 +370,15 @@
 
               {#if canEdit(p.id)}
                 <div>
-                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">Ruhezeit für Stupse</p>
+                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Ruhezeit für Stupse')}</p>
                   <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
-                    <span>Stupse in der Ruhezeit erst danach zustellen</span>
+                    <span>{t('Stupse in der Ruhezeit erst danach zustellen')}</span>
                     <input
                       type="checkbox"
                       class="h-5 w-5 accent-[var(--accent)]"
                       checked={!p.nudgeQuiet.off}
                       disabled={busy}
-                      aria-label="Ruhezeit für Stupse von {p.displayName}"
+                      aria-label={t('Ruhezeit für Stupse von {name}', { name: p.displayName })}
                       onchange={(e) => run(() => api.updatePerson(p.id, { quietOff: !e.currentTarget.checked }))}
                     />
                   </label>
@@ -389,15 +388,15 @@
                         type="time"
                         class="min-h-11 rounded-xl bg-surface2 px-3"
                         value={p.nudgeQuiet.start}
-                        aria-label="Beginn der Ruhezeit von {p.displayName}"
+                        aria-label={t('Beginn der Ruhezeit von {name}', { name: p.displayName })}
                         onchange={(e) => e.currentTarget.value && run(() => api.updatePerson(p.id, { quietStart: e.currentTarget.value }))}
                       />
-                      <span>bis</span>
+                      <span>{t('bis')}</span>
                       <input
                         type="time"
                         class="min-h-11 rounded-xl bg-surface2 px-3"
                         value={p.nudgeQuiet.end}
-                        aria-label="Ende der Ruhezeit von {p.displayName}"
+                        aria-label={t('Ende der Ruhezeit von {name}', { name: p.displayName })}
                         onchange={(e) => e.currentTarget.value && run(() => api.updatePerson(p.id, { quietEnd: e.currentTarget.value }))}
                       />
                     </div>
@@ -407,16 +406,16 @@
 
               {#if admin && !info.managed}
                 {#if confirmRemove === p.id}
-                  <p class="text-[13px] text-fg2">Zugewiesene Karten behalten die Zuweisung, falls {p.displayName} zurückkommt.</p>
+                  <p class="text-[13px] text-fg2">{t('Zugewiesene Karten behalten die Zuweisung, falls {name} zurückkommt.', { name: p.displayName })}</p>
                   <div class="flex gap-2">
                     <button type="button" class="min-h-11 flex-1 rounded-xl bg-danger-bg font-semibold text-danger" disabled={busy} onclick={() => remove(p.id)}>
-                      Ja, entfernen
+                      {t('Ja, entfernen')}
                     </button>
-                    <button type="button" class="min-h-11 flex-1 rounded-xl bg-surface2 font-semibold" onclick={() => (confirmRemove = null)}>Abbrechen</button>
+                    <button type="button" class="min-h-11 flex-1 rounded-xl bg-surface2 font-semibold" onclick={() => (confirmRemove = null)}>{t('Abbrechen')}</button>
                   </div>
                 {:else}
                   <button type="button" class="min-h-11 text-[15px] font-semibold text-danger" disabled={busy} onclick={() => (confirmRemove = p.id)}>
-                    Aus Stups entfernen
+                    {t('Aus Stups entfernen')}
                   </button>
                 {/if}
               {/if}
@@ -424,47 +423,47 @@
           {/if}
         </div>
       {:else}
-        <p class="px-4 py-4 text-[15px] text-fg2">Noch niemand. {admin && !info.managed ? 'Füge unten Personen hinzu.' : ''}</p>
+        <p class="px-4 py-4 text-[15px] text-fg2">{t('Noch niemand.')} {admin && !info.managed ? t('Füge unten Personen hinzu.') : ''}</p>
       {/each}
     </Group>
 
     {#if admin && feat.standalone}
-      <Group title="Benutzer anlegen" hint="Wer sich anmelden soll. Das Passwort sagst du der Person selbst, sie kann es danach unter Einstellungen ändern.">
-        <form onsubmit={addUser} class="flex flex-col gap-2 px-4 py-3" aria-label="Benutzer anlegen">
-          <input bind:value={nuName} maxlength="60" placeholder="Name in Stups (zum Beispiel Anna)" aria-label="Name der neuen Person" class="min-h-11 rounded-xl bg-surface2 px-3" />
-          <input bind:value={nuUser} autocomplete="off" autocapitalize="none" placeholder="Benutzername" aria-label="Benutzername" class="min-h-11 rounded-xl bg-surface2 px-3" />
-          <input type="password" bind:value={nuPw} autocomplete="new-password" placeholder="Passwort (mindestens 10 Zeichen)" aria-label="Passwort" class="min-h-11 rounded-xl bg-surface2 px-3" />
+      <Group title={t('Benutzer anlegen')} hint={t('Wer sich anmelden soll. Das Passwort sagst du der Person selbst, sie kann es danach unter Einstellungen ändern.')}>
+        <form onsubmit={addUser} class="flex flex-col gap-2 px-4 py-3" aria-label={t('Benutzer anlegen')}>
+          <input bind:value={nuName} maxlength="60" placeholder={t('Name in Stups (zum Beispiel Anna)')} aria-label={t('Name der neuen Person')} class="min-h-11 rounded-xl bg-surface2 px-3" />
+          <input bind:value={nuUser} autocomplete="off" autocapitalize="none" placeholder={t('Benutzername')} aria-label={t('Benutzername')} class="min-h-11 rounded-xl bg-surface2 px-3" />
+          <input type="password" bind:value={nuPw} autocomplete="new-password" placeholder={t('Passwort (mindestens 10 Zeichen)')} aria-label={t('Passwort')} class="min-h-11 rounded-xl bg-surface2 px-3" />
           <label class="flex min-h-11 items-center gap-3 text-[15px]">
-            <input type="checkbox" class="h-5 w-5 accent-[var(--accent)]" bind:checked={nuAdmin} />Administrator
+            <input type="checkbox" class="h-5 w-5 accent-[var(--accent)]" bind:checked={nuAdmin} />{t('Administrator')}
           </label>
-          <button class="min-h-11 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-40" disabled={busy || !nuUser.trim() || nuPw.length < 10}>Benutzer anlegen</button>
+          <button class="min-h-11 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-40" disabled={busy || !nuUser.trim() || nuPw.length < 10}>{t('Benutzer anlegen')}</button>
         </form>
       </Group>
       {#if feat.ha && info.haPersons.length}
         <Group
-          title="Aus Home Assistant"
-          hint="Personen aus Home Assistant (Einstellungen › Personen). Mit demselben Namen findet Stups sie bei den Wächtern („wer ist zu Hause“)."
+          title={t('Aus Home Assistant')}
+          hint={t('Personen aus Home Assistant (Einstellungen › Personen). Mit demselben Namen findet Stups sie bei den Wächtern („wer ist zu Hause“).')}
         >
           {#each info.haPersons as hp (hp.userId ?? hp.name)}
             <Row label={hp.name}>
               <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-60" disabled={busy} onclick={() => add(hp.name, hp.userId)}>
-                Hinzufügen
+                {t('Hinzufügen')}
               </button>
             </Row>
           {/each}
         </Group>
       {:else if feat.ha && info.directoryAvailable === false}
-        <p class="mb-3 rounded-2xl bg-surface2 px-4 py-3 text-[15px]">Home Assistant liefert die Personenliste gerade nicht.</p>
+        <p class="mb-3 rounded-2xl bg-surface2 px-4 py-3 text-[15px]">{t('Home Assistant liefert die Personenliste gerade nicht.')}</p>
       {/if}
-      <Group title="Person ohne Anmeldung" hint="Zum Zuweisen von Karten, zum Beispiel für Kinder, die Stups nicht selbst öffnen.">
+      <Group title={t('Person ohne Anmeldung')} hint={t('Zum Zuweisen von Karten, zum Beispiel für Kinder, die Stups nicht selbst öffnen.')}>
         <form onsubmit={addManual} class="flex items-center gap-2 px-4 py-2">
-          <input bind:value={manualName} maxlength="60" placeholder="Name" enterkeyhint="done" class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3" aria-label="Name der Person ohne Anmeldung" />
-          <button class="min-h-11 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-40" disabled={busy || !manualName.trim()}>Hinzufügen</button>
+          <input bind:value={manualName} maxlength="60" placeholder={t('Name')} enterkeyhint="done" class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3" aria-label={t('Name der Person ohne Anmeldung')} />
+          <button class="min-h-11 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-40" disabled={busy || !manualName.trim()}>{t('Hinzufügen')}</button>
         </form>
       </Group>
     {:else if admin && !info.managed}
       {#if info.pending.length}
-        <Group title="Wartet auf Freigabe" hint="Diese Benutzer haben Stups geöffnet, sind aber keine Person.">
+        <Group title={t('Wartet auf Freigabe')} hint={t('Diese Benutzer haben Stups geöffnet, sind aber keine Person.')}>
           {#each info.pending as u (u.id)}
             <Row label={u.displayName}>
               <button
@@ -472,7 +471,7 @@
                 disabled={busy}
                 onclick={() => add(u.displayName, u.haUserId)}
               >
-                Freigeben
+                {t('Freigeben')}
               </button>
             </Row>
           {/each}
@@ -480,10 +479,10 @@
       {/if}
 
       <Group
-        title="Person hinzufügen"
+        title={t('Person hinzufügen')}
         hint={info.directoryAvailable === false
-          ? 'Home Assistant liefert die Personenliste gerade nicht. Der Name muss zum Benutzernamen oder Anzeigenamen in Home Assistant passen.'
-          : 'Personen aus Home Assistant (Einstellungen › Personen). Wer noch nie angemeldet war, wird beim ersten Öffnen verknüpft.'}
+          ? t('Home Assistant liefert die Personenliste gerade nicht. Der Name muss zum Benutzernamen oder Anzeigenamen in Home Assistant passen.')
+          : t('Personen aus Home Assistant (Einstellungen › Personen). Wer noch nie angemeldet war, wird beim ersten Öffnen verknüpft.')}
       >
         {#each info.haPersons as hp (hp.userId ?? hp.name)}
           <Row label={hp.name}>
@@ -492,7 +491,7 @@
               disabled={busy}
               onclick={() => add(hp.name, hp.userId)}
             >
-              Hinzufügen
+              {t('Hinzufügen')}
             </button>
           </Row>
         {/each}
@@ -500,13 +499,13 @@
           <input
             bind:value={manualName}
             maxlength="60"
-            placeholder="Anderen Namen eintragen"
+            placeholder={t('Anderen Namen eintragen')}
             enterkeyhint="done"
             class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3"
-            aria-label="Name der neuen Person"
+            aria-label={t('Name der neuen Person')}
           />
           <button class="min-h-11 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-40" disabled={busy || !manualName.trim()}>
-            Hinzufügen
+            {t('Hinzufügen')}
           </button>
         </form>
       </Group>

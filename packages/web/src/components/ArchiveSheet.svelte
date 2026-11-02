@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, type Card } from '../lib/api';
   import { formatDue } from '../lib/datetime';
@@ -22,32 +23,32 @@
   async function restore(card: Card) {
     if (!firstOpen) return;
     const ok = await act(() => api.restoreArchived(card.id, firstOpen!.id));
-    if (ok) toast(`„${card.title}“ ist zurück in „${firstOpen.name}“`);
+    if (ok) toast(t('„{title}“ ist zurück in „{column}“', { title: card.title, column: firstOpen.name }));
     await load();
   }
 </script>
 
-<Sheet title="Archiv" onclose={closeSheet}>
+<Sheet title={t('Archiv')} onclose={closeSheet}>
   {#if items === null}
-    <p class="py-10 text-center text-fg2">Lädt …</p>
+    <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else if items.length === 0}
-    <p class="py-10 text-center text-fg2">Noch nichts archiviert. Erledigte Karten landen hier nach der Archivfrist des Boards.</p>
+    <p class="py-10 text-center text-fg2">{t('Noch nichts archiviert. Erledigte Karten landen hier nach der Archivfrist des Boards.')}</p>
   {:else}
     <input
       type="search"
       bind:value={search}
-      placeholder="Im Archiv suchen"
+      placeholder={t('Im Archiv suchen')}
       class="mt-2 min-h-11 w-full rounded-xl border border-line bg-surface px-4"
-      aria-label="Im Archiv suchen"
+      aria-label={t('Im Archiv suchen')}
     />
     <Group>
       {#each shown as card (card.id)}
         <div class="flex min-h-[60px] items-center justify-between gap-3 px-4 py-2">
           <div class="min-w-0">
             <div class="truncate text-[17px]">{card.title}</div>
-            <div class="text-[13px] text-fg2">archiviert {card.archivedAt ? formatDue(card.archivedAt) : ''}</div>
+            <div class="text-[13px] text-fg2">{t('archiviert {when}', { when: card.archivedAt ? formatDue(card.archivedAt) : '' })}</div>
           </div>
-          <button class="min-h-10 shrink-0 rounded-xl bg-surface2 px-3 font-semibold text-accent-text" onclick={() => restore(card)}>Zurückholen</button>
+          <button class="min-h-10 shrink-0 rounded-xl bg-surface2 px-3 font-semibold text-accent-text" onclick={() => restore(card)}>{t('Zurückholen')}</button>
         </div>
       {/each}
     </Group>

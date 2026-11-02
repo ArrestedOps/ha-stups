@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, ApiError, type BetaState } from '../lib/api';
   import { toast, ui } from '../lib/store.svelte';
@@ -20,31 +21,31 @@
     try {
       gate = await api.setBeta(patch);
     } catch (e) {
-      toast(e instanceof ApiError ? e.message : 'Das ging nicht', { tone: 'error' });
+      toast(e instanceof ApiError ? e.message : t('Das ging nicht'), { tone: 'error' });
     }
     busy = false;
   }
 
   const choices = $derived([
-    { id: 'off', label: 'Aus', run: () => change({ push: { mode: 'off' } }) },
-    { id: 'only', label: 'Nur für mich', run: () => ui.me && change({ push: { mode: 'only', personId: ui.me.id } }) },
-    { id: 'all', label: 'An', run: () => change({ push: { mode: 'all' } }) },
+    { id: 'off', label: t('Aus'), run: () => change({ push: { mode: 'off' } }) },
+    { id: 'only', label: t('Nur für mich'), run: () => ui.me && change({ push: { mode: 'only', personId: ui.me.id } }) },
+    { id: 'all', label: t('An'), run: () => change({ push: { mode: 'all' } }) },
   ]);
 </script>
 
 <Group
   title="Beta"
   hint={ui.isAdmin
-    ? 'Das ist die Beta-Version von Stups mit eigenen Daten. Push und Wächter sind zunächst aus, damit niemand Nachrichten doppelt bekommt (auch nicht aus der normalen App). Schalte sie nur ein, wenn du sie testen willst.'
-    : 'Das ist die Beta-Version von Stups mit eigenen Daten. Push und Wächter schaltet ein Administrator ein.'}
+    ? t('Das ist die Beta-Version von Stups mit eigenen Daten. Push und Wächter sind zunächst aus, damit niemand Nachrichten doppelt bekommt (auch nicht aus der normalen App). Schalte sie nur ein, wenn du sie testen willst.')
+    : t('Das ist die Beta-Version von Stups mit eigenen Daten. Push und Wächter schaltet ein Administrator ein.')}
 >
   <div class="flex min-h-[46px] items-center gap-2 bg-accent px-4 py-2 text-on-accent" data-testid="beta-banner">
     <span class="rounded-md bg-on-accent px-2 py-0.5 text-[12px] font-bold text-accent">BETA</span>
-    <span class="text-[15px] font-semibold">Beta-Version mit eigenen Daten</span>
+    <span class="text-[15px] font-semibold">{t('Beta-Version mit eigenen Daten')}</span>
   </div>
   {#if gate !== null}
     <div class="px-4 py-3">
-      <div class="mb-1.5 text-[17px]" id="beta-push-label">Push-Nachrichten</div>
+      <div class="mb-1.5 text-[17px]" id="beta-push-label">{t('Push-Nachrichten')}</div>
       <div class="flex gap-2" role="radiogroup" aria-labelledby="beta-push-label">
         {#each choices as c (c.id)}
           <button
@@ -60,13 +61,13 @@
         {/each}
       </div>
     </div>
-    <Row label="Wächter">
+    <Row label={t('Wächter')}>
       <input
         type="checkbox"
         class="h-6 w-6 accent-[var(--accent)]"
         checked={gate.watchers}
         disabled={!ui.isAdmin || busy}
-        aria-label="Wächter in der Beta einschalten"
+        aria-label={t('Wächter in der Beta einschalten')}
         onchange={(e) => change({ watchers: e.currentTarget.checked })}
       />
     </Row>

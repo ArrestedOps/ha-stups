@@ -2,6 +2,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { FastifyInstance } from 'fastify';
 import { createAccess } from './access.js';
 import { AppError, ForbiddenError } from './errors.js';
+import { registerLanguageHook } from './i18n/hook.js';
+import { t } from './i18n/index.js';
 import { fetchPageTitle, resolveMapsLink as resolveShortMapsLink } from './links.js';
 import { ensureWebsocket } from './ws.js';
 import { body, type ApiDeps, type ApiKit } from './api/kit.js';
@@ -34,14 +36,17 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   app.decorateRequest('access', null);
 
   const requireAdmin = (req: FastifyRequest) => {
-    if (!req.access?.isAdmin) throw new ForbiddenError('Das dürfen nur Administratoren');
+    if (!req.access?.isAdmin) throw new ForbiddenError(t('Das dürfen nur Administratoren'));
   };
+
+  // Die Sprache der Anfrage; main.ts hängt denselben Haken schon vor die Anmeldung, hier gilt er für alles, was nur die API einbindet
+  registerLanguageHook(app);
 
   app.setErrorHandler((err: Error & { statusCode?: number }, _req: FastifyRequest, reply: FastifyReply) => {
     if (err instanceof AppError) return reply.code(err.status).send({ error: err.message });
     if (err.statusCode && err.statusCode < 500) return reply.code(err.statusCode).send({ error: err.message });
     app.log.error(err);
-    return reply.code(500).send({ error: 'Interner Fehler' });
+    return reply.code(500).send({ error: t('Interner Fehler') });
   });
 
   app.addHook('preHandler', async (req) => {
@@ -51,7 +56,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
     req.user = result.user;
     req.access = result;
     if (!result.allowed && !OPEN_PATHS.has(req.url.split('?')[0] ?? '')) {
-      throw new ForbiddenError('Kein Zugriff: Bitte einen Administrator, dich freizugeben');
+      throw new ForbiddenError(t('Kein Zugriff: Bitte einen Administrator, dich freizugeben'));
     }
   });
 

@@ -91,7 +91,7 @@
                 <span class="absolute inset-y-2.5 left-0 w-[4px] rounded-r-full" style:background={bar ?? `var(--c-${boardColorKey(c.boardColor, boardIndex(c.boardId))}-fg)`} aria-hidden="true"></span>
                 <button
                   class="flex w-12 shrink-0 items-start justify-center pt-[15px] pl-1"
-                  aria-label={done ? 'Bereits erledigt' : `„${c.title}“ erledigen`}
+                  aria-label={done ? t('Bereits erledigt') : t('„{title}“ erledigen', { title: c.title })}
                   disabled={done}
                   onclick={() => completeCard(c)}
                 >

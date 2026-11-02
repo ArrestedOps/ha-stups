@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from '../lib/i18n/index.svelte';
+  import { t, tx } from '../lib/i18n/index.svelte';
   import { isFuture } from '../lib/datetime';
   import { canNudge } from '../lib/nudge';
   import { cardTargets } from '../lib/swipe';
@@ -47,7 +47,7 @@
             closeSheet();
           }}
         >
-          <Icon name="check" size={18} />{t('Erledigt')}
+          <Icon name="check" size={18} />{tx('Aktion', 'Erledigt')}
         </button>
       {/if}
       {#if ui.me?.isPerson && canNudge(card, ui.me.id)}

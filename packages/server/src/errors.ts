@@ -1,3 +1,5 @@
+import { t } from './i18n/index.js';
+
 export class AppError extends Error {
   constructor(
     message: string,
@@ -14,13 +16,13 @@ export class ValidationError extends AppError {
 }
 
 export class ForbiddenError extends AppError {
-  constructor(message = 'Kein Zugriff') {
+  constructor(message = t('Kein Zugriff')) {
     super(message, 403);
   }
 }
 
 export class NotFoundError extends AppError {
-  constructor(message = 'Nicht gefunden') {
+  constructor(message = t('Nicht gefunden')) {
     super(message, 404);
   }
 }

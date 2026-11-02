@@ -32,7 +32,7 @@
       </button>
     {/each}
     <button class={chip(sf.unassigned)} aria-pressed={sf.unassigned} onclick={() => setScheduleFilter({ unassigned: !sf.unassigned })}>
-      Niemand<span class="text-[13px] text-fg2">{pc.unassigned}</span>
+      {t('Niemand')}<span class="text-[13px] text-fg2">{pc.unassigned}</span>
     </button>
   </div>
 
@@ -49,7 +49,7 @@
 
   <div class="flex items-center gap-2">
     <button class={chip(sf.showDone)} aria-pressed={sf.showDone} onclick={() => setScheduleFilter({ showDone: !sf.showDone })}>
-      <Icon name="check" size={14} stroke={2.6} />Erledigte
+      <Icon name="check" size={14} stroke={2.6} />{t('Erledigte')}
     </button>
     {#if isFiltered(sf)}
       <button class="min-h-9 shrink-0 px-2 text-[14px] text-accent-text" onclick={() => setScheduleFilter({ ...DEFAULT_FILTER })}>{t('Zurücksetzen')}</button>

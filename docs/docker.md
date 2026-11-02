@@ -7,10 +7,13 @@ Stups läuft nicht nur als Home-Assistant-App, sondern auch als eigener Docker-C
 | Anmeldung | die Benutzer von Home Assistant | eigene Konten mit Passwort |
 | Personen | aus Home Assistant | in Stups gepflegt (jeder Benutzer ist eine Person) |
 | Boards, Agenda, Kalender, Wiederholungen, Stupsen | ja | ja |
-| Wächter und Sensoren | ja | nein, in der Oberfläche ausgeblendet |
-| Push-Nachrichten | Companion App | über [ntfy](https://ntfy.sh) (siehe unten) |
+| Wächter und Sensoren | ja | nur mit Verbindung zu Home Assistant (siehe unten), sonst in der Oberfläche ausgeblendet |
+| Push-Nachrichten | Companion App | über [ntfy](https://ntfy.sh), mit Verbindung zu Home Assistant auch über die Companion App |
 
-Ein eigener Container **mit** Verbindung zu Home Assistant (Wächter und Sensoren über eine Adresse und ein Zugangs-Token) folgt mit Version 1.7. `HA_URL` und `HA_TOKEN` werden bis dahin noch nicht genutzt.
+Der Container läuft in einer von zwei Arten, je nachdem, ob `HA_URL` und `HA_TOKEN` gesetzt sind:
+
+- **Ohne Home Assistant** (Vorgabe): alles bis auf Wächter und Sensoren.
+- **Mit Home Assistant**: Stups verbindet sich über Adresse und Zugangs-Token mit deinem Home Assistant und bietet dann auch Wächter, Sensoren und Push über die Companion App an. Angemeldet wird weiter mit den Konten in Stups (siehe „Mit Home Assistant verbinden").
 
 ## Schnellstart
 
@@ -64,6 +67,8 @@ Alle Einstellungen sind Umgebungsvariablen. Ohne Angabe gelten die Vorgaben.
 | `STUPS_SHARE_DIR` | `/share` | Ordner, aus dem ein Umzug (`stups-umzug`) beim ersten Start übernommen wird |
 | `STUPS_PUBLIC_URL` | – | Adresse, unter der Stups erreichbar ist. `https://…` schaltet das Secure-Cookie ein |
 | `STUPS_ADMIN_USER`, `STUPS_ADMIN_PASSWORD` | – | erster Administrator, nur beide zusammen. Gilt nur, solange es noch kein Konto gibt |
+| `HA_URL` | – | Adresse deines Home Assistant, zum Beispiel `http://homeassistant.local:8123` (siehe „Mit Home Assistant verbinden") |
+| `HA_TOKEN` | – | Long-Lived-Zugangs-Token aus Home Assistant. Nur zusammen mit `HA_URL` |
 | `STUPS_NTFY_URL` | – | Adresse des ntfy-Servers, schaltet Push ein (siehe unten) |
 | `STUPS_NTFY_TOKEN` | – | Zugriffstoken (`tk_…`) für einen Server mit Anmeldung |
 | `STUPS_NTFY_USER`, `STUPS_NTFY_PASSWORD` | – | statt des Tokens: Benutzer und Passwort, nur beide zusammen |
@@ -104,6 +109,36 @@ Ohne Home Assistant gibt es keine Companion App. Stups schickt Erinnerungen, Stu
 - **Wie die Knöpfe arbeiten.** Sie sind ntfy-Knöpfe vom Typ „HTTP" (Android, iPhone und Web-App). Die ntfy-App ruft beim Tippen `STUPS_PUBLIC_URL/api/push/action` auf. Jede Nachricht trägt dafür ein Token: Person, Aktion und Ablaufzeit (14 Tage), mit einem Geheimnis aus der Datenbank signiert. Damit lässt sich genau diese eine Aktion für genau diese Person auslösen, ohne Anmeldung, und nichts sonst. Veränderte oder abgelaufene Tokens werden abgewiesen; ein Token zu erraten ist aussichtslos (HMAC-SHA-256). Mit **Rückweg prüfen** in der Test-Nachricht siehst du unter **Stand anzeigen**, ob der Weg vom Handy zu Stups frei ist.
 - **Nachrichten ersetzen und entfernen.** Stups vergibt jeder Nachricht eine Kennung. Neuere ntfy-Server (ab Version 2.16) ersetzen damit eine ältere Nachricht und löschen erledigte Nachrichten vom Handy. Ältere Server legen stattdessen eine neue an und lassen die alte stehen; tippt man dort danach auf „Erledigt", meldet Stups „schon erledigt", und die Nachricht verschwindet.
 - **Stups sendet nur, was du eingetragen hast.** Wer kein Thema hat, bekommt nichts; die Übersicht unter **Benachrichtigungen › Stand anzeigen** zeigt, wer erreichbar ist.
+
+## Mit Home Assistant verbinden
+
+Läuft Home Assistant bei dir (oder bei jemandem, dem du vertraust), kann der Container es nutzen, ohne selbst eine Home-Assistant-App zu sein.
+
+1. In Home Assistant: **Profil (unten links) › Sicherheit › Langlebige Zugangs-Tokens › Token erstellen**, Name zum Beispiel „Stups". Das Token wird nur einmal angezeigt.
+2. In die Compose-Datei:
+
+```yaml
+    environment:
+      HA_URL: "http://homeassistant.local:8123"
+      HA_TOKEN: "eyJhbGciOi…"
+      STUPS_PUBLIC_URL: "https://stups.example.org"
+```
+
+3. Neu starten. Im Protokoll steht „Verbindung zu Home Assistant: …". In der Oberfläche erscheint der Reiter **Wächter**.
+
+**Was damit geht**
+
+- **Wächter und Sensoren** wie in der App: Stups beobachtet Entitäten und legt Karten an, und es schreibt `sensor.stups_…` nach Home Assistant. Das Token entscheidet, was Stups darf: Es hat die Rechte des Benutzers, dem es gehört.
+- **Personen als Vorschläge.** Unter **Personen & Zugriff › Aus Home Assistant** erscheinen die Personen aus Home Assistant; mit **Hinzufügen** werden sie Personen in Stups. Für die Wächter („wer ist zu Hause", „wer zuerst nach Hause kommt") gilt: **Der Name in Stups muss zum Namen der Person in Home Assistant passen.** Eine über die Vorschläge hinzugefügte Person ist gleich verknüpft.
+- **Push über die Companion App**, zusätzlich zu ntfy: Bei jeder Person lassen sich die Handys ankreuzen, auf denen die Companion App angemeldet ist. Tippt man auf die Nachricht, öffnet sie Stups unter `STUPS_PUBLIC_URL`. „Erledigt" in der Nachricht kommt über die Verbindung zu Home Assistant zurück, ohne dass Stups aus dem Netz erreichbar sein muss.
+- **Wer Administrator ist**, bestimmt weiter das Konto in Stups, nie Home Assistant.
+
+**Hinweise**
+
+- **Adresse mit https und eigenem Zertifikat:** Node (und damit Stups) kennt es nicht. Binde die Zertifikatsdatei ein und setze `NODE_EXTRA_CA_CERTS: /pfad/zur/ca.pem`.
+- **Erreichbarkeit:** Der Container muss Home Assistant erreichen (Port 8123). Home Assistant braucht Stups nicht zu erreichen.
+- **Zeitzone:** Sie kommt von Home Assistant, sobald die Verbindung steht.
+- Das Token gibt Zugriff auf deinen Home Assistant. Behandle die Compose-Datei wie ein Passwort und nimm für Stups einen eigenen Benutzer, wenn du ihm weniger erlauben willst.
 
 ## Synology (Container Manager)
 

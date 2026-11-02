@@ -440,6 +440,22 @@
           <button class="min-h-11 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-40" disabled={busy || !nuUser.trim() || nuPw.length < 10}>Benutzer anlegen</button>
         </form>
       </Group>
+      {#if feat.ha && info.haPersons.length}
+        <Group
+          title="Aus Home Assistant"
+          hint="Personen aus Home Assistant (Einstellungen › Personen). Mit demselben Namen findet Stups sie bei den Wächtern („wer ist zu Hause“)."
+        >
+          {#each info.haPersons as hp (hp.userId ?? hp.name)}
+            <Row label={hp.name}>
+              <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-60" disabled={busy} onclick={() => add(hp.name, hp.userId)}>
+                Hinzufügen
+              </button>
+            </Row>
+          {/each}
+        </Group>
+      {:else if feat.ha && info.directoryAvailable === false}
+        <p class="mb-3 rounded-2xl bg-surface2 px-4 py-3 text-[15px]">Home Assistant liefert die Personenliste gerade nicht.</p>
+      {/if}
       <Group title="Person ohne Anmeldung" hint="Zum Zuweisen von Karten, zum Beispiel für Kinder, die Stups nicht selbst öffnen.">
         <form onsubmit={addManual} class="flex items-center gap-2 px-4 py-2">
           <input bind:value={manualName} maxlength="60" placeholder="Name" enterkeyhint="done" class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3" aria-label="Name der Person ohne Anmeldung" />

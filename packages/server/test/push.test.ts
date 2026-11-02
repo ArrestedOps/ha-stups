@@ -62,6 +62,20 @@ describe('HaNotifyPush', () => {
     expect(calls[0]!.data.data.url).toBe('/dashboard/start');
   });
 
+  it('im eigenen Container öffnet die Nachricht Stups unter dessen Adresse, nicht ein Panel in Home Assistant', async () => {
+    const calls: any[] = [];
+    const push = createHaNotifyPush({
+      ha: { callService: async (_d, _s, data) => void calls.push(data) },
+      servicesFor: () => ['svc'],
+      panelPath: () => '/dashboard/start',
+      publicUrl: 'https://stups.example.org',
+    });
+    await push.send('u1', message);
+    await push.send('u1', { ...message, open: {} });
+    await push.send('u1', { title: 'T', body: 'B', tag: 't' });
+    expect(calls.map((c) => c.data.url)).toEqual(['https://stups.example.org/?card=c1', 'https://stups.example.org/', undefined]);
+  });
+
   it('canReach: nur mit mindestens einem Gerät', () => {
     const { push } = setup({ u1: ['svc'], u2: [] });
     expect(push.canReach('u1')).toBe(true);

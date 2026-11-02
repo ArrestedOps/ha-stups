@@ -12,11 +12,18 @@ export interface Directory {
   persons(): Promise<DirectoryPerson[] | null>;
 }
 
-/** Eigene Konten (Betrieb ohne Home Assistant): Administrator ist, wer es im Konto ist. Personen pflegt Stups selbst. */
-export function createLocalDirectory(accounts: { byExternalId(id: string): { isAdmin: boolean } | null }): Directory {
+/**
+ * Eigene Konten (eigener Container): Administrator ist, wer es im Konto ist. Personen pflegt Stups selbst.
+ * Mit Verbindung zu Home Assistant kommen von dort Vorschläge für Personen (`suggestions`), mehr nicht:
+ * Wer Administrator ist, bestimmt immer das Konto in Stups.
+ */
+export function createLocalDirectory(
+  accounts: { byExternalId(id: string): { isAdmin: boolean } | null },
+  suggestions?: () => Promise<DirectoryPerson[] | null>,
+): Directory {
   return {
     isAdmin: async (id) => accounts.byExternalId(id)?.isAdmin ?? false,
-    persons: async () => [],
+    persons: suggestions ?? (async () => []),
   };
 }
 

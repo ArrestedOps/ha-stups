@@ -33,12 +33,6 @@ const runtime = resolveRuntime(process.env);
 const { dataDir, shareDir, port, options } = runtime;
 
 const app = Fastify({ logger: { level: options.logLevel } });
-if (runtime.mode === 'standalone-ha') {
-  // Die Verbindung eines eigenständigen Containers zu Home Assistant folgt in einer späteren Version
-  app.log.warn('HA_URL und HA_TOKEN werden in dieser Version noch nicht genutzt: Stups läuft ohne Home Assistant');
-  runtime.mode = 'standalone';
-  runtime.ha = null;
-}
 
 const dbPath = `${dataDir}/stups.sqlite`;
 // Neue App ohne eigene Daten: Datenbank und Anhänge aus einem Export der alten App übernehmen (Einstellungen › Umzug)
@@ -84,6 +78,7 @@ const gateways = [
         ha,
         servicesFor: (userId) => store.userById(userId)?.notifyServices ?? [],
         panelPath: () => store.getSettings().panelPath ?? '/',
+        publicUrl: runtime.publicUrl,
         log,
       })
     : null,
@@ -185,7 +180,8 @@ if (accounts) {
 // Ohne Verbindung zu Home Assistant (lokale Entwicklung, Tests) gibt es kein Verzeichnis: Personen gelten als Administratoren.
 // Nur dort lässt sich mit DEV_ADMINS (Kennungen, durch Komma getrennt) eine feste Administratorenliste vorgeben.
 const directory = accounts
-  ? createLocalDirectory(accounts)
+  ? // Mit Home Assistant daneben: seine Personen als Vorschläge (Administrator ist, wer es im Konto ist)
+    createLocalDirectory(accounts, runtime.ha ? createDirectory({ ha }).persons : undefined)
   : runtime.ha
     ? createDirectory({ ha })
     : runtime.identity.devAdmins
@@ -243,6 +239,7 @@ await app.register(fastifyStatic, {
 });
 
 if (token) {
+  if (runtime.mode === 'standalone-ha') app.log.info(`Verbindung zu Home Assistant: ${runtime.ha!.baseUrl}`);
   ha.connect();
   watchers?.start();
   automation?.start();

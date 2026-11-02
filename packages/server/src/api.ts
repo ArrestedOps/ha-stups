@@ -268,7 +268,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
       people: withRole,
       pending,
       // Personen aus Home Assistant, die noch nicht dabei sind
-      haPersons: (haPersons ?? []).filter((p) => (p.userId ? !added.has(p.userId) : !addedNames.has(p.name.toLowerCase()))),
+      haPersons: (haPersons ?? []).filter((p) => !(p.userId && added.has(p.userId)) && !addedNames.has(p.name.toLowerCase())),
       services: notifyServices ? notifyServices.filter((s) => s.startsWith('mobile_app_')) : null,
       ntfy: deps.ntfy ? { url: deps.ntfy.url, buttons: deps.capabilities?.publicUrl != null } : null,
       directoryAvailable: isAdmin ? haPersons !== null && haPersons !== undefined : null,

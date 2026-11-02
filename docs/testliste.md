@@ -160,6 +160,18 @@ Nach dem Abschnitt „Push-Nachrichten über ntfy" in `docs/docker.md`: `STUPS_N
 - [ ] Person ohne Thema: Beim Stupsen heißt es „kein Push-Gerät", unter „Stand anzeigen" steht „kein Thema eingetragen"
 - [ ] Tageszusammenfassung zur eingestellten Uhrzeit kommt an (Variable `STUPS_DAILY_SUMMARY_TIME`)
 
+## 15 · Container mit Home Assistant (nur wenn du `HA_URL` und `HA_TOKEN` setzt)
+
+Nach dem Abschnitt „Mit Home Assistant verbinden" in `docs/docker.md`.
+
+- [ ] `docker logs stups` zeigt „Verbindung zu Home Assistant: …" und keine Meldung zu abgelehnter Anmeldung. Die Oberfläche hat vier Reiter, darunter **Wächter**
+- [ ] Personen & Zugriff › „Aus Home Assistant": Die Personen aus Home Assistant stehen dort (ohne die, die es in Stups schon gibt). **Hinzufügen** macht sie zur Person
+- [ ] Wächter anlegen (Vorlage „Waschmaschine fertig" o. ä.), Ereignis auslösen: Die Karte erscheint, mit „wer ist zu Hause" bekommt sie nur, wer in Home Assistant gerade zu Hause ist (Namen gleich)
+- [ ] In Home Assistant erscheinen die Sensoren `sensor.stups_…` und aktualisieren sich
+- [ ] Bei einer Person ein Handy der Companion App ankreuzen, Einstellungen › Benachrichtigungen › „An mich senden": Die Nachricht kommt an, Tippen darauf öffnet Stups (nicht Home Assistant) und, bei einer Karte, die Karte
+- [ ] „Erledigt" in der Nachricht der Companion App erledigt die Karte, auch wenn das Handy Stups nicht erreicht (Weg über Home Assistant)
+- [ ] Home Assistant neu starten: Stups verbindet sich von selbst wieder (Wächter lösen danach wieder aus), Sensoren erscheinen spätestens nach 5 Minuten
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.7.0
+
+- **Der eigene Container kann sich mit Home Assistant verbinden.** Mit `HA_URL` und `HA_TOKEN` (Long-Lived-Token) bekommt er auch **Wächter, Sensoren und Push über die Companion App**, ohne selbst eine Home-Assistant-App zu sein. Angemeldet wird weiter mit den Konten in Stups. Anleitung: `docs/docker.md`
+- **Personen aus Home Assistant** erscheinen unter Personen & Zugriff als Vorschläge zum Hinzufügen. Für „wer ist zu Hause" findet Stups die Person über ihren Namen
+- Push-Nachrichten über die Companion App öffnen im Container Stups unter `STUPS_PUBLIC_URL`, nicht ein Panel in Home Assistant
+- Vorschläge aus Home Assistant zeigen keine Personen mehr, die es in Stups schon gibt (gleicher Name)
+- **Für die App in Home Assistant ändert sich nichts**
+
 ## 1.6.0
 
 - **Push über ntfy im eigenen Container.** Ohne Home Assistant gibt es keine Companion App; jetzt kommen Erinnerungen, Stupse und die Tageszusammenfassung über einen ntfy-Server (selbst betrieben oder `ntfy.sh`). Jede Person trägt unter Personen & Zugriff ein eigenes Thema ein und abonniert es in der ntfy-App. Mit Link zur Karte und Knöpfen: „Erledigt" bei Fälligkeit, „Erledigt", „Mach ich" und „Später" beim Stups. Einrichtung und Hinweise: `docs/docker.md`

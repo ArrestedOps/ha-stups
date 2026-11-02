@@ -54,12 +54,18 @@ export interface HaNotifyDeps {
   servicesFor: (userId: string) => string[];
   /** Dashboard, das beim Tippen auf die Nachricht öffnet */
   panelPath: () => string;
+  /**
+   * Adresse von Stups im eigenen Container. Dort gibt es kein Panel in Home Assistant, das sich öffnen ließe:
+   * Die Nachricht öffnet dann Stups unter dieser Adresse.
+   */
+  publicUrl?: string | null;
   log?: { warn: (msg: string) => void };
 }
 
 /** Push über die Notify-Dienste von Home Assistant (Companion App), wie bisher. */
 export function createHaNotifyPush(deps: HaNotifyDeps): PushGateway {
   const url = (cardId?: string): string => {
+    if (deps.publicUrl) return cardId ? `${deps.publicUrl}/?card=${encodeURIComponent(cardId)}` : `${deps.publicUrl}/`;
     const base = deps.panelPath();
     return cardId ? `${base}?card=${cardId}` : base;
   };

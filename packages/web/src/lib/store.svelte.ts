@@ -106,9 +106,13 @@ export const feat = {
   get ntfy(): boolean {
     return ui.caps?.push.includes('ntfy') ?? false;
   },
-  /** Dashboard-Button, Kopfzeile von Home Assistant, Bubble Card, Diagnose-Seite */
+  /** Stups sitzt in Home Assistant (Add-on): Dashboard-Button, Kopfzeile von Home Assistant, Bubble Card, Diagnose-Seite */
   get haUi(): boolean {
-    return !this.standalone || (ui.caps?.ha ?? false);
+    return !this.standalone;
+  },
+  /** Verbindung zu Home Assistant besteht (App oder eigener Container mit Adresse und Token): Personen als Vorschläge */
+  get ha(): boolean {
+    return ui.caps?.ha ?? !this.standalone;
   },
   /** Umzug zwischen zwei Add-ons */
   get migration(): boolean {

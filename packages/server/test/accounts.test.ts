@@ -224,6 +224,15 @@ describe('Administratoren und Entfernen', () => {
     expect(await dir.isAdmin('ha-irgendwer')).toBe(false);
     expect(await dir.persons()).toEqual([]);
   });
+
+  it('Verzeichnis mit Home Assistant daneben: seine Personen sind Vorschläge, Administrator bleibt, wer es im Konto ist', async () => {
+    const member = await accounts.create({ username: 'ben', password: PW });
+    const dir = createLocalDirectory(accounts, async () => [{ name: 'Conny', userId: 'ha-conny' }]);
+    expect(await dir.persons()).toEqual([{ name: 'Conny', userId: 'ha-conny' }]);
+    // auch ein Administrator in Home Assistant macht niemanden in Stups zum Administrator
+    expect(await dir.isAdmin(member.externalId)).toBe(false);
+    expect(await dir.isAdmin('ha-conny')).toBe(false);
+  });
 });
 
 describe('Migration 11', () => {

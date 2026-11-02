@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { api } from '../lib/api';
   import { columnForNew } from '../lib/calendar';
   import { formatDue, isFuture } from '../lib/datetime';
@@ -41,7 +42,7 @@
     busy = false;
     if (!card) return;
     closeSheet();
-    toast('Karte angelegt', { action: { label: 'Öffnen', run: () => void openCardAnywhere({ id: card.id, boardId }) } });
+    toast(t('Karte angelegt'), { action: { label: t('Öffnen'), run: () => void openCardAnywhere({ id: card.id, boardId }) } });
   }
 
   /** Alle Felder: das volle Formular im gewählten Board, Termin vorbelegt */
@@ -59,17 +60,17 @@
   </button>
 {/snippet}
 
-<Sheet title="Neue Karte" onclose={closeSheet} right={createButton}>
+<Sheet title={t('Neue Karte')} onclose={closeSheet} right={createButton}>
   <form onsubmit={create} class="pt-1 pb-2">
     <p class="px-1 text-[15px] font-semibold text-accent-text" data-testid="slot-time">{formatDue(at)}</p>
     <input
       use:focus
       bind:value={title}
       maxlength="200"
-      placeholder="Titel, z. B. Elektriker"
+      placeholder={t('Titel, z. B. Elektriker')}
       enterkeyhint="done"
       class="mt-1 block w-full bg-transparent px-1 py-2 focus-visible:outline-none text-[26px] leading-tight font-bold tracking-tight"
-      aria-label="Titel"
+      aria-label={t('Titel')}
     />
 
     {#if ui.boards.length > 1}
@@ -88,8 +89,8 @@
       </div>
     {/if}
 
-    <h3 class="mt-4 mb-2 px-1 text-[13px] font-semibold text-fg2 uppercase">Zuständig</h3>
-    <div class="flex flex-wrap gap-2" role="group" aria-label="Zuständig">
+    <h3 class="mt-4 mb-2 px-1 text-[13px] font-semibold text-fg2 uppercase">{t('Zuständig')}</h3>
+    <div class="flex flex-wrap gap-2" role="group" aria-label={t('Zuständig')}>
       {#each people as p (p.id)}
         {@const on = assigneeIds.includes(p.id)}
         <button
@@ -104,7 +105,7 @@
     </div>
 
     <button type="button" class="mt-5 min-h-11 w-full rounded-xl border border-line text-[16px] text-accent-text" onclick={more}>
-      Alle Felder …
+      {t('Alle Felder …')}
     </button>
   </form>
 </Sheet>

@@ -1,13 +1,14 @@
+import { t } from './i18n/index.svelte';
 import type { CarryField } from './api';
 
 /** Was eine wiederkehrende Karte in die nächste Karte mitnehmen kann (Reihenfolge wie in der Oberfläche) */
 export const CARRY_OPTIONS: { field: CarryField; label: string; hint?: string }[] = [
-  { field: 'description', label: 'Beschreibung' },
-  { field: 'checklist', label: 'Checkliste', hint: 'alle Einträge wieder offen' },
-  { field: 'links', label: 'Links' },
-  { field: 'cost', label: 'Kosten' },
-  { field: 'attachments', label: 'Fotos und PDFs' },
-  { field: 'comments', label: 'Kommentare' },
+  { field: 'description', get label() { return t('Beschreibung'); } },
+  { field: 'checklist', get label() { return t('Checkliste'); }, get hint() { return t('alle Einträge wieder offen'); } },
+  { field: 'links', get label() { return t('Links'); } },
+  { field: 'cost', get label() { return t('Kosten'); } },
+  { field: 'attachments', get label() { return t('Fotos und PDFs'); } },
+  { field: 'comments', get label() { return t('Kommentare'); } },
 ];
 
 /** Gilt, solange man nichts ändert: Fotos und Kommentare gehören meist zu genau einem Durchgang */

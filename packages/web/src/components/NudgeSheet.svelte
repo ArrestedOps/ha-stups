@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, ApiError, type NudgeInfo, type NudgeResult, type NudgeTemplate } from '../lib/api';
   import { preselected, sentMessage, targetHint } from '../lib/nudge';
@@ -24,13 +25,16 @@
       info = await api.nudgeInfo(id);
       selected = keepSelection ? selected.filter((s) => info!.people.find((p) => p.id === s)?.selectable) : preselected(info.people);
     } catch (e) {
-      loadError = e instanceof ApiError ? e.message : 'Konnte die Auswahl nicht laden';
+      loadError = e instanceof ApiError ? e.message : t('Konnte die Auswahl nicht laden');
     }
   }
   onMount(() => load());
 
   const TEMPLATES: NudgeTemplate[] = ['think', 'today', 'help', 'thanks'];
-  const nameOf = (pid: string) => ui.people.find((p) => p.id === pid)?.displayName ?? 'Jemand';
+  // Die Vorlagen kommen vom Server (deutsch); hier stehen sie als Text, damit sie übersetzt werden
+  const templateText = (k: string): string =>
+    ({ think: t('Denkst du dran?'), today: t('Heute noch?'), help: t('Brauch deine Hilfe'), thanks: t('Danke dir! ❤️') })[k as 'think'] ?? (info?.templates as Record<string, string> | undefined)?.[k] ?? k;
+  const nameOf = (pid: string) => ui.people.find((p) => p.id === pid)?.displayName ?? t('Jemand');
   const ready = $derived(selected.length > 0 && (custom.trim().length > 0 || !!template));
 
   function toggle(pid: string, on: boolean) {
@@ -52,27 +56,27 @@
     } catch (e) {
       // Alle Empfänger gesperrt: die Auskunft steht schon in der Liste, die Auswahl wird neu geladen
       if (e instanceof ApiError && e.status === 409) {
-        toast('Gerade nicht möglich. Unter den Namen steht, ab wann es wieder geht.', { tone: 'error' });
+        toast(t('Gerade nicht möglich. Unter den Namen steht, ab wann es wieder geht.'), { tone: 'error' });
         await load(true);
       } else {
-        toast(e instanceof ApiError ? e.message : 'Senden fehlgeschlagen', { tone: 'error' });
+        toast(e instanceof ApiError ? e.message : t('Senden fehlgeschlagen'), { tone: 'error' });
       }
     }
     busy = false;
   }
 </script>
 
-<Sheet title="Stupsen" onclose={closeSheet}>
+<Sheet title={t('Stupsen')} onclose={closeSheet}>
   {#if loadError}
     <p class="py-10 text-center text-danger">{loadError}</p>
   {:else if !info}
-    <p class="py-10 text-center text-fg2">Lädt …</p>
+    <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else if !info.canNudge}
-    <p class="py-10 text-center text-fg2">Stupsen können nur Personen, die unter Einstellungen › Personen &amp; Zugriff stehen.</p>
+    <p class="py-10 text-center text-fg2">{t('Stupsen können nur Personen, die unter Einstellungen › Personen & Zugriff stehen.')}</p>
   {:else}
     <p class="mt-1 px-3 text-[15px] text-fg2">{card?.title ?? ''}</p>
 
-    <Group title="An wen" hint="Es bekommt jeder einen eigenen Stups. Pro Karte und Person geht höchstens einer alle 30 Minuten.">
+    <Group title={t('An wen')} hint={t('Es bekommt jeder einen eigenen Stups. Pro Karte und Person geht höchstens einer alle 30 Minuten.')}>
       {#each info.people as t (t.id)}
         {@const hint = targetHint(t)}
         <label class="flex min-h-[56px] items-center gap-3 px-4 {t.selectable ? '' : 'opacity-50'}">
@@ -91,12 +95,12 @@
           </span>
         </label>
       {:else}
-        <p class="px-4 py-4 text-[15px] text-fg2">Es gibt keine andere Person, die du stupsen könntest.</p>
+        <p class="px-4 py-4 text-[15px] text-fg2">{t('Es gibt keine andere Person, die du stupsen könntest.')}</p>
       {/each}
     </Group>
 
-    <Group title="Nachricht">
-      <div class="flex flex-wrap gap-2 px-4 py-3" role="radiogroup" aria-label="Nachricht">
+    <Group title={t('Nachricht')}>
+      <div class="flex flex-wrap gap-2 px-4 py-3" role="radiogroup" aria-label={t('Nachricht')}>
         {#each TEMPLATES as k (k)}
           <button
             type="button"
@@ -108,7 +112,7 @@
               custom = '';
             }}
           >
-            {info.templates[k]}
+            {templateText(k)}
           </button>
         {/each}
       </div>
@@ -116,10 +120,10 @@
         <input
           bind:value={custom}
           maxlength={info.maxText}
-          placeholder="Oder ein eigener Text"
+          placeholder={t('Oder ein eigener Text')}
           enterkeyhint="send"
           class="min-w-0 flex-1 bg-transparent py-3.5"
-          aria-label="Eigener Text"
+          aria-label={t('Eigener Text')}
         />
         {#if custom}<span class="text-[13px] text-fg2">{custom.length}/{info.maxText}</span>{/if}
       </label>
@@ -130,7 +134,7 @@
       disabled={!ready || busy}
       onclick={send}
     >
-      <Icon name="hand" size={20} />Stups senden
+      <Icon name="hand" size={20} />{t('Stups senden')}
     </button>
   {/if}
 </Sheet>

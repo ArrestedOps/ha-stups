@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { api } from '../lib/api';
   import { CATEGORY_COLORS, catClass, findCategory, nextColor } from '../lib/colors';
   import { act, ui } from '../lib/store.svelte';
@@ -61,14 +62,14 @@
 {/if}
 
 <form onsubmit={create} class="flex min-h-11 items-center gap-2 {categories.length > 0 ? 'mt-3' : ''}">
-  <button type="button" class="{catClass(shownColor)} h-9 w-9 shrink-0 !p-0" aria-label="Farbe wechseln" onclick={cycleColor}>●</button>
+  <button type="button" class="{catClass(shownColor)} h-9 w-9 shrink-0 !p-0" aria-label={t('Farbe wechseln')} onclick={cycleColor}>●</button>
   <input
     bind:value={name}
-    placeholder="Neue Kategorie"
+    placeholder={t('Neue Kategorie')}
     maxlength="40"
     enterkeyhint="done"
     class="min-h-11 min-w-0 flex-1 rounded-xl border border-line bg-surface2 px-3 text-[16px]"
-    aria-label="Name der neuen Kategorie"
+    aria-label={t('Name der neuen Kategorie')}
   />
   <button
     type="submit"

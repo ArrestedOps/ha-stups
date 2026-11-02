@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { autogrow } from '../lib/autogrow';
   import { highlightSegments, type QuickToken } from '../lib/quickadd';
 
@@ -40,7 +41,7 @@
     autocapitalize="sentences"
     spellcheck="false"
     class="relative block w-full resize-none overflow-hidden bg-transparent {font}"
-    aria-label="Titel"
+    aria-label={t('Titel')}
     onkeydown={(e) => {
       // Eingabetaste legt an, statt einen Zeilenumbruch in den Titel zu schreiben
       if (e.key === 'Enter') {

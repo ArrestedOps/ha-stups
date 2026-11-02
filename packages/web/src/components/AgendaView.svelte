@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { numberLocale, t } from '../lib/i18n/index.svelte';
   import { api } from '../lib/api';
   import { clock } from '../lib/nudge';
   import { AGENDA_STEP_DAYS, agendaHorizonAfterLoad, boardColorKey, filterSchedule, groupByDay, type ScheduleCard } from '../lib/schedule';
@@ -47,7 +48,7 @@
   const sections = $derived(groupByDay(shown));
   const boardIndex = (id: string) => ui.boards.findIndex((b) => b.id === id);
   /** bis wohin geladen ist, für den Hinweis bei leerer Liste */
-  const horizonLabel = $derived(new Date(Date.now() + days * DAY).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }));
+  const horizonLabel = $derived(new Date(Date.now() + days * DAY).toLocaleDateString(numberLocale(), { day: 'numeric', month: 'long', year: 'numeric' }));
 </script>
 
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
@@ -56,23 +57,23 @@
       <h1 class="text-[34px] leading-tight font-bold tracking-tight">Agenda</h1>
       <SettingsButton />
     </div>
-    <p class="mb-3 text-[15px] text-fg2">Alle Karten mit Termin, nach Tagen</p>
+    <p class="mb-3 text-[15px] text-fg2">{t('Alle Karten mit Termin, nach Tagen')}</p>
     <ScheduleFilterBar cards={loaded} />
   </header>
 
   <div class="-mr-4 mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-4 pb-tabbar" data-testid="agenda">
     {#if loading}
-      <p class="py-10 text-center text-fg2">Lädt …</p>
+      <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
     {:else if failed}
-      <p class="py-10 text-center text-fg2">Die Agenda konnte nicht geladen werden.</p>
+      <p class="py-10 text-center text-fg2">{t('Die Agenda konnte nicht geladen werden.')}</p>
     {:else if sections.length === 0}
       <div class="flex flex-col items-center gap-2 py-12 text-center text-fg2">
         <Icon name="calendar" size={32} />
-        <p class="text-[17px] font-semibold text-fg">Keine Termine</p>
-        <p>Bis {horizonLabel} gibt es mit diesem Filter keine Karte mit Termin.</p>
+        <p class="text-[17px] font-semibold text-fg">{t('Keine Termine')}</p>
+        <p>{t('Bis {date} gibt es mit diesem Filter keine Karte mit Termin.', { date: horizonLabel })}</p>
         <!-- Auch hier: Karten, die weiter in der Zukunft liegen, sind nur einen Tipp entfernt -->
         <button class="mt-3 min-h-11 w-full max-w-[320px] rounded-xl border border-line text-[15px] text-fg" onclick={() => (days += AGENDA_STEP_DAYS)}>
-          Weitere {AGENDA_STEP_DAYS} Tage laden
+          {t('Weitere {n} Tage laden', { n: AGENDA_STEP_DAYS })}
         </button>
       </div>
     {:else}
@@ -119,7 +120,7 @@
         </section>
       {/each}
       <button class="mb-6 min-h-11 w-full rounded-xl border border-line text-[15px] text-fg2" onclick={() => (days += AGENDA_STEP_DAYS)}>
-        Weitere {AGENDA_STEP_DAYS} Tage laden
+        {t('Weitere {n} Tage laden', { n: AGENDA_STEP_DAYS })}
       </button>
     {/if}
   </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import type { Card } from '../lib/api';
   import { catKey } from '../lib/colors';
   import { cardMeta } from '../lib/cardMeta';
@@ -169,11 +170,11 @@
 
       {#if nudge.toMe.length}
         <span class="mt-1.5 inline-flex items-center gap-1.5 rounded-[9px] bg-accent px-2 py-0.5 text-[13px] font-bold text-on-accent" data-testid="nudge-to-me">
-          <Icon name="hand" size={14} />{names(nudge.toMe.map((n) => n.fromId))} stupst dich
+          <Icon name="hand" size={14} />{t('{names} stupst dich', { names: names(nudge.toMe.map((n) => n.fromId)) })}
         </span>
       {:else if nudge.fromMe.length}
         <span class="mt-1.5 flex items-center gap-1.5 text-[12px] text-fg2" data-testid="nudge-from-me">
-          <Icon name="hand" size={12} />Du hast {names(nudge.fromMe.map((n) => n.toId))} gestupst
+          <Icon name="hand" size={12} />{t('Du hast {names} gestupst', { names: names(nudge.fromMe.map((n) => n.toId)) })}
         </span>
       {/if}
 
@@ -183,7 +184,7 @@
           <div class="flex min-w-0 flex-1 items-center gap-3 overflow-hidden whitespace-nowrap text-fg2">
             {#each meta as m (m.kind)}
               {#if m.kind === 'done'}
-                <span class="flex shrink-0 items-center gap-1 text-fg" data-testid="card-done-at"><Icon name="check" size={13} stroke={2.6} />Erledigt {m.text}</span>
+                <span class="flex shrink-0 items-center gap-1 text-fg" data-testid="card-done-at"><Icon name="check" size={13} stroke={2.6} />{t('Erledigt {when}', { when: m.text })}</span>
               {:else if m.kind === 'due'}
                 <span
                   class="flex shrink-0 items-center gap-1 font-medium {m.overdue ? 'text-danger' : 'text-fg'}"
@@ -194,7 +195,7 @@
                   <Icon name="clock" size={13} />{m.text}
                 </span>
               {:else if m.kind === 'watcher'}
-                <span class="shrink-0" title="Von einem Wächter angelegt" aria-label="Von einem Wächter angelegt" data-testid="card-watcher"><Icon name="eye" size={13} /></span>
+                <span class="shrink-0" title={t('Von einem Wächter angelegt')} aria-label={t('Von einem Wächter angelegt')} data-testid="card-watcher"><Icon name="eye" size={13} /></span>
               {:else if m.kind === 'recurrence'}
                 <span class="shrink-0" title={m.label} aria-label="Wiederholt: {m.label}"><Icon name="repeat" size={13} /></span>
               {:else if m.kind === 'priority'}

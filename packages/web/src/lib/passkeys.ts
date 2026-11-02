@@ -1,3 +1,4 @@
+import { t } from './i18n/index.svelte';
 import { api, ApiError, type PasskeyInfo } from './api';
 
 /** Passkeys brauchen eine sichere Seite (HTTPS oder localhost) und einen Browser mit WebAuthn */
@@ -27,8 +28,8 @@ export function passkeyErrorText(err: unknown): string {
   if (err instanceof ApiError) return err.message;
   const name = (err as { name?: string; code?: string } | null)?.name;
   const code = (err as { code?: string } | null)?.code;
-  if (name === 'NotAllowedError' || code === 'ERROR_CEREMONY_ABORTED') return 'Abgebrochen oder vom Gerät abgelehnt';
-  if (name === 'InvalidStateError' || code === 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED') return 'Dieses Gerät hat schon einen Passkey für Stups';
-  if (name === 'SecurityError') return 'Passkeys gehen nur über die HTTPS-Adresse von Stups';
-  return 'Das hat mit dem Passkey nicht geklappt';
+  if (name === 'NotAllowedError' || code === 'ERROR_CEREMONY_ABORTED') return t('Abgebrochen oder vom Gerät abgelehnt');
+  if (name === 'InvalidStateError' || code === 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED') return t('Dieses Gerät hat schon einen Passkey für Stups');
+  if (name === 'SecurityError') return t('Passkeys gehen nur über die HTTPS-Adresse von Stups');
+  return t('Das hat mit dem Passkey nicht geklappt');
 }

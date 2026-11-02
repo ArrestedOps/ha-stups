@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { isFuture } from '../lib/datetime';
   import { canNudge } from '../lib/nudge';
   import { cardTargets } from '../lib/swipe';
@@ -21,7 +22,7 @@
 
 <Sheet title={card?.title ?? ''} onclose={closeSheet}>
   {#if card}
-    <Group title="Verschieben nach">
+    <Group title={t('Verschieben nach')}>
       {#each targets as col (col.id)}
         <button
           class="flex min-h-[52px] w-full items-center justify-between px-4 text-left text-[17px] disabled:opacity-50"
@@ -46,12 +47,12 @@
             closeSheet();
           }}
         >
-          <Icon name="check" size={18} />Erledigt
+          <Icon name="check" size={18} />{t('Erledigt')}
         </button>
       {/if}
       {#if ui.me?.isPerson && canNudge(card, ui.me.id)}
         <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => openSheet({ type: 'nudge', id: card.id })}>
-          <Icon name="hand" size={18} />Stupsen
+          <Icon name="hand" size={18} />{t('Stupsen')}
         </button>
       {/if}
       <button
@@ -59,16 +60,16 @@
         onclick={async () => {
           const copy = await act(() => api.duplicateCard(card.id));
           closeSheet();
-          if (copy) toast('Karte dupliziert', { action: { label: 'Öffnen', run: () => openSheet({ type: 'card', id: copy.id }) } });
+          if (copy) toast(t('Karte dupliziert'), { action: { label: t('Öffnen'), run: () => openSheet({ type: 'card', id: copy.id }) } });
         }}
       >
         <Icon name="copy" size={18} />Duplizieren
       </button>
       <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => openSheet({ type: 'card', id: card.id })}>
-        <Icon name="more" size={18} />Details öffnen
+        <Icon name="more" size={18} />{t('Details öffnen')}
       </button>
       <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px] text-danger" onclick={() => removeCard(card)}>
-        <Icon name="trash" size={18} />Löschen
+        <Icon name="trash" size={18} />{t('Löschen')}
       </button>
     </Group>
   {/if}

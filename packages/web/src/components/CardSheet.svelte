@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { api, ApiError, type CardDetail, type Comment } from '../lib/api';
   import { formatBytes, prepareUpload, uploadProblem } from '../lib/image';
   import { autogrow } from '../lib/autogrow';
@@ -145,7 +146,7 @@
         await api.uploadAttachment(id, p.file, p.filename, p.thumb);
         await refresh();
       } catch (err) {
-        toast(err instanceof ApiError || err instanceof Error ? err.message : 'Upload fehlgeschlagen', { tone: 'error' });
+        toast(err instanceof ApiError || err instanceof Error ? err.message : t('Upload fehlgeschlagen'), { tone: 'error' });
       } finally {
         uploading -= 1;
       }
@@ -181,20 +182,20 @@
 {/snippet}
 
 {#snippet saveButton()}
-  <button class="min-h-11 px-3 text-[17px] font-semibold text-accent-text" onclick={finish}>Fertig</button>
+  <button class="min-h-11 px-3 text-[17px] font-semibold text-accent-text" onclick={finish}>{t('Fertig')}</button>
 {/snippet}
 
-<Sheet title={saved ? '✓ Gespeichert' : ''} onclose={closeSheet} left={doneButton} right={saveButton} hideClose>
+<Sheet title={saved ? `✓ ${t('Gespeichert')}` : ''} onclose={closeSheet} left={doneButton} right={saveButton} hideClose>
   {#if failed}
-    <p class="py-10 text-center text-fg2">Diese Karte gibt es nicht mehr.</p>
+    <p class="py-10 text-center text-fg2">{t('Diese Karte gibt es nicht mehr.')}</p>
   {:else if !card}
-    <p class="py-10 text-center text-fg2">Lädt …</p>
+    <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
     <textarea
       rows="1"
       use:autogrow={titleDraft}
       class="mt-1 block w-full resize-none overflow-hidden bg-transparent text-[26px] leading-tight font-bold tracking-tight"
-      aria-label="Titel"
+      aria-label={t('Titel')}
       bind:value={titleDraft}
       onfocus={() => (editing = 'title')}
       onblur={() => {
@@ -213,7 +214,7 @@
     />
 
     <p class="mt-2.5 px-1 text-[13px] text-fg2" data-testid="created-note">
-      Angelegt {formatDue(card.createdAt)}{#if personById(card.createdBy ?? '')} · {personById(card.createdBy ?? '')?.displayName}{/if}
+      {t('Angelegt {when}', { when: formatDue(card.createdAt) })}{#if personById(card.createdBy ?? '')} · {personById(card.createdBy ?? '')?.displayName}{/if}
     </p>
 
     {#if !card.completedAt && ui.me?.isPerson && canNudge(card, ui.me.id)}
@@ -221,7 +222,7 @@
         class="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-accent/60 text-[16px] font-semibold text-accent-text"
         onclick={() => openSheet({ type: 'nudge', id: card!.id })}
       >
-        <Icon name="hand" size={18} />Stupsen
+        <Icon name="hand" size={18} />{t('Stupsen')}
       </button>
     {/if}
 
@@ -229,18 +230,18 @@
       <p class="mt-3 flex items-center gap-2 rounded-xl bg-surface2 px-3.5 py-2.5 text-[15px]" data-testid="done-note">
         <Icon name="check" size={16} stroke={2.6} />
         <span>
-          Erledigt {formatDue(card.completedAt)}{card.history[0]?.completedByName ? ` · ${card.history[0].completedByName}` : ''}
+          {t('Erledigt {when}', { when: formatDue(card.completedAt) })}{card.history[0]?.completedByName ? ` · ${card.history[0].completedByName}` : ''}
         </span>
       </p>
     {/if}
 
-    <Group title="Beschreibung">
+    <Group title={t('Beschreibung')}>
       <textarea
         rows="3"
         placeholder="Notizen …"
         use:autogrow={descDraft}
         class="block min-h-[84px] w-full resize-none overflow-hidden bg-transparent px-4 py-3 text-[17px] leading-snug"
-        aria-label="Beschreibung"
+        aria-label={t('Beschreibung')}
         bind:value={descDraft}
         onfocus={() => (editing = 'desc')}
         onblur={() => {
@@ -257,7 +258,7 @@
             type="checkbox"
             class="h-6 w-6 shrink-0 accent-[var(--accent)]"
             checked={item.done}
-            aria-label="Erledigt"
+            aria-label={t('Erledigt')}
             onchange={(e) => act(() => api.updateChecklist(item.id, { done: e.currentTarget.checked }))}
           />
           <input
@@ -269,14 +270,14 @@
               if (t) void act(() => api.updateChecklist(item.id, { text: t }));
             }}
           />
-          <button class="flex h-10 w-10 items-center justify-center text-fg2" aria-label="Eintrag löschen" onclick={() => act(() => api.deleteChecklist(item.id))}>
+          <button class="flex h-10 w-10 items-center justify-center text-fg2" aria-label={t('Eintrag löschen')} onclick={() => act(() => api.deleteChecklist(item.id))}>
             <Icon name="x" size={16} />
           </button>
         </div>
       {/each}
       <form onsubmit={addItem} class="flex min-h-[46px] items-center gap-3 px-4">
         <Icon name="plus" size={18} />
-        <input bind:value={newItem} placeholder="Eintrag hinzufügen" enterkeyhint="done" class="min-w-0 flex-1 bg-transparent py-2" aria-label="Neuer Eintrag" />
+        <input bind:value={newItem} placeholder={t('Eintrag hinzufügen')} enterkeyhint="done" class="min-w-0 flex-1 bg-transparent py-2" aria-label={t('Neuer Eintrag')} />
         <SubmitPill show={!!newItem.trim()} />
       </form>
     </Group>
@@ -299,7 +300,7 @@
             </span>
             <Icon name="external" size={16} />
           </a>
-          <button class="flex h-10 w-10 shrink-0 items-center justify-center text-fg2" aria-label="Link entfernen" onclick={() => act(() => api.deleteLink(link.id))}>
+          <button class="flex h-10 w-10 shrink-0 items-center justify-center text-fg2" aria-label={t('Link entfernen')} onclick={() => act(() => api.deleteLink(link.id))}>
             <Icon name="x" size={16} />
           </button>
         </div>
@@ -309,17 +310,17 @@
         <input
           bind:value={newLink}
           type="url"
-          placeholder="Website oder Maps-Link einfügen"
+          placeholder={t('Website oder Maps-Link einfügen')}
           enterkeyhint="done"
           class="min-w-0 flex-1 bg-transparent py-2"
-          aria-label="Neuer Link"
+          aria-label={t('Neuer Link')}
           disabled={linkBusy}
         />
         <SubmitPill show={!!newLink.trim()} busy={linkBusy} />
       </form>
     </Group>
 
-    <Group title="Anhänge">
+    <Group title={t('Anhänge')}>
       {#if card.attachments.length}
         <div class="grid grid-cols-3 gap-2 p-3">
           {#each card.attachments as a (a.id)}
@@ -357,21 +358,21 @@
       </div>
     </Group>
 
-    <Group title="Kommentare">
+    <Group title={t('Kommentare')}>
       {#each comments as c (c.id)}
         <div class="flex gap-3 px-4 py-3">
           <div class="min-w-0 flex-1">
             <div class="text-[13px] text-fg2">{c.authorName ?? 'Unbekannt'} · {formatDue(c.createdAt)}</div>
             <div class="text-[16px] leading-snug whitespace-pre-wrap">{c.text}</div>
           </div>
-          <button class="flex h-9 w-9 shrink-0 items-center justify-center text-fg2" aria-label="Kommentar löschen" onclick={() => act(() => api.deleteComment(c.id))}>
+          <button class="flex h-9 w-9 shrink-0 items-center justify-center text-fg2" aria-label={t('Kommentar löschen')} onclick={() => act(() => api.deleteComment(c.id))}>
             <Icon name="x" size={14} />
           </button>
         </div>
       {/each}
       <form onsubmit={addComment} class="flex min-h-[46px] items-center gap-3 px-4">
         <Icon name="message" size={18} />
-        <input bind:value={newComment} placeholder="Kommentar schreiben" enterkeyhint="send" class="min-w-0 flex-1 bg-transparent py-2" aria-label="Neuer Kommentar" />
+        <input bind:value={newComment} placeholder={t('Kommentar schreiben')} enterkeyhint="send" class="min-w-0 flex-1 bg-transparent py-2" aria-label={t('Neuer Kommentar')} />
         <SubmitPill show={!!newComment.trim()} label="Senden" />
       </form>
     </Group>
@@ -389,10 +390,10 @@
     {/if}
 
     {#if ui.view && card.costCents !== null}
-      <p class="mt-3 px-3 text-[13px] text-fg2">Kosten dieser Karte: {formatCost(card.costCents)}</p>
+      <p class="mt-3 px-3 text-[13px] text-fg2">{t('Kosten dieser Karte: {amount}', { amount: formatCost(card.costCents) })}</p>
     {/if}
     <button class="mt-8 mb-2 min-h-11 w-full text-[15px] text-fg2" onclick={() => removeCard(card!)}>
-      <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />Karte löschen</span>
+      <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Karte löschen')}</span>
     </button>
   {/if}
 </Sheet>

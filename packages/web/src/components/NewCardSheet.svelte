@@ -4,7 +4,7 @@
   import { autogrow } from '../lib/autogrow';
   import { nextColor } from '../lib/colors';
   import { deviceTz, fromInputValue, isFuture } from '../lib/datetime';
-  import { i18n } from '../lib/i18n/index.svelte';
+  import { i18n, t } from '../lib/i18n/index.svelte';
   import { formatBytes, prepareUpload, uploadProblem } from '../lib/image';
   import { parseQuickAdd } from '../lib/quickadd';
   import { blockingProblem } from '../lib/quickadd/labels';
@@ -177,9 +177,9 @@
     if (fresh.length > 0 && !confirmedCategories) {
       const names = fresh.map((c) => `„${c.name}“`).join(', ');
       ui.confirm = {
-        title: fresh.length === 1 ? 'Kategorie anlegen?' : 'Kategorien anlegen?',
-        text: `${names} gibt es in diesem Board noch nicht. Neu anlegen und der Karte geben? Zum Weglassen schließ diese Frage und tippe auf den Chip.`,
-        label: 'Anlegen',
+        title: fresh.length === 1 ? t('Kategorie anlegen?') : t('Kategorien anlegen?'),
+        text: t('{names} gibt es in diesem Board noch nicht. Neu anlegen und der Karte geben? Zum Weglassen schließ diese Frage und tippe auf den Chip.', { names }),
+        label: t('Anlegen'),
         run: () => create(undefined, true),
       };
       return;
@@ -236,8 +236,8 @@
 
     busy = false;
     closeSheet();
-    if (problems.length) toast(`Karte angelegt, aber nicht gespeichert: ${problems.join(', ')}`, { tone: 'error' });
-    else toast('Karte angelegt', { action: { label: 'Öffnen', run: () => openSheet({ type: 'card', id: card.id }) } });
+    if (problems.length) toast(t('Karte angelegt, aber nicht gespeichert: {problems}', { problems: problems.join(', ') }), { tone: 'error' });
+    else toast(t('Karte angelegt'), { action: { label: t('Öffnen'), run: () => openSheet({ type: 'card', id: card.id }) } });
   }
 </script>
 
@@ -247,25 +247,25 @@
     disabled={!parsed.title || busy || !!quickProblem}
     onclick={() => create()}
   >
-    {busy ? 'Lege an …' : 'Anlegen'}
+    {busy ? t('Lege an …') : t('Anlegen')}
   </button>
 {/snippet}
 
-<Sheet title="Neue Karte" onclose={closeSheet} right={createButton}>
+<Sheet title={t('Neue Karte')} onclose={closeSheet} right={createButton}>
   <form onsubmit={create} class="pt-1 pb-2">
-    <QuickText bind:value={title} tokens={parsed.tokens} placeholder="z. B. Müll raus morgen 19 Uhr @Ben" onenter={() => void create()} />
+    <QuickText bind:value={title} tokens={parsed.tokens} placeholder={t('z. B. Müll raus morgen 19 Uhr @Ben')} onenter={() => void create()} />
     <QuickChips result={parsed} {tz} ondrop={dropToken} />
     {#if quickProblem}<p class="mt-2 rounded-xl bg-danger-bg px-3 py-2 text-[14px] text-danger" role="alert">{quickProblem}</p>{/if}
 
     <CardProps card={fields} targets={choices} {onsave} onmove={pickColumn} />
 
-    <Group title="Beschreibung">
+    <Group title={t('Beschreibung')}>
       <textarea
         rows="3"
         placeholder="Notizen …"
         use:autogrow={description}
         class="block min-h-[84px] w-full resize-none overflow-hidden bg-transparent px-4 py-3 text-[17px] leading-snug"
-        aria-label="Beschreibung"
+        aria-label={t('Beschreibung')}
         bind:value={description}
       ></textarea>
     </Group>
@@ -275,7 +275,7 @@
         <div class="flex min-h-[46px] items-center gap-3 px-4">
           <Icon name="check" size={16} />
           <span class="min-w-0 flex-1 py-2">{item}</span>
-          <button type="button" class="flex h-10 w-10 items-center justify-center text-fg2" aria-label="Eintrag entfernen" onclick={() => items.splice(i, 1)}>
+          <button type="button" class="flex h-10 w-10 items-center justify-center text-fg2" aria-label={t('Eintrag entfernen')} onclick={() => items.splice(i, 1)}>
             <Icon name="x" size={16} />
           </button>
         </div>
@@ -284,22 +284,22 @@
         <Icon name="plus" size={18} />
         <input
           bind:value={newItem}
-          placeholder="Eintrag hinzufügen"
+          placeholder={t('Eintrag hinzufügen')}
           enterkeyhint="done"
           class="min-w-0 flex-1 bg-transparent py-2"
-          aria-label="Neuer Eintrag"
+          aria-label={t('Neuer Eintrag')}
           onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), addItem(e))}
         />
-        <button type="button" class="min-h-9 shrink-0 rounded-xl bg-accent px-3.5 text-[15px] font-bold text-on-accent {newItem.trim() ? '' : 'hidden'}" onclick={addItem}>Hinzufügen</button>
+        <button type="button" class="min-h-9 shrink-0 rounded-xl bg-accent px-3.5 text-[15px] font-bold text-on-accent {newItem.trim() ? '' : 'hidden'}" onclick={addItem}>{t('Hinzufügen')}</button>
       </div>
     </Group>
 
-    <Group title="Links" hint="Websites oder Maps-Links, zum Beispiel für Date-Ideen. Der Seitentitel wird automatisch geholt.">
+    <Group title="Links" hint={t('Websites oder Maps-Links, zum Beispiel für Date-Ideen. Der Seitentitel wird automatisch geholt.')}>
       {#each urls as url, i (i)}
         <div class="flex min-h-12 items-center gap-3 px-4">
           <Icon name="link" size={16} />
           <span class="min-w-0 flex-1 truncate py-2">{host(url)}</span>
-          <button type="button" class="flex h-10 w-10 items-center justify-center text-fg2" aria-label="Link entfernen" onclick={() => urls.splice(i, 1)}>
+          <button type="button" class="flex h-10 w-10 items-center justify-center text-fg2" aria-label={t('Link entfernen')} onclick={() => urls.splice(i, 1)}>
             <Icon name="x" size={16} />
           </button>
         </div>
@@ -309,23 +309,23 @@
         <input
           bind:value={newLink}
           type="url"
-          placeholder="Website oder Maps-Link einfügen"
+          placeholder={t('Website oder Maps-Link einfügen')}
           enterkeyhint="done"
           class="min-w-0 flex-1 bg-transparent py-2"
-          aria-label="Neuer Link"
+          aria-label={t('Neuer Link')}
           onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), addLink(e))}
         />
-        <button type="button" class="min-h-9 shrink-0 rounded-xl bg-accent px-3.5 text-[15px] font-bold text-on-accent {newLink.trim() ? '' : 'hidden'}" onclick={addLink}>Hinzufügen</button>
+        <button type="button" class="min-h-9 shrink-0 rounded-xl bg-accent px-3.5 text-[15px] font-bold text-on-accent {newLink.trim() ? '' : 'hidden'}" onclick={addLink}>{t('Hinzufügen')}</button>
       </div>
     </Group>
 
-    <Group title="Anhänge">
+    <Group title={t('Anhänge')}>
       {#each files as f, i (i)}
         <div class="flex min-h-12 items-center gap-3 px-4">
           <Icon name="paperclip" size={16} />
           <span class="min-w-0 flex-1 truncate py-2">{f.name}</span>
           <span class="shrink-0 text-[13px] text-fg2">{formatBytes(f.size)}</span>
-          <button type="button" class="flex h-10 w-10 items-center justify-center text-fg2" aria-label="Anhang entfernen" onclick={() => files.splice(i, 1)}>
+          <button type="button" class="flex h-10 w-10 items-center justify-center text-fg2" aria-label={t('Anhang entfernen')} onclick={() => files.splice(i, 1)}>
             <Icon name="x" size={16} />
           </button>
         </div>
@@ -333,13 +333,13 @@
       <div class="px-4 py-1.5">
         <input bind:this={fileInput} type="file" accept="image/*,application/pdf" multiple class="hidden" onchange={onFiles} />
         <button type="button" class="flex min-h-11 w-full items-center gap-3 text-left text-[17px] text-accent-text" onclick={() => fileInput?.click()}>
-          <Icon name="camera" size={18} />Foto oder PDF hinzufügen
+          <Icon name="camera" size={18} />{t('Foto oder PDF hinzufügen')}
         </button>
       </div>
     </Group>
 
     <p class="mt-3 px-3 text-[13px] text-fg2">
-      Benachrichtigungen bekommen nur zugewiesene Personen, und nur wenn eine Fälligkeit gesetzt ist.
+      {t('Benachrichtigungen bekommen nur zugewiesene Personen, und nur wenn eine Fälligkeit gesetzt ist.')}
     </p>
   </form>
 </Sheet>

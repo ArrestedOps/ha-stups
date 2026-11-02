@@ -1,4 +1,6 @@
+import { t } from './i18n/index.svelte';
 import { toInputValue } from './datetime';
+import { names } from './i18n/names';
 
 export type Recurrence =
   | {
@@ -10,36 +12,37 @@ export type Recurrence =
     }
   | { type: 'after_completion'; every: number; unit: 'days' | 'weeks' | 'months' };
 
-const DAY_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-const DAY_LONG = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
-const UNIT_PLURAL = { days: 'Tage', weeks: 'Wochen', months: 'Monate' } as const;
-const UNIT_EACH = { days: 'jeden Tag', weeks: 'jede Woche', months: 'jeden Monat' } as const;
+/** 1 = Montag … 7 = Sonntag */
+const dayShort = (d: number) => names().weekdaysShort[d % 7]!;
+const dayLong = (d: number) => names().weekdaysLong[d % 7]!;
+const unitPlural = (u: 'days' | 'weeks' | 'months') => ({ days: t('Tage'), weeks: t('Wochen'), months: t('Monate') })[u];
+const unitEach = (u: 'days' | 'weeks' | 'months') => ({ days: t('jeden Tag'), weeks: t('jede Woche'), months: t('jeden Monat') })[u];
 
 export function describeRecurrence(rule: Recurrence): string {
   if (rule.type === 'after_completion') {
     return rule.every === 1
-      ? `${UNIT_EACH[rule.unit]} nach Erledigung`
-      : `alle ${rule.every} ${UNIT_PLURAL[rule.unit]} nach Erledigung`;
+      ? t('{each} nach Erledigung', { each: unitEach(rule.unit) })
+      : t('alle {n} {unit} nach Erledigung', { n: rule.every, unit: unitPlural(rule.unit) });
   }
   const n = rule.every;
   switch (rule.freq) {
     case 'daily':
-      return n === 1 ? 'täglich' : `alle ${n} Tage`;
+      return n === 1 ? t('täglich') : t('alle {n} Tage', { n });
     case 'weekly': {
       const days = [...(rule.weekdays ?? [])].sort((a, b) => a - b);
-      if (days.length === 0) return n === 1 ? 'wöchentlich' : `alle ${n} Wochen`;
+      if (days.length === 0) return n === 1 ? t('wöchentlich') : t('alle {n} Wochen', { n });
       if (n === 1) {
-        return days.length === 1 ? `jeden ${DAY_LONG[days[0]! - 1]}` : `jeden ${days.map((d) => DAY_SHORT[d - 1]).join(' + ')}`;
+        return days.length === 1 ? t('jeden {day}', { day: dayLong(days[0]!) }) : t('jeden {day}', { day: days.map(dayShort).join(' + ') });
       }
-      return `alle ${n} Wochen (${days.map((d) => DAY_SHORT[d - 1]).join(', ')})`;
+      return t('alle {n} Wochen ({days})', { n, days: days.map(dayShort).join(', ') });
     }
     case 'monthly': {
-      const day = rule.monthDay === -1 ? 'am letzten Tag' : rule.monthDay ? `am ${rule.monthDay}.` : '';
-      const base = n === 1 ? 'monatlich' : `alle ${n} Monate`;
+      const day = rule.monthDay === -1 ? t('am letzten Tag') : rule.monthDay ? t('am {day}.', { day: rule.monthDay }) : '';
+      const base = n === 1 ? t('monatlich') : t('alle {n} Monate', { n });
       return day ? `${base} ${day}` : base;
     }
     case 'yearly':
-      return n === 1 ? 'jährlich' : `alle ${n} Jahre`;
+      return n === 1 ? t('jährlich') : t('alle {n} Jahre', { n });
   }
 }
 

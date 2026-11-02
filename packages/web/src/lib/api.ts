@@ -1,4 +1,4 @@
-import { i18n, type LanguageChoice } from './i18n/index.svelte';
+import { i18n, type LanguageChoice, t } from './i18n/index.svelte';
 import type { Recurrence } from './recurrence';
 import type { HaEntity, WatcherActivity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
 
@@ -309,12 +309,12 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError('Keine Verbindung zum Server', 0);
+    throw new ApiError(t('Keine Verbindung zum Server'), 0);
   }
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => ({}));
   if (res.status === 401 && !path.startsWith('auth/')) onUnauthorized?.();
-  if (!res.ok) throw new ApiError((data as { error?: string }).error ?? `Fehler ${res.status}`, res.status, data);
+  if (!res.ok) throw new ApiError((data as { error?: string }).error ?? t('Fehler {status}', { status: res.status }), res.status, data);
   return data as T;
 }
 
@@ -403,10 +403,10 @@ export const api = {
     try {
       res = await fetch(`api/cards/${cardId}/attachments`, { method: 'POST', headers: clientHeaders(), body: form });
     } catch {
-      throw new ApiError('Keine Verbindung zum Server', 0);
+      throw new ApiError(t('Keine Verbindung zum Server'), 0);
     }
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new ApiError((data as { error?: string }).error ?? `Fehler ${res.status}`, res.status);
+    if (!res.ok) throw new ApiError((data as { error?: string }).error ?? t('Fehler {status}', { status: res.status }), res.status);
     return data as Attachment;
   },
   deleteAttachment: (id: string) => del(`attachments/${id}`),

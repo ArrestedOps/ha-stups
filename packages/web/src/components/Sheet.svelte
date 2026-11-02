@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import type { Snippet } from 'svelte';
   import { fade, fly } from 'svelte/transition';
   import { sheetInsets, type SheetInsets } from '../lib/viewport';
@@ -67,7 +68,7 @@
 <div class="fixed inset-0 z-40">
   <button
     class="absolute inset-0 bg-(--scrim)"
-    aria-label="Schließen"
+    aria-label={t('Schließen')}
     tabindex="-1"
     onclick={onclose}
     transition:fade={{ duration: 150 }}
@@ -97,7 +98,7 @@
       {#if left}
         {@render left()}
       {:else if !hideClose}
-        <button class="min-h-11 px-3 text-[17px] text-accent-text" onclick={onclose}>Schließen</button>
+        <button class="min-h-11 px-3 text-[17px] text-accent-text" onclick={onclose}>{t('Schließen')}</button>
       {:else}
         <span></span>
       {/if}

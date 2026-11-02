@@ -18,12 +18,15 @@ describe('Prüfer für den Quelltext', () => {
       "const b = tn('{n} Karte', '{n} Karten', n);",
       'const c = t(`Hallo ${name}`);',
       "const d = t('Es ist \\'so\\'');",
+      "const e = tx('Wiederholung', 'Alle');",
+      "const f = ctx('a', 'b');",
     ].join('\n');
     expect(extract(src)).toEqual([
       { key: 'Neu', plural: false },
       { key: 'Karte „{title}“', plural: false },
       { key: '{n} Karte', plural: true },
       { key: "Es ist 'so'", plural: false },
+      { key: 'Wiederholung|Alle', plural: false },
     ]);
   });
 });

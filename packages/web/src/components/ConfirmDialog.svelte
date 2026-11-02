@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { fade } from 'svelte/transition';
   import { ui } from '../lib/store.svelte';
 
@@ -24,12 +25,12 @@
 
 {#if c}
   <div class="fixed inset-0 z-50 flex items-center justify-center px-6" transition:fade={{ duration: 120 }}>
-    <button class="absolute inset-0 bg-(--scrim)" aria-label="Abbrechen" tabindex="-1" onclick={close}></button>
+    <button class="absolute inset-0 bg-(--scrim)" aria-label={t('Abbrechen')} tabindex="-1" onclick={close}></button>
     <div role="alertdialog" aria-modal="true" aria-label={c.title} class="relative w-full max-w-[340px] rounded-3xl border border-line bg-surface p-5">
       <h2 class="text-[18px] font-bold">{c.title}</h2>
       <p class="mt-2 text-[15px] text-fg2">{c.text}</p>
       <div class="mt-5 flex gap-3">
-        <button class="min-h-11 flex-1 rounded-xl border border-line font-semibold" onclick={close}>Abbrechen</button>
+        <button class="min-h-11 flex-1 rounded-xl border border-line font-semibold" onclick={close}>{t('Abbrechen')}</button>
         <button class="min-h-11 flex-1 rounded-xl bg-danger font-semibold text-white" onclick={ok}>{c.label}</button>
       </div>
     </div>

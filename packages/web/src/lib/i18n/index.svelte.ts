@@ -42,6 +42,15 @@ export function t(text: string, params?: Params): string {
   return fill(typeof entry === 'string' ? entry : text, params);
 }
 
+/**
+ * Wie t(), für ein deutsches Wort mit mehreren englischen Bedeutungen („Alle" = All im Filter, Every bei der Wiederholung):
+ * Der Katalog führt den Eintrag unter „Kontext|Text". Auf Deutsch ist das einfach der Text.
+ */
+export function tx(context: string, text: string, params?: Params): string {
+  const entry = i18n.lang === 'en' ? catalog[`${context}|${text}`] : undefined;
+  return fill(typeof entry === 'string' ? entry : text, params);
+}
+
 /** Mehrzahl: `one` ist der Schlüssel (und der deutsche Text für n = 1), `other` der deutsche Text sonst. {n} wird ersetzt. */
 export function tn(one: string, other: string, n: number): string {
   const entry = i18n.lang === 'en' ? catalog[one] : undefined;

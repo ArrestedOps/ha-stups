@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { tick } from 'svelte';
   import { api } from '../lib/api';
   import {
@@ -23,11 +24,11 @@
   import ScheduleFilterBar from './ScheduleFilterBar.svelte';
 
   const HOUR_PX = 56;
-  const MODES: { id: CalMode; label: string }[] = [
-    { id: 'day', label: 'Tag' },
-    { id: 'week', label: 'Woche' },
-    { id: 'month', label: 'Monat' },
-  ];
+  const MODES: { id: CalMode; label: string }[] = $derived([
+    { id: 'day', label: t('Tag') },
+    { id: 'week', label: t('Woche') },
+    { id: 'month', label: t('Monat') },
+  ]);
 
   const remembered = (() => {
     try {
@@ -126,7 +127,7 @@
 <main class="relative z-[1] mx-auto flex h-full max-w-[1100px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
   <header class="shrink-0 pt-2">
     <div class="flex items-center justify-between gap-2">
-      <h1 class="text-[34px] leading-tight font-bold tracking-tight">Kalender</h1>
+      <h1 class="text-[34px] leading-tight font-bold tracking-tight">{t('Kalender')}</h1>
       <div class="flex items-center gap-2">
       <button
         class="relative flex h-11 items-center gap-1.5 rounded-[14px] border border-line bg-surface px-3 text-[15px] {isFiltered(ui.sf) ? 'text-accent-text' : 'text-fg2'}"
@@ -142,14 +143,14 @@
     {#if filterOpen}<div class="mt-2"><ScheduleFilterBar cards={loaded} /></div>{/if}
 
     <div class="mt-2 flex items-center gap-1.5">
-      <button class="flex h-10 w-10 items-center justify-center rounded-xl text-fg2" aria-label="Zurück" onclick={() => (day = step(mode, day, -1))}>
+      <button class="flex h-10 w-10 items-center justify-center rounded-xl text-fg2" aria-label={t('Zurück')} onclick={() => (day = step(mode, day, -1))}>
         <Icon name="chevron-left" size={22} stroke={2.6} />
       </button>
       <h2 class="min-w-0 flex-1 truncate text-center text-[17px] font-bold" aria-live="polite">{rangeTitle(mode, day)}</h2>
-      <button class="flex h-10 w-10 items-center justify-center rounded-xl text-fg2" aria-label="Weiter" onclick={() => (day = step(mode, day, 1))}>
+      <button class="flex h-10 w-10 items-center justify-center rounded-xl text-fg2" aria-label={t('Weiter')} onclick={() => (day = step(mode, day, 1))}>
         <Icon name="chevron-right" size={22} stroke={2.6} />
       </button>
-      <button class="min-h-9 rounded-xl border border-line px-3 text-[14px] font-semibold" onclick={() => (day = todayKey())}>Heute</button>
+      <button class="min-h-9 rounded-xl border border-line px-3 text-[14px] font-semibold" onclick={() => (day = todayKey())}>{t('Heute')}</button>
     </div>
 
     <div class="mt-2 grid grid-cols-3 gap-1 rounded-xl bg-surface2 p-1" role="group" aria-label="Ansicht">
@@ -166,7 +167,7 @@
   </header>
 
   {#if failed}
-    <p class="py-10 text-center text-fg2">Der Kalender konnte nicht geladen werden.</p>
+    <p class="py-10 text-center text-fg2">{t('Der Kalender konnte nicht geladen werden.')}</p>
   {:else if mode === 'month'}
     <div class="-mr-4 mt-3 min-h-0 flex-1 overflow-y-auto pr-4 pb-tabbar" data-testid="calendar-month">
       <div class="grid grid-cols-7 pb-1 text-center text-[12px] font-semibold text-fg2">
@@ -251,5 +252,5 @@
     </div>
   {/if}
 
-  {#if loading}<p class="sr-only" role="status">Lädt …</p>{/if}
+  {#if loading}<p class="sr-only" role="status">{t('Lädt …')}</p>{/if}
 </main>

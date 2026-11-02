@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import { boardColorKey, boardCounts, isFiltered, personCounts, personFilterActive, toggleId, DEFAULT_FILTER, type ScheduleCard } from '../lib/schedule';
   import { scrollStrip } from '../lib/scrollStrip';
   import { setScheduleFilter, ui } from '../lib/store.svelte';
@@ -20,9 +21,9 @@
 </script>
 
 <div class="space-y-2" role="group" aria-label="Filter">
-  <div class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Personen" use:scrollStrip={sf.personIds.join() + sf.unassigned}>
+  <div class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label={t('Personen')} use:scrollStrip={sf.personIds.join() + sf.unassigned}>
     <button class={chip(!personFilterActive(sf))} aria-pressed={!personFilterActive(sf)} onclick={() => setScheduleFilter({ personIds: [], unassigned: false })}>
-      Alle
+      {t('Alle')}
     </button>
     {#each people as p (p.id)}
       {@const on = sf.personIds.includes(p.id)}
@@ -51,7 +52,7 @@
       <Icon name="check" size={14} stroke={2.6} />Erledigte
     </button>
     {#if isFiltered(sf)}
-      <button class="min-h-9 shrink-0 px-2 text-[14px] text-accent-text" onclick={() => setScheduleFilter({ ...DEFAULT_FILTER })}>Zurücksetzen</button>
+      <button class="min-h-9 shrink-0 px-2 text-[14px] text-accent-text" onclick={() => setScheduleFilter({ ...DEFAULT_FILTER })}>{t('Zurücksetzen')}</button>
     {/if}
   </div>
 </div>

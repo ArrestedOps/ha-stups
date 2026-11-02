@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { i18n, languageFromStorage, numberLocale, resolveLanguage, setLanguage, t, tn, useCatalog } from '../src/lib/i18n/index.svelte';
+import { i18n, languageFromStorage, numberLocale, resolveLanguage, setLanguage, t, tn, tx, useCatalog } from '../src/lib/i18n/index.svelte';
 
 let restore: () => void = () => undefined;
 afterEach(() => {
@@ -41,6 +41,23 @@ describe('t', () => {
   it('ein Platzhalter ohne Wert bleibt stehen', () => {
     setLanguage('de');
     expect(t('Hallo {name}')).toBe('Hallo {name}');
+  });
+});
+
+describe('tx', () => {
+  it('mit Kontext: Englisch nimmt „Kontext|Text", Deutsch den Text', () => {
+    catalog({ Alle: 'All', 'Wiederholung|Alle': 'Every' });
+    setLanguage('en');
+    expect(t('Alle')).toBe('All');
+    expect(tx('Wiederholung', 'Alle')).toBe('Every');
+    setLanguage('de');
+    expect(tx('Wiederholung', 'Alle')).toBe('Alle');
+  });
+
+  it('ohne Eintrag: der deutsche Text', () => {
+    setLanguage('en');
+    catalog({});
+    expect(tx('Wiederholung', 'Nach')).toBe('Nach');
   });
 });
 

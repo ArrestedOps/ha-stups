@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   // Sichtbarer „Hinzufügen"-Knopf für Eingabezeilen: Auf dem iPhone ist die Eingabetaste nicht überall zu finden
-  let { show, label = 'Hinzufügen', busy = false }: { show: boolean; label?: string; busy?: boolean } = $props();
+  let { show, label = t('Hinzufügen'), busy = false }: { show: boolean; label?: string; busy?: boolean } = $props();
 </script>
 
 {#if show}

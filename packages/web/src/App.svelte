@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from './lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import AgendaView from './components/AgendaView.svelte';
   import ArchiveSheet from './components/ArchiveSheet.svelte';
@@ -91,12 +92,12 @@
 {#if ui.fatal}
   <div class="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
     <Icon name="wifi-off" size={32} />
-    <p class="text-[17px] font-semibold">Stups konnte nicht geladen werden</p>
+    <p class="text-[17px] font-semibold">{t('Stups konnte nicht geladen werden')}</p>
     <p class="text-fg2">{ui.fatal}</p>
-    <button class="min-h-11 rounded-xl bg-accent px-5 font-semibold text-on-accent" onclick={() => location.reload()}>Neu laden</button>
+    <button class="min-h-11 rounded-xl bg-accent px-5 font-semibold text-on-accent" onclick={() => location.reload()}>{t('Neu laden')}</button>
   </div>
 {:else if !ui.ready}
-  <div class="flex h-full items-center justify-center text-fg2">Lädt …</div>
+  <div class="flex h-full items-center justify-center text-fg2">{t('Lädt …')}</div>
 {:else if ui.gate}
   <AuthView />
 {:else if !ui.allowed}
@@ -125,13 +126,13 @@
       </div>
 
       <div class="flex items-center justify-between gap-3">
-        <button class="flex min-h-11 min-w-0 items-center gap-1.5 text-left" onclick={() => openSheet({ type: 'boards' })} aria-label="Board wechseln">
+        <button class="flex min-h-11 min-w-0 items-center gap-1.5 text-left" onclick={() => openSheet({ type: 'boards' })} aria-label={t('Board wechseln')}>
           <h1 class="truncate text-[34px] leading-tight font-bold tracking-tight">{board?.name ?? 'Stups'}</h1>
           <span class="shrink-0 text-accent-text"><Icon name="chevron-down" size={22} stroke={2.6} /></span>
         </button>
         <button
           class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-line bg-surface text-fg2"
-          aria-label="Suchen"
+          aria-label={t('Suchen')}
           aria-pressed={ui.searchOpen}
           onclick={() => {
             ui.searchOpen = !ui.searchOpen;
@@ -142,11 +143,11 @@
         </button>
       </div>
       <p class="flex flex-wrap items-center gap-2 text-[15px] text-fg2">
-        {#if stats.overdue}<span class="rounded-full bg-danger-bg px-2.5 py-0.5 text-[13px] font-bold text-danger">{stats.overdue} überfällig</span>{/if}
-        {#if stats.today}<span class="rounded-full bg-accent/20 px-2.5 py-0.5 text-[13px] font-bold text-accent-text">{stats.today} heute fällig</span>{/if}
-        {#if !stats.overdue && !stats.today}Nichts Dringendes für dich{/if}
+        {#if stats.overdue}<span class="rounded-full bg-danger-bg px-2.5 py-0.5 text-[13px] font-bold text-danger">{t('{n} überfällig', { n: stats.overdue })}</span>{/if}
+        {#if stats.today}<span class="rounded-full bg-accent/20 px-2.5 py-0.5 text-[13px] font-bold text-accent-text">{t('{n} heute fällig', { n: stats.today })}</span>{/if}
+        {#if !stats.overdue && !stats.today}{t('Nichts Dringendes für dich')}{/if}
       </p>
-      {#if budget}<p class="text-[13px] text-fg2" aria-label="Kosten im Board">Kosten: {budget}</p>{/if}
+      {#if budget}<p class="text-[13px] text-fg2" aria-label={t('Kosten im Board')}>{t('Kosten: {amount}', { amount: budget })}</p>{/if}
     </header>
 
     {#if view}
@@ -155,9 +156,9 @@
           use:focus
           type="search"
           bind:value={ui.filter.search}
-          placeholder="Karten durchsuchen"
+          placeholder={t('Karten durchsuchen')}
           class="mt-3 min-h-11 w-full rounded-xl border border-line bg-surface px-4"
-          aria-label="Karten durchsuchen"
+          aria-label={t('Karten durchsuchen')}
         />
       {/if}
 
@@ -171,14 +172,14 @@
             ui.filter.nudged = false;
           }}
         >
-          Alle
+          {t('Alle')}
         </button>
         <button
           class="min-h-9 shrink-0 rounded-xl border px-3.5 text-[15px] {ui.filter.onlyMine ? 'border-accent bg-surface2 font-semibold' : 'border-line text-fg2'}"
           aria-pressed={ui.filter.onlyMine}
           onclick={() => (ui.filter.onlyMine = !ui.filter.onlyMine)}
         >
-          Nur meine
+          {t('Nur meine')}
         </button>
         {#if nudgedCount > 0 || ui.filter.nudged}
           <button
@@ -186,7 +187,7 @@
             aria-pressed={ui.filter.nudged}
             onclick={() => (ui.filter.nudged = !ui.filter.nudged)}
           >
-            <Icon name="hand" size={16} />Gestupst {nudgedCount}
+            <Icon name="hand" size={16} />{t('Gestupst {n}', { n: nudgedCount })}
           </button>
         {/if}
         {#each view.categories as c (c.id)}
@@ -222,8 +223,8 @@
       {/if}
     {:else}
       <div class="flex flex-1 flex-col items-center justify-center gap-3 text-center text-fg2">
-        <p>Es gibt noch kein Board.</p>
-        <button class="min-h-11 rounded-xl bg-accent px-5 font-semibold text-on-accent" onclick={() => openSheet({ type: 'boards' })}>Board anlegen</button>
+        <p>{t('Es gibt noch kein Board.')}</p>
+        <button class="min-h-11 rounded-xl bg-accent px-5 font-semibold text-on-accent" onclick={() => openSheet({ type: 'boards' })}>{t('Board anlegen')}</button>
       </div>
     {/if}
   </main>
@@ -238,7 +239,7 @@
   {#if tab === 'boards' && view && ui.columnId && !desktop}
     <button
       class="fixed right-5 bottom-[calc(max(10px,var(--safe-bottom))+80px)] z-30 flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-accent-grad"
-      aria-label="Neue Karte"
+      aria-label={t('Neue Karte')}
       onclick={() => openSheet({ type: 'new', columnId: ui.columnId! })}
     >
       <Icon name="plus" size={26} stroke={2.8} />

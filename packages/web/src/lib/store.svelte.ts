@@ -13,7 +13,7 @@ import {
 } from './api';
 import { formatDue } from './datetime';
 import { applyHeaderHiding } from './hideHaHeader';
-import { i18n, languageFromStorage, resolveLanguage, setLanguage, type LanguageChoice } from './i18n/index.svelte';
+import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLanguage, t } from './i18n/index.svelte';
 import { passkeysSupported } from './passkeys';
 import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
 import { swipeTarget } from './swipe';
@@ -186,7 +186,7 @@ export function dismissToast(id: number): void {
   if (i >= 0) ui.toasts.splice(i, 1);
 }
 
-const errorText = (e: unknown) => (e instanceof ApiError ? e.message : 'Etwas ist schiefgelaufen');
+const errorText = (e: unknown) => (e instanceof ApiError ? e.message : t('Etwas ist schiefgelaufen'));
 
 /** Führt eine Aktion aus, lädt danach neu und meldet Fehler als Hinweis. */
 export async function act<T>(fn: () => Promise<T>): Promise<T | undefined> {
@@ -397,7 +397,7 @@ export function goToDashboard(): void {
   const path = ui.settings?.effectiveDashboardPath ?? '/';
   try {
     if (window.parent === window) {
-      toast('Zurück zum Dashboard geht nur innerhalb von Home Assistant');
+      toast(t('Zurück zum Dashboard geht nur innerhalb von Home Assistant'));
       return;
     }
     window.parent.history.pushState(null, '', path);
@@ -406,7 +406,7 @@ export function goToDashboard(): void {
     try {
       window.top!.location.assign(path);
     } catch {
-      toast('Das Dashboard konnte nicht geöffnet werden', { tone: 'error' });
+      toast(t('Das Dashboard konnte nicht geöffnet werden'), { tone: 'error' });
     }
   }
 }
@@ -489,8 +489,8 @@ export async function completeCard(card: Card): Promise<void> {
   const res = await act(() => api.complete(card.id));
   if (!res || !res.completionId) return;
   const id = res.completionId;
-  const text = res.nextDueAt ? `Erledigt · nächste Karte ${formatDue(res.nextDueAt)}` : 'Erledigt';
-  toast(text, { action: { label: 'Rückgängig', run: () => void act(() => api.undo(id)) } });
+  const text = res.nextDueAt ? t('Erledigt · nächste Karte {when}', { when: formatDue(res.nextDueAt) }) : t('Erledigt');
+  toast(text, { action: { label: t('Rückgängig'), run: () => void act(() => api.undo(id)) } });
 }
 
 export async function moveCard(card: Card, columnId: string, afterId?: string | null): Promise<void> {
@@ -505,8 +505,8 @@ export async function moveCard(card: Card, columnId: string, afterId?: string | 
   if (completedNow && completion) {
     // Bei einer Wiederholung liegt die neue Karte inzwischen im geladenen Board
     const next = card.recurrence ? ui.view?.cards.find((c) => c.repeatedFrom === card.id) : undefined;
-    const text = next?.dueAt ? `Erledigt · nächste Karte ${formatDue(next.dueAt)}` : 'Erledigt';
-    toast(text, { action: { label: 'Rückgängig', run: () => void act(() => api.undo(completion.id)) } });
+    const text = next?.dueAt ? t('Erledigt · nächste Karte {when}', { when: formatDue(next.dueAt) }) : t('Erledigt');
+    toast(text, { action: { label: t('Rückgängig'), run: () => void act(() => api.undo(completion.id)) } });
     return;
   }
 
@@ -515,14 +515,14 @@ export async function moveCard(card: Card, columnId: string, afterId?: string | 
     // Der Server hat die Karte in die passende Spalte gelegt: „Geplant" gibt es nur für Termine nach heute
     toast(
       wanted.isPlanned
-        ? 'Nach „Geplant" kommen nur Karten mit einem Termin nach heute.'
-        : `„${res.title}" hat einen Termin nach heute und wartet deshalb in „${landed.name}".`,
+        ? t('Nach „Geplant" kommen nur Karten mit einem Termin nach heute.')
+        : t('„{title}" hat einen Termin nach heute und wartet deshalb in „{column}".', { title: res.title, column: landed.name }),
     );
     return;
   }
   if (landed && from && landed.id !== from.id) {
-    toast(`„${res.title}“ → ${landed.name}`, {
-      action: { label: 'Rückgängig', run: () => void act(() => api.moveCard(card.id, from.id)) },
+    toast(t('„{title}“ → {column}', { title: res.title, column: landed.name }), {
+      action: { label: t('Rückgängig'), run: () => void act(() => api.moveCard(card.id, from.id)) },
     });
   }
 }
@@ -543,13 +543,13 @@ export function closeViewer(): void {
 /** Fragt vor dem Löschen nach; gelöscht wird erst nach „Löschen" */
 export function removeCard(card: Card): void {
   ui.confirm = {
-    title: 'Karte löschen?',
-    text: `„${card.title}“ kommt in den Papierkorb und lässt sich von dort wiederherstellen.`,
-    label: 'Löschen',
+    title: t('Karte löschen?'),
+    text: t('„{title}“ kommt in den Papierkorb und lässt sich von dort wiederherstellen.', { title: card.title }),
+    label: t('Löschen'),
     run: async () => {
       await act(() => api.deleteCard(card.id));
       closeSheet();
-      toast('Karte gelöscht', { action: { label: 'Rückgängig', run: () => void act(() => api.restore('card', card.id)) } });
+      toast(t('Karte gelöscht'), { action: { label: t('Rückgängig'), run: () => void act(() => api.restore('card', card.id)) } });
     },
   };
 }

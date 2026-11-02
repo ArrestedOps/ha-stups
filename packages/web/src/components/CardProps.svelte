@@ -1,4 +1,5 @@
 <script module lang="ts">
+  import { t } from '../lib/i18n/index.svelte';
   import type { CarryField, Priority } from '../lib/api';
   import type { Recurrence } from '../lib/recurrence';
 
@@ -56,12 +57,12 @@
   const people = $derived(ui.people.filter((p) => card.assigneeIds.includes(p.id)));
   const catNames = $derived((ui.view?.categories ?? []).filter((c) => card.categoryIds.includes(c.id)).map((c) => c.name));
 
-  const PRIORITIES: [Priority | null, string][] = [
-    [null, 'Keine'],
-    ['low', 'Niedrig'],
-    ['medium', 'Mittel'],
-    ['high', 'Hoch'],
-  ];
+  const PRIORITIES: [Priority | null, string][] = $derived([
+    [null, t('Keine')],
+    ['low', t('Niedrig')],
+    ['medium', t('Mittel')],
+    ['high', t('Hoch')],
+  ]);
   const REMINDERS = [15, 30, 60, 120, 1440, 2880];
 
   // Kosten: wird beim Verlassen des Feldes übernommen
@@ -75,7 +76,7 @@
     editingCost = false;
     const cents = parseCost(costDraft);
     if (Number.isNaN(cents)) {
-      toast('Bitte einen Betrag wie 49,90 eingeben', { tone: 'error' });
+      toast(t('Bitte einen Betrag wie 49,90 eingeben'), { tone: 'error' });
       return;
     }
     if (cents !== card.costCents) void onsave({ costCents: cents });
@@ -87,15 +88,15 @@
     const res = await onsave(patch);
     if (!res) return;
     if (!res.dueAt) {
-      toast('Termin entfernt');
+      toast(t('Termin entfernt'));
     } else if (unassigned) {
       // Erinnerungen gehen nur an Zuständige: ohne sie kommt zur Fälligkeit nichts, das merkt man sonst erst zu spät
       const me = ui.me?.isPerson ? ui.me : null;
-      toast(`Fällig: ${formatDue(res.dueAt)}. Niemand ist zuständig, deshalb gibt es keine Erinnerung.`, {
-        action: me ? { label: 'Mir zuweisen', run: () => void onsave({ assigneeIds: [me.id] }) } : undefined,
+      toast(t('Fällig: {when}. Niemand ist zuständig, deshalb gibt es keine Erinnerung.', { when: formatDue(res.dueAt) }), {
+        action: me ? { label: t('Mir zuweisen'), run: () => void onsave({ assigneeIds: [me.id] }) } : undefined,
       });
     } else {
-      toast(`Fällig: ${formatDue(res.dueAt)}`);
+      toast(t('Fällig: {when}', { when: formatDue(res.dueAt) }));
     }
   }
 
@@ -135,49 +136,49 @@
 {/snippet}
 
 <!-- Eigenschaften als kleine Chips: leer gestrichelt, gefüllt mit Wert. Antippen öffnet darunter ein Feld. -->
-<div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="Eigenschaften">
+<div class="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('Eigenschaften')}>
   <label class="relative flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]">
     <Icon name="columns" size={16} />{column?.name ?? 'Status'}<Icon name="chevron-down" size={14} />
     <select
       class="absolute inset-0 h-full w-full opacity-0"
       value={card.columnId}
-      aria-label="Status der Karte"
+      aria-label={t('Status der Karte')}
       onchange={(e) => onmove(e.currentTarget.value)}
     >
       {#each targets as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
     </select>
   </label>
 
-  {@render chip('who', 'user', people.length ? people.map((p) => p.displayName).join(' & ') : 'Zuständig', people.length > 0)}
+  {@render chip('who', 'user', people.length ? people.map((p) => p.displayName).join(' & ') : t('Zuständig'), people.length > 0)}
   {@render chip(
     'due',
     'clock',
-    card.dueAt ? formatDue(card.dueAt) + (late ? ' · überfällig' : '') : 'Fälligkeit',
+    card.dueAt ? formatDue(card.dueAt) + (late ? ` · ${t('überfällig')}` : '') : t('Fälligkeit'),
     !!card.dueAt,
     late ? 'text-danger' : '',
   )}
   {#if card.dueAt}
-    {@render chip('rec', 'repeat', card.recurrence ? describeRecurrence(card.recurrence) : 'Wiederholen', !!card.recurrence)}
+    {@render chip('rec', 'repeat', card.recurrence ? describeRecurrence(card.recurrence) : t('Wiederholen'), !!card.recurrence)}
     {@render chip(
       'rem',
       'bell',
-      card.remindBeforeMin ? `${formatLead(card.remindBeforeMin)} vorher` : card.overdueNag ? 'Nachhaken' : 'Erinnerung',
+      card.remindBeforeMin ? t('{lead} vorher', { lead: formatLead(card.remindBeforeMin) }) : card.overdueNag ? t('Nachhaken') : t('Erinnerung'),
       !!card.remindBeforeMin || card.overdueNag,
     )}
   {/if}
-  {@render chip('prio', 'flag', card.priority ? (PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? '') : 'Priorität', !!card.priority)}
-  {@render chip('cat', 'tag', catNames.length ? catNames.join(', ') : 'Kategorie', catNames.length > 0)}
-  {@render chip('cost', 'euro', card.costCents !== null ? formatCost(card.costCents) : 'Kosten', card.costCents !== null)}
+  {@render chip('prio', 'flag', card.priority ? (PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? '') : t('Priorität'), !!card.priority)}
+  {@render chip('cat', 'tag', catNames.length ? catNames.join(', ') : t('Kategorie'), catNames.length > 0)}
+  {@render chip('cost', 'euro', card.costCents !== null ? formatCost(card.costCents) : t('Kosten'), card.costCents !== null)}
 </div>
 
 {#if panel}
   <div class="mt-3 rounded-[18px] border border-line bg-surface p-4">
     {#if panel === 'who'}
       <PeoplePicker selected={card.assigneeIds} onchange={(ids) => onsave({ assigneeIds: ids })} />
-      <p class="mt-3 text-[13px] text-fg2">Benachrichtigt werden nur zugewiesene Personen.</p>
+      <p class="mt-3 text-[13px] text-fg2">{t('Benachrichtigt werden nur zugewiesene Personen.')}</p>
     {:else if panel === 'due'}
       <div class="flex flex-wrap gap-2">
-        {#each [[0, 18, 'Heute 18:00'], [1, 9, 'Morgen 09:00']] as [days, hour, label] (label)}
+        {#each [[0, 18, t('Heute 18:00')], [1, 9, t('Morgen 09:00')]] as [days, hour, label] (label)}
           <button
             type="button"
             class="min-h-11 rounded-xl px-4 text-[15px] font-semibold {toInputValue(card.dueAt) === quickValue(days as number, hour as number)
@@ -190,20 +191,20 @@
           </button>
         {/each}
         {#if card.dueAt}
-          <button type="button" class="min-h-11 rounded-xl bg-surface2 px-4 text-[15px] font-semibold text-danger" onclick={clearDue}>Entfernen</button>
+          <button type="button" class="min-h-11 rounded-xl bg-surface2 px-4 text-[15px] font-semibold text-danger" onclick={clearDue}>{t('Entfernen')}</button>
         {/if}
       </div>
       <label class="mt-3 flex flex-col gap-1.5">
-        <span class="text-[13px] font-semibold text-fg2">Anderes Datum und Uhrzeit</span>
+        <span class="text-[13px] font-semibold text-fg2">{t('Anderes Datum und Uhrzeit')}</span>
         <input
           type="datetime-local"
           class="min-h-12 w-full rounded-xl border border-line bg-surface2 px-3 text-[17px]"
           value={toInputValue(card.dueAt)}
-          aria-label="Fälligkeit mit Datum und Uhrzeit"
+          aria-label={t('Fälligkeit mit Datum und Uhrzeit')}
           onchange={(e) => setDue(e.currentTarget.value)}
         />
       </label>
-      {#if !card.dueAt}<p class="mt-3 text-[13px] text-fg2">Mit einem Termin kannst du auch wiederholen und erinnern.</p>{/if}
+      {#if !card.dueAt}<p class="mt-3 text-[13px] text-fg2">{t('Mit einem Termin kannst du auch wiederholen und erinnern.')}</p>{/if}
     {:else if panel === 'rec'}
       <RecurrenceEditor
         value={card.recurrence}
@@ -214,20 +215,20 @@
       />
     {:else if panel === 'rem'}
       <label class="flex items-center justify-between gap-3">
-        <span class="text-[16px]">Vorab erinnern</span>
+        <span class="text-[16px]">{t('Vorab erinnern')}</span>
         <SelectField
           variant="box"
           class="!min-h-10"
           value={card.remindBeforeMin ?? ''}
-          label="Vorab-Erinnerung"
+          label={t('Vorab-Erinnerung')}
           onchange={(e) => onsave({ remindBeforeMin: e.currentTarget.value ? Number(e.currentTarget.value) : null })}
         >
-          <option value="">Nur zur Fälligkeit</option>
-          {#each REMINDERS as m (m)}<option value={m}>{formatLead(m)} vorher</option>{/each}
+          <option value="">{t('Nur zur Fälligkeit')}</option>
+          {#each REMINDERS as m (m)}<option value={m}>{t('{lead} vorher', { lead: formatLead(m) })}</option>{/each}
         </SelectField>
       </label>
       <label class="mt-3 flex items-center justify-between gap-3">
-        <span class="text-[16px]">Täglich nachhaken, solange überfällig</span>
+        <span class="text-[16px]">{t('Täglich nachhaken, solange überfällig')}</span>
         <input
           type="checkbox"
           class="h-6 w-6 accent-[var(--accent)]"
@@ -236,7 +237,7 @@
         />
       </label>
     {:else if panel === 'prio'}
-      <div class="flex flex-wrap gap-2" role="group" aria-label="Priorität">
+      <div class="flex flex-wrap gap-2" role="group" aria-label={t('Priorität')}>
         {#each PRIORITIES as [value, label] (label)}
           <button
             type="button"
@@ -257,9 +258,9 @@
     {:else if panel === 'cost'}
       <input
         inputmode="decimal"
-        placeholder="z. B. 49,90"
+        placeholder={t('z. B. 49,90')}
         class="min-h-12 w-full rounded-xl border border-line bg-surface2 px-3 text-[17px]"
-        aria-label="Kosten in Euro"
+        aria-label={t('Kosten in Euro')}
         bind:value={costDraft}
         onfocus={() => (editingCost = true)}
         onblur={saveCost}

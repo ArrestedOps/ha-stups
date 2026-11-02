@@ -36,6 +36,12 @@
     if (settings) ui.settings = settings;
   }
 
+  async function saveDefaultTime(value: string) {
+    // Ein geleertes Feld stellt die Vorgabe (09:00) wieder her
+    const settings = await act(() => api.saveSettings({ defaultDueTime: value === '' ? null : value }));
+    if (settings) ui.settings = settings;
+  }
+
   function onSelect(value: string) {
     if (value === CUSTOM) {
       custom = effective;
@@ -146,6 +152,19 @@ tap_action:
     <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => openSheet({ type: 'people' })}>
       <Icon name="user" size={20} /><span class="flex-1">Personen &amp; Zugriff</span><Icon name="chevron-right" size={18} />
     </button>
+  </Group>
+
+  <Group title="Vorgaben" hint="Gilt für alle: Schreibst du beim Anlegen einer Karte nur ein Datum („morgen“) ohne Uhrzeit, bekommt der Termin diese Uhrzeit. Nur Administratoren ändern sie.">
+    <Row label="Standard-Uhrzeit für Termine">
+      <input
+        type="time"
+        class="min-h-10 rounded-xl bg-surface2 px-3 disabled:opacity-60"
+        value={ui.settings?.defaultDueTime ?? '09:00'}
+        disabled={!ui.isAdmin}
+        aria-label="Standard-Uhrzeit für Termine"
+        onchange={(e) => void saveDefaultTime(e.currentTarget.value)}
+      />
+    </Row>
   </Group>
 
   {#if feat.standalone}

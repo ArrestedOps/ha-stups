@@ -1,13 +1,19 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { api, ApiError, type CardPatch } from '../lib/api';
   import { autogrow } from '../lib/autogrow';
-  import { fromInputValue, isFuture } from '../lib/datetime';
+  import { nextColor } from '../lib/colors';
+  import { deviceTz, fromInputValue, isFuture } from '../lib/datetime';
   import { formatBytes, prepareUpload, uploadProblem } from '../lib/image';
+  import { parseQuickAdd } from '../lib/quickadd';
+  import { blockingProblem } from '../lib/quickadd/labels';
   import { columnForDue } from '../lib/swipe';
   import { act, closeSheet, openSheet, toast, ui } from '../lib/store.svelte';
   import CardProps, { type CardFields } from './CardProps.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
+  import QuickChips from './QuickChips.svelte';
+  import QuickText from './QuickText.svelte';
   import Sheet from './Sheet.svelte';
 
   /** dueAt: vorbelegter Termin, z. B. aus dem Kalender */
@@ -42,6 +48,43 @@
     costCents: null,
   });
   let title = $state('');
+
+  // ---------- Schnell-Eingabe: aus einer Zeile Text werden Titel, Termin, Zuständige, Kategorie, Wiederholung, Priorität ----------
+  const tz = deviceTz();
+  // Zurückgenommene Teile (Kennungen) und Felder, die von Hand geändert wurden: Dort gewinnt die Handeingabe
+  let ignored = $state<string[]>([]);
+  let manual = $state<string[]>([]);
+  const parsed = $derived(
+    parseQuickAdd(title, {
+      now: Date.now(),
+      tz,
+      lang: 'de',
+      defaultTime: ui.settings?.defaultDueTime ?? '09:00',
+      people: ui.people.filter((p) => p.isPerson),
+      categories: ui.view?.categories ?? [],
+      ignore: new Set(ignored),
+    }),
+  );
+  const quickProblem = $derived(blockingProblem(parsed));
+  // Vorgaben, auf die ein Feld zurückfällt, wenn der erkannte Teil wegfällt
+  const defaults = { dueAt: fields.dueAt, assigneeIds: [...fields.assigneeIds] };
+  $effect(() => {
+    const r = parsed;
+    untrack(() => {
+      if (!manual.includes('dueAt')) fields.dueAt = r.dueAt ?? defaults.dueAt;
+      if (!manual.includes('recurrence')) fields.recurrence = r.recurrence;
+      if (!manual.includes('priority')) fields.priority = r.priority;
+      if (!manual.includes('assigneeIds')) {
+        const ids = r.assignees.flatMap((a) => (a.personId ? [a.personId] : []));
+        fields.assigneeIds = ids.length ? ids : [...defaults.assigneeIds];
+      }
+      if (!manual.includes('categoryIds')) fields.categoryIds = r.categories.flatMap((c) => (c.categoryId ? [c.categoryId] : []));
+    });
+  });
+  const dropToken = (id: string) => {
+    if (!ignored.includes(id)) ignored = [...ignored, id];
+  };
+
   let description = $state('');
   let items = $state<string[]>([]);
   let urls = $state<string[]>([]);
@@ -53,6 +96,10 @@
 
   async function onsave(patch: CardPatch) {
     Object.assign(fields, patch);
+    // Was von Hand geändert wurde, überschreibt die Schnell-Eingabe nicht mehr
+    for (const key of ['dueAt', 'recurrence', 'priority', 'assigneeIds', 'categoryIds']) {
+      if (key in patch && !manual.includes(key)) manual = [...manual, key];
+    }
     // „Geplant" gilt nur mit einem Termin nach heute: Wer den Termin auf heute stellt oder entfernt, landet in „Offen"
     if (patch.dueAt !== undefined) {
       const wanted = columnForDue(columns, fields.columnId, isFuture(fields.dueAt));
@@ -104,13 +151,38 @@
     }
   };
 
-  function focus(node: HTMLElement) {
-    node.focus();
+  /** Neue Kategorien aus der Schnell-Eingabe: erst fragen, dann anlegen und der Karte geben */
+  async function createCategories(): Promise<string[] | null> {
+    const wanted = parsed.categories.filter((c) => c.categoryId === null && c.status === 'new');
+    const ids: string[] = [];
+    const used = (ui.view?.categories ?? []).map((c) => c.color);
+    for (const c of wanted) {
+      try {
+        const made = await api.addCategory(ui.boardId!, c.name, nextColor(used));
+        used.push(made.color);
+        ids.push(made.id);
+      } catch (err) {
+        toast(err instanceof ApiError ? err.message : `Kategorie „${c.name}“ konnte nicht angelegt werden`, { tone: 'error' });
+        return null;
+      }
+    }
+    return ids;
   }
 
-  async function create(e?: Event) {
+  async function create(e?: Event, confirmedCategories = false) {
     e?.preventDefault();
-    if (!title.trim() || busy || !ui.boardId) return;
+    if (!parsed.title || busy || !ui.boardId || quickProblem) return;
+    const fresh = parsed.categories.filter((c) => c.categoryId === null && c.status === 'new');
+    if (fresh.length > 0 && !confirmedCategories) {
+      const names = fresh.map((c) => `„${c.name}“`).join(', ');
+      ui.confirm = {
+        title: fresh.length === 1 ? 'Kategorie anlegen?' : 'Kategorien anlegen?',
+        text: `${names} gibt es in diesem Board noch nicht. Neu anlegen und der Karte geben? Zum Weglassen schließ diese Frage und tippe auf den Chip.`,
+        label: 'Anlegen',
+        run: () => create(undefined, true),
+      };
+      return;
+    }
     // Das gerade getippte, aber noch nicht bestätigte Eintrag/Link nicht verlieren
     if (newItem.trim()) addItem(new Event('submit'));
     if (newLink.trim()) addLink(new Event('submit'));
@@ -118,10 +190,16 @@
     // Zur Sicherheit noch einmal, falls Spalte oder Termin anders gesetzt wurden: kein Fehler, sondern „Offen"
     fields.columnId = columnForDue(columns, fields.columnId, isFuture(fields.dueAt));
     busy = true;
+    const newCategoryIds = confirmedCategories ? await createCategories() : [];
+    if (newCategoryIds === null) {
+      busy = false;
+      return;
+    }
     const card = await act(() =>
       api.createCard(ui.boardId!, {
         ...fields,
-        title: title.trim(),
+        categoryIds: [...fields.categoryIds, ...newCategoryIds],
+        title: parsed.title,
         description: description.trim() || null,
       }),
     );
@@ -165,7 +243,7 @@
 {#snippet createButton()}
   <button
     class="min-h-11 px-3 text-[17px] font-semibold text-accent-text disabled:opacity-40"
-    disabled={!title.trim() || busy}
+    disabled={!parsed.title || busy || !!quickProblem}
     onclick={() => create()}
   >
     {busy ? 'Lege an …' : 'Anlegen'}
@@ -174,24 +252,9 @@
 
 <Sheet title="Neue Karte" onclose={closeSheet} right={createButton}>
   <form onsubmit={create} class="pt-1 pb-2">
-    <textarea
-      use:focus
-      use:autogrow={title}
-      rows="1"
-      bind:value={title}
-      placeholder="Titel, z. B. Bad putzen"
-      maxlength="200"
-      enterkeyhint="done"
-      class="mt-1 block w-full resize-none overflow-hidden bg-transparent text-[26px] leading-tight font-bold tracking-tight"
-      aria-label="Titel"
-      onkeydown={(e) => {
-        // Eingabetaste legt an, statt einen Zeilenumbruch in den Titel zu schreiben
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          void create();
-        }
-      }}
-    ></textarea>
+    <QuickText bind:value={title} tokens={parsed.tokens} placeholder="z. B. Müll raus morgen 19 Uhr @Ben" onenter={() => void create()} />
+    <QuickChips result={parsed} {tz} ondrop={dropToken} />
+    {#if quickProblem}<p class="mt-2 rounded-xl bg-danger-bg px-3 py-2 text-[14px] text-danger" role="alert">{quickProblem}</p>{/if}
 
     <CardProps card={fields} targets={choices} {onsave} onmove={pickColumn} />
 

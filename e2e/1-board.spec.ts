@@ -90,7 +90,8 @@ test('Termin nach heute: die Karte landet von selbst in „Geplant"', async ({ p
 });
 
 test('In „Geplant" angelegt, aber Termin heute: die Karte kommt nach „Offen" statt eines Fehlers', async ({ page }) => {
-  const title = uniqueTitle('Heute statt geplant');
+  // Kein Datumswort im Titel („heute" würde die Schnell-Eingabe als Termin lesen)
+  const title = uniqueTitle('Statt geplant sofort');
   const today = await page.evaluate(() => {
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');

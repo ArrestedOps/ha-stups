@@ -49,9 +49,30 @@ Die Namen der Geräte findest du in Home Assistant unter Entwicklerwerkzeuge ›
 - **Verschieben und mehr**: über „⋯" an der Karte (Verschieben nach …, Erledigt, Duplizieren, Details, Löschen). Auf großen Bildschirmen lassen sich Karten mit der Maus ziehen.
 - **Geplant**: Karten mit Termin nach heute stehen in „Geplant" und rücken am Tag der Fälligkeit nach „Offen". So bleibt „Offen" übersichtlich. Pro Board lässt sich einstellen, welche Spalte „Geplant" und welche „Erledigt" ist.
 
+### Karten schnell anlegen
+
+Im Fenster **Neue Karte** genügt eine Zeile. Stups liest Datum, Uhrzeit, Wiederholung, Personen, Kategorie und Priorität heraus, der Rest ist der Titel:
+
+```
+Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!
+```
+
+ergibt die Karte „Müll raus", fällig morgen 19:00, zuständig Ben, Kategorie Haushalt, jede Woche, Priorität hoch. Erkannte Teile sind im Text farbig hinterlegt, darunter zeigen **Chips**, was verstanden wurde. **Ein Tipp auf einen Chip nimmt ihn zurück** (der Text bleibt dann im Titel, zum Beispiel wenn „Montag" zum Titel gehört). Was du unter dem Titel von Hand änderst, überschreibt die Zeile nicht mehr.
+
+| Was | Beispiele |
+|---|---|
+| Datum | `heute`, `morgen`, `übermorgen`, `Freitag`, `nächsten Montag`, `in 3 Tagen`, `in 2 Wochen`, `in einem Monat`, `1.12.`, `1.12.2027`, `1. Dezember`, `am 24. März` |
+| Uhrzeit | `19 Uhr`, `19:30`, `um 19`. Steht nur ein Datum da, gilt die **Standard-Uhrzeit** (Einstellungen › Vorgaben, Vorgabe 09:00) |
+| Wiederholung | `jeden Tag`, `täglich`, `jede Woche`, `wöchentlich`, `alle 2 Tage`, `alle 3 Wochen`, `jeden Montag`, `monatlich`, `jährlich` |
+| Person | `@Ben` (ein eindeutiger Anfang genügt: `@be`) |
+| Kategorie | `#Haushalt` (aus dem aktuellen Board; eine neue wird nach Rückfrage angelegt) |
+| Priorität | `!` mittel, `!!` oder `wichtig` hoch (`!` nur als eigenes Wort: „Achtung!" bleibt Titel) |
+
+Gut zu wissen: Ein **Wochentag** allein meint den nächsten nach heute (ist heute Montag, ist „Montag" der Montag in einer Woche). Ein **Datum ohne Jahr** meint die nächste Wiederkehr. Schreibst du nur „heute" und die Standard-Uhrzeit ist schon vorbei, bekommt der Termin die nächste volle Stunde. Passt eine `@Person` nicht (unbekannt oder mehrdeutig), wartet das Anlegen, bis du den Namen änderst oder den Chip antippst, weil sonst keine Erinnerung käme.
+
 ### Aussehen
 
-Dunkel und hell folgen dem iPhone (oder dem Gerät). Ein farbiger **Balken links** an jeder Karte zeigt die Dringlichkeit: rot überfällig, orange heute, gelb in den nächsten zwei Tagen, grau später. Kategorien stehen als Chip mit farbigem Punkt an der Karte, und „Angelegt …" nennt, wann die Karte entstanden ist (im Karten-Fenster mit Uhrzeit und Person).
+Dunkel und hell folgen dem iPhone (oder dem Gerät). Ein farbiger **Balken links** an jeder Karte zeigt die Dringlichkeit: rot überfällig, orange heute, gelb in den nächsten zwei Tagen, grau später. Die Karte zeigt den Titel (höchstens zwei Zeilen) und **eine Zeile** mit dem Wichtigsten: Termin (rot, wenn überfällig), Wiederholung, Priorität als Flagge (orange mittel, rot hoch), Checkliste („1/2"), Kommentare, Links, Anhänge und Kosten. **Kategorien** stehen als kleine farbige Punkte rechts. Wann die Karte entstanden ist („Angelegt …"), steht im Karten-Fenster mit Uhrzeit und Person.
 
 ### Agenda
 
@@ -62,6 +83,8 @@ Oben filterst du, was du sehen willst:
 - **Personen:** „Alle", du selbst („Ich"), jede weitere Person und „Niemand" (Karten ohne Zuständige). Du kannst mehrere wählen; eine Karte erscheint, sobald eine der gewählten Personen zuständig ist. Die Zahl am Chip sagt, wie viele Karten dazugehören.
 - **Boards:** ein Chip je Board (mit Boardfarbe). Auch hier mehrere möglich.
 - **Erledigte** blendet die in den letzten sieben Tagen erledigten Karten ein. „Zurücksetzen" löscht alle Filter. Der Filter wird auf dem Gerät gemerkt.
+
+Die Agenda lädt die nächsten 60 Tage. Liegt in dieser Zeit nichts an, schaut sie gleich ein Jahr voraus; weiter entfernte Karten holt **„Weitere 60 Tage laden"** (auch bei einer leeren Liste).
 
 ### Kalender
 

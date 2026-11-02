@@ -269,7 +269,11 @@ export interface Settings {
   dashboardPath: string | null;
   /** Pfad des Stups-Panels in HA, vom Client gemeldet (für Links in Push-Nachrichten) */
   panelPath: string | null;
+  /** Uhrzeit (HH:MM), die die Schnell-Eingabe nimmt, wenn nur ein Datum dasteht */
+  defaultDueTime: string;
 }
+
+export const DEFAULT_DUE_TIME = '09:00';
 
 export interface OpenDueCard {
   id: string;
@@ -2172,10 +2176,10 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
 
   function getSettings(): Settings {
     const get = (k: string) => (one('select value from settings where key = ?', k)?.value as string | undefined) ?? null;
-    return { dashboardPath: get('dashboardPath'), panelPath: get('panelPath') };
+    return { dashboardPath: get('dashboardPath'), panelPath: get('panelPath'), defaultDueTime: get('defaultDueTime') ?? DEFAULT_DUE_TIME };
   }
 
-  function setSettings(patch: Partial<Settings>): Settings {
+  function setSettings(patch: { dashboardPath?: string | null; panelPath?: string | null; defaultDueTime?: string | null }): Settings {
     for (const key of ['dashboardPath', 'panelPath'] as const) {
       const value = patch[key];
       if (value === undefined) continue;
@@ -2187,6 +2191,12 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
         throw new ValidationError('Der Pfad muss mit / beginnen');
       }
       run('insert into settings (key, value) values (?, ?) on conflict(key) do update set value = excluded.value', key, value);
+    }
+    if (patch.defaultDueTime !== undefined) {
+      const t = patch.defaultDueTime;
+      if (t === null) run('delete from settings where key = ?', 'defaultDueTime');
+      else if (typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t)) putSetting('defaultDueTime', t);
+      else throw new ValidationError('Die Uhrzeit muss die Form HH:MM haben, zum Beispiel 09:00');
     }
     return getSettings();
   }

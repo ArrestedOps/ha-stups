@@ -146,8 +146,8 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   app.put('/api/settings', async (req) => {
     const b = body(req);
     // Der Panel-Pfad kommt von jedem Gerät, das Dashboard gilt für alle
-    if (b.dashboardPath !== undefined) requireAdmin(req);
-    store.setSettings({ dashboardPath: b.dashboardPath, panelPath: b.panelPath });
+    if (b.dashboardPath !== undefined || b.defaultDueTime !== undefined) requireAdmin(req);
+    store.setSettings({ dashboardPath: b.dashboardPath, panelPath: b.panelPath, defaultDueTime: b.defaultDueTime });
     return effectiveSettings();
   });
   // Beta: Push und Wächter sind zunächst aus (siehe beta-gate.ts). Jeder sieht den Stand, Administratoren ändern ihn.

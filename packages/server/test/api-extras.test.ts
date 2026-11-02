@@ -125,6 +125,20 @@ describe('Einstellungen und Dashboards', () => {
     expect(reset.body.effectiveDashboardPath).toBe('/lovelace/0');
   });
 
+  it('Standard-Uhrzeit für Termine: Vorgabe 09:00, speichern, zurücksetzen', async () => {
+    expect((await call('GET', '/api/settings')).body.defaultDueTime).toBe('09:00');
+    expect((await call('PUT', '/api/settings', { defaultDueTime: '07:30' })).body.defaultDueTime).toBe('07:30');
+    expect((await call('GET', '/api/settings')).body.defaultDueTime).toBe('07:30');
+    expect((await call('PUT', '/api/settings', { defaultDueTime: null })).body.defaultDueTime).toBe('09:00');
+  });
+
+  it('lehnt eine Standard-Uhrzeit ab, die keine Uhrzeit ist', async () => {
+    for (const bad of ['25:00', '7:30', '12:60', 'abc', '', 730, '09:00:00']) {
+      expect((await call('PUT', '/api/settings', { defaultDueTime: bad })).status, String(bad)).toBe(400);
+    }
+    expect((await call('GET', '/api/settings')).body.defaultDueTime).toBe('09:00');
+  });
+
   it('lehnt Pfade ab, die nicht mit / beginnen', async () => {
     expect((await call('PUT', '/api/settings', { dashboardPath: 'https://evil.example' })).status).toBe(400);
   });

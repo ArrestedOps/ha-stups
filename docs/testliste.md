@@ -212,6 +212,21 @@ Am iPhone, in der Beta zuerst (Abschnitt 17), dunkel und hell.
 - [ ] Spalten-Tabs („Offen · 3", „Erledigt · 1" …) und Filter-Chips: Am Rand ist ein **Verlauf**, wenn es weitergeht. Wählt man eine halb sichtbare Spalte, rückt sie ins Bild
 - [ ] Karten-Fenster: oben rechts steht **„Fertig"** (nicht „Speichern"). Eine Änderung zeigt in der Mitte kurz „✓ Gespeichert", „Fertig" schließt
 - [ ] Auswahlfelder (Wächter › Bedingung/Board/Spalte/Fälligkeit/Rückfall, Karte › Wiederholung, Erinnerung, Einstellungen › Dashboard, Board-Einstellungen › Spalte löschen): Wert und Pfeil, Antippen öffnet den Picker des Handys, die Wahl ändert die Anzeige
+## 19 · Schnell-Eingabe und Agenda (seit 1.11.0)
+
+Am iPhone, in der Beta zuerst, dunkel und hell.
+
+- [ ] „Neue Karte": Das Titelfeld hat den Cursor, die Tastatur kommt von selbst. Tippe `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!`. Erkannte Wörter sind **farbig hinterlegt** (genau hinter dem Text, auch wenn die Zeile umbricht), darunter stehen Chips: Tag, 19:00, @Ben, Haushalt, „jeden Dienstag" (oder dein Wochentag), Priorität hoch
+- [ ] Die Eigenschaften darunter (Zuständig, Fälligkeit, Wiederholung, Priorität, Kategorie) zeigen dieselben Werte. „Anlegen": Die Karte hat den Titel **„Müll raus"** und genau diese Werte
+- [ ] Ein Tipp auf einen Chip nimmt ihn zurück; die Farbe verschwindet, das Wort bleibt im Titel
+- [ ] Eine Eigenschaft von Hand ändern (zum Beispiel Priorität „Mittel"), dann in der Zeile weitertippen: Die Handänderung bleibt
+- [ ] `@Niemand`: roter Chip „unbekannt", Meldung, **Anlegen ist gesperrt**; den Chip antippen, dann geht es
+- [ ] `#Reisen` (gibt es nicht): Chip „neu: Reisen"; beim Anlegen kommt die Rückfrage, danach gibt es die Kategorie im Board
+- [ ] Datum ohne Uhrzeit (`übermorgen`): Der Chip nennt die Standard-Uhrzeit. Einstellungen › Vorgaben › „Standard-Uhrzeit für Termine" ändern (nur Administratoren) und prüfen
+- [ ] `Montag`, `1. Dezember`, `in 3 Tagen`, `alle 2 Wochen`, `jeden Freitag 18:30`: Die Chips zeigen das richtige Datum bzw. die richtige Wiederholung
+- [ ] Ein ganz normaler Titel („Kauf 2 Kisten Wasser") bleibt ohne Chips und unverändert
+- [ ] **Agenda:** Eine Karte, die mehr als 60 Tage entfernt ist, steht in der Agenda (die Agenda schaut gleich ein Jahr voraus, wenn sonst nichts anliegt) oder ist über „Weitere 60 Tage laden" erreichbar, auch bei einer leeren Liste (Board-Filter auf ein Board mit nur fernen Karten)
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

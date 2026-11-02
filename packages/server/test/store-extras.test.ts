@@ -85,12 +85,22 @@ describe('Kommentare', () => {
 
 describe('Einstellungen', () => {
   it('speichert und liest Werte, mit Vorgaben', () => {
-    expect(store.getSettings()).toEqual({ dashboardPath: null, panelPath: null });
+    expect(store.getSettings()).toEqual({ dashboardPath: null, panelPath: null, defaultDueTime: '09:00' });
     store.setSettings({ dashboardPath: '/dashboard-handy/start', panelPath: '/c552c524_stups' });
-    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy/start', panelPath: '/c552c524_stups' });
+    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy/start', panelPath: '/c552c524_stups', defaultDueTime: '09:00' });
     store.setSettings({ dashboardPath: null });
     expect(store.getSettings().dashboardPath).toBeNull();
     expect(store.getSettings().panelPath).toBe('/c552c524_stups');
+  });
+
+  it('Standard-Uhrzeit: Vorgabe 09:00, nur HH:MM, null stellt die Vorgabe wieder her', () => {
+    expect(store.getSettings().defaultDueTime).toBe('09:00');
+    store.setSettings({ defaultDueTime: '07:30' });
+    expect(store.getSettings().defaultDueTime).toBe('07:30');
+    for (const bad of ['24:00', '7:30', 'abc', '09:00:00', '']) expect(() => store.setSettings({ defaultDueTime: bad }), bad).toThrow(ValidationError);
+    expect(store.getSettings().defaultDueTime).toBe('07:30');
+    store.setSettings({ defaultDueTime: null });
+    expect(store.getSettings().defaultDueTime).toBe('09:00');
   });
 
   it('verlangt Pfade, die mit / beginnen', () => {

@@ -134,6 +134,17 @@ ctx = { now: Date, timeZone: string, locale: 'de', defaultTime: 'HH:MM', people,
 
 **Nicht in diesem Release:** Feld im Board, `stups_create_card` mit `text`, Englisch (die Stufe-2-Aufgabe wird nur vorbereitet), „halb 8".
 
+**Wie es gebaut wurde (1.11.0), wo es von der Spec abweicht oder sie präzisiert**
+
+- **Priorität:** Das Briefing nennt im Beispiel bei einem einzelnen `!` „Priorität hoch", in der Regelliste aber `!` = mittel und `!!` = hoch. Umgesetzt ist die Regelliste (`!` mittel, `!!` oder „wichtig" hoch); im Beispiel mit `!!`.
+- **„heute" ohne Uhrzeit**, wenn die Standard-Uhrzeit schon vorbei ist: die nächste volle Stunde (höchstens 23:00) statt eines Termins, der sofort überfällig wäre.
+- **Nur eine Uhrzeit** („19 Uhr"): heute, wenn sie noch kommt, sonst morgen. **Nur eine Wiederholung:** heute zur Standard-Uhrzeit, sonst morgen; „jeden Montag" ohne Datum: der nächste Montag nach heute.
+- **29.2. ohne Jahr:** der nächste Schalttag (statt abzulehnen). Mit ungültigem Jahr („29.2.2027") oder ungültigem Datum („31.4.") wird nichts erkannt, der Text bleibt im Titel.
+- **Ohne erkannte Teile** bleibt der Titel genau, wie er getippt wurde. Nach dem Zurücknehmen eines Datums rückt kein zweites nach, ein zweites Datum im Text bleibt Titel, solange das erste gilt.
+- **Kategorien** werden, wie ein Name, auch über einen eindeutigen Anfang gefunden (`#Haus` → Haushalt).
+- **Rückfrage bei neuer Kategorie:** „Anlegen" legt sie an und gibt sie der Karte; zum Weglassen schließt man die Frage und tippt auf den Chip.
+- **Agenda (Fehler aus der Praxis, mit 1.10.0-beta.2 behoben):** Karten, die mehr als 60 Tage entfernt sind, fehlten, und bei leerer Liste gab es den Knopf „Weitere 60 Tage laden" nicht. Jetzt steht der Knopf auch dann, und die Agenda schaut bei leerer Liste gleich ein Jahr voraus.
+
 ### 4.6 Technik (1.6)
 
 **Aufteilen** (reine Umstrukturierung, keine Verhaltensänderung, alle Tests bleiben unverändert grün)

@@ -1,3 +1,4 @@
+import { i18n, type LanguageChoice } from './i18n/index.svelte';
 import type { Recurrence } from './recurrence';
 import type { HaEntity, WatcherActivity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
 
@@ -16,6 +17,10 @@ export interface User {
   ntfy: boolean;
   /** Ruhezeit für Stupse */
   nudgeQuiet: { start: string; end: string; off: boolean };
+  /** Feste Wahl der Sprache; „auto" folgt dem Gerät */
+  languageChoice: LanguageChoice;
+  /** Die Sprache, die der Server zuletzt von einem Gerät der Person gemeldet bekam (null: noch keine) */
+  language: 'de' | 'en' | null;
 }
 
 export type AccessMode = 'everyone' | 'selected';
@@ -292,7 +297,7 @@ export function setUnauthorizedHandler(fn: (() => void) | null): void {
 }
 
 /** Jede ändernde Anfrage trägt diese Kopfzeile; der Server lehnt sonst Anfragen ab, die von einer fremden Seite kommen */
-const CLIENT = { 'x-stups-client': '1' };
+const clientHeaders = () => ({ 'x-stups-client': '1', 'x-stups-language': i18n.lang });
 
 // Relative Adresse: funktioniert unter dem wechselnden Ingress-Pfad von Home Assistant.
 async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -300,7 +305,7 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
   try {
     res = await fetch(`api/${path}`, {
       method,
-      headers: body === undefined ? CLIENT : { ...CLIENT, 'content-type': 'application/json' },
+      headers: body === undefined ? clientHeaders() : { ...clientHeaders(), 'content-type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
@@ -321,6 +326,8 @@ const del = (p: string) => req<void>('DELETE', p);
 
 export const api = {
   capabilities: () => get<Capabilities>('capabilities'),
+  /** Wahl der Person und Sprache, die das Gerät gerade zeigt (der Server braucht sie für Push) */
+  setLanguage: (choice: LanguageChoice, effective: 'de' | 'en') => put<void>('me/language', { choice, effective }),
   authStatus: () => get<AuthStatus>('auth/status'),
   login: (username: string, password: string) => post<AuthStatus>('auth/login', { username, password }),
   logout: () => post<void>('auth/logout'),
@@ -394,7 +401,7 @@ export const api = {
     if (thumb) form.append('thumb', thumb, 'vorschau.jpg');
     let res: Response;
     try {
-      res = await fetch(`api/cards/${cardId}/attachments`, { method: 'POST', headers: CLIENT, body: form });
+      res = await fetch(`api/cards/${cardId}/attachments`, { method: 'POST', headers: clientHeaders(), body: form });
     } catch {
       throw new ApiError('Keine Verbindung zum Server', 0);
     }

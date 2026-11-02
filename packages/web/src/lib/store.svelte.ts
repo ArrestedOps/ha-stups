@@ -13,6 +13,7 @@ import {
 } from './api';
 import { formatDue } from './datetime';
 import { applyHeaderHiding } from './hideHaHeader';
+import { i18n, languageFromStorage, resolveLanguage, setLanguage, type LanguageChoice } from './i18n/index.svelte';
 import { passkeysSupported } from './passkeys';
 import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
 import { swipeTarget } from './swipe';
@@ -148,6 +149,27 @@ const memo = {
     }
   },
 };
+
+// ---------- Sprache ----------
+
+const LANGUAGE_KEY = 'stups.language';
+
+/** Wendet die Wahl an (Automatisch: Sprache des Geräts) und merkt sie sich, damit schon die Anmeldeseite stimmt */
+export function applyLanguage(choice: LanguageChoice): void {
+  memo.set(LANGUAGE_KEY, choice);
+  setLanguage(resolveLanguage(choice, navigator.languages?.length ? navigator.languages : [navigator.language ?? '']));
+}
+
+/** Die Person wählt in den Einstellungen eine Sprache */
+export async function changeLanguage(choice: LanguageChoice): Promise<void> {
+  applyLanguage(choice);
+  if (ui.me) ui.me = { ...ui.me, languageChoice: choice, language: i18n.lang };
+  try {
+    await api.setLanguage(choice, i18n.lang);
+  } catch (e) {
+    toast(errorText(e), { tone: 'error' });
+  }
+}
 
 // ---------- Hinweise ----------
 
@@ -290,6 +312,7 @@ export async function logout(): Promise<void> {
 }
 
 export async function init(): Promise<void> {
+  applyLanguage(languageFromStorage(memo.get(LANGUAGE_KEY)));
   try {
     ui.caps = await api.capabilities().catch(() => null);
     if (ui.caps?.auth === 'session') {
@@ -305,6 +328,9 @@ export async function init(): Promise<void> {
     }
     const me = await api.me();
     ui.me = me.user;
+    // Die Wahl der Person gilt auf allen Geräten. Meldet dieses Gerät eine andere Sprache als zuletzt, erfährt es der Server (für Push)
+    applyLanguage(me.user.languageChoice);
+    if (me.allowed && me.user.language !== i18n.lang) void api.setLanguage(me.user.languageChoice, i18n.lang).catch(() => undefined);
     ui.isAdmin = me.isAdmin;
     if (!me.allowed) {
       // Home Assistant kennt den Benutzer, Stups lässt ihn nicht hinein: nur die Erklärung zeigen

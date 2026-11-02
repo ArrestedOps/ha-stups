@@ -4,6 +4,7 @@
   import { autogrow } from '../lib/autogrow';
   import { nextColor } from '../lib/colors';
   import { deviceTz, fromInputValue, isFuture } from '../lib/datetime';
+  import { i18n } from '../lib/i18n/index.svelte';
   import { formatBytes, prepareUpload, uploadProblem } from '../lib/image';
   import { parseQuickAdd } from '../lib/quickadd';
   import { blockingProblem } from '../lib/quickadd/labels';
@@ -58,7 +59,7 @@
     parseQuickAdd(title, {
       now: Date.now(),
       tz,
-      lang: 'de',
+      lang: i18n.lang,
       defaultTime: ui.settings?.defaultDueTime ?? '09:00',
       people: ui.people.filter((p) => p.isPerson),
       categories: ui.view?.categories ?? [],

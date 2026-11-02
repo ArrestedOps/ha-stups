@@ -411,7 +411,7 @@ describe('Hervorhebung', () => {
 });
 
 describe('Sprachen', () => {
-  it('jede Sprache hat alle Wörter (Grundlage für Englisch)', () => {
+  it('jede Sprache hat alle Wörter', () => {
     const keys = (o: object): string[] => Object.keys(o).sort();
     const de = DICTIONARIES.de;
     for (const [lang, d] of Object.entries(DICTIONARIES)) {

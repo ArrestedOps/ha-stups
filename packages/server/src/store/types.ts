@@ -17,6 +17,10 @@ export interface User {
   ntfy: boolean;
   /** Ruhezeit für Stupse */
   nudgeQuiet: QuietWindow;
+  /** Feste Wahl der Sprache; „auto" folgt dem Gerät */
+  languageChoice: 'auto' | 'de' | 'en';
+  /** Die zuletzt von einem Gerät der Person gemeldete Sprache (null: noch keine) */
+  language: 'de' | 'en' | null;
 }
 
 export type NudgeTemplate = 'think' | 'today' | 'help' | 'thanks';

@@ -107,5 +107,6 @@
   "POST /api/watchers/:id/test",
   "PUT /api/access/mode",
   "PUT /api/beta",
+  "PUT /api/me/language",
   "PUT /api/settings"
 ]

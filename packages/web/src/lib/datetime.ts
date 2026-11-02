@@ -1,3 +1,6 @@
+import { numberLocale, t, tn } from './i18n/index.svelte';
+import { dayOfMonth, names } from './i18n/names';
+
 // Zeit-Hilfen der Oberfläche. Rechnen bewusst mit einer Zeitzone als Parameter, damit sie testbar sind.
 
 export const deviceTz = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -13,8 +16,6 @@ interface Local {
 
 const MIN = 60_000;
 const DAY = 86_400_000;
-const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 const pad = (n: number) => String(n).padStart(2, '0');
 
 const formatters = new Map<string, Intl.DateTimeFormat>();
@@ -91,28 +92,31 @@ export function formatDue(iso: string, nowMs = Date.now(), tz = deviceTz()): str
   const n = toLocal(nowMs, tz);
   const time = `${pad(l.h)}:${pad(l.mi)}`;
   const diff = Math.round((Date.UTC(l.y, l.m - 1, l.d) - Date.UTC(n.y, n.m - 1, n.d)) / DAY);
-  if (diff === 0) return `heute ${time}`;
-  if (diff === 1) return `morgen ${time}`;
-  if (diff === -1) return `gestern ${time}`;
-  if (diff >= 2 && diff <= 6) return `${WEEKDAYS[new Date(Date.UTC(l.y, l.m - 1, l.d)).getUTCDay()]} ${time}`;
-  return `${l.d}. ${MONTHS[l.m - 1]}${l.y === n.y ? '' : ` ${l.y}`} ${time}`;
+  if (diff === 0) return t('heute {time}', { time });
+  if (diff === 1) return t('morgen {time}', { time });
+  if (diff === -1) return t('gestern {time}', { time });
+  if (diff >= 2 && diff <= 6) return `${names().weekdaysShort[new Date(Date.UTC(l.y, l.m - 1, l.d)).getUTCDay()]} ${time}`;
+  return `${dayOfMonth(l.d)} ${names().monthsShort[l.m - 1]}${l.y === n.y ? '' : ` ${l.y}`} ${time}`;
 }
 
 export function formatLead(min: number): string {
-  if (min % 1440 === 0) return min / 1440 === 1 ? '1 Tag' : `${min / 1440} Tage`;
-  if (min % 60 === 0) return `${min / 60} Std.`;
-  return `${min} Min.`;
+  if (min % 1440 === 0) return tn('{n} Tag', '{n} Tage', min / 1440);
+  if (min % 60 === 0) return t('{n} Std.', { n: min / 60 });
+  return t('{n} Min.', { n: min });
 }
 
 export const formatCost = (cents: number): string =>
-  new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(cents / 100);
+  new Intl.NumberFormat(numberLocale(), { style: 'currency', currency: 'EUR' }).format(cents / 100);
 
-/** "4.200,50" / "4200.5" / "19,99 €" → Cent. Leer → null, ungültig → NaN. */
+/** "4.200,50" / "4,200.50" / "4200.5" / "19,99 €" → Cent. Leer → null, ungültig → NaN. Bei beiden Zeichen ist das letzte das Dezimalzeichen. */
 export function parseCost(input: string): number | null {
   const s = input.replace(/[€\s]/g, '');
   if (s === '') return null;
   let normalized = s;
-  if (s.includes(',')) normalized = s.replace(/\./g, '').replace(',', '.');
+  if (s.includes(',') && s.includes('.')) {
+    const decimal = s.lastIndexOf(',') > s.lastIndexOf('.') ? ',' : '.';
+    normalized = decimal === ',' ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+  } else if (s.includes(',')) normalized = s.replace(',', '.');
   if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return NaN;
   return Math.round(Number(normalized) * 100);
 }
@@ -122,8 +126,8 @@ export function formatCreated(iso: string, nowMs = Date.now(), tz = deviceTz()):
   const l = toLocal(Date.parse(iso), tz);
   const n = toLocal(nowMs, tz);
   const diff = Math.round((Date.UTC(n.y, n.m - 1, n.d) - Date.UTC(l.y, l.m - 1, l.d)) / DAY);
-  if (diff <= 0) return 'heute';
-  if (diff === 1) return 'gestern';
-  if (diff <= 6) return `vor ${diff} Tagen`;
-  return `${l.d}. ${MONTHS[l.m - 1]}${l.y === n.y ? '' : ` ${l.y}`}`;
+  if (diff <= 0) return t('heute');
+  if (diff === 1) return t('gestern');
+  if (diff <= 6) return t('vor {n} Tagen', { n: diff });
+  return `${dayOfMonth(l.d)} ${names().monthsShort[l.m - 1]}${l.y === n.y ? '' : ` ${l.y}`}`;
 }

@@ -289,8 +289,15 @@ export function parseQuickAdd(text: string, ctx: QuickContext): QuickResult {
       // ohne Minuten braucht es „Uhr" oder „um"; mit Punkt braucht es „Uhr" (sonst wäre es ein Datum); mit Doppelpunkt reicht es
       if (!sep && !word && !prefix) continue;
       if (sep === '.' && !word) continue;
-      const h = Number(hh);
+      let h = Number(hh);
       const mi = mm === undefined ? 0 : Number(mm);
+      const meridiem = word && dict.meridiem ? word.toLowerCase() : null;
+      if (meridiem) {
+        // 12-Stunden-Schreibweise: 12 am = 0 Uhr, 12 pm = 12 Uhr, 7 pm = 19 Uhr
+        if (h < 1 || h > 12) continue;
+        if (dict.meridiem!.pm.includes(meridiem)) h = h === 12 ? 12 : h + 12;
+        else h = h === 12 ? 0 : h;
+      }
       if (h > 23 || mi > 59) continue;
       const c: TimeCandidate = { kind: 'time', start: m.index, end: m.index + m[0].length, text: m[0], h, m: mi };
       const id = norm(m[0]);
@@ -341,16 +348,21 @@ export function parseQuickAdd(text: string, ctx: QuickContext): QuickResult {
         push(m, () => (validYmd(y, mo, d) ? { y, m: mo, d } : null));
       }
     }
-    // 1. Dezember  1. Dez  3. Mai 2028
+    // 1. Dezember  1. Dez  3. Mai 2028 (Englisch: 1 December  1st Dec  3 May 2028  Dec 1  December 1st 2028)
     const monthAlt = alt(dict.months.flat());
-    for (const m of matches(new RegExp(`(?<![${LETTER}.])(\\d{1,2})\\.\\s*(${monthAlt})\\.?(?:\\s+(\\d{4}))?(?![${LETTER}])`, 'giu'), work)) {
-      const d = Number(m[1]);
-      const mo = dict.months.findIndex((names) => names.includes(m[2]!.toLowerCase())) + 1;
-      if (m[3] === undefined) push(m, (t) => (mo === 2 && d === 29 ? withoutYear(t, mo, d) : validYmd(2001, mo, d) ? withoutYear(t, mo, d) : null));
+    const pushMonthDate = (m: RegExpExecArray, day: string, month: string, year: string | undefined) => {
+      const d = Number(day);
+      const mo = dict.months.findIndex((names) => names.includes(month.toLowerCase())) + 1;
+      if (year === undefined) push(m, (t) => (mo === 2 && d === 29 ? withoutYear(t, mo, d) : validYmd(2001, mo, d) ? withoutYear(t, mo, d) : null));
       else {
-        const y = Number(m[3]);
+        const y = Number(year);
         push(m, () => (validYmd(y, mo, d) ? { y, m: mo, d } : null));
       }
+    };
+    const dayPart = dict.dayDot ? '(\\d{1,2})\\.' : '(\\d{1,2})(?:st|nd|rd|th)?';
+    for (const m of matches(new RegExp(`(?<![${LETTER}.])${dayPart}\\s*(${monthAlt})\\.?(?:\\s+(\\d{4}))?(?![${LETTER}])`, 'giu'), work)) pushMonthDate(m, m[1]!, m[2]!, m[3]);
+    if (dict.monthFirst) {
+      for (const m of matches(new RegExp(`(?<![${LETTER}.])(${monthAlt})\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s+(\\d{4}))?(?![${LETTER}])`, 'giu'), work)) pushMonthDate(m, m[2]!, m[1]!, m[3]);
     }
 
     const today = todayOf(ctx);

@@ -1,16 +1,17 @@
 import type { NudgeResult, NudgeTarget, OpenNudge } from './api';
 import { deviceTz } from './datetime';
+import { t } from './i18n/index.svelte';
 
-/** „14:32" in der Zeitzone des Geräts */
+/** „14:32" in der Zeitzone des Geräts (24 Stunden in beiden Sprachen) */
 export function clock(iso: string, tz = deviceTz()): string {
   return new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz }).format(new Date(iso));
 }
 
 /** Hinweis unter einer Person im Stups-Sheet: warum sie nicht wählbar ist oder wann zugestellt wird */
-export function targetHint(t: NudgeTarget, tz = deviceTz()): string | null {
-  if (t.reason === 'no_device') return 'hat kein Push-Gerät';
-  if (t.reason === 'rate' && t.retryAt) return `wieder ab ${clock(t.retryAt, tz)}`;
-  if (t.deliverAt) return `wird um ${clock(t.deliverAt, tz)} zugestellt`;
+export function targetHint(target: NudgeTarget, tz = deviceTz()): string | null {
+  if (target.reason === 'no_device') return t('hat kein Push-Gerät');
+  if (target.reason === 'rate' && target.retryAt) return t('wieder ab {time}', { time: clock(target.retryAt, tz) });
+  if (target.deliverAt) return t('wird um {time} zugestellt', { time: clock(target.deliverAt, tz) });
   return null;
 }
 
@@ -29,11 +30,11 @@ export function nudgeBadge(card: { openNudges?: OpenNudge[] }, meId: string | nu
 export function sentMessage(r: NudgeResult, nameOf: (id: string) => string, tz = deviceTz()): string {
   const queued = r.sent.filter((s) => s.status === 'queued');
   const skipped = r.skipped.filter((s) => s.reason === 'rate' && s.retryAt);
-  const parts = ['Gestupst!'];
-  if (queued.length > 0) parts.push(`${queued.map((s) => nameOf(s.to)).join(', ')} bekommt es um ${clock(queued[0]!.deliverAt, tz)}.`);
-  if (skipped.length > 0) parts.push(`${skipped.map((s) => nameOf(s.to)).join(', ')}: erst wieder ab ${clock(skipped[0]!.retryAt!, tz)}.`);
+  const parts = [t('Gestupst!')];
+  if (queued.length > 0) parts.push(t('{names} bekommt es um {time}.', { names: queued.map((s) => nameOf(s.to)).join(', '), time: clock(queued[0]!.deliverAt, tz) }));
+  if (skipped.length > 0) parts.push(t('{names}: erst wieder ab {time}.', { names: skipped.map((s) => nameOf(s.to)).join(', '), time: clock(skipped[0]!.retryAt!, tz) }));
   return parts.join(' ');
 }
 
 /** Vorauswahl im Sheet: die vom Server vorgeschlagenen, sonst niemand */
-export const preselected = (targets: NudgeTarget[]): string[] => targets.filter((t) => t.preselected && t.selectable).map((t) => t.id);
+export const preselected = (targets: NudgeTarget[]): string[] => targets.filter((target) => target.preselected && target.selectable).map((target) => target.id);

@@ -347,4 +347,12 @@ export const migrations: Migration[] = [
       create index ix_passkeys_user on passkeys(user_id);
     `,
   },
+  {
+    version: 14,
+    // Sprache je Person: `language` ist die zuletzt gemeldete Sprache (für Push, ohne Browser), `language_choice` die feste Wahl (null = Automatisch)
+    sql: `
+      alter table users add column language text;
+      alter table users add column language_choice text;
+    `,
+  },
 ];

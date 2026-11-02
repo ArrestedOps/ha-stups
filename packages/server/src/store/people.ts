@@ -24,6 +24,8 @@ export function createPeople(c: Ctx, late: unknown) {
     notifyServices: JSON.parse(r.notify_services ?? '[]') as string[],
     ntfy: typeof r.ntfy_topic === 'string' && r.ntfy_topic !== '',
     nudgeQuiet: quietOf(r),
+    languageChoice: r.language_choice === 'de' || r.language_choice === 'en' ? r.language_choice : 'auto',
+    language: r.language === 'de' || r.language === 'en' ? r.language : null,
   });
 
   /** Ruhezeit aus den Spalten der Person, mit der Vorgabe für alles, was nicht gesetzt ist */
@@ -209,6 +211,18 @@ export function createPeople(c: Ctx, late: unknown) {
     return toUser(userRow(id));
   }
 
+  /** Die zuletzt gemeldete Sprache der Person (für Push); null, solange noch kein Gerät eine gemeldet hat */
+  const languageOf = (id: string): 'de' | 'en' | null => {
+    const l = one('select language from users where id = ?', id)?.language;
+    return l === 'de' || l === 'en' ? l : null;
+  };
+
+  /** `choice`: die feste Wahl der Person ('auto' = folgt dem Gerät), `effective`: die Sprache, die das Gerät gerade zeigt */
+  function setLanguage(id: string, v: { choice: 'auto' | 'de' | 'en'; effective: 'de' | 'en' }): void {
+    userRow(id);
+    run('update users set language = ?, language_choice = ? where id = ?', v.effective, v.choice === 'auto' ? null : v.choice, id);
+  }
+
   const getSetting = (key: string): string | null =>
     (one('select value from settings where key = ?', key)?.value as string | undefined) ?? null;
 
@@ -340,6 +354,8 @@ export function createPeople(c: Ctx, late: unknown) {
     setNotifyServices,
     ntfyTopic,
     setNtfyTopic,
+    languageOf,
+    setLanguage,
     getSetting,
     putSetting,
     rawSetting,

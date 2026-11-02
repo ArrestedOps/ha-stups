@@ -1,11 +1,8 @@
 import { fromInputValue, deviceTz } from './datetime';
+import { dayOfMonth, names } from './i18n/names';
 import { dayKeyOf, type ScheduleCard } from './schedule';
 
 export type CalMode = 'day' | 'week' | 'month';
-
-const WEEKDAYS_SHORT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 
 const parts = (key: string): [number, number, number] => {
   const [y, m, d] = key.split('-').map(Number);
@@ -139,13 +136,16 @@ export function columnForNew(columns: { id: string; isDone: boolean; isPlanned: 
 /** Kopfzeile: „November 2026", „2.–8. Nov 2026" oder „Do 5. Nov 2026" */
 export function rangeTitle(mode: CalMode, key: string): string {
   const [y, m, d] = parts(key);
-  if (mode === 'month') return `${MONTHS[m - 1]} ${y}`;
-  if (mode === 'day') return `${WEEKDAYS_SHORT[utc(key).getUTCDay()]} ${d}. ${MONTHS_SHORT[m - 1]} ${y}`;
+  const { weekdaysShort, monthsShort, monthsLong } = names();
+  if (mode === 'month') return `${monthsLong[m - 1]} ${y}`;
+  if (mode === 'day') return `${weekdaysShort[utc(key).getUTCDay()]} ${dayOfMonth(d)} ${monthsShort[m - 1]} ${y}`;
   const days = weekDays(key);
   const [, m1, d1] = parts(days[0]!);
   const [y2, m2, d2] = parts(days[6]!);
-  return m1 === m2 ? `${d1}.–${d2}. ${MONTHS_SHORT[m2 - 1]} ${y2}` : `${d1}. ${MONTHS_SHORT[m1 - 1]} – ${d2}. ${MONTHS_SHORT[m2 - 1]} ${y2}`;
+  return m1 === m2
+    ? `${dayOfMonth(d1)}–${dayOfMonth(d2)} ${monthsShort[m2 - 1]} ${y2}`
+    : `${dayOfMonth(d1)} ${monthsShort[m1 - 1]} – ${dayOfMonth(d2)} ${monthsShort[m2 - 1]} ${y2}`;
 }
 
-export const weekdayShort = (key: string): string => WEEKDAYS_SHORT[utc(key).getUTCDay()]!;
+export const weekdayShort = (key: string): string => names().weekdaysShort[utc(key).getUTCDay()]!;
 export const dayNumber = (key: string): number => parts(key)[2];

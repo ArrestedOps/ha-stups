@@ -19,6 +19,15 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
       accessMode: store.getAccessMode(),
     };
   });
+  // Sprache der Person: die Wahl und die Sprache, die ihr Gerät zeigt (für Push, wenn kein Browser dabei ist)
+  app.put('/api/me/language', async (req, reply) => {
+    const b = body(req);
+    const choices = ['auto', 'de', 'en'];
+    if (!choices.includes(b.choice) || !['de', 'en'].includes(b.effective)) throw new ValidationError('Die Sprache muss „de" oder „en" sein');
+    if (!req.user) throw new ForbiddenError();
+    store.setLanguage(req.user.id, { choice: b.choice, effective: b.effective });
+    return noContent(reply);
+  });
   app.get('/api/people', async () => store.people());
   // ----- Personen & Zugriff -----
   app.get('/api/access', async (req) => {

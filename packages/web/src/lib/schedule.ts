@@ -1,6 +1,8 @@
 import type { Card, ScheduleCard } from './api';
 import { CATEGORY_COLORS } from './colors';
 import { deviceTz } from './datetime';
+import { t, tn } from './i18n/index.svelte';
+import { dayOfMonth, names } from './i18n/names';
 
 export type { ScheduleCard };
 
@@ -70,9 +72,6 @@ export interface DaySection {
   cards: ScheduleCard[];
 }
 
-const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-const MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-
 /** Kalendertag in Ortszeit als YYYY-MM-DD */
 export const dayKeyOf = (ms: number, tz = deviceTz()): string => new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date(ms));
 
@@ -84,12 +83,12 @@ const dayNumber = (key: string): number => {
 /** „Sa 31. Okt" (mit Jahr, wenn es nicht das laufende ist) */
 export function dayLabel(key: string, nowKey: string): string {
   const [y, m, d] = key.split('-').map(Number);
-  const wd = WEEKDAYS[new Date(Date.UTC(y!, m! - 1, d!)).getUTCDay()]!;
+  const wd = names().weekdaysShort[new Date(Date.UTC(y!, m! - 1, d!)).getUTCDay()]!;
   const sameYear = key.slice(0, 4) === nowKey.slice(0, 4);
-  return `${wd} ${d}. ${MONTHS[m! - 1]}${sameYear ? '' : ` ${y}`}`;
+  return `${wd} ${dayOfMonth(d!)} ${names().monthsShort[m! - 1]}${sameYear ? '' : ` ${y}`}`;
 }
 
-const cardsText = (n: number) => (n === 1 ? '1 Karte' : `${n} Karten`);
+const cardsText = (n: number) => tn('{n} Karte', '{n} Karten', n);
 
 /**
  * Teilt die Karten in „Überfällig" (offen, Termin vorbei) und je einen Abschnitt pro Tag, der Karten hat.
@@ -103,7 +102,7 @@ export function groupByDay(cards: ScheduleCard[], nowMs = Date.now(), tz = devic
 
   const sections: DaySection[] = [];
   if (overdue.length > 0) {
-    sections.push({ key: 'overdue', title: 'Überfällig', sub: cardsText(overdue.length), overdue: true, today: false, cards: overdue });
+    sections.push({ key: 'overdue', title: t('Überfällig'), sub: cardsText(overdue.length), overdue: true, today: false, cards: overdue });
   }
   const byDay = new Map<string, ScheduleCard[]>();
   for (const c of rest) {
@@ -112,7 +111,7 @@ export function groupByDay(cards: ScheduleCard[], nowMs = Date.now(), tz = devic
   }
   for (const [key, list] of byDay) {
     const diff = dayNumber(key) - dayNumber(nowKey);
-    const title = diff === 0 ? 'Heute' : diff === 1 ? 'Morgen' : diff === -1 ? 'Gestern' : dayLabel(key, nowKey);
+    const title = diff === 0 ? t('Heute') : diff === 1 ? t('Morgen') : diff === -1 ? t('Gestern') : dayLabel(key, nowKey);
     const sub = diff >= -1 && diff <= 1 ? `${dayLabel(key, nowKey)} · ${cardsText(list.length)}` : cardsText(list.length);
     sections.push({ key, title, sub, overdue: false, today: diff === 0, cards: list });
   }

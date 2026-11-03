@@ -263,7 +263,7 @@ export function fromWatcher(w: WatcherItem, entities: Map<string, HaEntity> = ne
 const forMinutes = (min: number) => (min <= 0 ? '' : tn('{n} Minute', '{n} Minuten', min));
 
 /** Die Bedingung in einem Halbsatz: „Waschmaschine Leistung 3 Minuten unter 5 W liegt" */
-export function conditionText(f: Pick<WatcherForm, 'entityName' | 'entityId' | 'entityUnit' | 'kind' | 'to' | 'value' | 'forMin'>): string {
+export function conditionText(f: Pick<WatcherForm, 'entityName' | 'entityId' | 'entityUnit' | 'kind' | 'to' | 'value' | 'forMin' | 'leadHours' | 'forecastHours'>): string {
   const who = f.entityName || f.entityId || '…';
   if (f.kind === 'calendar_event') return t('im Kalender {who} {hours} vor einem Termin ansteht', { who, hours: tn('{n} Stunde', '{n} Stunden', intOr(f.leadHours, 12)) });
   if (f.kind === 'forecast') return t('{who} in den nächsten {hours} Regen vorhersagt', { who, hours: tn('{n} Stunde', '{n} Stunden', intOr(f.forecastHours, 3)) });

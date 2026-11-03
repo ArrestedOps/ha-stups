@@ -3,17 +3,25 @@
   import { onMount } from 'svelte';
   import { api, ApiError, type BoardView, type HaEntity, type WatcherItem, type WatcherRun } from '../lib/api';
   import { clock } from '../lib/nudge';
-  import { emptyForm, formProblem, fromWatcher, noteText, previewSentence, RUN_TEXT, TEMPLATES, toInput, type WatcherForm, type WatcherTemplate } from '../lib/watchers';
+  import type { TemplateDraft, WatcherTemplate } from '../lib/watcher-types';
+  import { applyTemplate as applyDraft, emptyForm, formProblem, fromWatcher, noteText, RUN_TEXT, toInput, type WatcherForm } from '../lib/watchers';
   import { catClass } from '../lib/colors';
   import { closeSheet, openSettings, personById, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
+  import DryRunPanel from './DryRunPanel.svelte';
+  import WatcherSentence from './WatcherSentence.svelte';
   import Group from './Group.svelte';
+  import Icon from './Icon.svelte';
   import Row from './Row.svelte';
   import SelectField from './SelectField.svelte';
   import Sheet from './Sheet.svelte';
 
-  /** id = null: neuer Wächter; template: Kennung einer Vorlage, die gleich angewendet wird */
-  let { id, template = undefined }: { id: string | null; template?: string } = $props();
+  /** id = null: neuer Wächter; template: Kennung einer Vorlage, die gleich angewendet wird; hit: der Treffer aus „Gefunden“ (Entität schon gewählt) */
+  let {
+    id,
+    template = undefined,
+    hit = undefined,
+  }: { id: string | null; template?: string; hit?: { entityId: string; name: string; draft?: TemplateDraft } } = $props();
 
   // Aus dem Reiter „Wächter" geht es dorthin zurück, sonst in die Einstellungen
   const back = () => (ui.tab === 'home' ? closeSheet() : openSettings('watchers'));
@@ -22,6 +30,11 @@
   const personName = (pid: string) => personById(pid)?.displayName ?? '?';
 
   let loading = $state(true);
+  /** „Mehr Regeln“ aufgeklappt (Sperrzeit, Zähler, Erinnern, Fälligkeit, Erledigen-Bedingung …) */
+  let moreOpen = $state(false);
+  /** Vorlagen des Servers, und warum sich die Karte nicht von selbst erledigen kann (leer = sie kann) */
+  let templates = $state<WatcherTemplate[]>([]);
+  let selfNote = $state('');
   let busy = $state(false);
   let item = $state<WatcherItem | null>(null);
   let runs = $state<WatcherRun[]>([]);
@@ -55,9 +68,10 @@
     } catch (e) {
       toast(e instanceof ApiError ? e.message : t('Konnte den Wächter nicht laden'), { tone: 'error' });
     }
+    if (!id) templates = (await api.watcherTemplates().catch(() => [])).filter((x) => x.kind === 'watcher');
     loading = false;
-    const wanted = !id && template ? TEMPLATES.find((t) => t.id === template) : undefined;
-    if (wanted) applyTemplate(wanted);
+    const wanted = !id && template ? templates.find((x) => x.id === template) : undefined;
+    if (wanted) applyTemplate(wanted, hit);
   });
 
   // Spalten und Kategorien des gewählten Boards
@@ -124,14 +138,14 @@
     picking = null;
   }
 
-  function applyTemplate(t: WatcherTemplate) {
-    form = t.apply(form);
-    startPicking('trigger', t.search, t.domain);
+  function applyTemplate(tpl: WatcherTemplate, found?: { entityId: string; name: string; draft?: TemplateDraft }) {
+    form = applyDraft(form, tpl, found);
+    // Ehrlich beim Selbst-Erledigen: ein Sensor, der das Erledigen nicht belegen kann, schaltet es aus und sagt warum
+    selfNote = tpl.canSelfComplete ? '' : (tpl.whyNoSelfComplete ?? '');
+    if (!found) startPicking('trigger', tpl.search, tpl.domain ?? '');
   }
 
   // ---------- Speichern und Aktionen ----------
-
-  const preview = $derived(previewSentence(form, personName));
 
   async function save() {
     const problem = formProblem(form);
@@ -207,14 +221,6 @@
   const usesCircle = $derived(form.assignMode !== 'none');
   const needsPeople = $derived(form.assignMode === 'fixed' || form.assignMode === 'rotation');
 
-  const MODES: [WatcherForm['assignMode'], string][] = $derived([
-    ['rotation_present', t('Abwechselnd unter den Anwesenden')],
-    ['first_home', t('Wer zuerst nach Hause kommt')],
-    ['all_present', t('Alle Anwesenden')],
-    ['rotation', t('Abwechselnd (egal, wer da ist)')],
-    ['fixed', t('Feste Person(en)')],
-    ['none', t('Niemand (Karte bleibt offen)')],
-  ]);
 </script>
 
 {#snippet saveButton()}
@@ -227,58 +233,42 @@
   {#if loading}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
-    <p class="mt-3 rounded-2xl bg-surface2 px-4 py-3 text-[15px]" data-testid="watcher-preview">{preview}</p>
-
-    {#if !id}
-      <Group title={t('Vorlage')} hint={t('Füllt das Formular vor, alles bleibt änderbar. Danach noch die Entität wählen.')}>
+    {#if !id && templates.length > 0 && !form.entityId}
+      <Group title={t('Vorlage')} hint={t('Füllt den Satz vor, alles bleibt änderbar. Danach noch die Entität wählen.')}>
         <div class="flex flex-wrap gap-2 p-3">
-          {#each TEMPLATES as tpl (tpl.id)}
+          {#each templates as tpl (tpl.id)}
             <button type="button" class={chip(false)} title={tpl.hint} onclick={() => applyTemplate(tpl)}>{tpl.title}</button>
           {/each}
         </div>
       </Group>
     {/if}
 
+    <WatcherSentence bind:form {personName} onpick={() => startPicking('trigger')} />
+    {#if picking === 'trigger'}
+      <div class="mt-2 rounded-2xl border border-line bg-surface p-3">{@render picker()}</div>
+    {/if}
+    <DryRunPanel {form} />
+
+    <button
+      type="button"
+      class="mt-4 flex min-h-12 w-full items-center justify-between rounded-2xl border border-line px-4 text-[16px] font-semibold"
+      aria-expanded={moreOpen}
+      onclick={() => (moreOpen = !moreOpen)}
+    >
+      {t('Mehr Regeln')}<Icon name={moreOpen ? 'chevron-up' : 'chevron-down'} size={18} />
+    </button>
+    {#if moreOpen}
     <Group title="Name">
       <div class="p-2"><input class={field} bind:value={form.name} maxlength="80" placeholder={t('z. B. Waschmaschine fertig')} aria-label={t('Name des Wächters')} /></div>
     </Group>
 
-    <Group title={t('Wenn')} hint={t('Stups beobachtet die Entität in Home Assistant und prüft die Bedingung selbst.')}>
-      <Row stack>
-        <div class="flex items-center gap-2">
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-[17px] font-semibold">{form.entityName || t('Noch keine Entität gewählt')}</p>
-            {#if form.entityId}<p class="truncate text-[13px] text-fg2">{form.entityId}</p>{/if}
-          </div>
-          <button type="button" class="min-h-10 shrink-0 rounded-xl bg-surface2 px-4 font-semibold" onclick={() => startPicking('trigger')}>
-            {form.entityId ? t('Ändern') : t('Wählen')}
-          </button>
-        </div>
-        {#if picking === 'trigger'}
-          {@render picker()}
-        {/if}
-      </Row>
-      <Row label={t('Bedingung')}>
-        <SelectField bind:value={form.kind} label={t('Bedingung')}>
-          <option value="below">{t('Wert fällt unter …')}</option>
-          <option value="above">{t('Wert steigt über …')}</option>
-          <option value="state">{t('Zustand wechselt zu …')}</option>
-        </SelectField>
-      </Row>
-      <Row label={form.kind === 'state' ? t('Zustand') : `${t('Wert')}${form.entityUnit ? ` (${form.entityUnit})` : ''}`}>
-        {#if form.kind === 'state'}
-          <input class="min-h-10 w-40 rounded-xl bg-surface2 px-3 text-right" bind:value={form.to} placeholder={t('z. B. off')} aria-label={t('Zielzustand')} />
-        {:else}
-          <input class="min-h-10 w-28 rounded-xl bg-surface2 px-3 text-right" inputmode="decimal" bind:value={form.value} placeholder={t('z. B. 5')} aria-label={t('Schwellwert')} />
-        {/if}
-      </Row>
-      <Row label={t('Für mindestens (Minuten)')}>
-        <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.forMin} placeholder={form.kind === 'state' ? '0' : '3'} aria-label={t('Wartezeit in Minuten')} />
-      </Row>
+    {#if form.kind !== 'calendar_event' && form.kind !== 'forecast'}
+    <Group title={t('Zähler')}>
       <Row label={t('Erst beim N-ten Mal')}>
         <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.count} placeholder="1" aria-label={t('Anzahl')} />
       </Row>
     </Group>
+    {/if}
 
     <Group title={t('Dann Karte')}>
       <Row label="Board">
@@ -340,24 +330,10 @@
         ? t('Ist niemand zu Hause, erscheint die Karte ohne Zuständige und ohne Push. Wer als Erstes heimkommt, bekommt sie (die Fälligkeit zählt ab dann).')
         : form.assignMode === 'rotation_present' || form.assignMode === 'all_present'
           ? t('Anwesend heißt: Die Person in Home Assistant ist zu Hause.')
-          : undefined}
+          : form.assignMode === 'suggest'
+            ? t('Alle Anwesenden bekommen die Frage „Wer übernimmt?“. Nach 30 Minuten ohne Antwort greift der Rückfall.')
+            : undefined}
     >
-      <div class="flex flex-col" role="radiogroup" aria-label={t('Zuweisung')}>
-        {#each MODES as [mode, label] (mode)}
-          <button
-            type="button"
-            role="radio"
-            aria-checked={form.assignMode === mode}
-            class="flex min-h-[46px] items-center gap-3 px-4 text-left text-[16px] {form.assignMode === mode ? 'font-semibold' : 'text-fg2'}"
-            onclick={() => (form.assignMode = mode)}
-          >
-            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 {form.assignMode === mode ? 'border-accent' : 'border-line'}">
-              {#if form.assignMode === mode}<i class="h-2.5 w-2.5 rounded-full bg-accent"></i>{/if}
-            </span>
-            {label}
-          </button>
-        {/each}
-      </div>
       {#if usesCircle}
         <div class="p-3">
           <p class="mb-2 text-[13px] font-semibold text-fg2">{needsPeople ? t('Personen') : t('Kreis (leer = alle Personen)')}</p>
@@ -370,8 +346,8 @@
           </div>
         </div>
       {/if}
-      {#if form.assignMode === 'rotation_present' || form.assignMode === 'all_present'}
-        <Row label={t('Ist niemand zu Hause')}>
+      {#if form.assignMode === 'rotation_present' || form.assignMode === 'all_present' || form.assignMode === 'suggest'}
+        <Row label={form.assignMode === 'suggest' ? t('Wenn sich niemand meldet') : t('Ist niemand zu Hause')}>
           <SelectField bind:value={form.fallback} label={t('Rückfall')}>
             <option value="next">{t('nächste Person')}</option>
             <option value="all">{t('alle')}</option>
@@ -401,8 +377,11 @@
 
     <Group title={t('Erledigt sich selbst, wenn …')} hint={t('Zum Beispiel: Die Tür der Waschmaschine geht auf. Die offene Karte dieses Wächters wird dann erledigt.')}>
       <Row label={t('Automatisch erledigen')}>
-        <input type="checkbox" class="h-6 w-6 accent-[var(--accent)]" bind:checked={form.doneOn} aria-label={t('Automatisch erledigen')} />
+        <input type="checkbox" class="h-6 w-6 accent-[var(--accent)]" bind:checked={form.doneOn} disabled={selfNote !== ''} aria-label={t('Automatisch erledigen')} />
       </Row>
+      {#if selfNote}
+        <Row stack><p class="text-[14px] text-fg2" data-testid="self-note">{selfNote}</p></Row>
+      {/if}
       {#if form.doneOn}
         <Row stack>
           <div class="flex items-center gap-2">
@@ -446,6 +425,8 @@
         <input class="min-h-10 w-20 rounded-xl bg-surface2 px-3 text-right" inputmode="numeric" bind:value={form.nudgeAfterMin} placeholder={t('nie')} aria-label={t('Stupsen nach Minuten')} />
       </Row>
     </Group>
+
+    {/if}
 
     {#if id && item}
       <Group title={t('Status')}>

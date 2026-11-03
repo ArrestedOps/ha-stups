@@ -19,6 +19,7 @@ import { passkeysSupported } from './passkeys';
 import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
 import { swipeTarget } from './swipe';
 import type { SettingsPageId } from './settingsPages';
+import type { TemplateDraft } from './watcher-types';
 import { migrateTab, visibleTabs, type Tab } from './tabs';
 import { applyCards, deltaIds } from './delta';
 import { startSync, type SyncInfo } from './sync';
@@ -33,7 +34,8 @@ export type Sheet =
   | { type: 'boardSettings' }
   | { type: 'settings'; page?: SettingsPageId }
   | { type: 'people' }
-  | { type: 'watcher'; id: string | null; template?: string }
+  | { type: 'watcher'; id: string | null; template?: string; hit?: { entityId: string; name: string; draft?: TemplateDraft } }
+  | { type: 'found' }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
   | { type: 'archive' }

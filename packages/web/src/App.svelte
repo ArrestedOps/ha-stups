@@ -26,6 +26,7 @@
   import Toasts from './components/Toasts.svelte';
   import TrashSheet from './components/TrashSheet.svelte';
   import WatcherSheet from './components/WatcherSheet.svelte';
+  import FoundSheet from './components/FoundSheet.svelte';
   import HomeView from './components/HomeView.svelte';
   import { columnForNew } from './lib/calendar';
   import { catClass } from './lib/colors';
@@ -254,7 +255,9 @@
   {:else if ui.sheet?.type === 'people'}
     <PeopleSheet />
   {:else if ui.sheet?.type === 'watcher'}
-    {#key ui.sheet.id ?? 'neu'}<WatcherSheet id={ui.sheet.id} template={ui.sheet.template} />{/key}
+    {#key ui.sheet.id ?? 'neu'}<WatcherSheet id={ui.sheet.id} template={ui.sheet.template} hit={ui.sheet.hit} />{/key}
+  {:else if ui.sheet?.type === 'found'}
+    <FoundSheet />
   {:else if ui.sheet?.type === 'nudge'}
     {#key ui.sheet.id}<NudgeSheet id={ui.sheet.id} />{/key}
   {:else if ui.sheet?.type === 'trash'}

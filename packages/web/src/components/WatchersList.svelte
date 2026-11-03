@@ -2,7 +2,9 @@
   import { t } from '../lib/i18n/index.svelte';
   import { api, ApiError, type WatcherActivity, type WatcherItem } from '../lib/api';
   import { formatDue } from '../lib/datetime';
-  import { conditionText, noteText, RUN_TEXT, TEMPLATES, watcherLine } from '../lib/watchers';
+  import { onMount } from 'svelte';
+  import type { WatcherTemplate } from '../lib/watcher-types';
+  import { conditionText, noteText, RUN_TEXT, watcherLine } from '../lib/watchers';
   import { openCardAnywhere, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
@@ -10,6 +12,12 @@
   const items = $derived(data?.items ?? []);
   const admin = $derived(ui.isAdmin);
   const personName = (id: string) => personById(id)?.displayName ?? '?';
+
+  // Vorlagen des Servers für den Anfang (nur Administratoren, nur solange es noch keinen Wächter gibt)
+  let templates = $state<WatcherTemplate[]>([]);
+  onMount(async () => {
+    if (ui.isAdmin) templates = (await api.watcherTemplates().catch(() => [])).filter((x) => x.kind === 'watcher');
+  });
 
   let activity = $state<WatcherActivity[]>([]);
   // Mit jedem Nachladen (ui.rev zählt hoch, auch durch Live-Sync) auch die Aktivität holen
@@ -36,6 +44,8 @@
       to: w.trigger.to ?? '',
       value: String(w.trigger.value ?? '').replace('.', ','),
       forMin: String(w.trigger.forMin),
+      leadHours: String(Math.round((w.trigger.leadMin ?? 720) / 60)),
+      forecastHours: String(w.trigger.forecast?.hours ?? 3),
     });
 
   const problem = (w: WatcherItem): string | null =>
@@ -66,7 +76,7 @@
       {:else}
         <p class="mt-4 mb-2 text-[13px] font-semibold tracking-wide text-fg2 uppercase">{t('Mit einer Vorlage starten')}</p>
         <div class="flex flex-col gap-2">
-          {#each TEMPLATES as tpl (tpl.id)}
+          {#each templates as tpl (tpl.id)}
             <button
               class="flex min-h-12 items-center gap-3 rounded-2xl border border-line bg-surface2 px-4 text-left text-[16px] font-semibold"
               onclick={() => openSheet({ type: 'watcher', id: null, template: tpl.id })}

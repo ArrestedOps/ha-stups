@@ -3,7 +3,7 @@
   import { api, type HomeState } from '../lib/api';
   import { formatDue } from '../lib/datetime';
   import { durationText, homeSections, quietLine } from '../lib/home';
-  import { t } from '../lib/i18n/index.svelte';
+  import { t, tn } from '../lib/i18n/index.svelte';
   import { canNudge } from '../lib/nudge';
   import { ageText } from '../lib/today';
   import { openCardAnywhere, openSettings, openSheet, personById, ui } from '../lib/store.svelte';
@@ -11,11 +11,14 @@
   import TopBar from './TopBar.svelte';
 
   let data = $state<HomeState | null>(null);
+  /** Wie viele weitere Geräte Stups in Home Assistant gefunden hat (nur Administratoren) */
+  let found = $state(0);
   let failed = $state(false);
   let request = 0;
 
   async function load() {
     const mine = ++request;
+    if (ui.isAdmin) api.watcherSuggestions().then((r) => (found = r.items.length)).catch(() => (found = 0));
     try {
       const d = await api.home();
       if (mine === request) {
@@ -50,6 +53,13 @@
   </header>
 
   <div class="-mr-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-4 pb-tabbar" data-testid="home">
+    {#if ui.isAdmin && found > 0 && data?.available}
+      <button class="mb-4 flex min-h-12 w-full items-center gap-3 rounded-2xl border border-house-line bg-house-bg px-4 text-left" data-testid="home-found" onclick={() => openSheet({ type: 'found' })}>
+        <Icon name="eye" size={20} />
+        <span class="flex-1 text-[15px] font-semibold text-house">{tn('Stups hat {n} weiteres Gerät gefunden', 'Stups hat {n} weitere Geräte gefunden', found)}</span>
+        <Icon name="chevron-right" size={18} />
+      </button>
+    {/if}
     {#if failed && !data}
       <p class="py-10 text-center text-fg2">{t('Die Seite „Zuhause“ konnte nicht geladen werden.')}</p>
     {:else if !data}

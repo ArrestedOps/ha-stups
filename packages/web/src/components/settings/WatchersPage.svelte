@@ -14,5 +14,10 @@
       <Icon name="plus" size={18} stroke={2.6} />{t('Wächter hinzufügen')}
     </button>
   {/if}
+  {#if ui.isAdmin && ui.watchers?.available}
+    <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-house font-semibold text-bg" onclick={() => openSheet({ type: 'found' })}>
+      <Icon name="eye" size={18} />{t('Wächter aus Vorlagen')}
+    </button>
+  {/if}
   <div class="mt-3 pb-4"><WatchersList /></div>
 </Page>

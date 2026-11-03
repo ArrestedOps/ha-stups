@@ -285,7 +285,7 @@
 
 
               {#if !own}
-                <PersonDelivery {p} {info} {run} {busy} canEdit={canEdit(p.id)} show={{ quiet: true, summary: true }} />
+                <PersonDelivery {p} {info} {run} {busy} canEdit={canEdit(p.id)} show={{ quiet: true, summary: true, busy: true }} />
               {/if}
 
               {#if admin && p.isPerson}

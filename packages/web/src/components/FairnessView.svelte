@@ -1,7 +1,8 @@
 <script lang="ts">
   import { api, type Fairness } from '../lib/api';
+  import { formatBusy } from '../lib/busy';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { personById, ui } from '../lib/store.svelte';
+  import { answerConfirmation, openCardAnywhere, personById, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
 
@@ -28,6 +29,12 @@
         if (mine === request) failed = true;
       });
   });
+
+  async function confirmCard(cardId: string, title: string, answer: 'confirm' | 'reject') {
+    await answerConfirmation({ id: cardId, title }, answer);
+    // neu laden (ui.rev zählt hoch, aber die Antwort kommt zuerst)
+    data = await api.fairness(period).catch(() => data);
+  }
 
   const maxEffort = $derived(Math.max(1, ...(data?.people.map((p) => p.effort) ?? [0])));
   const sentence = $derived.by(() => {
@@ -67,7 +74,33 @@
   {:else if !data}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
+    {#if data.waitingForYou.length > 0}
+      <section class="mt-4" aria-label={t('Wartet auf dich')} data-testid="week-waiting">
+        <h3 class="font-display mb-2 text-[17px] font-bold">{t('Wartet auf dich')}</h3>
+        <ul class="space-y-2">
+          {#each data.waitingForYou as w (w.cardId)}
+            {@const child = w.childId ? personById(w.childId) : undefined}
+            <li class="rounded-[20px] border border-line bg-surface p-4">
+              <button class="block w-full text-left text-[16px] font-semibold" onclick={() => void openCardAnywhere({ id: w.cardId, boardId: w.boardId })}>{w.title}</button>
+              <p class="mt-0.5 text-[13px] text-fg2">{child ? t('{name} sagt: erledigt', { name: child.displayName }) : t('Wartet auf Bestätigung')}</p>
+              <div class="mt-3 flex gap-2">
+                <button class="min-h-11 flex-1 rounded-xl bg-accent font-semibold text-on-accent" onclick={() => void confirmCard(w.cardId, w.title, 'confirm')}>{t('Passt')}</button>
+                <button class="min-h-11 flex-1 rounded-xl border border-line font-semibold" onclick={() => void confirmCard(w.cardId, w.title, 'reject')}>{t('Nochmal')}</button>
+              </div>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {/if}
+
     <p class="mt-4 text-[17px] font-semibold" data-testid="fairness-sentence">{sentence}</p>
+    {#if data.houseCards > 0}
+      <p class="mt-1 text-[15px] text-house" data-testid="week-house">
+        {period === 'week'
+          ? tn('{n} Karte kam diese Woche vom Haus', '{n} Karten kamen diese Woche vom Haus', data.houseCards)
+          : tn('{n} Karte kam diesen Monat vom Haus', '{n} Karten kamen diesen Monat vom Haus', data.houseCards)}
+      </p>
+    {/if}
 
     <ul class="card-shadow mt-3 divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
       {#each data.people as p (p.id)}
@@ -83,6 +116,7 @@
             <div class="h-full rounded-full bg-accent" style:width="{p.effort === 0 ? 0 : Math.max(4, (p.effort / maxEffort) * 100)}%"></div>
           </div>
           {#if lines.length}<p class="mt-1.5 text-[13px] text-fg2">{lines.join(' · ')}</p>{/if}
+          {#if p.busyUntil}<p class="mt-1 text-[13px] text-fg2" data-testid="busy-{p.id}">{t('Hat wenig Zeit bis {date}', { date: formatBusy(p.busyUntil) })}</p>{/if}
         </li>
       {/each}
     </ul>

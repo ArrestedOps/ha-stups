@@ -340,8 +340,12 @@ export interface Fairness {
   from: string;
   to: string;
   /** In der Reihenfolge der Personenliste, nicht nach Wert sortiert */
-  people: (FairnessCounts & { id: string; name: string; color: string | null })[];
+  people: (FairnessCounts & { id: string; name: string; color: string | null; busyUntil: string | null })[];
   total: FairnessCounts;
+  /** Karten in diesem Zeitraum, die von Wächtern kamen */
+  houseCards: number;
+  /** Bestätigungen von Kindern, die die angemeldete Person geben darf */
+  waitingForYou: { cardId: string; title: string; boardId: string; childId: string | null; requestedAt: string }[];
 }
 
 // ---------- Haus-Kanäle ----------
@@ -504,6 +508,10 @@ export const api = {
   access: () => get<AccessInfo>('access'),
   fairness: (period: 'week' | 'month') => get<Fairness>(`fairness?period=${period}`),
   today: () => get<Today>('today'),
+  /** Weitergeben: `to` ist die neue Person, null wenn gerade niemand sonst dran ist */
+  passCard: (id: string) => post<{ to: string | null }>(`cards/${id}/pass`),
+  /** Übernehmen ("Erst vorschlagen") */
+  claimCard: (id: string) => post<Card>(`cards/${id}/claim`),
   home: () => get<HomeState>('home'),
   houseChannels: () => get<HouseInfo>('house/channels'),
   houseEntities: () => get<HouseEntities>('house/entities'),
@@ -529,6 +537,8 @@ export const api = {
       childScope: 'all' | 'assigned';
       confirmDefault: boolean;
       confirmers: string[];
+      /** "Wenig Zeit" bis zu diesem Tag (YYYY-MM-DD); null nimmt es zurück */
+      busyUntil: string | null;
     }>,
   ) =>
     patch<User>(`access/people/${id}`, b),

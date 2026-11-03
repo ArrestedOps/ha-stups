@@ -8,6 +8,7 @@ import type { CardDetail, CompleteResult, CompletionSource } from './types.js';
 export interface ConfirmationRequest {
   cardId: string;
   title: string;
+  boardId: string;
   childId: string | null;
   requestedAt: string;
 }
@@ -77,10 +78,10 @@ export function createConfirmation(c: Ctx, late: unknown) {
   /** Alle offenen Anfragen, älteste zuerst (für die Erinnerung an die Bestätiger) */
   function openConfirmations(): ConfirmationRequest[] {
     return all(
-      `select id, title, confirm_requested_at, confirm_requested_by from cards
+      `select id, title, board_id, confirm_requested_at, confirm_requested_by from cards
        where deleted_at is null and archived_at is null and completed_at is null and confirm_requested_at is not null
        order by confirm_requested_at, id`,
-    ).map((r) => ({ cardId: r.id, title: r.title, childId: r.confirm_requested_by ?? null, requestedAt: r.confirm_requested_at }));
+    ).map((r) => ({ cardId: r.id, title: r.title, boardId: r.board_id, childId: r.confirm_requested_by ?? null, requestedAt: r.confirm_requested_at }));
   }
 
   return { needsConfirmation, requestConfirmation, answerConfirmation, confirmerIds, mayConfirm, openConfirmations };

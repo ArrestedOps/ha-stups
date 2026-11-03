@@ -86,7 +86,7 @@
     <p class="py-6 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
     <section class="mt-5 space-y-4 rounded-[18px] border border-line bg-surface px-4 py-4" data-testid="my-delivery">
-      <PersonDelivery p={me} {info} {run} {busy} canEdit={true} show={{ delivery: true, quiet: true, summary: true }} />
+      <PersonDelivery p={me} {info} {run} {busy} canEdit={true} show={{ delivery: true, quiet: true, summary: true, busy: true }} />
     </section>
   {/if}
 </Page>

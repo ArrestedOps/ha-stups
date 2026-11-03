@@ -540,8 +540,22 @@ export async function completeCard(card: Pick<Card, 'id'>): Promise<void> {
   toast(text, { action: { label: t('Rückgängig'), run: () => void act(() => api.undo(id)) } });
 }
 
+/** Eine Karte vom Haus weitergeben: an die nächste Person der Rotation, oder sie bleibt bei mir, wenn gerade niemand sonst dran ist */
+export async function passCard(card: Pick<Card, 'id' | 'title'>): Promise<void> {
+  const res = await act(() => api.passCard(card.id));
+  if (!res) return;
+  if (res.to === null) toast(t('Gerade ist niemand sonst dran'));
+  else toast(t('Weitergegeben an {name}', { name: personById(res.to)?.displayName ?? '?' }));
+}
+
+/** "Erst vorschlagen": die Karte übernehmen (wer zuerst tippt, bekommt sie) */
+export async function claimCard(card: Pick<Card, 'id'>): Promise<void> {
+  const res = await act(() => api.claimCard(card.id));
+  if (res) toast(t('Übernommen'));
+}
+
 /** Ein Bestätiger sagt „Bestätigen" (die Karte ist erledigt, zählt aufs Kind) oder „Nochmal" (das Kind bekommt sie zurück) */
-export async function answerConfirmation(card: Card, answer: 'confirm' | 'reject'): Promise<void> {
+export async function answerConfirmation(card: Pick<Card, 'id' | 'title'>, answer: 'confirm' | 'reject'): Promise<void> {
   const res = await act(async (): Promise<boolean> => {
     if (answer === 'confirm') await api.confirmCard(card.id);
     else await api.rejectCard(card.id);

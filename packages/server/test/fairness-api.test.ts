@@ -59,3 +59,18 @@ describe('Sonntags-Zusammenfassung einschalten', () => {
     expect((await patch(ben, annaId, { weeklySummary: true })).statusCode).toBe(403);
   });
 });
+
+describe('GET /api/fairness: wartet auf dich', () => {
+  it('Bestätigungen von Kindern, die diese Person bestätigen darf', async () => {
+    const board = store.listBoards()[0]!;
+    const col = store.getBoardView(board.id).columns[0]!.id;
+    const kid = store.addPerson({ haUserId: 'ha-kid', name: 'Kind' }).id;
+    store.setChild(kid, { isChild: true, confirmDefault: true, confirmers: [store.people().find((p) => p.name === 'Anna')!.id] });
+    const c = store.createCard(board.id, { columnId: col, title: 'Zimmer', assigneeIds: [kid] }, null);
+    store.requestConfirmation(c.id, kid);
+    const anna = (await app.inject({ url: '/api/fairness', headers: as('ha-anna', 'Anna') })).json();
+    expect(anna.waitingForYou).toMatchObject([{ cardId: c.id, title: 'Zimmer', childId: kid }]);
+    // Ben ist weder Administrator noch gewählter Bestätiger
+    expect((await app.inject({ url: '/api/fairness', headers: ben })).json().waitingForYou).toEqual([]);
+  });
+});

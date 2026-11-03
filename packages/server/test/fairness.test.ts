@@ -164,3 +164,24 @@ describe('Zählen', () => {
     expect(f.people.every((p) => p.done === 0 && p.effort === 0)).toBe(true);
   });
 });
+
+describe('Zusätze für „Diese Woche"', () => {
+  it('houseCards zählt die Karten von Wächtern im Zeitraum', () => {
+    db.prepare("insert into watchers (id, name, active, trigger_json, card_json, assign_json, cooldown_min, dedupe, position, created_at, updated_at) values ('w1', 'W', 1, '{}', '{}', '{}', 10, 1, 0, 'x', 'x')").run();
+    const c = card('Vom Haus', ben);
+    db.prepare("update cards set watcher_id = 'w1' where id = ?").run(c.id);
+    card('Von Hand', ben);
+    expect(store.fairness('week').houseCards).toBe(1);
+    at('2026-11-12T09:00:00Z'); // nächste Woche: die Karte zählt nicht mehr
+    expect(store.fairness('week').houseCards).toBe(0);
+    expect(store.fairness('month').houseCards).toBe(1);
+  });
+
+  it('busyUntil erscheint nur, solange „wenig Zeit" gilt', () => {
+    store.setBusyUntil(anna, '2026-11-05');
+    expect(store.fairness('week').people.find((p) => p.id === anna)?.busyUntil).toBe('2026-11-05');
+    expect(store.fairness('week').people.find((p) => p.id === ben)?.busyUntil).toBeNull();
+    at('2026-11-05T23:30:00Z'); // 6.11. 00:30 Berlin: vorbei
+    expect(store.fairness('week').people.find((p) => p.id === anna)?.busyUntil).toBeNull();
+  });
+});

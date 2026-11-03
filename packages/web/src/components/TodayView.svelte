@@ -4,7 +4,7 @@
   import { numberLocale, t, tn } from '../lib/i18n/index.svelte';
   import { clock } from '../lib/nudge';
   import { ageText, dueTone, sourceLine, todaySentence } from '../lib/today';
-  import { completeCard, openCardAnywhere, openSheet, personById, ui } from '../lib/store.svelte';
+  import { claimCard, completeCard, openCardAnywhere, openSheet, passCard, personById, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
@@ -66,9 +66,22 @@
                 <button class="mt-1 block w-full text-left text-[17px] leading-snug font-semibold" onclick={() => open(c)}>{c.title}</button>
                 {#if c.why}<p class="mt-1 text-[13px] text-fg2">{c.why}</p>{/if}
                 <div class="mt-3 flex gap-2">
-                  <button class="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-house font-semibold text-bg" onclick={() => done(c)}>
-                    <Icon name="check" size={18} stroke={2.8} />{t('Erledigt')}
-                  </button>
+                  {#if c.assigneeIds.length === 0}
+                    <!-- "Erst vorschlagen": noch hat niemand die Karte, wer zuerst tippt, bekommt sie -->
+                    <button class="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-house font-semibold text-bg" onclick={() => void claimCard(c)}>
+                      <Icon name="hand" size={18} />{t('Übernehmen')}
+                    </button>
+                  {:else}
+                    <button class="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-house font-semibold text-bg" onclick={() => done(c)}>
+                      <Icon name="check" size={18} stroke={2.8} />{t('Erledigt')}
+                    </button>
+                    <!-- Ein Kind erledigt, die Erwachsenen verteilen -->
+                    {#if !ui.isChild}
+                      <button class="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-house-line font-semibold text-house" onclick={() => void passCard(c)}>
+                        <Icon name="arrow-right" size={18} />{t('Weitergeben')}
+                      </button>
+                    {/if}
+                  {/if}
                 </div>
               </li>
             {/each}

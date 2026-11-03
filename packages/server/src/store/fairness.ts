@@ -1,3 +1,4 @@
+import { isBusy } from '../busy.js';
 import { fromLocal, toLocal } from '../recurrence.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
@@ -21,6 +22,8 @@ export interface FairnessPerson extends FairnessCounts {
   id: string;
   name: string;
   color: string | null;
+  /** „Wenig Zeit" bis zu diesem Tag (nur solange es gilt), sonst null */
+  busyUntil: string | null;
 }
 
 export interface Fairness {
@@ -31,12 +34,14 @@ export interface Fairness {
   /** In der Reihenfolge der Personenliste, nicht nach Wert sortiert */
   people: FairnessPerson[];
   total: FairnessCounts;
+  /** Wie viele Karten in dem Zeitraum von Wächtern kamen ("vom Haus") */
+  houseCards: number;
 }
 
 /** Wer erledigt wie viel? Zahlen aus den Erledigungen, Karten und Stupsen; nur Personen, über alle Boards. */
 export function createFairness(c: Ctx, late: unknown) {
   const s = late as Internals;
-  const { now, timeZone, all } = c;
+  const { now, timeZone, all, one } = c;
   const { people } = lazy(s, ['people'] as const);
 
   /** Woche (Montag 00:00 bis Montag 00:00) oder Monat in der Ortszeit; Grenzen in UTC, auch über eine Zeitumstellung hinweg */
@@ -98,6 +103,7 @@ export function createFairness(c: Ctx, late: unknown) {
       id: p.id,
       name: p.displayName,
       color: p.color,
+      busyUntil: isBusy(p.busyUntil, now().getTime(), timeZone()) ? p.busyUntil : null,
       done: completed.get(p.id)?.n ?? 0,
       effort: completed.get(p.id)?.effort ?? 0,
       created: created.get(p.id)?.n ?? 0,
@@ -114,7 +120,8 @@ export function createFairness(c: Ctx, late: unknown) {
       }),
       { done: 0, effort: 0, created: 0, nudgesAnswered: 0, watcherCards: 0 },
     );
-    return { period, from: f, to: t, people: list, total };
+    const houseCards = (one('select count(*) as n from cards where watcher_id is not null and created_at >= ? and created_at < ?', f, t)?.n as number | undefined) ?? 0;
+    return { period, from: f, to: t, people: list, total, houseCards };
   }
 
   return { fairness };

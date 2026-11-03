@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
   import { api, type AccessInfo } from '../lib/api';
+  import { busyRange } from '../lib/busy';
   import { feat, toast } from '../lib/store.svelte';
 
   /**
@@ -21,7 +22,7 @@
     run: (fn: () => Promise<unknown>) => Promise<void>;
     busy: boolean;
     canEdit: boolean;
-    show: { delivery?: boolean; quiet?: boolean; summary?: boolean };
+    show: { delivery?: boolean; quiet?: boolean; summary?: boolean; busy?: boolean };
   } = $props();
 
   // ntfy: Entwurf des Themas je Person, bis gespeichert wird
@@ -141,6 +142,34 @@
                 {/if}
               </div>
               {/if}
+{/if}
+
+{#if show.busy && canEdit}
+  {@const range = busyRange()}
+  <div data-testid="busy-setup">
+    <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Wenig Zeit')}</p>
+    <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+      <span>{t('Rotationen der Wächter überspringen {name} bis zu diesem Tag', { name: p.displayName })}</span>
+      <input
+        type="date"
+        class="min-h-11 rounded-xl bg-surface2 px-3"
+        value={p.busyUntil ?? ''}
+        min={range.min}
+        max={range.max}
+        disabled={busy}
+        aria-label={t('Wenig Zeit bis (Datum) für {name}', { name: p.displayName })}
+        onchange={(e) => {
+          // sofort lesen: `run` führt die Änderung erst später aus
+          const value = e.currentTarget.value || null;
+          void run(() => api.updatePerson(p.id, { busyUntil: value }));
+        }}
+      />
+    </label>
+    {#if p.busyUntil}
+      <button type="button" class="min-h-11 text-[15px] font-semibold text-accent-text" disabled={busy} onclick={() => run(() => api.updatePerson(p.id, { busyUntil: null }))}>{t('Wieder normal')}</button>
+    {/if}
+    <p class="text-[13px] text-fg2">{t('Von Hand kann man ihr oder ihm weiter Karten zuweisen; nur das Verteilen durch Wächter pausiert.')}</p>
+  </div>
 {/if}
 
 {#if show.quiet}

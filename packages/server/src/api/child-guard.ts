@@ -43,6 +43,7 @@ const ALLOWED: Record<string, Own> = {
   'GET /api/people/:id/avatar': 'none',
   'GET /api/schedule': 'none',
   'GET /api/settings': 'none',
+  'GET /api/today': 'none',
 };
 
 export function registerChildGuard(app: FastifyInstance, store: Store): void {

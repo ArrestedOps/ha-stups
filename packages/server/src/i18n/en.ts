@@ -258,4 +258,10 @@ export const en: Catalog = {
   'Das Bild ist zu groß (höchstens 2 MB)': 'The picture is too large (2 MB at most)',
   'Dieser Bildtyp ist nicht erlaubt. Erlaubt sind JPEG, PNG und WebP': 'This picture type is not allowed. JPEG, PNG and WebP are allowed',
   'Kein Bild vorhanden': 'No picture available',
+  'Wer übernimmt?': 'Who takes it?',
+  'reihum unter allen': 'in turn among everyone',
+  'reihum unter allen, die zu Hause sind': 'in turn among everyone who is home',
+  'weil du zu Hause bist': 'because you are home',
+  'weil du als Erste oder Erster heimgekommen bist': 'because you were the first to get home',
+  'weil die Karte fest dir zugewiesen ist': 'because the card is assigned to you',
 };

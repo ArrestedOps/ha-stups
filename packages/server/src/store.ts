@@ -4,6 +4,7 @@ import { createHouse } from './store/house.js';
 import { createTemplates } from './store/templates.js';
 import { createFairness } from './store/fairness.js';
 import { createConfirmation } from './store/confirmation.js';
+import { createToday } from './store/today.js';
 import { createCards } from './store/cards.js';
 import { createBoards } from './store/boards.js';
 import { createCompletion } from './store/completion.js';
@@ -42,6 +43,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     createTemplates(c, s),
     createFairness(c, s),
     createConfirmation(c, s),
+    createToday(c, s),
   );
 
   return {
@@ -159,6 +161,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     purgeTrash: s.purgeTrash,
     ensureDefaultBoard: s.ensureDefaultBoard,
     fairness: s.fairness,
+    today: s.today,
     listTemplates: s.listTemplates,
     getTemplateData: s.getTemplateData,
     createBoardFromTemplate: s.createBoardFromTemplate,

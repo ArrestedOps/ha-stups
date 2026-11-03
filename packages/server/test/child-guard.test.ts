@@ -40,6 +40,7 @@ const ALLOWED_READS = [
   'GET /api/people/:id/avatar',
   'GET /api/schedule',
   'GET /api/settings',
+  'GET /api/today',
 ];
 
 const isRead = (r: string) => r.startsWith('GET ');

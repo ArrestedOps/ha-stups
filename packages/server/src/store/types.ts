@@ -219,6 +219,8 @@ export const EFFORTS: readonly Effort[] = ['small', 'medium', 'large'];
 /** Gewichte für die Fairness-Ansicht; eine Karte ohne Angabe zählt wie mittel */
 export const EFFORT_WEIGHT: Record<Effort, number> = { small: 1, medium: 2, large: 3 };
 
+export type { Today, TodayCard } from './today.js';
+
 export interface Card {
   id: string;
   boardId: string;

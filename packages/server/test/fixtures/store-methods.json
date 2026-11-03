@@ -118,6 +118,7 @@
   "syncPeople",
   "syncPlanned",
   "takeChanges",
+  "today",
   "transaction",
   "undoCompletion",
   "updateBoard",

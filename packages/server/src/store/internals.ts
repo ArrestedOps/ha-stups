@@ -12,6 +12,7 @@ import type { createHouse } from './house.js';
 import type { createTemplates } from './templates.js';
 import type { createFairness } from './fairness.js';
 import type { createConfirmation } from './confirmation.js';
+import type { createToday } from './today.js';
 
 export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createBoards> &
@@ -25,4 +26,5 @@ export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createHouse> &
   ReturnType<typeof createTemplates> &
   ReturnType<typeof createFairness> &
-  ReturnType<typeof createConfirmation>;
+  ReturnType<typeof createConfirmation> &
+  ReturnType<typeof createToday>;

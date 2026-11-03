@@ -70,6 +70,8 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     setAccentHue: s.setAccentHue,
     setWeeklySummary: s.setWeeklySummary,
     setChild: s.setChild,
+    boardIdsWithCardsOf: s.boardIdsWithCardsOf,
+    boardIdOfCard: s.boardIdOfCard,
     pushSecret: s.pushSecret,
     rawSetting: s.rawSetting,
     putRawSetting: s.putRawSetting,

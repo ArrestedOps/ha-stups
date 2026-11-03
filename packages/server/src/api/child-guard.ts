@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import { ForbiddenError } from '../errors.js';
+import { ForbiddenError, NotFoundError } from '../errors.js';
 import { t } from '../i18n/index.js';
 import type { Store } from '../store.js';
 
@@ -59,11 +59,47 @@ export function registerChildGuard(app: FastifyInstance, store: Store): void {
     }
   }
 
+  /** Boards, die dieses Kind sehen darf; null = alle (Kind mit „alle Boards", Mitglied, Administrator) */
+  function visibleBoards(req: FastifyRequest): Set<string> | null {
+    if (!req.access?.isChild || !req.user || req.user.childScope !== 'assigned') return null;
+    return new Set(store.boardIdsWithCardsOf(req.user.id));
+  }
+
+  /** Die Karte (oder der Anhang) liegt in einem Board, das das Kind nicht sieht: für das Kind gibt es sie nicht */
+  function hidden(req: FastifyRequest, cardId: string | null, what: string): void {
+    const visible = visibleBoards(req);
+    if (!visible || !cardId) return;
+    const board = store.boardIdOfCard(cardId);
+    if (board && !visible.has(board)) throw new NotFoundError(what);
+  }
+
   // Läuft nach dem Haken, der den Benutzer und seine Rolle bestimmt (req.access)
   app.addHook('preHandler', async (req) => {
     if (!req.access?.isChild || !req.user) return;
     const route = `${req.method} ${req.routeOptions.url ?? ''}`;
     const own = ALLOWED[route];
     if (own === undefined || !isOwn(req, own)) throw deny();
+
+    // Sichtbarkeit: einzelne Boards, Karten und Anhänge, die das Kind nicht sehen darf
+    const id = (req.params as { id?: string }).id ?? '';
+    if (route === 'GET /api/boards/:id') {
+      const visible = visibleBoards(req);
+      if (visible && !visible.has(id)) throw new NotFoundError(t('Board nicht gefunden'));
+    } else if (route.startsWith('GET /api/cards/:id')) {
+      hidden(req, id, t('Karte nicht gefunden'));
+    } else if (route.startsWith('GET /api/attachments/:id')) {
+      // Gibt es den Anhang nicht, wirft das schon hier „nicht gefunden" (derselbe 404 wie in der Route)
+      hidden(req, store.getAttachment(id).cardId, t('Anhang nicht gefunden'));
+    }
+  });
+
+  // Listen: die Einträge fremder Boards fallen weg, auch wenn das Kind sie ausdrücklich verlangt
+  app.addHook('preSerialization', async (req, _reply, payload) => {
+    const visible = visibleBoards(req);
+    if (!visible || !Array.isArray(payload)) return payload;
+    const route = `${req.method} ${req.routeOptions.url ?? ''}`;
+    if (route === 'GET /api/boards') return payload.filter((b: { id: string }) => visible.has(b.id));
+    if (route === 'GET /api/schedule' || route === 'GET /api/cards') return payload.filter((c: { boardId: string }) => visible.has(c.boardId));
+    return payload;
   });
 }

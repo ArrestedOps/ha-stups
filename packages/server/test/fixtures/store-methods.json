@@ -10,6 +10,8 @@
   "addPerson",
   "applyManagedPeople",
   "archiveDone",
+  "boardIdOfCard",
+  "boardIdsWithCardsOf",
   "cardIdOfChecklistItem",
   "cardIdOfCompletion",
   "claimNotification",

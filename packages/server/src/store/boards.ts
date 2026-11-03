@@ -387,6 +387,21 @@ export function createBoards(c: Ctx, late: unknown) {
     };
   }
 
+  /** Boards, in denen der Person Karten zugewiesen sind (auch erledigte und archivierte); für Kinder mit „nur eigene Boards" */
+  function boardIdsWithCardsOf(userId: string): string[] {
+    return all(
+      `select distinct c.board_id as id from cards c
+         join card_assignees a on a.card_id = c.id
+         join boards b on b.id = c.board_id
+        where a.user_id = ? and c.deleted_at is null and b.deleted_at is null`,
+      userId,
+    ).map((r) => r.id as string);
+  }
+
+  /** Das Board einer Karte (für die Rechte-Prüfung); null, wenn es die Karte nicht gibt */
+  const boardIdOfCard = (cardId: string): string | null =>
+    (one('select board_id from cards where id = ? and deleted_at is null', cardId)?.board_id as string | undefined) ?? null;
+
   function ensureDefaultBoard(): void {
     if (one('select count(*) as n from boards')!.n === 0) createBoard({ name: t('Haushalt'), withPlanned: true });
   }
@@ -419,6 +434,8 @@ export function createBoards(c: Ctx, late: unknown) {
     updateCategory,
     deleteCategory,
     getBoardView,
+    boardIdsWithCardsOf,
+    boardIdOfCard,
     ensureDefaultBoard,
   };
 }

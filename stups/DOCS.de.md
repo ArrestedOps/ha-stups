@@ -19,6 +19,7 @@ Kanban-Board für den Haushalt, direkt in Home Assistant (Ingress, kein eigener 
 
 - **Administrator** ist, wer es in Home Assistant ist. Administratoren ändern Personen, Zugriff und Dashboard und kommen immer hinein.
 - **Mitglieder** benutzen die App und wählen ihre eigenen Push-Geräte.
+- **Kinder** sind Personen mit eingeschränkten Rechten (siehe „Rolle Kind und Bestätigung“). Ein Administrator ist nie ein Kind.
 - Wer aus der Liste entfernt wird, verliert Zuweisungen und Nachrichten, die Karten bleiben unverändert. Kommt die Person zurück, gilt alles wieder.
 
 ### Optionen des Add-ons (Konfiguration in Home Assistant)
@@ -89,6 +90,15 @@ Oben filterst du, was du sehen willst:
 - **Erledigte** blendet die in den letzten sieben Tagen erledigten Karten ein. „Zurücksetzen" löscht alle Filter. Der Filter wird auf dem Gerät gemerkt.
 
 Die Agenda lädt die nächsten 60 Tage. Liegt in dieser Zeit nichts an, schaut sie gleich ein Jahr voraus; weiter entfernte Karten holt **„Weitere 60 Tage laden"** (auch bei einer leeren Liste).
+
+### Fairness: Wer macht wie viel?
+
+Oben in der Agenda schaltet **Termine | Fairness** die Ansicht um. Die Fairness-Ansicht zeigt für **diese Woche** oder **diesen Monat**, wie viele Karten jede Person erledigt hat, als Balken für den *Aufwand*. Es gibt **keine Rangliste**: keine Plätze, keine Medaillen, die Reihenfolge ist die der Personenliste, alle Balken haben dieselbe Farbe. Es geht darum, die Last zu sehen, nicht um einen Wettbewerb.
+
+- **Aufwand:** Jede Karte hat einen optionalen *Aufwand* (klein = 1, mittel = 2, groß = 3). Ohne Angabe zählt sie wie mittel. Eine große Aufgabe wiegt mehr als eine kleine.
+- Unter dem Balken stehen, wenn es welche gibt, die angelegten Karten, beantwortete Stupse und erledigte Wächter-Karten.
+- Karten von Kindern mit Bestätigung zählen erst **nach** der Bestätigung. Kinder sehen die Fairness-Ansicht nicht.
+- **Sonntags-Zusammenfassung (optional):** Jede Person kann unter *Personen & Zugriff* eine Nachricht am Sonntagabend einschalten (ab 18:00, nicht in der Ruhezeit): „Diese Woche habt ihr 14 Aufgaben erledigt.“ Sie ist aus, bis jemand sie einschaltet, und sagt nie „0“.
 
 ### Kalender
 
@@ -162,6 +172,22 @@ Gut zu wissen:
 - In einer Haus-Nachricht gibt es keine Knöpfe. Erledigt wird in der App.
 - In der **Beta** bleiben die Haus-Kanäle still, bis Push eingeschaltet ist (Einstellungen › Beta), damit nichts doppelt angesagt wird.
 - Die Übersicht unter Einstellungen › Benachrichtigungen zeigt jeden Kanal mit dem letzten Ergebnis.
+
+### Rolle Kind und Bestätigung
+
+Administratoren machen eine Person unter *Einstellungen › Personen & Zugriff › Rolle Kind* zum **Kind**. Ein Kind bekommt eine reduzierte App, und der Server setzt das durch (nicht nur der Bildschirm):
+
+- Ein Kind **sieht** alle Boards oder nur die **Boards mit eigenen Karten** (Wahl je Kind) und kann eigene Karten **abhaken**, Checklistenpunkte abhaken, **kommentieren** und **Fotos und Links anhängen**. Sonst nichts: kein Anlegen, Verschieben, Löschen, keine Board-Verwaltung, keine Wächter, keine Fairness, keine Einstellungen außer Sprache und Farbe.
+- **Bestätigung:** Je Kind kannst du *„Erledigt“ braucht eine Bestätigung* einschalten, je Karte lässt es sich überschreiben (*Bestätigung*: Vorgabe der Person, immer, nie). Hakt das Kind eine Karte ab, bleibt sie offen und zeigt **„Wartet auf Bestätigung“**. Die **Bestätiger** bekommen eine Push-Nachricht mit **Bestätigen** und **Nochmal**:
+  - *Bestätigen* erledigt die Karte. Sie zählt für das **Kind** (Wiederholung, Fairness, Wächter-Zähler).
+  - *Nochmal* nimmt die Anfrage zurück. Das Kind bekommt „Nochmal, bitte“ (aufs Handy und, wenn ein Haus-Kanal eingerichtet ist, als Ansage im Haus, außer in der Ruhezeit).
+  - Wer zuerst antwortet, entscheidet; die anderen sehen, dass schon geantwortet wurde. Unbeantwortete Anfragen erinnern die Bestätiger nach zwei Stunden, höchstens einmal am Tag.
+- **Wer bestätigt:** Administratoren immer; dazu die Personen, die du je Kind wählst. Ist niemand gewählt, dürfen alle Erwachsenen.
+- Wer eine wartende Karte anders erledigt (ein Erwachsener in der App), beendet die Anfrage.
+
+### Board-Vorlagen
+
+Beim Anlegen eines Boards (Board-Wechsler) startest du **leer** oder aus einer **Vorlage**, mit Vorschau auf Spalten, Kategorien und Karten. Eingebaut sind *Haushalt, Umzug, Renovierung, Urlaub packen, Baby kommt, Ideen und Unternehmungen*, in der Sprache deiner App. Unter *Board-Einstellungen › Vorlagen* kannst du ein Board **als Vorlage speichern** (Spalten, Kategorien und offene Karten, ohne Zuweisungen, Anhänge und Kommentare) und eigene Vorlagen löschen.
 
 ### Wächter: Karten automatisch aus Home Assistant
 

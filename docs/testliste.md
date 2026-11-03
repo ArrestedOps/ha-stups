@@ -300,6 +300,38 @@ Nur am echten Haus: Home Assistant mit einem Lautsprecher (`media_player`), eine
 - [ ] **Home Assistant › Stups › Dokumentation** (englisch, mit Link zur deutschen Fassung) liest sich verständlich; die Menüwege in der Anleitung („Settings › People & Access“) gibt es genau so in der englischen Oberfläche
 - [ ] **Ankündigungsentwürfe** in `docs/announcements/` gegenlesen (HA-Forum, Reddit, GitHub-Release, deutsches Forum): stimmen Versionsnummer und Links, ist die Aussage zur Lizenz so gewollt? Nichts wird von selbst veröffentlicht
 
+## 26 · Fairness und Sonntags-Zusammenfassung (seit 1.17.0)
+
+Am iPhone, in der Beta zuerst. Mindestens zwei Personen, ein paar erledigte Karten diese Woche.
+
+- [ ] **Aufwand:** In einer Karte Chip „Aufwand“: Klein, Mittel, Groß, oder wieder „Nicht angegeben“. Wird sofort gespeichert
+- [ ] **Umschalter:** Agenda › „Termine | Fairness“. Die Wahl bleibt nach dem Neuladen
+- [ ] **Zahlen:** Diese Woche / Dieser Monat: Satz oben („… habt ihr N Aufgaben erledigt“), je Person „N erledigt“ und ein Balken. Eine große Karte erledigen: der Balken der Person wächst um 3, eine kleine um 1, ohne Angabe um 2
+- [ ] **Keine Rangliste:** Keine Plätze, Medaillen, Pfeile; die Reihenfolge ist die der Personenliste, nicht nach Zahl; alle Balken gleiche Farbe. Bei null Karten steht „Das kommt noch.“
+- [ ] **Sonntag:** Bei einer Person „Wöchentliche Zusammenfassung am Sonntag“ einschalten. Sonntagabend ab 18:00 kommt genau eine Nachricht, nicht in der Ruhezeit, nicht bei null erledigten Karten, nicht ins Haus. Ausgeschaltet kommt nichts
+
+## 27 · Rolle Kind und Bestätigung (seit 1.17.0)
+
+Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Benutzer (oder ein Konto im eigenen Container); dazu zwei Erwachsene, einer davon Administrator.
+
+- [ ] **Einrichten:** Personen & Zugriff › Person › „Rolle Kind“: „Ist ein Kind“ einschalten, „Sieht“ wählen, „Erledigt braucht eine Bestätigung“, „Wer bestätigt“. Bei einem Administrator ist der Schalter aus und erklärt, warum
+- [ ] **Reduzierte App:** Das Kind sieht keinen Plus-Knopf, kein Menü an der Karte, kein Wischen, kein Ziehen, keinen Reiter „Wächter“, keine Fairness, in den Einstellungen nur Sprache und Farbe (und „Abmelden“ im eigenen Container)
+- [ ] **Sichtbarkeit:** „Nur Boards mit eigenen Karten“: im Board-Wechsler nur diese Boards, auch Agenda und Kalender zeigen nur deren Karten. Wird dem Kind eine Karte in einem neuen Board zugewiesen, erscheint das Board sofort
+- [ ] **Eigene Karte:** Abhaken, Checklistenpunkt abhaken, kommentieren, Foto und Link anhängen funktionieren. In einer fremden Karte (bei „Alle Boards“) ist alles nur zum Ansehen
+- [ ] **Bestätigung:** Das Kind hakt ab: Hinweis „Gemeldet: wartet auf Bestätigung“, die Karte bleibt offen mit dem Zeichen „Wartet auf Bestätigung“. Die gewählten Erwachsenen bekommen eine Push-Nachricht mit „Bestätigen“ und „Nochmal“
+- [ ] **Bestätigen:** Tipp auf „Bestätigen“ (in der Nachricht oder in der Karte): erledigt, steht beim Kind in der Fairness-Ansicht der Erwachsenen, das Kind bekommt „Bestätigt von … ✓“. Bei einer Wiederholung entsteht die nächste Karte ohne Anfrage
+- [ ] **Nochmal:** Das Kind bekommt „… : Nochmal, bitte“, und mit Haus-Kanal (Stufe 24) die Ansage, außer in der Ruhezeit. Die Karte ist wieder offen
+- [ ] **Zwei Erwachsene:** Beide bekommen die Frage; wer zuerst antwortet, entscheidet, bei dem anderen verschwindet die Nachricht
+- [ ] **Erinnerung:** Wird nicht geantwortet, kommt nach zwei Stunden eine Erinnerung, danach höchstens eine am Tag
+- [ ] **Pro Karte:** Chip „Bestätigung“ (nur bei einem Kind unter den Zuständigen): „Immer bestätigen“ gilt auch ohne Vorgabe der Person, „Nie bestätigen“ lässt das Kind sofort erledigen
+- [ ] **Der Server hält dicht:** Mit dem Kind-Benutzer in den Entwicklerwerkzeugen `/api/fairness` oder einen Löschaufruf versuchen: 403
+
+## 28 · Board-Vorlagen (seit 1.17.0)
+
+- [ ] **Aus Vorlage:** Board-Wechsler › Vorlage „Haushalt“: Vorschau mit Spalten, Kategorien, Karten; anlegen. Termine liegen ab heute, Karten mit Termin nach heute in „Geplant“. Auf englischem Gerät kommt alles englisch
+- [ ] **Jede Vorlage:** Haushalt, Umzug, Renovierung, Urlaub packen, Baby kommt, Ideen und Unternehmungen anlegen und ansehen: sinnvoll und vollständig
+- [ ] **Eigene Vorlage:** Board-Einstellungen › Vorlagen: Name eingeben, speichern. Daraus ein neues Board: gleiche Spalten, Kategorien und offene Karten, ohne Zuweisungen, Anhänge, Kommentare. Löschen mit Rückfrage
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

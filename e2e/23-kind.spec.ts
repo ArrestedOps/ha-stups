@@ -1,0 +1,190 @@
+import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
+
+// Rolle „Kind": reduzierte Oberfläche und die Bestätigung bis zum Ende (Kind hakt ab, Elternteil bestätigt oder sagt „Nochmal").
+// Der Test-Server meldet jeden als „rene" (Administrator) an; das Kind kommt über die Kopfzeilen von Home Assistant.
+test.describe.configure({ mode: 'serial' });
+
+const unique = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
+const tag = unique();
+const KID = `Kind${tag}`;
+const kidHeaders = { 'x-remote-user-id': `ha-kid-${tag}`, 'x-remote-user-name': `kid${tag}`, 'x-remote-user-display-name': KID, 'x-stups-language': 'de' };
+
+let kidId = '';
+let mineName = '';
+let mineId = '';
+let otherName = '';
+const boardIds: string[] = [];
+const cardIds: Record<string, string> = {};
+
+async function board(request: APIRequestContext, name: string) {
+  const b = (await (await request.post('/api/boards', { data: { name } })).json()) as { id: string };
+  boardIds.push(b.id);
+  const view = (await (await request.get(`/api/boards/${b.id}`)).json()) as { columns: { id: string }[] };
+  return { id: b.id, columnId: view.columns[0]!.id };
+}
+
+async function card(request: APIRequestContext, b: { id: string; columnId: string }, title: string, assigneeIds: string[]) {
+  const res = await request.post(`/api/boards/${b.id}/cards`, { data: { title, columnId: b.columnId, assigneeIds } });
+  expect(res.status(), await res.text()).toBe(201);
+  const id = ((await res.json()) as { id: string }).id;
+  cardIds[title] = id;
+  return id;
+}
+
+const state = async (request: APIRequestContext, id: string) => (await (await request.get(`/api/cards/${id}`)).json()) as { completedAt: string | null; confirmRequestedAt: string | null; history: { completedBy: string | null }[] };
+
+test.beforeAll(async ({ request }) => {
+  const person = (await (await request.post('/api/access/people', { data: { name: KID, haUserId: `ha-kid-${tag}` } })).json()) as { id: string };
+  kidId = person.id;
+  const set = await request.patch(`/api/access/people/${kidId}`, { data: { isChild: true, childScope: 'assigned', confirmDefault: true, confirmers: [], quietOff: true } });
+  expect(set.status(), await set.text()).toBe(200);
+
+  mineName = `Zimmer ${tag}`;
+  otherName = `Nur Erwachsene ${tag}`;
+  const mine = await board(request, `Kinderboard ${tag}`);
+  mineId = await card(request, mine, mineName, [kidId]);
+  await card(request, mine, `Noch eine ${tag}`, [kidId]);
+  const other = await board(request, `Erwachsenenboard ${tag}`);
+  await card(request, other, otherName, []);
+});
+
+test.afterAll(async ({ request }) => {
+  for (const id of boardIds) await request.delete(`/api/boards/${id}`);
+  if (kidId) await request.delete(`/api/access/people/${kidId}`);
+});
+
+async function kidPage(browser: Browser, baseURL: string | undefined): Promise<{ page: Page; close: () => Promise<void> }> {
+  const ctx = await browser.newContext({ baseURL, locale: 'de-DE', timezoneId: 'Europe/Berlin', viewport: { width: 390, height: 780 }, extraHTTPHeaders: kidHeaders });
+  const page = await ctx.newPage();
+  await page.goto('/');
+  return { page, close: () => ctx.close() };
+}
+
+async function openCard(page: Page, title: string) {
+  await page.getByRole('button', { name: new RegExp(`^${title}`) }).first().click();
+  return page.getByRole('dialog');
+}
+
+test('Einrichtung: der Administrator macht eine Person zum Kind, ein Administrator kann es nicht sein', async ({ page, request }) => {
+  const people = (await (await request.get('/api/access')).json()) as { people: { id: string; displayName: string; isAdmin: boolean }[] };
+  const rene = people.people.find((p) => p.isAdmin)!;
+  const res = await request.patch(`/api/access/people/${rene.id}`, { data: { isChild: true } });
+  expect(res.status()).toBe(409);
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+  await page.getByRole('button', { name: 'Personen & Zugriff' }).click();
+  await page.getByRole('button', { name: new RegExp(KID) }).click();
+  const setup = page.getByTestId('child-setup');
+  await setup.scrollIntoViewIfNeeded();
+  await expect(setup.getByLabel(`Kind: ${KID}`)).toBeChecked();
+  await expect(setup.getByLabel(`Welche Boards ${KID} sieht`)).toHaveValue('assigned');
+  await expect(setup.getByLabel(`Bestätigung als Vorgabe für ${KID}`)).toBeChecked();
+});
+
+test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, keine Fairness', async ({ browser, baseURL }) => {
+  const kid = await kidPage(browser, baseURL);
+  try {
+    const page = kid.page;
+    await expect(page.getByRole('button', { name: mineName }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Neue Karte' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Menü für/ })).toHaveCount(0);
+
+    // Board-Wechsler: nur das eigene Board, nichts zum Anlegen oder Verwalten
+    await page.getByRole('button', { name: 'Board wechseln' }).click();
+    const sheet = page.getByRole('dialog');
+    await expect(sheet.getByText(`Kinderboard ${tag}`)).toBeVisible();
+    await expect(sheet.getByText(`Erwachsenenboard ${tag}`)).toHaveCount(0);
+    await expect(sheet.getByLabel('Name des neuen Boards')).toHaveCount(0);
+    await expect(sheet.getByRole('button', { name: 'Board-Einstellungen' })).toHaveCount(0);
+    await expect(sheet.getByRole('button', { name: 'Papierkorb' })).toHaveCount(0);
+
+    // Einstellungen: nur Sprache und Farbe
+    await sheet.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    const settings = page.getByRole('dialog');
+    await expect(settings.getByText('Sprache').first()).toBeVisible();
+    await expect(settings.getByTestId('accent-wheel')).toBeVisible();
+    await expect(settings.getByRole('button', { name: 'Personen & Zugriff' })).toHaveCount(0);
+    await expect(settings.getByText('Benachrichtigungen')).toHaveCount(0);
+    await page.keyboard.press('Escape');
+
+    // Agenda: keine Fairness-Wahl
+    await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Agenda' }).click();
+    await expect(page.getByRole('group', { name: 'Ansicht der Agenda' })).toHaveCount(0);
+  } finally {
+    await kid.close();
+  }
+});
+
+test('der Server verweigert, was die Oberfläche nicht zeigt', async ({ browser, baseURL }) => {
+  const ctx = await browser.newContext({ baseURL, extraHTTPHeaders: kidHeaders });
+  try {
+    const api = ctx.request;
+    expect((await api.get('/api/fairness')).status()).toBe(403);
+    expect((await api.post('/api/boards', { data: { name: 'Nein' } })).status()).toBe(403);
+    expect((await api.delete(`/api/cards/${mineId}`)).status()).toBe(403);
+    expect((await api.get(`/api/cards/${cardIds[otherName]}`)).status()).toBe(404); // fremdes Board: gibt es nicht
+  } finally {
+    await ctx.close();
+  }
+});
+
+test('Kind hakt ab: die Karte wartet auf Bestätigung, ein Elternteil bestätigt, sie zählt auf das Kind', async ({ browser, baseURL, page, request }) => {
+  const kid = await kidPage(browser, baseURL);
+  try {
+    const kp = kid.page;
+    await kp.getByRole('button', { name: `„${mineName}“ erledigen` }).click();
+    await expect(kp.getByText('Gemeldet: wartet auf Bestätigung')).toBeVisible();
+    const waiting = kp.getByTestId('card-waiting');
+    await expect(waiting).toHaveCount(1);
+    await expect(kp.getByRole('button', { name: 'Wartet auf Bestätigung' }).first()).toBeDisabled();
+    expect((await state(request, mineId)).completedAt).toBeNull();
+    expect((await state(request, mineId)).confirmRequestedAt).not.toBeNull();
+
+    // Das Kind sieht in der Karte keine Antwort-Knöpfe
+    const kd = await openCard(kp, mineName);
+    await expect(kd.getByTestId('confirm-note')).toContainText('wartet auf Bestätigung');
+    await expect(kd.getByRole('button', { name: 'Bestätigen' })).toHaveCount(0);
+    await expect(kd.getByRole('button', { name: 'Karte löschen' })).toHaveCount(0);
+    await expect(kd.getByLabel('Titel')).toHaveJSProperty('readOnly', true);
+    await kp.keyboard.press('Escape');
+
+    // Der Erwachsene bestätigt
+    await page.addInitScript((id) => localStorage.setItem('stups.board', id), boardIds[0]!);
+    await page.goto('/');
+    const pd = await openCard(page, mineName);
+    await expect(pd.getByTestId('confirm-note')).toContainText(`${KID} wartet auf Bestätigung`);
+    await pd.getByRole('button', { name: 'Bestätigen' }).click();
+    await expect.poll(async () => (await state(request, mineId)).completedAt).not.toBeNull();
+    const done = await state(request, mineId);
+    expect(done.confirmRequestedAt).toBeNull();
+    expect(done.history[0]!.completedBy).toBe(kidId);
+  } finally {
+    await kid.close();
+  }
+});
+
+test('„Nochmal": die Anfrage entfällt, die Karte bleibt offen und das Kind kann es erneut versuchen', async ({ browser, baseURL, page, request }) => {
+  const title = `Noch eine ${tag}`;
+  const id = cardIds[title]!;
+  const kid = await kidPage(browser, baseURL);
+  try {
+    await kid.page.getByRole('button', { name: `„${title}“ erledigen` }).click();
+    await expect(kid.page.getByTestId('card-waiting')).toHaveCount(1);
+
+    await page.addInitScript((boardId) => localStorage.setItem('stups.board', boardId), boardIds[0]!);
+    await page.goto('/');
+    const pd = await openCard(page, title);
+    await pd.getByRole('button', { name: 'Nochmal' }).click();
+    await expect.poll(async () => (await state(request, id)).confirmRequestedAt).toBeNull();
+    expect((await state(request, id)).completedAt).toBeNull();
+
+    // Das Kind sieht es nach dem Laden wieder als offen und kann erneut abhaken
+    await kid.page.reload();
+    await expect(kid.page.getByTestId('card-waiting')).toHaveCount(0);
+    await kid.page.getByRole('button', { name: `„${title}“ erledigen` }).click();
+    await expect(kid.page.getByTestId('card-waiting')).toHaveCount(1);
+  } finally {
+    await kid.close();
+  }
+});

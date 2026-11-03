@@ -42,6 +42,9 @@ Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haus
 - **Push über die Companion App:** zur Fälligkeit, vorab, nachhaken, Tageszusammenfassung. „Erledigt" direkt in der Nachricht.
 - **Stupsen:** einer anderen Person zu ihrer Karte einen Stups schicken („Denkst du dran?"). Mit Sperrzeit und Ruhezeit pro Person, damit niemand genervt wird.
 - **Haus-Kanäle:** Ein Stups kann auch im Haus ankommen: als Ansage über einen Lautsprecher oder als Lampe, die in deiner Farbe aufleuchtet, für Kinder ohne Handy. Je Kanal wählst du, welche Nachrichten ankommen und was geschieht, wenn jemand nicht zu Hause ist.
+- **Fairness:** Wer diese Woche oder diesen Monat wie viel erledigt hat, als Balken für den Aufwand (klein, mittel, groß). Keine Rangliste, keine Medaillen. Auf Wunsch eine Zusammenfassung am Sonntagabend.
+- **Rolle Kind:** Kinder sehen und haken nur ihre eigenen Karten ab. Mit Bestätigung: Die Karte wartet, bis ein Elternteil „Bestätigen“ oder „Nochmal“ sagt, und zählt dann für das Kind.
+- **Board-Vorlagen:** Ein Board aus Haushalt, Umzug, Renovierung und mehr starten oder ein eigenes Board als Vorlage speichern.
 - **Mehrere Personen:** Zugriff steuerst du unter Einstellungen › Personen & Zugriff. Wer Administrator in Home Assistant ist, stellt ein; alle freigegebenen Personen dürfen Boards, Karten und Kategorien anlegen.
 - **Sensoren** für Home Assistant: überfällige und heute fällige Karten, gesamt und je Person, offene Stupse.
 - Alles bleibt bei dir: SQLite im Add-on-Speicher, Teil des normalen HA-Backups.

@@ -19,6 +19,7 @@ A Kanban board for the household, right inside Home Assistant (Ingress, no separ
 
 - **Administrator** is whoever is one in Home Assistant. Administrators change people, access and the dashboard and always get in.
 - **Members** use the app and choose their own push devices.
+- **Children** are people with limited rights (see "Child role and confirmation"). An administrator is never a child.
 - Whoever is removed from the list loses assignments and messages; the cards stay unchanged. If the person comes back, everything applies again.
 
 ### Add-on options (configuration in Home Assistant)
@@ -93,6 +94,15 @@ At the top you filter what you want to see:
 
 The agenda loads the next 60 days. If nothing is due in that time, it looks a year ahead right away; cards further away are fetched by **"Load 60 more days"** (also with an empty list).
 
+### Fairness: who does how much?
+
+At the top of the agenda, **Dates | Fairness** switches the view. Fairness shows, for **this week** or **this month**, how many cards each person completed, as a bar for the *effort*. There is no ranking: no places, no medals, the order is that of the people list, and all bars have the same colour. It is about seeing the load, not about a competition.
+
+- **Effort:** every card has an optional *Effort* (small = 1, medium = 2, large = 3). Without it, a card counts as medium. A large task weighs more than a small one.
+- Under the bar you see the cards a person created, nudges answered and watcher cards completed, if there are any.
+- Cards of children that need confirmation count only **after** the confirmation. Children do not see the fairness view.
+- **Sunday summary (optional):** every person can switch on, under *People & access*, a message on Sunday evening (from 18:00, not during quiet time): "This week you completed 14 tasks together." It is off until somebody switches it on, and it never says "0".
+
 ### Calendar
 
 The third tab at the bottom shows the cards with a due date in a calendar, as **Day**, **Week** or **Month**. The arrows page through, "Today" jumps back.
@@ -166,6 +176,22 @@ Good to know:
 - There are no buttons in a house message. You finish a card in the app.
 - In the **beta**, house channels stay silent until push is switched on (Settings › Beta), so nothing is announced twice.
 - The overview under Settings › Notifications shows every channel with its last result.
+
+### Child role and confirmation
+
+Administrators can turn a person into a **child** under *Settings › People & access › Child role*. A child gets a reduced app, and the server enforces it (not just the screen):
+
+- A child **sees** all boards or only the **boards with their own cards** (your choice per child) and can **tick off** their own cards, tick checklist items, **comment**, and attach **photos and links**. Nothing else: no creating, moving, deleting, no board management, no watchers, no fairness, no settings except language and colour.
+- **Confirmation:** per child you can switch on *"Done" needs confirmation*, and per card you can override it (*Confirmation*: person's default, always, never). When the child ticks a card, it stays open and shows **"Waiting for confirmation"**. The **confirmers** get a push message with **Confirm** and **Again**:
+  - *Confirm* completes the card. It counts for the **child** (recurrence, fairness, watcher counters).
+  - *Again* withdraws the request. The child gets "Again, please" (on the phone and, if a house channel is set up, spoken in the house, except in quiet time).
+  - Who answers first decides; the others see that it is already answered. Unanswered requests remind the confirmers after two hours, at most once a day.
+- **Who confirms:** administrators always; besides them the people you choose per child. If nobody is chosen, all adults may.
+- Whoever completes a waiting card another way (an adult in the app) ends the request.
+
+### Board templates
+
+When you create a board (board switcher), you can start **empty** or from a **template**, with a preview of columns, categories and cards. Built in: *Household, Moving house, Renovation, Packing for a trip, Baby on the way, Ideas and outings*, in the language of your app. Under *Board settings › Templates* you can **save a board as a template** (columns, categories and open cards, without assignees, attachments and comments) and delete your own templates.
 
 ### Watchers: cards created automatically from Home Assistant
 

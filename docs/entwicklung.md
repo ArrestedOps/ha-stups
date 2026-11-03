@@ -122,6 +122,18 @@ Ansage und Lampe sind ein dritter Push-Weg (`house.ts`, `createHousePush`) neben
 - Daten: Migration 16 (`house_channels`, `house_pending`); `house_pending` ist eine stille Tabelle (ändert keine Ansicht, kein Live-Sync). Wer als Person entfernt wird, hat keine Kanäle mehr (weiche Löschung), kommt sie zurück, gelten sie wieder.
 - Tests: alle Zeitregeln mit fester Uhr (Einheiten); der Test-Home-Assistant (`e2e/mock-ha.mjs`) kennt Ansage, Lautstärke, Lampe und Szenen und zeichnet sie unter `/mock/calls` auf. `e2e/20-haus.spec.ts` läuft im Projekt `waechter`.
 
+### Fairness, Rolle Kind, Vorlagen (seit 1.17.0)
+
+Migrationen 17 (Vorlagen `board_templates`), 18 (`cards.effort`, `users.weekly_summary`), 19 (Kind: `users.is_child`, `child_scope`, `confirm_default`, Tabelle `child_confirmers`, `cards.confirm`, `confirm_requested_at`, `confirm_requested_by`).
+
+- **Vorlagen:** eingebaute in `templates.ts` (zweisprachig, `resolveTemplate` rechnet Termine ab heute aus), eigene in `store/templates.ts`; `POST /api/boards` nimmt `template`. Texte nach `currentLanguage()` zum Anlegen.
+- **Fairness:** `store/fairness.ts` zählt `completions` im Zeitraum (nach Bestätigung, auf `completed_by`), Gewichte `EFFORT_WEIGHT` (klein 1, mittel 2, groß 3, leer wie mittel). `GET /api/fairness`. Die Sonntagsnachricht ist `weeklySummaries` im Notifier (Sendeprotokoll `cardId: 'weekly'`).
+- **Kind – Rechte:** `api/child-guard.ts` ist ein `preHandler` mit **Erlaubnisliste** (`ALLOWED`: Route → wie geprüft wird, ob die Karte dem Kind gehört). Was nicht dasteht, ist 403 „Das darf ein Kind nicht“, auch jede künftige Route. `test/child-guard.test.ts` geht alle Routen aus `test/fixtures/api-routes.json` durch. Wer eine Route für Kinder freigibt, ändert die Liste im Server **und** die im Test.
+- **Kind – Sichtbarkeit:** bei `child_scope = 'assigned'` filtert derselbe Wächter: 404 für fremde Boards, Karten, Kommentare, Erledigungen, Anhänge (`store.boardIdsWithCardsOf`, `boardIdOfCard`) und ein `preSerialization`-Filter für Boardliste, Agenda/Kalender und `GET /api/cards?ids`. Der Live-Sync meldet nur Kennungen; geholt wird über dieselben gefilterten Routen. `test/child-visibility.test.ts`.
+- **Bestätigung:** `store/confirmation.ts` (`needsConfirmation`, `requestConfirmation`, `answerConfirmation`, `confirmerIds`, `mayConfirm`). Das Erledigen eines Kindes mit Bestätigungspflicht wird in **drei** Wegen zur Anfrage umgebogen: `POST /api/cards/:id/complete` und im Notifier die Aktionen „Erledigt“ einer Erinnerung und eines Stupses (`requestInstead`). `completeCard` löscht die Anfrage mit; die Bestätigung ruft es mit `by = Kind`. Knöpfe in der Nachricht: `KANBAN_CONFIRM_YES|NO:<karte>` (`handleConfirmAction`). Ohne gewählte Bestätiger dürfen alle Erwachsenen (Abweichung vom Entwurf: Push kennt die Administratoren nicht). Erinnerung: Sendeprotokoll `kind = 'nag'`, Schlüssel `confirm:<Tag>`. Karten mit offener Anfrage fallen aus `openDueCards` (keine Mahnungen an das Kind).
+- **Oberfläche:** `ui.isChild` (aus `/api/me`) blendet aus; maßgeblich ist immer der Server. `lib/confirm.ts` spiegelt die Regel „wer darf bestätigen“.
+- Tests: `confirmation.test.ts`, `child-*.test.ts`, `fairness*.test.ts`, `template*.test.ts`, `weekly-summary.test.ts`; Browser: `e2e/21-vorlagen`, `22-fairness`, `23-kind`.
+
 ### Live-Sync mit Änderungen (seit 1.13.0)
 
 Jede Änderung löst eine Meldung über den WebSocket (`/api/events`) aus. Neu: Die Meldung sagt, was sich geändert hat, und der Client holt nur das nach.

@@ -46,6 +46,9 @@ A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your h
 - **Push through the Companion App:** when due, in advance, as a follow-up, and a daily summary. "Done" right in the message.
 - **Nudging:** send another person a nudge for their card ("Are you on it?"). With lock time and quiet time per person so nobody gets annoyed.
 - **House channels:** a nudge can also arrive in the house: an announcement on a speaker or a lamp that lights up in your colour, for children without a phone. Per channel you choose which messages arrive and what happens when someone is not at home.
+- **Fairness:** who completes how much this week or month, as a bar for the effort (small, medium, large). No ranking, no medals. Optional: a Sunday-evening summary.
+- **Child role:** children see and tick off only their own cards. With confirmation: the card waits until a parent says "Confirm" or "Again", then it counts for the child.
+- **Board templates:** start a board from Household, Moving house, Renovation and more, or save your own board as a template.
 - **Several people:** you control access under Settings › People & Access. Home Assistant administrators set things up; all approved people may create boards, cards and categories.
 - **English and German:** the app follows your device language; Settings › Language switches it for you on all your devices, push messages included.
 - **Sensors** for Home Assistant: overdue and due-today cards, in total and per person, open nudges.

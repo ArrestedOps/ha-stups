@@ -84,6 +84,14 @@ Ergebnis ist `docs/spike-ha-integration.md`, kein Code im Produkt. Der Bericht b
 - `docs/spike-ha-integration.md` (Deutsch, mit englischer Kurzfassung).
 - **1.17.0-beta.1** (Migrationen 17 bis 19, vorher wie immer eine Sicherung); die normale App erst nach deiner Freigabe.
 
+### 4.7 Abweichungen bei der Umsetzung
+
+- **Migrationen:** 17 = Vorlagen, 18 = Aufwand und Sonntags-Schalter, 19 = Kind (der Entwurf nannte 18 für das Kind).
+- **Bestätiger:** Ist niemand gewählt, dürfen **alle Erwachsenen** bestätigen und bekommen die Nachricht. Der Entwurf sagte „nur Administratoren“, aber der Push-Weg kennt die Administratoren aus Home Assistant nicht. In der App dürfen Administratoren zusätzlich immer.
+- **Kind-Rechte:** zusätzlich zur Erlaubnisliste filtert derselbe Wächter die Sichtbarkeit (404 statt leerer Liste für fremde Boards, Karten, Anhänge). Karten mit offener Anfrage bekommen keine Fälligkeits-Mahnungen.
+- **Zusätzliche Wege zur Anfrage:** „Erledigt“ in einer Erinnerung und in einem Stups wird für ein Kind ebenfalls zur Anfrage (nicht nur die App).
+- **Eigener Container:** Ein Kind kann sich abmelden (Route außerhalb der Schnittstelle), sein Passwort ändert der Administrator.
+
 ## 5. Nicht in diesem Teil
 
 - Umsetzung der HA-Integration (nur der Spike)

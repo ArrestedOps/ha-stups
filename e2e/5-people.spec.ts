@@ -118,7 +118,8 @@ test('Nur freigegebene: Fremder sieht „Kein Zugriff", der Administrator gibt i
     await page.reload();
     await openPeople(page);
     await expect(page.getByRole('heading', { name: 'Wartet auf Freigabe' })).toBeVisible();
-    await page.getByRole('button', { name: 'Freigeben' }).first().click();
+    // Andere Tests lassen entfernte Personen zurück, die als wartend erscheinen: gezielt „Fremd" freigeben, nicht den ersten
+    await page.locator('div.justify-between').filter({ has: page.getByText('Fremd', { exact: true }) }).getByRole('button', { name: 'Freigeben' }).click();
 
     await fremd.reload();
     await expect(fremd.getByRole('tablist', { name: 'Spalten' })).toBeVisible();

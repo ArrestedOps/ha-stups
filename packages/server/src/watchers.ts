@@ -1,4 +1,5 @@
 import type { HaState } from './ha.js';
+import { personOfEntity, presenceOf, type PresenceMap } from './presence.js';
 import { fromLocal, toLocal } from './recurrence.js';
 import type { Card, Store, User } from './store.js';
 import type { Waiting, Watcher, WatcherData } from './watcher-data.js';
@@ -49,12 +50,6 @@ interface Seen {
   lastChanged: string | null;
   name?: string;
   unit?: string;
-}
-
-interface Presence {
-  /** Home-Assistant-Entität je Person, soweit zuzuordnen */
-  entityOf: Map<string, string>;
-  home: Set<string>;
 }
 
 const minutes = (n: number) => n * 60_000;
@@ -128,20 +123,8 @@ export function createWatchers(deps: WatcherDeps) {
   }
 
   /** Wer ist zu Hause? Zuordnung über den Benutzer der HA-Person, sonst über den Namen */
-  async function presence(): Promise<Presence> {
-    const states = await personStates();
-    const entityOf = new Map<string, string>();
-    const home = new Set<string>();
-    for (const p of store.people()) {
-      const names = [p.name, p.displayName].map((n) => n.trim().toLowerCase());
-      const match =
-        (p.haUserId ? states.find((s) => s.attributes?.user_id === p.haUserId) : undefined) ??
-        states.find((s) => names.includes(String(s.attributes?.friendly_name ?? '').trim().toLowerCase()));
-      if (!match) continue;
-      entityOf.set(p.id, match.entity_id);
-      if (match.state === 'home') home.add(p.id);
-    }
-    return { entityOf, home };
+  async function presence(): Promise<PresenceMap> {
+    return presenceOf(store.people(), await personStates());
   }
 
   // ---------- Zuweisung ----------
@@ -484,13 +467,7 @@ export function createWatchers(deps: WatcherDeps) {
     const states = await personStates(0);
     const entity = states.find((s) => s.entity_id === entityId);
     const people = store.people();
-    const who = people.find((p) => {
-      const names = [p.name, p.displayName].map((n) => n.trim().toLowerCase());
-      return (
-        (!!p.haUserId && entity?.attributes?.user_id === p.haUserId) ||
-        names.includes(String(entity?.attributes?.friendly_name ?? '').trim().toLowerCase())
-      );
-    });
+    const who = personOfEntity(entity, people);
     if (!who) return;
 
     for (const row of data.listWaiting()) {

@@ -530,6 +530,24 @@ export const api = {
   updateLink: (id: string, b: Partial<{ url: string; title: string | null }>) => patch<CardLink>(`links/${id}`, b),
   deleteLink: (id: string) => del(`links/${id}`),
 
+  /** Eigenes Personenbild (oder als Administrator das einer anderen Person) hochladen: die Bytes selbst, nicht als Formular */
+  uploadAvatar: async (personId: string, image: Blob): Promise<User> => {
+    let res: Response;
+    try {
+      res = await fetch(`api/people/${encodeURIComponent(personId)}/avatar`, {
+        method: 'PUT',
+        headers: { ...clientHeaders(), 'content-type': image.type || 'image/webp' },
+        body: image,
+      });
+    } catch {
+      throw new ApiError(t('Keine Verbindung zum Server'), 0);
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ApiError((data as { error?: string }).error ?? t('Fehler {status}', { status: res.status }), res.status);
+    return data as User;
+  },
+  removeAvatar: (personId: string) => del(`people/${encodeURIComponent(personId)}/avatar`),
+
   uploadAttachment: async (cardId: string, file: Blob, filename: string, thumb: Blob | null): Promise<Attachment> => {
     const form = new FormData();
     form.append('file', file, filename);

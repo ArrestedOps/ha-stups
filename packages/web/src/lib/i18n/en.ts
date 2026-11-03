@@ -872,4 +872,5 @@ export const en: Catalog = {
   '{type} „{title}“ wiederhergestellt': '{type} “{title}” restored',
   '{amount} offen': '{amount} open',
   '{amount} erledigt': '{amount} done',
+  'Bitte ein Bild wählen': 'Please choose a picture',
 };

@@ -270,4 +270,9 @@ export const en: Catalog = {
   'Nur Karten vom Haus lassen sich weitergeben': 'Only cards from the house can be passed on',
   'Die Karte ist dir nicht zugewiesen': 'The card is not assigned to you',
   'Den Wächter dieser Karte gibt es nicht mehr': 'The watcher of this card no longer exists',
+  'Das dürfen nur Personen in Stups': 'Only people in Stups may do this',
+  '{name} hat die Karte schon übernommen': '{name} has already taken the card',
+  'Die Karte ist nicht mehr offen': 'The card is no longer open',
+  'Übernehmen': 'Take it',
+  'Wer übernimmt: {title}?': 'Who takes it: {title}?',
 };

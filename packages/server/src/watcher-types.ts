@@ -42,7 +42,7 @@ export interface CardTemplate {
   due: DueRule;
 }
 
-export type AssignMode = 'fixed' | 'rotation' | 'rotation_present' | 'all_present' | 'first_home' | 'none';
+export type AssignMode = 'fixed' | 'rotation' | 'rotation_present' | 'all_present' | 'first_home' | 'suggest' | 'none';
 export type Fallback = 'next' | 'all' | 'none' | 'fixed';
 export type WaitFallback = 'all' | 'none' | 'fixed';
 
@@ -77,7 +77,9 @@ export type WatcherStatus = 'ok' | 'entity_missing' | 'target_missing';
 
 const ENTITY_RE = /^[a-z0-9_]+\.[a-z0-9_]+$/;
 const HM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
-const MODES: AssignMode[] = ['fixed', 'rotation', 'rotation_present', 'all_present', 'first_home', 'none'];
+const MODES: AssignMode[] = ['fixed', 'rotation', 'rotation_present', 'all_present', 'first_home', 'suggest', 'none'];
+/** So lange wartet eine vorgeschlagene Karte auf ein „Übernehmen", dann greift der Rückfall des Wächters */
+export const SUGGEST_WAIT_MIN = 30;
 
 /** Wartezeit der Vorgabe: Zahlenwerte schwanken, Zustandswechsel gelten sofort */
 export const DEFAULT_FOR_MIN = { state: 0, above: 3, below: 3 } as const;

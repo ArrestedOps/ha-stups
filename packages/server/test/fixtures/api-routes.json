@@ -108,6 +108,7 @@
   "POST /api/cards/:id/archive",
   "POST /api/cards/:id/attachments",
   "POST /api/cards/:id/checklist",
+  "POST /api/cards/:id/claim",
   "POST /api/cards/:id/comments",
   "POST /api/cards/:id/complete",
   "POST /api/cards/:id/confirm",

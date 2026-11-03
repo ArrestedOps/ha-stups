@@ -65,6 +65,13 @@ export interface Waiting {
   firstAssignedAt: string | null;
 }
 
+/** Eine vorgeschlagene Karte, die auf ein „Übernehmen" wartet */
+export interface Suggestion {
+  cardId: string;
+  watcherId: string;
+  since: string;
+}
+
 const KEEP_RUNS = 50;
 
 type Row = Record<string, any>;
@@ -254,6 +261,18 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
   const markFirstAssigned = (cardId: string) => run('update watcher_waiting set first_assigned_at = ? where card_id = ?', iso(), cardId);
   const removeWaiting = (cardId: string) => run('delete from watcher_waiting where card_id = ?', cardId);
 
+  // ---------- Vorschläge ("Erst vorschlagen") ----------
+
+  const toSuggest = (r: Row): Suggestion => ({ cardId: r.card_id, watcherId: r.watcher_id, since: r.since });
+  const addSuggest = (cardId: string, watcherId: string) =>
+    run('insert or replace into watcher_suggest (card_id, watcher_id, since) values (?, ?, ?)', cardId, watcherId, iso());
+  const getSuggest = (cardId: string): Suggestion | null => {
+    const r = one('select * from watcher_suggest where card_id = ?', cardId);
+    return r ? toSuggest(r) : null;
+  };
+  const listSuggest = (): Suggestion[] => all('select * from watcher_suggest order by since, rowid').map(toSuggest);
+  const removeSuggest = (cardId: string) => run('delete from watcher_suggest where card_id = ?', cardId);
+
   return {
     list,
     get,
@@ -273,6 +292,10 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     listWaiting,
     markFirstAssigned,
     removeWaiting,
+    addSuggest,
+    getSuggest,
+    listSuggest,
+    removeSuggest,
   };
 }
 

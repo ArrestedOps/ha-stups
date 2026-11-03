@@ -9,6 +9,7 @@ import type { Card, Store, User } from './store.js';
 import type { Waiting, Watcher, WatcherData } from './watcher-data.js';
 import {
   conditionMet,
+  SUGGEST_WAIT_MIN,
   WAITING_MARKER,
   type AssignRule,
   type CardTemplate,
@@ -40,6 +41,10 @@ export interface WatcherDeps {
   onAssigned?: (card: Card, userIds: string[]) => void;
   /** Die Karte ist nach der eingestellten Zeit noch offen: an die Zuständigen erinnern */
   onNudge?: (card: Card, userIds: string[]) => void;
+  /** "Erst vorschlagen": die Karte ist noch niemandem zugewiesen, diese Personen (zu Hause) werden gefragt, wer sie übernimmt */
+  onSuggest?: (card: Card, userIds: string[]) => void;
+  /** Der Vorschlag ist vorbei (übernommen oder Rückfall): die Frage bei den anderen wegräumen */
+  onSuggestClosed?: (card: Card) => void;
   /** Etwas hat sich geändert (Live-Sync) */
   onChange?: () => void;
   log?: { info(m: string): void; warn(m: string): void };
@@ -161,6 +166,8 @@ export function createWatchers(deps: WatcherDeps) {
     waiting: boolean;
     /** zuletzt gewählte Person für die Rotation */
     last?: string;
+    /** "Erst vorschlagen": diese Personen fragen, wer übernimmt (die Karte entsteht ohne Zuständige) */
+    suggest?: string[];
   }
 
   /** Nächste Person nach `last` in der Reihenfolge des Kreises; mit `only` nur unter diesen */
@@ -180,19 +187,22 @@ export function createWatchers(deps: WatcherDeps) {
     return nextOf(pool, last, only ? new Set([...only].filter((id) => !busy.has(id))) : new Set(free)) ?? nextOf(pool, last, only);
   }
 
+  /** Der Rückfall des Wächters (wenn niemand zu Hause ist oder sich niemand zum Übernehmen meldet) */
+  function fallbackOf(rule: AssignRule, pool: string[], eligible: Set<string>, last: string | null, busy: Set<string>): Decision {
+    if (rule.fallback === 'all') return { ids: pool, waiting: false };
+    if (rule.fallback === 'none') return { ids: [], waiting: false };
+    if (rule.fallback === 'fixed') {
+      return { ids: rule.fallbackPersonId && eligible.has(rule.fallbackPersonId) ? [rule.fallbackPersonId] : [], waiting: false };
+    }
+    const next = rotate(pool, last, busy);
+    return next ? { ids: [next], waiting: false, last: next } : { ids: [], waiting: false };
+  }
+
   function decide(rule: AssignRule, people: User[], home: Set<string>, last: string | null, busy: Set<string> = new Set()): Decision {
     const eligible = new Set(people.map((p) => p.id));
     const order = rule.personIds.length > 0 ? rule.personIds : people.map((p) => p.id);
     const pool = order.filter((id) => eligible.has(id));
-    const fallback = (): Decision => {
-      if (rule.fallback === 'all') return { ids: pool, waiting: false };
-      if (rule.fallback === 'none') return { ids: [], waiting: false };
-      if (rule.fallback === 'fixed') {
-        return { ids: rule.fallbackPersonId && eligible.has(rule.fallbackPersonId) ? [rule.fallbackPersonId] : [], waiting: false };
-      }
-      const next = rotate(pool, last, busy);
-      return next ? { ids: [next], waiting: false, last: next } : { ids: [], waiting: false };
-    };
+    const fallback = (): Decision => fallbackOf(rule, pool, eligible, last, busy);
     const present = new Set(pool.filter((id) => home.has(id)));
 
     switch (rule.mode) {
@@ -203,6 +213,11 @@ export function createWatchers(deps: WatcherDeps) {
       case 'rotation': {
         const next = rotate(pool, last, busy);
         return next ? { ids: [next], waiting: false, last: next } : { ids: [], waiting: false };
+      }
+      case 'suggest': {
+        // Gefragt werden alle Erwachsenen, die zu Hause sind; ist niemand da, greift sofort der Rückfall
+        const ask = pool.filter((id) => present.has(id) && !people.find((p) => p.id === id)?.isChild);
+        return ask.length > 0 ? { ids: [], waiting: false, suggest: ask } : fallback();
       }
       case 'all_present':
         return present.size > 0 ? { ids: pool.filter((id) => present.has(id)), waiting: false } : fallback();
@@ -309,7 +324,7 @@ export function createWatchers(deps: WatcherDeps) {
 
   async function createCard(w: Watcher, nowMs: number, test: boolean): Promise<void> {
     const people = store.people();
-    const needsPresence = w.assign.mode === 'rotation_present' || w.assign.mode === 'all_present' || w.assign.mode === 'first_home';
+    const needsPresence = w.assign.mode === 'rotation_present' || w.assign.mode === 'all_present' || w.assign.mode === 'first_home' || w.assign.mode === 'suggest';
     const home = needsPresence ? (await presence()).home : new Set<string>();
     const busy = new Set(people.filter((p) => isBusy(p.busyUntil, nowMs, timeZone())).map((p) => p.id));
     const decision = decide(w.assign, people, home, data.getState(w.id).lastPerson, busy);
@@ -336,11 +351,12 @@ export function createWatchers(deps: WatcherDeps) {
         );
         store.setCardOrigin(created.id, { watcherId: w.id });
         if (decision.waiting) data.addWaiting(created.id, w.id);
+        if (decision.suggest) data.addSuggest(created.id, w.id);
         if (decision.last) data.patchState(w.id, { lastPerson: decision.last });
         data.markFired(w.id, decision.ids);
         data.addRun({
           watcherId: w.id,
-          result: test ? 'test' : decision.waiting ? 'waiting' : 'created',
+          result: test ? 'test' : decision.waiting ? 'waiting' : decision.suggest ? 'suggested' : 'created',
           cardId: created.id,
           assignedTo: decision.ids,
           note: w.trigger.count > 1 && !test ? note(w, data.getState(w.id).counter) : undefined,
@@ -361,7 +377,8 @@ export function createWatchers(deps: WatcherDeps) {
     }
     if (decision.waiting) syncPresenceSubscription();
     deps.onChange?.();
-    if (decision.ids.length > 0) deps.onAssigned?.(card, decision.ids);
+    if (decision.suggest) deps.onSuggest?.(card, decision.suggest);
+    else if (decision.ids.length > 0) deps.onAssigned?.(card, decision.ids);
   }
 
   // ---------- Bedingung prüfen ----------
@@ -661,6 +678,7 @@ export function createWatchers(deps: WatcherDeps) {
         if (nowMs - Date.parse(st.metSince) >= minutes(w.trigger.forMin)) await fire(w);
       }
       checkWaiting(nowMs);
+      checkSuggestions(nowMs);
       checkNudges(nowMs);
     });
   }
@@ -704,6 +722,66 @@ export function createWatchers(deps: WatcherDeps) {
         openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, waiting: waiting.has(open.id) } : null,
       };
     });
+  }
+
+  // ---------- Erst vorschlagen: Übernehmen und Rückfall ----------
+
+  /** Die erste Person, die auf „Übernehmen" tippt, bekommt die Karte; jede weitere erfährt, wer schneller war */
+  function claim(cardId: string, userId: string): Promise<{ ok: true }> {
+    return enqueue(async () => {
+      const card = store.getCard(cardId);
+      const row = data.getSuggest(cardId);
+      const user = store.userById(userId);
+      if (!user || !user.isPerson) throw new ForbiddenError(t('Das dürfen nur Personen in Stups'));
+      if (user.isChild) throw new ForbiddenError(t('Das darf ein Kind nicht'));
+      if (!row || card.completedAt || card.assigneeIds.length > 0) {
+        const taken = card.assigneeIds[0] ? store.userById(card.assigneeIds[0])?.displayName : undefined;
+        throw new ConflictError(taken ? t('{name} hat die Karte schon übernommen', { name: taken }) : t('Die Karte ist nicht mehr offen'));
+      }
+      store.transaction(() => {
+        store.updateCard(card.id, { assigneeIds: [userId] });
+        data.removeSuggest(cardId);
+        data.markFired(row.watcherId, [userId]);
+        data.addRun({ watcherId: row.watcherId, result: 'claimed', cardId, assignedTo: [userId] });
+      });
+      deps.onChange?.();
+      deps.onSuggestClosed?.(store.getCard(cardId));
+      return { ok: true };
+    });
+  }
+
+  /** Nach 30 Minuten ohne „Übernehmen" greift der Rückfall des Wächters; Vorschläge zu erledigten oder schon vergebenen Karten verfallen */
+  function checkSuggestions(nowMs: number): void {
+    for (const row of data.listSuggest()) {
+      let w: Watcher;
+      let card: Card;
+      try {
+        w = data.get(row.watcherId);
+        card = store.getCard(row.cardId);
+      } catch {
+        data.removeSuggest(row.cardId);
+        continue;
+      }
+      if (card.completedAt || card.assigneeIds.length > 0) {
+        data.removeSuggest(row.cardId);
+        continue;
+      }
+      if (nowMs - Date.parse(row.since) < minutes(SUGGEST_WAIT_MIN)) continue;
+      const people = store.people();
+      const eligible = new Set(people.map((p) => p.id));
+      const pool = (w.assign.personIds.length > 0 ? w.assign.personIds : people.map((p) => p.id)).filter((id) => eligible.has(id));
+      const busy = new Set(people.filter((p) => isBusy(p.busyUntil, nowMs, timeZone())).map((p) => p.id));
+      const decision = fallbackOf(w.assign, pool, eligible, data.getState(w.id).lastPerson, busy);
+      store.transaction(() => {
+        if (decision.ids.length > 0) store.updateCard(card.id, { assigneeIds: decision.ids });
+        data.removeSuggest(row.cardId);
+        if (decision.last) data.patchState(w.id, { lastPerson: decision.last });
+        data.addRun({ watcherId: w.id, result: 'suggest_fallback', cardId: card.id, assignedTo: decision.ids, note: `nach ${SUGGEST_WAIT_MIN} Min. niemand gemeldet` });
+      });
+      deps.onChange?.();
+      deps.onSuggestClosed?.(store.getCard(card.id));
+      if (decision.ids.length > 0) deps.onAssigned?.(store.getCard(card.id), decision.ids);
+    }
   }
 
   // ---------- Weitergeben ----------
@@ -796,7 +874,7 @@ export function createWatchers(deps: WatcherDeps) {
     return data.recentRuns(limit);
   }
 
-  return { start, presentPersonIds, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, homeState, pass, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
+  return { start, presentPersonIds, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, homeState, pass, claim, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
 }
 
 export type Watchers = ReturnType<typeof createWatchers>;

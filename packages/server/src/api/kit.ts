@@ -53,7 +53,7 @@ export interface ApiDeps {
   /** Haus-Kanäle (nur mit Verbindung zu Home Assistant): der Weg für Test und Ergebnis, `sync` gleicht das Abonnement auf die Heimkehr ab */
   house?: { push: HousePush; sync(): Promise<void>; entityOwners(): Promise<Map<string, string>> };
   /** Wächter (nur mit Verbindung zu Home Assistant) */
-  watchers?: Pick<Watchers, 'view' | 'homeState' | 'pass' | 'activity' | 'onSaved' | 'test' | 'resetCounter' | 'syncSubscriptions'>;
+  watchers?: Pick<Watchers, 'view' | 'homeState' | 'pass' | 'claim' | 'activity' | 'onSaved' | 'test' | 'resetCounter' | 'syncSubscriptions'>;
   watcherData?: WatcherData;
   /** Letzte Ereignisse stups_create_card mit Ergebnis (für die Diagnose) */
   automationLog?: () => AutomationEntry[];

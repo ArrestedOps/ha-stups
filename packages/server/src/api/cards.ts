@@ -106,6 +106,12 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     if (!deps.watchers) throw new ConflictError(t('Wächter brauchen die Verbindung zu Home Assistant'));
     return deps.watchers.pass(req.params.id, req.user!.id);
   });
+  // Übernehmen: bei „Erst vorschlagen" bekommt die erste Person die Karte (nicht für Kinder: die Erlaubnisliste verweigert es)
+  app.post<{ Params: Params }>('/api/cards/:id/claim', async (req) => {
+    if (!deps.watchers) throw new ConflictError(t('Wächter brauchen die Verbindung zu Home Assistant'));
+    await deps.watchers.claim(req.params.id, req.user!.id);
+    return store.getCard(req.params.id);
+  });
   // Bestätigen und „Nochmal": die gewählten Personen des Kindes und Administratoren
   for (const answer of ['confirm', 'reject'] as const) {
     app.post<{ Params: Params }>(`/api/cards/:id/${answer}`, async (req) => {

@@ -139,6 +139,8 @@ const notifier = createNotifier({
   now: () => new Date(),
   timeZone: () => timeZone,
   actionPrefix: names.actionPrefix,
+  // "Erst vorschlagen": das Übernehmen per Knopf geht an die Wächter (erst unten angelegt, daher erst beim Tippen nachgeschlagen)
+  claim: (cardId, userId) => (watchers ? watchers.claim(cardId, userId) : Promise.reject(new Error('Wächter sind nicht verfügbar'))),
   onChange: () => bus.emit({ by: null }),
   log,
 });
@@ -156,6 +158,8 @@ const watchers = token
       enabled: () => betaGate.watchersEnabled(),
       onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Karte fehlgeschlagen')),
       onNudge: (card, ids) => void notifier.notifyStillOpen(card, ids).catch((err) => app.log.warn(err, 'Erinnerung zur offenen Karte fehlgeschlagen')),
+      onSuggest: (card, ids) => void notifier.notifySuggest(card, ids).catch((err) => app.log.warn(err, 'Frage „Wer übernimmt?" fehlgeschlagen')),
+      onSuggestClosed: (card) => void notifier.suggestClosed(card).catch(() => undefined),
       onChange: () => bus.emit({ by: null }),
       log,
     })

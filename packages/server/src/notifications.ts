@@ -20,6 +20,8 @@ export interface NotifierDeps {
   retryDelaysMin?: number[];
   /** Steht vor der Kennung jedes Knopfs (die Beta: BETA_), damit sich normale App und Beta nicht in die Quere kommen */
   actionPrefix?: string;
+  /** "Erst vorschlagen": die Person übernimmt die Karte (wirft, wenn schon jemand schneller war) */
+  claim?: (cardId: string, userId: string) => Promise<unknown>;
 }
 
 /** Ein Tipp auf einen Knopf: aus Home Assistant (userId) oder über ntfy (personId, schon geprüft) */
@@ -28,7 +30,7 @@ export interface PushAction extends NotificationAction {
   personId?: string;
 }
 
-export type ActionResult = 'completed' | 'acked' | 'postponed' | 'awaiting' | 'confirmed' | 'rejected' | 'already_done' | 'stale' | 'unknown_card' | 'ignored';
+export type ActionResult = 'completed' | 'claimed' | 'taken' | 'acked' | 'postponed' | 'awaiting' | 'confirmed' | 'rejected' | 'already_done' | 'stale' | 'unknown_card' | 'ignored';
 
 const MINUTE = 60_000;
 /** Eine Anfrage ohne Antwort: erst nach dieser Zeit wird erinnert, danach höchstens einmal am Tag */
@@ -40,6 +42,7 @@ const GROUP = 'stups';
 const ACTION_PREFIX = 'KANBAN_DONE';
 const NUDGE_PREFIX = 'KANBAN_NUDGE_';
 const CONFIRM_PREFIX = 'KANBAN_CONFIRM_';
+const CLAIM_PREFIX = 'KANBAN_CLAIM:';
 
 export const cardTag = (cardId: string) => `stups-card-${cardId}`;
 const confirmTag = (cardId: string) => `stups-confirm-${cardId}`;
@@ -124,6 +127,33 @@ export function createNotifier(deps: NotifierDeps) {
         log.info(`Push (neue Karte) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
       }
     }
+  }
+
+  /** "Erst vorschlagen": alle, die zu Hause sind, fragen, wer die Karte übernimmt (Knopf „Übernehmen") */
+  async function notifySuggest(card: { id: string; title: string }, userIds: string[]): Promise<void> {
+    for (const id of userIds) {
+      if (!push.canReach(id, 'watcher')) {
+        warnNoServices(id);
+        continue;
+      }
+      const message = inLang(id, (): PushMessage => ({
+        title: card.title,
+        body: t('Wer übernimmt?'),
+        tag: cardTag(card.id),
+        group: GROUP,
+        open: { cardId: card.id },
+        level: 'time-sensitive',
+        actions: [{ id: `${aPrefix}${CLAIM_PREFIX}${card.id}`, title: t('Übernehmen') }],
+        kind: 'watcher',
+        spoken: t('Wer übernimmt: {title}?', { title: speakable(card.title) }),
+      }));
+      if (await send(id, message)) log.info(`Push (Wer übernimmt?) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
+    }
+  }
+
+  /** Die Frage „Wer übernimmt?" ist beantwortet oder verfallen: bei allen Personen wegräumen */
+  async function suggestClosed(card: { id: string }): Promise<void> {
+    await Promise.allSettled(store.people().map((p) => push.clear(p.id, cardTag(card.id))));
   }
 
   /** Eine Karte eines Wächters ist nach der eingestellten Zeit noch offen: freundlich erinnern */
@@ -628,6 +658,17 @@ export function createNotifier(deps: NotifierDeps) {
   async function handleAction(a: PushAction): Promise<ActionResult> {
     const nm = new RegExp(`^${aPrefix}${NUDGE_PREFIX}(DONE|ACK|LATER):(.+)$`).exec(a.action);
     if (nm) return handleNudgeAction(nm[1]!, nm[2]!, a);
+    const claim = new RegExp(`^${aPrefix}${CLAIM_PREFIX}(.+)$`).exec(a.action);
+    if (claim) {
+      const user = actor(a);
+      if (!user || !deps.claim) return 'ignored';
+      try {
+        await deps.claim(claim[1]!, user.id);
+        return 'claimed';
+      } catch {
+        return 'taken'; // jemand war schneller (oder die Karte ist erledigt): für den Knopf kein Fehler
+      }
+    }
     const cm = new RegExp(`^${aPrefix}${CONFIRM_PREFIX}(YES|NO):(.+)$`).exec(a.action);
     if (cm) return handleConfirmAction(cm[1] === 'YES' ? 'confirm' : 'reject', cm[2]!, a);
     const m = new RegExp(`^${aPrefix}${ACTION_PREFIX}:([^:]+):(.+)$`).exec(a.action);
@@ -659,7 +700,7 @@ export function createNotifier(deps: NotifierDeps) {
     return 'completed';
   }
 
-  return { tick, handleAction, clearFor, nudgesClosed, notifyAssigned, notifyStillOpen, confirmationRequested, confirmationAnswered, idle };
+  return { tick, handleAction, clearFor, nudgesClosed, notifyAssigned, notifySuggest, suggestClosed, notifyStillOpen, confirmationRequested, confirmationAnswered, idle };
 }
 
 export type Notifier = ReturnType<typeof createNotifier>;

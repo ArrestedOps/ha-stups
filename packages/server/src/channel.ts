@@ -60,7 +60,7 @@ export function channelNames(channel: Channel): ChannelNames {
 export function withChannel(push: PushGateway, names: ChannelNames): PushGateway {
   if (names.channel === 'stable') return push;
   return {
-    canReach: (userId) => push.canReach(userId),
+    canReach: (userId, kind) => push.canReach(userId, kind),
     send: (userId, message) =>
       push.send(userId, {
         ...message,

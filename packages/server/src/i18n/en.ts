@@ -75,6 +75,7 @@ export const en: Catalog = {
   '„An" muss wahr oder falsch sein': '“On” must be true or false',
   'Der Typ muss „speak" oder „light" sein': 'The type must be “speak” or “light”',
   'Kanal nicht gefunden': 'Channel not found',
+  'Das ist ein Test von Stups.': 'This is a test from Stups.',
   'Der Sprachdienst muss eine tts-Entität sein (zum Beispiel tts.piper)': 'The speech service must be a tts entity (for example tts.piper)',
   'Das wird in der Add-on-Konfiguration von Home Assistant verwaltet (Einstellungen › Apps › Stups › Konfiguration)': 'This is managed in the add-on configuration in Home Assistant (Settings › Apps › Stups › Configuration)',
   'ntfy ist nicht eingerichtet (STUPS_NTFY_URL)': 'ntfy is not set up (STUPS_NTFY_URL)',

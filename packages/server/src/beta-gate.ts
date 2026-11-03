@@ -80,7 +80,7 @@ export function createBetaGate(deps: BetaGateDeps) {
   function gatePush(push: PushGateway): PushGateway {
     if (!deps.enabled) return push;
     return {
-      canReach: (userId) => allowed(userId) && push.canReach(userId),
+      canReach: (userId, kind) => allowed(userId) && push.canReach(userId, kind),
       send: async (userId, message) => (allowed(userId) ? push.send(userId, message) : false),
       clear: (userId, tag) => push.clear(userId, tag),
     };

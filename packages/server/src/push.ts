@@ -25,8 +25,11 @@ export interface PushMessage {
 export type PushKind = 'nudge' | 'due' | 'watcher';
 
 export interface PushGateway {
-  /** Gibt es für diese Person überhaupt ein Gerät, an das sich senden lässt? */
-  canReach(userId: string): boolean;
+  /**
+   * Gibt es für diese Person überhaupt ein Gerät, an das sich senden lässt? Mit `kind` auch: nimmt dieser Weg diese Art von
+   * Nachricht an? (Nur der Haus-Weg unterscheidet das: Ansage und Lampe sind je Kanal für bestimmte Arten eingeschaltet.)
+   */
+  canReach(userId: string, kind?: PushKind): boolean;
   /** true, wenn mindestens ein Gerät die Nachricht angenommen hat */
   send(userId: string, message: PushMessage): Promise<boolean>;
   /** Entfernt die Nachricht mit diesem Tag von den Geräten der Person */
@@ -49,9 +52,9 @@ export function combinePush(gateways: PushGateway[]): PushGateway {
   if (gateways.length === 0) return createNoPush();
   if (gateways.length === 1) return gateways[0]!;
   return {
-    canReach: (userId) => gateways.some((g) => g.canReach(userId)),
+    canReach: (userId, kind) => gateways.some((g) => g.canReach(userId, kind)),
     async send(userId, message) {
-      const results = await Promise.all(gateways.filter((g) => g.canReach(userId)).map((g) => g.send(userId, message)));
+      const results = await Promise.all(gateways.filter((g) => g.canReach(userId, message.kind)).map((g) => g.send(userId, message)));
       return results.some(Boolean);
     },
     async clear(userId, tag) {

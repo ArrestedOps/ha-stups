@@ -94,7 +94,7 @@ export function createNotifier(deps: NotifierDeps) {
   async function notifyAssigned(card: { id: string; title: string; dueAt: string | null }, userIds: string[]): Promise<void> {
     const nowMs = deps.now().getTime();
     for (const id of userIds) {
-      if (!push.canReach(id)) {
+      if (!push.canReach(id, 'watcher')) {
         warnNoServices(id);
         continue;
       }
@@ -123,7 +123,7 @@ export function createNotifier(deps: NotifierDeps) {
   /** Eine Karte eines Wächters ist nach der eingestellten Zeit noch offen: freundlich erinnern */
   async function notifyStillOpen(card: { id: string; title: string; dueAt: string | null }, userIds: string[]): Promise<void> {
     for (const id of userIds) {
-      if (!push.canReach(id)) {
+      if (!push.canReach(id, 'watcher')) {
         warnNoServices(id);
         continue;
       }
@@ -223,7 +223,7 @@ export function createNotifier(deps: NotifierDeps) {
         const dueMs = Date.parse(card.dueAt);
         for (const userId of card.assigneeIds) {
           const due = inLang(userId, () => formatDue(dueMs, nowMs, tz));
-          if (!push.canReach(userId)) {
+          if (!push.canReach(userId, 'due')) {
             warnNoServices(userId);
             continue;
           }
@@ -358,7 +358,7 @@ export function createNotifier(deps: NotifierDeps) {
         sent += 1;
         continue;
       }
-      if (!push.canReach(n.toId)) {
+      if (!push.canReach(n.toId, 'nudge')) {
         retries.delete(retryKey);
         log.warn(`Stups „${n.cardTitle}": ${nameOf(n.toId)} hat kein Push-Gerät, nicht zugestellt`);
         continue; // bleibt vorgemerkt, es gibt nichts zu wiederholen

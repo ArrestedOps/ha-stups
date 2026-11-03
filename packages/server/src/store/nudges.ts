@@ -44,9 +44,11 @@ export function createNudgesPart(c: Ctx, late: unknown) {
     return end > nowMs ? end : null;
   }
 
-  /** Ein Notify-Dienst (Home Assistant) oder ein ntfy-Thema: irgendein Weg, auf dem ein Stups ankommen kann */
+  /** Ein Notify-Dienst (Home Assistant), ein ntfy-Thema oder ein eingeschalteter Haus-Kanal für Stupse: irgendein Weg, auf dem ein Stups ankommen kann */
   const hasDevice = (u: Row): boolean =>
-    (JSON.parse(u.notify_services ?? '[]') as string[]).length > 0 || (typeof u.ntfy_topic === 'string' && u.ntfy_topic !== '');
+    (JSON.parse(u.notify_services ?? '[]') as string[]).length > 0 ||
+    (typeof u.ntfy_topic === 'string' && u.ntfy_topic !== '') ||
+    one(`select 1 as x from house_channels where user_id = ? and enabled = 1 and kinds like '%"nudge"%' limit 1`, u.id) !== undefined;
 
   /** Frühester Zustellzeitpunkt: sofort, außer der Empfänger hat gerade Ruhezeit */
   const deliverAtFor = (recipient: Row, atMs: number): number => quietEnd(atMs, timeZone(), quietOf(recipient)) ?? atMs;

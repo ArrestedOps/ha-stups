@@ -449,6 +449,22 @@ export const migrations: Migration[] = [
         watcher_id text not null references watchers(id) on delete cascade,
         since      text not null
       );
+
+      -- Neue Ergebnisse der Läufe (Weitergeben, Vorschlagen, Übernehmen, Rückfall nach 30 Minuten): die Prüfliste der Tabelle erweitern
+      create table watcher_runs_new (
+        id          text primary key,
+        watcher_id  text not null references watchers(id) on delete cascade,
+        at          text not null,
+        result      text not null check (result in
+                      ('created', 'retriggered', 'counted', 'cooldown', 'waiting', 'assigned', 'auto_done', 'nudged', 'test', 'error', 'passed', 'suggested', 'claimed', 'suggest_fallback')),
+        card_id     text,
+        assigned_to text not null default '[]',
+        note        text
+      );
+      insert into watcher_runs_new select id, watcher_id, at, result, card_id, assigned_to, note from watcher_runs;
+      drop table watcher_runs;
+      alter table watcher_runs_new rename to watcher_runs;
+      create index ix_watcher_runs on watcher_runs(watcher_id, at);
     `,
   },
 ];

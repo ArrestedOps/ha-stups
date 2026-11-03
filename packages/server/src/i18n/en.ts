@@ -267,4 +267,7 @@ export const en: Catalog = {
   'Das Datum muss die Form JJJJ-MM-TT haben': 'The date must have the form YYYY-MM-DD',
   'Das Datum liegt in der Vergangenheit': 'The date is in the past',
   '„Wenig Zeit" lässt sich höchstens 90 Tage im Voraus eintragen': '“Little time” can be set at most 90 days ahead',
+  'Nur Karten vom Haus lassen sich weitergeben': 'Only cards from the house can be passed on',
+  'Die Karte ist dir nicht zugewiesen': 'The card is not assigned to you',
+  'Den Wächter dieser Karte gibt es nicht mehr': 'The watcher of this card no longer exists',
 };

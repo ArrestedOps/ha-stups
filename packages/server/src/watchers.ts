@@ -1,4 +1,6 @@
+import { ConflictError, ForbiddenError } from './errors.js';
 import type { HaState } from './ha.js';
+import { t } from './i18n/index.js';
 import { isBusy } from './busy.js';
 import { isRunning, phaseOf, type HomeItem, type HomeState, type PhaseMemory } from './home.js';
 import { personOfEntity, presenceOf, type PresenceMap } from './presence.js';
@@ -704,6 +706,53 @@ export function createWatchers(deps: WatcherDeps) {
     });
   }
 
+  // ---------- Weitergeben ----------
+
+  /**
+   * Eine Karte vom Haus an die nächste Person der Rotation dieses Wächters weitergeben: derselbe Kreis und dieselbe Anwesenheitsregel
+   * wie beim Zuweisen, ohne Personen mit „wenig Zeit" und ohne die, die die Karte schon haben. Die Rotation rückt nicht weiter
+   * (wer weitergibt, bleibt beim nächsten Mal dran), und es zählt nicht als erledigt. Gibt es niemanden, bleibt die Karte: `{ to: null }`.
+   */
+  function pass(cardId: string, byUserId: string): Promise<{ to: string | null }> {
+    return enqueue(async () => {
+      const card = store.getCard(cardId);
+      if (card.completedAt) throw new ConflictError(t('Die Karte ist schon erledigt'));
+      if (!card.watcherId) throw new ConflictError(t('Nur Karten vom Haus lassen sich weitergeben'));
+      if (!card.assigneeIds.includes(byUserId)) throw new ForbiddenError(t('Die Karte ist dir nicht zugewiesen'));
+      let w: Watcher;
+      try {
+        w = data.get(card.watcherId);
+      } catch {
+        throw new ConflictError(t('Den Wächter dieser Karte gibt es nicht mehr'));
+      }
+      const people = store.people();
+      const rule = w.assign;
+      const eligible = new Set(people.map((p) => p.id));
+      const pool = (rule.personIds.length > 0 ? rule.personIds : people.map((p) => p.id)).filter((id) => eligible.has(id));
+      let needsPresence = ['rotation_present', 'all_present', 'first_home', 'suggest'].includes(rule.mode);
+      let home = new Set<string>();
+      if (needsPresence) {
+        try {
+          home = presenceOf(people, await personStates(0)).home; // frisch abfragen: das ist eine Handlung der Person
+        } catch {
+          needsPresence = false; // Home Assistant antwortet nicht: lieber weitergeben als gar nicht
+        }
+      }
+      const nowMs = now().getTime();
+      const busy = new Set(people.filter((p) => isBusy(p.busyUntil, nowMs, timeZone())).map((p) => p.id));
+      const candidates = new Set(pool.filter((id) => id !== byUserId && !card.assigneeIds.includes(id) && !busy.has(id) && (!needsPresence || home.has(id))));
+      const next = nextOf(pool, byUserId, candidates);
+      if (!next) return { to: null };
+      store.transaction(() => {
+        store.updateCard(card.id, { assigneeIds: [...card.assigneeIds.filter((id) => id !== byUserId), next] });
+        data.addRun({ watcherId: w.id, result: 'passed', cardId: card.id, assignedTo: [next], note: `von ${people.find((p) => p.id === byUserId)?.displayName ?? '?'}` });
+      });
+      deps.onChange?.();
+      deps.onAssigned?.(store.getCard(card.id), [next]);
+      return { to: next };
+    });
+  }
+
   /** Für den Reiter „Zuhause": jeder aktive Wächter mit seiner Phase (siehe home.ts) */
   function homeState(): HomeState {
     const link = ha.connection?.() ?? { connected: true, lostSince: null };
@@ -747,7 +796,7 @@ export function createWatchers(deps: WatcherDeps) {
     return data.recentRuns(limit);
   }
 
-  return { start, presentPersonIds, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, homeState, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
+  return { start, presentPersonIds, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, homeState, pass, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
 }
 
 export type Watchers = ReturnType<typeof createWatchers>;

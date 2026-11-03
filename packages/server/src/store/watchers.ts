@@ -26,6 +26,14 @@ export function createWatcherCards(c: Ctx, late: unknown) {
             ? 'Wartet auf die erste Person, die heimkommt'
             : r.result === 'assigned'
               ? `Zugewiesen: ${names}${note}`
+              : r.result === 'passed'
+                ? `Weitergegeben an ${names}${note}`
+                : r.result === 'suggested'
+                  ? 'Vorgeschlagen: alle, die zu Hause sind, wurden gefragt'
+                  : r.result === 'claimed'
+                    ? `Übernommen von ${names}`
+                    : r.result === 'suggest_fallback'
+                      ? `Niemand hat sich gemeldet, zugewiesen: ${names || 'niemand'}`
               : r.result === 'auto_done'
                 ? 'Automatisch erledigt, weil die Bedingung eingetreten ist'
                 : r.result === 'nudged'

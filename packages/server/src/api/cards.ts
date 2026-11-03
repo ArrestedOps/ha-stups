@@ -101,6 +101,11 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     if (res.completionId) void deps.notifier?.clearFor(res.card.id);
     return res;
   });
+  // Weitergeben: eine Karte vom Haus an die nächste Person der Rotation (nicht für Kinder: die Erlaubnisliste verweigert es)
+  app.post<{ Params: Params }>('/api/cards/:id/pass', async (req) => {
+    if (!deps.watchers) throw new ConflictError(t('Wächter brauchen die Verbindung zu Home Assistant'));
+    return deps.watchers.pass(req.params.id, req.user!.id);
+  });
   // Bestätigen und „Nochmal": die gewählten Personen des Kindes und Administratoren
   for (const answer of ['confirm', 'reject'] as const) {
     app.post<{ Params: Params }>(`/api/cards/:id/${answer}`, async (req) => {

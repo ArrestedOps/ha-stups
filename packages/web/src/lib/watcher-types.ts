@@ -42,7 +42,7 @@ export interface WatcherRun {
   id: string;
   watcherId: string;
   at: string;
-  result: 'created' | 'retriggered' | 'counted' | 'cooldown' | 'waiting' | 'assigned' | 'auto_done' | 'nudged' | 'test' | 'error';
+  result: 'created' | 'retriggered' | 'counted' | 'cooldown' | 'waiting' | 'assigned' | 'auto_done' | 'nudged' | 'test' | 'error' | 'passed' | 'suggested' | 'claimed' | 'suggest_fallback';
   cardId: string | null;
   assignedTo: string[];
   note: string | null;

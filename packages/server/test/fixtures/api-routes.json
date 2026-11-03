@@ -115,6 +115,7 @@
   "POST /api/cards/:id/links",
   "POST /api/cards/:id/move",
   "POST /api/cards/:id/nudge",
+  "POST /api/cards/:id/pass",
   "POST /api/cards/:id/reject",
   "POST /api/cards/:id/restore-archived",
   "POST /api/columns/:id/move",

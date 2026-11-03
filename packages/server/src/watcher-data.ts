@@ -26,7 +26,25 @@ export interface WatcherState {
   lastFireAt: string | null;
 }
 
-export type RunResult = 'created' | 'retriggered' | 'counted' | 'cooldown' | 'waiting' | 'assigned' | 'auto_done' | 'nudged' | 'test' | 'error';
+export type RunResult =
+  | 'created'
+  | 'retriggered'
+  | 'counted'
+  | 'cooldown'
+  | 'waiting'
+  | 'assigned'
+  | 'auto_done'
+  | 'nudged'
+  | 'test'
+  | 'error'
+  /** die Person hat die Karte weitergegeben */
+  | 'passed'
+  /** „Erst vorschlagen": die Karte entstand ohne Zuständige, alle Anwesenden wurden gefragt */
+  | 'suggested'
+  /** jemand hat die vorgeschlagene Karte übernommen */
+  | 'claimed'
+  /** niemand hat sich in 30 Minuten gemeldet: der Rückfall des Wächters greift */
+  | 'suggest_fallback';
 
 export interface WatcherRun {
   id: string;

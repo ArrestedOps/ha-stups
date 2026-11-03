@@ -286,7 +286,7 @@ await app.register(apiRoutes, {
   betaGate,
   capabilities,
   push,
-  house: house && houseSubscription ? { push: house, sync: () => houseSubscription.sync() } : undefined,
+  house: house && houseSubscription ? { push: house, sync: () => houseSubscription.sync(), entityOwners: () => presence.entityOwners() } : undefined,
   ntfy: runtime.ntfy ? { url: runtime.ntfy.url, roundTrip: (personId) => roundTrips.last(personId) } : undefined,
   files,
   watchers,

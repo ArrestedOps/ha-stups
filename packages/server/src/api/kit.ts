@@ -43,7 +43,7 @@ export interface ApiDeps {
     getStates?(): Promise<HaState[]>;
   };
   /** Haus-Kanäle (nur mit Verbindung zu Home Assistant): der Weg für Test und Ergebnis, `sync` gleicht das Abonnement auf die Heimkehr ab */
-  house?: { push: HousePush; sync(): Promise<void> };
+  house?: { push: HousePush; sync(): Promise<void>; entityOwners(): Promise<Map<string, string>> };
   /** Wächter (nur mit Verbindung zu Home Assistant) */
   watchers?: Pick<Watchers, 'view' | 'activity' | 'onSaved' | 'test' | 'resetCounter' | 'syncSubscriptions'>;
   watcherData?: WatcherData;

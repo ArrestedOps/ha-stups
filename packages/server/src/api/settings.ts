@@ -54,7 +54,7 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
           note:
             who.length === 0
               ? 'Niemand zuständig, deshalb keine Nachricht'
-              : who.some((p) => (deps.push ? deps.push.canReach(p.id) : p.notifyServices.length > 0))
+              : who.some((p) => (deps.push ? deps.push.canReach(p.id, 'due') : p.notifyServices.length > 0))
                 ? null
                 : 'Kein Push-Gerät eingetragen (Einstellungen › Personen & Zugriff)',
         };
@@ -68,6 +68,17 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
       })),
       ntfy: deps.ntfy
         ? { url: deps.ntfy.url, buttons: deps.capabilities?.publicUrl != null, roundTrip: req.user ? deps.ntfy.roundTrip(req.user.id) : null }
+        : null,
+      // Haus-Kanäle (Ansage, Lampe) mit dem letzten Ergebnis; null ohne Home Assistant
+      house: deps.house
+        ? store.houseChannels().map((c) => ({
+            person: byId.get(c.userId)?.name ?? '',
+            name: c.name,
+            type: c.type,
+            enabled: c.enabled,
+            kinds: c.kinds,
+            status: deps.house!.push.status(c.id),
+          }))
         : null,
       recent: store.recentNotifications(15),
       nudges: store.recentNudges(10),

@@ -35,7 +35,8 @@ export type Sheet =
   | { type: 'watcher'; id: string | null; template?: string }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
-  | { type: 'archive' };
+  | { type: 'archive' }
+  | { type: 'week' };
 
 export type { Tab };
 
@@ -531,7 +532,7 @@ export const personById = (id: string) => ui.people.find((p) => p.id === id);
 
 // ---------- Aktionen auf Karten ----------
 
-export async function completeCard(card: Card): Promise<void> {
+export async function completeCard(card: Pick<Card, 'id'>): Promise<void> {
   const res = await act(() => api.complete(card.id));
   if (res?.awaitingConfirmation) {
     toast(t('Gemeldet: wartet auf Bestätigung'));

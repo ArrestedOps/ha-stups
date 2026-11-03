@@ -280,6 +280,28 @@ export interface TemplateInfo {
   createdBy: string | null;
 }
 
+// ---------- Heute ----------
+
+export interface TodayCard {
+  id: string;
+  title: string;
+  boardId: string;
+  boardName: string;
+  dueAt: string | null;
+  assigneeIds: string[];
+  watcherId: string | null;
+  watcherName: string | null;
+  createdAt: string;
+  /** Warum diese Person dran ist; nur bei Karten vom Haus */
+  why: string | null;
+}
+
+export interface Today {
+  house: TodayCard[];
+  mine: TodayCard[];
+  others: { personId: string; open: number }[];
+}
+
 // ---------- Fairness ----------
 
 export interface FairnessCounts {
@@ -458,6 +480,7 @@ export const api = {
   people: () => get<User[]>('people'),
   access: () => get<AccessInfo>('access'),
   fairness: (period: 'week' | 'month') => get<Fairness>(`fairness?period=${period}`),
+  today: () => get<Today>('today'),
   houseChannels: () => get<HouseInfo>('house/channels'),
   houseEntities: () => get<HouseEntities>('house/entities'),
   addHouseChannel: (b: { userId: string; type: HouseType; entityId: string; name?: string }) => post<HouseChannel>('house/channels', b),

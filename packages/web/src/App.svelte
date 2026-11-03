@@ -1,12 +1,13 @@
 <script lang="ts">
   import { t } from './lib/i18n/index.svelte';
   import { onMount } from 'svelte';
-  import AgendaView from './components/AgendaView.svelte';
   import ArchiveSheet from './components/ArchiveSheet.svelte';
   import AuthView from './components/AuthView.svelte';
   import CalendarView from './components/CalendarView.svelte';
   import SlotSheet from './components/SlotSheet.svelte';
   import TabBar from './components/TabBar.svelte';
+  import TodayView from './components/TodayView.svelte';
+  import WeekSheet from './components/WeekSheet.svelte';
   import BoardSettings from './components/BoardSettings.svelte';
   import BoardSwitcher from './components/BoardSwitcher.svelte';
   import CardMenu from './components/CardMenu.svelte';
@@ -217,14 +218,14 @@
     {/if}
   </main>
   {:else if tab === 'today'}
-    <AgendaView />
+    <TodayView />
   {:else if tab === 'calendar'}
     <CalendarView />
   {:else}
     <WatchersView />
   {/if}
 
-  {#if tab === 'boards' && view && newCardColumn && !ui.isChild}
+  {#if (tab === 'boards' || tab === 'today') && view && newCardColumn && !ui.isChild}
     <button
       class="fixed right-5 bottom-[calc(max(10px,var(--safe-bottom))+80px)] z-30 flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-accent-grad"
       aria-label={t('Neue Karte')}
@@ -260,6 +261,8 @@
     <TrashSheet />
   {:else if ui.sheet?.type === 'archive'}
     <ArchiveSheet />
+  {:else if ui.sheet?.type === 'week'}
+    <WeekSheet />
   {/if}
 
   <Lightbox />

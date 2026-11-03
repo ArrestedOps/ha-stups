@@ -89,3 +89,34 @@ test('Probelauf: ohne Historie ein Hinweis statt eines Diagramms; Wackeln wird g
   await page.getByRole('button', { name: 'Probelauf', exact: true }).click();
   await expect(page.getByTestId('dry-run-result')).toContainText('keine Historie');
 });
+
+test('Gefunden: einen Treffer ausblenden, er kommt nicht wieder; unter „Ausgeblendet" lässt er sich zurückholen', async ({ page }) => {
+  const open = async () => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Wächter' }).click();
+    await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
+  };
+  const dialog = page.getByRole('dialog');
+  const bins = () => dialog.getByTestId('found-hit').filter({ hasText: 'Abfallkalender' });
+
+  await open();
+  await expect(bins()).toBeVisible();
+  await expect(dialog.getByTestId('found-hidden-toggle')).toHaveCount(0);
+  await bins().getByRole('button', { name: /ausblenden/ }).click();
+  await expect(page.getByText(/ausgeblendet. Stups schlägt es nicht mehr vor/)).toBeVisible();
+  await expect(bins()).toHaveCount(0);
+  await expect(dialog.getByTestId('found-hit').filter({ hasText: 'Bad Fenster Batterie' })).toBeVisible(); // die anderen bleiben
+
+  // Auch nach dem Neuladen (gespeichert), nicht nur in dieser Ansicht
+  await open();
+  await expect(bins()).toHaveCount(0);
+  await dialog.getByTestId('found-hidden-toggle').click();
+  await expect(dialog.getByTestId('found-hidden')).toHaveCount(1);
+  await expect(dialog.getByTestId('found-hidden')).toContainText('Abfallkalender');
+
+  // Zurückholen
+  await dialog.getByTestId('found-hidden').getByRole('button', { name: /wieder anzeigen/ }).click();
+  await expect(bins()).toBeVisible();
+  await expect(dialog.getByTestId('found-hidden-toggle')).toHaveCount(0);
+});

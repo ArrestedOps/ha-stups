@@ -467,4 +467,16 @@ export const migrations: Migration[] = [
       create index ix_watcher_runs on watcher_runs(watcher_id, at);
     `,
   },
+  {
+    version: 21,
+    // „Gefunden": Treffer, die ein Administrator ausgeblendet hat (Vorlage + Entität), damit sie nicht wieder vorgeschlagen werden
+    sql: `
+      create table watcher_hidden (
+        template_id text not null,
+        entity_id   text not null,
+        at          text not null,
+        primary key (template_id, entity_id)
+      );
+    `,
+  },
 ];

@@ -128,6 +128,7 @@ export const en: Catalog = {
   'Unbekannter Typ': 'Unknown type',
   'Nicht verfügbar (keine Verbindung zu Home Assistant)': 'Not available (no connection to Home Assistant)',
   'Die Entität muss die Form domain.name haben': 'The entity must have the form domain.name',
+  'Diese Vorlage gibt es nicht': 'There is no such template',
   'Wächter brauchen die Verbindung zu Home Assistant': 'Watchers need the connection to Home Assistant',
   'Das Board gibt es nicht': 'The board does not exist',
   'Die Spalte gehört nicht zu diesem Board': 'The column does not belong to this board',

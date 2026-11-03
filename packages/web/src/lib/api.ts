@@ -657,7 +657,10 @@ export const api = {
   watcherRuns: (id: string) => get<WatcherRun[]>(`watchers/${id}/runs`),
   watcherTemplates: () => get<WatcherTemplate[]>('watchers/templates'),
   /** Was in Home Assistant zu einer Vorlage passt (ohne Entitäten, die schon ein Wächter beobachtet) */
-  watcherSuggestions: () => get<{ items: WatcherSuggestion[] }>('watchers/suggestions'),
+  watcherSuggestions: () => get<{ items: WatcherSuggestion[]; hidden: WatcherSuggestion[] }>('watchers/suggestions'),
+  /** Einen Treffer von „Gefunden" ausblenden (nie wieder vorschlagen) oder wieder einblenden */
+  hideSuggestion: (templateId: string, entityId: string) => post<void>('watchers/suggestions/hide', { templateId, entityId }),
+  unhideSuggestion: (templateId: string, entityId: string) => post<void>('watchers/suggestions/unhide', { templateId, entityId }),
   /** Probelauf: die Regel auf die Historie der letzten 7 Tage anwenden, ohne zu speichern */
   dryRun: (b: { trigger: WatcherInput['trigger']; cooldownMin: number }) => post<DryRunResult>('watchers/dry-run', b),
   haEntities: (q: string, domain?: string) =>

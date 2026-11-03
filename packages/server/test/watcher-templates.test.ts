@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { HaState } from '../src/ha.js';
-import { detectSuggestions, watcherTemplates } from '../src/watcher-templates.js';
+import { detectSuggestions, suggestionKey, watcherTemplates } from '../src/watcher-templates.js';
 
 const state = (entityId: string, st: string, attributes: Record<string, unknown> = {}): HaState => ({ entity_id: entityId, state: st, attributes });
 const ids = (list: { templateId: string; entityId: string }[]) => list.map((s) => `${s.templateId}:${s.entityId}`);
@@ -91,5 +91,25 @@ describe('Erkennung', () => {
   it('Waschmaschine und Waschtrockner/Trockner werden nicht verwechselt', () => {
     const list = detectSuggestions([state('sensor.trockner_power', '1', { device_class: 'power', friendly_name: 'Trockner' })], new Set());
     expect(ids(list)).toEqual(['dryer:sensor.trockner_power']);
+  });
+});
+
+describe('Ausgeblendetes', () => {
+  const states = [
+    state('sensor.batt_a', '10', { device_class: 'battery' }),
+    state('sensor.batt_b', '20', { device_class: 'battery' }),
+    state('vacuum.robi', 'docked'),
+  ];
+
+  it('ausgeblendete Treffer fehlen, andere Vorlagen derselben Entität bleiben', () => {
+    const hidden = new Set([suggestionKey('battery', 'sensor.batt_a')]);
+    expect(ids(detectSuggestions(states, new Set(), hidden))).toEqual(['battery:sensor.batt_b', 'vacuum:vacuum.robi']);
+    expect(ids(detectSuggestions(states, new Set()))).toEqual(['battery:sensor.batt_a', 'battery:sensor.batt_b', 'vacuum:vacuum.robi']);
+  });
+
+  it('beim Ausblenden rückt der nächste Treffer nach (die Grenze je Vorlage zählt erst danach)', () => {
+    const many = Array.from({ length: 7 }, (_, i) => state(`sensor.b${i}`, String(10 + i), { device_class: 'battery' }));
+    const hidden = new Set([suggestionKey('battery', 'sensor.b0')]);
+    expect(detectSuggestions(many, new Set(), hidden).map((s) => s.entityId)).toEqual(['sensor.b1', 'sensor.b2', 'sensor.b3', 'sensor.b4', 'sensor.b5']);
   });
 });

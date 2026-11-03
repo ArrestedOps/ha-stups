@@ -216,8 +216,13 @@ const MAX_PER_TEMPLATE = 5;
  * Welche Entitäten passen zu welcher Vorlage? `watched` sind Entitäten, die schon ein Wächter beobachtet; sie fehlen in der Antwort.
  * Kaputte oder fremdartige Zustände (fehlende Attribute) werden übergangen, nie wirft die Erkennung.
  */
-export function detectSuggestions(states: HaState[], watched: Set<string>): Suggestion[] {
+/** Schlüssel eines Treffers (Vorlage + Entität), unter dem ein Administrator ihn ausblendet */
+export const suggestionKey = (templateId: string, entityId: string): string => `${templateId}:${entityId}`;
+
+export function detectSuggestions(states: HaState[], watched: Set<string>, hidden: Set<string> = new Set()): Suggestion[] {
   const out: Suggestion[] = [];
+  /** Ausgeblendete Treffer fehlen schon vor der Grenze je Vorlage, damit der nächste nachrückt */
+  const shown = (id: TemplateId, s: HaState): boolean => !hidden.has(suggestionKey(id, s.entity_id));
   const templates = new Map(watcherTemplates().map((tpl) => [tpl.id, tpl]));
   const fresh = states.filter((s) => s && typeof s.entity_id === 'string' && !watched.has(s.entity_id));
 
@@ -227,7 +232,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>): Sugg
     const hits: Suggestion[] = [];
     for (const s of fresh) {
       const domain = s.entity_id.split('.')[0];
-      if (!words.test(hay(s)) || (id === 'washer' && WORDS.dryer.test(hay(s)))) continue;
+      if (!shown(id, s) || !words.test(hay(s)) || (id === 'washer' && WORDS.dryer.test(hay(s)))) continue;
       if (domain === 'sensor' && s.attributes?.device_class === 'power') {
         hits.push({ templateId: id, entityId: s.entity_id, name: nameOf(s), variant: 'power', ...unitOf(s), reason: t('{name} misst die Leistung', { name: nameOf(s) }) });
       } else if ((domain === 'sensor' || domain === 'select') && STATUS_ENTITY.test(lower(s.entity_id)) && STATUS_STATES.has(norm(lower(s.state)))) {
@@ -249,7 +254,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>): Sugg
   // Abfallkalender
   out.push(
     ...fresh
-      .filter((s) => s.entity_id.startsWith('calendar.') && BIN_WORDS.test(hay(s)))
+      .filter((s) => s.entity_id.startsWith('calendar.') && BIN_WORDS.test(hay(s)) && shown('bins', s))
       .slice(0, MAX_PER_TEMPLATE)
       .map((s): Suggestion => ({ templateId: 'bins', entityId: s.entity_id, name: nameOf(s), variant: 'default', reason: t('{name} ist ein Kalender mit Abfallterminen', { name: nameOf(s) }) })),
   );
@@ -257,7 +262,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>): Sugg
   // Wetter (eine Entität genügt meist)
   out.push(
     ...fresh
-      .filter((s) => s.entity_id.startsWith('weather.'))
+      .filter((s) => s.entity_id.startsWith('weather.') && shown('rain', s))
       .slice(0, 2)
       .map((s): Suggestion => ({ templateId: 'rain', entityId: s.entity_id, name: nameOf(s), variant: 'default', reason: t('{name} liefert eine Wettervorhersage', { name: nameOf(s) }) })),
   );
@@ -265,7 +270,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>): Sugg
   // Batterien: die schwächsten zuerst, nur mit Zahlenwert
   out.push(
     ...fresh
-      .filter((s) => s.entity_id.startsWith('sensor.') && s.attributes?.device_class === 'battery' && num(s.state) !== null)
+      .filter((s) => s.entity_id.startsWith('sensor.') && s.attributes?.device_class === 'battery' && num(s.state) !== null && shown('battery', s))
       .sort((a, b) => num(a.state)! - num(b.state)!)
       .slice(0, MAX_PER_TEMPLATE)
       .map((s): Suggestion => ({ templateId: 'battery', entityId: s.entity_id, name: nameOf(s), variant: 'default', ...unitOf(s), reason: t('{name}: Batterie bei {n} %', { name: nameOf(s), n: Math.round(num(s.state)!) }) })),
@@ -274,7 +279,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>): Sugg
   // Saugroboter
   out.push(
     ...fresh
-      .filter((s) => s.entity_id.startsWith('vacuum.'))
+      .filter((s) => s.entity_id.startsWith('vacuum.') && shown('vacuum', s))
       .slice(0, MAX_PER_TEMPLATE)
       .map((s): Suggestion => ({ templateId: 'vacuum', entityId: s.entity_id, name: nameOf(s), variant: 'default', reason: t('{name} ist ein Saugroboter', { name: nameOf(s) }) })),
   );

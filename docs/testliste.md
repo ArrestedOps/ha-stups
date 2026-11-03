@@ -355,6 +355,7 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 **Gefunden und Wächter als Satz**
 
 - [ ] Einstellungen › Haushalt › Wächter › „Wächter aus Vorlagen": Treffer zu deinen echten Geräten mit Begründung; schon beobachtete fehlen. „Auch ohne Gerät" legt eine wiederkehrende Karte an. „Alle Vorlagen ansehen"
+- [ ] **Ausblenden:** bei einem Treffer, den du nicht brauchst, „Ausblenden" tippen: er verschwindet und kommt auch nach dem Neuladen und nach einem Neustart der App nicht wieder; die anderen Treffer bleiben, der nächste ähnliche rückt nach. Unter „Ausgeblendet (n)" steht er mit „Wieder anzeigen"; danach ist er wieder in der Liste
 - [ ] „Einrichten" füllt den Satz („Wenn … länger als … unter … liegt, bekommt … die Karte …"); jedes Feld lässt sich antippen und ändern. „Mehr Regeln" zeigt Board, Spalte, Fälligkeit, Zähler, Sperrzeit, Erledigt-Bedingung
 - [ ] **Probelauf** mit einem echten Gerät: Diagramm und Satz („3 Auslösungen erkannt, kein Fehlalarm"); bei einem wackelnden Sensor der Hinweis „Mindestdauer erhöhen?"; bei einer neuen Entität ein Hinweis statt Diagramm
 - [ ] Bei Vorlagen mit Leistungssensor ist „Automatisch erledigen" aus, mit Begründung

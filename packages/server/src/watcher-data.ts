@@ -273,6 +273,14 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
   const listSuggest = (): Suggestion[] => all('select * from watcher_suggest order by since, rowid').map(toSuggest);
   const removeSuggest = (cardId: string) => run('delete from watcher_suggest where card_id = ?', cardId);
 
+  // ---------- Ausgeblendete Treffer von „Gefunden" ----------
+
+  const hide = (templateId: string, entityId: string) =>
+    run('insert or ignore into watcher_hidden (template_id, entity_id, at) values (?, ?, ?)', templateId, entityId, iso());
+  const unhide = (templateId: string, entityId: string) => run('delete from watcher_hidden where template_id = ? and entity_id = ?', templateId, entityId);
+  const hidden = (): { templateId: string; entityId: string }[] =>
+    all('select template_id, entity_id from watcher_hidden order by at, rowid').map((r) => ({ templateId: r.template_id, entityId: r.entity_id }));
+
   return {
     list,
     get,
@@ -296,6 +304,9 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     getSuggest,
     listSuggest,
     removeSuggest,
+    hide,
+    unhide,
+    hidden,
   };
 }
 

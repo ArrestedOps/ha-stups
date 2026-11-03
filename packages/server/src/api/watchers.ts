@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { ConflictError, ValidationError } from '../errors.js';
 import { type HaState } from '../ha.js';
 import { DRY_RUN_DAYS, dryRun } from '../dry-run.js';
-import { detectSuggestions, watcherTemplates } from '../watcher-templates.js';
+import { detectSuggestions, suggestionKey, watcherTemplates } from '../watcher-templates.js';
 import { parseTrigger, parseWatcher, type WatcherConfig } from '../watcher-types.js';
 import { type ApiKit, type Params } from './kit.js';
 import { t } from '../i18n/index.js';
@@ -65,7 +65,33 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       throw new ConflictError(err instanceof Error ? err.message : t('Home Assistant antwortet nicht'));
     }
     const watched = new Set((deps.watcherData?.list() ?? []).flatMap((w) => [w.trigger.entityId, ...(w.done ? [w.done.entityId] : [])]));
-    return { items: detectSuggestions(states, watched) };
+    const hidden = new Set((deps.watcherData?.hidden() ?? []).map((h) => suggestionKey(h.templateId, h.entityId)));
+    return {
+      items: detectSuggestions(states, watched, hidden),
+      /** Ausgeblendet, aber noch in Home Assistant da: zum Zurückholen */
+      hidden: detectSuggestions(states, watched).filter((s) => hidden.has(suggestionKey(s.templateId, s.entityId))),
+    };
+  });
+  /** Einen Treffer ausblenden (er wird nie wieder vorgeschlagen) oder wieder einblenden */
+  const hitOf = (req: Parameters<typeof body>[0]): { templateId: string; entityId: string } => {
+    const b = body(req);
+    if (typeof b.templateId !== 'string' || !watcherTemplates().some((x) => x.id === b.templateId)) throw new ValidationError(t('Diese Vorlage gibt es nicht'));
+    if (typeof b.entityId !== 'string' || !/^[a-z0-9_]+\.[a-z0-9_]+$/.test(b.entityId)) throw new ValidationError(t('Die Entität muss die Form domain.name haben'));
+    return { templateId: b.templateId, entityId: b.entityId };
+  };
+  app.post('/api/watchers/suggestions/hide', async (req, reply) => {
+    requireAdmin(req);
+    const { data } = watcherEngine();
+    const hit = hitOf(req);
+    data.hide(hit.templateId, hit.entityId);
+    return noContent(reply);
+  });
+  app.post('/api/watchers/suggestions/unhide', async (req, reply) => {
+    requireAdmin(req);
+    const { data } = watcherEngine();
+    const hit = hitOf(req);
+    data.unhide(hit.templateId, hit.entityId);
+    return noContent(reply);
   });
   /** Probelauf: die Regel auf die Historie der letzten 7 Tage anwenden (höchstens 20 000 Zustände), ohne zu speichern */
   app.post('/api/watchers/dry-run', async (req) => {

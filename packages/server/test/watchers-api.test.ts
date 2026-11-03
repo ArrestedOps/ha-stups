@@ -198,6 +198,24 @@ describe('Vorlagen, Gefunden und Probelauf', () => {
     expect(second.body.items.map((s: any) => s.entityId)).not.toContain(ENTITY);
   });
 
+  it('Gefunden: Ausblenden gilt für immer, lässt sich zurücknehmen und ist nur für Administratoren', async () => {
+    ha.set(ENTITY, '120', '2026-11-04T09:00:00Z', { friendly_name: 'Waschmaschine Leistung', device_class: 'power' });
+    const hide = { templateId: 'washer', entityId: ENTITY };
+    expect((await call(anna, 'POST', '/api/watchers/suggestions/hide', hide)).status).toBe(403);
+    expect((await call(chef, 'POST', '/api/watchers/suggestions/hide', { templateId: 'gibtsnicht', entityId: ENTITY })).status).toBe(400);
+    expect((await call(chef, 'POST', '/api/watchers/suggestions/hide', { templateId: 'washer', entityId: 'kaputt' })).status).toBe(400);
+    expect((await call(chef, 'POST', '/api/watchers/suggestions/hide', hide)).status).toBe(204);
+    expect((await call(chef, 'POST', '/api/watchers/suggestions/hide', hide)).status).toBe(204); // zweimal ist harmlos
+    const hidden = await call(chef, 'GET', '/api/watchers/suggestions');
+    expect(hidden.body.items.map((s: any) => s.entityId)).not.toContain(ENTITY);
+    expect(hidden.body.hidden).toEqual([expect.objectContaining({ templateId: 'washer', entityId: ENTITY, name: 'Waschmaschine Leistung' })]);
+    expect((await call(anna, 'POST', '/api/watchers/suggestions/unhide', hide)).status).toBe(403);
+    expect((await call(chef, 'POST', '/api/watchers/suggestions/unhide', hide)).status).toBe(204);
+    const back = await call(chef, 'GET', '/api/watchers/suggestions');
+    expect(back.body.items.map((s: any) => s.entityId)).toContain(ENTITY);
+    expect(back.body.hidden).toEqual([]);
+  });
+
   it('Gefunden: ohne Verbindung zu Home Assistant ein Klartext statt eines Fehlers', async () => {
     ha.failStates = true;
     const res = await call(chef, 'GET', '/api/watchers/suggestions');

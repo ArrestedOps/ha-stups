@@ -19,6 +19,7 @@ describe('Migration 20', () => {
     expect(s.people()[0]).toMatchObject({ avatarRev: null, busyUntil: null });
     expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBeGreaterThanOrEqual(20);
     expect(() => new DatabaseSync(file).prepare('select card_id, watcher_id, since from watcher_suggest').all()).not.toThrow();
+    expect(() => new DatabaseSync(file).prepare('select template_id, entity_id, at from watcher_hidden').all()).not.toThrow();
     db.close();
   });
 });

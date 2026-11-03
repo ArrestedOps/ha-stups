@@ -16,6 +16,9 @@
    * dazu „Auch ohne Gerät" (wiederkehrende Karten aus Vorlage) und alle Vorlagen. Nur für Administratoren.
    */
   let suggestions = $state<WatcherSuggestion[] | null>(null);
+  /** Ausgeblendet: nicht mehr vorgeschlagen, hier wieder einblendbar */
+  let hidden = $state<WatcherSuggestion[]>([]);
+  let showHidden = $state(false);
   let templates = $state<WatcherTemplate[]>([]);
   let error = $state('');
   let showAll = $state(false);
@@ -25,12 +28,18 @@
   onMount(async () => {
     templates = await api.watcherTemplates().catch(() => []);
     try {
-      suggestions = (await api.watcherSuggestions()).items;
+      await loadSuggestions();
     } catch (e) {
       suggestions = [];
       error = e instanceof ApiError ? e.message : t('Keine Verbindung zu Home Assistant');
     }
   });
+
+  async function loadSuggestions() {
+    const r = await api.watcherSuggestions();
+    suggestions = r.items;
+    hidden = r.hidden ?? [];
+  }
 
   const titleOf = (id: string) => templates.find((x) => x.id === id)?.title ?? id;
   const device = $derived(templates.filter((x) => x.kind === 'watcher'));
@@ -38,6 +47,26 @@
 
   function setup(s: WatcherSuggestion) {
     openSheet({ type: 'watcher', id: null, template: s.templateId, hit: { entityId: s.entityId, name: s.name, ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) } });
+  }
+
+  /** Ausblenden gilt für immer (in der Datenbank), bis der Treffer hier wieder eingeblendet wird */
+  async function hide(s: WatcherSuggestion) {
+    try {
+      await api.hideSuggestion(s.templateId, s.entityId);
+      toast(t('„{name}“ ausgeblendet. Stups schlägt es nicht mehr vor.', { name: s.name }));
+      await loadSuggestions();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : t('Ausblenden fehlgeschlagen'), { tone: 'error' });
+    }
+  }
+
+  async function unhide(s: WatcherSuggestion) {
+    try {
+      await api.unhideSuggestion(s.templateId, s.entityId);
+      await loadSuggestions();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : t('Einblenden fehlgeschlagen'), { tone: 'error' });
+    }
   }
 
   /** Eine wiederkehrende Karte aus der Vorlage: morgen zur Standard-Uhrzeit, danach wie die Wiederholung es sagt */
@@ -75,12 +104,36 @@
               <span class="block truncate text-[16px] font-semibold">{titleOf(s.templateId)}</span>
               <span class="block text-[13px] text-fg2">{s.reason}</span>
             </span>
-            <button class="min-h-10 shrink-0 rounded-xl bg-house px-4 font-semibold text-bg" onclick={() => setup(s)}>{t('Einrichten')}</button>
+            <span class="flex shrink-0 flex-col items-stretch gap-1">
+              <button class="min-h-10 rounded-xl bg-house px-4 font-semibold text-bg" onclick={() => setup(s)}>{t('Einrichten')}</button>
+              <button class="min-h-9 rounded-xl px-4 text-[14px] font-semibold text-fg2" aria-label={t('{name} ausblenden', { name: s.name })} data-testid="found-hide" onclick={() => hide(s)}>{t('Ausblenden')}</button>
+            </span>
           </div>
         {:else}
           <p class="px-4 py-4 text-[15px] text-fg2">{t('Stups hat nichts gefunden, das zu einer Vorlage passt. Unten gibt es alle Vorlagen zum Einrichten von Hand.')}</p>
         {/each}
       </Group>
+    {/if}
+
+    {#if hidden.length > 0}
+      <button class="mt-4 flex min-h-12 w-full items-center justify-between rounded-2xl border border-line px-4 text-[16px] font-semibold" aria-expanded={showHidden} data-testid="found-hidden-toggle" onclick={() => (showHidden = !showHidden)}>
+        {t('Ausgeblendet ({n})', { n: hidden.length })}<Icon name={showHidden ? 'chevron-up' : 'chevron-down'} size={18} />
+      </button>
+      {#if showHidden}
+        <div class="mt-2">
+          <Group hint={t('Diese Treffer schlägt Stups nicht mehr vor. Mit „Wieder anzeigen“ kommen sie zurück.')}>
+            {#each hidden as s (s.templateId + s.entityId)}
+              <div class="flex items-center gap-3 px-4 py-3" data-testid="found-hidden">
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[16px] font-semibold">{titleOf(s.templateId)}</span>
+                  <span class="block text-[13px] text-fg2">{s.name}</span>
+                </span>
+                <button class="min-h-10 shrink-0 rounded-xl bg-surface2 px-4 font-semibold" aria-label={t('{name} wieder anzeigen', { name: s.name })} onclick={() => unhide(s)}>{t('Wieder anzeigen')}</button>
+              </div>
+            {/each}
+          </Group>
+        </div>
+      {/if}
     {/if}
 
     {#if recurring.length > 0}

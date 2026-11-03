@@ -2,10 +2,11 @@
   import { t, tn } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, ApiError, type AccessInfo, type AccessMode, type Account, type HouseEntities, type HouseInfo } from '../lib/api';
-  import { closeSheet, feat, refresh, toast, ui } from '../lib/store.svelte';
+  import { closeSheet, feat, openSettings, refresh, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Group from './Group.svelte';
   import HouseChannels from './HouseChannels.svelte';
+  import PersonDelivery from './PersonDelivery.svelte';
   import Icon from './Icon.svelte';
   import Row from './Row.svelte';
   import Sheet from './Sheet.svelte';
@@ -80,11 +81,6 @@
     await add(name, null);
   }
 
-  function toggleService(id: string, current: string[], service: string, on: boolean) {
-    const next = on ? [...current, service] : current.filter((s) => s !== service);
-    void run(() => api.updatePerson(id, { notifyServices: next }));
-  }
-
   function rename(id: string, current: string, value: string) {
     const name = value.trim();
     if (name && name !== current) void run(() => api.updatePerson(id, { displayName: name }));
@@ -140,28 +136,14 @@
   const hasPush = (p: { notifyServices: string[]; ntfy: boolean }) => (feat.haPush && p.notifyServices.length > 0) || (feat.ntfy && p.ntfy);
   const canEdit = (id: string) => admin || ui.me?.id === id;
 
-  // ntfy: Entwurf des Themas je Person, bis gespeichert wird
-  let topicDraft = $state<Record<string, string>>({});
-  const topicOf = (p: { id: string; ntfyTopic?: string | null }) => topicDraft[p.id] ?? p.ntfyTopic ?? '';
-  const TOPIC_RE = /^[A-Za-z0-9_-]{1,64}$/;
-
-  function randomTopic(): string {
-    const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    const bytes = crypto.getRandomValues(new Uint8Array(20));
-    return `stups-${Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('')}`;
-  }
-
-  function saveTopic(id: string, topic: string) {
-    const value = topic.trim();
-    void run(async () => {
-      await api.updatePerson(id, { ntfyTopic: value });
-      delete topicDraft[id];
-      toast(value ? t('ntfy-Thema gespeichert') : t('ntfy-Thema entfernt'));
-    });
-  }
 </script>
 
 <Sheet title={t('Personen & Zugriff')} onclose={closeSheet}>
+  {#snippet left()}
+    <button class="flex min-h-11 items-center pr-3 pl-1 text-[17px] text-accent-text" onclick={() => openSettings()} aria-label={t('Zurück zu den Einstellungen')}>
+      <Icon name="chevron-left" size={24} stroke={2.6} />{t('Einstellungen')}
+    </button>
+  {/snippet}
   {#if loadError}
     <p class="py-10 text-center text-danger">{loadError}</p>
   {:else if !info}
@@ -201,27 +183,6 @@
     </Group>
     {/if}
 
-    {#if feat.house && admin && house}
-      <Group title={t('Haus')} hint={t('Der Sprachdienst, mit dem alle Ansagen gesprochen werden. Die Kanäle (Lautsprecher, Lampe) richtest du bei jeder Person ein.')}>
-        <Row label={t('Sprachdienst')}>
-          <select
-            class="min-h-11 max-w-full rounded-xl bg-surface2 px-3"
-            value={house.tts ?? ''}
-            disabled={busy || !entities}
-            aria-label={t('Sprachdienst für Ansagen')}
-            onchange={(e) => {
-              // sofort lesen: `run` führt die Änderung erst später aus, dann ist currentTarget schon leer
-              const tts = e.currentTarget.value || null;
-              void run(() => api.setHouseTts(tts));
-            }}
-          >
-            <option value="">{t('Nicht gewählt')}</option>
-            {#each entities?.tts ?? [] as o (o.entityId)}<option value={o.entityId}>{o.name}</option>{/each}
-          </select>
-        </Row>
-      </Group>
-    {/if}
-
     <Group title={t('Personen')} hint={t('Diese Personen kann man Karten zuweisen, und sie bekommen die Push-Nachrichten.')}>
       {#each info.people as p (p.id)}
         <div>
@@ -251,6 +212,7 @@
           </button>
 
           {#if openId === p.id}
+            {@const own = p.id === ui.me?.id}
             <div class="space-y-4 px-4 pb-4">
               {#if admin}
                 <label class="flex flex-col gap-1.5">
@@ -307,157 +269,23 @@
                 </div>
               {/if}
 
-              {#if feat.ntfy && info.ntfy}
-                <div data-testid="ntfy-{p.id}">
-                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Push über ntfy')}</p>
-                  {#if !canEdit(p.id)}
-                    <p class="text-[15px] text-fg2">{t('Das Thema richtet {name} selbst ein oder ein Administrator.', { name: p.displayName })}</p>
-                  {:else}
-                    <div class="flex items-center gap-2">
-                      <input
-                        value={topicOf(p)}
-                        oninput={(e) => (topicDraft[p.id] = e.currentTarget.value)}
-                        maxlength="64"
-                        autocomplete="off"
-                        autocapitalize="none"
-                        spellcheck="false"
-                        placeholder={t('Thema, zum Beispiel stups-anna-7x2k')}
-                        aria-label={t('ntfy-Thema von {name}', { name: p.displayName })}
-                        class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3"
-                      />
-                      <button
-                        type="button"
-                        class="min-h-11 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-40"
-                        disabled={busy || (topicOf(p) !== '' && !TOPIC_RE.test(topicOf(p).trim())) || topicOf(p).trim() === (p.ntfyTopic ?? '')}
-                        onclick={() => saveTopic(p.id, topicOf(p))}
-                      >
-                        {t('Speichern')}
-                      </button>
-                    </div>
-                    <div class="mt-1 flex gap-2">
-                      <button type="button" class="min-h-11 text-[15px] font-semibold text-accent-text" onclick={() => (topicDraft[p.id] = randomTopic())}>
-                        {t('Zufälliges Thema')}
-                      </button>
-                      {#if p.ntfy}
-                        <button type="button" class="min-h-11 text-[15px] font-semibold text-danger" disabled={busy} onclick={() => saveTopic(p.id, '')}>
-                          {t('Entfernen')}
-                        </button>
-                      {/if}
-                    </div>
-                    {#if topicOf(p) !== '' && !TOPIC_RE.test(topicOf(p).trim())}
-                      <p class="text-[13px] text-danger">{t('Erlaubt sind Buchstaben, Ziffern, Minus und Unterstrich (höchstens 64 Zeichen).')}</p>
-                    {/if}
-                    <p class="mt-1 text-[13px] text-fg2">
-                      {t('In der ntfy-App den Server {url} verwenden und dieses Thema abonnieren. Wer das Thema kennt, kann die Nachrichten lesen: ein zufälliges ist sicherer als ein Name.', { url: info.ntfy.url })}
-                    </p>
-                    {#if !info.ntfy.buttons}
-                      <p class="mt-1 text-[13px] text-danger">
-                        {t('Ohne STUPS_PUBLIC_URL im Container kommen die Nachrichten ohne Link zur Karte und ohne Knöpfe.')}
-                      </p>
-                    {/if}
-                  {/if}
-                </div>
+              {#if own}
+                <p class="text-[13px] text-fg2">
+                  {t('Deine Geräte, Ruhezeit und den Rückblick am Sonntag findest du unter Einstellungen › Benachrichtigungen.')}
+                </p>
+                <button type="button" class="min-h-11 text-[15px] font-semibold text-accent-text" onclick={() => openSettings('notifications')}>{t('Benachrichtigungen öffnen')}</button>
+              {:else}
+                <PersonDelivery {p} {info} {run} {busy} canEdit={canEdit(p.id)} show={{ delivery: true }} />
               {/if}
 
-              {#if feat.haPush}
-              <div>
-                <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Push-Geräte (Companion App)')}</p>
-                {#if info.managed}
-                  {#each p.notifyServices as s (s)}
-                    {@const missing = info.services !== null && !info.services.includes(s)}
-                    <p class="flex min-h-9 items-center gap-3 text-[15px]">
-                      <span class="min-w-0 flex-1 truncate">{s.replace(/^mobile_app_/, '')}</span>
-                      {#if missing}<span class="text-[13px] text-danger">{t('gibt es nicht')}</span>{/if}
-                    </p>
-                  {:else}
-                    <p class="text-[15px] text-danger">{t('Kein Gerät in der Konfiguration eingetragen.')}</p>
-                  {/each}
-                {:else if !canEdit(p.id)}
-                  <p class="text-[15px] text-fg2">{t('Die Geräte wählt {name} selbst oder ein Administrator.', { name: p.displayName })}</p>
-                {:else}
-                  {#each [...new Set([...(info.services ?? []), ...p.notifyServices])].sort() as s (s)}
-                    {@const on = p.notifyServices.includes(s)}
-                    {@const missing = info.services !== null && !info.services.includes(s)}
-                    <label class="flex min-h-11 items-center gap-3 text-[15px]">
-                      <input
-                        type="checkbox"
-                        class="h-5 w-5 accent-[var(--accent)]"
-                        checked={on}
-                        disabled={busy}
-                        onchange={(e) => toggleService(p.id, p.notifyServices, s, e.currentTarget.checked)}
-                      />
-                      <span class="min-w-0 flex-1 truncate">{s.replace(/^mobile_app_/, '')}</span>
-                      {#if missing}<span class="text-[13px] text-danger">{t('gibt es nicht mehr')}</span>{/if}
-                    </label>
-                  {:else}
-                    <p class="text-[15px] text-fg2">
-                      {t('Home Assistant meldet keine Geräte. Die Companion App muss auf dem Handy angemeldet sein.')}
-                    </p>
-                  {/each}
-                {/if}
-              </div>
-              {/if}
 
               {#if feat.house && admin && house}
                 <HouseChannels person={p} {house} {entities} {run} {busy} />
               {/if}
 
-              {#if canEdit(p.id)}
-                <div>
-                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Ruhezeit für Stupse')}</p>
-                  <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
-                    <span>{t('Stupse in der Ruhezeit erst danach zustellen')}</span>
-                    <input
-                      type="checkbox"
-                      class="h-5 w-5 accent-[var(--accent)]"
-                      checked={!p.nudgeQuiet.off}
-                      disabled={busy}
-                      aria-label={t('Ruhezeit für Stupse von {name}', { name: p.displayName })}
-                      onchange={(e) => run(() => api.updatePerson(p.id, { quietOff: !e.currentTarget.checked }))}
-                    />
-                  </label>
-                  {#if !p.nudgeQuiet.off}
-                    <div class="mt-1 flex items-center gap-2 text-[15px]">
-                      <input
-                        type="time"
-                        class="min-h-11 rounded-xl bg-surface2 px-3"
-                        value={p.nudgeQuiet.start}
-                        aria-label={t('Beginn der Ruhezeit von {name}', { name: p.displayName })}
-                        onchange={(e) => e.currentTarget.value && run(() => api.updatePerson(p.id, { quietStart: e.currentTarget.value }))}
-                      />
-                      <span>{t('bis')}</span>
-                      <input
-                        type="time"
-                        class="min-h-11 rounded-xl bg-surface2 px-3"
-                        value={p.nudgeQuiet.end}
-                        aria-label={t('Ende der Ruhezeit von {name}', { name: p.displayName })}
-                        onchange={(e) => e.currentTarget.value && run(() => api.updatePerson(p.id, { quietEnd: e.currentTarget.value }))}
-                      />
-                    </div>
-                  {/if}
-                </div>
-              {/if}
 
-              {#if canEdit(p.id)}
-                <div>
-                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Zusammenfassung')}</p>
-                  <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
-                    <span>{t('Wöchentliche Zusammenfassung am Sonntag')}</span>
-                    <input
-                      type="checkbox"
-                      class="h-5 w-5 accent-[var(--accent)]"
-                      checked={p.weeklySummary}
-                      disabled={busy}
-                      aria-label={t('Wöchentliche Zusammenfassung von {name}', { name: p.displayName })}
-                      onchange={(e) => {
-                        // sofort lesen: `run` führt die Änderung erst später aus
-                        const on = e.currentTarget.checked;
-                        void run(() => api.updatePerson(p.id, { weeklySummary: on }));
-                      }}
-                    />
-                  </label>
-                  <p class="text-[13px] text-fg2">{t('Am Sonntagabend eine Nachricht, wie viel ihr diese Woche zusammen erledigt habt. Aus, bis du es einschaltest.')}</p>
-                </div>
+              {#if !own}
+                <PersonDelivery {p} {info} {run} {busy} canEdit={canEdit(p.id)} show={{ quiet: true, summary: true }} />
               {/if}
 
               {#if admin && p.isPerson}

@@ -35,6 +35,8 @@ export interface User {
   confirmers: string[];
   /** Fassung des Personenbilds (zählt bei jeder Änderung hoch, für langes Caching); null = kein Bild */
   avatarRev: number | null;
+  /** Woher das Bild kommt: Home Assistant oder selbst hochgeladen (null: keins) */
+  avatarSource: 'ha' | 'upload' | null;
   /** „Wenig Zeit" bis zu diesem Tag (YYYY-MM-DD, einschließlich): Rotationen der Wächter überspringen die Person */
   busyUntil: string | null;
 }

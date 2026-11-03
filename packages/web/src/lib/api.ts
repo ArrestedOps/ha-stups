@@ -37,6 +37,8 @@ export interface User {
   confirmers: string[];
   /** Fassung des Personenbilds (null = kein Bild, dann gilt die Initiale) */
   avatarRev: number | null;
+  /** Woher das Bild kommt (null: keins) */
+  avatarSource: 'ha' | 'upload' | null;
   /** „Wenig Zeit" bis zu diesem Tag (YYYY-MM-DD, einschließlich) */
   busyUntil: string | null;
 }

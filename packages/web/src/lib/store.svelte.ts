@@ -18,6 +18,7 @@ import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLan
 import { passkeysSupported } from './passkeys';
 import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
 import { swipeTarget } from './swipe';
+import type { SettingsPageId } from './settingsPages';
 import { migrateTab, visibleTabs, type Tab } from './tabs';
 import { applyCards, deltaIds } from './delta';
 import { startSync, type SyncInfo } from './sync';
@@ -30,7 +31,7 @@ export type Sheet =
   | { type: 'slot'; at: string }
   | { type: 'boards' }
   | { type: 'boardSettings' }
-  | { type: 'settings' }
+  | { type: 'settings'; page?: SettingsPageId }
   | { type: 'people' }
   | { type: 'watcher'; id: string | null; template?: string }
   | { type: 'nudge'; id: string }
@@ -515,6 +516,10 @@ export function hopCard(id: string): void {
 
 export function openSheet(s: Sheet): void {
   ui.sheet = s;
+}
+/** Öffnet die Einstellungen, auf Wunsch gleich eine Unterseite */
+export function openSettings(page?: SettingsPageId): void {
+  ui.sheet = { type: 'settings', ...(page ? { page } : {}) };
 }
 export function closeSheet(): void {
   ui.sheet = null;

@@ -5,7 +5,7 @@
   import { clock } from '../lib/nudge';
   import { emptyForm, formProblem, fromWatcher, noteText, previewSentence, RUN_TEXT, TEMPLATES, toInput, type WatcherForm, type WatcherTemplate } from '../lib/watchers';
   import { catClass } from '../lib/colors';
-  import { closeSheet, openSheet, personById, toast, ui } from '../lib/store.svelte';
+  import { closeSheet, openSettings, personById, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Group from './Group.svelte';
   import Row from './Row.svelte';
@@ -16,7 +16,7 @@
   let { id, template = undefined }: { id: string | null; template?: string } = $props();
 
   // Aus dem Reiter „Wächter" geht es dorthin zurück, sonst in die Einstellungen
-  const back = () => (ui.tab === 'home' ? closeSheet() : openSheet({ type: 'settings' }));
+  const back = () => (ui.tab === 'home' ? closeSheet() : openSettings('watchers'));
 
   const people = $derived(ui.people.filter((p) => p.isPerson));
   const personName = (pid: string) => personById(pid)?.displayName ?? '?';

@@ -33,6 +33,7 @@ export function createPeople(c: Ctx, late: unknown) {
     childScope: r.child_scope === 'assigned' ? 'assigned' : 'all',
     confirmDefault: r.confirm_default === 1,
     avatarRev: r.avatar_source ? (r.avatar_rev as number) : null,
+    avatarSource: r.avatar_source === 'ha' || r.avatar_source === 'upload' ? r.avatar_source : null,
     busyUntil: typeof r.busy_until === 'string' && r.busy_until !== '' ? r.busy_until : null,
     confirmers: all(
       'select c.user_id from child_confirmers c join users u on u.id = c.user_id and u.is_person = 1 where c.child_id = ? order by c.rowid',

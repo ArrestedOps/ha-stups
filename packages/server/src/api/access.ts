@@ -112,6 +112,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
       person = store.setNudgeQuiet(person.id, { start: b.quietStart, end: b.quietEnd, off: b.quietOff });
     }
     if (b.weeklySummary !== undefined) person = store.setWeeklySummary(person.id, b.weeklySummary);
+    if (b.busyUntil !== undefined) person = store.setBusyUntil(person.id, b.busyUntil);
     // Die Rolle „Kind" legen nur Administratoren fest (auch ein Kind ändert seine Regeln nicht selbst)
     if (b.isChild !== undefined || b.childScope !== undefined || b.confirmDefault !== undefined || b.confirmers !== undefined) {
       requireAdmin(req);

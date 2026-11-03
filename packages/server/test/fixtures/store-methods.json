@@ -106,6 +106,7 @@
   "setAccessMode",
   "setArchived",
   "setAvatar",
+  "setBusyUntil",
   "setCardOrigin",
   "setChild",
   "setHouseTts",

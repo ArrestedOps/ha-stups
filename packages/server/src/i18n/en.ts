@@ -264,4 +264,7 @@ export const en: Catalog = {
   'weil du zu Hause bist': 'because you are home',
   'weil du als Erste oder Erster heimgekommen bist': 'because you were the first to get home',
   'weil die Karte fest dir zugewiesen ist': 'because the card is assigned to you',
+  'Das Datum muss die Form JJJJ-MM-TT haben': 'The date must have the form YYYY-MM-DD',
+  'Das Datum liegt in der Vergangenheit': 'The date is in the past',
+  '„Wenig Zeit" lässt sich höchstens 90 Tage im Voraus eintragen': '“Little time” can be set at most 90 days ahead',
 };

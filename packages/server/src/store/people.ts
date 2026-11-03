@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { NotFoundError, ValidationError } from '../errors.js';
+import { lastBusyDay, localDateKey, validDateKey } from '../busy.js';
 import { DEFAULT_QUIET, type QuietWindow } from '../quiet.js';
 import { type User, type AccessMode, type Settings, DEFAULT_DUE_TIME, type Row } from './types.js';
 import { PERSON_COLORS, NTFY_TOPIC_RE } from './constants.js';
@@ -11,7 +12,7 @@ import { t } from '../i18n/index.js';
 export function createPeople(c: Ctx, late: unknown) {
   // Erst hier auf den vollen Typ gebracht: stünde Internals schon im Kopf, hinge sein Typ von sich selbst ab
   const s = late as Internals;
-  const { iso, one, all, run, tx } = c;
+  const { iso, one, all, run, tx, now, timeZone } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
   const { closeNudgesOfUser } = lazy(s, ['closeNudgesOfUser'] as const);
 
@@ -237,6 +238,19 @@ export function createPeople(c: Ctx, late: unknown) {
   }
 
   /** Eigener Farbton der Oberfläche: eine ganze Zahl von 0 bis 359, null = das Orange der App */
+  /** „Wenig Zeit" bis zu einem Tag (YYYY-MM-DD, einschließlich; heute bis 90 Tage); null nimmt es zurück */
+  function setBusyUntil(id: string, value: unknown): User {
+    userRow(id);
+    if (value !== null) {
+      const tz = timeZone();
+      if (typeof value !== 'string' || !validDateKey(value)) throw new ValidationError(t('Das Datum muss die Form JJJJ-MM-TT haben'));
+      if (value < localDateKey(now().getTime(), tz)) throw new ValidationError(t('Das Datum liegt in der Vergangenheit'));
+      if (value > lastBusyDay(now().getTime(), tz)) throw new ValidationError(t('„Wenig Zeit" lässt sich höchstens 90 Tage im Voraus eintragen'));
+    }
+    run('update users set busy_until = ? where id = ?', value, id);
+    return toUser(userRow(id));
+  }
+
   /** Sonntags-Zusammenfassung als Push: je Person ein- oder ausgeschaltet (aus, bis jemand sie einschaltet) */
   function setWeeklySummary(id: string, on: unknown): User {
     if (typeof on !== 'boolean') throw new ValidationError(t('„Wöchentliche Zusammenfassung" muss wahr oder falsch sein'));
@@ -446,6 +460,7 @@ export function createPeople(c: Ctx, late: unknown) {
     setLanguage,
     setAccentHue,
     setWeeklySummary,
+    setBusyUntil,
     setChild,
     avatarSource,
     setAvatar,

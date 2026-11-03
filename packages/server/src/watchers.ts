@@ -1,4 +1,5 @@
 import type { HaState } from './ha.js';
+import { isBusy } from './busy.js';
 import { isRunning, phaseOf, type HomeItem, type HomeState, type PhaseMemory } from './home.js';
 import { personOfEntity, presenceOf, type PresenceMap } from './presence.js';
 import { fromLocal, toLocal } from './recurrence.js';
@@ -171,7 +172,13 @@ export function createWatchers(deps: WatcherDeps) {
     return undefined;
   }
 
-  function decide(rule: AssignRule, people: User[], home: Set<string>, last: string | null): Decision {
+  /** Wer `busy` ist („wenig Zeit"), wird bei Rotationen übersprungen; sind alle im Kreis beschäftigt, gilt die normale Reihenfolge */
+  function rotate(pool: string[], last: string | null, busy: Set<string>, only?: Set<string>): string | undefined {
+    const free = pool.filter((id) => !busy.has(id));
+    return nextOf(pool, last, only ? new Set([...only].filter((id) => !busy.has(id))) : new Set(free)) ?? nextOf(pool, last, only);
+  }
+
+  function decide(rule: AssignRule, people: User[], home: Set<string>, last: string | null, busy: Set<string> = new Set()): Decision {
     const eligible = new Set(people.map((p) => p.id));
     const order = rule.personIds.length > 0 ? rule.personIds : people.map((p) => p.id);
     const pool = order.filter((id) => eligible.has(id));
@@ -181,7 +188,7 @@ export function createWatchers(deps: WatcherDeps) {
       if (rule.fallback === 'fixed') {
         return { ids: rule.fallbackPersonId && eligible.has(rule.fallbackPersonId) ? [rule.fallbackPersonId] : [], waiting: false };
       }
-      const next = nextOf(pool, last);
+      const next = rotate(pool, last, busy);
       return next ? { ids: [next], waiting: false, last: next } : { ids: [], waiting: false };
     };
     const present = new Set(pool.filter((id) => home.has(id)));
@@ -192,7 +199,7 @@ export function createWatchers(deps: WatcherDeps) {
       case 'fixed':
         return { ids: pool, waiting: false };
       case 'rotation': {
-        const next = nextOf(pool, last);
+        const next = rotate(pool, last, busy);
         return next ? { ids: [next], waiting: false, last: next } : { ids: [], waiting: false };
       }
       case 'all_present':
@@ -200,7 +207,7 @@ export function createWatchers(deps: WatcherDeps) {
       case 'rotation_present':
       case 'first_home': {
         if (present.size > 0) {
-          const next = nextOf(pool, last, present);
+          const next = rotate(pool, last, busy, present);
           return next ? { ids: [next], waiting: false, last: next } : { ids: [], waiting: false };
         }
         return rule.mode === 'first_home' ? { ids: [], waiting: true } : fallback();
@@ -302,7 +309,8 @@ export function createWatchers(deps: WatcherDeps) {
     const people = store.people();
     const needsPresence = w.assign.mode === 'rotation_present' || w.assign.mode === 'all_present' || w.assign.mode === 'first_home';
     const home = needsPresence ? (await presence()).home : new Set<string>();
-    const decision = decide(w.assign, people, home, data.getState(w.id).lastPerson);
+    const busy = new Set(people.filter((p) => isBusy(p.busyUntil, nowMs, timeZone())).map((p) => p.id));
+    const decision = decide(w.assign, people, home, data.getState(w.id).lastPerson, busy);
 
     let card: Card;
     try {

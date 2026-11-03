@@ -61,6 +61,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     setNudgeQuiet: s.setNudgeQuiet,
     syncPeople: s.syncPeople,
     avatarSource: s.avatarSource,
+    setBusyUntil: s.setBusyUntil,
     setAvatar: s.setAvatar,
     clearAvatar: s.clearAvatar,
     resolveUser: s.resolveUser,

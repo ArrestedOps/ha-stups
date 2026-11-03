@@ -140,3 +140,13 @@ describe('layoutDay', () => {
     expect(p.find((x) => x.card.id === 'a')).toMatchObject({ cols: 2 });
   });
 });
+
+describe('parseCalendarView', () => {
+  it('kennt Tag, Monat und Liste; alles andere ist die Woche', async () => {
+    const { parseCalendarView } = await import('../src/lib/calendar');
+    expect(parseCalendarView('day')).toBe('day');
+    expect(parseCalendarView('month')).toBe('month');
+    expect(parseCalendarView('list')).toBe('list');
+    for (const bad of [null, undefined, '', 'week', 'agenda', 'x']) expect(parseCalendarView(bad as string | null), String(bad)).toBe('week');
+  });
+});

@@ -15,19 +15,23 @@
     step,
     visibleDays,
     weekdayShort,
+    parseCalendarView,
     type CalMode,
+    type CalView,
   } from '../lib/calendar';
   import { boardColorKey, dayKeyOf, filterSchedule, isFiltered, type ScheduleCard } from '../lib/schedule';
   import { openCardAnywhere, openSheet, ui } from '../lib/store.svelte';
+  import AgendaView from './AgendaView.svelte';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
   import ScheduleFilterBar from './ScheduleFilterBar.svelte';
 
   const HOUR_PX = 56;
-  const MODES: { id: CalMode; label: string }[] = $derived([
+  const MODES: { id: CalView; label: string }[] = $derived([
     { id: 'day', label: t('Tag') },
     { id: 'week', label: t('Woche') },
     { id: 'month', label: t('Monat') },
+    { id: 'list', label: t('Liste') },
   ]);
 
   const remembered = (() => {
@@ -37,7 +41,11 @@
       return null;
     }
   })();
-  let mode = $state<CalMode>(remembered === 'day' || remembered === 'month' ? remembered : 'week');
+  const startView = parseCalendarView(remembered);
+  let view = $state<CalView>(startView);
+  // Die Rasteransichten (Tag, Woche, Monat) rechnen mit einem Modus; in der Liste gilt der zuletzt gewählte (für die Kopfzeile unten)
+  let gridMode = $state<CalMode>(startView === 'list' ? 'week' : startView);
+  const mode = $derived<CalMode>(view === 'list' ? gridMode : view);
   const todayKey = () => dayKeyOf(Date.now());
   let day = $state(todayKey());
   let filterOpen = $state(false);
@@ -47,8 +55,9 @@
   let failed = $state(false);
   let request = 0;
 
-  function setMode(m: CalMode) {
-    mode = m;
+  function setMode(m: CalView) {
+    view = m;
+    if (m !== 'list') gridMode = m;
     try {
       localStorage.setItem('stups.calmode', m);
     } catch {
@@ -58,6 +67,7 @@
 
   $effect(() => {
     void ui.rev;
+    if (view === 'list') return; // die Liste lädt selbst
     const { from, to } = rangeFor(mode, day);
     const showDone = ui.sf.showDone;
     const mine = ++request;
@@ -131,18 +141,19 @@
     <div class="flex items-center justify-between gap-2">
       <h1 class="font-display text-[34px] leading-tight font-bold tracking-tight">{t('Kalender')}</h1>
       <div class="flex items-center gap-2">
-      <button
+      {#if view !== 'list'}<button
         class="relative flex h-11 items-center gap-1.5 rounded-[14px] border border-line bg-surface px-3 text-[15px] {isFiltered(ui.sf) ? 'text-accent-text' : 'text-fg2'}"
         aria-pressed={filterOpen}
         onclick={() => (filterOpen = !filterOpen)}
       >
         <Icon name="user" size={18} />Filter{#if isFiltered(ui.sf)}<span class="h-2 w-2 rounded-full bg-accent"></span>{/if}
-      </button>
+      </button>{/if}
       </div>
     </div>
 
-    {#if filterOpen}<div class="mt-2"><ScheduleFilterBar cards={loaded} /></div>{/if}
+    {#if filterOpen && view !== 'list'}<div class="mt-2"><ScheduleFilterBar cards={loaded} /></div>{/if}
 
+    {#if view !== 'list'}
     <div class="mt-2 flex items-center gap-1.5">
       <button class="flex h-10 w-10 items-center justify-center rounded-xl text-fg2" aria-label={t('Zurück')} onclick={() => (day = step(mode, day, -1))}>
         <Icon name="chevron-left" size={22} stroke={2.6} />
@@ -153,12 +164,13 @@
       </button>
       <button class="min-h-9 rounded-xl border border-line px-3 text-[14px] font-semibold" onclick={() => (day = todayKey())}>{t('Heute')}</button>
     </div>
+    {/if}
 
-    <div class="mt-2 grid grid-cols-3 gap-1 rounded-xl bg-surface2 p-1" role="group" aria-label={t('Ansicht')}>
+    <div class="mt-2 grid grid-cols-4 gap-1 rounded-xl bg-surface2 p-1" role="group" aria-label={t('Ansicht')}>
       {#each MODES as m (m.id)}
         <button
-          class="min-h-9 rounded-lg text-[15px] {mode === m.id ? 'bg-surface font-semibold shadow-sm' : 'text-fg2'}"
-          aria-pressed={mode === m.id}
+          class="min-h-9 rounded-lg text-[15px] {view === m.id ? 'bg-surface font-semibold shadow-sm' : 'text-fg2'}"
+          aria-pressed={view === m.id}
           onclick={() => setMode(m.id)}
         >
           {m.label}
@@ -167,7 +179,9 @@
     </div>
   </header>
 
-  {#if failed}
+  {#if view === 'list'}
+    <AgendaView />
+  {:else if failed}
     <p class="py-10 text-center text-fg2">{t('Der Kalender konnte nicht geladen werden.')}</p>
   {:else if mode === 'month'}
     <div class="-mr-4 mt-3 min-h-0 flex-1 overflow-y-auto pr-4 pb-tabbar" data-testid="calendar-month">

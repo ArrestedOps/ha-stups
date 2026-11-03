@@ -3,12 +3,10 @@
   import { api } from '../lib/api';
   import { clock } from '../lib/nudge';
   import { AGENDA_STEP_DAYS, agendaHorizonAfterLoad, boardColorKey, filterSchedule, groupByDay, type ScheduleCard } from '../lib/schedule';
-  import { completeCard, openCardAnywhere, personById, setAgendaMode, ui } from '../lib/store.svelte';
+  import { completeCard, openCardAnywhere, personById, ui } from '../lib/store.svelte';
   import { urgency, urgencyColor } from '../lib/urgency';
   import Avatar from './Avatar.svelte';
-  import FairnessView from './FairnessView.svelte';
   import Icon from './Icon.svelte';
-  import TopBar from './TopBar.svelte';
   import ScheduleFilterBar from './ScheduleFilterBar.svelte';
 
   const DAY = 86_400_000;
@@ -52,33 +50,11 @@
   const horizonLabel = $derived(new Date(Date.now() + days * DAY).toLocaleDateString(numberLocale(), { day: 'numeric', month: 'long', year: 'numeric' }));
 </script>
 
-<main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
-  <header class="shrink-0">
-    <TopBar />
-    <h1 class="font-display text-[34px] leading-tight font-bold tracking-tight">Agenda</h1>
-    <p class="mb-3 text-[15px] text-fg2">{ui.agendaMode === 'fairness' && !ui.isChild ? t('Wer erledigt wie viel? Ohne Rangliste.') : t('Alle Karten mit Termin, nach Tagen')}</p>
-    <!-- Ein Kind sieht die Fairness-Ansicht nicht -->
-    {#if !ui.isChild}
-    <div class="mb-3 flex gap-2" role="group" aria-label={t('Ansicht der Agenda')}>
-      {#each [['dates', t('Termine')], ['fairness', t('Fairness')]] as [value, label] (value)}
-        <button
-          type="button"
-          class="min-h-9 flex-1 rounded-xl border text-[15px] {ui.agendaMode === value ? 'border-accent bg-surface2 font-semibold' : 'border-line text-fg2'}"
-          aria-pressed={ui.agendaMode === value}
-          onclick={() => setAgendaMode(value as 'dates' | 'fairness')}
-        >
-          {label}
-        </button>
-      {/each}
-    </div>
-    {/if}
-    {#if ui.agendaMode !== 'fairness' || ui.isChild}<ScheduleFilterBar cards={loaded} />{/if}
-  </header>
-
+<!-- Die Liste im Kalender: alle Karten mit Termin nach Tagen (früher der Reiter Agenda) -->
+<div class="flex min-h-0 flex-1 flex-col">
+  <div class="mt-2 shrink-0"><ScheduleFilterBar cards={loaded} /></div>
   <div class="-mr-4 mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-4 pb-tabbar" data-testid="agenda">
-    {#if ui.agendaMode === 'fairness' && !ui.isChild}
-      <FairnessView />
-    {:else if loading}
+    {#if loading}
       <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
     {:else if failed}
       <p class="py-10 text-center text-fg2">{t('Die Agenda konnte nicht geladen werden.')}</p>
@@ -140,4 +116,4 @@
       </button>
     {/if}
   </div>
-</main>
+</div>

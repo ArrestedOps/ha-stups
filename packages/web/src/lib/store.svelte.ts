@@ -77,8 +77,6 @@ export const ui = $state({
   hop: null as string | null,
   /** Ansicht unten in der Leiste: Heute, Boards, Kalender oder Zuhause */
   tab: 'today' as Tab,
-  /** Agenda: die Liste der Termine oder die Fairness-Ansicht */
-  agendaMode: 'dates' as 'dates' | 'fairness',
   /** Filter für Agenda und Kalender (Personen, Boards, Erledigtes) */
   sf: { ...DEFAULT_FILTER } as ScheduleFilter,
   /** zählt bei jedem Nachladen hoch, damit offene Detailansichten und die Agenda sich aktualisieren */
@@ -473,7 +471,6 @@ function restoreView(): void {
   // Alte Namen (agenda, watchers) führen zu den neuen; ein Reiter, den es hier nicht gibt (Kind, ohne Wächter), heißt Heute
   const tab = migrateTab(memo.get('stups.tab'));
   ui.tab = visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }).includes(tab) ? tab : 'today';
-  if (memo.get('stups.agendaMode') === 'fairness' && !ui.isChild) ui.agendaMode = 'fairness';
   try {
     const raw = JSON.parse(memo.get('stups.schedule') ?? 'null') as Partial<ScheduleFilter> | null;
     if (!raw) return;
@@ -494,12 +491,6 @@ export function selectTab(tab: Tab): void {
   ui.tab = tab;
   ui.sheet = null;
   memo.set('stups.tab', tab);
-}
-
-/** Wechselt in der Agenda zwischen den Terminen und der Fairness-Ansicht und merkt es sich auf diesem Gerät */
-export function setAgendaMode(mode: 'dates' | 'fairness'): void {
-  ui.agendaMode = mode;
-  memo.set('stups.agendaMode', mode);
 }
 
 /** Ändert den Filter von Agenda und Kalender und merkt ihn sich auf diesem Gerät */

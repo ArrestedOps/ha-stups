@@ -4,6 +4,14 @@ import { dayKeyOf, type ScheduleCard } from './schedule';
 
 export type CalMode = 'day' | 'week' | 'month';
 
+/** Die Ansichten des Kalenders: Tag, Woche, Monat und die Liste (die frühere Agenda: alle Karten mit Termin nach Tagen) */
+export type CalView = CalMode | 'list';
+
+/** Die gemerkte Ansicht von diesem Gerät; Unbekanntes oder nichts ergibt die Woche */
+export function parseCalendarView(raw: string | null | undefined): CalView {
+  return raw === 'day' || raw === 'month' || raw === 'list' ? raw : 'week';
+}
+
 const parts = (key: string): [number, number, number] => {
   const [y, m, d] = key.split('-').map(Number);
   return [y!, m!, d!];

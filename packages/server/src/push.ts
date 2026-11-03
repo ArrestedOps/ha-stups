@@ -10,7 +10,19 @@ export interface PushMessage {
   level?: 'time-sensitive' | 'active' | 'passive';
   /** Knöpfe in der Nachricht; `id` kommt unverändert als Aktion zurück (siehe Notifier.handleAction) */
   actions?: { id: string; title: string }[];
+  /**
+   * Art der Nachricht, nur für den Haus-Weg (Ansage, Lampe): ohne Angabe erreicht sie das Haus nie
+   * (Tageszusammenfassung, Rückmeldungen, Test).
+   */
+  kind?: PushKind;
+  /** Kurzer Satz zum Vorlesen, in der Sprache des Empfängers (nur mit `kind`) */
+  spoken?: string;
+  /** Der Stups, zu dem die Nachricht gehört (nur bei `kind: 'nudge'`): damit die Warteschlange prüfen kann, ob er noch offen ist */
+  nudgeId?: string;
 }
+
+/** Stups, Fälligkeit (auch Vorab-Erinnerung und Nachhaken) oder Karte eines Wächters */
+export type PushKind = 'nudge' | 'due' | 'watcher';
 
 export interface PushGateway {
   /** Gibt es für diese Person überhaupt ein Gerät, an das sich senden lässt? */

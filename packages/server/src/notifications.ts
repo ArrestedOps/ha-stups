@@ -1,4 +1,4 @@
-import { t, withLanguage, type Lang } from './i18n/index.js';
+import { t, tn, withLanguage, type Lang } from './i18n/index.js';
 import type { Options } from './config.js';
 import type { NotificationAction } from './ha.js';
 import type { PushGateway, PushMessage } from './push.js';
@@ -63,7 +63,20 @@ export function createNotifier(deps: NotifierDeps) {
 
   const doneAction = (cardId: string, dueAt: string) => ({ id: `${aPrefix}${ACTION_PREFIX}:${cardId}:${dueAt}`, title: t('Erledigt') });
 
-  function cardPayload(card: OpenDueCard, body: string): PushMessage {
+  /** Text zum Vorlesen: ohne Emoji und Sonderzeichen, Leerzeichen zusammengefasst, höchstens `max` Zeichen */
+  const speakable = (text: string, max = 80): string => {
+    const clean = text.replace(/[^\p{L}\p{N}\s.,:;!?'’"„“-]/gu, ' ').replace(/\s+/g, ' ').trim();
+    return clean.length > max ? `${clean.slice(0, max).trim()}…` : clean;
+  };
+  const nameOf = (userId: string | null): string => (userId ? (store.userById(userId)?.displayName ?? t('Jemand')) : t('Jemand'));
+  /** „30 Minuten", „1 Stunde", „2 Tage" statt „30 Min." (eine Sprachausgabe liest Abkürzungen schlecht) */
+  const spokenLead = (min: number): string => {
+    if (min % 1440 === 0) return tn('{n} Tag', '{n} Tage', min / 1440);
+    if (min % 60 === 0) return tn('{n} Stunde', '{n} Stunden', min / 60);
+    return tn('{n} Minute', '{n} Minuten', min);
+  };
+
+  function cardPayload(card: OpenDueCard, body: string, spoken: string): PushMessage {
     return {
       title: card.title,
       body,
@@ -72,6 +85,8 @@ export function createNotifier(deps: NotifierDeps) {
       open: { cardId: card.id },
       level: 'time-sensitive',
       actions: [doneAction(card.id, card.dueAt)],
+      kind: 'due',
+      spoken,
     };
   }
 
@@ -92,6 +107,8 @@ export function createNotifier(deps: NotifierDeps) {
           group: GROUP,
           open: { cardId: card.id },
           level: 'time-sensitive',
+          kind: 'watcher',
+          spoken: t('{name}, neue Aufgabe: {title}.', { name: nameOf(id), title: speakable(card.title) }),
         };
         // „Erledigt" gilt für einen bestimmten Termin; ohne Termin bleibt es beim Öffnen der Karte
         if (card.dueAt) m.actions = [doneAction(card.id, card.dueAt)];
@@ -118,6 +135,8 @@ export function createNotifier(deps: NotifierDeps) {
           group: GROUP,
           open: { cardId: card.id },
           level: 'time-sensitive',
+          kind: 'watcher',
+          spoken: t('{name}, noch offen: {title}.', { name: nameOf(id), title: speakable(card.title) }),
         };
         if (card.dueAt) m.actions = [doneAction(card.id, card.dueAt)];
         return m;
@@ -211,7 +230,13 @@ export function createNotifier(deps: NotifierDeps) {
           const key = (kind: NotificationKind, k: string): NotificationKey => ({ cardId: card.id, userId, kind, key: k });
 
           if (card.remindBeforeMin && nowMs >= dueMs - card.remindBeforeMin * MINUTE && nowMs < dueMs) {
-            const payload = inLang(userId, () => cardPayload(card, t('In {lead} fällig: {due} · {board}', { lead: formatLead(card.remindBeforeMin!), due, board: card.boardName })));
+            const payload = inLang(userId, () =>
+              cardPayload(
+                card,
+                t('In {lead} fällig: {due} · {board}', { lead: formatLead(card.remindBeforeMin!), due, board: card.boardName }),
+                t('{name}, {title} ist in {lead} fällig.', { name: nameOf(userId), title: speakable(card.title), lead: spokenLead(card.remindBeforeMin!) }),
+              ),
+            );
             if (await deliver(key('reminder', card.dueAt), payload)) sent += 1;
           }
 
@@ -222,7 +247,13 @@ export function createNotifier(deps: NotifierDeps) {
                 log.info(`Push (due) „${card.title}" übersprungen: Termin liegt mehr als 12 Stunden zurück`);
               }
             } else {
-              const payload = inLang(userId, () => cardPayload(card, `${t('Fällig: {due} · {board}', { due, board: card.boardName })}${late > LATE_NOTE_MS ? ` ${t('(verspätet)')}` : ''}`));
+              const payload = inLang(userId, () =>
+                cardPayload(
+                  card,
+                  `${t('Fällig: {due} · {board}', { due, board: card.boardName })}${late > LATE_NOTE_MS ? ` ${t('(verspätet)')}` : ''}`,
+                  t('{name}, {title} ist fällig.', { name: nameOf(userId), title: speakable(card.title) }),
+                ),
+              );
               if (await deliver(key('due', card.dueAt), payload)) sent += 1;
             }
           }
@@ -232,7 +263,13 @@ export function createNotifier(deps: NotifierDeps) {
             dayDiff(dueMs, nowMs, tz) < 0 &&
             minutesOfDay(nowMs, tz) >= parseHm(options.overdueNagTime)
           ) {
-            const payload = inLang(userId, () => cardPayload(card, t('Überfällig seit {due} · {board}', { due, board: card.boardName })));
+            const payload = inLang(userId, () =>
+              cardPayload(
+                card,
+                t('Überfällig seit {due} · {board}', { due, board: card.boardName }),
+                t('{name}, {title} ist überfällig.', { name: nameOf(userId), title: speakable(card.title) }),
+              ),
+            );
             if (await deliver(key('nag', localDateKey(nowMs, tz)), payload)) sent += 1;
           }
         }
@@ -280,8 +317,6 @@ export function createNotifier(deps: NotifierDeps) {
   const templateText = (tpl: NonNullable<DueNudge['template']>): string =>
     ({ think: t('Denkst du dran?'), today: t('Heute noch?'), help: t('Brauch deine Hilfe'), thanks: t('Danke dir! ❤️') })[tpl];
 
-  const nameOf = (userId: string | null): string => (userId ? (store.userById(userId)?.displayName ?? t('Jemand')) : t('Jemand'));
-
   function nudgePayload(n: DueNudge): PushMessage {
     const actions = [
       { id: `${aPrefix}${NUDGE_PREFIX}DONE:${n.id}`, title: t('Erledigt') },
@@ -297,6 +332,14 @@ export function createNotifier(deps: NotifierDeps) {
       open: { cardId: n.cardId },
       // Keine Stufe gesetzt, also normal (nicht „time-sensitive"): ein Stups soll freundlich sein und nicht durch den Fokus brechen
       actions,
+      kind: 'nudge',
+      nudgeId: n.id,
+      spoken: t('{to}, {from} stupst dich: {title}. {text}', {
+        to: nameOf(n.toId),
+        from: speakable(n.fromName, 40),
+        title: speakable(n.cardTitle),
+        text: speakable(n.template ? templateText(n.template) : n.text, 120),
+      }),
     };
   }
 

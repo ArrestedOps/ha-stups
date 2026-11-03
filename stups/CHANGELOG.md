@@ -1,5 +1,21 @@
 # Änderungen
 
+## 1.18.2
+
+*English first, German version below.*
+
+This version is the beta app's 1.18.2-beta.1.
+
+- **Found: hide suggestions.** Every suggestion (washing machine, waste calendar, battery …) now has a **Hide** button. Whatever you do not have, Stups never suggests again, not even after a restart. Under **Hidden (n)** it is listed with **Show again**, in case you need it after all. It applies to all administrators; the next suggestion of the same kind moves up
+- Database: migration 21 (a small table for the hidden ones, with a backup beforehand as always)
+
+**Deutsch**
+
+Diese Version ist die 1.18.2-beta.1 der Beta-App.
+
+- **Gefunden: Treffer ausblenden.** Bei jedem Treffer (Waschmaschine, Abfallkalender, Batterie …) gibt es **Ausblenden**. Was du nicht hast, schlägt Stups nie wieder vor, auch nicht nach einem Neustart. Unter **Ausgeblendet (n)** steht es mit **Wieder anzeigen**, falls du es doch brauchst. Gilt für alle Administratoren; der nächste Treffer derselben Art rückt nach
+- Datenbank: Migration 21 (eine kleine Tabelle für das Ausgeblendete, vorher wie immer eine Sicherung)
+
 ## 1.18.1
 
 *English first, German version below.*

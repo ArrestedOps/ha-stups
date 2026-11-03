@@ -1,5 +1,39 @@
 # Änderungen
 
+## 1.15.0
+
+*English first, German version below.*
+
+This version combines everything that ran in the beta app as 1.13.1, 1.14.0 and 1.15.0.
+
+- **Stups is available in English.** If your device (iPhone, browser) reports English, Stups shows the interface in English: board, cards, agenda, calendar, watchers, settings, messages. **A German device keeps seeing German, nothing changes for it.** Settings › Language: "Automatic", "Deutsch" or "English"; it applies to you on all your devices and takes effect at once
+- **Quick entry understands English:** `Take out trash tomorrow 7pm @Ben #Home every week !!`, also `in 3 days`, `next Monday`, `Dec 1`, `at 18:30`, `every 2 weeks`, `important`. Times, dates and weekdays follow the language
+- **Push messages, the daily summary, nudges and error messages arrive in the language of the person.** The server remembers the language your device last reported (or your choice in Settings). **Anyone who has not reported a language yet keeps getting German push messages** until the app has been opened once. Nudge templates arrive in the recipient's language, your own texts stay as written
+- A new board gets its columns ("Open", "Planned", "In progress", "Done", or the German names) in the language of the person; existing boards and names you chose stay. Watcher run notes appear in the language of the interface, and the app options in Home Assistant are available in English. The names of the Home Assistant sensors stay German for now
+- **Your own colour.** Settings › Colour: a colour wheel on which you tap or drag your favourite hue. Buttons, the active tab, the plus button and coloured text follow at once. It applies to you on all your devices, everyone picks their own; "Orange (default)" restores the original look. Light and dark are calculated separately, and the text on buttons stays readable for every hue. The urgency bars on cards (red, orange, yellow) stay as they are
+- **The plus button always creates an open card**, even when "Done" or "In progress" is showing; if you pick a date after today, the card goes to "Planned". On the desktop there is only the one orange plus button instead of one per column, as on the phone
+- **Settings gear.** A subtle gear without a frame at the top right of every tab (Boards, Agenda, Calendar, Watchers) opens the settings; the way through the board name stays
+- **Fixed:** ticking two boxes quickly under "Carry over to the next card" could lose the first one when the server was slow. They are now saved in order and the display follows your tap at once
+- **Faster:** "People & access" opens at once in the standalone container; without Home Assistant it used to wait 2 to 3 seconds for a Home Assistant that does not exist
+- **Documentation:** README, app documentation and Docker guide are now in English (the German versions stay as `*.de.md`), with English screenshots and a short demo GIF
+- Database: two new columns for the language and the hue of the person (migrations 14 and 15, with a backup beforehand as always)
+
+**Deutsch**
+
+Diese Version fasst die Versionen 1.13.1, 1.14.0 und 1.15.0 zusammen, die zuvor in der Beta-App liefen.
+
+- **Stups gibt es jetzt auf Englisch.** Meldet dein Gerät (iPhone, Browser) Englisch, zeigt Stups die Oberfläche auf Englisch: Board, Karten, Agenda, Kalender, Wächter, Einstellungen, Hinweise. **Ein deutsches Gerät sieht weiter Deutsch, es ändert sich nichts.** Einstellungen › Sprache: „Automatisch", „Deutsch" oder „English", gilt für dich auf allen Geräten, der Wechsel wirkt sofort
+- Die **Schnell-Eingabe** versteht Englisch: `Take out trash tomorrow 7pm @Ben #Home every week !!`, auch `in 3 days`, `next Monday`, `Dec 1`, `at 18:30`, `every 2 weeks`, `important`. Zeiten, Datum und Wochentage folgen der Sprache
+- **Push-Nachrichten, Tageszusammenfassung, Stupse und Fehlermeldungen** kommen in der Sprache der Person. Der Server merkt sich die Sprache, die dein Gerät zuletzt gemeldet hat (oder deine Wahl in den Einstellungen). **Wer noch keine Sprache gemeldet hat, bekommt Push weiter auf Deutsch**, bis die App einmal geöffnet wurde. Stups-Vorlagen erscheinen beim Empfänger in dessen Sprache, eigene Texte bleiben, wie sie geschrieben wurden
+- Ein neues Board bekommt seine Spalten („Open", „Planned", „In progress", „Done" bzw. die deutschen Namen) in der Sprache der Person; bestehende Boards und Namen, die du vergeben hast, bleiben. Die Notizen der Wächter-Läufe erscheinen in der Sprache der Oberfläche, die Optionen der App in Home Assistant gibt es auch auf Englisch. Die Namen der Home-Assistant-Sensoren bleiben vorerst deutsch
+- **Eigene Farbe.** Einstellungen › Farbe: ein Farbkreis, auf dem du deinen Lieblingsfarbton antippst oder ziehst. Knöpfe, aktiver Reiter, Plus-Knopf und farbige Schrift folgen sofort. Die Farbe gilt für dich auf allen Geräten, jede Person wählt ihre eigene; „Orange (Standard)" stellt das bisherige Aussehen wieder her. Hell und Dunkel werden einzeln berechnet, die Schrift auf den Knöpfen bleibt bei jedem Farbton gut lesbar. Die Dringlichkeitsbalken an den Karten bleiben, wie sie sind
+- **Der Plus-Knopf legt immer in „Offen" an**, auch wenn gerade „Erledigt" oder „In Arbeit" geöffnet ist; wählst du einen Termin nach heute, landet die Karte in „Geplant". Am Desktop gibt es nur noch den einen orangen Plus-Knopf statt eines Knopfes je Spalte, wie auf dem Handy
+- **Zahnrad für die Einstellungen.** Oben rechts in der Kopfzeile jedes Reiters (Boards, Agenda, Kalender, Wächter) sitzt ein dezentes Zahnrad ohne Rahmen; der Weg über den Board-Namen bleibt
+- **Fehler behoben:** Wer unter „Für die nächste Karte übernehmen" zwei Häkchen schnell hintereinander setzte, konnte das erste verlieren, wenn der Server langsam antwortete. Die Häkchen werden jetzt der Reihe nach gespeichert, die Anzeige folgt sofort deinem Tipp
+- **Schneller:** „Personen & Zugriff" öffnet sich im eigenen Container sofort; ohne Home Assistant wartete es 2 bis 3 Sekunden auf einen Home Assistant, den es nicht gibt
+- **Dokumentation:** README, Anleitung der App und Docker-Anleitung gibt es jetzt auf Englisch (die deutschen Fassungen bleiben als `*.de.md`), mit englischen Bildern und einem kurzen Demo-GIF
+- Datenbank: zwei neue Spalten für Sprache und Farbton der Person (Migration 14 und 15, vorher wie immer eine Sicherung)
+
 ## 1.13.0
 
 Diese Version fasst die Versionen 1.10.0 bis 1.13.0 zusammen, die zuvor in der Beta-App liefen.

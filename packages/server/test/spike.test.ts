@@ -71,6 +71,7 @@ describe('spike routes', () => {
       lastError: null,
       eventsReceived: 0,
       lastEventAt: null,
+      lostSince: null,
     });
   });
 

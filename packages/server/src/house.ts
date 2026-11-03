@@ -122,6 +122,10 @@ export function createHousePush(deps: HouseDeps) {
     const quiet = kind !== 'nudge' && inQuiet(userId); // Stupse sind schon bis zum Ende der Ruhezeit zurückgehalten
     const at = deps.now().getTime();
 
+    // Frisch erfragt (einmal je Nachricht): eine Entscheidung über Ansage oder Verwerfen darf nicht auf einem 15 Sekunden alten Stand beruhen
+    let asked: HomeState | null = null;
+    const whereNow = async (): Promise<HomeState> => (asked ??= await presence.homeOf(userId, { fresh: true }));
+
     let handled = false;
     for (const c of channels) {
       if (quiet) {
@@ -129,7 +133,7 @@ export function createHousePush(deps: HouseDeps) {
         handled = true;
         continue;
       }
-      const where = await presence.homeOf(userId);
+      const where = await whereNow();
       if (where === 'away') {
         if (c.whenAway === 'wait') {
           store.addHousePending(c.id, { kind, spoken, cardId: message.open?.cardId ?? null, nudgeId: message.nudgeId ?? null }, new Date(at + c.waitMinutes * MINUTE).toISOString());

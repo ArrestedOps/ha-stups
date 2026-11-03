@@ -209,7 +209,11 @@
             value={house.tts ?? ''}
             disabled={busy || !entities}
             aria-label={t('Sprachdienst für Ansagen')}
-            onchange={(e) => run(() => api.setHouseTts(e.currentTarget.value || null))}
+            onchange={(e) => {
+              // sofort lesen: `run` führt die Änderung erst später aus, dann ist currentTarget schon leer
+              const tts = e.currentTarget.value || null;
+              void run(() => api.setHouseTts(tts));
+            }}
           >
             <option value="">{t('Nicht gewählt')}</option>
             {#each entities?.tts ?? [] as o (o.entityId)}<option value={o.entityId}>{o.name}</option>{/each}

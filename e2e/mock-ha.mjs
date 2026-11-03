@@ -45,6 +45,14 @@ export async function startMockHa({ port, first, second, token }) {
   setState(`person.${second}`, 'home', { friendly_name: cap(second), user_id: `ha-${second}-e2e` });
   setState('sensor.waschmaschine_leistung', '120', { friendly_name: 'Waschmaschine Leistung', unit_of_measurement: 'W' });
   setState('binary_sensor.waschmaschine_tuer', 'off', { friendly_name: 'Waschmaschine Tür' });
+  // Haus-Kanäle: ein Lautsprecher, eine Lampe und ein Sprachdienst
+  setState('media_player.kinderzimmer', 'idle', { friendly_name: 'Kinderzimmer', volume_level: 0.3 });
+  setState('light.flur', 'off', { friendly_name: 'Flur' });
+  setState('tts.piper', 'unknown', { friendly_name: 'Piper' });
+  /** Aufrufe von tts, media_player, light und scene, abrufbar unter /mock/calls */
+  const calls = [];
+  /** gemerkte Zustände der Szenen (scene.create) */
+  const scenes = new Map();
 
   const body = (req) =>
     new Promise((resolve) => {
@@ -77,6 +85,26 @@ export async function startMockHa({ port, first, second, token }) {
       pushes.push({ service: url.pathname.split('/').pop(), ...(await body(req)) });
       return send([]);
     }
+    if (req.method === 'POST' && /^\/api\/services\/(tts|media_player|light|scene)\//.test(url.pathname)) {
+      const [, , , domain, service] = url.pathname.split('/');
+      const b = await body(req);
+      calls.push({ domain, service, data: b });
+      // Ein bisschen Verhalten, damit sich „Lampe leuchtet und wird zurückgestellt" prüfen lässt
+      if (domain === 'scene' && service === 'create') {
+        scenes.set(b.scene_id, (b.snapshot_entities ?? []).map((id) => ({ ...states.get(id) })));
+        setState(`scene.${b.scene_id}`, 'scening', { friendly_name: b.scene_id });
+      } else if (domain === 'scene' && service === 'turn_on') {
+        for (const snap of scenes.get(String(b.entity_id).slice('scene.'.length)) ?? []) setState(snap.entity_id, snap.state, snap.attributes);
+      } else if (domain === 'scene' && service === 'delete') {
+        scenes.delete(String(b.entity_id).slice('scene.'.length));
+        states.delete(b.entity_id);
+      } else if (domain === 'light' && service === 'turn_on') {
+        setState(b.entity_id, 'on', { rgb_color: b.rgb_color, brightness_pct: b.brightness_pct });
+      } else if (domain === 'media_player' && service === 'volume_set') {
+        setState(b.entity_id, states.get(b.entity_id)?.state ?? 'idle', { volume_level: b.volume_level });
+      }
+      return send([]);
+    }
     // Fernsteuerung für die Tests
     if (req.method === 'POST' && url.pathname === '/mock/state') {
       const b = await body(req);
@@ -90,6 +118,12 @@ export async function startMockHa({ port, first, second, token }) {
       }
       return send({ ok: true });
     }
+    if (req.method === 'GET' && url.pathname === '/mock/calls') return send(calls);
+    if (req.method === 'POST' && url.pathname === '/mock/calls/clear') {
+      calls.length = 0;
+      return send({ ok: true });
+    }
+    if (req.method === 'GET' && url.pathname.startsWith('/mock/entity/')) return send(states.get(url.pathname.slice('/mock/entity/'.length)) ?? null);
     if (req.method === 'GET' && url.pathname === '/mock/pushes') return send(pushes);
     if (req.method === 'GET' && url.pathname === '/mock/published') return send(published);
     if (req.method === 'GET' && url.pathname === '/mock/wrong-tokens') return send({ count: wrongTokens });

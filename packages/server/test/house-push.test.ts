@@ -190,6 +190,14 @@ describe('Ruhezeit', () => {
 });
 
 describe('Anwesenheit', () => {
+  it('beim Senden wird die Anwesenheit frisch erfragt (wer gerade weggegangen ist, gilt nicht noch 15 Sekunden als zu Hause), einmal je Nachricht', async () => {
+    speakChannel();
+    lightChannel();
+    freshAsked = [];
+    await house().send(ben, msg('nudge'));
+    expect(freshAsked).toEqual([true]);
+  });
+
   it('nicht zu Hause und „verwerfen": nichts, aber kein Fehler (sonst würde der Notifier wiederholen)', async () => {
     const c = speakChannel();
     home[ben] = 'away';

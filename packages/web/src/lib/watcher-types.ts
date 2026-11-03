@@ -1,7 +1,9 @@
 // Wächter: Karten automatisch aus Zuständen in Home Assistant. Diese Typen spiegeln die Schnittstelle des Servers.
 
-export type TriggerKind = 'state' | 'above' | 'below';
-export type AssignMode = 'fixed' | 'rotation' | 'rotation_present' | 'all_present' | 'first_home' | 'none';
+export type ConditionKind = 'state' | 'above' | 'below';
+/** Dazu Termine eines Kalenders (mit Vorlauf) und Regen in der Vorhersage: Stups fragt sie im Takt ab */
+export type TriggerKind = ConditionKind | 'calendar_event' | 'forecast';
+export type AssignMode = 'fixed' | 'rotation' | 'rotation_present' | 'all_present' | 'first_home' | 'suggest' | 'none';
 export type DueRule = { kind: 'none' } | { kind: 'in'; minutes: number } | { kind: 'at'; day: 'today' | 'tomorrow'; time: string };
 
 export interface WatchTrigger {
@@ -11,11 +13,15 @@ export interface WatchTrigger {
   value: number | null;
   forMin: number;
   count: number;
+  /** Kalender: so viele Minuten vor dem Termin entsteht die Karte */
+  leadMin?: number;
+  /** Vorhersage: Regen in den nächsten so vielen Stunden */
+  forecast?: { condition: 'rain'; hours: number };
 }
 
 export interface DoneTrigger {
   entityId: string;
-  kind: TriggerKind;
+  kind: ConditionKind;
   to: string | null;
   value: number | null;
 }
@@ -87,4 +93,52 @@ export interface HaEntity {
   state: string;
   unit: string | null;
   domain: string;
+}
+
+// ---------- Vorlagen, Gefunden, Probelauf (vom Server) ----------
+
+export interface TemplateDraft {
+  name: string;
+  trigger:
+    | { kind: 'below' | 'above'; value: number; forMin: number; count?: number }
+    | { kind: 'state'; to: string; forMin: number; count?: number }
+    | { kind: 'calendar_event'; leadMin: number }
+    | { kind: 'forecast'; condition: 'rain'; hours: number };
+  card: { title: string; due: DueRule };
+  assign: { mode: AssignMode };
+  done: { kind: 'above'; value: number } | null;
+}
+
+export interface WatcherTemplate {
+  id: string;
+  kind: 'watcher' | 'recurring';
+  title: string;
+  hint: string;
+  domain: string | null;
+  search: string;
+  draft: TemplateDraft | null;
+  recurring: { title: string; recurrence: Record<string, unknown> } | null;
+  /** Kann der Sensor belegen, dass die Aufgabe erledigt ist? */
+  canSelfComplete: boolean;
+  whyNoSelfComplete: string | null;
+}
+
+export interface WatcherSuggestion {
+  templateId: string;
+  entityId: string;
+  name: string;
+  reason: string;
+  variant: 'power' | 'status' | 'default';
+  draft?: TemplateDraft;
+}
+
+export interface DryRunResult {
+  fired: { at: string }[];
+  quick: number;
+  sentence: string;
+  points: { at: string; v: number }[];
+  noHistory: boolean;
+  truncated: boolean;
+  from: string;
+  to: string;
 }

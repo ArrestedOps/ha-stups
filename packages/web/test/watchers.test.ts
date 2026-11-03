@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WatcherItem } from '../src/lib/watcher-types';
-import { conditionText, emptyForm, formProblem, fromWatcher, previewSentence, TEMPLATES, toInput, watcherLine, type WatcherForm } from '../src/lib/watchers';
+import { conditionText, emptyForm, formProblem, fromWatcher, previewSentence, toInput, watcherLine, type WatcherForm } from '../src/lib/watchers';
 
 const names: Record<string, string> = { a: 'Anna', b: 'Ben' };
 const nameOf = (id: string) => names[id] ?? '?';
@@ -88,21 +88,6 @@ describe('Formular prüfen und umwandeln', () => {
     const input = toInput(filled({ forMin: '3', count: '3', cooldownMin: '15', nudgeAfterMin: '90', categoryIds: ['k1'] }));
     const w: WatcherItem = { ...input, id: 'w1', status: 'ok', lastFiredAt: null, lastAssignees: [], armed: true, counter: 0, subscribed: true, lastRun: null, entityState: null, entityName: null, entityUnit: null, openCard: null };
     expect(toInput(fromWatcher(w))).toEqual(input);
-  });
-});
-
-describe('Vorlagen', () => {
-  it('jede Vorlage füllt ein Formular, das nach Wahl von Entität, Board und Spalte speicherbar ist', () => {
-    for (const t of TEMPLATES) {
-      const f = t.apply({ ...emptyForm('b1', 'c1'), entityId: 'x.y', entityName: 'X' });
-      expect(formProblem(f), t.id).toBeNull();
-    }
-    expect(TEMPLATES.map((t) => t.id)).toEqual(['washer', 'dishwasher', 'dryer', 'filter', 'battery', 'vacuum']);
-  });
-
-  it('Saugroboter: Zähler 3, wer zuerst nach Hause kommt', () => {
-    const f = TEMPLATES.find((t) => t.id === 'vacuum')!.apply(emptyForm('b', 'c'));
-    expect(f).toMatchObject({ kind: 'state', count: '3', assignMode: 'first_home', dueKind: 'none' });
   });
 });
 

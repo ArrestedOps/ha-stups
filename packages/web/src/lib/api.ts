@@ -1,6 +1,6 @@
 import { i18n, type LanguageChoice, t } from './i18n/index.svelte';
 import type { Recurrence } from './recurrence';
-import type { HaEntity, WatcherActivity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
+import type { DryRunResult, HaEntity, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from './watcher-types';
 
 export type Priority = 'low' | 'medium' | 'high';
 /** Aufwand einer Karte für die Fairness-Ansicht; leer zählt wie mittel */
@@ -653,6 +653,11 @@ export const api = {
   testWatcher: (id: string) => post<WatcherItem>(`watchers/${id}/test`),
   resetWatcherCounter: (id: string) => post<WatcherItem>(`watchers/${id}/reset-counter`),
   watcherRuns: (id: string) => get<WatcherRun[]>(`watchers/${id}/runs`),
+  watcherTemplates: () => get<WatcherTemplate[]>('watchers/templates'),
+  /** Was in Home Assistant zu einer Vorlage passt (ohne Entitäten, die schon ein Wächter beobachtet) */
+  watcherSuggestions: () => get<{ items: WatcherSuggestion[] }>('watchers/suggestions'),
+  /** Probelauf: die Regel auf die Historie der letzten 7 Tage anwenden, ohne zu speichern */
+  dryRun: (b: { trigger: WatcherInput['trigger']; cooldownMin: number }) => post<DryRunResult>('watchers/dry-run', b),
   haEntities: (q: string, domain?: string) =>
     get<HaEntity[]>(`ha/entities?q=${encodeURIComponent(q)}${domain ? `&domain=${encodeURIComponent(domain)}` : ''}`),
   exportData: () => post<{ dir: string; bytes: number; files: boolean }>('admin/export'),

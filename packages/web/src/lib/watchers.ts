@@ -1,6 +1,6 @@
 import { t, tn } from './i18n/index.svelte';
 import { clock } from './nudge';
-import type { AssignMode, DueRule, HaEntity, TriggerKind, WatcherInput, WatcherItem } from './watcher-types';
+import type { AssignMode, ConditionKind, DueRule, HaEntity, TemplateDraft, TriggerKind, WatcherInput, WatcherItem, WatcherTemplate } from './watcher-types';
 
 /** Das Formular im Sheet: alles als Text, damit Eingaben unfertig sein dürfen; toInput prüft und wandelt um */
 export interface WatcherForm {
@@ -33,12 +33,16 @@ export interface WatcherForm {
   doneOn: boolean;
   doneEntityId: string;
   doneEntityName: string;
-  doneKind: TriggerKind;
+  doneKind: ConditionKind;
   doneTo: string;
   doneValue: string;
   cooldownMin: string;
   dedupe: boolean;
   nudgeAfterMin: string;
+  /** Kalender: so viele Stunden vor dem Termin entsteht die Karte */
+  leadHours: string;
+  /** Vorhersage: Regen in den nächsten so vielen Stunden */
+  forecastHours: string;
 }
 
 export const emptyForm = (boardId = '', columnId = ''): WatcherForm => ({
@@ -77,113 +81,51 @@ export const emptyForm = (boardId = '', columnId = ''): WatcherForm => ({
   cooldownMin: '',
   dedupe: true,
   nudgeAfterMin: '',
+  leadHours: '12',
+  forecastHours: '3',
 });
 
-// ---------- Vorlagen ----------
+// ---------- Vorlagen (vom Server) ----------
 
-export interface WatcherTemplate {
-  id: string;
-  title: string;
-  /** Hilfe unter dem Titel */
-  hint: string;
-  /** Art der Entitäten für die Suche (domain), Suchwort für den Vorschlag */
-  domain: string;
-  search: string;
-  apply: (f: WatcherForm) => WatcherForm;
+/**
+ * Wendet eine Vorlage des Servers auf das Formular an. Mit einem Treffer aus „Gefunden" (`hit`) steht auch die Entität schon drin;
+ * sonst wählt man sie danach in der Suche. Der Mensch kann alles ändern.
+ */
+export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { entityId: string; name: string; draft?: TemplateDraft }): WatcherForm {
+  const d = hit?.draft ?? tpl.draft;
+  if (!d) return f;
+  const out: WatcherForm = {
+    ...f,
+    name: d.name,
+    title: d.card.title,
+    dueKind: d.card.due.kind,
+    dueMinutes: d.card.due.kind === 'in' ? String(d.card.due.minutes) : '30',
+    dueDay: d.card.due.kind === 'at' ? d.card.due.day : 'tomorrow',
+    dueTime: d.card.due.kind === 'at' ? d.card.due.time : '08:00',
+    assignMode: d.assign.mode,
+    kind: d.trigger.kind,
+    count: 'count' in d.trigger && d.trigger.count && d.trigger.count > 1 ? String(d.trigger.count) : '',
+    forMin: 'forMin' in d.trigger ? String(d.trigger.forMin) : '',
+    doneOn: false,
+  };
+  if (d.trigger.kind === 'below' || d.trigger.kind === 'above') out.value = String(d.trigger.value);
+  if (d.trigger.kind === 'state') out.to = d.trigger.to;
+  if (d.trigger.kind === 'calendar_event') out.leadHours = String(Math.round(d.trigger.leadMin / 60));
+  if (d.trigger.kind === 'forecast') out.forecastHours = String(d.trigger.hours);
+  if (hit) {
+    out.entityId = hit.entityId;
+    out.entityName = hit.name;
+  }
+  // ein Sensor, der das Erledigen belegen kann (Batterie wieder voll): die Karte erledigt sich von selbst
+  if (d.done && hit) {
+    out.doneOn = true;
+    out.doneEntityId = hit.entityId;
+    out.doneEntityName = hit.name;
+    out.doneKind = d.done.kind;
+    out.doneValue = String(d.done.value);
+  }
+  return out;
 }
-
-const base = (f: WatcherForm, over: Partial<WatcherForm>): WatcherForm => ({ ...f, ...over });
-
-export const TEMPLATES: WatcherTemplate[] = [
-  {
-    id: 'washer',
-    get title() {
-      return t('Waschmaschine fertig');
-    },
-    get hint() {
-      return t('Leistungs-Sensor, der nach dem Waschen unter einen kleinen Wert fällt. Hängen Waschmaschine und Trockner an einer Steckdose, hilft nur ein eigener Sensor je Gerät.');
-    },
-    domain: 'sensor',
-    get search() {
-      return t('waschmaschine leistung');
-    },
-    apply: (f) =>
-      base(f, { name: t('Waschmaschine fertig'), kind: 'below', value: '5', forMin: '3', title: t('Waschmaschine ausräumen'), dueKind: 'in', dueMinutes: '30', assignMode: 'rotation_present' }),
-  },
-  {
-    id: 'dishwasher',
-    get title() {
-      return t('Spülmaschine fertig');
-    },
-    get hint() {
-      return t('Leistungs-Sensor, der nach dem Spülen unter einen kleinen Wert fällt.');
-    },
-    domain: 'sensor',
-    get search() {
-      return t('spülmaschine leistung');
-    },
-    apply: (f) =>
-      base(f, { name: t('Spülmaschine fertig'), kind: 'below', value: '5', forMin: '3', title: t('Spülmaschine ausräumen'), dueKind: 'in', dueMinutes: '30', assignMode: 'rotation_present' }),
-  },
-  {
-    id: 'dryer',
-    get title() {
-      return t('Trockner fertig');
-    },
-    get hint() {
-      return t('Leistungs-Sensor, der nach dem Trocknen unter einen kleinen Wert fällt.');
-    },
-    domain: 'sensor',
-    get search() {
-      return t('trockner leistung');
-    },
-    apply: (f) =>
-      base(f, { name: t('Trockner fertig'), kind: 'below', value: '5', forMin: '3', title: t('Wäsche aus dem Trockner holen'), dueKind: 'in', dueMinutes: '30', assignMode: 'rotation_present' }),
-  },
-  {
-    id: 'filter',
-    get title() {
-      return t('Filter oder Verbrauchsmaterial niedrig');
-    },
-    get hint() {
-      return t('Sensor mit der Restmenge in Prozent, zum Beispiel beim Luftreiniger.');
-    },
-    domain: 'sensor',
-    get search() {
-      return t('filter');
-    },
-    apply: (f) =>
-      base(f, { name: t('Filter niedrig'), kind: 'below', value: '10', forMin: '5', title: t('Filter wechseln'), dueKind: 'none', assignMode: 'rotation_present' }),
-  },
-  {
-    id: 'battery',
-    get title() {
-      return t('Batterie schwach');
-    },
-    get hint() {
-      return t('Batterie-Sensor eines Geräts. Der Titel nennt das Gerät erst, wenn du ihn anpasst.');
-    },
-    domain: 'sensor',
-    get search() {
-      return t('batterie');
-    },
-    apply: (f) =>
-      base(f, { name: t('Batterie schwach'), kind: 'below', value: '15', forMin: '10', title: t('Batterie wechseln'), dueKind: 'none', assignMode: 'rotation_present' }),
-  },
-  {
-    id: 'vacuum',
-    get title() {
-      return t('Saugroboter: Behälter leeren');
-    },
-    get hint() {
-      return t('Staubsaugerroboter (vacuum). Nach 3 Reinigungen entsteht die Karte; wer zuerst nach Hause kommt, bekommt sie. Wird die Karte erledigt, beginnt die Zählung von vorn.');
-    },
-    domain: 'vacuum',
-    search: '',
-    apply: (f) =>
-      base(f, { name: t('Saugroboter: Behälter leeren'), kind: 'state', to: 'docked', forMin: '0', count: '3', title: t('Staubbehälter leeren'), dueKind: 'none', assignMode: 'first_home' }),
-  },
-];
 
 // ---------- Formular ↔ Server ----------
 
@@ -204,7 +146,9 @@ export function formProblem(f: WatcherForm): string | null {
   if (!f.name.trim()) return t('Gib dem Wächter einen Namen.');
   if (!f.entityId) return t('Wähle die Entität, die beobachtet werden soll.');
   if (f.kind === 'state' && !f.to.trim()) return t('Gib den Zustand an, in den die Entität wechseln soll.');
-  if (f.kind !== 'state' && num(f.value) === null) return t('Gib den Schwellwert als Zahl an.');
+  if ((f.kind === 'above' || f.kind === 'below') && num(f.value) === null) return t('Gib den Schwellwert als Zahl an.');
+  if (f.kind === 'calendar_event' && intOr(f.leadHours, -1) < 0) return t('Gib an, wie viele Stunden vor dem Termin die Karte entstehen soll.');
+  if (f.kind === 'forecast' && intOr(f.forecastHours, 0) < 1) return t('Gib an, für wie viele Stunden im Voraus nach Regen geschaut werden soll.');
   if (!f.title.trim()) return t('Gib der Karte einen Titel.');
   if (!f.boardId || !f.columnId) return t('Wähle Board und Spalte für die Karte.');
   if (f.dueKind === 'in' && intOr(f.dueMinutes, -1) < 0) return t('Gib die Minuten bis zur Fälligkeit an.');
@@ -230,14 +174,19 @@ export function toInput(f: WatcherForm): WatcherInput {
   return {
     name: f.name.trim(),
     active: f.active,
-    trigger: {
-      entityId: f.entityId,
-      kind: f.kind,
-      to: f.kind === 'state' ? f.to.trim() : null,
-      value: f.kind === 'state' ? null : num(f.value),
-      forMin: intOr(f.forMin, f.kind === 'state' ? 0 : 3),
-      count: Math.max(1, intOr(f.count, 1)),
-    },
+    trigger:
+      f.kind === 'calendar_event'
+        ? { entityId: f.entityId, kind: 'calendar_event', to: null, value: null, forMin: 0, count: 1, leadMin: Math.max(0, intOr(f.leadHours, 12)) * 60 }
+        : f.kind === 'forecast'
+          ? { entityId: f.entityId, kind: 'forecast', to: null, value: null, forMin: 0, count: 1, forecast: { condition: 'rain', hours: Math.max(1, intOr(f.forecastHours, 3)) } }
+          : {
+              entityId: f.entityId,
+              kind: f.kind,
+              to: f.kind === 'state' ? f.to.trim() : null,
+              value: f.kind === 'state' ? null : num(f.value),
+              forMin: intOr(f.forMin, f.kind === 'state' ? 0 : 3),
+              count: Math.max(1, intOr(f.count, 1)),
+            },
     card: {
       boardId: f.boardId,
       columnId: f.columnId,
@@ -304,6 +253,8 @@ export function fromWatcher(w: WatcherItem, entities: Map<string, HaEntity> = ne
     cooldownMin: String(w.cooldownMin),
     dedupe: w.dedupe,
     nudgeAfterMin: w.nudgeAfterMin === null ? '' : String(w.nudgeAfterMin),
+    leadHours: w.trigger.leadMin !== undefined ? String(Math.round(w.trigger.leadMin / 60)) : '12',
+    forecastHours: w.trigger.forecast ? String(w.trigger.forecast.hours) : '3',
   };
 }
 
@@ -314,6 +265,8 @@ const forMinutes = (min: number) => (min <= 0 ? '' : tn('{n} Minute', '{n} Minut
 /** Die Bedingung in einem Halbsatz: „Waschmaschine Leistung 3 Minuten unter 5 W liegt" */
 export function conditionText(f: Pick<WatcherForm, 'entityName' | 'entityId' | 'entityUnit' | 'kind' | 'to' | 'value' | 'forMin'>): string {
   const who = f.entityName || f.entityId || '…';
+  if (f.kind === 'calendar_event') return t('im Kalender {who} {hours} vor einem Termin ansteht', { who, hours: tn('{n} Stunde', '{n} Stunden', intOr(f.leadHours, 12)) });
+  if (f.kind === 'forecast') return t('{who} in den nächsten {hours} Regen vorhersagt', { who, hours: tn('{n} Stunde', '{n} Stunden', intOr(f.forecastHours, 3)) });
   const minutes = forMinutes(intOr(f.forMin, f.kind === 'state' ? 0 : 3));
   if (f.kind === 'state') {
     const to = f.to.trim() || '…';
@@ -337,6 +290,7 @@ export function previewSentence(f: WatcherForm, personName: (id: string) => stri
     rotation_present: t('bekommt eine anwesende Person abwechselnd {card}', { card }),
     all_present: t('bekommen alle Anwesenden {card}', { card }),
     first_home: t('bekommt die Person, die als Erstes nach Hause kommt, {card}', { card }),
+    suggest: t('fragt Stups alle Anwesenden, wer {card} übernimmt', { card }),
   };
   const due =
     f.dueKind === 'in'
@@ -420,4 +374,76 @@ export const RUN_TEXT: Record<string, string> = {
   get error() {
     return t('Fehler');
   },
+  get passed() {
+    return t('Weitergegeben');
+  },
+  get suggested() {
+    return t('Gefragt, wer übernimmt');
+  },
+  get claimed() {
+    return t('Übernommen');
+  },
+  get suggest_fallback() {
+    return t('Niemand hat sich gemeldet, der Rückfall greift');
+  },
 };
+
+// ---------- Der Satz ----------
+
+/** Ein Stück des Satzes: Text, oder ein antippbares Feld (`field`) */
+export interface SentencePart {
+  text: string;
+  field?: 'entity' | 'duration' | 'threshold' | 'lead' | 'hours' | 'who' | 'title';
+}
+
+/** Wer die Karte bekommt, als Halbsatz für das Feld im Satz */
+export function whoText(f: Pick<WatcherForm, 'assignMode' | 'personIds'>, personName: (id: string) => string): string {
+  const names = f.personIds.map(personName).join(', ');
+  switch (f.assignMode) {
+    case 'rotation_present':
+      return t('wer zu Hause ist, reihum');
+    case 'all_present':
+      return t('jede Person, die zu Hause ist');
+    case 'first_home':
+      return t('wer zuerst nach Hause kommt');
+    case 'rotation':
+      return names ? t('reihum {names}', { names }) : t('reihum jemand');
+    case 'fixed':
+      return names || t('niemand gewählt');
+    case 'suggest':
+      return t('wer sich meldet');
+    default:
+      return t('niemand');
+  }
+}
+
+/**
+ * Der Satz, den das Formular zeigt: „Wenn [Entität] länger als [3 Min.] unter [5 W] liegt, bekommt [wer zu Hause ist, reihum] die Karte [Titel]."
+ * Die Felder in eckigen Klammern sind antippbar. Der Satz wird als Ganzes übersetzt (Wortstellung!) und dann an den Platzhaltern zerlegt.
+ */
+export function sentenceParts(f: WatcherForm, personName: (id: string) => string): SentencePart[] {
+  const minutes = intOr(f.forMin, f.kind === 'state' ? 0 : 3);
+  const entity = f.entityName || f.entityId || t('Entität wählen');
+  const unit = f.entityUnit ? ` ${f.entityUnit}` : '';
+  const threshold = f.kind === 'state' ? f.to.trim() || '…' : `${f.value.trim() || '…'}${unit}`;
+  const duration = t('{n} Min.', { n: minutes });
+  let template: string;
+  if (f.kind === 'calendar_event') template = t('Wenn im Kalender {entity} {lead} vor einem Termin ansteht, bekommt {who} die Karte {title}.');
+  else if (f.kind === 'forecast') template = t('Wenn {entity} in den nächsten {hours} Regen vorhersagt, bekommt {who} die Karte {title}.');
+  else if (f.kind === 'state') template = minutes > 0 ? t('Wenn {entity} länger als {duration} auf {threshold} steht, bekommt {who} die Karte {title}.') : t('Wenn {entity} zu {threshold} wechselt, bekommt {who} die Karte {title}.');
+  else if (f.kind === 'below') template = minutes > 0 ? t('Wenn {entity} länger als {duration} unter {threshold} liegt, bekommt {who} die Karte {title}.') : t('Wenn {entity} unter {threshold} liegt, bekommt {who} die Karte {title}.');
+  else template = minutes > 0 ? t('Wenn {entity} länger als {duration} über {threshold} liegt, bekommt {who} die Karte {title}.') : t('Wenn {entity} über {threshold} liegt, bekommt {who} die Karte {title}.');
+  const fields: Record<string, SentencePart> = {
+    '{entity}': { text: entity, field: 'entity' },
+    '{duration}': { text: duration, field: 'duration' },
+    '{threshold}': { text: threshold, field: 'threshold' },
+    '{lead}': { text: tn('{n} Stunde', '{n} Stunden', intOr(f.leadHours, 12)), field: 'lead' },
+    '{hours}': { text: tn('{n} Stunde', '{n} Stunden', intOr(f.forecastHours, 3)), field: 'hours' },
+    '{who}': { text: whoText(f, personName), field: 'who' },
+    '{title}': { text: f.title.trim() || t('Titel wählen'), field: 'title' },
+  };
+  return template
+    .split(/(\{[a-z]+\})/)
+    .filter((x) => x !== '')
+    .map((x) => fields[x] ?? { text: x });
+}

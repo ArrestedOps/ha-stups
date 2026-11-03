@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext } from '@playwright/test';
 
 // Haus-Kanäle (Ansage, Lampe) mit dem nachgebauten Home Assistant (Projekt „waechter", Server mit e2e/mock-ha.mjs).
 // Keine Abhängigkeit von der Tageszeit: Die Ruhezeit der Testpersonen ist aus, sonst hielte der Server Stupse nachts zurück.
@@ -83,14 +83,6 @@ test.afterEach(async ({ request }) => {
   await setHome(request, 'home');
   await request.post(`${MOCK}/mock/calls/clear`);
 });
-
-async function openPeople(page: Page) {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Board wechseln' }).click();
-  await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /Personen und Kinder/ }).click();
-  await expect(page.getByRole('radiogroup', { name: 'Zugriff' })).toBeVisible();
-}
 
 test('Einrichten in den Einstellungen: Sprachdienst wählen, Ansage-Kanal anlegen, testen', async ({ page, request }) => {
   // Sprachdienst: Home Assistant › Ansage und Lampe

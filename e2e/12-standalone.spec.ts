@@ -146,7 +146,7 @@ test('Passwort ändern: das neue gilt, das alte nicht mehr', async ({ browser, b
     await melden(page, 'ben', 'bens-passwort-1');
     const dialog = await einstellungen(page);
     await dialog.getByRole('button', { name: 'Konto und Anmeldung' }).click();
-    await dialog.getByRole('button', { name: 'Ändern' }).click();
+    await dialog.getByRole('button', { name: 'Ändern', exact: true }).click();
     const form = page.getByRole('form', { name: 'Passwort ändern' });
     await form.getByLabel('Aktuelles Passwort').fill('bens-passwort-1');
     await form.getByLabel('Neues Passwort', { exact: true }).fill('bens-neues-passwort');

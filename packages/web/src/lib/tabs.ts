@@ -11,6 +11,15 @@ export function migrateTab(raw: string | null | undefined): Tab {
 }
 
 /**
+ * Auf welchem Reiter die App startet: auf **Heute**. Nur Boards und Kalender werden von diesem Gerät gemerkt; Zuhause (und der alte
+ * Name „watchers") führt zu Heute, denn wer dort zuletzt war, will beim Öffnen sehen, was für ihn dran ist.
+ */
+export function startTab(raw: string | null | undefined, visible: Tab[]): Tab {
+  const tab = migrateTab(raw);
+  return (tab === 'boards' || tab === 'calendar') && visible.includes(tab) ? tab : 'today';
+}
+
+/**
  * Welche Reiter es gibt. „Zuhause" zeigt die Wächter: nur mit Home Assistant (im Add-on immer, im eigenen Container, wenn er
  * Wächter kann) und nie für ein Kind (der Server verweigert sie ohnehin).
  */

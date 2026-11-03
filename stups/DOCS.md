@@ -84,7 +84,7 @@ Dark and light follow the iPhone (or the device). A coloured **bar on the left**
 
 ### The four tabs and the header
 
-The bar at the bottom has four tabs: **Today** (the start), **Boards**, **Calendar** and **Home**. A child and the container without Home Assistant have three (no Home). The same header sits on every tab: **"‹ Dashboard"** on the left (add-on only; takes you back to the Home Assistant dashboard), an **offline notice** on the right when the connection is missing, and your **avatar**. The avatar opens the settings. It shows your picture (from Home Assistant or uploaded by you) or your initial in your colour.
+The bar at the bottom has four tabs: **Today** (the start: the app always opens there, only Boards and Calendar are remembered), **Boards**, **Calendar** and **Home**. A child and the container without Home Assistant have three (no Home). The same header sits on every tab: **"‹ Dashboard"** on the left (add-on only; takes you back to the Home Assistant dashboard), an **offline notice** on the right when the connection is missing, and your **avatar**. The avatar opens the settings. It shows your picture (from Home Assistant or uploaded by you) or your initial in your colour.
 
 Two colours: your **accent** (orange unless you pick one) belongs to people and actions; **teal** belongs to everything that comes from the house (watcher cards, Home). That is why green and teal are missing from the colour wheel.
 
@@ -219,7 +219,7 @@ A watcher observes an entity in Home Assistant and **creates a card and assigns 
 
 ![The Watchers tab](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/waechter-liste-dunkel.png)
 
-**Home shows the state, not the rules.** The **Home** tab (fourth tab, for all adults) sorts the watchers by what is going on: **Waiting for someone** (a card is open: who is up, since when, **Nudge** button), **Running now** (the machine is running: since when, which card comes next), **Coming up** (the counter is at "2 of 3", or a calendar appointment is due) and a **Quiet** line with the watchers that report nothing. Without a connection to Home Assistant it says "No connection to Home Assistant since …" (boards and cards keep working). Administrators also see "Stups has found N more devices".
+**Home shows the state, not the rules.** The **Home** tab (fourth tab, for all adults) sorts the watchers by what is going on: **Waiting for someone** (a card is open: who is up, since when, **Nudge** button), **Running now** (the machine is running: since when, which card comes next), **Coming up** (the counter is at "2 of 3", or a calendar appointment is due) and a **Quiet** line with the watchers that report nothing. Without a connection to Home Assistant it says "No connection to Home Assistant since …" (boards and cards keep working). Administrators also see "Stups has found N more devices". **Tapping a watcher opens it:** administrators edit it right there (sentence, More rules, Test, Pause, Delete), everyone else sees settings and history read-only. At the bottom is the **recent activity** of all watchers; inside a watcher the history of its latest runs.
 
 **Managing** (list, on/off, edit, delete, recent activity): *Settings › Household › Watchers*. All adults see the list, **administrators** change it.
 

@@ -139,3 +139,56 @@ test('Erst vorschlagen: die Karte entsteht ohne Zuständige, „Übernehmen" auf
   await expect.poll(async () => (await cardsOf(request, s.boardId))[0]!.assigneeIds).toEqual([s.rene.id]);
   await expect(house.getByRole('button', { name: 'Weitergeben' }).first()).toBeVisible();
 });
+
+const connyHeaders = { 'x-remote-user-id': 'ha-conny-e2e', 'x-remote-user-name': 'conny', 'x-remote-user-display-name': 'Conny' };
+
+test('Zuhause: Administratoren bearbeiten einen Wächter direkt, Mitglieder sehen ihn lesend, mit Verlauf', async ({ page, browser, request, baseURL }) => {
+  const s = await setup(request);
+  const name = `Bearbeiten ${s.tag}`;
+  const created = await request.post('/api/watchers', {
+    data: {
+      name,
+      trigger: { entityId: 'sensor.waschmaschine_leistung', kind: 'below', value: 5, forMin: 3 },
+      card: { boardId: s.boardId, columnId: s.columnId, title: `Probe ${s.tag}`, due: { kind: 'none' } },
+      assign: { mode: 'fixed', personIds: [s.rene.id] },
+    },
+  });
+  const id = (await created.json()).id as string;
+  // ein Lauf für den Verlauf („Test")
+  expect((await request.post(`/api/watchers/${id}/test`)).status()).toBe(200);
+
+  // Administrator: Tipp auf den Wächter öffnet das Bearbeiten (Satz, Speichern), der Verlauf steht unten
+  await page.goto('/');
+  await nav(page).getByRole('button', { name: 'Zuhause' }).click();
+  await expect(page.getByTestId('home-activity')).toContainText(name);
+  await page.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByTestId('watcher-sentence')).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Speichern' })).toBeVisible();
+  await expect(dialog.getByTestId('watcher-readonly')).toHaveCount(0);
+  await expect(dialog.getByText('Status', { exact: true })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: /Testen: Karte jetzt anlegen/ })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  // Mitglied: dieselbe Seite, aber nur lesend
+  const ctx = await browser.newContext({ baseURL: String(baseURL), extraHTTPHeaders: connyHeaders });
+  const conny = await ctx.newPage();
+  try {
+    await conny.goto('/');
+    await conny.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Zuhause' }).click();
+    await conny.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
+    const d = conny.getByRole('dialog');
+    await expect(d.getByTestId('watcher-readonly')).toBeVisible();
+    await expect(d.getByTestId('watcher-sentence')).toBeVisible();
+    await expect(d.locator('[data-field=title]')).toBeDisabled();
+    await expect(d.getByRole('button', { name: 'Speichern' })).toHaveCount(0);
+    await expect(d.getByRole('button', { name: /Testen: Karte jetzt anlegen/ })).toHaveCount(0);
+    await expect(d.getByRole('button', { name: 'Wächter löschen' })).toHaveCount(0);
+    await expect(d.getByText('Status', { exact: true })).toBeVisible(); // der Verlauf ist lesbar
+    // und die Änderung bleibt auch über die Schnittstelle verboten
+    expect((await ctx.request.patch(`/api/watchers/${id}`, { data: { active: false }, headers: { 'x-stups-client': 'e2e' } })).status()).toBe(403);
+  } finally {
+    await ctx.close();
+  }
+});

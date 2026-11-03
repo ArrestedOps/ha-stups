@@ -81,7 +81,7 @@ Dunkel und hell folgen dem iPhone (oder dem Gerät). Ein farbiger **Balken links
 
 ### Die vier Reiter und die Kopfzeile
 
-Die Leiste unten hat vier Reiter: **Heute** (der Start), **Boards**, **Kalender** und **Zuhause**. Ein Kind und der Container ohne Home Assistant haben drei (ohne Zuhause). Oben steht auf jedem Reiter dieselbe Kopfzeile: links **„‹ Dashboard"** (nur im Add-on; führt zurück zum Home-Assistant-Dashboard), rechts ein **Offline-Hinweis**, wenn die Verbindung fehlt, und dein **Avatar**. Der Avatar öffnet die Einstellungen. Er zeigt dein Bild (aus Home Assistant oder selbst hochgeladen) oder sonst deine Initiale in deiner Farbe.
+Die Leiste unten hat vier Reiter: **Heute** (der Start: die App öffnet immer dort, nur Boards und Kalender merkt sie sich), **Boards**, **Kalender** und **Zuhause**. Ein Kind und der Container ohne Home Assistant haben drei (ohne Zuhause). Oben steht auf jedem Reiter dieselbe Kopfzeile: links **„‹ Dashboard"** (nur im Add-on; führt zurück zum Home-Assistant-Dashboard), rechts ein **Offline-Hinweis**, wenn die Verbindung fehlt, und dein **Avatar**. Der Avatar öffnet die Einstellungen. Er zeigt dein Bild (aus Home Assistant oder selbst hochgeladen) oder sonst deine Initiale in deiner Farbe.
 
 Zwei Farben: Dein **Akzent** (Orange, wenn du keinen wählst) gehört den Menschen und Aktionen; **Türkis** gehört allem, was vom Haus kommt (Wächter-Karten, Zuhause). Darum fehlen im Farbkreis Grün und Türkis.
 
@@ -215,7 +215,7 @@ Ein Wächter beobachtet eine Entität in Home Assistant und legt **von selbst ei
 
 ![Der Reiter Wächter](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-liste-dunkel.png)
 
-**Zuhause zeigt den Zustand, nicht die Regeln.** Der Reiter **Zuhause** (vierter Reiter, für alle Erwachsenen) sortiert die Wächter nach dem, was gerade los ist: **Wartet auf jemanden** (eine Karte ist offen: wer ist dran, seit wann, Knopf **Stupsen**), **Läuft gerade** (die Maschine läuft: seit wann, welche Karte danach kommt), **Bald dran** (der Zähler steht auf „2 von 3", oder ein Termin im Kalender steht an) und eine Zeile **Ruhig** mit den Wächtern, die nichts melden. Fehlt die Verbindung zu Home Assistant, steht dort „Keine Verbindung zu Home Assistant seit …" (Boards und Karten funktionieren weiter). Administratoren sehen dort außerdem „Stups hat N weitere Geräte gefunden".
+**Zuhause zeigt den Zustand, nicht die Regeln.** Der Reiter **Zuhause** (vierter Reiter, für alle Erwachsenen) sortiert die Wächter nach dem, was gerade los ist: **Wartet auf jemanden** (eine Karte ist offen: wer ist dran, seit wann, Knopf **Stupsen**), **Läuft gerade** (die Maschine läuft: seit wann, welche Karte danach kommt), **Bald dran** (der Zähler steht auf „2 von 3", oder ein Termin im Kalender steht an) und eine Zeile **Ruhig** mit den Wächtern, die nichts melden. Fehlt die Verbindung zu Home Assistant, steht dort „Keine Verbindung zu Home Assistant seit …" (Boards und Karten funktionieren weiter). Administratoren sehen dort außerdem „Stups hat N weitere Geräte gefunden". **Ein Tipp auf einen Wächter öffnet ihn:** Administratoren bearbeiten ihn dort direkt (Satz, Mehr Regeln, Testen, Pausieren, Löschen), alle anderen sehen Einstellungen und Verlauf lesend. Unten steht die **letzte Aktivität** aller Wächter; im Wächter selbst der Verlauf seiner letzten Läufe.
 
 **Verwalten** (Liste, An/Aus, Bearbeiten, Löschen, letzte Aktivität): *Einstellungen › Haushalt › Wächter*. Alle Erwachsenen sehen die Liste, **Administratoren** ändern sie.
 

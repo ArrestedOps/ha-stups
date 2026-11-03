@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { api, type HomeState } from '../lib/api';
+  import { api, type HomeState, type WatcherActivity } from '../lib/api';
   import { formatDue } from '../lib/datetime';
-  import { durationText, homeSections, quietLine } from '../lib/home';
+  import { durationText, homeSections } from '../lib/home';
   import { t, tn } from '../lib/i18n/index.svelte';
   import { canNudge } from '../lib/nudge';
+  import { noteText, RUN_TEXT } from '../lib/watchers';
   import { ageText } from '../lib/today';
   import { openCardAnywhere, openSettings, openSheet, personById, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
@@ -15,10 +16,13 @@
   let found = $state(0);
   let failed = $state(false);
   let request = 0;
+  /** Was die Wächter zuletzt getan haben (für alle lesbar) */
+  let activity = $state<WatcherActivity[]>([]);
 
   async function load() {
     const mine = ++request;
     if (ui.isAdmin) api.watcherSuggestions().then((r) => (found = r.items.length)).catch(() => (found = 0));
+    api.watcherActivity().then((a) => (activity = a)).catch(() => undefined);
     try {
       const d = await api.home();
       if (mine === request) {
@@ -43,13 +47,15 @@
   const items = $derived(data?.items ?? []);
   const sections = $derived(homeSections(items));
   const names = (ids: string[]) => ids.map((id) => personById(id)?.displayName ?? '?').join(', ');
+  /** Ein Wächter öffnet sich: Administratoren bearbeiten ihn dort, alle anderen sehen Einstellungen und Verlauf lesend */
+  const openWatcher = (id: string) => openSheet({ type: 'watcher', id });
 </script>
 
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
   <header class="shrink-0">
     <TopBar />
     <h1 class="font-display text-[34px] leading-tight font-bold tracking-tight">{t('Zuhause')}</h1>
-    <p class="mb-3 text-[15px] text-fg2">{t('Was das Haus gerade tut')}</p>
+    <p class="mb-3 text-[15px] text-fg2">{t('Was das Haus gerade tut')}{items.length > 0 ? ` · ${ui.isAdmin ? t('Tippe auf einen Wächter, um ihn zu bearbeiten.') : t('Tippe auf einen Wächter, um ihn anzusehen.')}` : ''}</p>
   </header>
 
   <div class="-mr-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-4 pb-tabbar" data-testid="home">
@@ -94,7 +100,7 @@
             {#each sections.waiting as i (i.watcherId)}
               {@const card = i.openCard!}
               <li class="rounded-[20px] border border-house-line bg-house-bg p-4">
-                <p class="text-[13px] font-semibold text-house">{i.name} · {ageText(card.createdAt, nowMs)}</p>
+                <button class="block w-full text-left text-[13px] font-semibold text-house" aria-label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>{i.name} · {ageText(card.createdAt, nowMs)}</button>
                 <button class="mt-1 block w-full text-left text-[17px] leading-snug font-semibold" onclick={() => openCardAnywhere(card)}>{card.title}</button>
                 <p class="mt-1 text-[13px] text-fg2">{card.assigneeIds.length ? names(card.assigneeIds) : t('Noch niemand zuständig')}</p>
                 {#if canNudge(card, ui.me?.id ?? null)}
@@ -113,9 +119,14 @@
           <h2 class="font-display mb-2 text-[17px] font-bold text-house">{t('Läuft gerade')}</h2>
           <ul class="card-shadow divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
             {#each sections.running as i (i.watcherId)}
-              <li class="px-4 py-3">
-                <p class="text-[16px] font-semibold">{i.name}</p>
-                <p class="text-[13px] text-fg2">{i.since ? durationText(i.since, nowMs) : ''} · {t('danach: {title}', { title: i.nextCard })}</p>
+              <li>
+                <button class="flex w-full items-center gap-3 px-4 py-3 text-left" aria-label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[16px] font-semibold">{i.name}</span>
+                    <span class="block text-[13px] text-fg2">{i.since ? durationText(i.since, nowMs) : ''} · {t('danach: {title}', { title: i.nextCard })}</span>
+                  </span>
+                  <Icon name="chevron-right" size={18} />
+                </button>
               </li>
             {/each}
           </ul>
@@ -127,8 +138,10 @@
           <h2 class="font-display mb-2 text-[17px] font-bold">{t('Bald dran')}</h2>
           <ul class="card-shadow divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
             {#each sections.soon as i (i.watcherId)}
-              <li class="px-4 py-3">
-                <p class="text-[16px] font-semibold">{i.name}</p>
+              <li>
+               <button class="flex w-full items-center gap-3 px-4 py-3 text-left" aria-label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
+                <span class="min-w-0 flex-1">
+                <span class="block text-[16px] font-semibold">{i.name}</span>
                 {#if i.progress}
                   <div class="mt-1.5 flex items-center gap-2" aria-label={t('Zähler {n} von {total}', { n: i.progress.n, total: i.progress.of })}>
                     <div class="flex flex-1 gap-1">
@@ -139,7 +152,10 @@
                     <span class="text-[13px] text-fg2">{t('{n} von {total}', { n: i.progress.n, total: i.progress.of })}</span>
                   </div>
                 {/if}
-                {#if i.nextEvent}<p class="text-[13px] text-fg2">{i.nextEvent.title} · {formatDue(i.nextEvent.at, nowMs)}</p>{/if}
+                {#if i.nextEvent}<span class="block text-[13px] text-fg2">{i.nextEvent.title} · {formatDue(i.nextEvent.at, nowMs)}</span>{/if}
+                </span>
+                <Icon name="chevron-right" size={18} />
+               </button>
               </li>
             {/each}
           </ul>
@@ -147,10 +163,36 @@
       {/if}
 
       {#if sections.quiet.length > 0}
-        <p class="mb-6 px-1 text-[15px] text-fg2" data-testid="home-quiet">
-          <span class="font-semibold text-fg">{t('Ruhig')}:</span>
-          {quietLine(sections.quiet)}
-        </p>
+        <section class="mb-6" aria-label={t('Ruhig')} data-testid="home-quiet">
+          <h2 class="font-display mb-2 text-[17px] font-bold">{t('Ruhig')}</h2>
+          <ul class="card-shadow divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
+            {#each sections.quiet as i (i.watcherId)}
+              <li>
+                <button class="flex min-h-12 w-full items-center gap-3 px-4 text-left" aria-label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
+                  <span class="min-w-0 flex-1 truncate text-[16px]">{i.name}</span>
+                  {#if i.entityMissing}<span class="shrink-0 text-[13px] text-danger">{t('Entität fehlt')}</span>{/if}
+                  <Icon name="chevron-right" size={18} />
+                </button>
+              </li>
+            {/each}
+          </ul>
+        </section>
+      {/if}
+
+      {#if activity.length > 0}
+        <section class="mb-6" aria-label={t('Letzte Aktivität')} data-testid="home-activity">
+          <h2 class="font-display mb-2 text-[17px] font-bold">{t('Letzte Aktivität')}</h2>
+          <ul class="card-shadow divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
+            {#each activity as r (r.id)}
+              <li class="px-4 py-2.5">
+                <p class="text-[15px] font-medium">{r.watcherName} · {RUN_TEXT[r.result] ?? r.result}</p>
+                <p class="text-[13px] text-fg2">
+                  {formatDue(r.at, nowMs)}{r.assignedTo.length ? ` · ${names(r.assignedTo)}` : ''}{r.note ? ` · ${noteText(r.note)}` : ''}
+                </p>
+              </li>
+            {/each}
+          </ul>
+        </section>
       {/if}
     {/if}
   </div>

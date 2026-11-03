@@ -16,8 +16,3 @@ export function durationText(sinceIso: string, nowMs = Date.now()): string {
   if (min < 60) return t('seit {n} Min.', { n: min });
   return t('seit {n} Std.', { n: Math.floor(min / 60) });
 }
-
-/** Die Zeile unter „Ruhig": nur die Namen, mit Warnung bei fehlender Entität */
-export function quietLine(items: HomeItem[]): string {
-  return items.map((i) => (i.entityMissing ? `${i.name} (${t('Entität fehlt')})` : i.name)).join(', ');
-}

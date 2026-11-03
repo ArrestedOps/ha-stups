@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { HomeItem } from '../src/lib/api';
-import { durationText, homeSections, quietLine } from '../src/lib/home';
+import { durationText, homeSections } from '../src/lib/home';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
 
 const item = (over: Partial<HomeItem>): HomeItem => ({
@@ -44,11 +44,5 @@ describe('durationText', () => {
     expect(durationText('2026-11-04T11:59:50Z', now)).toBe('gerade erst');
     expect(durationText('2026-11-04T11:35:00Z', now)).toBe('seit 25 Min.');
     expect(durationText('2026-11-04T09:30:00Z', now)).toBe('seit 2 Std.');
-  });
-});
-
-describe('quietLine', () => {
-  it('nennt die Namen, bei fehlender Entität mit Warnung', () => {
-    expect(quietLine([item({ name: 'Trockner' }), item({ name: 'Müll', entityMissing: true })])).toBe('Trockner, Müll (Entität fehlt)');
   });
 });

@@ -20,7 +20,7 @@ import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
 import { swipeTarget } from './swipe';
 import type { SettingsPageId } from './settingsPages';
 import type { TemplateDraft } from './watcher-types';
-import { migrateTab, visibleTabs, type Tab } from './tabs';
+import { startTab, visibleTabs, type Tab } from './tabs';
 import { applyCards, deltaIds } from './delta';
 import { startSync, type SyncInfo } from './sync';
 
@@ -474,9 +474,8 @@ export function selectColumn(id: string): void {
 
 /** Gemerkte Ansicht und gemerkter Filter von diesem Gerät (nur bekannte Boards und Personen bleiben im Filter) */
 function restoreView(): void {
-  // Alte Namen (agenda, watchers) führen zu den neuen; ein Reiter, den es hier nicht gibt (Kind, ohne Wächter), heißt Heute
-  const tab = migrateTab(memo.get('stups.tab'));
-  ui.tab = visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }).includes(tab) ? tab : 'today';
+  // Start auf Heute; gemerkt werden nur Boards und Kalender (siehe startTab)
+  ui.tab = startTab(memo.get('stups.tab'), visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }));
   try {
     const raw = JSON.parse(memo.get('stups.schedule') ?? 'null') as Partial<ScheduleFilter> | null;
     if (!raw) return;

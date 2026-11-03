@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { migrateTab, visibleTabs } from '../src/lib/tabs';
+import { migrateTab, startTab, visibleTabs } from '../src/lib/tabs';
 
 describe('migrateTab', () => {
   it('bildet die alten Reiter auf die neuen ab', () => {
@@ -11,6 +11,25 @@ describe('migrateTab', () => {
   });
   it('Unbekanntes, Leeres und fehlender Wert ergeben Heute', () => {
     for (const bad of [null, undefined, '', 'unsinn', 'Boards']) expect(migrateTab(bad as string | null), String(bad)).toBe('today');
+  });
+});
+
+describe('startTab: die App startet auf Heute, nie auf Zuhause', () => {
+  const all = ['today', 'boards', 'calendar', 'home'] as const;
+  it('gemerkt werden nur Boards und Kalender', () => {
+    expect(startTab('boards', [...all])).toBe('boards');
+    expect(startTab('calendar', [...all])).toBe('calendar');
+    expect(startTab('today', [...all])).toBe('today');
+  });
+  it('Zuhause, auch als alter Name „watchers", führt zu Heute', () => {
+    expect(startTab('home', [...all])).toBe('today');
+    expect(startTab('watchers', [...all])).toBe('today');
+    expect(startTab('agenda', [...all])).toBe('today');
+  });
+  it('Unbekanntes, Leeres und nicht vorhandene Reiter führen zu Heute', () => {
+    expect(startTab(null, [...all])).toBe('today');
+    expect(startTab('unsinn', [...all])).toBe('today');
+    expect(startTab('calendar', ['today', 'boards'])).toBe('today');
   });
 });
 

@@ -7,16 +7,24 @@ const nav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
 test.describe('Start', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test('Die App startet auf „Heute"; alte gemerkte Reiter führen zu den neuen', async ({ page }) => {
+  test('Die App startet auf „Heute"; Zuhause und alte Namen werden nicht gemerkt', async ({ page }) => {
     await page.goto('/');
     await expect(nav(page).getByRole('button', { name: 'Heute' })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('heading', { name: 'Heute' })).toBeVisible();
     await page.evaluate(() => localStorage.setItem('stups.tab', 'agenda'));
     await page.reload();
     await expect(nav(page).getByRole('button', { name: 'Heute' })).toHaveAttribute('aria-current', 'page');
+    // Zuhause wird nicht gemerkt: die App startet auf Heute (auch mit dem alten Namen „watchers")
     await page.evaluate(() => localStorage.setItem('stups.tab', 'watchers'));
     await page.reload();
-    await expect(nav(page).getByRole('button', { name: 'Zuhause' })).toHaveAttribute('aria-current', 'page');
+    await expect(nav(page).getByRole('button', { name: 'Heute' })).toHaveAttribute('aria-current', 'page');
+    await nav(page).getByRole('button', { name: 'Zuhause' }).click();
+    await page.reload();
+    await expect(nav(page).getByRole('button', { name: 'Heute' })).toHaveAttribute('aria-current', 'page');
+    // Boards und Kalender werden gemerkt
+    await nav(page).getByRole('button', { name: 'Kalender' }).click();
+    await page.reload();
+    await expect(nav(page).getByRole('button', { name: 'Kalender' })).toHaveAttribute('aria-current', 'page');
     await page.evaluate(() => localStorage.setItem('stups.tab', 'unsinn'));
     await page.reload();
     await expect(nav(page).getByRole('button', { name: 'Heute' })).toHaveAttribute('aria-current', 'page');

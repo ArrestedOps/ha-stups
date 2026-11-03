@@ -361,6 +361,12 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] **Erst vorschlagen:** Alle Anwesenden bekommen „Wer übernimmt?" mit Knopf; wer zuerst tippt, bekommt die Karte, der Zweite erfährt, wer schneller war. Nach 30 Minuten ohne Antwort greift der Rückfall
 - [ ] **Tonnen rausstellen** (Abfallkalender, Vorlauf 12 Stunden) legt am Vorabend eine Karte an, genau eine je Termin; **Wäsche rein, es regnet** reagiert auf Regen in der Vorhersage (Abfrage alle 30 Minuten)
 
+**Zuhause bearbeiten und lesen (seit 1.18.1)**
+
+- [ ] Die App öffnet immer auf **Heute**, auch wenn du zuletzt auf Zuhause warst. Boards und Kalender werden weiter gemerkt
+- [ ] Als Administrator: Tipp auf einen Wächter unter Zuhause öffnet das Bearbeiten (Satz, Mehr Regeln, Speichern, Testen, Pausieren, Löschen) mit dem Verlauf seiner Läufe; unten auf Zuhause steht die letzte Aktivität
+- [ ] Als Mitglied (kein Administrator): derselbe Tipp zeigt den Wächter lesend (Hinweis oben, Felder gesperrt, kein Speichern, Testen, Löschen), der Verlauf ist lesbar
+
 **Einstellungen**
 
 - [ ] Gruppen und Seiten: Administrator sieht „Für mich", „Haushalt", „Home Assistant", „Hilfe und Daten"; ein Mitglied nur „Für mich" und „Hilfe und Daten"; ein Kind nur „Sprache und Farbe". Die Wahl „HA-Kopfzeile ausblenden" gibt es für Mitglieder unter „Sprache und Farbe", für Administratoren unter „Dashboard und Kopfzeile"

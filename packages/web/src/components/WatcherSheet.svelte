@@ -38,6 +38,9 @@
   let busy = $state(false);
   let item = $state<WatcherItem | null>(null);
   let runs = $state<WatcherRun[]>([]);
+  /** Nur Administratoren ändern Wächter; alle anderen sehen Einstellungen und Verlauf lesend */
+  const readOnly = $derived(!ui.isAdmin);
+  let allRuns = $state(false);
   // svelte-ignore state_referenced_locally
   let form = $state<WatcherForm>(emptyForm(ui.boardId ?? '', ''));
   let view = $state<BoardView | null>(null);
@@ -56,8 +59,10 @@
         if (found) {
           item = found;
           const names = new Map<string, HaEntity>();
-          // Namen der Entitäten nachschlagen (Home Assistant liefert sie in der Suche)
-          for (const eid of [found.trigger.entityId, found.done?.entityId].filter((x): x is string => !!x)) {
+          // Der Name der beobachteten Entität steht schon im Wächter (auch für Mitglieder ohne Suche)
+          if (found.entityName) names.set(found.trigger.entityId, { entityId: found.trigger.entityId, name: found.entityName, state: found.entityState ?? '', unit: found.entityUnit, domain: '' });
+          // Namen der Entitäten nachschlagen (Home Assistant liefert sie in der Suche; nur Administratoren)
+          for (const eid of ui.isAdmin ? [found.trigger.entityId, found.done?.entityId].filter((x): x is string => !!x) : []) {
             const hit = (await api.haEntities(eid).catch(() => [])).find((e) => e.entityId === eid);
             if (hit) names.set(eid, hit);
           }
@@ -229,7 +234,7 @@
   </button>
 {/snippet}
 
-<Sheet title={id ? t('Wächter') : t('Neuer Wächter')} onclose={back} right={saveButton}>
+<Sheet title={id ? t('Wächter') : t('Neuer Wächter')} onclose={back} right={readOnly ? undefined : saveButton}>
   {#if loading}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
@@ -243,11 +248,16 @@
       </Group>
     {/if}
 
-    <WatcherSentence bind:form {personName} onpick={() => startPicking('trigger')} />
-    {#if picking === 'trigger'}
+    {#if readOnly}
+      <p class="mt-3 rounded-2xl bg-surface2 px-4 py-3 text-[15px]" data-testid="watcher-readonly">{t('Nur Administratoren ändern Wächter. Du kannst hier alles ansehen, auch den Verlauf.')}</p>
+    {/if}
+    <fieldset disabled={readOnly} class="m-0 min-w-0 border-0 p-0">
+      <WatcherSentence bind:form {personName} onpick={() => startPicking('trigger')} />
+    </fieldset>
+    {#if picking === 'trigger' && !readOnly}
       <div class="mt-2 rounded-2xl border border-line bg-surface p-3">{@render picker()}</div>
     {/if}
-    <DryRunPanel {form} />
+    {#if !readOnly}<DryRunPanel {form} />{/if}
 
     <button
       type="button"
@@ -258,6 +268,7 @@
       {t('Mehr Regeln')}<Icon name={moreOpen ? 'chevron-up' : 'chevron-down'} size={18} />
     </button>
     {#if moreOpen}
+    <fieldset disabled={readOnly} class="m-0 min-w-0 border-0 p-0">
     <Group title="Name">
       <div class="p-2"><input class={field} bind:value={form.name} maxlength="80" placeholder={t('z. B. Waschmaschine fertig')} aria-label={t('Name des Wächters')} /></div>
     </Group>
@@ -425,6 +436,7 @@
       </Row>
     </Group>
 
+    </fieldset>
     {/if}
 
     {#if id && item}
@@ -432,7 +444,7 @@
         <Row label={t('Zähler')}>
           <span class="flex items-center gap-3">
             <span>{item.trigger.count > 1 ? t('{n} von {total}', { n: item.counter, total: item.trigger.count }) : t('nicht aktiv')}</span>
-            {#if item.trigger.count > 1}
+            {#if item.trigger.count > 1 && !readOnly}
               <button type="button" class="min-h-9 rounded-xl bg-surface2 px-3 text-[14px] font-semibold" onclick={resetCounter}>{t('Zurücksetzen')}</button>
             {/if}
           </span>
@@ -442,7 +454,7 @@
             {!item.active ? t('pausiert') : item.status === 'entity_missing' ? t('Entität fehlt') : item.status === 'target_missing' ? t('Board oder Spalte fehlt') : item.subscribed ? t('aktiv') : t('Abo nicht aktiv')}
           </span>
         </Row>
-        {#each runs.slice(0, 8) as r (r.id)}
+        {#each runs.slice(0, allRuns ? runs.length : 8) as r (r.id)}
           <Row stack>
             <p class="text-[15px]">{RUN_TEXT[r.result] ?? r.result}{r.note ? ` · ${noteText(r.note)}` : ''}</p>
             <p class="text-[13px] text-fg2">{t('{time} Uhr', { time: clock(r.at) })}{r.assignedTo.length ? ` · ${r.assignedTo.map(personName).join(', ')}` : ''}</p>
@@ -450,13 +462,20 @@
         {:else}
           <Row stack><p class="text-[15px] text-fg2">{t('Noch keine Läufe.')}</p></Row>
         {/each}
+        {#if runs.length > 8}
+          <button type="button" class="min-h-11 w-full px-4 text-left text-[15px] font-semibold text-accent-text" onclick={() => (allRuns = !allRuns)}>
+            {allRuns ? t('Weniger anzeigen') : t('Älteren Verlauf anzeigen ({n})', { n: runs.length - 8 })}
+          </button>
+        {/if}
       </Group>
 
+      {#if !readOnly}
       <div class="mt-5 flex flex-col gap-2">
         <button type="button" class="min-h-12 rounded-2xl bg-surface2 font-semibold disabled:opacity-40" disabled={busy} onclick={test}>{t('Testen: Karte jetzt anlegen')}</button>
         <button type="button" class="min-h-12 rounded-2xl bg-surface2 font-semibold" onclick={togglePause}>{form.active ? t('Pausieren') : t('Wieder aktivieren')}</button>
         <button type="button" class="min-h-12 rounded-2xl bg-danger-bg font-semibold text-danger" onclick={askRemove}>{t('Wächter löschen')}</button>
       </div>
+      {/if}
     {/if}
   {/if}
 </Sheet>

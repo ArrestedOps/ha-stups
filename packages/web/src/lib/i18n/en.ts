@@ -968,4 +968,10 @@ export const en: Catalog = {
   'Wächter aus Vorlagen': 'Watchers from templates',
   'Papierkorb und Archiv': 'Bin and archive',
   'Version {version}': 'Version {version}',
+  'Tippe auf einen Wächter, um ihn zu bearbeiten.': 'Tap a watcher to edit it.',
+  'Tippe auf einen Wächter, um ihn anzusehen.': 'Tap a watcher to view it.',
+  'Wächter {name} öffnen': 'Open watcher {name}',
+  'Nur Administratoren ändern Wächter. Du kannst hier alles ansehen, auch den Verlauf.': 'Only administrators change watchers. You can see everything here, including the history.',
+  'Weniger anzeigen': 'Show less',
+  'Älteren Verlauf anzeigen ({n})': 'Show older history ({n})',
 };

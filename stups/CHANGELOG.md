@@ -1,5 +1,25 @@
 # Änderungen
 
+## 1.18.1
+
+*English first, German version below.*
+
+This version is the beta app's 1.18.1-beta.1.
+
+- **Always opens on "Today".** Anyone who was last on Home used to land there again on the next start. Now the app always opens on Today; only Boards and Calendar are remembered
+- **Home: open a watcher directly.** Tapping a watcher opens it. **Administrators edit it right there** (sentence, More rules, Test, Pause, Delete). **Everyone else sees it read-only:** settings and history, without saving and without changes (the server refuses them anyway)
+- **History visible.** At the bottom of Home is the **recent activity** of all watchers; inside a watcher the history of its runs, older ones on request. The "Quiet" line is now a list, every entry tappable
+- No change to the database
+
+**Deutsch**
+
+Diese Version ist die 1.18.1-beta.1 der Beta-App.
+
+- **Start immer auf „Heute".** Wer zuletzt unter Zuhause war, landete beim nächsten Öffnen wieder dort. Jetzt öffnet die App immer auf Heute; gemerkt werden nur Boards und Kalender
+- **Zuhause: Wächter direkt öffnen.** Ein Tipp auf einen Wächter öffnet ihn. **Administratoren bearbeiten ihn dort** (Satz, Mehr Regeln, Testen, Pausieren, Löschen). **Alle anderen sehen ihn lesend:** Einstellungen und Verlauf, ohne Speichern und ohne Änderungen (der Server verweigert sie ohnehin)
+- **Verlauf sichtbar.** Unten auf Zuhause steht die **letzte Aktivität** aller Wächter; im Wächter selbst der Verlauf seiner Läufe, älterer auf Wunsch. Die Zeile „Ruhig" ist jetzt eine Liste, jeder Eintrag antippbar
+- Keine Änderung an der Datenbank
+
 ## 1.18.0
 
 *English first, German version below.*

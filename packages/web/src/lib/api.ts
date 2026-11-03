@@ -241,6 +241,51 @@ export class ApiError extends Error {
 }
 
 /** Was die Betriebsart bietet (GET api/capabilities) */
+// ---------- Haus-Kanäle ----------
+
+export type HouseKind = 'nudge' | 'due' | 'watcher';
+export type HouseType = 'speak' | 'light';
+
+export interface HouseResult {
+  at: string;
+  result: 'delivered' | 'queued' | 'skipped_away' | 'skipped_quiet' | 'error';
+  error?: { code: 'no_tts' | 'ha_error'; detail: string; message: string };
+}
+
+export interface HouseChannel {
+  id: string;
+  userId: string;
+  type: HouseType;
+  name: string;
+  entityId: string;
+  enabled: boolean;
+  kinds: HouseKind[];
+  whenAway: 'skip' | 'wait';
+  waitMinutes: number;
+  volume: number | null;
+  createdAt: string;
+  status: HouseResult | null;
+}
+
+export interface HouseInfo {
+  channels: HouseChannel[];
+  /** Der Sprachdienst für alle Ansagen */
+  tts: string | null;
+  /** Personen mit Kanal, denen sich keine Person in Home Assistant zuordnen lässt */
+  unmatched: string[];
+}
+
+export interface HouseEntity {
+  entityId: string;
+  name: string;
+}
+
+export interface HouseEntities {
+  speakers: HouseEntity[];
+  lights: HouseEntity[];
+  tts: HouseEntity[];
+}
+
 export interface Capabilities {
   mode: 'addon' | 'standalone-ha' | 'standalone';
   /** normale App oder Beta */
@@ -250,6 +295,8 @@ export interface Capabilities {
   ha: boolean;
   watchers: boolean;
   sensors: boolean;
+  /** Haus-Kanäle (Ansage, Lampe): nur mit Verbindung zu Home Assistant */
+  house: boolean;
   push: string[];
   publicUrl: string | null;
   /** Anmeldung mit Passkey ist eingerichtet (eigene Konten, STUPS_PUBLIC_URL mit HTTPS) */
@@ -352,6 +399,14 @@ export const api = {
   me: () => get<Me>('me'),
   people: () => get<User[]>('people'),
   access: () => get<AccessInfo>('access'),
+  houseChannels: () => get<HouseInfo>('house/channels'),
+  houseEntities: () => get<HouseEntities>('house/entities'),
+  addHouseChannel: (b: { userId: string; type: HouseType; entityId: string; name?: string }) => post<HouseChannel>('house/channels', b),
+  updateHouseChannel: (id: string, b: Partial<Pick<HouseChannel, 'name' | 'enabled' | 'kinds' | 'whenAway' | 'waitMinutes' | 'volume'>>) =>
+    patch<HouseChannel>(`house/channels/${id}`, b),
+  removeHouseChannel: (id: string) => del(`house/channels/${id}`),
+  testHouseChannel: (id: string) => post<HouseResult>(`house/channels/${id}/test`),
+  setHouseTts: (tts: string | null) => put<{ tts: string | null }>('house/settings', { tts }),
   setAccessMode: (mode: AccessMode) => put<{ mode: AccessMode }>('access/mode', { mode }),
   addPerson: (b: { name: string; haUserId?: string | null }) => post<User>('access/people', b),
   updatePerson: (
@@ -460,6 +515,8 @@ export interface PushStatus {
   people: { name: string; services: { service: string; exists: boolean | null }[]; ntfy?: boolean }[];
   /** nur mit ntfy: wann der Testknopf zuletzt zurückgemeldet hat (null = noch nie seit dem Start) */
   ntfy: { url: string; buttons: boolean; roundTrip: string | null } | null;
+  /** Haus-Kanäle mit dem letzten Ergebnis; null ohne Home Assistant */
+  house: { person: string; name: string; type: HouseType; enabled: boolean; kinds: HouseKind[]; status: HouseResult | null }[] | null;
   recent: { kind: 'due' | 'reminder' | 'nag' | 'summary'; status: 'sent' | 'skipped' | 'failed'; at: string; title: string; user: string }[];
   nudges: { title: string; from: string; to: string; at: string; deliverAt: string; state: 'wartet' | 'offen' | 'beantwortet' | 'geschlossen' }[];
 }

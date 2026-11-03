@@ -1,9 +1,19 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { en } from '../src/lib/i18n/en';
 import { extract, placeholders, type Found } from './helpers/i18n-extract';
 
-// Alle Quelltexte der Oberfläche als Rohtext (ohne den Katalog selbst), auch neu angelegte Dateien
-const sources = import.meta.glob<string>(['../src/**/*.ts', '../src/**/*.svelte', '!../src/lib/i18n/**'], { query: '?raw', import: 'default', eager: true });
+// Alle Quelltexte der Oberfläche als Rohtext (ohne den Katalog selbst). Direkt vom Dateisystem gelesen, nicht mit import.meta.glob:
+// Das merkt sich die Dateiliste im Zwischenspeicher von Vitest, und neu angelegte Dateien fehlten dann, bis die Testdatei geändert wurde.
+const root = fileURLToPath(new URL('../src', import.meta.url));
+const sources: Record<string, string> = Object.fromEntries(
+  readdirSync(root, { recursive: true, encoding: 'utf8' })
+    .map((p) => p.replaceAll('\\', '/'))
+    .filter((p) => /\.(ts|svelte)$/.test(p) && !p.startsWith('lib/i18n/'))
+    .map((p) => [`../src/${p}`, readFileSync(join(root, p), 'utf8')]),
+);
 
 const found = new Map<string, Found>();
 for (const source of Object.values(sources)) for (const x of extract(source)) found.set(x.key, x);

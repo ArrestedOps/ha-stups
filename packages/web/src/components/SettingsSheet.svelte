@@ -2,7 +2,8 @@
   import { onMount } from 'svelte';
   import { api, ApiError, type PushStatus } from '../lib/api';
   import { applyHeaderHiding, isHeaderHidingWanted, setHeaderHidingWanted, showHaHeader } from '../lib/hideHaHeader';
-  import { type LanguageChoice, numberLocale, t, tn } from '../lib/i18n/index.svelte';
+  import { houseResultLabel } from '../lib/house';
+import { type LanguageChoice, numberLocale, t, tn } from '../lib/i18n/index.svelte';
   import { act, changeLanguage, closeSheet, feat, logout, openSheet, selectTab, toast, ui } from '../lib/store.svelte';
   import AccentPicker from './AccentPicker.svelte';
   import BetaSettings from './BetaSettings.svelte';
@@ -325,6 +326,19 @@ tap_action:
                   {t('Rückweg der Knöpfe seit dem Start nicht geprüft (Test-Nachricht senden und auf „Rückweg prüfen“ tippen).')}
                 {/if}
               </p>
+            </div>
+          {/if}
+          {#if status.house && status.house.length > 0}
+            <div data-testid="house-status">
+              <p class="font-semibold">{t('Haus')}</p>
+              {#each status.house as h, i (i)}
+                <p class="mt-1">
+                  {h.person}: {h.type === 'speak' ? t('Ansage') : t('Lampe')} {h.name}
+                  <span class="block text-[13px] {h.status?.result === 'error' ? 'text-danger' : 'text-fg2'}">
+                    {#if !h.enabled}{t('ausgeschaltet')}{:else if !h.status}{t('noch nichts gesendet seit dem Start')}{:else}{houseResultLabel(h.status)}{#if h.status.result !== 'error'} · {clock(h.status.at)}{/if}{/if}
+                  </span>
+                </p>
+              {/each}
             </div>
           {/if}
           <div>

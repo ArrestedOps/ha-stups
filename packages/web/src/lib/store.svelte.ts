@@ -118,6 +118,10 @@ export const feat = {
   get ha(): boolean {
     return ui.caps?.ha ?? !this.standalone;
   },
+  /** Haus-Kanäle (Ansage über einen Lautsprecher, Lampe): nur mit Verbindung zu Home Assistant */
+  get house(): boolean {
+    return ui.caps?.house ?? false;
+  },
   /** Die Beta-App (mit eigenen Daten; Push und Wächter sind dort zunächst aus) */
   get beta(): boolean {
     return ui.caps?.channel === 'beta';

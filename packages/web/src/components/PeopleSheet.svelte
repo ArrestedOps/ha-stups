@@ -1,10 +1,11 @@
 <script lang="ts">
   import { t, tn } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
-  import { api, ApiError, type AccessInfo, type AccessMode, type Account } from '../lib/api';
+  import { api, ApiError, type AccessInfo, type AccessMode, type Account, type HouseEntities, type HouseInfo } from '../lib/api';
   import { closeSheet, feat, refresh, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Group from './Group.svelte';
+  import HouseChannels from './HouseChannels.svelte';
   import Icon from './Icon.svelte';
   import Row from './Row.svelte';
   import Sheet from './Sheet.svelte';
@@ -27,10 +28,18 @@
   let nuPw = $state('');
   let nuAdmin = $state(false);
 
+  // Haus-Kanäle (nur Administratoren, nur mit Home Assistant): Kanäle und die Auswahl an Lautsprechern, Lampen und Sprachdiensten
+  let house = $state<HouseInfo | null>(null);
+  let entities = $state<HouseEntities | null>(null);
+
   async function load() {
     try {
       info = await api.access();
       if (feat.standalone && info.isAdmin) accounts = await api.accounts().catch(() => accounts);
+      if (feat.house && info.isAdmin) {
+        house = await api.houseChannels().catch(() => house);
+        if (!entities) entities = await api.houseEntities().catch(() => null);
+      }
       loadError = '';
     } catch (e) {
       loadError = e instanceof ApiError ? e.message : t('Konnte die Personen nicht laden');
@@ -190,6 +199,23 @@
         {#if !admin && !info.managed}<p class="mt-2 text-[13px] text-fg2">{t('Das ändern nur Administratoren von Home Assistant.')}</p>{/if}
       </Row>
     </Group>
+    {/if}
+
+    {#if feat.house && admin && house}
+      <Group title={t('Haus')} hint={t('Der Sprachdienst, mit dem alle Ansagen gesprochen werden. Die Kanäle (Lautsprecher, Lampe) richtest du bei jeder Person ein.')}>
+        <Row label={t('Sprachdienst')}>
+          <select
+            class="min-h-11 max-w-full rounded-xl bg-surface2 px-3"
+            value={house.tts ?? ''}
+            disabled={busy || !entities}
+            aria-label={t('Sprachdienst für Ansagen')}
+            onchange={(e) => run(() => api.setHouseTts(e.currentTarget.value || null))}
+          >
+            <option value="">{t('Nicht gewählt')}</option>
+            {#each entities?.tts ?? [] as o (o.entityId)}<option value={o.entityId}>{o.name}</option>{/each}
+          </select>
+        </Row>
+      </Group>
     {/if}
 
     <Group title={t('Personen')} hint={t('Diese Personen kann man Karten zuweisen, und sie bekommen die Push-Nachrichten.')}>
@@ -366,6 +392,10 @@
                   {/each}
                 {/if}
               </div>
+              {/if}
+
+              {#if feat.house && admin && house}
+                <HouseChannels person={p} {house} {entities} {run} {busy} />
               {/if}
 
               {#if canEdit(p.id)}

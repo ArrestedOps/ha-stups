@@ -1,5 +1,29 @@
 # Änderungen
 
+## 1.17.0
+
+*English first, German version below.*
+
+This version combines everything that ran in the beta app as 1.16.0 and 1.17.0.
+
+- **Stups in the house.** A nudge (and, if you like, a due-date reminder or a watcher card) can arrive in the house: as an **announcement on a speaker** ("Ben, Anna nudges you: Take out the trash. Are you on it?") or as a **lamp that lights up for five seconds in the person's accent colour** and then returns to what it was. Meant for children without a phone. Needs the connection to Home Assistant. Administrators set it up under Settings › People & access (speech service once, then channels per person); each channel can be switched on and off, chooses which messages may arrive, and what happens when the person is not at home (discard, or wait until they come home). The person's quiet time applies
+- **Fairness.** Agenda › "Dates | Fairness": who completed how much this week or this month, as a bar for the **effort**. Every card has an optional effort (small, medium, large; without it, medium). **No ranking:** no places, no medals, the order is that of the people list. If you like, switch on a **Sunday-evening summary** for yourself (off until you switch it on, never "0")
+- **Child role.** Settings › People & access › Child role (administrators only). A child sees all boards or only those with their own cards and can tick off their own cards, comment, and attach photos and links, nothing else; the **server** refuses everything else. The app shows a reduced interface
+- **Confirmation.** Switchable per child, overridable per card: the child ticks a card, it **waits for confirmation**, and the adults get **Confirm / Again** (in the message or in the card). Confirmed, it counts **for the child**; "Again" sends it back, spoken in the house if a house channel exists. Unanswered requests remind the confirmers after two hours, at most once a day. If nobody is chosen as confirmer, all adults may confirm
+- **Board templates.** When creating a board, start empty or from a template (Household, Moving house, Renovation, Packing for a trip, Baby on the way, Ideas and outings) with a preview. Save your own boards as templates
+- Database: new tables and columns for house channels, templates, effort, summary and the child role (migrations 16 to 19, with a backup beforehand as always). Without children, templates and the Sunday summary, nothing changes for anyone
+
+**Deutsch**
+
+Diese Version fasst die Versionen 1.16.0 und 1.17.0 zusammen, die zuvor in der Beta-App liefen.
+
+- **Stups ins Haus.** Ein Stups (und wenn du magst eine Fälligkeits-Erinnerung oder eine Wächter-Karte) kann im Haus ankommen: als **Ansage über einen Lautsprecher** („Ben, Anna stupst dich: Müll rausbringen. Denkst du dran?") oder als **Lampe, die fünf Sekunden in der Akzentfarbe der Person leuchtet** und danach wieder so ist wie vorher. Gedacht für Kinder ohne Handy. Nur mit Home Assistant. Administratoren richten es unter Einstellungen › Personen & Zugriff ein (einmal den Sprachdienst, dann Kanäle je Person); jeder Kanal ist ein- und ausschaltbar, wählt, welche Nachrichten ankommen, und was geschieht, wenn die Person nicht zu Hause ist (verwerfen oder warten, bis sie heimkommt). Die Ruhezeit der Person gilt
+- **Fairness.** Agenda › „Termine | Fairness": wer diese Woche oder diesen Monat wie viel erledigt hat, als Balken für den **Aufwand**. Jede Karte hat einen optionalen Aufwand (klein, mittel, groß; ohne Angabe mittel). **Keine Rangliste:** keine Plätze, keine Medaillen, die Reihenfolge ist die der Personenliste. Wer mag, schaltet bei sich eine **Zusammenfassung am Sonntagabend** ein (aus, bis du sie einschaltest, nie bei null)
+- **Rolle Kind.** Einstellungen › Personen & Zugriff › Rolle Kind (nur Administratoren). Ein Kind sieht alle Boards oder nur die mit eigenen Karten und kann eigene Karten abhaken, kommentieren, Fotos und Links anhängen, sonst nichts; der **Server** verweigert alles andere. Die App zeigt ihm eine reduzierte Oberfläche
+- **Bestätigung.** Je Kind einschaltbar, je Karte überschreibbar: Das Kind hakt ab, die Karte **wartet auf Bestätigung**, die Erwachsenen bekommen **Bestätigen / Nochmal** (in der Nachricht oder in der Karte). Bestätigt zählt sie **für das Kind**; „Nochmal" gibt sie zurück, mit Ansage im Haus, wenn ein Haus-Kanal da ist. Unbeantwortet erinnert Stups nach zwei Stunden, höchstens einmal am Tag. Ist niemand als Bestätiger gewählt, dürfen alle Erwachsenen bestätigen
+- **Board-Vorlagen.** Beim Anlegen eines Boards leer oder aus einer Vorlage starten (Haushalt, Umzug, Renovierung, Urlaub packen, Baby kommt, Ideen und Unternehmungen) mit Vorschau. Eigene Boards lassen sich als Vorlage speichern
+- Datenbank: neue Tabellen und Spalten für Haus-Kanäle, Vorlagen, Aufwand, Zusammenfassung und die Rolle Kind (Migrationen 16 bis 19, vorher wie immer eine Sicherung). Ohne Kinder, Vorlagen und Sonntagsnachricht ändert sich für niemanden etwas
+
 ## 1.15.0
 
 *English first, German version below.*

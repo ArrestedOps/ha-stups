@@ -41,6 +41,7 @@ Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haus
 - **Wächter:** Stups beobachtet Entitäten in Home Assistant und legt von selbst Karten an: „Die Waschmaschine ist fertig, also bekommt eine Person, die zu Hause ist, die Karte ‚ausräumen'." Mit Zähler (Saugroboter: nach 3 Reinigungen) und „wer zuerst nach Hause kommt". Einrichtung ohne YAML.
 - **Push über die Companion App:** zur Fälligkeit, vorab, nachhaken, Tageszusammenfassung. „Erledigt" direkt in der Nachricht.
 - **Stupsen:** einer anderen Person zu ihrer Karte einen Stups schicken („Denkst du dran?"). Mit Sperrzeit und Ruhezeit pro Person, damit niemand genervt wird.
+- **Haus-Kanäle:** Ein Stups kann auch im Haus ankommen: als Ansage über einen Lautsprecher oder als Lampe, die in deiner Farbe aufleuchtet, für Kinder ohne Handy. Je Kanal wählst du, welche Nachrichten ankommen und was geschieht, wenn jemand nicht zu Hause ist.
 - **Mehrere Personen:** Zugriff steuerst du unter Einstellungen › Personen & Zugriff. Wer Administrator in Home Assistant ist, stellt ein; alle freigegebenen Personen dürfen Boards, Karten und Kategorien anlegen.
 - **Sensoren** für Home Assistant: überfällige und heute fällige Karten, gesamt und je Person, offene Stupse.
 - Alles bleibt bei dir: SQLite im Add-on-Speicher, Teil des normalen HA-Backups.

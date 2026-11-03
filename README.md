@@ -45,6 +45,7 @@ A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your h
 - **Watchers:** Stups observes entities in Home Assistant and creates cards by itself: "The washing machine is done, so whoever is at home gets the card 'empty it'." With a counter (robot vacuum: after 3 cleanings) and "whoever gets home first". Set up without YAML.
 - **Push through the Companion App:** when due, in advance, as a follow-up, and a daily summary. "Done" right in the message.
 - **Nudging:** send another person a nudge for their card ("Are you on it?"). With lock time and quiet time per person so nobody gets annoyed.
+- **House channels:** a nudge can also arrive in the house: an announcement on a speaker or a lamp that lights up in your colour, for children without a phone. Per channel you choose which messages arrive and what happens when someone is not at home.
 - **Several people:** you control access under Settings › People & Access. Home Assistant administrators set things up; all approved people may create boards, cards and categories.
 - **English and German:** the app follows your device language; Settings › Language switches it for you on all your devices, push messages included.
 - **Sensors** for Home Assistant: overdue and due-today cards, in total and per person, open nudges.

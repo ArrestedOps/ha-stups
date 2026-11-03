@@ -276,7 +276,25 @@ Am iPhone, in der Beta zuerst.
 - [ ] **Plus-Knopf:** In „Erledigt“ oder „In Arbeit“ tippen: die neue Karte landet trotzdem in „Offen“. Mit einem Termin nach heute landet sie in „Geplant“, mit Termin heute oder ohne in „Offen“
 - [ ] **Desktop:** Am Computer gibt es nur den einen Plus-Knopf unten rechts, keinen je Spalte
 
-## 24 · Dokumentation und Auftritt (seit 1.15.0)
+## 24 · Stups ins Haus (seit 1.16.0)
+
+Nur am echten Haus: Home Assistant mit einem Lautsprecher (`media_player`), einem Sprachdienst (`tts`) und einer Lampe (`light`). Zuerst in der Beta (dort Push einschalten, Einstellungen › Beta), sonst bleibt es still.
+
+- [ ] **Einrichten:** Einstellungen › Personen & Zugriff: Gruppe „Haus", Sprachdienst wählen. Bei einer Person „Kanal hinzufügen": Ansage mit deinem Lautsprecher, Lampe mit einer Lampe. Die Listen zeigen die Namen aus Home Assistant
+- [ ] **Testen:** „Testen" an der Ansage: Der Lautsprecher sagt „Das ist ein Test von Stups." (englisch bei englischem Gerät). „Testen" an der Lampe: sie leuchtet fünf Sekunden und ist danach wieder so wie vorher (probiere es einmal mit eingeschalteter, einmal mit ausgeschalteter Lampe)
+- [ ] **Stups ins Haus:** Eine Person ohne Handy (nur Haus-Kanal) lässt sich stupsen. Der Lautsprecher sagt „Ben, Anna stupst dich: …", die Lampe leuchtet in der Akzentfarbe der Person (Einstellungen › Farbe)
+- [ ] **Lautstärke:** Mit eingestellter Lautstärke spricht der Lautsprecher in dieser Lautstärke und stellt danach die vorherige wieder her
+- [ ] **Läuft Musik?** Notiere, was dein Lautsprecher macht (leiser, Pause, nichts). Das bestimmt der Player, Stups kann es nicht ändern
+- [ ] **Ruhezeit:** In der Ruhezeit der Person sagt das Haus nichts an. Ein Stups kommt danach, eine Fälligkeits-Erinnerung entfällt
+- [ ] **Nicht zu Hause, „verwerfen":** Die Person ist unterwegs: nichts wird angesagt, im Protokoll (Einstellungen › Benachrichtigungen) steht „Verworfen, nicht zu Hause"
+- [ ] **Nicht zu Hause, „warten":** Der Stups wartet; kommt die Person heim (Zustand „home" in Home Assistant), wird er angesagt. Nach Ablauf der Frist nicht mehr
+- [ ] **Erledigt in der Zwischenzeit:** Eine wartende Nachricht entfällt, wenn die Karte inzwischen erledigt ist
+- [ ] **Nur Stupse, Fälligkeit nur wenn gewählt:** Ein neuer Kanal sagt nur Stupse an. Schaltest du „Fälligkeiten" ein, kommt auch die Erinnerung zur Fälligkeit
+- [ ] **Beta und normale App:** Es wird nie doppelt angesagt. Die Beta bleibt still, solange Push dort aus ist
+- [ ] **Neustart mitten im Leuchten:** Starte die App neu, während die Lampe leuchtet: sie ist danach wieder im alten Zustand, und es liegt keine Szene `scene.stups_haus_…` in Home Assistant herum
+- [ ] **Mitglieder:** Wer kein Administrator ist, sieht den Haus-Block nicht
+
+## 25 · Dokumentation und Auftritt (seit 1.15.0)
 
 - [ ] **README auf GitHub** (englisch): Das Demo-GIF läuft, die Bilder sind englisch, die Knöpfe „Zu Home Assistant hinzufügen“ und die Beta-Adresse stimmen. Oben der Link zur deutschen Fassung; `README.de.md` zeigt deutsche Bilder
 - [ ] **Home Assistant › Stups › Dokumentation** (englisch, mit Link zur deutschen Fassung) liest sich verständlich; die Menüwege in der Anleitung („Settings › People & Access“) gibt es genau so in der englischen Oberfläche

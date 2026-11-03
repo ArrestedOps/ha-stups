@@ -135,3 +135,14 @@ Der Haus-Weg prüft für jeden eingeschalteten Kanal der Person der Reihe nach:
 - Die Lampe ist nach jedem Aufleuchten wieder im alten Zustand.
 - Alle Texte gibt es auf Deutsch und Englisch, die Abdeckungstests sind grün.
 - Browser-Tests laufen stabil (keine Abhängigkeit von der Uhrzeit).
+
+## 8. Was sich bei der Umsetzung gegenüber dem Entwurf geändert hat
+
+- **Erreichbarkeit kennt die Art der Nachricht:** `canReach(userId, kind)`. Eine Person, die nur einen Stups-Kanal hat, gilt für Fälligkeiten und Zusammenfassungen nicht als erreichbar (sonst hätte der Notifier sinnlos wiederholt). Ohne Art erreicht nichts das Haus. Dazu zählt `hasDevice` im Datenteil eingeschaltete Haus-Kanäle für Stupse, sonst wäre eine Person ohne Handy trotz Kanal nicht stupsbar.
+- **Bewusst Verworfenes ist kein Fehler:** `send` meldet „zugestellt“, wenn ein Kanal ausgeliefert, in die Warteschlange gelegt oder wegen Ruhezeit/Abwesenheit bewusst verworfen hat. Nur wenn alle passenden Kanäle an einem Fehler scheitern, ist es „nicht zugestellt“. Sonst würde der Notifier nach 1, 5 und 15 Minuten wiederholen.
+- **Personen werden weich entfernt** (`is_person = 0`, wie bisher): Ihre Kanäle bleiben in der Datenbank, zählen aber nur, solange die Person eine Person ist. Kommt sie zurück, gelten sie wieder.
+- **Die Warteschlange hat einfache Spalten** (`kind`, `spoken`, `card_id`, `nudge_id`) statt eines JSON-Felds.
+- **Anwesenheit beim Senden wird frisch erfragt** (einmal je Nachricht); nur der Takt der Warteschlange nutzt den Zwischenspeicher. Sonst gälte jemand, der gerade weggegangen ist, noch bis zu 15 Sekunden als zu Hause.
+- **Das Beta-Tor gilt auch für die Warteschlange**, denn sie liefert selbst aus und läuft nicht über `send`: `betaGate.pushAllowed`.
+- **Der Sprachdienst-Wert wird sofort gelesen:** `run` führt Änderungen erst später aus, dann ist `event.currentTarget` leer. Der Browser-Test mit `selectOption` hat das gezeigt.
+- Der Abdeckungstest der Oberfläche liest die Quelltexte vom Dateisystem (`import.meta.glob` merkte sich die Dateiliste, neue Dateien fehlten).

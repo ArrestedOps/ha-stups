@@ -2,6 +2,17 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.16.0-beta.1
+
+- **Stups ins Haus.** Ein Stups (und wenn du magst eine Fälligkeits-Erinnerung oder eine Wächter-Karte) kann im Haus ankommen: als **Ansage über einen Lautsprecher** („Ben, Anna stupst dich: Müll rausbringen. Denkst du dran?") oder als **Lampe, die fünf Sekunden in der Akzentfarbe der Person leuchtet** und danach wieder so ist wie vorher. Gedacht für Kinder ohne Handy. Nur mit Home Assistant
+- **Einrichten (Administratoren):** Einstellungen › Personen & Zugriff. Oben einmal den Sprachdienst wählen (Gruppe „Haus"), dann bei jeder Person unter „Haus" Kanäle hinzufügen (Lautsprecher oder Lampe aus einer Liste aus Home Assistant). Jeder Kanal ist einzeln ein- und ausschaltbar und hat einen „Testen"-Knopf
+- **Je Kanal wählbar:** welche Nachrichten ankommen (Stupse, Fälligkeiten, Wächter-Karten; neu ist nur „Stupse" an), eine Lautstärke für die Ansage (danach geht der Lautsprecher auf die vorherige zurück) und **was geschieht, wenn die Person nicht zu Hause ist**: verwerfen oder warten, bis sie heimkommt (mit Frist, ist die Karte inzwischen erledigt oder der Stups beantwortet, entfällt die Nachricht)
+- Die **Ruhezeit** der Person gilt: Stupse warten bis zu ihrem Ende, Erinnerungen und Wächter-Karten entfallen. „Zu Hause" kommt von der Person in Home Assistant (über den Benutzer oder den Namen); passt keine, gilt die Person als zu Hause
+- Wer nur einen Haus-Kanal hat, lässt sich trotzdem stupsen und bekommt Karten zugewiesen. Die Push-Übersicht (Einstellungen › Benachrichtigungen) zeigt jeden Kanal mit dem letzten Ergebnis
+- **In der Beta bleiben die Haus-Kanäle still, bis Push eingeschaltet ist** (Einstellungen › Beta), damit nichts doppelt angesagt wird: Ansage und Lampe laufen sonst in der Beta und der normalen App gleichzeitig
+- Die Anleitung beschreibt ehrlich, was nur dein Lautsprecher entscheidet (laufende Musik) und was nicht (Lampen ohne Farbe leuchten weiß). Am echten Haus musst du es selbst abhaken: Testliste, Abschnitt 24
+- Datenbank: zwei neue Tabellen für die Kanäle und die Warteschlange (Migration 16, vorher wie immer eine Sicherung)
+
 ## 1.15.0-beta.2
 
 - **Personen & Zugriff öffnet sich sofort.** Ohne Verbindung zu Home Assistant (eigener Container) wartete die Schnittstelle bei jedem Öffnen auf einen Home Assistant, den es nicht gibt, und brauchte je nach Rechner 2 bis 3 Sekunden. Jetzt antwortet sie in wenigen Millisekunden. In der App mit Home Assistant ändert sich nichts

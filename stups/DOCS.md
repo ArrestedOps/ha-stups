@@ -146,6 +146,27 @@ If someone completes the card (wherever), every sender of an open nudge gets "�
 
 On the card an orange badge "Conny nudges you" shows when someone nudged you, and a subtle hint "You nudged Conny" for your own. The **Nudged** filter above the list shows the cards with an open nudge to you. "Show status" in the settings lists the nudges with their state.
 
+### House channels: announcements and lamps
+
+A nudge (and, if you like, a due-date reminder or a watcher card) can arrive **in the house** instead of on a phone. That is meant for children without a phone, and for everybody who is at home and not looking at a screen. It needs the connection to Home Assistant.
+
+Administrators set it up under **Settings › People & access**. Choose a speech service once (group **House**), then open a person and add channels under **House**:
+
+- **Announcement:** a speaker (`media_player`). Stups says, for example: "Ben, Anna nudges you: Take out the trash. Are you on it?" You can set a volume; afterwards the speaker goes back to its previous volume.
+- **Lamp:** a light that lights up for five seconds in the person's accent colour and then returns to what it was before (also when it was off).
+
+Each channel can be switched on and off on its own. For every channel you choose **which messages may arrive** (nudges, due dates, watcher cards; a new channel only has nudges) and **what happens when the person is not at home**: *discard* the message, or *wait until the person comes home* (with a time limit in minutes; the message is dropped if the card is done or the nudge answered in the meantime). **Test** tries the channel right away.
+
+Good to know:
+
+- The person's **quiet time** applies: nudges wait until it is over, due-date reminders and watcher cards are dropped during it.
+- "At home" comes from the person in Home Assistant (matched by user, otherwise by name). If none matches, Stups treats the person as at home, and the settings say so.
+- Someone with only a house channel can still be nudged and assigned cards.
+- What happens to music that is playing is up to the speaker: some lower the volume, some pause, some play on. A lamp that cannot show colours simply lights up white.
+- There are no buttons in a house message. You finish a card in the app.
+- In the **beta**, house channels stay silent until push is switched on (Settings › Beta), so nothing is announced twice.
+- The overview under Settings › Notifications shows every channel with its last result.
+
 ### Watchers: cards created automatically from Home Assistant
 
 A watcher observes an entity in Home Assistant and **creates a card and assigns it by itself** as soon as something happens. The standard example: the washing machine is done, and a person who is at home gets the card "Empty the washing machine" (due in 30 minutes) along with a push message. Only Home Assistant **administrators** may set up and change watchers; everyone sees them.

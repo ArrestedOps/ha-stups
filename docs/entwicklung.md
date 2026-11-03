@@ -111,6 +111,17 @@ Stups spricht Deutsch und Englisch. **Der deutsche Text steht im Quelltext und i
 - **Demo-GIF:** `node e2e/demo.mjs --lang en` und `--lang de` schreiben `docs/images/demo.<sprache>.gif` (iPhone-Ansicht, erfundene Daten, Einzelbilder per Screenshot, zusammengesetzt mit `gifenc`). Ein Test (`demo-gif.test.ts`) hält Größe (unter 3 MB) und Format fest.
 - **Ankündigungen:** Entwürfe in `docs/announcements/` (nicht veröffentlicht; den Text prüft und postet der Mensch).
 
+### Haus-Kanäle (seit 1.16.0)
+
+Ansage und Lampe sind ein dritter Push-Weg (`house.ts`, `createHousePush`) neben der Companion App und ntfy, eingehängt in `combinePush`. Dadurch gelten Doppelungsschutz, Protokoll und der Beta-Schalter ohne Umbau; die Warteschlange liefert selbst aus und fragt das Tor deshalb mit `allowed` (`betaGate.pushAllowed`).
+
+- `PushMessage` trägt `kind` (`nudge` | `due` | `watcher`), `spoken` (der Satz in der Sprache des Empfängers) und `nudgeId`. Nachrichten ohne `kind` erreichen das Haus nie. `canReach(userId, kind)` kennt die Art, `hasDevice` im Datenteil zählt Haus-Kanäle für Stupse mit.
+- `presence.ts` ordnet Stups-Personen den HA-Personen zu (gemeinsam mit den Wächtern). Beim Senden wird frisch gefragt, der Takt der Warteschlange darf den Zwischenspeicher (15 s) nutzen. Ohne passende HA-Person gilt `unknown`, und das heißt „zu Hause".
+- `house-drivers.ts`: `tts.speak`, `media_player.volume_set` mit Rückstellung nach `Länge × 0,08 s + 3 s`, Lampe über `scene.create`/`scene.turn_on`/`scene.delete` (`scene.stups_haus_<kanal>`), eine Sperre je Lampe (Verlängern statt zweiter Szene), Aufräumen beim Start. Zeitgeber werden eingespritzt.
+- `accent.ts` im Server ist eine Kopie der Farbrechnung im Browser; `test/accent-color.test.ts` hält beide gleich.
+- Daten: Migration 16 (`house_channels`, `house_pending`); `house_pending` ist eine stille Tabelle (ändert keine Ansicht, kein Live-Sync). Wer als Person entfernt wird, hat keine Kanäle mehr (weiche Löschung), kommt sie zurück, gelten sie wieder.
+- Tests: alle Zeitregeln mit fester Uhr (Einheiten); der Test-Home-Assistant (`e2e/mock-ha.mjs`) kennt Ansage, Lautstärke, Lampe und Szenen und zeichnet sie unter `/mock/calls` auf. `e2e/20-haus.spec.ts` läuft im Projekt `waechter`.
+
 ### Live-Sync mit Änderungen (seit 1.13.0)
 
 Jede Änderung löst eine Meldung über den WebSocket (`/api/events`) aus. Neu: Die Meldung sagt, was sich geändert hat, und der Client holt nur das nach.

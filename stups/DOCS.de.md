@@ -142,6 +142,27 @@ Erledigt jemand die Karte (egal wo), bekommt jeder Absender eines offenen Stupse
 
 An der Karte zeigt ein orangefarbenes Abzeichen „Conny stupst dich", wenn dich jemand gestupst hat, und ein dezenter Hinweis „Du hast Conny gestupst" bei deinen eigenen. Der Filter **Gestupst** über der Liste zeigt die Karten mit einem offenen Stups an dich. „Stand anzeigen" in den Einstellungen listet die Stupse mit ihrem Stand.
 
+### Haus-Kanäle: Ansagen und Lampen
+
+Ein Stups (und wenn du magst eine Fälligkeits-Erinnerung oder eine Wächter-Karte) kann **im Haus** ankommen statt auf dem Handy. Gedacht für Kinder ohne Handy und für alle, die zu Hause sind und nicht auf einen Bildschirm schauen. Es braucht die Verbindung zu Home Assistant.
+
+Administratoren richten es unter **Einstellungen › Personen & Zugriff** ein. Einmal einen Sprachdienst wählen (Gruppe **Haus**), dann eine Person aufklappen und unter **Haus** Kanäle hinzufügen:
+
+- **Ansage:** ein Lautsprecher (`media_player`). Stups sagt zum Beispiel: „Ben, Anna stupst dich: Müll rausbringen. Denkst du dran?" Du kannst eine Lautstärke einstellen; danach geht der Lautsprecher auf die vorherige zurück.
+- **Lampe:** eine Lampe, die fünf Sekunden in der Akzentfarbe der Person leuchtet und dann wieder so ist wie vorher (auch wenn sie aus war).
+
+Jeder Kanal lässt sich einzeln ein- und ausschalten. Je Kanal wählst du, **welche Nachrichten ankommen** (Stupse, Fälligkeiten, Wächter-Karten; ein neuer Kanal hat nur Stupse) und **was geschieht, wenn die Person nicht zu Hause ist**: die Nachricht *verwerfen* oder *warten, bis die Person heimkommt* (mit einer Frist in Minuten; ist die Karte inzwischen erledigt oder der Stups beantwortet, entfällt sie). **Testen** probiert den Kanal sofort aus.
+
+Gut zu wissen:
+
+- Es gilt die **Ruhezeit** der Person: Stupse warten, bis sie vorbei ist, Fälligkeits-Erinnerungen und Wächter-Karten entfallen in dieser Zeit.
+- „Zu Hause" kommt von der Person in Home Assistant (zugeordnet über den Benutzer, sonst über den Namen). Passt keine, behandelt Stups die Person als zu Hause, und die Einstellungen weisen darauf hin.
+- Wer nur einen Haus-Kanal hat, kann trotzdem gestupst werden und Karten zugewiesen bekommen.
+- Was mit laufender Musik geschieht, bestimmt der Lautsprecher: Manche senken die Lautstärke, manche pausieren, manche spielen weiter. Eine Lampe ohne Farbe leuchtet einfach weiß.
+- In einer Haus-Nachricht gibt es keine Knöpfe. Erledigt wird in der App.
+- In der **Beta** bleiben die Haus-Kanäle still, bis Push eingeschaltet ist (Einstellungen › Beta), damit nichts doppelt angesagt wird.
+- Die Übersicht unter Einstellungen › Benachrichtigungen zeigt jeden Kanal mit dem letzten Ergebnis.
+
 ### Wächter: Karten automatisch aus Home Assistant
 
 Ein Wächter beobachtet eine Entität in Home Assistant und legt **von selbst eine Karte an und weist sie zu**, sobald etwas passiert. Das Standardbeispiel: Die Waschmaschine ist fertig, und eine Person, die gerade zu Hause ist, bekommt die Karte „Waschmaschine ausräumen" (fällig in 30 Minuten) samt Push-Nachricht. Wächter einrichten und ändern dürfen nur **Administratoren** von Home Assistant, alle Personen sehen sie.

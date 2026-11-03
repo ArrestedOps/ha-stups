@@ -98,7 +98,7 @@ test('Einrichten in den Einstellungen: Sprachdienst wählen, Ansage-Kanal anlege
   await tts.selectOption('tts.piper');
   await expect(tts).toHaveValue('tts.piper');
 
-  await page.getByRole('button', { name: /Conny/ }).first().click();
+  await page.getByRole('dialog').getByRole('button', { name: /Conny.*Push-Gerät/ }).click();
   const house = page.getByTestId(`house-${conny.id}`);
   await house.getByRole('button', { name: 'Kanal hinzufügen' }).click();
   await house.getByLabel('Typ des Kanals').selectOption('speak');
@@ -180,7 +180,7 @@ test('Ein Mitglied sieht den Haus-Block nicht und darf die Schnittstelle nicht b
     expect((await ctx.request.post('/api/house/channels', { data: { userId: conny.id, type: 'speak', entityId: 'media_player.kinderzimmer' } })).status()).toBe(403);
     const page = await ctx.newPage();
     await openPeople(page);
-    await page.getByRole('button', { name: /Conny/ }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: /Conny.*Push-Gerät/ }).click();
     await expect(page.getByLabel('Sprachdienst für Ansagen')).toHaveCount(0);
     await expect(page.locator('[data-testid^=house-]')).toHaveCount(0);
   } finally {

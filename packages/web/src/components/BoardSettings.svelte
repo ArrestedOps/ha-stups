@@ -9,6 +9,7 @@
   import SelectField from './SelectField.svelte';
   import Sheet from './Sheet.svelte';
   import SubmitPill from './SubmitPill.svelte';
+  import TemplateSettings from './TemplateSettings.svelte';
 
   const view = $derived(ui.view);
   const columns = $derived(view?.columns ?? []);
@@ -210,6 +211,8 @@
         <SubmitPill show={!!newCategory.trim()} />
       </form>
     </Group>
+
+    <TemplateSettings />
 
     <div class="mt-6">
       {#if confirmBoard}

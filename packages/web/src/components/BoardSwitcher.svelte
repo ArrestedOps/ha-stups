@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { t } from '../lib/i18n/index.svelte';
-  import { api } from '../lib/api';
+  import { onMount } from 'svelte';
+  import { t, tn } from '../lib/i18n/index.svelte';
+  import { api, type TemplateInfo } from '../lib/api';
   import { act, closeSheet, openSheet, selectBoard, ui } from '../lib/store.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
@@ -9,16 +10,24 @@
 
   let name = $state('');
   let busy = $state(false);
+  // Vorlagen: „" = leeres Board
+  let templates = $state<TemplateInfo[]>([]);
+  let template = $state('');
+  const chosen = $derived(templates.find((x) => x.id === template) ?? null);
+  const builtin = $derived(templates.filter((x) => x.builtin));
+  const own = $derived(templates.filter((x) => !x.builtin));
+  onMount(() => void api.templates().then((list) => (templates = list)).catch(() => undefined));
 
   async function create(e: Event) {
     e.preventDefault();
     const n = name.trim();
     if (!n || busy) return;
     busy = true;
-    const board = await act(() => api.createBoard(n));
+    const board = await act(() => api.createBoard(n, template || undefined));
     busy = false;
     if (board) {
       name = '';
+      template = '';
       await selectBoard(board.id);
     }
   }
@@ -54,6 +63,30 @@
       />
       <SubmitPill show={!!name.trim()} {busy} />
     </form>
+    {#if templates.length > 0}
+      <div class="px-4 py-2">
+        <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+          <span>{t('Vorlage')}</span>
+          <select class="min-h-11 max-w-[65%] rounded-xl bg-surface2 px-3" bind:value={template} aria-label={t('Vorlage für das neue Board')}>
+            <option value="">{t('Leeres Board')}</option>
+            <optgroup label={t('Eingebaute Vorlagen')}>
+              {#each builtin as tpl (tpl.id)}<option value={tpl.id}>{tpl.name}</option>{/each}
+            </optgroup>
+            {#if own.length > 0}
+              <optgroup label={t('Eigene Vorlagen')}>
+                {#each own as tpl (tpl.id)}<option value={tpl.id}>{tpl.name}</option>{/each}
+              </optgroup>
+            {/if}
+          </select>
+        </label>
+        {#if chosen}
+          <p class="mt-1 text-[13px] text-fg2" data-testid="template-preview">
+            {#if chosen.description}{chosen.description}<br />{/if}
+            {tn('{n} Spalte', '{n} Spalten', chosen.columns)} · {tn('{n} Kategorie', '{n} Kategorien', chosen.categories)} · {tn('{n} Karte', '{n} Karten', chosen.cards)}
+          </p>
+        {/if}
+      </div>
+    {/if}
   </Group>
 
   <Group>

@@ -241,6 +241,18 @@ export class ApiError extends Error {
 }
 
 /** Was die Betriebsart bietet (GET api/capabilities) */
+/** Eine Board-Vorlage (eingebaut oder eigen) mit Zahlen für die Vorschau */
+export interface TemplateInfo {
+  id: string;
+  name: string;
+  description: string;
+  builtin: boolean;
+  columns: number;
+  categories: number;
+  cards: number;
+  createdBy: string | null;
+}
+
 // ---------- Haus-Kanäle ----------
 
 export type HouseKind = 'nudge' | 'due' | 'watcher';
@@ -419,7 +431,10 @@ export const api = {
   board: (id: string) => get<BoardView>(`boards/${id}`),
   /** Einzelne Karten (für den Live-Sync); gelöschte und archivierte fehlen in der Antwort */
   cardsByIds: (ids: string[]) => get<Card[]>(`cards?ids=${ids.map(encodeURIComponent).join(',')}`),
-  createBoard: (name: string) => post<Board>('boards', { name }),
+  createBoard: (name: string, template?: string) => post<Board>('boards', template ? { name, template } : { name }),
+  templates: () => get<TemplateInfo[]>('templates'),
+  saveAsTemplate: (boardId: string, name: string) => post<TemplateInfo>(`boards/${boardId}/save-as-template`, { name }),
+  deleteTemplate: (id: string) => del(`templates/${id}`),
   updateBoard: (id: string, b: Partial<{ name: string; archiveAfterDays: number }>) => patch<Board>(`boards/${id}`, b),
   deleteBoard: (id: string) => del(`boards/${id}`),
   archived: (boardId: string) => get<Card[]>(`boards/${boardId}/archive`),

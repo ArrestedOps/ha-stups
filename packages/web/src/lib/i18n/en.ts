@@ -8,6 +8,18 @@ export type Catalog = Record<string, string | [string, string]>;
 export const en: Catalog = {
   // Einstellungen › Sprache
   'Sprache': 'Language',
+  'Vorlage für das neue Board': 'Template for the new board',
+  'Leeres Board': 'Empty board',
+  'Eingebaute Vorlagen': 'Built-in templates',
+  'Eigene Vorlagen': 'Your templates',
+  '{n} Spalte': ['{n} column', '{n} columns'],
+  '{n} Kategorie': ['{n} category', '{n} categories'],
+  'Vorlage gespeichert': 'Template saved',
+  'Vorlage gelöscht': 'Template deleted',
+  'Vorlagen': 'Templates',
+  'Speichert Spalten, Kategorien und offene Karten dieses Boards, ohne Zuweisungen, Anhänge und Kommentare. Daraus lassen sich neue Boards anlegen.': 'Saves the columns, categories and open cards of this board, without assignments, attachments and comments. New boards can be created from it.',
+  'Name der Vorlage': 'Template name',
+  'Vorlage {name} löschen': 'Delete template {name}',
   'Fälligkeiten': 'Due dates',
   'Wächter-Karten': 'Watcher cards',
   'Ansage': 'Announcement',

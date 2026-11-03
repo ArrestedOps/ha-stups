@@ -17,6 +17,7 @@ import { registerAttachmentRoutes } from './api/attachments.js';
 import { registerCardExtraRoutes } from './api/card-extras.js';
 import { registerTrashRoutes } from './api/trash.js';
 import { registerHouseRoutes } from './api/house.js';
+import { registerTemplateRoutes } from './api/templates.js';
 
 export type { ApiDeps } from './api/kit.js';
 
@@ -90,4 +91,5 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   registerCardExtraRoutes(app, k);
   registerTrashRoutes(app, k);
   registerHouseRoutes(app, k);
+  registerTemplateRoutes(app, k);
 }

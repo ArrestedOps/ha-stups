@@ -1,4 +1,6 @@
 import type { FastifyInstance } from 'fastify';
+import { ValidationError } from '../errors.js';
+import { currentLanguage, t } from '../i18n/index.js';
 import { type ApiKit, type Params } from './kit.js';
 
 /** Boards, Spalten und Kategorien */
@@ -9,6 +11,11 @@ export function registerBoardRoutes(app: FastifyInstance, k: ApiKit): void {
   app.get('/api/boards', async () => store.listBoards());
   app.post('/api/boards', async (req, reply) => {
     const b = body(req);
+    if (b.template !== undefined && b.template !== null) {
+      if (typeof b.template !== 'string') throw new ValidationError(t('Die Vorlage ist ungültig'));
+      const board = store.createBoardFromTemplate({ name: b.name, template: b.template, lang: currentLanguage(), by: req.user?.id ?? null });
+      return reply.code(201).send(board);
+    }
     // Neue Boards bekommen die Spalte „Geplant", außer es wird ausdrücklich abgelehnt
     return reply
       .code(201)

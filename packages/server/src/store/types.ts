@@ -25,6 +25,14 @@ export interface User {
   accentHue: number | null;
   /** Sonntags-Zusammenfassung als Push (aus, bis die Person sie einschaltet) */
   weeklySummary: boolean;
+  /** Rolle „Kind": eingeschränkte Rechte (der Administrator legt sie fest; ein Administrator ist nie Kind) */
+  isChild: boolean;
+  /** Welche Boards ein Kind sieht: alle oder nur die mit eigenen (zugewiesenen) Karten */
+  childScope: 'all' | 'assigned';
+  /** „Erledigt" des Kindes braucht standardmäßig eine Bestätigung */
+  confirmDefault: boolean;
+  /** Personen, die für das Kind bestätigen dürfen (Administratoren dürfen immer) */
+  confirmers: string[];
 }
 
 export type NudgeTemplate = 'think' | 'today' | 'help' | 'thanks';
@@ -228,6 +236,11 @@ export interface Card {
   costCents: number | null;
   /** Aufwand für die Fairness-Ansicht; leer zählt wie mittel */
   effort: Effort | null;
+  /** Bestätigung: leer = Vorgabe der zuständigen Person, on = immer, off = nie */
+  confirm: 'on' | 'off' | null;
+  /** Das Kind hat erledigt gesagt, die Karte wartet auf Bestätigung (sonst null) */
+  confirmRequestedAt: string | null;
+  confirmRequestedBy: string | null;
   /** Was die nächste Karte übernimmt, wenn diese sich wiederholt */
   carryOver: CarryField[];
   /** offene Stupse zu dieser Karte */

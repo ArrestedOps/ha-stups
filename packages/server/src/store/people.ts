@@ -29,6 +29,13 @@ export function createPeople(c: Ctx, late: unknown) {
     language: r.language === 'de' || r.language === 'en' ? r.language : null,
     accentHue: typeof r.accent_hue === 'number' ? r.accent_hue : null,
     weeklySummary: r.weekly_summary === 1,
+    isChild: r.is_child === 1,
+    childScope: r.child_scope === 'assigned' ? 'assigned' : 'all',
+    confirmDefault: r.confirm_default === 1,
+    confirmers: all(
+      'select c.user_id from child_confirmers c join users u on u.id = c.user_id and u.is_person = 1 where c.child_id = ? order by c.rowid',
+      r.id,
+    ).map((x) => x.user_id as string),
   });
 
   /** Ruhezeit aus den Spalten der Person, mit der Vorgabe für alles, was nicht gesetzt ist */
@@ -235,6 +242,48 @@ export function createPeople(c: Ctx, late: unknown) {
     return toUser(userRow(id));
   }
 
+  /**
+   * Rolle „Kind" einrichten (nur Administratoren, das prüft die Schnittstelle): ist die Person ein Kind, welche Boards sie sieht,
+   * ob „Erledigt" standardmäßig eine Bestätigung braucht und wer bestätigen darf. Nur die angegebenen Felder ändern sich.
+   */
+  function setChild(id: string, patch: { isChild?: unknown; childScope?: unknown; confirmDefault?: unknown; confirmers?: unknown }): User {
+    const row = userRow(id);
+    if (row.is_person !== 1) throw new NotFoundError(t('Person nicht gefunden'));
+    const bool = (v: unknown, what: string): boolean => {
+      if (typeof v !== 'boolean') throw new ValidationError(t('{what} muss wahr oder falsch sein', { what }));
+      return v;
+    };
+    // Erst alles prüfen, dann schreiben: ein Fehler ändert nichts
+    const isChild = patch.isChild === undefined ? undefined : bool(patch.isChild, t('„Kind"'));
+    const confirmDefault = patch.confirmDefault === undefined ? undefined : bool(patch.confirmDefault, t('„Bestätigung als Vorgabe"'));
+    let scope: 'all' | 'assigned' | undefined;
+    if (patch.childScope !== undefined) {
+      if (patch.childScope !== 'all' && patch.childScope !== 'assigned') {
+        throw new ValidationError(t('Die Sichtbarkeit muss „all" (alle Boards) oder „assigned" (nur Boards mit eigenen Karten) sein'));
+      }
+      scope = patch.childScope;
+    }
+    let confirmers: string[] | undefined;
+    if (patch.confirmers !== undefined) {
+      if (!Array.isArray(patch.confirmers) || patch.confirmers.some((x) => typeof x !== 'string')) throw new ValidationError(t('Die Bestätiger müssen eine Liste von Personen sein'));
+      confirmers = [...new Set(patch.confirmers as string[])];
+      if (confirmers.includes(id)) throw new ValidationError(t('Das Kind kann sich nicht selbst bestätigen'));
+      for (const other of confirmers) {
+        if (one('select 1 as x from users where id = ? and is_person = 1', other) === undefined) throw new NotFoundError(t('Person nicht gefunden'));
+      }
+    }
+    tx(() => {
+      if (isChild !== undefined) run('update users set is_child = ? where id = ?', isChild ? 1 : 0, id);
+      if (scope !== undefined) run('update users set child_scope = ? where id = ?', scope, id);
+      if (confirmDefault !== undefined) run('update users set confirm_default = ? where id = ?', confirmDefault ? 1 : 0, id);
+      if (confirmers !== undefined) {
+        run('delete from child_confirmers where child_id = ?', id);
+        for (const other of confirmers) run('insert into child_confirmers (child_id, user_id) values (?, ?)', id, other);
+      }
+    });
+    return toUser(userRow(id));
+  }
+
   function setAccentHue(id: string, hue: number | null): void {
     if (hue !== null && (!Number.isInteger(hue) || hue < 0 || hue > 359)) throw new ValidationError(t('Der Farbton muss eine Zahl von 0 bis 359 sein'));
     userRow(id);
@@ -376,6 +425,7 @@ export function createPeople(c: Ctx, late: unknown) {
     setLanguage,
     setAccentHue,
     setWeeklySummary,
+    setChild,
     getSetting,
     putSetting,
     rawSetting,

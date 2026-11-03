@@ -16,6 +16,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
       user: req.user,
       people: allowed ? store.people() : [],
       isAdmin: req.access?.isAdmin ?? false,
+      isChild: req.access?.isChild ?? false,
       allowed,
       accessMode: store.getAccessMode(),
     };
@@ -111,6 +112,14 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
       person = store.setNudgeQuiet(person.id, { start: b.quietStart, end: b.quietEnd, off: b.quietOff });
     }
     if (b.weeklySummary !== undefined) person = store.setWeeklySummary(person.id, b.weeklySummary);
+    // Die Rolle „Kind" legen nur Administratoren fest (auch ein Kind ändert seine Regeln nicht selbst)
+    if (b.isChild !== undefined || b.childScope !== undefined || b.confirmDefault !== undefined || b.confirmers !== undefined) {
+      requireAdmin(req);
+      if (b.isChild === true && person.haUserId && (await deps.directory?.isAdmin(person.haUserId))) {
+        throw new ConflictError(t('Ein Administrator kann kein Kind sein'));
+      }
+      person = store.setChild(person.id, { isChild: b.isChild, childScope: b.childScope, confirmDefault: b.confirmDefault, confirmers: b.confirmers });
+    }
     return person;
   });
   // ----- Konten (nur ohne Home Assistant: eigene Anmeldung) -----

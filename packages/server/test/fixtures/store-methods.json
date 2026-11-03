@@ -94,6 +94,7 @@
   "setAccessMode",
   "setArchived",
   "setCardOrigin",
+  "setChild",
   "setHouseTts",
   "setLanguage",
   "setNotifyServices",

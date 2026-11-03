@@ -415,4 +415,25 @@ export const migrations: Migration[] = [
       alter table users add column weekly_summary integer not null default 0;
     `,
   },
+  {
+    version: 19,
+    // Rolle „Kind": eingeschränkte Rechte, Sichtbarkeit (alle Boards oder nur Boards mit eigenen Karten), Bestätigung durch Eltern
+    sql: `
+      alter table users add column is_child integer not null default 0;
+      alter table users add column child_scope text not null default 'all' check (child_scope in ('all', 'assigned'));
+      alter table users add column confirm_default integer not null default 0;
+
+      create table child_confirmers (
+        child_id text not null references users(id) on delete cascade,
+        user_id  text not null references users(id) on delete cascade,
+        primary key (child_id, user_id)
+      );
+
+      -- Bestätigung je Karte: leer = Vorgabe der zuständigen Person, on = immer, off = nie
+      alter table cards add column confirm text check (confirm in ('on', 'off'));
+      -- Das Kind hat „erledigt" gesagt, die Karte wartet auf Bestätigung
+      alter table cards add column confirm_requested_at text;
+      alter table cards add column confirm_requested_by text references users(id) on delete set null;
+    `,
+  },
 ];

@@ -7,6 +7,8 @@ export interface AccessResult {
   isAdmin: boolean;
   /** Darf die App benutzen */
   allowed: boolean;
+  /** Hat die eingeschränkten Rechte eines Kindes (ein Administrator ist nie Kind, auch wenn es eingetragen ist) */
+  isChild: boolean;
 }
 
 export interface Access {
@@ -29,7 +31,8 @@ export function createAccess(deps: { store: Store; directory?: Directory }): Acc
       const noPeople = store.people().length === 0;
       const isAdmin = fromHa ?? (user.isPerson || noPeople);
       const allowed = store.getAccessMode() === 'everyone' || isAdmin || user.isPerson;
-      return { user, isAdmin, allowed };
+      const isChild = user.isChild && user.isPerson && !isAdmin;
+      return { user, isAdmin, allowed, isChild };
     },
   };
 }

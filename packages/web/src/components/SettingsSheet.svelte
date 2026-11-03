@@ -151,7 +151,7 @@ tap_action:
 </script>
 
 <Sheet title={t('Einstellungen')} onclose={closeSheet}>
-  {#if feat.beta}<BetaSettings />{/if}
+  {#if feat.beta && !ui.isChild}<BetaSettings />{/if}
   <Group title={t('Sprache')} hint={t('Gilt auf allen deinen Geräten und für Push-Nachrichten. „Automatisch“ folgt der Sprache des Geräts.')}>
     <Row label={t('Sprache')}>
       <SelectField label={t('Sprache')} value={ui.me?.languageChoice ?? 'auto'} onchange={(e) => void changeLanguage(e.currentTarget.value as LanguageChoice)}>
@@ -164,6 +164,8 @@ tap_action:
   <Group title={t('Farbe')} hint={t('Die Farbe der Knöpfe und Reiter. Gilt auf allen deinen Geräten, jede Person wählt ihre eigene.')}>
     <AccentPicker />
   </Group>
+  <!-- Ein Kind ändert nur Sprache und Farbe (und meldet sich ab); alles andere verweigert auch der Server -->
+  {#if !ui.isChild}
   <Group title={t('Personen')} hint={t('Wer Stups nutzen darf, wer Karten zugewiesen bekommt und auf welchen Geräten die Push-Nachrichten ankommen.')}>
     <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => openSheet({ type: 'people' })}>
       <Icon name="user" size={20} /><span class="flex-1">{t('Personen & Zugriff')}</span><Icon name="chevron-right" size={18} />
@@ -182,11 +184,14 @@ tap_action:
       />
     </Row>
   </Group>
+  {/if}
 
   {#if feat.standalone}
     <Group title={t('Konto')} hint={t('Wenn du dein Passwort änderst, melden sich deine anderen Geräte ab.')}>
       <Row label={t('Angemeldet als')}><span class="text-fg2">{ui.me?.displayName ?? '—'}</span></Row>
-      {#if changingPassword}
+      {#if ui.isChild}
+        <!-- ein Kind meldet sich nur ab; das Passwort ändert der Administrator -->
+      {:else if changingPassword}
         <form onsubmit={savePassword} class="space-y-2 px-4 py-3" aria-label={t('Passwort ändern')}>
           <input type="password" bind:value={pwCurrent} autocomplete="current-password" placeholder={t('Aktuelles Passwort')} aria-label={t('Aktuelles Passwort')} class="min-h-11 w-full rounded-xl bg-surface2 px-3" required />
           <input type="password" bind:value={pwNext} autocomplete="new-password" placeholder={t('Neues Passwort (mindestens 10 Zeichen)')} aria-label={t('Neues Passwort')} minlength="10" class="min-h-11 w-full rounded-xl bg-surface2 px-3" required />
@@ -205,10 +210,10 @@ tap_action:
         <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold text-danger" onclick={() => void logout()}>{t('Abmelden')}</button>
       </Row>
     </Group>
-    {#if feat.passkeys}<PasskeySettings />{/if}
+    {#if feat.passkeys && !ui.isChild}<PasskeySettings />{/if}
   {/if}
 
-  {#if feat.haUi}
+  {#if feat.haUi && !ui.isChild}
   <Group
     title={t('Zurück zum Dashboard')}
     hint={ui.isAdmin
@@ -249,7 +254,7 @@ tap_action:
   </Group>
   {/if}
 
-  {#if feat.watchers}
+  {#if feat.watchers && !ui.isChild}
   <Group title={t('Wächter')} hint={t('Karten, die von selbst aus Home Assistant entstehen, zum Beispiel wenn die Waschmaschine fertig ist.')}>
     <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => selectTab('watchers')}>
       <Icon name="eye" size={20} />
@@ -259,7 +264,7 @@ tap_action:
   </Group>
   {/if}
 
-  {#if feat.push}
+  {#if feat.push && !ui.isChild}
   <Group
     title={t('Benachrichtigungen')}
     hint={feat.haPush
@@ -371,7 +376,7 @@ tap_action:
   </Group>
   {/if}
 
-  {#if feat.haUi}
+  {#if feat.haUi && !ui.isChild}
   <Group title={t('Dashboard-Button (Bubble Card)')}>
     <Row stack>
       <pre class="overflow-x-auto rounded-xl bg-surface2 p-3 text-[13px] leading-relaxed">{yaml}</pre>

@@ -62,7 +62,7 @@
     items,
     type: 'card',
     // Am Handy wird gewischt, gezogen wird nur mit der Maus (große Bildschirme)
-    dragDisabled: !ui.desktop,
+    dragDisabled: !ui.desktop || ui.isChild,
     flipDurationMs: 150,
     delayTouchStart: 250,
     dropTargetStyle: { outline: '2px dashed var(--accent)', 'outline-offset': '4px', 'border-radius': '20px' },

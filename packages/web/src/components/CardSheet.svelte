@@ -6,8 +6,10 @@
   import { describeActivity } from '../lib/activity';
   import { formatCost, formatDue } from '../lib/datetime';
   import { tick } from 'svelte';
+  import { mayConfirm, waitingForConfirmation } from '../lib/confirm';
   import {
     act as rawAct,
+    answerConfirmation,
     closeSheet,
     completeCard,
     moveCard,
@@ -86,6 +88,15 @@
   const column = $derived(columns.find((c) => c.id === card?.columnId));
   const firstOpen = $derived(columns.find((c) => !c.isDone) ?? columns[0]);
   const done = $derived(!!card && (column?.isDone ?? false) && card.completedAt !== null);
+
+  // Rolle „Kind": ansehen, eigene Karten abhaken, kommentieren, Fotos und Links anhängen; sonst nichts (der Server prüft es auch)
+  const child = $derived(ui.isChild);
+  const mine = $derived(!!card && !!ui.me && card.assigneeIds.includes(ui.me.id));
+  const canAct = $derived(!child || mine);
+  // Bestätigung: das Kind hat abgehakt, ein Erwachsener antwortet
+  const waiting = $derived(!!card && waitingForConfirmation(card));
+  const requester = $derived(card ? ui.people.find((p) => p.id === card!.confirmRequestedBy) : undefined);
+  const mayAnswer = $derived(waiting && mayConfirm(ui.me, ui.isAdmin, requester));
   // Wohin die Karte verschoben werden darf; ihre aktuelle Spalte bleibt immer auswählbar
   const targets = $derived(
     card
@@ -164,7 +175,7 @@
 
 <!-- Oben wie in iOS: links „Erledigt", mittig kurz „Gespeichert", rechts „Fertig" (schließt). Alles speichert sofort, „Fertig" schließt nur. Nichts liegt unten im Weg. -->
 {#snippet doneButton()}
-  {#if card}
+  {#if card && (!child || (mine && !waiting && !done))}
     <button
       class="flex min-h-10 items-center gap-1.5 rounded-full border border-line px-3.5 text-[15px] font-semibold"
       onclick={async () => {
@@ -197,11 +208,12 @@
       class="mt-1 block w-full resize-none overflow-hidden bg-transparent text-[26px] leading-tight font-bold tracking-tight"
       aria-label={t('Titel')}
       bind:value={titleDraft}
+      readonly={child}
       onfocus={() => (editing = 'title')}
       onblur={() => {
         editing = null;
         const t = titleDraft.trim();
-        if (t && t !== card!.title) void save({ title: t });
+        if (!child && t && t !== card!.title) void save({ title: t });
         else titleDraft = card!.title;
       }}
     ></textarea>
@@ -211,13 +223,44 @@
       {targets}
       onsave={save}
       onmove={(columnId) => moveCard(card!, columnId)}
+      readonly={child}
     />
 
     <p class="mt-2.5 px-1 text-[13px] text-fg2" data-testid="created-note">
       {t('Angelegt {when}', { when: formatDue(card.createdAt) })}{#if personById(card.createdBy ?? '')} · {personById(card.createdBy ?? '')?.displayName}{/if}
     </p>
 
-    {#if !card.completedAt && ui.me?.isPerson && canNudge(card, ui.me.id)}
+    {#if waiting}
+      <div class="mt-3 rounded-xl bg-surface2 px-3.5 py-3" data-testid="confirm-note">
+        <p class="flex items-center gap-2 text-[15px] font-semibold">
+          <Icon name="clock" size={16} />{requester ? t('{name} wartet auf Bestätigung', { name: requester.displayName }) : t('Wartet auf Bestätigung')}
+        </p>
+        {#if mayAnswer}
+          <div class="mt-2.5 flex gap-2">
+            <button
+              class="min-h-11 flex-1 rounded-xl bg-accent text-[16px] font-semibold text-on-accent"
+              onclick={async () => {
+                await answerConfirmation(card!, 'confirm');
+                closeSheet();
+              }}
+            >
+              {t('Bestätigen')}
+            </button>
+            <button
+              class="min-h-11 flex-1 rounded-xl border border-line text-[16px] font-semibold"
+              onclick={async () => {
+                await answerConfirmation(card!, 'reject');
+                closeSheet();
+              }}
+            >
+              {t('Nochmal')}
+            </button>
+          </div>
+        {/if}
+      </div>
+    {/if}
+
+    {#if !child && !card.completedAt && ui.me?.isPerson && canNudge(card, ui.me.id)}
       <button
         class="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-accent/60 text-[16px] font-semibold text-accent-text"
         onclick={() => openSheet({ type: 'nudge', id: card!.id })}
@@ -243,10 +286,11 @@
         class="block min-h-[84px] w-full resize-none overflow-hidden bg-transparent px-4 py-3 text-[17px] leading-snug"
         aria-label={t('Beschreibung')}
         bind:value={descDraft}
+        readonly={child}
         onfocus={() => (editing = 'desc')}
         onblur={() => {
           editing = null;
-          if (descDraft !== (card!.description ?? '')) void save({ description: descDraft.trim() || null });
+          if (!child && descDraft !== (card!.description ?? '')) void save({ description: descDraft.trim() || null });
         }}
       ></textarea>
     </Group>
@@ -258,28 +302,34 @@
             type="checkbox"
             class="h-6 w-6 shrink-0 accent-[var(--accent)]"
             checked={item.done}
+            disabled={!canAct}
             aria-label={t('Erledigt')}
             onchange={(e) => act(() => api.updateChecklist(item.id, { done: e.currentTarget.checked }))}
           />
           <input
             class="min-w-0 flex-1 bg-transparent py-2 {item.done ? 'text-fg2 line-through' : ''}"
             value={item.text}
+            readonly={child}
             aria-label={t('Eintrag')}
             onchange={(e) => {
               const t = e.currentTarget.value.trim();
               if (t) void act(() => api.updateChecklist(item.id, { text: t }));
             }}
           />
-          <button class="flex h-10 w-10 items-center justify-center text-fg2" aria-label={t('Eintrag löschen')} onclick={() => act(() => api.deleteChecklist(item.id))}>
-            <Icon name="x" size={16} />
-          </button>
+          {#if !child}
+            <button class="flex h-10 w-10 items-center justify-center text-fg2" aria-label={t('Eintrag löschen')} onclick={() => act(() => api.deleteChecklist(item.id))}>
+              <Icon name="x" size={16} />
+            </button>
+          {/if}
         </div>
       {/each}
-      <form onsubmit={addItem} class="flex min-h-[46px] items-center gap-3 px-4">
-        <Icon name="plus" size={18} />
-        <input bind:value={newItem} placeholder={t('Eintrag hinzufügen')} enterkeyhint="done" class="min-w-0 flex-1 bg-transparent py-2" aria-label={t('Neuer Eintrag')} />
-        <SubmitPill show={!!newItem.trim()} />
-      </form>
+      {#if canAct}
+        <form onsubmit={addItem} class="flex min-h-[46px] items-center gap-3 px-4">
+          <Icon name="plus" size={18} />
+          <input bind:value={newItem} placeholder={t('Eintrag hinzufügen')} enterkeyhint="done" class="min-w-0 flex-1 bg-transparent py-2" aria-label={t('Neuer Eintrag')} />
+          <SubmitPill show={!!newItem.trim()} />
+        </form>
+      {/if}
     </Group>
 
     <Group title="Links">
@@ -300,24 +350,28 @@
             </span>
             <Icon name="external" size={16} />
           </a>
-          <button class="flex h-10 w-10 shrink-0 items-center justify-center text-fg2" aria-label={t('Link entfernen')} onclick={() => act(() => api.deleteLink(link.id))}>
-            <Icon name="x" size={16} />
-          </button>
+          {#if !child}
+            <button class="flex h-10 w-10 shrink-0 items-center justify-center text-fg2" aria-label={t('Link entfernen')} onclick={() => act(() => api.deleteLink(link.id))}>
+              <Icon name="x" size={16} />
+            </button>
+          {/if}
         </div>
       {/each}
-      <form onsubmit={addLink} class="flex min-h-[46px] items-center gap-3 px-4">
-        <Icon name="link" size={18} />
-        <input
-          bind:value={newLink}
-          type="url"
-          placeholder={t('Website oder Maps-Link einfügen')}
-          enterkeyhint="done"
-          class="min-w-0 flex-1 bg-transparent py-2"
-          aria-label={t('Neuer Link')}
-          disabled={linkBusy}
-        />
-        <SubmitPill show={!!newLink.trim()} busy={linkBusy} />
-      </form>
+      {#if canAct}
+        <form onsubmit={addLink} class="flex min-h-[46px] items-center gap-3 px-4">
+          <Icon name="link" size={18} />
+          <input
+            bind:value={newLink}
+            type="url"
+            placeholder={t('Website oder Maps-Link einfügen')}
+            enterkeyhint="done"
+            class="min-w-0 flex-1 bg-transparent py-2"
+            aria-label={t('Neuer Link')}
+            disabled={linkBusy}
+          />
+          <SubmitPill show={!!newLink.trim()} busy={linkBusy} />
+        </form>
+      {/if}
     </Group>
 
     <Group title={t('Anhänge')}>
@@ -339,23 +393,27 @@
                   </span>
                 {/if}
               </button>
-              <button
-                class="absolute top-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white"
-                aria-label={t('{name} entfernen', { name: a.filename })}
-                onclick={() => act(() => api.deleteAttachment(a.id))}
-              >
-                <Icon name="x" size={14} />
-              </button>
+              {#if !child}
+                <button
+                  class="absolute top-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white"
+                  aria-label={t('{name} entfernen', { name: a.filename })}
+                  onclick={() => act(() => api.deleteAttachment(a.id))}
+                >
+                  <Icon name="x" size={14} />
+                </button>
+              {/if}
             </div>
           {/each}
         </div>
       {/if}
-      <div class="px-4 py-1.5">
-        <input bind:this={fileInput} type="file" accept="image/*,application/pdf" multiple class="hidden" onchange={onFiles} />
-        <button class="flex min-h-11 w-full items-center gap-3 text-left text-[17px] text-accent-text disabled:opacity-50" disabled={uploading > 0} onclick={() => fileInput?.click()}>
-          <Icon name="camera" size={18} />{uploading > 0 ? t('Lädt hoch …') : t('Foto oder PDF hinzufügen')}
-        </button>
-      </div>
+      {#if canAct}
+        <div class="px-4 py-1.5">
+          <input bind:this={fileInput} type="file" accept="image/*,application/pdf" multiple class="hidden" onchange={onFiles} />
+          <button class="flex min-h-11 w-full items-center gap-3 text-left text-[17px] text-accent-text disabled:opacity-50" disabled={uploading > 0} onclick={() => fileInput?.click()}>
+            <Icon name="camera" size={18} />{uploading > 0 ? t('Lädt hoch …') : t('Foto oder PDF hinzufügen')}
+          </button>
+        </div>
+      {/if}
     </Group>
 
     <Group title={t('Kommentare')}>
@@ -365,16 +423,20 @@
             <div class="text-[13px] text-fg2">{c.authorName ?? 'Unbekannt'} · {formatDue(c.createdAt)}</div>
             <div class="text-[16px] leading-snug whitespace-pre-wrap">{c.text}</div>
           </div>
-          <button class="flex h-9 w-9 shrink-0 items-center justify-center text-fg2" aria-label={t('Kommentar löschen')} onclick={() => act(() => api.deleteComment(c.id))}>
-            <Icon name="x" size={14} />
-          </button>
+          {#if !child}
+            <button class="flex h-9 w-9 shrink-0 items-center justify-center text-fg2" aria-label={t('Kommentar löschen')} onclick={() => act(() => api.deleteComment(c.id))}>
+              <Icon name="x" size={14} />
+            </button>
+          {/if}
         </div>
       {/each}
-      <form onsubmit={addComment} class="flex min-h-[46px] items-center gap-3 px-4">
-        <Icon name="message" size={18} />
-        <input bind:value={newComment} placeholder={t('Kommentar schreiben')} enterkeyhint="send" class="min-w-0 flex-1 bg-transparent py-2" aria-label={t('Neuer Kommentar')} />
-        <SubmitPill show={!!newComment.trim()} label={t('Senden')} />
-      </form>
+      {#if canAct}
+        <form onsubmit={addComment} class="flex min-h-[46px] items-center gap-3 px-4">
+          <Icon name="message" size={18} />
+          <input bind:value={newComment} placeholder={t('Kommentar schreiben')} enterkeyhint="send" class="min-w-0 flex-1 bg-transparent py-2" aria-label={t('Neuer Kommentar')} />
+          <SubmitPill show={!!newComment.trim()} label={t('Senden')} />
+        </form>
+      {/if}
     </Group>
 
     {#if card.activity.length}
@@ -389,11 +451,13 @@
       </Group>
     {/if}
 
-    {#if ui.view && card.costCents !== null}
+    {#if ui.view && card.costCents !== null && !child}
       <p class="mt-3 px-3 text-[13px] text-fg2">{t('Kosten dieser Karte: {amount}', { amount: formatCost(card.costCents) })}</p>
     {/if}
-    <button class="mt-8 mb-2 min-h-11 w-full text-[15px] text-fg2" onclick={() => removeCard(card!)}>
-      <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Karte löschen')}</span>
-    </button>
+    {#if !child}
+      <button class="mt-8 mb-2 min-h-11 w-full text-[15px] text-fg2" onclick={() => removeCard(card!)}>
+        <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Karte löschen')}</span>
+      </button>
+    {/if}
   {/if}
 </Sheet>

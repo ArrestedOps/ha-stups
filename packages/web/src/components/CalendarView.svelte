@@ -110,6 +110,7 @@
   const nowTop = $derived((minutesOfDay(new Date().toISOString()) / 60) * HOUR_PX);
 
   function tapSlot(e: MouseEvent, d: string) {
+    if (ui.isChild) return; // ein Kind legt keine Karten an
     const el = e.currentTarget as HTMLElement;
     // Mit der Tastatur gibt es keine Stelle: dann 9 Uhr
     const minutes = e.detail === 0 ? 9 * 60 : ((e.clientY - el.getBoundingClientRect().top) / HOUR_PX) * 60 - 15;

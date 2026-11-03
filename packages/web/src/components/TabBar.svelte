@@ -11,7 +11,8 @@
   ]);
   // Alle sehen alle vier Reiter; nur Administratoren ändern im Reiter „Wächter" etwas.
   // Ohne Home Assistant (eigene Anmeldung) gibt es die Wächter nicht, dann sind es drei Reiter.
-  const tabs = $derived(all.filter((tb) => tb.id !== 'watchers' || feat.watchers));
+  // Ein Kind sieht die Wächter nicht (der Server verweigert sie ohnehin)
+  const tabs = $derived(all.filter((tb) => tb.id !== 'watchers' || (feat.watchers && !ui.isChild)));
   const active = $derived(ui.tab);
 </script>
 

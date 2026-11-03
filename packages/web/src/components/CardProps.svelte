@@ -19,6 +19,8 @@
     completedAt?: string | null;
     /** Was die nächste Karte übernimmt; ohne Angabe gilt die Voreinstellung */
     carryOver?: CarryField[];
+    /** Bestätigung beim Erledigen durch ein Kind; fehlt bei einer neuen Karte (dort gibt es die Wahl noch nicht) */
+    confirm?: 'on' | 'off' | null;
   }
 </script>
 
@@ -39,6 +41,7 @@
     targets,
     onsave,
     onmove,
+    readonly = false,
   }: {
     card: CardFields;
     /** Spalten, die zur Wahl stehen */
@@ -46,6 +49,8 @@
     /** Speichert eine Änderung und gibt den neuen Stand zurück (undefined bei Fehler) */
     onsave: (patch: CardPatch) => Promise<{ dueAt: string | null } | undefined | void>;
     onmove: (columnId: string) => void;
+    /** Nur ansehen (Rolle „Kind"): eine Zeile mit den Werten statt der Knöpfe */
+    readonly?: boolean;
   } = $props();
 
   const column = $derived(ui.view?.columns.find((c) => c.id === card.columnId));
@@ -72,6 +77,15 @@
   ]);
   const effortLabel = $derived(card.effort ? (EFFORTS.find((e) => e[0] === card.effort)?.[1] ?? '') : t('Aufwand'));
   const REMINDERS = [15, 30, 60, 120, 1440, 2880];
+
+  // Bestätigung: nur sinnvoll, wenn der Karte ein Kind zugewiesen ist
+  const hasChild = $derived(ui.people.some((p) => p.isChild && card.assigneeIds.includes(p.id)));
+  const CONFIRMS: [('on' | 'off') | null, string][] = $derived([
+    [null, t('Vorgabe der Person')],
+    ['on', t('Immer bestätigen')],
+    ['off', t('Nie bestätigen')],
+  ]);
+  const confirmLabel = $derived(card.confirm === 'on' ? t('Mit Bestätigung') : card.confirm === 'off' ? t('Ohne Bestätigung') : t('Bestätigung'));
 
   // Kosten: wird beim Verlassen des Feldes übernommen
   let costDraft = $state('');
@@ -143,6 +157,29 @@
   </button>
 {/snippet}
 
+{#if readonly}
+  <!-- Rolle „Kind": die Werte nur zum Ansehen (Aufwand und Kosten gehören nicht dazu) -->
+  <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('Eigenschaften')} data-testid="card-props-readonly">
+    <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]"><Icon name="columns" size={16} />{column?.name ?? 'Status'}</span>
+    {#if people.length}
+      <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]"><Icon name="user" size={16} />{people.map((p) => p.displayName).join(' & ')}</span>
+    {/if}
+    {#if card.dueAt}
+      <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px] {late ? 'text-danger' : ''}">
+        <Icon name="clock" size={16} />{formatDue(card.dueAt)}{late ? ` · ${t('überfällig')}` : ''}
+      </span>
+    {/if}
+    {#if card.recurrence}
+      <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]"><Icon name="repeat" size={16} />{describeRecurrence(card.recurrence)}</span>
+    {/if}
+    {#if card.priority}
+      <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]"><Icon name="flag" size={16} />{PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? ''}</span>
+    {/if}
+    {#if catNames.length}
+      <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]"><Icon name="tag" size={16} />{catNames.join(', ')}</span>
+    {/if}
+  </div>
+{:else}
 <!-- Eigenschaften als kleine Chips: leer gestrichelt, gefüllt mit Wert. Antippen öffnet darunter ein Feld. -->
 <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('Eigenschaften')}>
   <label class="relative flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]">
@@ -178,6 +215,9 @@
   {@render chip('effort', 'checklist', effortLabel, !!card.effort)}
   {@render chip('cat', 'tag', catNames.length ? catNames.join(', ') : t('Kategorie'), catNames.length > 0)}
   {@render chip('cost', 'euro', card.costCents !== null ? formatCost(card.costCents) : t('Kosten'), card.costCents !== null)}
+  {#if card.confirm !== undefined && hasChild}
+    {@render chip('confirm', 'check', confirmLabel, card.confirm !== null)}
+  {/if}
 </div>
 
 {#if panel}
@@ -288,6 +328,21 @@
         onfocus={() => (editingCost = true)}
         onblur={saveCost}
       />
+    {:else if panel === 'confirm'}
+      <div class="flex flex-wrap gap-2" role="group" aria-label={t('Bestätigung')}>
+        {#each CONFIRMS as [value, label] (label)}
+          <button
+            type="button"
+            class="min-h-11 rounded-xl px-4 text-[15px] font-semibold {card.confirm === value ? 'bg-accent text-on-accent' : 'bg-surface2'}"
+            aria-pressed={card.confirm === value}
+            onclick={() => onsave({ confirm: value })}
+          >
+            {label}
+          </button>
+        {/each}
+      </div>
+      <p class="mt-3 text-[13px] text-fg2">{t('Ist die Karte einem Kind zugewiesen, kann „Erledigt“ erst nach einem Ja der Eltern zählen. „Vorgabe der Person“ folgt der Einstellung unter Personen & Zugriff.')}</p>
     {/if}
   </div>
+{/if}
 {/if}

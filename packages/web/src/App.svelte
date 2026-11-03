@@ -223,8 +223,12 @@
       {/if}
     {:else}
       <div class="flex flex-1 flex-col items-center justify-center gap-3 text-center text-fg2">
-        <p>{t('Es gibt noch kein Board.')}</p>
-        <button class="min-h-11 rounded-xl bg-accent px-5 font-semibold text-on-accent" onclick={() => openSheet({ type: 'boards' })}>{t('Board anlegen')}</button>
+        {#if ui.isChild}
+          <p>{t('Für dich ist noch nichts da.')}</p>
+        {:else}
+          <p>{t('Es gibt noch kein Board.')}</p>
+          <button class="min-h-11 rounded-xl bg-accent px-5 font-semibold text-on-accent" onclick={() => openSheet({ type: 'boards' })}>{t('Board anlegen')}</button>
+        {/if}
       </div>
     {/if}
   </main>
@@ -236,7 +240,7 @@
     <WatchersView />
   {/if}
 
-  {#if tab === 'boards' && view && newCardColumn}
+  {#if tab === 'boards' && view && newCardColumn && !ui.isChild}
     <button
       class="fixed right-5 bottom-[calc(max(10px,var(--safe-bottom))+80px)] z-30 flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-accent-grad"
       aria-label={t('Neue Karte')}

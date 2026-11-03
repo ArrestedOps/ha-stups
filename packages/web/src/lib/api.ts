@@ -27,6 +27,14 @@ export interface User {
   accentHue: number | null;
   /** Sonntags-Zusammenfassung als Push (aus, bis die Person sie einschaltet) */
   weeklySummary: boolean;
+  /** Rolle „Kind": eingeschränkte Rechte, der Administrator legt sie fest */
+  isChild: boolean;
+  /** Welche Boards ein Kind sieht: alle oder nur die mit eigenen Karten */
+  childScope: 'all' | 'assigned';
+  /** „Erledigt" des Kindes braucht standardmäßig eine Bestätigung */
+  confirmDefault: boolean;
+  /** Personen, die für das Kind bestätigen dürfen (Administratoren immer; ohne Auswahl alle Erwachsenen) */
+  confirmers: string[];
 }
 
 export type AccessMode = 'everyone' | 'selected';
@@ -36,6 +44,8 @@ export interface Me {
   people: User[];
   /** Administrator in Home Assistant: darf Personen, Zugriff und Dashboard ändern */
   isAdmin: boolean;
+  /** Hat die eingeschränkten Rechte eines Kindes */
+  isChild: boolean;
   /** false: Home Assistant kennt den Benutzer, Stups lässt ihn aber (noch) nicht hinein */
   allowed: boolean;
   accessMode: AccessMode;
@@ -117,6 +127,11 @@ export interface Card {
   watcherId: string | null;
   /** offene Stupse zu dieser Karte */
   openNudges: OpenNudge[];
+  /** Bestätigung beim Erledigen durch ein Kind: ein, aus oder leer (Vorgabe der zuständigen Person) */
+  confirm: 'on' | 'off' | null;
+  /** Ein Kind hat abgehakt, die Karte wartet auf Bestätigung (seit wann, durch wen) */
+  confirmRequestedAt: string | null;
+  confirmRequestedBy: string | null;
   assigneeIds: string[];
   categoryIds: string[];
   checklist: { done: number; total: number };
@@ -216,6 +231,8 @@ export interface CompleteResult {
   nextDueAt: string | null;
   /** die neue Karte, wenn sich die erledigte wiederholt */
   nextCardId: string | null;
+  /** true: ein Kind hat abgehakt, erledigt wurde noch nichts (die Karte wartet auf Bestätigung) */
+  awaitingConfirmation?: boolean;
 }
 
 export interface CardInput {
@@ -233,7 +250,7 @@ export interface CardInput {
   assigneeIds?: string[];
   categoryIds?: string[];
 }
-export type CardPatch = Partial<Omit<CardInput, 'columnId'>>;
+export type CardPatch = Partial<Omit<CardInput, 'columnId'>> & { confirm?: 'on' | 'off' | null };
 
 export class ApiError extends Error {
   constructor(
@@ -449,7 +466,19 @@ export const api = {
   addPerson: (b: { name: string; haUserId?: string | null }) => post<User>('access/people', b),
   updatePerson: (
     id: string,
-    b: Partial<{ displayName: string; notifyServices: string[]; ntfyTopic: string; quietStart: string; quietEnd: string; quietOff: boolean; weeklySummary: boolean }>,
+    b: Partial<{
+      displayName: string;
+      notifyServices: string[];
+      ntfyTopic: string;
+      quietStart: string;
+      quietEnd: string;
+      quietOff: boolean;
+      weeklySummary: boolean;
+      isChild: boolean;
+      childScope: 'all' | 'assigned';
+      confirmDefault: boolean;
+      confirmers: string[];
+    }>,
   ) =>
     patch<User>(`access/people/${id}`, b),
   removePerson: (id: string) => del(`access/people/${id}`),
@@ -482,6 +511,9 @@ export const api = {
   moveCard: (id: string, columnId: string, afterId?: string | null) =>
     post<CardDetail>(`cards/${id}/move`, afterId === undefined ? { columnId } : { columnId, afterId }),
   complete: (id: string) => post<CompleteResult>(`cards/${id}/complete`),
+  /** Ein Bestätiger sagt „Bestätigen" (erledigt die Karte) oder „Nochmal" (nimmt die Anfrage zurück) */
+  confirmCard: (id: string) => post<CompleteResult>(`cards/${id}/confirm`),
+  rejectCard: (id: string) => post<CardDetail>(`cards/${id}/reject`),
   duplicateCard: (id: string) => post<CardDetail>(`cards/${id}/duplicate`),
   undo: (completionId: string) => post<CardDetail>(`completions/${completionId}/undo`),
   restoreArchived: (id: string, columnId: string) => post<CardDetail>(`cards/${id}/restore-archived`, { columnId }),

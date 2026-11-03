@@ -460,6 +460,81 @@
                 </div>
               {/if}
 
+              {#if admin && p.isPerson}
+                {@const grown = info.people.filter((o) => o.isPerson && !o.isChild && o.id !== p.id)}
+                <div data-testid="child-setup">
+                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Rolle Kind')}</p>
+                  <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                    <span>{t('Ist ein Kind (eingeschränkte Rechte)')}</span>
+                    <input
+                      type="checkbox"
+                      class="h-5 w-5 accent-[var(--accent)]"
+                      checked={p.isChild}
+                      disabled={busy || p.isAdmin}
+                      aria-label={t('Kind: {name}', { name: p.displayName })}
+                      onchange={(e) => {
+                        const on = e.currentTarget.checked;
+                        void run(() => api.updatePerson(p.id, { isChild: on }));
+                      }}
+                    />
+                  </label>
+                  {#if p.isAdmin}
+                    <p class="text-[13px] text-fg2">{t('Ein Administrator kann kein Kind sein.')}</p>
+                  {:else if p.isChild}
+                    <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                      <span>{t('Sieht')}</span>
+                      <select
+                        class="min-h-10 rounded-xl bg-surface2 px-3"
+                        value={p.childScope}
+                        disabled={busy}
+                        aria-label={t('Welche Boards {name} sieht', { name: p.displayName })}
+                        onchange={(e) => {
+                          const scope = e.currentTarget.value as 'all' | 'assigned';
+                          void run(() => api.updatePerson(p.id, { childScope: scope }));
+                        }}
+                      >
+                        <option value="assigned">{t('Nur Boards mit eigenen Karten')}</option>
+                        <option value="all">{t('Alle Boards')}</option>
+                      </select>
+                    </label>
+                    <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                      <span>{t('„Erledigt“ braucht eine Bestätigung')}</span>
+                      <input
+                        type="checkbox"
+                        class="h-5 w-5 accent-[var(--accent)]"
+                        checked={p.confirmDefault}
+                        disabled={busy}
+                        aria-label={t('Bestätigung als Vorgabe für {name}', { name: p.displayName })}
+                        onchange={(e) => {
+                          const on = e.currentTarget.checked;
+                          void run(() => api.updatePerson(p.id, { confirmDefault: on }));
+                        }}
+                      />
+                    </label>
+                    <p class="mt-1 text-[13px] font-semibold text-fg2">{t('Wer bestätigt')}</p>
+                    {#each grown as o (o.id)}
+                      <label class="flex min-h-11 items-center gap-3 text-[15px]">
+                        <input
+                          type="checkbox"
+                          class="h-5 w-5 accent-[var(--accent)]"
+                          checked={p.confirmers.includes(o.id)}
+                          disabled={busy}
+                          aria-label={t('{name} bestätigt für {child}', { name: o.displayName, child: p.displayName })}
+                          onchange={(e) => {
+                            const on = e.currentTarget.checked;
+                            const next = on ? [...p.confirmers, o.id] : p.confirmers.filter((x) => x !== o.id);
+                            void run(() => api.updatePerson(p.id, { confirmers: next }));
+                          }}
+                        />
+                        <span class="min-w-0 flex-1 truncate">{o.displayName}</span>
+                      </label>
+                    {/each}
+                    <p class="text-[13px] text-fg2">{t('Administratoren dürfen immer bestätigen. Ist niemand gewählt, dürfen alle Erwachsenen.')}</p>
+                    <p class="text-[13px] text-fg2">{t('Ein Kind sieht und ändert nur seine eigenen Karten (abhaken, kommentieren, Fotos anhängen), nichts sonst. Sprache und Farbe wählt es selbst.')}</p>
+                  {/if}
+                </div>
+              {/if}
+
               {#if admin && !info.managed}
                 {#if confirmRemove === p.id}
                   <p class="text-[13px] text-fg2">{t('Zugewiesene Karten behalten die Zuweisung, falls {name} zurückkommt.', { name: p.displayName })}</p>

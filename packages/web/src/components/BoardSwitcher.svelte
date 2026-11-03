@@ -32,12 +32,16 @@
     }
   }
 
-  const links = $derived([
-    ['settings', t('Board-Einstellungen'), 'boardSettings'],
-    ['archive', t('Archiv'), 'archive'],
-    ['trash', t('Papierkorb'), 'trash'],
-    ['gear', t('Einstellungen'), 'settings'],
-  ] as const);
+  const links = $derived(
+    (ui.isChild
+      ? [['gear', t('Einstellungen'), 'settings']]
+      : [
+          ['settings', t('Board-Einstellungen'), 'boardSettings'],
+          ['archive', t('Archiv'), 'archive'],
+          ['trash', t('Papierkorb'), 'trash'],
+          ['gear', t('Einstellungen'), 'settings'],
+        ]) as readonly (readonly [string, string, 'boardSettings' | 'archive' | 'trash' | 'settings'])[],
+  );
 </script>
 
 <Sheet title="Boards" onclose={closeSheet}>
@@ -51,6 +55,7 @@
         <span class="text-[15px] text-fg2">{t('{n} offen', { n: b.openCards })}</span>
       </button>
     {/each}
+    {#if !ui.isChild}
     <form onsubmit={create} class="flex min-h-[52px] items-center gap-3 px-4">
       <Icon name="plus" size={18} />
       <input
@@ -86,6 +91,7 @@
           </p>
         {/if}
       </div>
+    {/if}
     {/if}
   </Group>
 

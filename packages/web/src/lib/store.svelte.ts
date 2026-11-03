@@ -56,6 +56,8 @@ export const ui = $state({
   me: null as User | null,
   /** Administrator in Home Assistant */
   isAdmin: false,
+  /** Rolle „Kind": die Oberfläche zeigt nur, was ein Kind darf (der Server prüft es ohnehin) */
+  isChild: false,
   /** false: der Benutzer ist (noch) nicht freigegeben, statt der App steht eine Erklärung */
   allowed: true,
   people: [] as User[],
@@ -368,6 +370,7 @@ export async function init(): Promise<void> {
     applyAccentHue(me.user.accentHue ?? null);
     if (me.allowed && me.user.language !== i18n.lang) void api.setLanguage(me.user.languageChoice, i18n.lang).catch(() => undefined);
     ui.isAdmin = me.isAdmin;
+    ui.isChild = me.isChild;
     if (!me.allowed) {
       // Home Assistant kennt den Benutzer, Stups lässt ihn nicht hinein: nur die Erklärung zeigen
       ui.allowed = false;
@@ -469,7 +472,7 @@ const TABS: Tab[] = ['boards', 'agenda', 'calendar', 'watchers'];
 function restoreView(): void {
   const tab = memo.get('stups.tab') as Tab | null;
   if (tab && TABS.includes(tab) && (tab !== 'watchers' || feat.watchers)) ui.tab = tab;
-  if (memo.get('stups.agendaMode') === 'fairness') ui.agendaMode = 'fairness';
+  if (memo.get('stups.agendaMode') === 'fairness' && !ui.isChild) ui.agendaMode = 'fairness';
   try {
     const raw = JSON.parse(memo.get('stups.schedule') ?? 'null') as Partial<ScheduleFilter> | null;
     if (!raw) return;
@@ -530,10 +533,25 @@ export const personById = (id: string) => ui.people.find((p) => p.id === id);
 
 export async function completeCard(card: Card): Promise<void> {
   const res = await act(() => api.complete(card.id));
+  if (res?.awaitingConfirmation) {
+    toast(t('Gemeldet: wartet auf Bestätigung'));
+    return;
+  }
   if (!res || !res.completionId) return;
   const id = res.completionId;
   const text = res.nextDueAt ? t('Erledigt · nächste Karte {when}', { when: formatDue(res.nextDueAt) }) : t('Erledigt');
   toast(text, { action: { label: t('Rückgängig'), run: () => void act(() => api.undo(id)) } });
+}
+
+/** Ein Bestätiger sagt „Bestätigen" (die Karte ist erledigt, zählt aufs Kind) oder „Nochmal" (das Kind bekommt sie zurück) */
+export async function answerConfirmation(card: Card, answer: 'confirm' | 'reject'): Promise<void> {
+  const res = await act(async (): Promise<boolean> => {
+    if (answer === 'confirm') await api.confirmCard(card.id);
+    else await api.rejectCard(card.id);
+    return true;
+  });
+  if (!res) return;
+  toast(answer === 'confirm' ? t('Bestätigt') : t('Zurückgegeben: {title}', { title: card.title }));
 }
 
 export async function moveCard(card: Card, columnId: string, afterId?: string | null): Promise<void> {

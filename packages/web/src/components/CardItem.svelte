@@ -3,6 +3,7 @@
   import type { Card } from '../lib/api';
   import { catKey } from '../lib/colors';
   import { cardMeta } from '../lib/cardMeta';
+  import { waitingForConfirmation } from '../lib/confirm';
   import { formatCost, formatDue, isOverdue } from '../lib/datetime';
   import { nudgeBadge } from '../lib/nudge';
   import { describeRecurrence } from '../lib/recurrence';
@@ -29,8 +30,12 @@
   // ---------- Wischen: nach rechts in den nächsten Status, nach links in den vorigen ----------
   const THRESHOLD = 96;
   const columns = $derived(ui.view?.columns ?? []);
-  const rightTarget = $derived(swipeTarget(columns, card.columnId, 'right'));
-  const leftTarget = $derived(swipeTarget(columns, card.columnId, 'left'));
+  // Ein Kind verschiebt keine Karten (auch nicht durch Wischen); es hakt nur eigene ab
+  const rightTarget = $derived(ui.isChild ? null : swipeTarget(columns, card.columnId, 'right'));
+  const leftTarget = $derived(ui.isChild ? null : swipeTarget(columns, card.columnId, 'left'));
+  const waiting = $derived(waitingForConfirmation(card));
+  // Erwachsene dürfen eine wartende Karte auch gleich erledigen; ein Kind wartet auf die Antwort
+  const canTick = $derived(!isDoneColumn && (!ui.isChild || (!waiting && !!ui.me && card.assigneeIds.includes(ui.me.id))));
 
   let dx = $state(0);
   let animating = $state(false);
@@ -143,18 +148,20 @@
     {#if bar}<span class="absolute inset-y-0 left-0 w-[5px]" style:background={bar} aria-hidden="true"></span>{/if}
     <button
       class="flex min-h-14 w-11 shrink-0 items-start justify-center pt-[17px]"
-      aria-label={isDoneColumn ? t('Bereits erledigt') : t('„{title}“ erledigen', { title: card.title })}
-      disabled={isDoneColumn}
+      aria-label={isDoneColumn ? t('Bereits erledigt') : waiting && ui.isChild ? t('Wartet auf Bestätigung') : t('„{title}“ erledigen', { title: card.title })}
+      disabled={!canTick}
       onclick={() => !suppressClick && completeCard(card)}
     >
       <span
         class="flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 {isDoneColumn
           ? 'border-accent bg-accent text-on-accent'
-          : overdue
-            ? 'border-danger'
-            : 'border-fg2'}"
+          : waiting
+            ? 'border-accent text-accent-text'
+            : overdue
+              ? 'border-danger'
+              : 'border-fg2'}"
       >
-        {#if isDoneColumn}<Icon name="check" size={14} stroke={3} />{/if}
+        {#if isDoneColumn}<Icon name="check" size={14} stroke={3} />{:else if waiting}<Icon name="clock" size={13} stroke={2.6} />{/if}
       </span>
     </button>
 
@@ -168,6 +175,11 @@
         {/if}
       </div>
 
+      {#if waiting}
+        <span class="mt-1.5 inline-flex items-center gap-1.5 rounded-[9px] bg-surface2 px-2 py-0.5 text-[13px] font-semibold text-accent-text" data-testid="card-waiting">
+          <Icon name="clock" size={14} />{t('Wartet auf Bestätigung')}
+        </span>
+      {/if}
       {#if nudge.toMe.length}
         <span class="mt-1.5 inline-flex items-center gap-1.5 rounded-[9px] bg-accent px-2 py-0.5 text-[13px] font-bold text-on-accent" data-testid="nudge-to-me">
           <Icon name="hand" size={14} />{t('{names} stupst dich', { names: names(nudge.toMe.map((n) => n.fromId)) })}
@@ -229,12 +241,16 @@
         </div>
       {/if}
     </button>
-    <button
-      class="flex w-10 shrink-0 items-start justify-center pt-[18px] text-fg2"
-      aria-label={t('Menü für „{title}“', { title: card.title })}
-      onclick={() => !suppressClick && openSheet({ type: 'cardMenu', id: card.id })}
-    >
-      <Icon name="more" size={18} />
-    </button>
+    {#if ui.isChild}
+      <span class="w-2 shrink-0" aria-hidden="true"></span>
+    {:else}
+      <button
+        class="flex w-10 shrink-0 items-start justify-center pt-[18px] text-fg2"
+        aria-label={t('Menü für „{title}“', { title: card.title })}
+        onclick={() => !suppressClick && openSheet({ type: 'cardMenu', id: card.id })}
+      >
+        <Icon name="more" size={18} />
+      </button>
+    {/if}
   </div>
 </div>

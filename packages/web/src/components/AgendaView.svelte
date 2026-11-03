@@ -58,7 +58,9 @@
       <h1 class="text-[34px] leading-tight font-bold tracking-tight">Agenda</h1>
       <SettingsButton />
     </div>
-    <p class="mb-3 text-[15px] text-fg2">{ui.agendaMode === 'fairness' ? t('Wer erledigt wie viel? Ohne Rangliste.') : t('Alle Karten mit Termin, nach Tagen')}</p>
+    <p class="mb-3 text-[15px] text-fg2">{ui.agendaMode === 'fairness' && !ui.isChild ? t('Wer erledigt wie viel? Ohne Rangliste.') : t('Alle Karten mit Termin, nach Tagen')}</p>
+    <!-- Ein Kind sieht die Fairness-Ansicht nicht -->
+    {#if !ui.isChild}
     <div class="mb-3 flex gap-2" role="group" aria-label={t('Ansicht der Agenda')}>
       {#each [['dates', t('Termine')], ['fairness', t('Fairness')]] as [value, label] (value)}
         <button
@@ -71,11 +73,12 @@
         </button>
       {/each}
     </div>
-    {#if ui.agendaMode !== 'fairness'}<ScheduleFilterBar cards={loaded} />{/if}
+    {/if}
+    {#if ui.agendaMode !== 'fairness' || ui.isChild}<ScheduleFilterBar cards={loaded} />{/if}
   </header>
 
   <div class="-mr-4 mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-4 pb-tabbar" data-testid="agenda">
-    {#if ui.agendaMode === 'fairness'}
+    {#if ui.agendaMode === 'fairness' && !ui.isChild}
       <FairnessView />
     {:else if loading}
       <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>

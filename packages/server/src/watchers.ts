@@ -1,4 +1,5 @@
 import type { HaState } from './ha.js';
+import { isRunning, phaseOf, type HomeItem, type HomeState, type PhaseMemory } from './home.js';
 import { personOfEntity, presenceOf, type PresenceMap } from './presence.js';
 import { fromLocal, toLocal } from './recurrence.js';
 import type { Card, Store, User } from './store.js';
@@ -20,6 +21,8 @@ export interface WatcherHa {
   getStates(): Promise<HaState[]>;
   onConnected(cb: () => void): void;
   activeSubscriptions?(): string[];
+  /** Steht die Verbindung, und seit wann fehlt sie? (ohne Angabe gilt sie als stehend) */
+  connection?(): { connected: boolean; lostSince: string | null };
 }
 
 export interface WatcherDeps {
@@ -64,6 +67,10 @@ export function createWatchers(deps: WatcherDeps) {
   const subscribed = new Map<string, string>();
   let persons: HaState[] = [];
   let personsAt = 0;
+  /** Was für „Zuhause" gemerkt wird (Beginn eines laufenden Vorgangs) */
+  const memory = new Map<string, PhaseMemory>();
+  /** Nächste Termine von Kalender-Wächtern (Stufe 6), je Wächter */
+  const nextEvents = new Map<string, { title: string; at: string }>();
 
   // ---------- Warteschlange: eine Auswertung nach der anderen ----------
 
@@ -125,6 +132,23 @@ export function createWatchers(deps: WatcherDeps) {
   /** Wer ist zu Hause? Zuordnung über den Benutzer der HA-Person, sonst über den Namen */
   async function presence(): Promise<PresenceMap> {
     return presenceOf(store.people(), await personStates());
+  }
+
+  // ---------- Zuhause: läuft gerade? ----------
+
+  const memoryOf = (id: string): PhaseMemory => {
+    let m = memory.get(id);
+    if (!m) memory.set(id, (m = { runningSince: null, touched: false }));
+    return m;
+  };
+
+  /** Merkt sich bei jeder Beobachtung, ob der Vorgang läuft und seit wann */
+  function remember(w: Watcher, s: Seen | null, lastFireAt: string | null): void {
+    const m = memoryOf(w.id);
+    if (s && w.trigger.kind === 'above' && conditionMet(w.trigger, s.state)) m.touched = true;
+    const running = isRunning(w.trigger, s, lastFireAt, m.touched);
+    if (running && !m.runningSince) m.runningSince = now().toISOString();
+    else if (!running) m.runningSince = null;
   }
 
   // ---------- Zuweisung ----------
@@ -247,6 +271,7 @@ export function createWatchers(deps: WatcherDeps) {
         return;
       }
       data.patchState(w.id, { armed: false, lastFireAt: nowIso });
+      memoryOf(w.id).touched = false;
 
       // Zähler: erst beim N-ten Mal
       let counter = 0;
@@ -341,6 +366,7 @@ export function createWatchers(deps: WatcherDeps) {
     if (w.status === 'entity_missing') data.setStatus(w.id, 'ok');
     const nowMs = now().getTime();
     const st = data.getState(w.id);
+    remember(w, s, st.lastFireAt);
 
     if (!conditionMet(w.trigger, s.state)) {
       if (!st.armed || st.metSince) data.patchState(w.id, { armed: true, metSince: null });
@@ -670,12 +696,50 @@ export function createWatchers(deps: WatcherDeps) {
     });
   }
 
+  /** Für den Reiter „Zuhause": jeder aktive Wächter mit seiner Phase (siehe home.ts) */
+  function homeState(): HomeState {
+    const link = ha.connection?.() ?? { connected: true, lostSince: null };
+    const nowIso = now().toISOString();
+    const items: HomeItem[] = [];
+    for (const w of data.list()) {
+      if (!w.active) continue;
+      const s = seenOf(w.trigger.entityId);
+      const st = data.getState(w.id);
+      remember(w, s, st.lastFireAt);
+      const open = store.openCardOfWatcher(w.id);
+      const counter = w.trigger.count > 1 ? counterOf(w.id) : 0;
+      const nextEvent = nextEvents.get(w.id) ?? null;
+      const { phase, since } = phaseOf({
+        watcher: w,
+        seen: s,
+        lastFireAt: st.lastFireAt,
+        counter,
+        openCard: open ? { id: open.id, createdAt: open.createdAt } : null,
+        memory: memoryOf(w.id),
+        nextEvent,
+        nowIso,
+      });
+      items.push({
+        watcherId: w.id,
+        name: w.name,
+        phase,
+        since,
+        progress: w.trigger.count > 1 && counter > 0 ? { n: counter, of: w.trigger.count } : null,
+        nextCard: w.card.title,
+        entityMissing: w.status === 'entity_missing' || s === null,
+        openCard: open ? { id: open.id, title: open.title, assigneeIds: open.assigneeIds, createdAt: open.createdAt } : null,
+        nextEvent,
+      });
+    }
+    return { available: link.connected, lostSince: link.lostSince, items };
+  }
+
   /** Die letzten Läufe über alle Wächter (für den Reiter „Wächter") */
   function activity(limit = 20) {
     return data.recentRuns(limit);
   }
 
-  return { start, presentPersonIds, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
+  return { start, presentPersonIds, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, homeState, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
 }
 
 export type Watchers = ReturnType<typeof createWatchers>;

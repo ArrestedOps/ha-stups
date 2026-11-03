@@ -30,6 +30,7 @@ function makeDeps(overrides: Partial<SpikeDeps> = {}) {
         lastError: null,
         eventsReceived: 0,
         lastEventAt: null,
+        lostSince: null,
       }),
       onNotificationAction: (cb) => {
         actions.push(cb);

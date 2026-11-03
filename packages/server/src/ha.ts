@@ -53,6 +53,8 @@ export interface HaStatus {
   lastError: string | null;
   eventsReceived: number;
   lastEventAt: string | null;
+  /** Seit wann die Verbindung fehlt (null, solange sie steht); beim Start gilt der Start als Beginn */
+  lostSince: string | null;
 }
 
 export interface HaClientOptions {
@@ -86,7 +88,13 @@ export class HaClient {
     lastError: null,
     eventsReceived: 0,
     lastEventAt: null,
+    lostSince: new Date().toISOString(),
   };
+
+  /** Steht die Verbindung, und seit wann fehlt sie? (für „Zuhause") */
+  connection(): { connected: boolean; lostSince: string | null } {
+    return { connected: this.state.connected, lostSince: this.state.lostSince };
+  }
 
   status(): HaStatus {
     return { ...this.state };
@@ -347,6 +355,7 @@ export class HaClient {
         ws.send(JSON.stringify({ type: 'auth', access_token: this.opts.token }));
       } else if (msg.type === 'auth_ok') {
         this.state.connected = true;
+        this.state.lostSince = null;
         this.state.lastError = null;
         ws.send(
           JSON.stringify({
@@ -390,6 +399,7 @@ export class HaClient {
       this.state.lastError = `Verbindungsfehler: ${err.message}`;
     });
     ws.on('close', () => {
+      if (this.state.connected || this.state.lostSince === null) this.state.lostSince = new Date().toISOString();
       this.state.connected = false;
       this.state.subscribed = false;
       this.ready = false;

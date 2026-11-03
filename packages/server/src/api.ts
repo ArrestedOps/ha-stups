@@ -21,6 +21,7 @@ import { registerTemplateRoutes } from './api/templates.js';
 import { registerFairnessRoutes } from './api/fairness.js';
 import { registerAvatarRoutes } from './api/people-avatar.js';
 import { registerTodayRoutes } from './api/today.js';
+import { registerHomeStateRoutes } from './api/home-state.js';
 import { registerChildGuard } from './api/child-guard.js';
 
 export type { ApiDeps } from './api/kit.js';
@@ -102,4 +103,5 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   registerFairnessRoutes(app, k);
   registerAvatarRoutes(app, k);
   registerTodayRoutes(app, k);
+  registerHomeStateRoutes(app, k);
 }

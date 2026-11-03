@@ -53,6 +53,7 @@
     remindBeforeMin: null,
     overdueNag: false,
     priority: null,
+    effort: null,
     categoryIds: [],
     costCents: null,
   });

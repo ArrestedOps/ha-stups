@@ -1,6 +1,6 @@
 import { ValidationError } from '../errors.js';
 import { type Recurrence } from '../recurrence.js';
-import { CARRY_FIELDS, DEFAULT_CARRY, type CarryField, type Priority } from './types.js';
+import { CARRY_FIELDS, DEFAULT_CARRY, EFFORTS, type CarryField, type Effort, type Priority } from './types.js';
 import { DUE_RE, PRIORITIES } from './constants.js';
 import { t } from '../i18n/index.js';
 
@@ -34,6 +34,13 @@ export function parseRemind(value: unknown): number | null {
     throw new ValidationError(t('Die Vorab-Erinnerung muss zwischen 1 Minute und 30 Tagen liegen'));
   }
   return value as number;
+}
+
+/** Aufwand: klein, mittel, groß; nicht angegeben oder null = leer */
+export function parseEffort(value: unknown): Effort | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'string' || !EFFORTS.includes(value as Effort)) throw new ValidationError(t('Der Aufwand muss klein, mittel oder groß sein'));
+  return value as Effort;
 }
 
 export function parseCost(value: unknown): number | null {

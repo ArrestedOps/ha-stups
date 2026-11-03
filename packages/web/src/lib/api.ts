@@ -3,6 +3,8 @@ import type { Recurrence } from './recurrence';
 import type { HaEntity, WatcherActivity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
 
 export type Priority = 'low' | 'medium' | 'high';
+/** Aufwand einer Karte für die Fairness-Ansicht; leer zählt wie mittel */
+export type Effort = 'small' | 'medium' | 'large';
 
 export interface User {
   id: string;
@@ -93,6 +95,7 @@ export interface Card {
   title: string;
   description: string | null;
   priority: Priority | null;
+  effort: Effort | null;
   dueAt: string | null;
   recurrence: Recurrence | null;
   completedAt: string | null;
@@ -218,6 +221,7 @@ export interface CardInput {
   title: string;
   description?: string | null;
   priority?: Priority | null;
+  effort?: Effort | null;
   dueAt?: string | null;
   recurrence?: Recurrence | null;
   remindBeforeMin?: number | null;

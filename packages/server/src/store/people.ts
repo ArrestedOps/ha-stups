@@ -28,6 +28,7 @@ export function createPeople(c: Ctx, late: unknown) {
     languageChoice: r.language_choice === 'de' || r.language_choice === 'en' ? r.language_choice : 'auto',
     language: r.language === 'de' || r.language === 'en' ? r.language : null,
     accentHue: typeof r.accent_hue === 'number' ? r.accent_hue : null,
+    weeklySummary: r.weekly_summary === 1,
   });
 
   /** Ruhezeit aus den Spalten der Person, mit der Vorgabe für alles, was nicht gesetzt ist */

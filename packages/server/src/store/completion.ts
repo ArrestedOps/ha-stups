@@ -71,8 +71,8 @@ export function createCompletion(c: Ctx, late: unknown) {
     const col = toPlanned ? planned! : firstOpenColumn(src.board_id);
     run(
       `insert into cards (id, board_id, column_id, position, title, description, priority, due_at, recurrence,
-                          remind_before_min, overdue_nag, cost_cents, carry_over, repeated_from, created_by, created_at, updated_at)
-       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                          remind_before_min, overdue_nag, cost_cents, carry_over, repeated_from, created_by, created_at, updated_at, effort)
+       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       newId,
       src.board_id,
       col.id,
@@ -90,6 +90,7 @@ export function createCompletion(c: Ctx, late: unknown) {
       src.created_by,
       t,
       t,
+      src.effort ?? null,
     );
     run('insert into card_assignees (card_id, user_id) select ?, user_id from card_assignees where card_id = ?', newId, src.id);
     run(

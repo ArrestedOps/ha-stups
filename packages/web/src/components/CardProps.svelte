@@ -12,6 +12,7 @@
     remindBeforeMin: number | null;
     overdueNag: boolean;
     priority: Priority | null;
+    effort?: Effort | null;
     categoryIds: string[];
     costCents: number | null;
     /** gesetzt, wenn die Karte erledigt ist: dann ist der Termin nicht mehr „überfällig" */
@@ -22,7 +23,7 @@
 </script>
 
 <script lang="ts">
-  import type { CardPatch, Column } from '../lib/api';
+  import type { CardPatch, Column, Effort } from '../lib/api';
   import { formatCost, formatDue, formatLead, fromInputValue, isOverdue, parseCost, toInputValue } from '../lib/datetime';
   import { DEFAULT_CARRY } from '../lib/carry';
   import { describeRecurrence } from '../lib/recurrence';
@@ -63,6 +64,13 @@
     ['medium', t('Mittel')],
     ['high', t('Hoch')],
   ]);
+  const EFFORTS: [Effort | null, string][] = $derived([
+    [null, t('Nicht angegeben')],
+    ['small', t('Klein')],
+    ['medium', t('Mittel')],
+    ['large', t('Groß')],
+  ]);
+  const effortLabel = $derived(card.effort ? (EFFORTS.find((e) => e[0] === card.effort)?.[1] ?? '') : t('Aufwand'));
   const REMINDERS = [15, 30, 60, 120, 1440, 2880];
 
   // Kosten: wird beim Verlassen des Feldes übernommen
@@ -167,6 +175,7 @@
     )}
   {/if}
   {@render chip('prio', 'flag', card.priority ? (PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? '') : t('Priorität'), !!card.priority)}
+  {@render chip('effort', 'checklist', effortLabel, !!card.effort)}
   {@render chip('cat', 'tag', catNames.length ? catNames.join(', ') : t('Kategorie'), catNames.length > 0)}
   {@render chip('cost', 'euro', card.costCents !== null ? formatCost(card.costCents) : t('Kosten'), card.costCents !== null)}
 </div>
@@ -253,6 +262,20 @@
           </button>
         {/each}
       </div>
+    {:else if panel === 'effort'}
+      <div class="flex flex-wrap gap-2" role="group" aria-label={t('Aufwand')}>
+        {#each EFFORTS as [value, label] (label)}
+          <button
+            type="button"
+            class="min-h-11 rounded-xl px-4 text-[15px] font-semibold {card.effort === value || (!card.effort && value === null) ? 'bg-accent text-on-accent' : 'bg-surface2'}"
+            aria-pressed={card.effort === value || (!card.effort && value === null)}
+            onclick={() => onsave({ effort: value })}
+          >
+            {label}
+          </button>
+        {/each}
+      </div>
+      <p class="mt-3 text-[13px] text-fg2">{t('Zählt in der Fairness-Ansicht: eine große Aufgabe wiegt mehr als eine kleine. Ohne Angabe zählt sie wie „Mittel“.')}</p>
     {:else if panel === 'cat'}
       <CategoryPicker selected={card.categoryIds} onchange={(ids) => onsave({ categoryIds: ids })} />
     {:else if panel === 'cost'}

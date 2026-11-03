@@ -23,6 +23,8 @@ export interface User {
   language: 'de' | 'en' | null;
   /** Eigener Farbton der Oberfläche (0–359); null: das Orange der App */
   accentHue: number | null;
+  /** Sonntags-Zusammenfassung als Push (aus, bis die Person sie einschaltet) */
+  weeklySummary: boolean;
 }
 
 export type NudgeTemplate = 'think' | 'today' | 'help' | 'thanks';
@@ -197,6 +199,12 @@ export const CARRY_FIELDS: readonly CarryField[] = ['description', 'checklist', 
 /** Ohne eigene Auswahl: Fotos und Kommentare gehören meist zu genau einem Durchgang und bleiben bei der erledigten Karte */
 export const DEFAULT_CARRY: readonly CarryField[] = ['description', 'checklist', 'links', 'cost'];
 
+/** Aufwand einer Karte: klein, mittel oder groß */
+export type Effort = 'small' | 'medium' | 'large';
+export const EFFORTS: readonly Effort[] = ['small', 'medium', 'large'];
+/** Gewichte für die Fairness-Ansicht; eine Karte ohne Angabe zählt wie mittel */
+export const EFFORT_WEIGHT: Record<Effort, number> = { small: 1, medium: 2, large: 3 };
+
 export interface Card {
   id: string;
   boardId: string;
@@ -218,6 +226,8 @@ export interface Card {
   /** täglich nachhaken, solange überfällig */
   overdueNag: boolean;
   costCents: number | null;
+  /** Aufwand für die Fairness-Ansicht; leer zählt wie mittel */
+  effort: Effort | null;
   /** Was die nächste Karte übernimmt, wenn diese sich wiederholt */
   carryOver: CarryField[];
   /** offene Stupse zu dieser Karte */
@@ -369,6 +379,7 @@ export interface CardInput {
   remindBeforeMin?: number | null;
   overdueNag?: unknown;
   costCents?: number | null;
+  effort?: unknown;
   carryOver?: unknown;
   assigneeIds?: string[];
   categoryIds?: string[];

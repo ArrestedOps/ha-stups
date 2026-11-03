@@ -8,6 +8,11 @@ export type Catalog = Record<string, string | [string, string]>;
 export const en: Catalog = {
   // Einstellungen › Sprache
   'Sprache': 'Language',
+  'Aufwand': 'Effort',
+  'Nicht angegeben': 'Not specified',
+  'Klein': 'Small',
+  'Groß': 'Large',
+  'Zählt in der Fairness-Ansicht: eine große Aufgabe wiegt mehr als eine kleine. Ohne Angabe zählt sie wie „Mittel“.': 'Counts in the fairness view: a large task weighs more than a small one. Without a value it counts as “Medium”.',
   'Vorlage für das neue Board': 'Template for the new board',
   'Leeres Board': 'Empty board',
   'Eingebaute Vorlagen': 'Built-in templates',

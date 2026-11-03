@@ -92,6 +92,7 @@ export function createTemplates(c: Ctx, late: unknown) {
             dueAt,
             recurrence: card.recurrence,
             categoryIds: card.categories.map((i) => categoryIds[i]!),
+            effort: card.effort,
           },
           input.by,
         );
@@ -125,7 +126,7 @@ export function createTemplates(c: Ctx, late: unknown) {
         categories: card.categoryIds.flatMap((id) => (categoryIndex.has(id) ? [categoryIndex.get(id)!] : [])),
         checklist: all('select text from checklist_items where card_id = ? order by position, id', card.id).map((r: Row) => r.text as string),
         priority: card.priority,
-        effort: null,
+        effort: card.effort,
         recurrence: (card.recurrence as Record<string, unknown> | null) ?? null,
         dueInDays: card.dueAt && earliest !== null ? Math.max(0, dayDiff(Date.parse(card.dueAt), earliest, tz)) : null,
       })),

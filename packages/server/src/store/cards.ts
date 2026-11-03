@@ -3,7 +3,7 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { NotFoundError, ValidationError } from '../errors.js';
 import { type Recurrence } from '../recurrence.js';
 import { type OpenNudge, type Card, type ScheduleCard, type ChecklistItem, type CardLink, type ActivityEntry, type CardDetail, type CardInput, type CardPatch, type Row } from './types.js';
-import { cleanText, parseDue, parsePriority, parseRemind, parseCost, parseCarryOver, resolveCarry, parseBool, parseRecurrence } from './validate.js';
+import { cleanText, parseDue, parsePriority, parseRemind, parseCost, parseEffort, parseCarryOver, resolveCarry, parseBool, parseRecurrence } from './validate.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
@@ -102,6 +102,7 @@ export function createCards(c: Ctx, late: unknown) {
       remindBeforeMin: r.remind_before_min,
       overdueNag: r.overdue_nag === 1,
       costCents: r.cost_cents,
+      effort: r.effort ?? null,
       carryOver: resolveCarry(r.carry_over),
       openNudges: nudges.get(r.id) ?? [],
       repeatedFrom: r.repeated_from ?? null,
@@ -242,6 +243,7 @@ export function createCards(c: Ctx, late: unknown) {
     if (recurrence && !dueAt) throw new ValidationError(t('Eine Wiederholung braucht eine Fälligkeit'));
     const remind = parseRemind(input.remindBeforeMin);
     const cost = parseCost(input.costCents);
+    const effort = parseEffort(input.effort);
     const carry = parseCarryOver(input.carryOver);
     const nag = parseBool(input.overdueNag, t('Nachhaken'));
     if (remind !== null && !dueAt) throw new ValidationError(t('Eine Vorab-Erinnerung braucht eine Fälligkeit'));
@@ -256,8 +258,8 @@ export function createCards(c: Ctx, late: unknown) {
       const t = iso();
       run(
         `insert into cards (id, board_id, column_id, position, title, description, priority, due_at, recurrence,
-                            remind_before_min, overdue_nag, cost_cents, carry_over, created_by, created_at, updated_at)
-         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                            remind_before_min, overdue_nag, cost_cents, carry_over, created_by, created_at, updated_at, effort)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         id,
         boardId,
         col.id,
@@ -274,6 +276,7 @@ export function createCards(c: Ctx, late: unknown) {
         createdBy,
         t,
         t,
+        effort,
       );
       for (const u of assignees) run('insert into card_assignees (card_id, user_id) values (?, ?)', id, u);
       for (const c of categories) run('insert into card_categories (card_id, category_id) values (?, ?)', id, c);
@@ -352,6 +355,10 @@ export function createCards(c: Ctx, late: unknown) {
         sets.push('cost_cents = ?');
         params.push(parseCost(patch.costCents));
       }
+      if (patch.effort !== undefined) {
+        sets.push('effort = ?');
+        params.push(parseEffort(patch.effort));
+      }
       if (patch.carryOver !== undefined) {
         const carry = parseCarryOver(patch.carryOver);
         sets.push('carry_over = ?');
@@ -402,8 +409,8 @@ export function createCards(c: Ctx, late: unknown) {
         : generateKeyBetween(lastPos('cards', 'column_id = ?', col.id), null);
       run(
         `insert into cards (id, board_id, column_id, position, title, description, priority, due_at, recurrence,
-                            remind_before_min, overdue_nag, cost_cents, carry_over, created_by, created_at, updated_at)
-         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                            remind_before_min, overdue_nag, cost_cents, carry_over, created_by, created_at, updated_at, effort)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         newId,
         src.board_id,
         col.id,
@@ -420,6 +427,7 @@ export function createCards(c: Ctx, late: unknown) {
         by,
         t,
         t,
+        src.effort ?? null,
       );
       run('insert into card_assignees (card_id, user_id) select ?, user_id from card_assignees where card_id = ?', newId, id);
       run(

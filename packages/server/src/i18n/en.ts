@@ -76,6 +76,7 @@ export const en: Catalog = {
   'Der Typ muss „speak" oder „light" sein': 'The type must be “speak” or “light”',
   'Kanal nicht gefunden': 'Channel not found',
   'Vorlage nicht gefunden': 'Template not found',
+  'Der Aufwand muss klein, mittel oder groß sein': 'The effort must be small, medium or large',
   'Die Vorlage ist ungültig': 'The template is invalid',
   'Eingebaute Vorlagen lassen sich nicht löschen': 'Built-in templates cannot be deleted',
   'Das darf nur, wer die Vorlage gespeichert hat, oder ein Administrator': 'Only the person who saved the template, or an administrator, may do that',

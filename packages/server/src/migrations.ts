@@ -407,4 +407,12 @@ export const migrations: Migration[] = [
       );
     `,
   },
+  {
+    version: 18,
+    // Aufwand je Karte (klein, mittel, groß; leer = mittel) für die Fairness-Ansicht, und die Sonntags-Zusammenfassung je Person
+    sql: `
+      alter table cards add column effort text check (effort in ('small', 'medium', 'large'));
+      alter table users add column weekly_summary integer not null default 0;
+    `,
+  },
 ];

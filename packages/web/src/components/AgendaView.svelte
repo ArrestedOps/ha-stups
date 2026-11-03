@@ -8,7 +8,7 @@
   import Avatar from './Avatar.svelte';
   import FairnessView from './FairnessView.svelte';
   import Icon from './Icon.svelte';
-  import SettingsButton from './SettingsButton.svelte';
+  import TopBar from './TopBar.svelte';
   import ScheduleFilterBar from './ScheduleFilterBar.svelte';
 
   const DAY = 86_400_000;
@@ -53,11 +53,9 @@
 </script>
 
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
-  <header class="shrink-0 pt-2">
-    <div class="flex items-center justify-between gap-2">
-      <h1 class="text-[34px] leading-tight font-bold tracking-tight">Agenda</h1>
-      <SettingsButton />
-    </div>
+  <header class="shrink-0">
+    <TopBar />
+    <h1 class="font-display text-[34px] leading-tight font-bold tracking-tight">Agenda</h1>
     <p class="mb-3 text-[15px] text-fg2">{ui.agendaMode === 'fairness' && !ui.isChild ? t('Wer erledigt wie viel? Ohne Rangliste.') : t('Alle Karten mit Termin, nach Tagen')}</p>
     <!-- Ein Kind sieht die Fairness-Ansicht nicht -->
     {#if !ui.isChild}

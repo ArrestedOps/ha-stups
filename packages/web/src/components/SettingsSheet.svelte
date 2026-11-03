@@ -256,7 +256,7 @@ tap_action:
 
   {#if feat.watchers && !ui.isChild}
   <Group title={t('Wächter')} hint={t('Karten, die von selbst aus Home Assistant entstehen, zum Beispiel wenn die Waschmaschine fertig ist.')}>
-    <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => selectTab('watchers')}>
+    <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => selectTab('home')}>
       <Icon name="eye" size={20} />
       <span class="flex-1">{t('Wächter')}{watchers && watchers.items.length ? ` (${t('{n} aktiv', { n: watchers.items.filter((w) => w.active).length })})` : ''}</span>
       <Icon name="chevron-right" size={18} />

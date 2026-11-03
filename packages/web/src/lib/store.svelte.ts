@@ -18,6 +18,7 @@ import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLan
 import { passkeysSupported } from './passkeys';
 import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
 import { swipeTarget } from './swipe';
+import { migrateTab, visibleTabs, type Tab } from './tabs';
 import { applyCards, deltaIds } from './delta';
 import { startSync, type SyncInfo } from './sync';
 
@@ -36,7 +37,7 @@ export type Sheet =
   | { type: 'trash' }
   | { type: 'archive' };
 
-export type Tab = 'boards' | 'agenda' | 'calendar' | 'watchers';
+export type { Tab };
 
 export interface Toast {
   id: number;
@@ -73,8 +74,8 @@ export const ui = $state({
   sheet: null as Sheet,
   /** Karte, die gerade „hüpft" (nach dem Stupsen) */
   hop: null as string | null,
-  /** Ansicht unten in der Leiste: Boards, Agenda (Liste der Termine) oder Kalender */
-  tab: 'boards' as Tab,
+  /** Ansicht unten in der Leiste: Heute, Boards, Kalender oder Zuhause */
+  tab: 'today' as Tab,
   /** Agenda: die Liste der Termine oder die Fairness-Ansicht */
   agendaMode: 'dates' as 'dates' | 'fairness',
   /** Filter für Agenda und Kalender (Personen, Boards, Erledigtes) */
@@ -466,12 +467,11 @@ export function selectColumn(id: string): void {
   memo.set('stups.column', id);
 }
 
-const TABS: Tab[] = ['boards', 'agenda', 'calendar', 'watchers'];
-
 /** Gemerkte Ansicht und gemerkter Filter von diesem Gerät (nur bekannte Boards und Personen bleiben im Filter) */
 function restoreView(): void {
-  const tab = memo.get('stups.tab') as Tab | null;
-  if (tab && TABS.includes(tab) && (tab !== 'watchers' || feat.watchers)) ui.tab = tab;
+  // Alte Namen (agenda, watchers) führen zu den neuen; ein Reiter, den es hier nicht gibt (Kind, ohne Wächter), heißt Heute
+  const tab = migrateTab(memo.get('stups.tab'));
+  ui.tab = visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }).includes(tab) ? tab : 'today';
   if (memo.get('stups.agendaMode') === 'fairness' && !ui.isChild) ui.agendaMode = 'fairness';
   try {
     const raw = JSON.parse(memo.get('stups.schedule') ?? 'null') as Partial<ScheduleFilter> | null;

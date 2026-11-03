@@ -873,4 +873,5 @@ export const en: Catalog = {
   '{amount} offen': '{amount} open',
   '{amount} erledigt': '{amount} done',
   'Bitte ein Bild wählen': 'Please choose a picture',
+  'Zuhause': 'Home',
 };

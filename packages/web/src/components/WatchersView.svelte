@@ -5,7 +5,7 @@
   import { conditionText, noteText, RUN_TEXT, TEMPLATES, watcherLine } from '../lib/watchers';
   import { openCardAnywhere, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
-  import SettingsButton from './SettingsButton.svelte';
+  import TopBar from './TopBar.svelte';
 
   const data = $derived(ui.watchers);
   const items = $derived(data?.items ?? []);
@@ -50,9 +50,10 @@
 </script>
 
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
-  <header class="shrink-0 pt-2">
+  <header class="shrink-0">
+    <TopBar />
     <div class="flex items-center justify-between gap-2">
-      <h1 class="text-[34px] leading-tight font-bold tracking-tight">{t('Wächter')}</h1>
+      <h1 class="font-display text-[34px] leading-tight font-bold tracking-tight">{t('Wächter')}</h1>
       <div class="flex items-center gap-2">
         {#if admin && data?.available}
           <button
@@ -63,7 +64,6 @@
             <Icon name="plus" size={22} stroke={2.6} />
           </button>
         {/if}
-        <SettingsButton />
       </div>
     </div>
     <p class="mb-3 text-[15px] text-fg2">{t('Karten, die von selbst aus Home Assistant entstehen')}</p>

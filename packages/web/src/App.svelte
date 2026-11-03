@@ -15,7 +15,7 @@
   import ColumnList from './components/ColumnList.svelte';
   import ColumnTabs from './components/ColumnTabs.svelte';
   import Icon from './components/Icon.svelte';
-  import SettingsButton from './components/SettingsButton.svelte';
+  import TopBar from './components/TopBar.svelte';
   import Lightbox from './components/Lightbox.svelte';
   import NewCardSheet from './components/NewCardSheet.svelte';
   import NudgeSheet from './components/NudgeSheet.svelte';
@@ -31,7 +31,7 @@
   import { deviceTz, formatCost } from './lib/datetime';
   import { costTotals, countByColumn, dueStats, filterCards } from './lib/filters';
   import { scrollStrip } from './lib/scrollStrip';
-  import { feat, goToDashboard, init, openSheet, ui } from './lib/store.svelte';
+  import { init, openSheet, ui } from './lib/store.svelte';
 
   onMount(init);
 
@@ -110,27 +110,11 @@
   {#if tab === 'boards'}
   <main class="relative z-[1] mx-auto flex h-full max-w-[1400px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
     <header class="shrink-0">
-      <div class="flex items-center justify-between">
-        {#if feat.haUi}
-          <button class="-ml-1.5 flex min-h-11 items-center text-[17px] text-accent-text" onclick={goToDashboard}>
-            <Icon name="chevron-left" size={24} stroke={2.6} />Dashboard
-          </button>
-        {:else}
-          <span class="min-h-11"></span>
-        {/if}
-        <div class="flex items-center gap-2">
-          {#if !ui.online}
-            <span class="flex items-center gap-1.5 rounded-full bg-surface2 px-3 py-1 text-[13px] text-fg2" role="status">
-              <Icon name="wifi-off" size={14} />Offline
-            </span>
-          {/if}
-          <SettingsButton />
-        </div>
-      </div>
+      <TopBar />
 
       <div class="flex items-center justify-between gap-3">
         <button class="flex min-h-11 min-w-0 items-center gap-1.5 text-left" onclick={() => openSheet({ type: 'boards' })} aria-label={t('Board wechseln')}>
-          <h1 class="truncate text-[34px] leading-tight font-bold tracking-tight">{board?.name ?? 'Stups'}</h1>
+          <h1 class="font-display truncate text-[34px] leading-tight font-bold tracking-tight">{board?.name ?? 'Stups'}</h1>
           <span class="shrink-0 text-accent-text"><Icon name="chevron-down" size={22} stroke={2.6} /></span>
         </button>
         <button
@@ -232,7 +216,7 @@
       </div>
     {/if}
   </main>
-  {:else if tab === 'agenda'}
+  {:else if tab === 'today'}
     <AgendaView />
   {:else if tab === 'calendar'}
     <CalendarView />

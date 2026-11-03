@@ -1,18 +1,17 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
-  import { feat, selectTab, ui, type Tab } from '../lib/store.svelte';
+  import { visibleTabs, type Tab } from '../lib/tabs';
+  import { feat, selectTab, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
-  const all: { id: Tab; label: string; icon: string }[] = $derived([
-    { id: 'boards', label: 'Boards', icon: 'columns' },
-    { id: 'agenda', label: 'Agenda', icon: 'list' },
-    { id: 'calendar', label: t('Kalender'), icon: 'calendar' },
-    { id: 'watchers', label: t('Wächter'), icon: 'eye' },
-  ]);
-  // Alle sehen alle vier Reiter; nur Administratoren ändern im Reiter „Wächter" etwas.
-  // Ohne Home Assistant (eigene Anmeldung) gibt es die Wächter nicht, dann sind es drei Reiter.
-  // Ein Kind sieht die Wächter nicht (der Server verweigert sie ohnehin)
-  const tabs = $derived(all.filter((tb) => tb.id !== 'watchers' || (feat.watchers && !ui.isChild)));
+  const all: Record<Tab, { label: string; icon: string }> = $derived({
+    today: { label: t('Heute'), icon: 'list' },
+    boards: { label: 'Boards', icon: 'columns' },
+    calendar: { label: t('Kalender'), icon: 'calendar' },
+    home: { label: t('Zuhause'), icon: 'home' },
+  });
+  // Ohne Home Assistant (eigene Anmeldung) gibt es keine Wächter, ein Kind sieht sie nicht: dann sind es drei Reiter
+  const tabs = $derived(visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }).map((id) => ({ id, ...all[id] })));
   const active = $derived(ui.tab);
 </script>
 

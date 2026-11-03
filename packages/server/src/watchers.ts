@@ -25,6 +25,10 @@ export interface WatcherHa {
   getStates(): Promise<HaState[]>;
   onConnected(cb: () => void): void;
   activeSubscriptions?(): string[];
+  /** Termine eines Kalenders (start/end als ISO-Text oder nur Datum) */
+  getCalendarEvents?(entityId: string, fromIso: string, toIso: string): Promise<{ title: string; start: string; end: string }[]>;
+  /** Stündliche Vorhersage einer Wetter-Entität */
+  getForecast?(entityId: string): Promise<{ datetime: string; condition?: string; precipitation?: number; precipitation_probability?: number }[]>;
   /** Steht die Verbindung, und seit wann fehlt sie? (ohne Angabe gilt sie als stehend) */
   connection?(): { connected: boolean; lostSince: string | null };
 }
@@ -52,6 +56,10 @@ export interface WatcherDeps {
 
 /** Wer nach der ersten Heimkehr noch dazukommen darf */
 const JOIN_WINDOW_MS = 2 * 60_000;
+/** Kalender und Vorhersage werden höchstens so oft abgefragt */
+const POLL_MS = 30 * 60_000;
+/** Nach einem Fehlversuch geht es nach so langer Zeit weiter */
+const POLL_RETRY_MS = 5 * 60_000;
 /** So lange wartet eine Karte auf die erste heimkehrende Person */
 const WAIT_LIMIT_MS = 24 * 3_600_000;
 const TEST_NOTE = 'Test';
@@ -79,6 +87,8 @@ export function createWatchers(deps: WatcherDeps) {
   const memory = new Map<string, PhaseMemory>();
   /** Nächste Termine von Kalender-Wächtern (Stufe 6), je Wächter */
   const nextEvents = new Map<string, { title: string; at: string }>();
+  /** Wann Kalender und Vorhersage je Wächter zuletzt abgefragt wurden */
+  const lastPoll = new Map<string, number>();
 
   // ---------- Warteschlange: eine Auswertung nach der anderen ----------
 
@@ -322,7 +332,7 @@ export function createWatchers(deps: WatcherDeps) {
     await createCard(w, nowMs, test);
   }
 
-  async function createCard(w: Watcher, nowMs: number, test: boolean): Promise<void> {
+  async function createCard(w: Watcher, nowMs: number, test: boolean, dedupeKey: string | null = null): Promise<void> {
     const people = store.people();
     const needsPresence = w.assign.mode === 'rotation_present' || w.assign.mode === 'all_present' || w.assign.mode === 'first_home' || w.assign.mode === 'suggest';
     const home = needsPresence ? (await presence()).home : new Set<string>();
@@ -349,7 +359,7 @@ export function createWatchers(deps: WatcherDeps) {
           },
           null,
         );
-        store.setCardOrigin(created.id, { watcherId: w.id });
+        store.setCardOrigin(created.id, { watcherId: w.id, dedupeKey });
         if (decision.waiting) data.addWaiting(created.id, w.id);
         if (decision.suggest) data.addSuggest(created.id, w.id);
         if (decision.last) data.patchState(w.id, { lastPerson: decision.last });
@@ -391,6 +401,8 @@ export function createWatchers(deps: WatcherDeps) {
       return;
     }
     if (w.status === 'entity_missing') data.setStatus(w.id, 'ok');
+    // Termine und Vorhersage werden im Takt abgefragt (pollExternal), nicht über Zustandswechsel
+    if (w.trigger.kind === 'calendar_event' || w.trigger.kind === 'forecast') return;
     const nowMs = now().getTime();
     const st = data.getState(w.id);
     remember(w, s, st.lastFireAt);
@@ -470,6 +482,74 @@ export function createWatchers(deps: WatcherDeps) {
     }
     for (const w of active) subscribeWatcher(w);
     syncPresenceSubscription();
+  }
+
+  // ---------- Kalender und Vorhersage (im Takt abgefragt) ----------
+
+  /** Ein Datum ohne Uhrzeit (ganztägiger Termin) beginnt um Mitternacht Ortszeit */
+  function eventMs(value: string): number {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    return m ? fromLocal({ y: Number(m[1]), m: Number(m[2]), d: Number(m[3]), h: 0, mi: 0, s: 0 }, timeZone()) : Date.parse(value);
+  }
+
+  async function pollCalendar(w: Watcher, nowMs: number): Promise<void> {
+    if (!ha.getCalendarEvents) return;
+    const lead = minutes(w.trigger.leadMin ?? 720);
+    const events = await ha.getCalendarEvents(w.trigger.entityId, new Date(nowMs).toISOString(), new Date(nowMs + 7 * 86_400_000).toISOString());
+    const upcoming = events
+      .map((e) => ({ ...e, startMs: eventMs(e.start), endMs: eventMs(e.end) }))
+      .filter((e) => Number.isFinite(e.startMs) && Number.isFinite(e.endMs) && e.endMs > nowMs)
+      .sort((a, b) => a.startMs - b.startMs);
+    let next: { title: string; at: string } | null = null;
+    for (const e of upcoming) {
+      const key = `cal:${w.id}:${new Date(e.startMs).toISOString()}:${e.title}`;
+      if (store.hasCardWithDedupeKey(key)) continue; // dieser Termin hat seine Karte schon
+      if (e.startMs - lead <= nowMs) {
+        data.patchState(w.id, { lastFireAt: new Date(nowMs).toISOString() });
+        await createCard(w, nowMs, false, key);
+      } else if (!next) {
+        next = { title: e.title, at: new Date(e.startMs).toISOString() };
+      }
+    }
+    if (next) nextEvents.set(w.id, next);
+    else nextEvents.delete(w.id);
+  }
+
+  /** Regnet es in der Vorhersage? Condition „rainy" und Verwandte, oder eine Wahrscheinlichkeit ab 50 %, oder spürbarer Niederschlag */
+  const RAINY = new Set(['rainy', 'pouring', 'lightning-rainy', 'snowy-rainy', 'hail']);
+
+  async function pollForecast(w: Watcher, nowMs: number): Promise<void> {
+    if (!ha.getForecast) return;
+    const hours = w.trigger.forecast?.hours ?? 3;
+    const items = await ha.getForecast(w.trigger.entityId);
+    const wet = items.some((i) => {
+      const at = Date.parse(i.datetime);
+      if (!Number.isFinite(at) || at < nowMs - 30 * 60_000 || at > nowMs + hours * 3_600_000) return false;
+      return (typeof i.condition === 'string' && RAINY.has(i.condition)) || (i.precipitation_probability ?? 0) >= 50 || (i.precipitation ?? 0) >= 0.3;
+    });
+    // wie bei Zuständen: erst wieder scharf, wenn es einmal trocken war; Sperrzeit und Doppelkarten-Regel gelten wie sonst
+    const st = data.getState(w.id);
+    if (!wet) {
+      if (!st.armed || st.metSince) data.patchState(w.id, { armed: true, metSince: null });
+      return;
+    }
+    if (!st.metSince) data.patchState(w.id, { metSince: new Date(nowMs).toISOString() });
+    if (st.armed) await fire(w);
+  }
+
+  /** Fragt Kalender und Vorhersage ab, höchstens alle 30 Minuten je Wächter; nach einem Fehler nach 5 Minuten wieder */
+  async function pollExternal(w: Watcher, nowMs: number): Promise<void> {
+    const kind = w.trigger.kind;
+    if (kind !== 'calendar_event' && kind !== 'forecast') return;
+    if (nowMs - (lastPoll.get(w.id) ?? -Infinity) < POLL_MS) return;
+    lastPoll.set(w.id, nowMs);
+    try {
+      if (kind === 'calendar_event') await pollCalendar(w, nowMs);
+      else await pollForecast(w, nowMs);
+    } catch (err) {
+      lastPoll.set(w.id, nowMs - POLL_MS + POLL_RETRY_MS);
+      log.warn(`Wächter „${w.name}": Abfrage von ${w.trigger.entityId}: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   // ---------- Heimkehr ----------
@@ -671,6 +751,7 @@ export function createWatchers(deps: WatcherDeps) {
       const nowMs = now().getTime();
       for (const w of data.list()) {
         if (!w.active) continue;
+        await pollExternal(w, nowMs);
         const st = data.getState(w.id);
         if (!st.armed || !st.metSince) continue;
         const s = seenOf(w.trigger.entityId);

@@ -38,7 +38,8 @@ async function build(withWatchers = true) {
   await app.register(apiRoutes, {
     store,
     directory: { isAdmin: async (id: string) => id === 'ha-chef', persons: async () => [] },
-    ha: { listDashboards: async () => [], getStates: () => ha.getStates() },
+    ha: { listDashboards: async () => [], getStates: () => ha.getStates(), getHistory: (e: string, a: string, b: string) => ha.getHistory(e, a, b) },
+    now: () => new Date('2026-11-04T12:00:00Z'),
     ...(withWatchers ? { watchers: engine, watcherData: data } : {}),
   });
 }
@@ -175,5 +176,51 @@ describe('Ohne Verbindung zu Home Assistant', () => {
     const res = await call(chef, 'POST', '/api/watchers', input());
     expect(res.status).toBe(409);
     expect(res.body.error).toMatch(/Home Assistant/);
+  });
+});
+
+describe('Vorlagen, Gefunden und Probelauf', () => {
+  it('Vorlagen: nur Administratoren', async () => {
+    expect((await call(anna, 'GET', '/api/watchers/templates')).status).toBe(403);
+    const res = await call(chef, 'GET', '/api/watchers/templates');
+    expect(res.status).toBe(200);
+    expect(res.body.map((x: any) => x.id)).toContain('washer');
+  });
+
+  it('Gefunden: Treffer aus den Zuständen, ohne schon beobachtete Entitäten', async () => {
+    expect((await call(anna, 'GET', '/api/watchers/suggestions')).status).toBe(403);
+    ha.set(ENTITY, '120', '2026-11-04T09:00:00Z', { friendly_name: 'Waschmaschine Leistung', device_class: 'power' });
+    const first = await call(chef, 'GET', '/api/watchers/suggestions');
+    expect(first.body.items.map((s: any) => s.entityId)).toContain(ENTITY);
+    expect(first.body.items.find((s: any) => s.entityId === ENTITY)).toMatchObject({ templateId: 'washer', variant: 'power', reason: 'Waschmaschine Leistung misst die Leistung' });
+    await call(chef, 'POST', '/api/watchers', input());
+    const second = await call(chef, 'GET', '/api/watchers/suggestions');
+    expect(second.body.items.map((s: any) => s.entityId)).not.toContain(ENTITY);
+  });
+
+  it('Gefunden: ohne Verbindung zu Home Assistant ein Klartext statt eines Fehlers', async () => {
+    ha.failStates = true;
+    const res = await call(chef, 'GET', '/api/watchers/suggestions');
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBeTruthy();
+  });
+
+  it('Probelauf: wendet die Regel auf die Historie an, speichert nichts', async () => {
+    const at = (min: number) => new Date(Date.parse('2026-11-04T12:00:00Z') - min * 60_000).toISOString();
+    ha.history.set(ENTITY, [{ state: '120', at: at(500) }, { state: '1', at: at(400) }, { state: '120', at: at(300) }, { state: '1', at: at(200) }]);
+    expect((await call(anna, 'POST', '/api/watchers/dry-run', { trigger: input().trigger })).status).toBe(403);
+    const res = await call(chef, 'POST', '/api/watchers/dry-run', { trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 3 }, cooldownMin: 10 });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ noHistory: false, quick: 0, sentence: '2 Auslösungen erkannt, kein Fehlalarm' });
+    expect(res.body.fired).toHaveLength(2);
+    expect((await call(chef, 'GET', '/api/watchers')).body.items).toEqual([]);
+  });
+
+  it('Probelauf: fehlende Historie, ungültige Regel, Home Assistant nicht erreichbar', async () => {
+    const noHist = await call(chef, 'POST', '/api/watchers/dry-run', { trigger: { entityId: 'sensor.neu', kind: 'below', value: 5 } });
+    expect(noHist.body).toMatchObject({ noHistory: true, points: [] });
+    expect((await call(chef, 'POST', '/api/watchers/dry-run', { trigger: { entityId: 'kaputt', kind: 'below', value: 5 } })).status).toBe(400);
+    ha.failHistory = true;
+    expect((await call(chef, 'POST', '/api/watchers/dry-run', { trigger: { entityId: ENTITY, kind: 'below', value: 5 } })).status).toBe(409);
   });
 });

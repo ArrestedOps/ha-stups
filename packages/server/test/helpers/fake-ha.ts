@@ -7,6 +7,29 @@ export class FakeHa implements WatcherHa {
   states: HaState[] = [];
   connected: (() => void)[] = [];
   failStates = false;
+  /** Historie je Entität für den Probelauf */
+  history = new Map<string, { state: string; at: string }[]>();
+  failHistory = false;
+  /** Termine je Kalender (start/end wie von Home Assistant: ISO-Text oder nur ein Datum) */
+  calendars = new Map<string, { title: string; start: string; end: string }[]>();
+  calendarCalls = 0;
+  failCalendar = false;
+  async getCalendarEvents(entityId: string, _from: string, _to: string) {
+    this.calendarCalls += 1;
+    if (this.failCalendar) throw new Error('Kalender nicht erreichbar');
+    return this.calendars.get(entityId) ?? [];
+  }
+  /** Stündliche Vorhersage je Wetter-Entität */
+  forecasts = new Map<string, { datetime: string; condition?: string; precipitation?: number; precipitation_probability?: number }[]>();
+  forecastCalls = 0;
+  async getForecast(entityId: string) {
+    this.forecastCalls += 1;
+    return this.forecasts.get(entityId) ?? [];
+  }
+  async getHistory(entityId: string, _from: string, _to: string) {
+    if (this.failHistory) throw new Error('nicht erreichbar');
+    return this.history.get(entityId) ?? [];
+  }
   subscribe(key: string, payload: Record<string, unknown>, onEvent: (e: Record<string, any>) => void) {
     this.subs.set(key, { payload, onEvent });
     return () => this.subs.delete(key);

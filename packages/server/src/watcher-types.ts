@@ -1,7 +1,13 @@
 import { ValidationError } from './errors.js';
 import { t } from './i18n/index.js';
 
-export type TriggerKind = 'state' | 'above' | 'below';
+/** Bedingungen auf dem Zustand einer Entität (live über subscribe_trigger beobachtet) */
+export type ConditionKind = 'state' | 'above' | 'below';
+/**
+ * Dazu zwei Arten, die Stups im Takt von 30 Minuten selbst abfragt: ein Termin in einem Kalender (mit Vorlauf) und Regen in der
+ * Vorhersage einer Wetter-Entität.
+ */
+export type TriggerKind = ConditionKind | 'calendar_event' | 'forecast';
 
 /** Wann ein Wächter auslöst */
 export interface WatchTrigger {
@@ -15,12 +21,16 @@ export interface WatchTrigger {
   forMin: number;
   /** erst beim N-ten Mal eine Karte (1 = jedes Mal) */
   count: number;
+  /** calendar_event: so viele Minuten vor dem Termin entsteht die Karte */
+  leadMin?: number;
+  /** forecast: Regen in den nächsten so vielen Stunden */
+  forecast?: { condition: 'rain'; hours: number };
 }
 
 /** Wann sich die Karte von selbst erledigt */
 export interface DoneTrigger {
   entityId: string;
-  kind: TriggerKind;
+  kind: ConditionKind;
   to: string | null;
   value: number | null;
 }
@@ -82,7 +92,7 @@ const MODES: AssignMode[] = ['fixed', 'rotation', 'rotation_present', 'all_prese
 export const SUGGEST_WAIT_MIN = 30;
 
 /** Wartezeit der Vorgabe: Zahlenwerte schwanken, Zustandswechsel gelten sofort */
-export const DEFAULT_FOR_MIN = { state: 0, above: 3, below: 3 } as const;
+export const DEFAULT_FOR_MIN = { state: 0, above: 3, below: 3, calendar_event: 0, forecast: 0 } as const;
 export const WAITING_MARKER = '⏳ Wartet auf die erste Person, die heimkommt.';
 
 const obj = (raw: unknown, what: string): Record<string, unknown> => {
@@ -125,12 +135,12 @@ function strings(raw: unknown, what: string): string[] {
   return [...new Set(raw as string[])];
 }
 
-function kindOf(raw: unknown): TriggerKind {
+function kindOf(raw: unknown): ConditionKind {
   if (raw !== 'state' && raw !== 'above' && raw !== 'below') throw new ValidationError(t('Die Bedingung ist unbekannt'));
   return raw;
 }
 
-function bound(kind: TriggerKind, o: Record<string, unknown>): { to: string | null; value: number | null } {
+function bound(kind: ConditionKind, o: Record<string, unknown>): { to: string | null; value: number | null } {
   if (kind === 'state') return { to: text(o.to, t('Der Zielzustand'), 255)!, value: null };
   if (typeof o.value !== 'number' || !Number.isFinite(o.value)) throw new ValidationError(t('Der Schwellwert muss eine Zahl sein'));
   return { to: null, value: o.value };
@@ -138,6 +148,19 @@ function bound(kind: TriggerKind, o: Record<string, unknown>): { to: string | nu
 
 export function parseTrigger(raw: unknown): WatchTrigger {
   const o = obj(raw, t('Der Auslöser'));
+  // Kalender und Vorhersage: kein Zustandsvergleich, Stups fragt sie im Takt ab
+  if (o.kind === 'calendar_event') {
+    const id = entity(o.entityId);
+    if (!id.startsWith('calendar.')) throw new ValidationError(t('Für Termine muss es ein Kalender sein (calendar.…)'));
+    return { entityId: id, kind: 'calendar_event', to: null, value: null, forMin: 0, count: 1, leadMin: int(o.leadMin, t('Der Vorlauf'), 0, 10_080, 720) };
+  }
+  if (o.kind === 'forecast') {
+    const id = entity(o.entityId);
+    if (!id.startsWith('weather.')) throw new ValidationError(t('Für die Vorhersage muss es eine Wetter-Entität sein (weather.…)'));
+    const f = o.forecast === undefined || o.forecast === null ? {} : obj(o.forecast, t('Die Vorhersage'));
+    if (f.condition !== undefined && f.condition !== 'rain') throw new ValidationError(t('Die Vorhersage kennt nur Regen'));
+    return { entityId: id, kind: 'forecast', to: null, value: null, forMin: 0, count: 1, forecast: { condition: 'rain', hours: int(f.hours, t('Die Stunden'), 1, 48, 3) } };
+  }
   const kind = kindOf(o.kind);
   return {
     entityId: entity(o.entityId),
@@ -214,6 +237,8 @@ export function parseWatcher(raw: unknown): WatcherConfig {
 
 /** Erfüllt dieser Zustand die Bedingung? */
 export function conditionMet(c: { kind: TriggerKind; to: string | null; value: number | null }, state: string): boolean {
+  // Kalender und Vorhersage haben keinen Zustandsvergleich (Stups fragt sie im Takt ab)
+  if (c.kind === 'calendar_event' || c.kind === 'forecast') return false;
   if (c.kind === 'state') return state === c.to;
   if (state === '' || state === 'unknown' || state === 'unavailable') return false;
   const n = Number(state);

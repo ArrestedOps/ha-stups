@@ -5,6 +5,7 @@ import type { AutomationEntry } from '../automation-cards.js';
 import type { Avatars } from '../avatars.js';
 import type { BetaGate } from '../beta-gate.js';
 import type { Directory } from '../directory.js';
+import type { HistoryPoint } from '../dry-run.js';
 import { ValidationError } from '../errors.js';
 import type { EventBus } from '../events.js';
 import type { FileStore } from '../files.js';
@@ -49,7 +50,10 @@ export interface ApiDeps {
     listNotifyServices?(): Promise<string[]>;
     probeWatchers?(entityId?: string): Promise<WatcherProbe>;
     getStates?(): Promise<HaState[]>;
+    getHistory?(entityId: string, fromIso: string, toIso: string): Promise<HistoryPoint[]>;
   };
+  /** Die Uhr (für Tests); Vorgabe: die Systemuhr */
+  now?: () => Date;
   /** Haus-Kanäle (nur mit Verbindung zu Home Assistant): der Weg für Test und Ergebnis, `sync` gleicht das Abonnement auf die Heimkehr ab */
   house?: { push: HousePush; sync(): Promise<void>; entityOwners(): Promise<Map<string, string>> };
   /** Wächter (nur mit Verbindung zu Home Assistant) */

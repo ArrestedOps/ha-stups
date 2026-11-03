@@ -100,6 +100,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     watcherCardCompletedSince: s.watcherCardCompletedSince,
     openWatcherCardCount: s.openWatcherCardCount,
     openCardByDedupeKey: s.openCardByDedupeKey,
+    hasCardWithDedupeKey: s.hasCardWithDedupeKey,
     applyManagedPeople: s.applyManagedPeople,
     isManaged: s.isManaged,
     clearManaged: s.clearManaged,

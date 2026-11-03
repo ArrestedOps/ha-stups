@@ -49,6 +49,7 @@
   "getNudge",
   "getSettings",
   "getTemplateData",
+  "hasCardWithDedupeKey",
   "houseChannel",
   "houseChannels",
   "houseChannelsOf",

@@ -1,3 +1,4 @@
+import { DRY_RUN_MAX_STATES, type HistoryPoint } from './dry-run.js';
 import { t } from './i18n/index.js';
 import WebSocket from 'ws';
 
@@ -280,6 +281,53 @@ export class HaClient {
     if (!res.ok) throw new Error(`HA GET ${path} -> ${res.status}`);
     const bytes = Buffer.from(await res.arrayBuffer());
     return bytes.length > maxBytes ? null : bytes;
+  }
+
+  /**
+   * Zustandsverlauf einer Entität aus dem Recorder von Home Assistant (für den Probelauf eines Wächters). Höchstens
+   * `DRY_RUN_MAX_STATES + 1` Zustände kommen zurück (die Mehrzahl reicht, um „zu viele" zu erkennen). Ohne Recorder ist die Liste leer.
+   */
+  async getHistory(entityId: string, fromIso: string, toIso: string): Promise<HistoryPoint[]> {
+    const res = await this.wsCommand<Record<string, Record<string, any>[]> | null>(
+      'history/history_during_period',
+      { start_time: fromIso, end_time: toIso, entity_ids: [entityId], minimal_response: true, no_attributes: true, significant_changes_only: false },
+      30_000,
+    );
+    const out: HistoryPoint[] = [];
+    for (const item of res?.[entityId] ?? []) {
+      const state = item.s ?? item.state;
+      // Zeit: Sekunden seit 1970 (lu/lc) oder ein Text (last_updated/last_changed)
+      const raw = item.lu ?? item.lc ?? item.last_updated ?? item.last_changed;
+      const ms = typeof raw === 'number' ? raw * 1000 : typeof raw === 'string' ? Date.parse(raw) : NaN;
+      if (typeof state !== 'string' || !Number.isFinite(ms)) continue;
+      out.push({ state, at: new Date(ms).toISOString() });
+      if (out.length > DRY_RUN_MAX_STATES) break;
+    }
+    return out;
+  }
+
+  /** Termine eines Kalenders von Home Assistant (REST); start und end so, wie sie kommen: ISO-Text mit Zeit oder nur ein Datum (ganztägig) */
+  async getCalendarEvents(entityId: string, fromIso: string, toIso: string): Promise<{ title: string; start: string; end: string }[]> {
+    const path = `/api/calendars/${encodeURIComponent(entityId)}?start=${encodeURIComponent(fromIso)}&end=${encodeURIComponent(toIso)}`;
+    const list = (await this.request('GET', path)) as { summary?: string; start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string } }[];
+    const out: { title: string; start: string; end: string }[] = [];
+    for (const e of Array.isArray(list) ? list : []) {
+      const start = e.start?.dateTime ?? e.start?.date;
+      const end = e.end?.dateTime ?? e.end?.date;
+      if (start && end) out.push({ title: e.summary ?? '', start, end });
+    }
+    return out;
+  }
+
+  /** Stündliche Vorhersage einer Wetter-Entität (Dienst weather.get_forecasts mit Antwort); ohne Vorhersage eine leere Liste */
+  async getForecast(entityId: string): Promise<{ datetime: string; condition?: string; precipitation?: number; precipitation_probability?: number }[]> {
+    const res = await this.wsCommand<{ response?: Record<string, { forecast?: Record<string, any>[] }> } | null>(
+      'call_service',
+      { domain: 'weather', service: 'get_forecasts', service_data: { type: 'hourly' }, target: { entity_id: entityId }, return_response: true },
+      20_000,
+    );
+    const list = res?.response?.[entityId]?.forecast ?? [];
+    return list.filter((i) => typeof i.datetime === 'string') as { datetime: string; condition?: string; precipitation?: number; precipitation_probability?: number }[];
   }
 
   /** Alle Zustände (für die Suche und für den Abgleich nach einem Verbindungsabbruch) */

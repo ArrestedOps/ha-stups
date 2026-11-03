@@ -1,7 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import { ConflictError, ValidationError } from '../errors.js';
 import { type HaState } from '../ha.js';
-import { parseWatcher, type WatcherConfig } from '../watcher-types.js';
+import { DRY_RUN_DAYS, dryRun } from '../dry-run.js';
+import { detectSuggestions, watcherTemplates } from '../watcher-templates.js';
+import { parseTrigger, parseWatcher, type WatcherConfig } from '../watcher-types.js';
 import { type ApiKit, type Params } from './kit.js';
 import { t } from '../i18n/index.js';
 
@@ -47,6 +49,43 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   app.get('/api/watchers', async () => ({ available: !!deps.watchers, items: deps.watchers?.view() ?? [] }));
   /** Letzte Aktivität über alle Wächter (Reiter „Wächter") */
   app.get('/api/watchers/activity', async () => (deps.watchers ? deps.watchers.activity(20) : []));
+  // ----- Vorlagen, Gefunden (Erkennung) und Probelauf: nur Administratoren, nichts davon speichert -----
+  app.get('/api/watchers/templates', async (req) => {
+    requireAdmin(req);
+    return watcherTemplates();
+  });
+  /** Was in Home Assistant zu einer Vorlage passt, ohne Entitäten, die schon ein Wächter beobachtet */
+  app.get('/api/watchers/suggestions', async (req) => {
+    requireAdmin(req);
+    if (!deps.ha?.getStates) throw new ConflictError(t('Keine Verbindung zu Home Assistant'));
+    let states: HaState[];
+    try {
+      states = await deps.ha.getStates();
+    } catch (err) {
+      throw new ConflictError(err instanceof Error ? err.message : t('Home Assistant antwortet nicht'));
+    }
+    const watched = new Set((deps.watcherData?.list() ?? []).flatMap((w) => [w.trigger.entityId, ...(w.done ? [w.done.entityId] : [])]));
+    return { items: detectSuggestions(states, watched) };
+  });
+  /** Probelauf: die Regel auf die Historie der letzten 7 Tage anwenden (höchstens 20 000 Zustände), ohne zu speichern */
+  app.post('/api/watchers/dry-run', async (req) => {
+    requireAdmin(req);
+    if (!deps.ha?.getHistory) throw new ConflictError(t('Keine Verbindung zu Home Assistant'));
+    const b = body(req);
+    const trigger = parseTrigger(b.trigger);
+    if (trigger.kind !== 'state' && trigger.kind !== 'above' && trigger.kind !== 'below') {
+      throw new ValidationError(t('Einen Probelauf gibt es nur für Zahlen und Zustände'));
+    }
+    const cooldownMin = typeof b.cooldownMin === 'number' && Number.isFinite(b.cooldownMin) ? Math.min(1440, Math.max(0, Math.round(b.cooldownMin))) : 10;
+    const nowMs = (deps.now?.() ?? new Date()).getTime();
+    let history;
+    try {
+      history = await deps.ha.getHistory(trigger.entityId, new Date(nowMs - DRY_RUN_DAYS * 86_400_000).toISOString(), new Date(nowMs).toISOString());
+    } catch (err) {
+      throw new ConflictError(err instanceof Error ? err.message : t('Home Assistant antwortet nicht'));
+    }
+    return dryRun({ trigger, cooldownMin }, history, nowMs);
+  });
   app.get<{ Params: Params }>('/api/watchers/:id/runs', async (req) => {
     const { data } = watcherEngine();
     data.get(req.params.id);

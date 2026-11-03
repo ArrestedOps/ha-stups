@@ -23,6 +23,7 @@ export function exportData(db: DatabaseSync, dataDir: string, shareDir: string, 
   db.exec(`vacuum into '${target.replace(/'/g, "''")}'`);
   const files = existsSync(join(dataDir, 'files'));
   if (files) cpSync(join(dataDir, 'files'), join(dir, 'files'), { recursive: true });
+  if (existsSync(join(dataDir, 'avatars'))) cpSync(join(dataDir, 'avatars'), join(dir, 'avatars'), { recursive: true });
   writeFileSync(join(dir, 'info.json'), JSON.stringify({ exportedAt: now.toISOString() }, null, 2));
   return { dir, bytes: statSync(target).size, files };
 }
@@ -31,7 +32,7 @@ export function exportData(db: DatabaseSync, dataDir: string, shareDir: string, 
  * Beim ersten Start einer neuen App ohne eigene Daten: Datenbank und Anhänge aus <share>/stups-umzug übernehmen.
  * Muss vor dem Öffnen der Datenbank laufen; hat die App schon Daten, passiert nichts.
  */
-export function importTransfer(dbPath: string, filesDir: string, shareDir: string): boolean {
+export function importTransfer(dbPath: string, filesDir: string, shareDir: string, avatarsDir?: string): boolean {
   if (existsSync(dbPath) && statSync(dbPath).size > 0) return false;
   const source = join(shareDir, TRANSFER_DIR);
   const sourceDb = join(source, DB_NAME);
@@ -39,6 +40,7 @@ export function importTransfer(dbPath: string, filesDir: string, shareDir: strin
   mkdirSync(dirname(dbPath), { recursive: true });
   copyFileSync(sourceDb, dbPath);
   if (existsSync(join(source, 'files'))) cpSync(join(source, 'files'), filesDir, { recursive: true });
+  if (avatarsDir && existsSync(join(source, 'avatars'))) cpSync(join(source, 'avatars'), avatarsDir, { recursive: true });
   return true;
 }
 

@@ -37,6 +37,7 @@ const ALLOWED_READS = [
   'GET /api/events',
   'GET /api/me',
   'GET /api/people',
+  'GET /api/people/:id/avatar',
   'GET /api/schedule',
   'GET /api/settings',
 ];

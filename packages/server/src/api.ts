@@ -19,6 +19,7 @@ import { registerTrashRoutes } from './api/trash.js';
 import { registerHouseRoutes } from './api/house.js';
 import { registerTemplateRoutes } from './api/templates.js';
 import { registerFairnessRoutes } from './api/fairness.js';
+import { registerAvatarRoutes } from './api/people-avatar.js';
 import { registerChildGuard } from './api/child-guard.js';
 
 export type { ApiDeps } from './api/kit.js';
@@ -98,4 +99,5 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   registerHouseRoutes(app, k);
   registerTemplateRoutes(app, k);
   registerFairnessRoutes(app, k);
+  registerAvatarRoutes(app, k);
 }

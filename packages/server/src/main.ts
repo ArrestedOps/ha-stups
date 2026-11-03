@@ -13,6 +13,7 @@ import { createRoundTrips, pushActionRoutes } from './push-action.js';
 import { openDb } from './db.js';
 import { exportData, importTransfer, transferStatus } from './transfer.js';
 import { createEventBus } from './events.js';
+import { createAvatars } from './avatars.js';
 import { createFileStore } from './files.js';
 import { HaClient } from './ha.js';
 import { createAccess } from './access.js';
@@ -48,7 +49,7 @@ registerLanguageHook(app);
 const dbPath = `${dataDir}/stups.sqlite`;
 // Neue App ohne eigene Daten: Datenbank und Anhänge aus einem Export der alten App übernehmen (Einstellungen › Umzug)
 const transfer = transferStatus(dbPath, shareDir);
-if (importTransfer(dbPath, `${dataDir}/files`, shareDir)) app.log.info('Daten aus dem Umzug (/share/stups-umzug) übernommen');
+if (importTransfer(dbPath, `${dataDir}/files`, shareDir, `${dataDir}/avatars`)) app.log.info('Daten aus dem Umzug (/share/stups-umzug) übernommen');
 else if (transfer.state === 'none') app.log.info(transfer.text);
 const db = openDb(dbPath, { backupDir: `${dataDir}/backups` });
 // Wird nach dem Start von Home Assistant übernommen, bis dahin gilt dieser Wert.
@@ -85,6 +86,8 @@ const ha = new HaClient({
   wsUrl: runtime.ha?.wsUrl,
 });
 const log = { info: (m: string) => app.log.info(m), warn: (m: string) => app.log.warn(m) };
+// Bilder der Personen: Upload, und im Add-on (oder mit Verbindung zu Home Assistant) das Bild der zugeordneten HA-Person
+const avatars = createAvatars({ dir: `${dataDir}/avatars`, store, ha: runtime.ha ? ha : undefined, log });
 
 // Normale App oder Beta: die Beta hat eigene Namen für alles Sichtbare und startet mit ausgeschaltetem Push und ausgeschalteten Wächtern
 const names = channelNames(runtime.channel);
@@ -289,6 +292,7 @@ await app.register(apiRoutes, {
   house: house && houseSubscription ? { push: house, sync: () => houseSubscription.sync(), entityOwners: () => presence.entityOwners() } : undefined,
   ntfy: runtime.ntfy ? { url: runtime.ntfy.url, roundTrip: (personId) => roundTrips.last(personId) } : undefined,
   files,
+  avatars,
   watchers,
   watcherData: watchers ? watcherData : undefined,
   automationLog: automation ? () => automation.log() : undefined,
@@ -304,6 +308,7 @@ if (token) {
   if (runtime.mode === 'standalone-ha') app.log.info(`Verbindung zu Home Assistant: ${runtime.ha!.baseUrl}`);
   ha.connect();
   watchers?.start();
+  avatars.start();
   automation?.start();
   ha.onNotificationAction((a) => {
     notifier.handleAction(a).catch((err) => app.log.error(err, 'Push-Aktion fehlgeschlagen'));

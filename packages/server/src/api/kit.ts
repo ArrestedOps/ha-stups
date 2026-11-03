@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Access, AccessResult } from '../access.js';
 import type { Accounts } from '../accounts.js';
 import type { AutomationEntry } from '../automation-cards.js';
+import type { Avatars } from '../avatars.js';
 import type { BetaGate } from '../beta-gate.js';
 import type { Directory } from '../directory.js';
 import { ValidationError } from '../errors.js';
@@ -75,6 +76,8 @@ export interface ApiDeps {
   ntfy?: { url: string; roundTrip: (personId: string) => string | null };
   /** Ablage für Anhänge, ohne sie gibt es keine Uploads */
   files?: FileStore;
+  /** Bilder der Personen (Upload und Home Assistant); ohne sie antworten die Bild-Routen mit 501 */
+  avatars?: Avatars;
   /** Schreibt Datenbank und Anhänge für den Umzug in eine andere App nach /share */
   exportData?: () => ExportResult;
 }

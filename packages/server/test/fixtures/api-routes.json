@@ -11,6 +11,7 @@
   "DELETE /api/house/channels/:id",
   "DELETE /api/links/:id",
   "DELETE /api/passkeys/:id",
+  "DELETE /api/people/:id/avatar",
   "DELETE /api/templates/:id",
   "DELETE /api/watchers/:id",
   "GET /api/access",
@@ -38,6 +39,7 @@
   "GET /api/notifications/status",
   "GET /api/passkeys",
   "GET /api/people",
+  "GET /api/people/:id/avatar",
   "GET /api/schedule",
   "GET /api/settings",
   "GET /api/templates",
@@ -70,6 +72,7 @@
   "HEAD /api/notifications/status",
   "HEAD /api/passkeys",
   "HEAD /api/people",
+  "HEAD /api/people/:id/avatar",
   "HEAD /api/schedule",
   "HEAD /api/settings",
   "HEAD /api/templates",
@@ -126,5 +129,6 @@
   "PUT /api/house/settings",
   "PUT /api/me/accent",
   "PUT /api/me/language",
+  "PUT /api/people/:id/avatar",
   "PUT /api/settings"
 ]

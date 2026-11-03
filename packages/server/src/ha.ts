@@ -258,6 +258,22 @@ export class HaClient {
     this.listeners.push(cb);
   }
 
+  /**
+   * Holt ein Bild von Home Assistant (z. B. das `entity_picture` einer Person: /api/image_proxy/… oder /local/…). Nur Pfade auf
+   * Home Assistant selbst, keine fremden Adressen. null, wenn es das Bild nicht gibt.
+   */
+  async fetchPicture(path: string, maxBytes = 2 * 1024 * 1024): Promise<Buffer | null> {
+    if (!path.startsWith('/') || path.startsWith('//')) return null;
+    const res = await this.fetchFn(`${this.opts.baseUrl}${path}`, {
+      headers: { Authorization: `Bearer ${this.opts.token}` },
+      signal: AbortSignal.timeout(this.opts.requestTimeoutMs ?? 15_000),
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`HA GET ${path} -> ${res.status}`);
+    const bytes = Buffer.from(await res.arrayBuffer());
+    return bytes.length > maxBytes ? null : bytes;
+  }
+
   /** Alle Zustände (für die Suche und für den Abgleich nach einem Verbindungsabbruch) */
   async getStates(): Promise<HaState[]> {
     return (await this.wsCommand<HaState[]>('get_states', {}, 15_000)) ?? [];

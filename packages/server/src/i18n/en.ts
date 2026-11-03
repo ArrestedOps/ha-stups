@@ -254,4 +254,8 @@ export const en: Catalog = {
   'Zeitüberschreitung bei Home Assistant': 'Home Assistant timed out',
   'Befehl fehlgeschlagen': 'Command failed',
   'Verbindung zu Home Assistant geschlossen': 'Connection to Home Assistant closed',
+  'Es fehlt das Bild': 'The picture is missing',
+  'Das Bild ist zu groß (höchstens 2 MB)': 'The picture is too large (2 MB at most)',
+  'Dieser Bildtyp ist nicht erlaubt. Erlaubt sind JPEG, PNG und WebP': 'This picture type is not allowed. JPEG, PNG and WebP are allowed',
+  'Kein Bild vorhanden': 'No picture available',
 };

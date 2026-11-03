@@ -40,6 +40,7 @@ const ALLOWED: Record<string, Own> = {
   'GET /api/events': 'none',
   'GET /api/me': 'none',
   'GET /api/people': 'none',
+  'GET /api/people/:id/avatar': 'none',
   'GET /api/schedule': 'none',
   'GET /api/settings': 'none',
 };

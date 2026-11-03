@@ -45,6 +45,17 @@ describe('Umzug', () => {
     expect(store.getBoardView(board.id).cards.map((c) => c.title)).toEqual(['Müll rausbringen']);
   });
 
+  it('nimmt die Bilder der Personen mit', () => {
+    const { dataDir, db } = oldInstall();
+    mkdirSync(join(dataDir, 'avatars'));
+    writeFileSync(join(dataDir, 'avatars', 'u1.img'), 'bild');
+    const share = tmp();
+    exportData(db, dataDir, share);
+    const newData = tmp();
+    expect(importTransfer(join(newData, 'stups.sqlite'), join(newData, 'files'), share, join(newData, 'avatars'))).toBe(true);
+    expect(readFileSync(join(newData, 'avatars', 'u1.img'), 'utf8')).toBe('bild');
+  });
+
   it('übernimmt nichts, wenn die App schon eigene Daten hat', () => {
     const { dataDir, db } = oldInstall();
     const share = tmp();

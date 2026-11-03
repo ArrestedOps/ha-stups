@@ -362,4 +362,36 @@ export const migrations: Migration[] = [
       alter table users add column accent_hue integer;
     `,
   },
+  {
+    version: 16,
+    // Haus-Kanäle (Ansage über einen Lautsprecher, Lampe) je Person und die Warteschlange „warten bis zur Heimkehr"
+    sql: `
+      create table house_channels (
+        id            text primary key,
+        user_id       text not null references users(id) on delete cascade,
+        type          text not null check (type in ('speak', 'light')),
+        name          text not null,
+        entity_id     text not null,
+        enabled       integer not null default 1,
+        kinds         text not null default '["nudge"]',
+        when_away     text not null default 'skip' check (when_away in ('skip', 'wait')),
+        wait_minutes  integer not null default 120,
+        volume        integer,
+        created_at    text not null
+      );
+      create index ix_house_channels_user on house_channels(user_id);
+
+      create table house_pending (
+        id          text primary key,
+        channel_id  text not null references house_channels(id) on delete cascade,
+        kind        text not null check (kind in ('nudge', 'due', 'watcher')),
+        spoken      text not null,
+        card_id     text,
+        nudge_id    text,
+        expires_at  text not null,
+        created_at  text not null
+      );
+      create index ix_house_pending_channel on house_pending(channel_id);
+    `,
+  },
 ];

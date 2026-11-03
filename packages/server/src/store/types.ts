@@ -387,6 +387,45 @@ export interface TrashItem {
   purgeAt: string;
 }
 
+// ---------- Haus-Kanäle ----------
+
+/** Welche Nachrichten ins Haus dürfen: Stups, Fälligkeit (auch Vorab-Erinnerung und Nachhaken), Karte eines Wächters */
+export type HouseKind = 'nudge' | 'due' | 'watcher';
+export const HOUSE_KINDS: readonly HouseKind[] = ['nudge', 'due', 'watcher'];
+/** Ansage über einen Lautsprecher oder eine Lampe, die aufleuchtet */
+export type HouseChannelType = 'speak' | 'light';
+/** Was geschieht, wenn die Person nicht zu Hause ist: verwerfen oder warten, bis sie heimkommt */
+export type HouseWhenAway = 'skip' | 'wait';
+
+export interface HouseChannel {
+  id: string;
+  userId: string;
+  type: HouseChannelType;
+  name: string;
+  /** `media_player.…` (Ansage) oder `light.…` (Lampe) */
+  entityId: string;
+  enabled: boolean;
+  kinds: HouseKind[];
+  whenAway: HouseWhenAway;
+  /** Wie lange eine Nachricht auf die Heimkehr wartet (nur bei `wait`) */
+  waitMinutes: number;
+  /** Lautstärke der Ansage in Prozent, leer = nicht anfassen */
+  volume: number | null;
+  createdAt: string;
+}
+
+/** Eine Nachricht, die auf die Heimkehr der Person wartet */
+export interface HousePending {
+  id: string;
+  channelId: string;
+  kind: HouseKind;
+  spoken: string;
+  cardId: string | null;
+  nudgeId: string | null;
+  expiresAt: string;
+  createdAt: string;
+}
+
 export interface StoreOptions {
   /** Wird nach dem Erledigen einer Karte mit den dabei geschlossenen Stupsen aufgerufen (für die Rückmeldung) */
   onNudgesClosed?: (list: ClosedNudge[]) => void;

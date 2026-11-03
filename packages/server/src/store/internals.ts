@@ -8,6 +8,7 @@ import type { createNotifications } from './notifications.js';
 import type { createNudgesPart } from './nudges.js';
 import type { createWatcherCards } from './watchers.js';
 import type { createTrash } from './trash.js';
+import type { createHouse } from './house.js';
 
 export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createBoards> &
@@ -17,4 +18,5 @@ export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createNotifications> &
   ReturnType<typeof createNudgesPart> &
   ReturnType<typeof createWatcherCards> &
-  ReturnType<typeof createTrash>;
+  ReturnType<typeof createTrash> &
+  ReturnType<typeof createHouse>;

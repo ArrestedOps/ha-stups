@@ -1,5 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { createCardExtras } from './store/card-extras.js';
+import { createHouse } from './store/house.js';
 import { createCards } from './store/cards.js';
 import { createBoards } from './store/boards.js';
 import { createCompletion } from './store/completion.js';
@@ -34,6 +35,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     createNudgesPart(c, s),
     createWatcherCards(c, s),
     createTrash(c, s),
+    createHouse(c, s),
   );
 
   return {
@@ -135,6 +137,19 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     restoreFromTrash: s.restoreFromTrash,
     purgeTrash: s.purgeTrash,
     ensureDefaultBoard: s.ensureDefaultBoard,
+    houseChannels: s.houseChannels,
+    houseChannelsOf: s.houseChannelsOf,
+    houseChannel: s.houseChannel,
+    addHouseChannel: s.addHouseChannel,
+    updateHouseChannel: s.updateHouseChannel,
+    removeHouseChannel: s.removeHouseChannel,
+    addHousePending: s.addHousePending,
+    housePendingOf: s.housePendingOf,
+    housePendingAll: s.housePendingAll,
+    removeHousePending: s.removeHousePending,
+    purgeHousePending: s.purgeHousePending,
+    getHouseTts: s.getHouseTts,
+    setHouseTts: s.setHouseTts,
   };
 }
 

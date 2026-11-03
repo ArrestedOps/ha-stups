@@ -91,7 +91,7 @@ const BY_ID = /where\s+id\s*=\s*\?\s*$/i;
 /** Teile einer Karte: ihre Zahlen und Zähler stehen auf der Karte selbst */
 const CARD_PARTS = new Set(['card_categories', 'card_assignees', 'checklist_items', 'links', 'comments', 'attachments', 'completions', 'card_events']);
 /** Ändert sich laufend, ohne dass sich eine Ansicht ändert */
-const QUIET_TABLES = new Set(['sent_notifications', 'sessions', 'passkeys', 'local_accounts']);
+const QUIET_TABLES = new Set(['sent_notifications', 'sessions', 'passkeys', 'local_accounts', 'house_pending']);
 
 export type Ctx = ReturnType<typeof createContext>;
 

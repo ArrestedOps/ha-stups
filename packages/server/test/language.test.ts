@@ -26,7 +26,7 @@ describe('Migration 14', () => {
     const s = createStore(db);
     expect(s.people().map((p) => [p.name, p.notifyServices, p.languageChoice])).toEqual([['anna', ['svc'], 'auto']]);
     expect(s.languageOf('u1')).toBeNull();
-    expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(15);
+    expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(migrations.at(-1)!.version);
     expect(() => new DatabaseSync(file).prepare('select language, language_choice, accent_hue from users').all()).not.toThrow();
     expect(s.people()[0]!.accentHue).toBeNull();
     db.close();

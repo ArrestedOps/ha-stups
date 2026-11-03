@@ -10,6 +10,8 @@
   "addPerson",
   "applyManagedPeople",
   "archiveDone",
+  "cardIdOfChecklistItem",
+  "cardIdOfCompletion",
   "claimNotification",
   "claimNudge",
   "clearManaged",

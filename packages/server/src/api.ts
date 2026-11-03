@@ -19,6 +19,7 @@ import { registerTrashRoutes } from './api/trash.js';
 import { registerHouseRoutes } from './api/house.js';
 import { registerTemplateRoutes } from './api/templates.js';
 import { registerFairnessRoutes } from './api/fairness.js';
+import { registerChildGuard } from './api/child-guard.js';
 
 export type { ApiDeps } from './api/kit.js';
 
@@ -61,6 +62,9 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
       throw new ForbiddenError(t('Kein Zugriff: Bitte einen Administrator, dich freizugeben'));
     }
   });
+
+  // Rolle „Kind": nur, was ausdrücklich erlaubt ist (Erlaubnisliste)
+  registerChildGuard(app, store);
 
   // Jede erfolgreiche Änderung wird allen Geräten gemeldet, die sie dann nachladen.
   app.addHook('onResponse', async (req, reply) => {

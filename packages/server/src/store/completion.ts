@@ -204,6 +204,9 @@ export function createCompletion(c: Ctx, late: unknown) {
     });
   }
 
+  /** Die Karte einer Erledigung (für die Rechte-Prüfung); null, wenn es sie nicht gibt */
+  const cardIdOfCompletion = (id: string): string | null => (one('select card_id from completions where id = ?', id)?.card_id as string | undefined) ?? null;
+
   function undoCompletion(completionId: string): CardDetail {
     const c = one('select * from completions where id = ?', completionId);
     if (!c) throw new NotFoundError(t('Erledigung nicht gefunden'));
@@ -284,6 +287,7 @@ export function createCompletion(c: Ctx, late: unknown) {
     firstOpenColumn,
     completeCard,
     undoCompletion,
+    cardIdOfCompletion,
     archiveDone,
     restoreArchived,
   };

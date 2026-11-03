@@ -156,6 +156,9 @@ export function createCardExtras(c: Ctx, late: unknown) {
     });
   }
 
+  /** Die Karte eines Checklistenpunkts (für die Rechte-Prüfung); null, wenn es ihn nicht gibt */
+  const cardIdOfChecklistItem = (id: string): string | null => (one('select card_id from checklist_items where id = ?', id)?.card_id as string | undefined) ?? null;
+
   function itemRow(id: string): Row {
     const r = one(
       `select i.* from checklist_items i join cards c on c.id = i.card_id where i.id = ? and c.deleted_at is null`,
@@ -255,6 +258,7 @@ export function createCardExtras(c: Ctx, late: unknown) {
     addChecklistItem,
     itemRow,
     updateChecklistItem,
+    cardIdOfChecklistItem,
     deleteChecklistItem,
     addLink,
     linkRow,

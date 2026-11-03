@@ -125,6 +125,8 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     completeCard: s.completeCard,
     duplicateCard: s.duplicateCard,
     undoCompletion: s.undoCompletion,
+    cardIdOfCompletion: s.cardIdOfCompletion,
+    cardIdOfChecklistItem: s.cardIdOfChecklistItem,
     listCompletions: s.listCompletions,
     archiveDone: s.archiveDone,
     restoreArchived: s.restoreArchived,

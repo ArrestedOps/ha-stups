@@ -76,6 +76,7 @@ export const en: Catalog = {
   'Der Typ muss „speak" oder „light" sein': 'The type must be “speak” or “light”',
   'Kanal nicht gefunden': 'Channel not found',
   'Vorlage nicht gefunden': 'Template not found',
+  'Das darf ein Kind nicht': 'A child may not do that',
   '„Kind"': '“Child”',
   '„Bestätigung als Vorgabe"': '“Confirmation by default”',
   'Die Sichtbarkeit muss „all" (alle Boards) oder „assigned" (nur Boards mit eigenen Karten) sein': 'The visibility must be “all” (all boards) or “assigned” (only boards with their own cards)',

@@ -1,5 +1,33 @@
 # Änderungen
 
+## 1.18.0
+
+*English first, German version below.*
+
+This version is the beta app's 1.18.0-beta.1. The desktop layout is not part of it and follows later.
+
+- **A new start page, "Today".** The bar at the bottom is now **Today · Boards · Calendar · Home**. Today shows what is on for you: **From the house** (cards from watchers, with what triggered them, when, and why you are up; buttons **Done**, **Pass on** and, with "Suggest first", **Take it**), **For you** (your cards due until tomorrow) and a line **With the others** that leads to **This week** (the former fairness view, now with "Waiting for you" for confirmations and the number of cards that came from the house). The agenda is now the fourth calendar view, **List**
+- **One header on every tab.** "‹ Dashboard" on the left (in the app), an offline notice and your **avatar** on the right, which opens the settings (the gear is gone). **Pictures of people:** from Home Assistant (always fetched through Stups, never directly by the browser) or uploaded by you; administrators can change them for others
+- **Home** shows the state of the watchers: waiting for someone (with **Nudge**), running now, coming up (counter, next appointment), quiet; without a connection to Home Assistant it says since when
+- **Watchers from templates.** "Found" detects in Home Assistant what a watcher fits (washing machine, dryer, dishwasher, waste calendar, rain, batteries, robot vacuum), with a reason. The form is a **sentence with tappable fields**, plus a **trial run** on the last 7 days ("3 triggers detected, no false alarm"). New triggers: **an appointment in a calendar with a lead time** and **rain in the forecast** (queried every 30 minutes). Templates without a device create repeating cards (descale, test smoke detectors, change the filter, change the bedding)
+- **Pass on, suggest first, little time.** Passing on sends a card from the house to the next person in the rotation. "Suggest first" asks everyone who is home "Who takes it?", whoever taps first gets it, after 30 minutes the fallback applies. Whoever has **little time** (up to 90 days) is skipped by the rotations
+- **Settings** are now an organised page with sub-pages: For me (notifications, language and colour, account), Household (people and children, watchers, templates, dates), Home Assistant (dashboard and header, announcements and lamp), Help and data (why does nothing arrive?, bin, archive, move, beta). Nothing was lost; members do not see "Household" and "Home Assistant". The version and the diagnostics page are at the bottom
+- **Colours:** teal is the colour for everything that comes from the house, and the colour wheel leaves out green and teal. Headings use their own font (bundled locally in the app, no download)
+- Database: migration 20 (with a backup beforehand as always). Without watchers nothing else changes for anyone
+
+**Deutsch**
+
+Diese Version ist die 1.18.0-beta.1 der Beta-App. Die Desktop-Fassung gehört nicht dazu und folgt später.
+
+- **Neue Startseite „Heute".** Die Leiste unten heißt jetzt **Heute · Boards · Kalender · Zuhause**. Heute zeigt, was für dich dran ist: **Vom Haus** (Karten von Wächtern, mit Auslöser, Zeit und Grund; Knöpfe **Erledigt**, **Weitergeben** und bei „Erst vorschlagen" **Übernehmen**), **Für dich** (deine Karten mit Termin bis morgen) und eine Zeile **Bei den anderen**, die zu **Diese Woche** führt (die frühere Fairness-Ansicht, jetzt mit „Wartet auf dich" für Bestätigungen und der Zahl der Karten vom Haus). Die Agenda ist im **Kalender** die vierte Ansicht „Liste"
+- **Eine Kopfzeile auf jedem Reiter.** Links „‹ Dashboard" (in der App), rechts Offline-Hinweis und dein **Avatar**, der die Einstellungen öffnet (das Zahnrad entfällt). **Personenbilder:** aus Home Assistant (immer über Stups geholt, nie direkt vom Browser) oder selbst hochgeladen; Administratoren ändern sie auch für andere
+- **Zuhause** zeigt den Zustand der Wächter: wartet auf jemanden (mit **Stupsen**), läuft gerade, bald dran (Zähler, nächster Termin), ruhig; ohne Verbindung zu Home Assistant steht seit wann
+- **Wächter aus Vorlagen.** „Gefunden" erkennt in Home Assistant, wozu ein Wächter passt (Waschmaschine, Trockner, Spülmaschine, Abfallkalender, Regen, Batterien, Saugroboter), mit Begründung. Das Formular ist ein **Satz mit antippbaren Feldern**, dazu ein **Probelauf** auf den letzten 7 Tagen („3 Auslösungen erkannt, kein Fehlalarm"). Neue Auslöser: **Termin im Kalender mit Vorlauf** und **Regen in der Vorhersage** (Abfrage alle 30 Minuten). Vorlagen ohne Gerät legen wiederkehrende Karten an (Entkalken, Rauchmelder testen, Filter wechseln, Bettwäsche)
+- **Weitergeben, Erst vorschlagen, Wenig Zeit.** Weitergeben schickt eine Karte vom Haus an die nächste Person der Rotation. „Erst vorschlagen" fragt alle Anwesenden „Wer übernimmt?", wer zuerst tippt, bekommt sie, nach 30 Minuten greift der Rückfall. Wer **wenig Zeit** hat (bis zu 90 Tage), wird von den Rotationen übersprungen
+- **Einstellungen** sind eine gegliederte Seite mit Unterseiten: Für mich (Benachrichtigungen, Sprache und Farbe, Konto), Haushalt (Personen und Kinder, Wächter, Vorlagen, Termine), Home Assistant (Dashboard und Kopfzeile, Ansage und Lampe), Hilfe und Daten (Warum kommt nichts an?, Papierkorb, Archiv, Umzug, Beta). Nichts ging verloren; Mitglieder sehen „Haushalt" und „Home Assistant" nicht. Version und Diagnose-Seite stehen am Fuß
+- **Farben:** Türkis ist die Farbe für alles, was vom Haus kommt; der Farbkreis lässt Grün und Türkis aus. Überschriften in einer eigenen Schrift (lokal in der App gebündelt, kein Download)
+- Datenbank: Migration 20 (vorher wie immer eine Sicherung). Ohne Wächter ändert sich sonst für niemanden etwas
+
 ## 1.17.0
 
 *English first, German version below.*

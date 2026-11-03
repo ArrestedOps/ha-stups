@@ -11,6 +11,7 @@ export function createNotifications(c: Ctx) {
        from cards c join boards b on b.id = c.board_id
        where c.deleted_at is null and c.archived_at is null and c.completed_at is null
          and c.due_at is not null and b.deleted_at is null
+         and c.confirm_requested_at is null
        order by c.due_at, c.id`,
     );
     const assignees = new Map<string, string[]>();

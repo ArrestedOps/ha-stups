@@ -92,6 +92,7 @@ export function createCompletion(c: Ctx, late: unknown) {
       t,
       src.effort ?? null,
     );
+    run('update cards set confirm = ? where id = ?', src.confirm ?? null, newId); // die Bestätigungspflicht gehört zur Aufgabe
     run('insert into card_assignees (card_id, user_id) select ?, user_id from card_assignees where card_id = ?', newId, src.id);
     run(
       `insert into card_categories (card_id, category_id)
@@ -192,11 +193,11 @@ export function createCompletion(c: Ctx, late: unknown) {
         snapshot.spawnedId = nextCardId;
         const done = visibleColumns(card.board_id).find((c) => c.is_done === 1);
         if (done && done.id !== card.column_id) placeCard(id, done, null);
-        run('update cards set recurrence = null, completed_at = ?, archived_at = null where id = ?', iso(), id);
+        run('update cards set recurrence = null, completed_at = ?, archived_at = null, confirm_requested_at = null, confirm_requested_by = null where id = ?', iso(), id);
       } else {
         const done = visibleColumns(card.board_id).find((c) => c.is_done === 1);
         if (done && done.id !== card.column_id) placeCard(id, done, null);
-        run('update cards set completed_at = ?, archived_at = null where id = ?', iso(), id);
+        run('update cards set completed_at = ?, archived_at = null, confirm_requested_at = null, confirm_requested_by = null where id = ?', iso(), id);
       }
       const completionId = recordCompletion(id, ctx.by, ctx.source, card.due_at, snapshot);
       touchCard(id);

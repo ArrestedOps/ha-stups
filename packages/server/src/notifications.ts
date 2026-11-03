@@ -28,17 +28,21 @@ export interface PushAction extends NotificationAction {
   personId?: string;
 }
 
-export type ActionResult = 'completed' | 'acked' | 'postponed' | 'already_done' | 'stale' | 'unknown_card' | 'ignored';
+export type ActionResult = 'completed' | 'acked' | 'postponed' | 'awaiting' | 'confirmed' | 'rejected' | 'already_done' | 'stale' | 'unknown_card' | 'ignored';
 
 const MINUTE = 60_000;
+/** Eine Anfrage ohne Antwort: erst nach dieser Zeit wird erinnert, danach höchstens einmal am Tag */
+const CONFIRM_REMIND_AFTER_MS = 2 * 60 * MINUTE;
 const CATCH_UP_MS = 12 * 60 * MINUTE;
 const LATE_NOTE_MS = 10 * MINUTE;
 const SUMMARY_WINDOW_MS = 4 * 60 * MINUTE;
 const GROUP = 'stups';
 const ACTION_PREFIX = 'KANBAN_DONE';
 const NUDGE_PREFIX = 'KANBAN_NUDGE_';
+const CONFIRM_PREFIX = 'KANBAN_CONFIRM_';
 
 export const cardTag = (cardId: string) => `stups-card-${cardId}`;
+const confirmTag = (cardId: string) => `stups-confirm-${cardId}`;
 
 /** Sprache der Push-Nachrichten einer Person: die zuletzt gemeldete; solange keine bekannt ist, Deutsch (so war es bisher) */
 export const pushLanguage = (store: Pick<Store, 'languageOf'>, userId: string): Lang => store.languageOf(userId) ?? 'de';
@@ -250,6 +254,128 @@ export function createNotifier(deps: NotifierDeps) {
     return sent;
   }
 
+  // ---------- Bestätigung (Rolle „Kind") ----------
+
+  /** Die Frage an einen Bestätiger, mit den Knöpfen „Bestätigen" und „Nochmal" */
+  function confirmMessage(id: string, card: { id: string; title: string }, childId: string | null, reminder: boolean): PushMessage {
+    return inLang(id, () => ({
+      title: card.title,
+      body: reminder ? t('{name} wartet auf Bestätigung', { name: nameOf(childId) }) : t('{name} meldet: erledigt. Stimmt das?', { name: nameOf(childId) }),
+      tag: confirmTag(card.id),
+      group: GROUP,
+      open: { cardId: card.id },
+      level: 'active',
+      actions: [
+        { id: `${aPrefix}${CONFIRM_PREFIX}YES:${card.id}`, title: t('Bestätigen') },
+        { id: `${aPrefix}${CONFIRM_PREFIX}NO:${card.id}`, title: t('Nochmal') },
+      ],
+    }));
+  }
+
+  /** Ein Kind hat abgehakt: das Kind sieht „Wartet auf Bestätigung" (ersetzt die Erinnerung), die Bestätiger werden gefragt */
+  async function confirmationRequested(cardId: string): Promise<void> {
+    let card;
+    try {
+      card = store.getCard(cardId);
+    } catch {
+      return;
+    }
+    const childId = card.confirmRequestedBy;
+    if (childId) {
+      await Promise.allSettled([
+        send(childId, inLang(childId, () => ({ title: card.title, body: t('Wartet auf Bestätigung'), tag: cardTag(card.id), group: GROUP, open: { cardId: card.id }, level: 'passive' }))),
+      ]);
+    }
+    if (!childId) return;
+    for (const id of store.confirmerIds(childId)) {
+      if (!push.canReach(id)) {
+        warnNoServices(id);
+        continue;
+      }
+      if (await send(id, confirmMessage(id, card, childId, false))) log.info(`Push (Bestätigung) „${card.title}" an ${nameOf(id)} gesendet`);
+    }
+  }
+
+  /** Ein Bestätiger hat geantwortet: das Kind erfährt es, die Frage verschwindet bei allen Bestätigern, andere Zuständige sind die Erinnerung los */
+  async function confirmationAnswered(a: { cardId: string; childId: string | null; byId: string | null; outcome: 'confirmed' | 'rejected' }): Promise<void> {
+    let card;
+    try {
+      card = store.getCard(a.cardId);
+    } catch {
+      return;
+    }
+    if (a.childId) {
+      await Promise.allSettled(store.confirmerIds(a.childId).map((id) => push.clear(id, confirmTag(a.cardId))));
+    }
+    if (a.outcome === 'confirmed') await clearFor(a.cardId, card.assigneeIds.filter((id) => id !== a.childId));
+    if (a.childId) {
+      const childId = a.childId;
+      const child = store.userById(childId);
+      // Ein „Nochmal" ist wie ein Stups und darf ins Haus, außer das Kind hat gerade Ruhezeit
+      const speak = a.outcome === 'rejected' && !!child && quietEnd(deps.now().getTime(), deps.timeZone(), child.nudgeQuiet) === null;
+      const message = inLang(childId, (): PushMessage => {
+        const m: PushMessage = {
+          title: card.title,
+          body: a.outcome === 'confirmed' ? t('Bestätigt von {name} ✓', { name: nameOf(a.byId) }) : t('{name}: Nochmal, bitte', { name: nameOf(a.byId) }),
+          tag: cardTag(card.id),
+          group: GROUP,
+          open: { cardId: card.id },
+          level: a.outcome === 'confirmed' ? 'passive' : 'active',
+        };
+        if (speak) {
+          m.kind = 'nudge';
+          m.spoken = t('{to}, {from} sagt: Nochmal, bitte. {title}', { to: nameOf(childId), from: speakable(nameOf(a.byId), 40), title: speakable(card.title) });
+        }
+        return m;
+      });
+      await Promise.allSettled([send(childId, message)]);
+    }
+    deps.onChange?.();
+  }
+
+  /** Ein Kind tippt „Erledigt" in einer Nachricht: braucht das Bestätigung, wird daraus eine Anfrage. true = so behandelt. */
+  async function requestInstead(card: { id: string }, userId: string): Promise<boolean> {
+    if (!store.needsConfirmation(card.id, userId)) return false;
+    const asked = store.requestConfirmation(card.id, userId);
+    if (asked.created) await confirmationRequested(card.id);
+    deps.onChange?.();
+    return true;
+  }
+
+  /** Tipp auf „Bestätigen" oder „Nochmal". Nur die Bestätiger des Kindes (und bei „Bestätigen" wer zuerst kommt) */
+  async function handleConfirmAction(answer: 'confirm' | 'reject', cardId: string, a: PushAction): Promise<ActionResult> {
+    const user = actor(a);
+    if (!user) return 'ignored';
+    let card;
+    try {
+      card = store.getCard(cardId);
+    } catch {
+      return 'unknown_card';
+    }
+    if (card.confirmRequestedAt === null) return 'stale'; // schon beantwortet
+    if (!store.mayConfirm(user.id, card.confirmRequestedBy, false)) return 'ignored';
+    const res = store.answerConfirmation(cardId, answer, 'push');
+    await confirmationAnswered({ cardId, childId: res.childId, byId: user.id, outcome: answer === 'confirm' ? 'confirmed' : 'rejected' });
+    log.info(`Karte „${card.title}" ${answer === 'confirm' ? 'bestätigt' : 'zurückgegeben'} von ${user.name}`);
+    return answer === 'confirm' ? 'confirmed' : 'rejected';
+  }
+
+  /** Anfragen, die keiner beantwortet: nach zwei Stunden an die Bestätiger erinnern, danach höchstens einmal am Tag */
+  async function confirmationReminders(nowMs: number, tz: string): Promise<number> {
+    let sent = 0;
+    const date = localDateKey(nowMs, tz);
+    for (const r of store.openConfirmations()) {
+      if (!r.childId || nowMs - Date.parse(r.requestedAt) < CONFIRM_REMIND_AFTER_MS) continue;
+      for (const id of store.confirmerIds(r.childId)) {
+        const person = store.userById(id);
+        if (!person || !push.canReach(id) || quietEnd(nowMs, tz, person.nudgeQuiet) !== null) continue;
+        const k: NotificationKey = { cardId: r.cardId, userId: id, kind: 'nag', key: `confirm:${date}` };
+        if (await deliver(k, confirmMessage(id, { id: r.cardId, title: r.title }, r.childId, true))) sent += 1;
+      }
+    }
+    return sent;
+  }
+
   /** Ein Durchlauf. Gibt die Zahl der gesendeten Nachrichten (je Person) zurück. */
   async function tick(): Promise<number> {
     if (running) return 0;
@@ -317,6 +443,7 @@ export function createNotifier(deps: NotifierDeps) {
       }
       sent += await summaries(cards, nowMs, tz);
       sent += await weeklySummaries(nowMs, tz);
+      sent += await confirmationReminders(nowMs, tz);
       sent += await deliverNudges(nowMs);
       return sent;
     } finally {
@@ -475,6 +602,7 @@ export function createNotifier(deps: NotifierDeps) {
     if (nudge.reply !== null || card.completedAt) return 'stale';
 
     if (kind === 'DONE') {
+      if (await requestInstead(card, user.id)) return 'awaiting';
       const res = store.completeCard(card.id, { by: user.id, source: 'push' });
       if (res.completionId === null) return 'already_done';
       if (res.nextDueAt) await confirmRepeat(card.id, card.title, card.assigneeIds, res.nextDueAt);
@@ -500,6 +628,8 @@ export function createNotifier(deps: NotifierDeps) {
   async function handleAction(a: PushAction): Promise<ActionResult> {
     const nm = new RegExp(`^${aPrefix}${NUDGE_PREFIX}(DONE|ACK|LATER):(.+)$`).exec(a.action);
     if (nm) return handleNudgeAction(nm[1]!, nm[2]!, a);
+    const cm = new RegExp(`^${aPrefix}${CONFIRM_PREFIX}(YES|NO):(.+)$`).exec(a.action);
+    if (cm) return handleConfirmAction(cm[1] === 'YES' ? 'confirm' : 'reject', cm[2]!, a);
     const m = new RegExp(`^${aPrefix}${ACTION_PREFIX}:([^:]+):(.+)$`).exec(a.action);
     if (!m) return 'ignored';
     const [, cardId, key] = m as unknown as [string, string, string];
@@ -514,6 +644,7 @@ export function createNotifier(deps: NotifierDeps) {
     if (!card.dueAt || Date.parse(card.dueAt) !== Date.parse(key)) return 'stale';
 
     const user = actor(a);
+    if (user && (await requestInstead(card, user.id))) return 'awaiting';
     const res = store.completeCard(cardId, { by: user?.id ?? null, source: 'push' });
     if (res.completionId === null) return 'already_done';
 
@@ -528,7 +659,7 @@ export function createNotifier(deps: NotifierDeps) {
     return 'completed';
   }
 
-  return { tick, handleAction, clearFor, nudgesClosed, notifyAssigned, notifyStillOpen, idle };
+  return { tick, handleAction, clearFor, nudgesClosed, notifyAssigned, notifyStillOpen, confirmationRequested, confirmationAnswered, idle };
 }
 
 export type Notifier = ReturnType<typeof createNotifier>;

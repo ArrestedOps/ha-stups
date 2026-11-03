@@ -3,7 +3,7 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { NotFoundError, ValidationError } from '../errors.js';
 import { type Recurrence } from '../recurrence.js';
 import { type OpenNudge, type Card, type ScheduleCard, type ChecklistItem, type CardLink, type ActivityEntry, type CardDetail, type CardInput, type CardPatch, type Row } from './types.js';
-import { cleanText, parseDue, parsePriority, parseRemind, parseCost, parseEffort, parseCarryOver, resolveCarry, parseBool, parseRecurrence } from './validate.js';
+import { cleanText, parseDue, parsePriority, parseRemind, parseCost, parseEffort, parseConfirm, parseCarryOver, resolveCarry, parseBool, parseRecurrence } from './validate.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
@@ -362,6 +362,10 @@ export function createCards(c: Ctx, late: unknown) {
         sets.push('effort = ?');
         params.push(parseEffort(patch.effort));
       }
+      if (patch.confirm !== undefined) {
+        sets.push('confirm = ?');
+        params.push(parseConfirm(patch.confirm));
+      }
       if (patch.carryOver !== undefined) {
         const carry = parseCarryOver(patch.carryOver);
         sets.push('carry_over = ?');
@@ -432,6 +436,7 @@ export function createCards(c: Ctx, late: unknown) {
         t,
         src.effort ?? null,
       );
+      run('update cards set confirm = ? where id = ?', src.confirm ?? null, newId);
       run('insert into card_assignees (card_id, user_id) select ?, user_id from card_assignees where card_id = ?', newId, id);
       run(
         `insert into card_categories (card_id, category_id)

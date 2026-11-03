@@ -197,6 +197,8 @@ export interface CompleteResult {
   nextDueAt: string | null;
   /** die neue Karte, die bei einer wiederkehrenden Karte angelegt wurde */
   nextCardId: string | null;
+  /** true, wenn ein Kind abgehakt hat und die Karte auf Bestätigung wartet (erledigt wurde nichts) */
+  awaitingConfirmation?: boolean;
 }
 
 /** Felder, die eine wiederkehrende Karte auf Wunsch in die nächste Karte mitnimmt */
@@ -398,7 +400,10 @@ export interface CardInput {
   categoryIds?: string[];
 }
 
-export type CardPatch = Partial<Omit<CardInput, 'columnId'>>;
+export type CardPatch = Partial<Omit<CardInput, 'columnId'>> & {
+  /** Bestätigung beim Erledigen durch ein Kind: 'on', 'off' oder leer (Vorgabe der zuständigen Person) */
+  confirm?: unknown;
+};
 
 export type TrashType = 'board' | 'column' | 'category' | 'card';
 

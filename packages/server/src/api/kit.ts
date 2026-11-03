@@ -35,7 +35,14 @@ export interface ApiDeps {
   /** Meldet Änderungen an alle verbundenen Geräte (Live-Sync). */
   bus?: EventBus;
   /** Räumt Push-Nachrichten auf, wenn eine Karte in der App erledigt wurde; tick stellt neue Stupse sofort zu. */
-  notifier?: { clearFor(cardId: string): Promise<void>; tick?(): Promise<number> };
+  notifier?: {
+    clearFor(cardId: string): Promise<void>;
+    tick?(): Promise<number>;
+    /** Ein Kind hat abgehakt: die Bestätiger fragen */
+    confirmationRequested?(cardId: string): Promise<void>;
+    /** Ein Bestätiger hat geantwortet: dem Kind Bescheid geben, die Fragen bei den anderen Bestätigern wegräumen */
+    confirmationAnswered?(a: { cardId: string; childId: string | null; byId: string | null; outcome: 'confirmed' | 'rejected' }): Promise<void>;
+  };
   ha?: {
     listDashboards(): Promise<{ title: string; path: string }[]>;
     listNotifyServices?(): Promise<string[]>;

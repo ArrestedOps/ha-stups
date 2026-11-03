@@ -43,6 +43,13 @@ export function parseEffort(value: unknown): Effort | null {
   return value as Effort;
 }
 
+/** „Bestätigung" an einer Karte: ein = braucht sie, aus = braucht sie nicht, leer = Vorgabe der zuständigen Person */
+export function parseConfirm(value: unknown): 'on' | 'off' | null {
+  if (value === null || value === undefined) return null;
+  if (value !== 'on' && value !== 'off') throw new ValidationError(t('Die Bestätigung muss ein, aus oder leer (Vorgabe) sein'));
+  return value;
+}
+
 export function parseCost(value: unknown): number | null {
   if (value === null || value === undefined) return null;
   if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > 1_000_000_000) {

@@ -11,6 +11,7 @@ import type { createTrash } from './trash.js';
 import type { createHouse } from './house.js';
 import type { createTemplates } from './templates.js';
 import type { createFairness } from './fairness.js';
+import type { createConfirmation } from './confirmation.js';
 
 export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createBoards> &
@@ -23,4 +24,5 @@ export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createTrash> &
   ReturnType<typeof createHouse> &
   ReturnType<typeof createTemplates> &
-  ReturnType<typeof createFairness>;
+  ReturnType<typeof createFairness> &
+  ReturnType<typeof createConfirmation>;

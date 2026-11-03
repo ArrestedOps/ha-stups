@@ -1,6 +1,6 @@
 import { t } from '../i18n/index.js';
 import type { FastifyInstance } from 'fastify';
-import { ValidationError } from '../errors.js';
+import { ConflictError, ForbiddenError, ValidationError } from '../errors.js';
 import { type ApiKit, type Params } from './kit.js';
 
 const MAX_IDS = 50;
@@ -53,6 +53,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
       'overdueNag',
       'costCents',
       'effort',
+      'confirm',
       'carryOver',
       'assigneeIds',
       'categoryIds',
@@ -89,10 +90,30 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
       .slice(0, 2000);
   });
   app.post<{ Params: Params }>('/api/cards/:id/complete', async (req) => {
-    const res = store.completeCard(req.params.id, { by: req.user?.id ?? null, source: 'app' });
+    const by = req.user?.id ?? null;
+    // Ein Kind, dessen „Erledigt" bestätigt werden muss, löst nur eine Anfrage aus: die Karte bleibt offen und zählt noch nicht
+    if (by && req.access?.isChild && store.needsConfirmation(req.params.id, by)) {
+      const asked = store.requestConfirmation(req.params.id, by);
+      if (asked.created) void deps.notifier?.confirmationRequested?.(asked.card.id);
+      return { card: asked.card, completionId: null, nextDueAt: null, nextCardId: null, awaitingConfirmation: true };
+    }
+    const res = store.completeCard(req.params.id, { by, source: 'app' });
     if (res.completionId) void deps.notifier?.clearFor(res.card.id);
     return res;
   });
+  // Bestätigen und „Nochmal": die gewählten Personen des Kindes und Administratoren
+  for (const answer of ['confirm', 'reject'] as const) {
+    app.post<{ Params: Params }>(`/api/cards/:id/${answer}`, async (req) => {
+      const card = store.getCard(req.params.id);
+      if (card.confirmRequestedAt === null) throw new ConflictError(t('Es wartet nichts auf Bestätigung'));
+      if (!req.user || !store.mayConfirm(req.user.id, card.confirmRequestedBy, req.access?.isAdmin ?? false)) {
+        throw new ForbiddenError(t('Das dürfen nur die Bestätiger dieses Kindes'));
+      }
+      const res = store.answerConfirmation(card.id, answer, 'app');
+      void deps.notifier?.confirmationAnswered?.({ cardId: card.id, childId: res.childId, byId: req.user.id, outcome: answer === 'confirm' ? 'confirmed' : 'rejected' });
+      return res.result ?? res.card;
+    });
+  }
   app.post<{ Params: Params }>('/api/completions/:id/undo', async (req) => store.undoCompletion(req.params.id));
   app.get<{ Params: Params }>('/api/cards/:id/completions', async (req) => store.listCompletions(req.params.id));
   app.post<{ Params: Params }>('/api/cards/:id/restore-archived', async (req) =>

@@ -3,6 +3,7 @@ import { createCardExtras } from './store/card-extras.js';
 import { createHouse } from './store/house.js';
 import { createTemplates } from './store/templates.js';
 import { createFairness } from './store/fairness.js';
+import { createConfirmation } from './store/confirmation.js';
 import { createCards } from './store/cards.js';
 import { createBoards } from './store/boards.js';
 import { createCompletion } from './store/completion.js';
@@ -40,6 +41,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     createHouse(c, s),
     createTemplates(c, s),
     createFairness(c, s),
+    createConfirmation(c, s),
   );
 
   return {
@@ -70,6 +72,12 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     setAccentHue: s.setAccentHue,
     setWeeklySummary: s.setWeeklySummary,
     setChild: s.setChild,
+    needsConfirmation: s.needsConfirmation,
+    requestConfirmation: s.requestConfirmation,
+    answerConfirmation: s.answerConfirmation,
+    confirmerIds: s.confirmerIds,
+    mayConfirm: s.mayConfirm,
+    openConfirmations: s.openConfirmations,
     boardIdsWithCardsOf: s.boardIdsWithCardsOf,
     boardIdOfCard: s.boardIdOfCard,
     pushSecret: s.pushSecret,

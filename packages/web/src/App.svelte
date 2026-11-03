@@ -26,7 +26,7 @@
   import Toasts from './components/Toasts.svelte';
   import TrashSheet from './components/TrashSheet.svelte';
   import WatcherSheet from './components/WatcherSheet.svelte';
-  import WatchersView from './components/WatchersView.svelte';
+  import HomeView from './components/HomeView.svelte';
   import { columnForNew } from './lib/calendar';
   import { catClass } from './lib/colors';
   import { deviceTz, formatCost } from './lib/datetime';
@@ -222,7 +222,7 @@
   {:else if tab === 'calendar'}
     <CalendarView />
   {:else}
-    <WatchersView />
+    <HomeView />
   {/if}
 
   {#if (tab === 'boards' || tab === 'today') && view && newCardColumn && !ui.isChild}

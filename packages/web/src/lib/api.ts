@@ -304,6 +304,27 @@ export interface Today {
   others: { personId: string; open: number }[];
 }
 
+// ---------- Zuhause ----------
+
+export interface HomeItem {
+  watcherId: string;
+  name: string;
+  phase: 'waiting' | 'running' | 'soon' | 'quiet';
+  since: string | null;
+  progress: { n: number; of: number } | null;
+  /** Titel der Karte, die danach kommt */
+  nextCard: string;
+  entityMissing: boolean;
+  openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; createdAt: string } | null;
+  nextEvent: { title: string; at: string } | null;
+}
+
+export interface HomeState {
+  available: boolean;
+  lostSince: string | null;
+  items: HomeItem[];
+}
+
 // ---------- Fairness ----------
 
 export interface FairnessCounts {
@@ -483,6 +504,7 @@ export const api = {
   access: () => get<AccessInfo>('access'),
   fairness: (period: 'week' | 'month') => get<Fairness>(`fairness?period=${period}`),
   today: () => get<Today>('today'),
+  home: () => get<HomeState>('home'),
   houseChannels: () => get<HouseInfo>('house/channels'),
   houseEntities: () => get<HouseEntities>('house/entities'),
   addHouseChannel: (b: { userId: string; type: HouseType; entityId: string; name?: string }) => post<HouseChannel>('house/channels', b),

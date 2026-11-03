@@ -727,7 +727,7 @@ export function createWatchers(deps: WatcherDeps) {
         progress: w.trigger.count > 1 && counter > 0 ? { n: counter, of: w.trigger.count } : null,
         nextCard: w.card.title,
         entityMissing: w.status === 'entity_missing' || s === null,
-        openCard: open ? { id: open.id, title: open.title, assigneeIds: open.assigneeIds, createdAt: open.createdAt } : null,
+        openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, createdAt: open.createdAt } : null,
         nextEvent,
       });
     }

@@ -72,7 +72,7 @@ export interface HomeItem {
   nextCard: string;
   /** Die Entität gibt es in Home Assistant nicht (mehr) */
   entityMissing: boolean;
-  openCard: { id: string; title: string; assigneeIds: string[]; createdAt: string } | null;
+  openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; createdAt: string } | null;
   nextEvent: { title: string; at: string } | null;
 }
 

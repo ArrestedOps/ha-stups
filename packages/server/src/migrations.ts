@@ -436,4 +436,19 @@ export const migrations: Migration[] = [
       alter table cards add column confirm_requested_by text references users(id) on delete set null;
     `,
   },
+  {
+    version: 20,
+    // Stufe 4: Bild der Person (Quelle und Fassung für den Cache), „wenig Zeit" bis Datum, offene Vorschläge der Wächter („Erst vorschlagen")
+    sql: `
+      alter table users add column avatar_source text check (avatar_source in ('ha', 'upload'));
+      alter table users add column avatar_rev integer not null default 0;
+      alter table users add column busy_until text;
+
+      create table watcher_suggest (
+        card_id    text primary key references cards(id) on delete cascade,
+        watcher_id text not null references watchers(id) on delete cascade,
+        since      text not null
+      );
+    `,
+  },
 ];

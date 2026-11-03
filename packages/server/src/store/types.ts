@@ -33,6 +33,10 @@ export interface User {
   confirmDefault: boolean;
   /** Personen, die für das Kind bestätigen dürfen (Administratoren dürfen immer) */
   confirmers: string[];
+  /** Fassung des Personenbilds (zählt bei jeder Änderung hoch, für langes Caching); null = kein Bild */
+  avatarRev: number | null;
+  /** „Wenig Zeit" bis zu diesem Tag (YYYY-MM-DD, einschließlich): Rotationen der Wächter überspringen die Person */
+  busyUntil: string | null;
 }
 
 export type NudgeTemplate = 'think' | 'today' | 'help' | 'thanks';

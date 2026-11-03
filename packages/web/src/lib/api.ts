@@ -35,6 +35,10 @@ export interface User {
   confirmDefault: boolean;
   /** Personen, die für das Kind bestätigen dürfen (Administratoren immer; ohne Auswahl alle Erwachsenen) */
   confirmers: string[];
+  /** Fassung des Personenbilds (null = kein Bild, dann gilt die Initiale) */
+  avatarRev: number | null;
+  /** „Wenig Zeit" bis zu diesem Tag (YYYY-MM-DD, einschließlich) */
+  busyUntil: string | null;
 }
 
 export type AccessMode = 'everyone' | 'selected';

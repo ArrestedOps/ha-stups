@@ -32,6 +32,8 @@ export function createPeople(c: Ctx, late: unknown) {
     isChild: r.is_child === 1,
     childScope: r.child_scope === 'assigned' ? 'assigned' : 'all',
     confirmDefault: r.confirm_default === 1,
+    avatarRev: r.avatar_source ? (r.avatar_rev as number) : null,
+    busyUntil: typeof r.busy_until === 'string' && r.busy_until !== '' ? r.busy_until : null,
     confirmers: all(
       'select c.user_id from child_confirmers c join users u on u.id = c.user_id and u.is_person = 1 where c.child_id = ? order by c.rowid',
       r.id,
@@ -394,6 +396,24 @@ export function createPeople(c: Ctx, late: unknown) {
     return getSettings();
   }
 
+  /** Woher das Bild der Person kommt (Home Assistant oder selbst hochgeladen); null = keins */
+  function avatarSource(id: string): 'ha' | 'upload' | null {
+    const s = one('select avatar_source from users where id = ?', id)?.avatar_source;
+    return s === 'ha' || s === 'upload' ? s : null;
+  }
+
+  /** Vermerkt ein neues Bild und gibt die neue Fassung zurück (zählt auch nach dem Entfernen weiter hoch) */
+  function setAvatar(id: string, source: 'ha' | 'upload'): number {
+    userRow(id);
+    run('update users set avatar_source = ?, avatar_rev = avatar_rev + 1 where id = ?', source, id);
+    return one('select avatar_rev from users where id = ?', id)!.avatar_rev as number;
+  }
+
+  function clearAvatar(id: string): void {
+    userRow(id);
+    run('update users set avatar_source = null where id = ?', id);
+  }
+
   function userByHaId(haId: string): User | null {
     const r = one('select * from users where ha_user_id = ?', haId);
     return r ? toUser(r) : null;
@@ -426,6 +446,9 @@ export function createPeople(c: Ctx, late: unknown) {
     setAccentHue,
     setWeeklySummary,
     setChild,
+    avatarSource,
+    setAvatar,
+    clearAvatar,
     getSetting,
     putSetting,
     rawSetting,

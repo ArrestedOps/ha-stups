@@ -31,6 +31,7 @@
   "duplicateCard",
   "ensureDefaultBoard",
   "ensurePlannedColumns",
+  "fairness",
   "getAccessMode",
   "getAttachment",
   "getBoardView",

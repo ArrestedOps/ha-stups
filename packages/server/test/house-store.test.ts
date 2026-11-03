@@ -19,7 +19,7 @@ describe('Migration 16', () => {
     const s = createStore(db);
     expect(s.people().map((p) => [p.name, p.notifyServices])).toEqual([['anna', ['svc']]]);
     expect(s.houseChannels()).toEqual([]);
-    expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(16);
+    expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBeGreaterThanOrEqual(16);
     expect(() => new DatabaseSync(file).prepare('select id from house_channels').all()).not.toThrow();
     expect(() => new DatabaseSync(file).prepare('select id from house_pending').all()).not.toThrow();
     db.close();

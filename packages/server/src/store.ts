@@ -1,6 +1,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { createCardExtras } from './store/card-extras.js';
 import { createHouse } from './store/house.js';
+import { createTemplates } from './store/templates.js';
 import { createCards } from './store/cards.js';
 import { createBoards } from './store/boards.js';
 import { createCompletion } from './store/completion.js';
@@ -36,6 +37,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     createWatcherCards(c, s),
     createTrash(c, s),
     createHouse(c, s),
+    createTemplates(c, s),
   );
 
   return {
@@ -137,6 +139,11 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     restoreFromTrash: s.restoreFromTrash,
     purgeTrash: s.purgeTrash,
     ensureDefaultBoard: s.ensureDefaultBoard,
+    listTemplates: s.listTemplates,
+    getTemplateData: s.getTemplateData,
+    createBoardFromTemplate: s.createBoardFromTemplate,
+    saveBoardAsTemplate: s.saveBoardAsTemplate,
+    deleteTemplate: s.deleteTemplate,
     houseChannels: s.houseChannels,
     houseChannelsOf: s.houseChannelsOf,
     houseChannel: s.houseChannel,

@@ -40,6 +40,8 @@ export function createBoards(c: Ctx, late: unknown) {
     color?: string | null;
     /** Spalte „Geplant" gleich mit anlegen (Standard der App) */
     withPlanned?: boolean;
+    /** Eigene Spalten (aus einer Vorlage) statt der Standardspalten */
+    columns?: { name: string; done?: boolean; planned?: boolean }[];
   }): Board {
     const name = cleanText(input.name, t('Der Name'), 80);
     return tx(() => {
@@ -55,7 +57,7 @@ export function createBoards(c: Ctx, late: unknown) {
         stamp,
         stamp,
       );
-      const defaults: { name: string; done?: boolean; planned?: boolean }[] = [
+      const defaults: { name: string; done?: boolean; planned?: boolean }[] = input.columns ?? [
         { name: t('Offen') },
         ...(input.withPlanned ? [{ name: t('Geplant'), planned: true }] : []),
         { name: t('In Arbeit') },

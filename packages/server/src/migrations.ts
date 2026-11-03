@@ -394,4 +394,17 @@ export const migrations: Migration[] = [
       create index ix_house_pending_channel on house_pending(channel_id);
     `,
   },
+  {
+    version: 17,
+    // Eigene Board-Vorlagen (die eingebauten stehen im Code, siehe templates.ts)
+    sql: `
+      create table board_templates (
+        id          text primary key,
+        name        text not null,
+        data        text not null,
+        created_by  text references users(id) on delete set null,
+        created_at  text not null
+      );
+    `,
+  },
 ];

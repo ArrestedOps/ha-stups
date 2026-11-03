@@ -29,6 +29,9 @@ import { createNotifier } from './notifications.js';
 import { createAutomationCards } from './automation-cards.js';
 import { createWatcherData } from './watcher-data.js';
 import { createWatchers } from './watchers.js';
+import { createHousePush, createHouseSubscription } from './house.js';
+import { createHouseDrivers } from './house-drivers.js';
+import { createPresence } from './presence.js';
 import { createSensors } from './sensors.js';
 import { spikeRoutes } from './spike.js';
 import { createStore, type ClosedNudge } from './store.js';
@@ -98,6 +101,18 @@ if (betaGate.enabled) {
 // Push-Wege: Companion App über Home Assistant, ntfy (Standalone), oder beides nebeneinander
 const actionTokens = createActionTokens({ secret: () => store.pushSecret() });
 const roundTrips = createRoundTrips();
+// Haus-Kanäle (Ansage über einen Lautsprecher, Lampe): ein dritter Weg, nur mit Verbindung zu Home Assistant
+const houseDrivers = createHouseDrivers({
+  ha,
+  setTimer: (fn, ms) => setTimeout(fn, ms).unref(),
+  clearTimer: (handle) => clearTimeout(handle as NodeJS.Timeout),
+  log,
+});
+const presence = createPresence({ ha, people: () => store.people(), now: () => new Date() });
+const house = runtime.ha
+  ? createHousePush({ store, drivers: houseDrivers, presence, now: () => new Date(), timeZone: () => timeZone, allowed: (userId) => betaGate.pushAllowed(userId), log })
+  : null;
+const houseSubscription = house ? createHouseSubscription({ ha, presence, store, house, log }) : null;
 const gateways = [
   runtime.ha
     ? createHaNotifyPush({
@@ -111,6 +126,7 @@ const gateways = [
   runtime.ntfy
     ? createNtfyPush({ config: runtime.ntfy, topicFor: (userId) => store.ntfyTopic(userId), publicUrl: runtime.publicUrl, tokens: actionTokens, log })
     : null,
+  house,
 ].filter((g): g is PushGateway => g !== null);
 const push = withChannel(betaGate.gatePush(combinePush(gateways)), names);
 const notifier = createNotifier({
@@ -233,6 +249,7 @@ const capabilities: Capabilities = {
   ha: runtime.ha !== null,
   watchers: watchers !== undefined,
   sensors: runtime.ha !== null,
+  house: house !== null,
   push: [...(runtime.ha ? (['ha-notify'] as const) : []), ...(runtime.ntfy ? (['ntfy'] as const) : [])],
   publicUrl: runtime.publicUrl,
   passkeys: passkeys !== undefined,
@@ -269,6 +286,7 @@ await app.register(apiRoutes, {
   betaGate,
   capabilities,
   push,
+  house: house && houseSubscription ? { push: house, sync: () => houseSubscription.sync() } : undefined,
   ntfy: runtime.ntfy ? { url: runtime.ntfy.url, roundTrip: (personId) => roundTrips.last(personId) } : undefined,
   files,
   watchers,
@@ -302,6 +320,21 @@ if (token) {
   void loadTimeZone();
 
   if (watchers) setInterval(() => void watchers.tick(), 30_000).unref();
+
+  // Haus-Kanäle: Szenen aufräumen (nach einem Neustart mitten im Leuchten), auf die Heimkehr abonnieren, wartende Nachrichten ausliefern
+  if (house && houseSubscription) {
+    const warn = (what: string) => (err: unknown) => app.log.warn(`Haus: ${what}: ${String(err)}`);
+    let cleaned = false;
+    ha.onConnected(() => {
+      if (!cleaned) {
+        cleaned = true;
+        void houseDrivers.cleanup().then((n) => n > 0 && app.log.info(`Haus: ${n} übrig gebliebene Szene(n) aufgeräumt`));
+      }
+      void houseSubscription.sync().catch(warn('Abonnement'));
+    });
+    setInterval(() => void house.tick().catch(warn('Takt')), 30_000).unref();
+    setInterval(() => void houseSubscription.sync().catch(warn('Abonnement')), 5 * 60_000).unref();
+  }
 
   // Sensoren: beim Start, bei Änderungen (gebündelt) und alle 5 Minuten (HA vergisst sie bei einem eigenen Neustart)
   void sensors.publish();

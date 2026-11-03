@@ -91,6 +91,8 @@ export function createBetaGate(deps: BetaGateDeps) {
     state,
     set,
     gatePush,
+    /** Darf diese Person gerade Push bekommen? (In der normalen App immer.) Auch für alles, was nicht über `gatePush` läuft, etwa die Haus-Warteschlange */
+    pushAllowed: (userId: string): boolean => !deps.enabled || allowed(userId),
     watchersEnabled,
     /** Wird aufgerufen, wenn sich ändert, ob die Wächter laufen */
     onWatchers: (cb: (on: boolean) => void): void => void listeners.push(cb),

@@ -54,6 +54,7 @@ async function build(opts: { ntfy: boolean }) {
       ha: false,
       watchers: false,
       sensors: false,
+      house: false,
       push: opts.ntfy ? ['ntfy'] : [],
       publicUrl,
       passkeys: false,

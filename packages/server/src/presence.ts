@@ -94,5 +94,11 @@ export function createPresence(deps: PresenceDeps) {
       if (!states) return [];
       return [...presenceOf(deps.people(), states).entityOf.values()].sort();
     },
+    /** Entität → Stups-Person, damit ein Ereignis (es nennt nur die Entität) zur Person findet */
+    async entityOwners(): Promise<Map<string, string>> {
+      const states = await persons(true);
+      if (!states) return new Map();
+      return new Map([...presenceOf(deps.people(), states).entityOf].map(([userId, entityId]) => [entityId, userId]));
+    },
   };
 }

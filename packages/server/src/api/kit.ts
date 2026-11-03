@@ -8,6 +8,7 @@ import { ValidationError } from '../errors.js';
 import type { EventBus } from '../events.js';
 import type { FileStore } from '../files.js';
 import type { HaState, WatcherProbe } from '../ha.js';
+import type { HousePush } from '../house.js';
 import type { Passkeys } from '../passkeys.js';
 import type { PushGateway } from '../push.js';
 import type { Capabilities } from '../runtime.js';
@@ -41,6 +42,8 @@ export interface ApiDeps {
     probeWatchers?(entityId?: string): Promise<WatcherProbe>;
     getStates?(): Promise<HaState[]>;
   };
+  /** Haus-Kanäle (nur mit Verbindung zu Home Assistant): der Weg für Test und Ergebnis, `sync` gleicht das Abonnement auf die Heimkehr ab */
+  house?: { push: HousePush; sync(): Promise<void> };
   /** Wächter (nur mit Verbindung zu Home Assistant) */
   watchers?: Pick<Watchers, 'view' | 'activity' | 'onSaved' | 'test' | 'resetCounter' | 'syncSubscriptions'>;
   watcherData?: WatcherData;

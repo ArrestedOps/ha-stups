@@ -98,6 +98,7 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
         ha: deps.ha !== undefined,
         watchers: deps.watchers !== undefined,
         sensors: false,
+        house: false,
         push: [],
         publicUrl: null,
         passkeys: false,

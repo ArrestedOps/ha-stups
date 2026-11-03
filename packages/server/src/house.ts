@@ -44,6 +44,11 @@ export interface HouseDeps {
   presence: { homeOf(userId: string, opts?: { fresh?: boolean }): Promise<HomeState> };
   now: () => Date;
   timeZone: () => string;
+  /**
+   * Darf diese Person gerade Push bekommen? Die Warteschlange liefert selbst aus (nicht über `send`), also muss sie das Tor der Beta
+   * selbst fragen. Vorgabe: immer.
+   */
+  allowed?: (userId: string) => boolean;
   log?: { info: (msg: string) => void; warn: (msg: string) => void };
 }
 
@@ -162,6 +167,7 @@ export function createHousePush(deps: HouseDeps) {
   /** Liefert aus, was für diese Person auf die Heimkehr wartet */
   async function flush(userId: string, fresh: boolean): Promise<void> {
     store.purgeHousePending(deps.now().toISOString());
+    if (deps.allowed && !deps.allowed(userId)) return; // Beta mit Push aus: es bleibt, wo es ist, bis es wieder erlaubt ist (oder abläuft)
     for (const p of store.housePendingOf(userId)) {
       const channel = store.houseChannel(p.channelId);
       if (!channel || !channel.enabled || !stillRelevant(p)) {
@@ -225,3 +231,49 @@ export function createHousePush(deps: HouseDeps) {
 }
 
 export type HousePush = ReturnType<typeof createHousePush>;
+
+// ---------- Abonnement auf die Heimkehr ----------
+
+const ARRIVAL_KEY = 'house:arrival';
+
+export interface HouseSubscriptionDeps {
+  ha: {
+    subscribe(key: string, payload: Record<string, unknown>, onEvent: (event: Record<string, any>) => void): unknown;
+    unsubscribe(key: string): void;
+  };
+  presence: { entityOwners(): Promise<Map<string, string>> };
+  store: Pick<Store, 'houseChannels'>;
+  house: Pick<HousePush, 'arrival'>;
+  log?: { warn: (msg: string) => void };
+}
+
+/**
+ * Wechselt eine Person nach „home", wird ausgeliefert, was für sie wartet. Abonniert wird nur, solange es einen eingeschalteten Kanal
+ * mit „warten" gibt (wie bei den Wächtern: sonst gäbe es nichts zu tun). `sync` gleicht ab, nach Änderungen an Kanälen oder Personen,
+ * beim Start und nach einer neuen Verbindung zu Home Assistant.
+ */
+export function createHouseSubscription(deps: HouseSubscriptionDeps) {
+  let signature = '';
+
+  function stop(): void {
+    if (signature !== '') deps.ha.unsubscribe(ARRIVAL_KEY);
+    signature = '';
+  }
+
+  async function sync(): Promise<void> {
+    if (!deps.store.houseChannels().some((c) => c.enabled && c.whenAway === 'wait')) return stop();
+    const owners = await deps.presence.entityOwners();
+    const entities = [...owners.keys()].sort();
+    if (entities.length === 0) return stop();
+    const next = entities.join(',');
+    if (next === signature) return;
+    signature = next;
+    deps.ha.subscribe(ARRIVAL_KEY, { type: 'subscribe_trigger', trigger: { platform: 'state', entity_id: entities, to: 'home' } }, (ev) => {
+      const entityId = ev.variables?.trigger?.entity_id;
+      const userId = typeof entityId === 'string' ? owners.get(entityId) : undefined;
+      if (userId) void deps.house.arrival(userId).catch((err) => deps.log?.warn(`Haus: Heimkehr: ${String(err)}`));
+    });
+  }
+
+  return { sync };
+}

@@ -31,7 +31,7 @@ async function build(beta: boolean) {
     store,
     directory: { isAdmin: async (id: string) => id === 'ha-chef', persons: async () => [] },
     betaGate: gate,
-    capabilities: { mode: 'addon', auth: 'ingress', channel: beta ? 'beta' : 'stable', ha: true, watchers: true, sensors: true, push: ['ha-notify'], publicUrl: null, passkeys: false },
+    capabilities: { mode: 'addon', auth: 'ingress', channel: beta ? 'beta' : 'stable', ha: true, watchers: true, sensors: true, house: true, push: ['ha-notify'], publicUrl: null, passkeys: false },
   });
 }
 

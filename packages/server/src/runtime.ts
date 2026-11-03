@@ -191,6 +191,8 @@ export interface Capabilities {
   ha: boolean;
   watchers: boolean;
   sensors: boolean;
+  /** Haus-Kanäle (Ansage, Lampe): nur mit Verbindung zu Home Assistant */
+  house: boolean;
   /** Wege, auf denen Push zugestellt werden kann */
   push: ('ha-notify' | 'ntfy')[];
   publicUrl: string | null;

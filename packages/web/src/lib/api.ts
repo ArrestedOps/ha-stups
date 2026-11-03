@@ -257,6 +257,25 @@ export interface TemplateInfo {
   createdBy: string | null;
 }
 
+// ---------- Fairness ----------
+
+export interface FairnessCounts {
+  done: number;
+  effort: number;
+  created: number;
+  nudgesAnswered: number;
+  watcherCards: number;
+}
+
+export interface Fairness {
+  period: 'week' | 'month';
+  from: string;
+  to: string;
+  /** In der Reihenfolge der Personenliste, nicht nach Wert sortiert */
+  people: (FairnessCounts & { id: string; name: string; color: string | null })[];
+  total: FairnessCounts;
+}
+
 // ---------- Haus-Kanäle ----------
 
 export type HouseKind = 'nudge' | 'due' | 'watcher';
@@ -415,6 +434,7 @@ export const api = {
   me: () => get<Me>('me'),
   people: () => get<User[]>('people'),
   access: () => get<AccessInfo>('access'),
+  fairness: (period: 'week' | 'month') => get<Fairness>(`fairness?period=${period}`),
   houseChannels: () => get<HouseInfo>('house/channels'),
   houseEntities: () => get<HouseEntities>('house/entities'),
   addHouseChannel: (b: { userId: string; type: HouseType; entityId: string; name?: string }) => post<HouseChannel>('house/channels', b),

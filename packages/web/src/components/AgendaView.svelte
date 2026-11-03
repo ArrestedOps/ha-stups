@@ -3,9 +3,10 @@
   import { api } from '../lib/api';
   import { clock } from '../lib/nudge';
   import { AGENDA_STEP_DAYS, agendaHorizonAfterLoad, boardColorKey, filterSchedule, groupByDay, type ScheduleCard } from '../lib/schedule';
-  import { completeCard, openCardAnywhere, personById, ui } from '../lib/store.svelte';
+  import { completeCard, openCardAnywhere, personById, setAgendaMode, ui } from '../lib/store.svelte';
   import { urgency, urgencyColor } from '../lib/urgency';
   import Avatar from './Avatar.svelte';
+  import FairnessView from './FairnessView.svelte';
   import Icon from './Icon.svelte';
   import SettingsButton from './SettingsButton.svelte';
   import ScheduleFilterBar from './ScheduleFilterBar.svelte';
@@ -57,12 +58,26 @@
       <h1 class="text-[34px] leading-tight font-bold tracking-tight">Agenda</h1>
       <SettingsButton />
     </div>
-    <p class="mb-3 text-[15px] text-fg2">{t('Alle Karten mit Termin, nach Tagen')}</p>
-    <ScheduleFilterBar cards={loaded} />
+    <p class="mb-3 text-[15px] text-fg2">{ui.agendaMode === 'fairness' ? t('Wer erledigt wie viel? Ohne Rangliste.') : t('Alle Karten mit Termin, nach Tagen')}</p>
+    <div class="mb-3 flex gap-2" role="group" aria-label={t('Ansicht der Agenda')}>
+      {#each [['dates', t('Termine')], ['fairness', t('Fairness')]] as [value, label] (value)}
+        <button
+          type="button"
+          class="min-h-9 flex-1 rounded-xl border text-[15px] {ui.agendaMode === value ? 'border-accent bg-surface2 font-semibold' : 'border-line text-fg2'}"
+          aria-pressed={ui.agendaMode === value}
+          onclick={() => setAgendaMode(value as 'dates' | 'fairness')}
+        >
+          {label}
+        </button>
+      {/each}
+    </div>
+    {#if ui.agendaMode !== 'fairness'}<ScheduleFilterBar cards={loaded} />{/if}
   </header>
 
   <div class="-mr-4 mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-4 pb-tabbar" data-testid="agenda">
-    {#if loading}
+    {#if ui.agendaMode === 'fairness'}
+      <FairnessView />
+    {:else if loading}
       <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
     {:else if failed}
       <p class="py-10 text-center text-fg2">{t('Die Agenda konnte nicht geladen werden.')}</p>

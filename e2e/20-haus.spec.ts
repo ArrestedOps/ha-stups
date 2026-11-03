@@ -185,9 +185,12 @@ test('Ein Mitglied sieht den Haus-Block nicht und darf die Schnittstelle nicht b
     expect((await ctx.request.get('/api/house/channels')).status()).toBe(403);
     expect((await ctx.request.post('/api/house/channels', { data: { userId: conny.id, type: 'speak', entityId: 'media_player.kinderzimmer' } })).status()).toBe(403);
     const page = await ctx.newPage();
-    await openPeople(page);
-    await page.getByRole('dialog').getByRole('button', { name: /Conny.*Push-Gerät/ }).click();
-    await expect(page.getByLabel('Sprachdienst für Ansagen')).toHaveCount(0);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+    const settings = page.getByRole('dialog');
+    await expect(settings.getByRole('button', { name: 'Sprache und Farbe' })).toBeVisible();
+    await expect(settings.getByRole('button', { name: /Personen und Kinder/ })).toHaveCount(0);
+    await expect(settings.getByRole('button', { name: 'Ansage und Lampe' })).toHaveCount(0);
     await expect(page.locator('[data-testid^=house-]')).toHaveCount(0);
   } finally {
     await ctx.close();

@@ -66,8 +66,8 @@ test('Nichts geht verloren: Sprache und Farbe, Termine, Dashboard und Kopfzeile,
   await back(page);
 
   await d.getByRole('button', { name: 'Papierkorb, Archiv, Umzug' }).click();
-  await expect(d.getByRole('button', { name: 'Papierkorb' })).toBeVisible();
-  await expect(d.getByRole('button', { name: 'Archiv' })).toBeVisible();
+  await expect(d.getByRole('button', { name: 'Papierkorb', exact: true })).toBeVisible();
+  await expect(d.getByRole('button', { name: 'Archiv', exact: true })).toBeVisible();
   await expect(d.getByRole('button', { name: 'Nach /share' })).toBeVisible();
 });
 
@@ -77,7 +77,9 @@ test('Wenig Zeit: Datum eintragen, gespeichert, „Wieder normal" nimmt es zurü
   const key = `${inTwoDays.getFullYear()}-${String(inTwoDays.getMonth() + 1).padStart(2, '0')}-${String(inTwoDays.getDate()).padStart(2, '0')}`;
   await page.goto('/');
   await openSettingsPage(page, 'Benachrichtigungen');
-  await dialog(page).getByLabel(`Wenig Zeit bis (Datum) für ${me.displayName}`).fill(key);
+  const field = dialog(page).getByLabel(`Wenig Zeit bis (Datum) für ${me.displayName}`);
+  await field.fill(key);
+  await field.dispatchEvent('change');
   await expect.poll(async () => ((await (await request.get('/api/people')).json()) as { id: string; busyUntil: string | null }[]).find((p) => p.id === me.id)?.busyUntil).toBe(key);
   await dialog(page).getByRole('button', { name: 'Wieder normal' }).click();
   await expect.poll(async () => ((await (await request.get('/api/people')).json()) as { id: string; busyUntil: string | null }[]).find((p) => p.id === me.id)?.busyUntil).toBeNull();

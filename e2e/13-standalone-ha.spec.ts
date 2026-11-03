@@ -152,9 +152,14 @@ test('Wächter: „wer ist zu Hause" findet die Personen über ihren Namen, die 
     .not.toBeNull();
 });
 
-test('Der Wächter-Reiter zeigt beide Wächter mit Zustand', async ({ page }) => {
+test('Zuhause zeigt beide Wächter, die Verwaltung steht in den Einstellungen', async ({ page }) => {
   await anmelden(page);
-  await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  await nav(page).getByRole('button', { name: 'Zuhause' }).click();
+  await expect(page.getByTestId('home')).toContainText('Saugroboter');
+  await expect(page.getByTestId('home')).toContainText('Zweiter Roboter');
+  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Wächter', exact: true }).click();
   await expect(page.getByTestId('watcher-card').filter({ hasText: 'Saugroboter' })).toBeVisible();
   await expect(page.getByTestId('watcher-card').filter({ hasText: 'Zweiter Roboter' })).toBeVisible();
   await expect(page.getByTestId('watcher-activity')).toContainText('Karte angelegt');

@@ -61,6 +61,7 @@ test('Solange die Wächter aus sind, legen sie keine Karten an; nach dem Einscha
 
   // Einschalten: nur Administratoren, mit Stand-Abgleich
   const dialog = await einstellungen(page);
+  await dialog.getByRole('button', { name: 'Beta', exact: true }).click();
   await dialog.getByRole('checkbox', { name: 'Wächter in der Beta einschalten' }).check();
   expect((await (await page.request.get('/api/beta')).json()).watchers).toBe(true);
 
@@ -71,6 +72,7 @@ test('Solange die Wächter aus sind, legen sie keine Karten an; nach dem Einscha
 
 test('Push: „Nur für mich" und „An" lassen sich wählen und bleiben nach dem Neuladen', async ({ page }) => {
   const dialog = await einstellungen(page);
+  await dialog.getByRole('button', { name: 'Beta', exact: true }).click();
   await dialog.getByRole('radio', { name: 'Nur für mich' }).click();
   await expect(dialog.getByRole('radio', { name: 'Nur für mich' })).toHaveAttribute('aria-checked', 'true');
   const rene = ((await (await page.request.get('/api/people')).json()) as { id: string; name: string }[]).find((p) => p.name === 'Rene')!;
@@ -78,6 +80,7 @@ test('Push: „Nur für mich" und „An" lassen sich wählen und bleiben nach de
 
   await dialog.getByRole('radio', { name: 'An', exact: true }).click();
   const again = await einstellungen(page);
+  await again.getByRole('button', { name: 'Beta', exact: true }).click();
   await expect(again.getByRole('radio', { name: 'An', exact: true })).toHaveAttribute('aria-checked', 'true');
   expect((await (await page.request.get('/api/beta')).json()).push).toEqual({ mode: 'all' });
 });

@@ -97,6 +97,7 @@ test('Anmelden, Karte anlegen, nach dem Neuladen noch angemeldet; Abmelden sperr
   await expect(page.getByRole('list').getByText('Fenster putzen')).toBeVisible();
 
   const dialog = await einstellungen(page);
+  await dialog.getByRole('button', { name: 'Konto und Anmeldung' }).click();
   await dialog.getByRole('button', { name: 'Abmelden' }).click();
   await expect(page.getByTestId('login')).toBeVisible();
   await expect(page.getByText('Fenster putzen')).toHaveCount(0);
@@ -144,6 +145,7 @@ test('Passwort ändern: das neue gilt, das alte nicht mehr', async ({ browser, b
   try {
     await melden(page, 'ben', 'bens-passwort-1');
     const dialog = await einstellungen(page);
+    await dialog.getByRole('button', { name: 'Konto und Anmeldung' }).click();
     await dialog.getByRole('button', { name: 'Ändern' }).click();
     const form = page.getByRole('form', { name: 'Passwort ändern' });
     await form.getByLabel('Aktuelles Passwort').fill('bens-passwort-1');

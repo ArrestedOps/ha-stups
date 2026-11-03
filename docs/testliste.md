@@ -16,7 +16,7 @@ Für die Beispiele: Anna und Ben sind zwei Personen in Stups, jede mit dem eigen
 - [ ] **„‹ Dashboard"** oben links führt zum gewählten Dashboard (Einstellungen → Dashboard wählen)
 - [ ] Dunkel und hell folgen dem iPhone: Dunkel mit warmem Schwarz und orangem Schimmer, hell mit Creme und weichen Schatten. Alle Texte gut lesbar
 - [ ] Die Seite lässt sich nicht seitlich verschieben (nur die Filter-Chips wischen), die Tastatur verdeckt keine Felder
-- [ ] **Leiste unten** mit Boards, Agenda, Kalender; die letzte Karte einer Liste ist nicht abgeschnitten, das „+" verdeckt nichts
+- [ ] **Leiste unten** mit Heute, Boards, Kalender, Zuhause; die letzte Karte einer Liste ist nicht abgeschnitten, das „+" verdeckt nichts
 
 ## 2 · Karten wischen und sortieren
 
@@ -54,15 +54,15 @@ Für die Beispiele: Anna und Ben sind zwei Personen in Stups, jede mit dem eigen
 - [ ] **Übernahme:** Im Feld „Wiederholen" stehen unter „Für die nächste Karte übernehmen" sechs Schalter. Fotos und Kommentare sind aus, die anderen vier an
 - [ ] Im Verlauf der neuen Karte steht „Aus Wiederholung angelegt"
 
-## 6 · Agenda und Kalender
+## 6 · Liste (frühere Agenda) und Kalender
 
-- [ ] **Agenda:** Überfälliges oben in Rot, dann Heute, Morgen und die weiteren Tage mit Karten, aus allen Boards mit Boardname und Farbpunkt
+- [ ] **Liste** (Kalender › Liste): Überfälliges oben in Rot, dann Heute, Morgen und die weiteren Tage mit Karten, aus allen Boards mit Boardname und Farbpunkt
 - [ ] **Filter Personen:** Chip „Anna" zeigt nur ihre Karten, „Niemand" nimmt die nicht zugewiesenen dazu, die Zahlen stimmen
 - [ ] **Filter Boards:** nur die gewählten Boards. „Erledigte" blendet Erledigtes der letzten Woche ein, „Zurücksetzen" räumt auf
 - [ ] Der Kreis links erledigt eine Karte, ein Tipp öffnet sie (auch aus einem anderen Board)
 - [ ] **Kalender Woche:** Karten stehen zur Uhrzeit mit Boardfarbe, die aktuelle Uhrzeit ist markiert; Pfeile blättern, „Heute" springt zurück
 - [ ] **Tag und Monat:** Tag zeigt Titel und Boardname; im Monat zeigen Punkte die Karten, ein Tipp auf einen Tag öffnet ihn
-- [ ] **Filter** (Knopf oben rechts im Kalender) wirkt wie in der Agenda
+- [ ] **Filter** (Knopf oben rechts im Kalender) wirkt wie in der Liste
 - [ ] **Karte anlegen:** Auf einen freien Zeitpunkt tippen: Uhrzeit stimmt, Board wählbar, „Anlegen" legt sie an. „Alle Felder …" öffnet das volle Formular mit dem Termin
 
 ## 7 · Push-Benachrichtigungen
@@ -103,8 +103,8 @@ Zwei Personen, jede mit dem eigenen Handy.
 
 Zuerst Einstellungen › Diagnose-Seite › „Wächter-Test": Alle Zustände lesen und beide Auslöser müssen „geht" zeigen.
 
-- [ ] **Reiter:** In der Leiste unten gibt es „Wächter" (als Administrator immer). Er zeigt je Wächter Bedingung, aktuellen Zustand, offene Karte und die letzte Aktivität. Ein Mitglied (kein Administrator) sieht den Reiter ebenfalls (ohne Wächter mit einem Hinweis), kann aber nichts ändern: kein „+", keine Schalter
-- [ ] **Waschmaschine:** Reiter „Wächter" › „+" › Vorlage „Waschmaschine fertig", den Leistungs-Sensor wählen, Board und Titel prüfen, Speichern. Ein echter Waschgang: Nach dem Ende (Leistung 3 Minuten unter dem Schwellwert) entsteht die Karte, bei einer **anwesenden** Person, mit Push „Neue Karte für dich"
+- [ ] **Reiter:** In der Leiste unten gibt es „Zuhause" (nicht für Kinder). Er zeigt die Wächter nach Zustand (wartet, läuft, bald dran, ruhig); die Verwaltung (Liste, Bearbeiten, letzte Aktivität) steht unter Einstellungen › Haushalt › Wächter. Ein Mitglied (kein Administrator) sieht den Reiter ebenfalls (ohne Wächter mit einem Hinweis), kann aber nichts ändern: kein „+", keine Schalter
+- [ ] **Waschmaschine:** Einstellungen › Haushalt › Wächter › „Wächter aus Vorlagen" › Treffer „Waschmaschine" › „Einrichten", den Leistungs-Sensor wählen, Board und Titel prüfen, Speichern. Ein echter Waschgang: Nach dem Ende (Leistung 3 Minuten unter dem Schwellwert) entsteht die Karte, bei einer **anwesenden** Person, mit Push „Neue Karte für dich"
 - [ ] **Anwesenheit:** Eine Person ist unterwegs. Der Wächter gibt die Karte nur an Personen, die in Home Assistant `home` sind, und wechselt bei mehreren reihum
 - [ ] **Testen:** Im Wächter „Testen: Karte jetzt anlegen": Karte und Push kommen bei der richtigen Person an; im Verlauf der Karte steht der Wächter
 - [ ] **Zähler und Heimkehr (Saugroboter):** Vorlage „Saugroboter: Behälter leeren". An einem Tag, an dem alle weg sind: Nach der dritten Reinigung erscheint die Karte **ohne Zuständige** mit dem Hinweis „Wartet auf die erste Person, die heimkommt". Wer zuerst nach Hause kommt, bekommt sie samt Nachricht. Wird die Karte erledigt, beginnt der Zähler bei 0
@@ -140,7 +140,7 @@ Zuerst Einstellungen › Diagnose-Seite › „Wächter-Test": Alle Zustände le
 Nach `docs/docker.md` aufgebaut, zum Beispiel auf der NAS.
 
 - [ ] Erster Start: `docker logs stups` zeigt „Einrichtung: … Code". Im Browser erscheint die Einrichtung, ein falscher Code wird abgelehnt, mit dem richtigen entsteht der Administrator und man ist gleich drin. Danach lässt sich die Einrichtung nicht mehr öffnen
-- [ ] Drei Reiter (Boards, Agenda, Kalender), kein „Dashboard"-Button, in den Einstellungen nichts von Home Assistant oder Wächtern (Benachrichtigungen nur, wenn ntfy eingerichtet ist, siehe 14)
+- [ ] Drei Reiter (Heute, Boards, Kalender), kein „‹ Dashboard"-Button, in den Einstellungen nichts von Home Assistant oder Wächtern (Benachrichtigungen nur, wenn ntfy eingerichtet ist, siehe 14)
 - [ ] Personen & Zugriff › Benutzer anlegen: Ben bekommt ein Konto, meldet sich auf seinem Handy an und sieht die gemeinsamen Boards. Er sieht keine Benutzerverwaltung
 - [ ] Neu laden bzw. App schließen und wieder öffnen: man bleibt angemeldet. Einstellungen › Abmelden führt zur Anmeldung
 - [ ] Passwort ändern: danach melden sich die anderen Geräte der Person ab
@@ -164,7 +164,7 @@ Nach dem Abschnitt „Push-Nachrichten über ntfy" in `docs/docker.md`: `STUPS_N
 
 Nach dem Abschnitt „Mit Home Assistant verbinden" in `docs/docker.md`.
 
-- [ ] `docker logs stups` zeigt „Verbindung zu Home Assistant: …" und keine Meldung zu abgelehnter Anmeldung. Die Oberfläche hat vier Reiter, darunter **Wächter**
+- [ ] `docker logs stups` zeigt „Verbindung zu Home Assistant: …" und keine Meldung zu abgelehnter Anmeldung. Die Oberfläche hat vier Reiter, darunter **Zuhause**
 - [ ] Personen & Zugriff › „Aus Home Assistant": Die Personen aus Home Assistant stehen dort (ohne die, die es in Stups schon gibt). **Hinzufügen** macht sie zur Person
 - [ ] Wächter anlegen (Vorlage „Waschmaschine fertig" o. ä.), Ereignis auslösen: Die Karte erscheint, mit „wer ist zu Hause" bekommt sie nur, wer in Home Assistant gerade zu Hause ist (Namen gleich)
 - [ ] In Home Assistant erscheinen die Sensoren `sensor.stups_…` und aktualisieren sich
@@ -239,10 +239,10 @@ Zwei Geräte (zum Beispiel iPhone und Mac), beide in der Beta.
 - [ ] App im Hintergrund, am anderen Gerät mehrere Karten ändern, wieder öffnen: aktueller Stand
 - [ ] Flugmodus kurz an und wieder aus, am anderen Gerät währenddessen etwas ändern: Nach dem Verbinden stimmt der Stand
 
-## 21 · Zahnrad für die Einstellungen (seit 1.13.1)
+## 21 · Einstellungen oben rechts (seit 1.13.1, Avatar seit 1.18.0)
 
-- [ ] Oben rechts in der Kopfzeile jedes Reiters (Boards, Agenda, Kalender, Wächter) steht ein Zahnrad. Ein Tipp öffnet die Einstellungen
-- [ ] Das Zahnrad verdeckt nichts: Im Board neben „Dashboard", im Kalender neben „Filter", bei den Wächtern neben „+". Auch mit „Offline"-Hinweis und langem Board-Namen passt alles in die Zeile
+- [ ] Oben rechts in der Kopfzeile jedes Reiters (Heute, Boards, Kalender, Zuhause) steht dein Avatar. Ein Tipp öffnet die Einstellungen
+- [ ] Der Avatar verdeckt nichts: links „‹ Dashboard", im Kalender neben „Filter". Auch mit „Offline"-Hinweis und langem Board-Namen passt alles in die Zeile
 - [ ] Der Weg über den Board-Namen › „Einstellungen" geht weiter
 
 ## 22 · Englisch (seit 1.14.0)
@@ -267,7 +267,7 @@ Am iPhone, in der Beta zuerst. Zum Ausprobieren: iPhone-Sprache auf Englisch ste
 
 Am iPhone, in der Beta zuerst.
 
-- [ ] **Farbkreis:** Einstellungen › Farbe zeigt einen Farbkreis mit dem Plus-Knopf als Vorschau in der Mitte. Antippen und Ziehen auf dem Ring ändert die Farbe sofort (Knöpfe, aktiver Reiter, Plus-Knopf, Schrift in Farbe), gespeichert wird beim Loslassen
+- [ ] **Farbkreis:** Einstellungen › Sprache und Farbe zeigt einen Farbkreis mit dem Plus-Knopf als Vorschau in der Mitte. Antippen und Ziehen auf dem Ring ändert die Farbe sofort (Knöpfe, aktiver Reiter, Plus-Knopf, Schrift in Farbe), gespeichert wird beim Loslassen
 - [ ] **Hell und Dunkel:** Gerät auf Hell und auf Dunkel stellen: die Farbe bleibt, wird aber passend hell oder dunkel. Bei hellem Grün oder Türkis ist die Schrift auf dem Knopf dunkel und gut lesbar, bei Rot, Orange, Blau und Violett weiß
 - [ ] **Bleibt:** App schließen und neu öffnen, am zweiten Gerät derselben Person öffnen: die Farbe ist dieselbe, schon auf der Anmeldeseite (Standalone) ohne Aufblitzen in Orange
 - [ ] **Je Person:** Eine zweite Person wählt eine andere Farbe; beide sehen ihre eigene
@@ -305,7 +305,7 @@ Nur am echten Haus: Home Assistant mit einem Lautsprecher (`media_player`), eine
 Am iPhone, in der Beta zuerst. Mindestens zwei Personen, ein paar erledigte Karten diese Woche.
 
 - [ ] **Aufwand:** In einer Karte Chip „Aufwand“: Klein, Mittel, Groß, oder wieder „Nicht angegeben“. Wird sofort gespeichert
-- [ ] **Umschalter:** Agenda › „Termine | Fairness“. Die Wahl bleibt nach dem Neuladen
+- [ ] **Diese Woche:** Heute › „Bei den anderen" öffnet die Fairness-Seite (Woche oder Monat)
 - [ ] **Zahlen:** Diese Woche / Dieser Monat: Satz oben („… habt ihr N Aufgaben erledigt“), je Person „N erledigt“ und ein Balken. Eine große Karte erledigen: der Balken der Person wächst um 3, eine kleine um 1, ohne Angabe um 2
 - [ ] **Keine Rangliste:** Keine Plätze, Medaillen, Pfeile; die Reihenfolge ist die der Personenliste, nicht nach Zahl; alle Balken gleiche Farbe. Bei null Karten steht „Das kommt noch.“
 - [ ] **Sonntag:** Bei einer Person „Wöchentliche Zusammenfassung am Sonntag“ einschalten. Sonntagabend ab 18:00 kommt genau eine Nachricht, nicht in der Ruhezeit, nicht bei null erledigten Karten, nicht ins Haus. Ausgeschaltet kommt nichts
@@ -315,7 +315,7 @@ Am iPhone, in der Beta zuerst. Mindestens zwei Personen, ein paar erledigte Kart
 Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Benutzer (oder ein Konto im eigenen Container); dazu zwei Erwachsene, einer davon Administrator.
 
 - [ ] **Einrichten:** Personen & Zugriff › Person › „Rolle Kind“: „Ist ein Kind“ einschalten, „Sieht“ wählen, „Erledigt braucht eine Bestätigung“, „Wer bestätigt“. Bei einem Administrator ist der Schalter aus und erklärt, warum
-- [ ] **Reduzierte App:** Das Kind sieht keinen Plus-Knopf, kein Menü an der Karte, kein Wischen, kein Ziehen, keinen Reiter „Wächter“, keine Fairness, in den Einstellungen nur Sprache und Farbe (und „Abmelden“ im eigenen Container)
+- [ ] **Reduzierte App:** Das Kind sieht keinen Plus-Knopf, kein Menü an der Karte, kein Wischen, kein Ziehen, keinen Reiter „Zuhause“, keine Fairness, in den Einstellungen nur Sprache und Farbe (und „Abmelden“ im eigenen Container)
 - [ ] **Sichtbarkeit:** „Nur Boards mit eigenen Karten“: im Board-Wechsler nur diese Boards, auch Agenda und Kalender zeigen nur deren Karten. Wird dem Kind eine Karte in einem neuen Board zugewiesen, erscheint das Board sofort
 - [ ] **Eigene Karte:** Abhaken, Checklistenpunkt abhaken, kommentieren, Foto und Link anhängen funktionieren. In einer fremden Karte (bei „Alle Boards“) ist alles nur zum Ansehen
 - [ ] **Bestätigung:** Das Kind hakt ab: Hinweis „Gemeldet: wartet auf Bestätigung“, die Karte bleibt offen mit dem Zeichen „Wartet auf Bestätigung“. Die gewählten Erwachsenen bekommen eine Push-Nachricht mit „Bestätigen“ und „Nochmal“
@@ -331,6 +331,42 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] **Aus Vorlage:** Board-Wechsler › Vorlage „Haushalt“: Vorschau mit Spalten, Kategorien, Karten; anlegen. Termine liegen ab heute, Karten mit Termin nach heute in „Geplant“. Auf englischem Gerät kommt alles englisch
 - [ ] **Jede Vorlage:** Haushalt, Umzug, Renovierung, Urlaub packen, Baby kommt, Ideen und Unternehmungen anlegen und ansehen: sinnvoll und vollständig
 - [ ] **Eigene Vorlage:** Board-Einstellungen › Vorlagen: Name eingeben, speichern. Daraus ein neues Board: gleiche Spalten, Kategorien und offene Karten, ohne Zuweisungen, Anhänge, Kommentare. Löschen mit Rückfrage
+
+## 29 · Heute, Zuhause, Wächter aus Vorlagen, Einstellungen (seit 1.18.0)
+
+**Kopfzeile und Leiste**
+
+- [ ] Auf allen vier Reitern steht links „‹ Dashboard" (nur im Add-on) und führt zum gewählten Dashboard; rechts Offline-Hinweis (Flugmodus) und dein Avatar mit Bild oder Initiale. Nichts ragt seitlich heraus, auch nicht mit langem Board-Namen
+- [ ] Die App startet auf **Heute**. Ein Kind und der Container ohne Home Assistant haben nur drei Reiter
+- [ ] Türkis erscheint nur bei dem, was vom Haus kommt (Wächter-Karten, Zuhause); der Farbkreis hat kein Grün und Türkis. Überschriften der Reiter in der eigenen Schrift
+
+**Heute**
+
+- [ ] „Für dich": deine offenen Karten bis morgen (überfällig und heute zuerst); die Uhrzeit ist rot, wenn überfällig. „Bei den anderen" führt zu „Diese Woche"
+- [ ] „Vom Haus": eine echte Wächter-Karte erscheint mit „Waschmaschine fertig · vor … Min.", dem Grund („reihum unter allen, die zu Hause sind") und den Knöpfen **Erledigt** und **Weitergeben**. Weitergeben schickt die Karte an die nächste anwesende Person (mit Push), sie zählt nicht als erledigt. Ist niemand sonst zu Hause: „Gerade ist niemand sonst dran"
+- [ ] Kind: sieht nur eigene Karten, kein „Bei den anderen", kein „Weitergeben"
+
+**Zuhause**
+
+- [ ] Während die Waschmaschine läuft, steht sie unter „Läuft gerade" (mit Dauer), danach „Wartet auf jemanden" (Person, Alter, **Stupsen**), nach dem Erledigen unter „Ruhig". Zähler-Wächter (Saugroboter) stehen mit „2 von 3" unter „Bald dran"
+- [ ] Home Assistant ausschalten oder trennen: „Keine Verbindung zu Home Assistant seit …", Boards und Heute gehen weiter
+- [ ] Administratoren sehen „Stups hat N weitere Geräte gefunden"
+
+**Gefunden und Wächter als Satz**
+
+- [ ] Einstellungen › Haushalt › Wächter › „Wächter aus Vorlagen": Treffer zu deinen echten Geräten mit Begründung; schon beobachtete fehlen. „Auch ohne Gerät" legt eine wiederkehrende Karte an. „Alle Vorlagen ansehen"
+- [ ] „Einrichten" füllt den Satz („Wenn … länger als … unter … liegt, bekommt … die Karte …"); jedes Feld lässt sich antippen und ändern. „Mehr Regeln" zeigt Board, Spalte, Fälligkeit, Zähler, Sperrzeit, Erledigt-Bedingung
+- [ ] **Probelauf** mit einem echten Gerät: Diagramm und Satz („3 Auslösungen erkannt, kein Fehlalarm"); bei einem wackelnden Sensor der Hinweis „Mindestdauer erhöhen?"; bei einer neuen Entität ein Hinweis statt Diagramm
+- [ ] Bei Vorlagen mit Leistungssensor ist „Automatisch erledigen" aus, mit Begründung
+- [ ] **Erst vorschlagen:** Alle Anwesenden bekommen „Wer übernimmt?" mit Knopf; wer zuerst tippt, bekommt die Karte, der Zweite erfährt, wer schneller war. Nach 30 Minuten ohne Antwort greift der Rückfall
+- [ ] **Tonnen rausstellen** (Abfallkalender, Vorlauf 12 Stunden) legt am Vorabend eine Karte an, genau eine je Termin; **Wäsche rein, es regnet** reagiert auf Regen in der Vorhersage (Abfrage alle 30 Minuten)
+
+**Einstellungen**
+
+- [ ] Gruppen und Seiten: Administrator sieht „Für mich", „Haushalt", „Home Assistant", „Hilfe und Daten"; ein Mitglied nur „Für mich" und „Hilfe und Daten"; ein Kind nur „Sprache und Farbe". Die Wahl „HA-Kopfzeile ausblenden" gibt es für Mitglieder unter „Sprache und Farbe", für Administratoren unter „Dashboard und Kopfzeile"
+- [ ] Nichts fehlt gegenüber früher: Sprache, Farbe, Standard-Uhrzeit, Zurück-Dashboard samt eigenem Pfad, Bubble-Card-YAML kopieren, Test-Nachricht, Ruhezeit, Sonntagsrückblick, Stand der Zustellung, Papierkorb, Archiv, Umzug, Board-Vorlagen, Beta, Diagnose-Seite, im Container Passwort, Passkeys und Abmelden
+- [ ] **Bild:** „Bild ändern" lädt ein eigenes Bild hoch, es erscheint im Avatar und bei den Karten; „Bild entfernen" geht zurück zum Bild aus Home Assistant (oder zur Initiale). Ein Administrator ändert Bilder auch für andere und für Kinder
+- [ ] **Wenig Zeit:** Datum eintragen; die Rotationen der Wächter überspringen die Person, auf „Diese Woche" steht der Hinweis. „Wieder normal" nimmt es zurück
 
 ## Bekannte Lücken
 

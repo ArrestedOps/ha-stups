@@ -58,6 +58,8 @@ export interface Suggestion {
   entityId: string;
   name: string;
   reason: string;
+  /** Einheit des Sensors (zum Beispiel W), falls Home Assistant eine meldet */
+  unit?: string;
   /** Welche Fassung der Vorlage passt: Leistung (power) oder Programmstatus des Geräts (status) */
   variant: 'power' | 'status' | 'default';
   /** Ersatz für den Entwurf der Vorlage (beim Programmstatus: Wechsel in „finished") */
@@ -204,6 +206,7 @@ const STATUS_STATES = new Set(['inactive', 'ready', 'delayedstart', 'run', 'runn
 const STATUS_ENTITY = /operation_state|program_phase|programm?_?status|betriebszustand|status/;
 const BIN_WORDS = /m[üu]ll|abfall|tonne|waste|garbage|trash|rubbish|bin\b|bins\b/;
 
+const unitOf = (s: HaState): { unit?: string } => (typeof s.attributes?.unit_of_measurement === 'string' ? { unit: s.attributes.unit_of_measurement } : {});
 const norm = (s: string): string => s.replace(/[^a-z]/g, '');
 const num = (s: string): number | null => (s !== '' && s !== 'unknown' && s !== 'unavailable' && Number.isFinite(Number(s)) ? Number(s) : null);
 /** Höchstens so viele Treffer je Vorlage, damit eine Liste mit 40 Batteriesensoren nicht alles zuschüttet */
@@ -226,7 +229,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>): Sugg
       const domain = s.entity_id.split('.')[0];
       if (!words.test(hay(s)) || (id === 'washer' && WORDS.dryer.test(hay(s)))) continue;
       if (domain === 'sensor' && s.attributes?.device_class === 'power') {
-        hits.push({ templateId: id, entityId: s.entity_id, name: nameOf(s), variant: 'power', reason: t('{name} misst die Leistung', { name: nameOf(s) }) });
+        hits.push({ templateId: id, entityId: s.entity_id, name: nameOf(s), variant: 'power', ...unitOf(s), reason: t('{name} misst die Leistung', { name: nameOf(s) }) });
       } else if ((domain === 'sensor' || domain === 'select') && STATUS_ENTITY.test(lower(s.entity_id)) && STATUS_STATES.has(norm(lower(s.state)))) {
         const base = templates.get(id)!.draft!;
         hits.push({
@@ -265,7 +268,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>): Sugg
       .filter((s) => s.entity_id.startsWith('sensor.') && s.attributes?.device_class === 'battery' && num(s.state) !== null)
       .sort((a, b) => num(a.state)! - num(b.state)!)
       .slice(0, MAX_PER_TEMPLATE)
-      .map((s): Suggestion => ({ templateId: 'battery', entityId: s.entity_id, name: nameOf(s), variant: 'default', reason: t('{name}: Batterie bei {n} %', { name: nameOf(s), n: Math.round(num(s.state)!) }) })),
+      .map((s): Suggestion => ({ templateId: 'battery', entityId: s.entity_id, name: nameOf(s), variant: 'default', ...unitOf(s), reason: t('{name}: Batterie bei {n} %', { name: nameOf(s), n: Math.round(num(s.state)!) }) })),
   );
 
   // Saugroboter

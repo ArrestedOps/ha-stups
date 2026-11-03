@@ -52,7 +52,7 @@ On first start the log shows a line like
 Einrichtung: Öffne http://192.168.1.20:8099 und gib diesen Code ein: K7Q4-MX2P
 ```
 
-(setup: open the address and enter this code). Open the address in the browser, enter the code and create the first administrator (username, name, password with at least 10 characters). After that, setup is closed for good. You create more users under **Settings › People & Access › Create user**.
+(setup: open the address and enter this code). Open the address in the browser, enter the code and create the first administrator (username, name, password with at least 10 characters). After that, setup is closed for good. You create more users under **Settings › Household › People and children › Create user**.
 
 Instead of the code you can also put the first administrator right into the compose file (take the password out again afterwards, it is only needed at the very first start):
 
@@ -92,13 +92,13 @@ Instead of typing the password, you sign in with the fingerprint, face or screen
 
 **Requirement:** `STUPS_PUBLIC_URL` is an `https://` address with a name, for example `https://stups.example.org`. Passkeys belong to a domain; browsers only allow them over HTTPS (or `localhost`) and never for an IP address like `http://192.168.1.20:8099`. If the address does not fit, passkeys are off, and the log says so at start. Stups takes the domain for verification from this address, not from request headers.
 
-**Setting up:** Settings › Passkeys › **Add passkey**, give it a name (for example "Anna's iPhone"), the device asks for fingerprint or face. Repeat once on every device you use. After that the sign-in page shows **Sign in with passkey**, without a username at all.
+**Setting up:** Settings › For me › Account and sign-in › Passkeys › **Add passkey**, give it a name (for example "Anna's iPhone"), the device asks for fingerprint or face. Repeat once on every device you use. After that the sign-in page shows **Sign in with passkey**, without a username at all.
 
 **Important**
 
 - **The domain must not change.** A passkey only applies to the domain it was created under. If you switch to another address, you create new ones (with the password you can always get in).
 - **The device is always confirmed.** Stups requires fingerprint, face or PIN; merely touching the key is not enough.
-- **Removing** works under Settings › Passkeys. That deletes it only in Stups. On the device the passkey stays until you delete it there. If an account is deleted, its passkeys disappear with it.
+- **Removing** works under Settings › For me › Account and sign-in › Passkeys. That deletes it only in Stups. On the device the passkey stays until you delete it there. If an account is deleted, its passkeys disappear with it.
 - **Stored safely:** the database holds only the public key, which is not secret. Wrong attempts count like wrong passwords and lead to the same waiting time.
 - The Home Assistant app does not use passkeys: there, Home Assistant signs you in.
 
@@ -121,8 +121,8 @@ Without Home Assistant there is no Companion App. Stups sends reminders, nudges 
       # STUPS_NTFY_PASSWORD: "…"
 ```
 
-3. In Stups, under **Settings › People & Access**, open the person and enter a topic under **Push via ntfy** (**Random topic** creates one). In the ntfy app use the same server and subscribe to this topic.
-4. Under **Settings › Notifications › Send to me** send a test message.
+3. In Stups, under **Settings › For me › Notifications**, enter a topic under **Push via ntfy** (administrators do it for others under **Household › People and children**) (**Random topic** creates one). In the ntfy app use the same server and subscribe to this topic.
+4. Under **Settings › For me › Notifications › Send to me** send a test message.
 
 **Important**
 
@@ -182,7 +182,7 @@ Updating: `docker compose pull && docker compose up -d`; in Container Manager do
 
 ## Moving from the Home Assistant app
 
-In the app, export the data under **Settings › Move**; it lands in `/share/stups-umzug` of Home Assistant. Copy this folder `stups-umzug` into a folder on the NAS (for example `./share`) and mount it on the first start of the new container:
+In the app, export the data under **Settings › Help and data › Bin, archive, move**; it lands in `/share/stups-umzug` of Home Assistant. Copy this folder `stups-umzug` into a folder on the NAS (for example `./share`) and mount it on the first start of the new container:
 
 ```yaml
     volumes:

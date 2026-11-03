@@ -7,13 +7,13 @@ Das ist die **Beta-Version** von Stups: dieselbe App wie „Stups", aber mit **e
 ## Was ist anders als in der normalen App
 
 - **Eigene Daten.** Die Beta hat ihren eigenen Speicher. Boards und Karten der normalen App sind nicht darin, außer du kopierst sie einmal hinein (siehe unten).
-- **Push und Wächter sind zunächst aus.** Sonst bekäme die Familie Erinnerungen doppelt. Unter **Einstellungen › Beta** schaltet ein Administrator beides gezielt ein, zum Beispiel Push nur für sich.
+- **Push und Wächter sind zunächst aus.** Sonst bekäme die Familie Erinnerungen doppelt. Unter **Einstellungen › Hilfe und Daten › Beta** schaltet ein Administrator beides gezielt ein, zum Beispiel Push nur für sich.
 - **Eigene Namen.** Push-Titel beginnen mit „Beta ·", Sensoren heißen `sensor.stups_beta_…`, das Ereignis für Automationen heißt `stups_beta_create_card`, die Knöpfe in Nachrichten gehören nur der Beta.
 - **Eigenes Symbol** („BETA") und eigener Eintrag in der Seitenleiste („Stups Beta").
 
 ## Echte Daten zum Testen kopieren
 
-1. In der **normalen** Stups-App: **Einstellungen › Umzug › Exportieren**. Die Daten landen in `/share/stups-umzug`.
+1. In der **normalen** Stups-App: **Einstellungen › Hilfe und Daten › Papierkorb, Archiv, Umzug › Exportieren**. Die Daten landen in `/share/stups-umzug`.
 2. **Erst danach** die Beta zum ersten Mal starten. Sie übernimmt den Export beim ersten Start, aber nur dann, wenn sie noch keine eigenen Daten hat.
 3. Die Beta nimmt die Daten **als Kopie**; die normale App bleibt unberührt.
 

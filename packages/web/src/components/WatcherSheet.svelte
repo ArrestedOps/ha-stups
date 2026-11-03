@@ -21,7 +21,7 @@
     id,
     template = undefined,
     hit = undefined,
-  }: { id: string | null; template?: string; hit?: { entityId: string; name: string; draft?: TemplateDraft } } = $props();
+  }: { id: string | null; template?: string; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } } = $props();
 
   // Aus dem Reiter „Wächter" geht es dorthin zurück, sonst in die Einstellungen
   const back = () => (ui.tab === 'home' ? closeSheet() : openSettings('watchers'));
@@ -138,7 +138,7 @@
     picking = null;
   }
 
-  function applyTemplate(tpl: WatcherTemplate, found?: { entityId: string; name: string; draft?: TemplateDraft }) {
+  function applyTemplate(tpl: WatcherTemplate, found?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft }) {
     form = applyDraft(form, tpl, found);
     // Ehrlich beim Selbst-Erledigen: ein Sensor, der das Erledigen nicht belegen kann, schaltet es aus und sagt warum
     selfNote = tpl.canSelfComplete ? '' : (tpl.whyNoSelfComplete ?? '');

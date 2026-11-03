@@ -129,6 +129,7 @@ export interface WatcherSuggestion {
   name: string;
   reason: string;
   variant: 'power' | 'status' | 'default';
+  unit?: string;
   draft?: TemplateDraft;
 }
 

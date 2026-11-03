@@ -34,7 +34,7 @@ export type Sheet =
   | { type: 'boardSettings' }
   | { type: 'settings'; page?: SettingsPageId }
   | { type: 'people' }
-  | { type: 'watcher'; id: string | null; template?: string; hit?: { entityId: string; name: string; draft?: TemplateDraft } }
+  | { type: 'watcher'; id: string | null; template?: string; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
   | { type: 'found' }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
@@ -300,6 +300,9 @@ async function load(): Promise<void> {
     const [boards, people] = await Promise.all([api.boards(), api.people()]);
     ui.boards = boards;
     ui.people = people;
+    // die eigene Person folgt der Liste (Bild, „wenig Zeit" … ändern sich auch auf anderen Geräten)
+    const mine = people.find((p) => p.id === ui.me?.id);
+    if (mine && ui.me) ui.me = { ...ui.me, ...mine };
     if (!ui.boards.some((b) => b.id === ui.boardId)) {
       ui.boardId = ui.boards[0]?.id ?? null;
       ui.columnId = null;

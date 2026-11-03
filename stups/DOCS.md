@@ -7,13 +7,13 @@ A Kanban board for the household, right inside Home Assistant (Ingress, no separ
 ## Setup
 
 1. Start the app and open **Stups** in the sidebar.
-2. Open **Board switcher › Settings › People & Access**:
+2. Open **avatar at the top right › Household › People and children** (administrators):
    - **Add people:** the people from Home Assistant (Settings › People) are offered. Whoever is added can be assigned cards and receives push messages.
    - **Choose push devices:** tick, per person, the devices that should receive the messages. The devices where the Home Assistant Companion App is signed in appear. Everyone chooses their own devices; an administrator can also do it for others.
    - **Set access:** *Everyone in Home Assistant* (every Home Assistant user may open the app) or *Only these people* (only the list and administrators; anyone else who opens it sees "No access" and appears for administrators under "Waiting for approval").
-3. Under **Settings › Back to the dashboard** choose the dashboard for the back button.
-4. **Settings › Language:** Automatic (follows the device), German or English. The choice applies to you on all your devices, push messages included.
-5. **Settings › Colour:** pick your favourite colour on the colour wheel. Buttons, the active tab and coloured text follow at once; it applies to you on all your devices. "Orange (default)" restores the original look.
+3. Under **Settings › Home Assistant › Dashboard and header** choose the dashboard for the "‹ Dashboard" button at the top left.
+4. **Settings › For me › Language and colour:** Automatic (follows the device), German or English. The choice applies to you on all your devices, push messages included.
+5. **Settings › For me › Language and colour:** pick your favourite colour on the colour wheel (green and teal are missing: teal belongs to the house, see "Today"). Buttons, the active tab and coloured text follow at once; it applies to you on all your devices. "Orange (default)" restores the original look.
 
 ### Roles
 
@@ -41,9 +41,9 @@ daily_summary_time: "08:00"  # Daily summary
 overdue_nag_time: "18:00"    # Follow-up for overdue cards
 ```
 
-You find the device names in Home Assistant under Developer tools › Actions (services `notify.mobile_app_…`); in the app, Settings › People & Access shows which devices Home Assistant knows.
+You find the device names in Home Assistant under Developer tools › Actions (services `notify.mobile_app_…`); in the app, Settings › Household › People and children shows which devices Home Assistant knows.
 
-**Two ways, one result:** if at least one person is entered under `users`, **this list applies** (at every start of the app): the people named are created and get their devices, whoever is not on the list is no longer a person (their cards keep the assignment), and access follows `access_mode`. In the app, people, devices and access are then locked and can only be viewed; display name and quiet time can still be changed. Restart the app after changing the configuration. If `users` stays empty, you manage everything in the app under Settings › People & Access, and without a choice "Everyone in Home Assistant" applies.
+**Two ways, one result:** if at least one person is entered under `users`, **this list applies** (at every start of the app): the people named are created and get their devices, whoever is not on the list is no longer a person (their cards keep the assignment), and access follows `access_mode`. In the app, people, devices and access are then locked and can only be viewed; display name and quiet time can still be changed. Restart the app after changing the configuration. If `users` stays empty, you manage everything in the app under Settings › Household › People and children, and without a choice "Everyone in Home Assistant" applies.
 
 ## Usage
 
@@ -53,7 +53,7 @@ You find the device names in Home Assistant under Developer tools › Actions (s
 - **Swiping:** swiping a card to the left moves it to the next status, to the right to the previous one. Behind the card it says where it will jump. "Planned" is skipped.
 - **Moving and more:** via "⋯" on the card (Move to …, Mark as done, Duplicate, Details, Delete). On large screens cards can be dragged with the mouse.
 - **Planned:** cards with a due date after today sit in "Planned" and move to "Open" on the due date. This keeps "Open" tidy. Per board you can choose which column is "Planned" and which is "Done".
-- **Settings** are behind the **gear at the top right** of every tab.
+- **Settings** are behind the **avatar at the top right** of every tab.
 
 ### Creating cards quickly
 
@@ -82,35 +82,42 @@ Good to know: a **weekday** on its own means the next one after today (if today 
 
 Dark and light follow the iPhone (or the device). A coloured **bar on the left** of every card shows urgency: red overdue, orange today, yellow in the next two days, grey later. The card shows the title (at most two lines) and **one line** with the most important things: due date (red when overdue), repeat, priority as a flag (orange medium, red high), checklist ("1/2"), comments, links, attachments and cost. **Categories** appear as small coloured dots on the right. When the card was created ("Created …") is shown in the card window with time and person.
 
-### Agenda
+### The four tabs and the header
 
-The bar at the bottom switches between **Boards** and **Agenda**. The agenda shows all cards with a due date from all boards, sorted by day: first **Overdue**, then Today, Tomorrow and every further day with something due. The circle on the left completes a card, a tap opens it.
+The bar at the bottom has four tabs: **Today** (the start), **Boards**, **Calendar** and **Home**. A child and the container without Home Assistant have three (no Home). The same header sits on every tab: **"‹ Dashboard"** on the left (add-on only; takes you back to the Home Assistant dashboard), an **offline notice** on the right when the connection is missing, and your **avatar**. The avatar opens the settings. It shows your picture (from Home Assistant or uploaded by you) or your initial in your colour.
 
-At the top you filter what you want to see:
+Two colours: your **accent** (orange unless you pick one) belongs to people and actions; **teal** belongs to everything that comes from the house (watcher cards, Home). That is why green and teal are missing from the colour wheel.
 
-- **People:** "All", yourself ("Me"), every other person and "Nobody" (cards without assignees). You can choose several; a card appears as soon as one of the chosen people is assigned. The number on the chip says how many cards belong to it.
-- **Boards:** one chip per board (with board colour). Several are possible here too.
-- **Completed** shows the cards completed in the last seven days. "Reset" clears all filters. The filter is remembered on the device.
+### Today
 
-The agenda loads the next 60 days. If nothing is due in that time, it looks a year ahead right away; cards further away are fetched by **"Load 60 more days"** (also with an empty list).
+Today shows at a glance what is on for you:
 
-### Fairness: who does how much?
+- **From the house** (only when there is something): open cards from watchers that are assigned to you or to nobody yet. Each shows what triggered it and when ("Washing machine done · 4 min ago") and why you are up ("in turn among everyone who is home"). Buttons: **Done**, **Pass on** (to the next person in the rotation, without counting as done) and, with "Suggest first", **Take it**.
+- **For you:** your open cards with a due date until the end of tomorrow, overdue and today first. The time is red when overdue and in the accent colour when due today.
+- **With the others:** one line with the avatars and the number of open cards. It leads to **This week**.
 
-At the top of the agenda, **Dates | Fairness** switches the view. Fairness shows, for **this week** or **this month**, how many cards each person completed, as a bar for the *effort*. There is no ranking: no places, no medals, the order is that of the people list, and all bars have the same colour. It is about seeing the load, not about a competition.
+A child only sees "From the house" (its own cards) and "For you". When nothing is open, a friendly sentence appears.
 
-- **Effort:** every card has an optional *Effort* (small = 1, medium = 2, large = 3). Without it, a card counts as medium. A large task weighs more than a small one.
-- Under the bar you see the cards a person created, nudges answered and watcher cards completed, if there are any.
-- Cards of children that need confirmation count only **after** the confirmation. Children do not see the fairness view.
-- **Sunday summary (optional):** every person can switch on, under *People & access*, a message on Sunday evening (from 18:00, not during quiet time): "This week you completed 14 tasks together." It is off until somebody switches it on, and it never says "0".
+### This week: who does how much?
+
+Through "With the others" on Today you reach **This week** (or this month). It shows how many cards each person completed, as bars for the *effort*. There is **no ranking**: no places, no medals, no percentages, the order is that of the people list, all bars have the same colour. The point is to see the load, not to compete.
+
+- **Effort:** every card has an optional *effort* (small = 1, medium = 2, large = 3). Without a choice it counts as medium. A large task weighs more than a small one.
+- Below the bar, when there are any: cards created, nudges answered and watcher cards completed. One line tells how many cards **came from the house** this week. If somebody has **little time**, it says so.
+- **Waiting for you:** confirmations from children that you may give, with **Looks good** and **Once more**.
+- Cards from children with confirmation only count **after** the confirmation. Children do not see the page.
+- **Sunday summary (optional):** every person can switch on a message on Sunday evening under *Settings › For me › Notifications* (from 18:00, not during quiet time): "This week you completed 14 tasks together." It is off until somebody switches it on, and it never says "0".
+- **Little time:** whoever has a busy week sets a date under *Settings › For me › Notifications* (up to 90 days). Until then the watchers' rotations skip that person. You can still assign cards by hand. Administrators can set it for others too.
 
 ### Calendar
 
-The third tab at the bottom shows the cards with a due date in a calendar, as **Day**, **Week** or **Month**. The arrows page through, "Today" jumps back.
+The third tab at the bottom shows the cards with a due date in a calendar, as **Day**, **Week**, **Month** or **List**. The arrows page through, "Today" jumps back.
 
 - **Day and week** show a time grid. A card sits at the time of its due date in the colour of its board; cards at the same time sit side by side. A tap opens the card, a tap on the day number in the week view opens the day.
 - **Month:** dots (on a large screen the titles) show where something is due. A tap on a day opens the day view.
 - **Creating a card:** tap a free time in the grid. A short form opens with the due date: choose title, board and assignees, "Create". If exactly one board or person is chosen in the filter, they are preset. "All fields …" opens the full form.
-- **Filter:** the "Filter" button at the top right shows the same people and board filters as the agenda.
+- **List:** the former agenda. All cards with a due date from all boards, sorted by day: **Overdue** first, then Today, Tomorrow and every further day. Tap the circle on the left to complete a card, tap the card to open it. It loads the next 60 days; if nothing is due in that time it looks a year ahead, and **"Load 60 more days"** fetches cards further away.
+- **Filter:** the "Filter" button at the top right (in the list: the chips above it) filters by **people** (yourself, every other person, "Nobody" for cards without an assignee) and **boards**; **Done** shows the ones completed in the last seven days, "Reset" clears all filters. The filter is remembered on the device.
 
 ### Recurring tasks
 
@@ -133,7 +140,7 @@ Recipients are always the **assigned** people. Cards without assignment or witho
 
 ### Nudging
 
-With **Nudge** you give another person a friendly nudge for a card ("Are you on it?"). The button is in the card window and in the "⋯" menu of every card. It applies to all people listed under Settings › People & Access.
+With **Nudge** you give another person a friendly nudge for a card ("Are you on it?"). The button is in the card window and in the "⋯" menu of every card. It applies to all people listed under Settings › Household › People and children.
 
 1. **To whom:** the card's assignees (except you) are preselected. If there are none, you choose. Whoever has no push device appears greyed out with a hint.
 2. **Message:** one of the four templates or your own text of up to 120 characters (it replaces the template).
@@ -150,7 +157,7 @@ If someone completes the card (wherever), every sender of an open nudge gets "�
 **So that it never annoys:**
 
 - Per card, sender and recipient at most **one nudge every 30 minutes**. The sheet shows "again from 14:32".
-- **Quiet time** (default 22:00 to 07:00): nudges to a person during their quiet time are delivered at the end. The sender sees "delivered at 07:00". Everyone sets their own quiet time (Settings › People & Access, tap the person) or switches it off. The quiet time only applies to nudges, not to reminders when due.
+- **Quiet time** (default 22:00 to 07:00): nudges to a person during their quiet time are delivered at the end. The sender sees "delivered at 07:00". Everyone sets their own quiet time (Settings › For me › Notifications) or switches it off. The quiet time only applies to nudges, not to reminders when due.
 - If the card is completed or deleted before a waiting nudge is delivered, it lapses.
 - You cannot nudge yourself. That is what the due date and advance reminder are for.
 
@@ -160,7 +167,7 @@ On the card an orange badge "Conny nudges you" shows when someone nudged you, an
 
 A nudge (and, if you like, a due-date reminder or a watcher card) can arrive **in the house** instead of on a phone. That is meant for children without a phone, and for everybody who is at home and not looking at a screen. It needs the connection to Home Assistant.
 
-Administrators set it up under **Settings › People & access**. Choose a speech service once (group **House**), then open a person and add channels under **House**:
+Administrators set it up: choose the speech service once under **Settings › Home Assistant › Announcements and lamp**, then open a person under **Household › People and children** and add channels under **House**:
 
 - **Announcement:** a speaker (`media_player`). Stups says, for example: "Ben, Anna nudges you: Take out the trash. Are you on it?" You can set a volume; afterwards the speaker goes back to its previous volume.
 - **Lamp:** a light that lights up for five seconds in the person's accent colour and then returns to what it was before (also when it was off).
@@ -179,7 +186,7 @@ Good to know:
 
 ### Child role and confirmation
 
-Administrators can turn a person into a **child** under *Settings › People & access › Child role*. A child gets a reduced app, and the server enforces it (not just the screen):
+Administrators can turn a person into a **child** under *Settings › Household › People and children › Child role*. A child gets a reduced app, and the server enforces it (not just the screen):
 
 - A child **sees** all boards or only the **boards with their own cards** (your choice per child) and can **tick off** their own cards, tick checklist items, **comment**, and attach **photos and links**. Nothing else: no creating, moving, deleting, no board management, no watchers, no fairness, no settings except language and colour.
 - **Confirmation:** per child you can switch on *"Done" needs confirmation*, and per card you can override it (*Confirmation*: person's default, always, never). When the child ticks a card, it stays open and shows **"Waiting for confirmation"**. The **confirmers** get a push message with **Confirm** and **Again**:
@@ -188,6 +195,19 @@ Administrators can turn a person into a **child** under *Settings › People & a
   - Who answers first decides; the others see that it is already answered. Unanswered requests remind the confirmers after two hours, at most once a day.
 - **Who confirms:** administrators always; besides them the people you choose per child. If nobody is chosen, all adults may.
 - Whoever completes a waiting card another way (an adult in the app) ends the request.
+
+### Settings
+
+The avatar at the top right opens the settings as an overview with sub-pages. At the top are your picture, your name and where the picture comes from; **Change picture** uploads your own (JPEG, PNG or WebP up to 2 MB, shrunk to 256 pixels on the device), **Remove picture** goes back to the picture from Home Assistant or to the initial. If your person is matched with a person in Home Assistant that has a picture, Stups fetches it from there (never directly in the browser, always through Stups). An uploaded picture takes precedence. Administrators can also change the picture for others.
+
+| Group | Pages |
+|---|---|
+| **For me** (everyone) | Notifications (test to me, my devices or ntfy topic, quiet time, Sunday recap, little time) · Language and colour · Account and sign-in (container only) |
+| **Household** (administrators) | People and children · Watchers · Templates (board templates) · Dates (default time) |
+| **Home Assistant** (administrators) | Dashboard and header (back dashboard, hide the HA header, Bubble Card button) · Announcements and lamp (speech service) |
+| **Help and data** | Why does nothing arrive? · Bin, archive, move · Beta (beta only) |
+
+At the bottom are the version and the link to the diagnostics page. Members do not see "Household" and "Home Assistant"; a child only sees "Language and colour". The "hide the HA header" choice only applies to the device; members find it under *Language and colour*.
 
 ### Board templates
 
@@ -199,13 +219,25 @@ A watcher observes an entity in Home Assistant and **creates a card and assigns 
 
 ![The Watchers tab](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/waechter-liste-dunkel.png)
 
-**The "Watchers" tab:** it is the fourth tab in the bar at the bottom. It shows every watcher with its condition, the current state of the entity, the counter (for "only the Nth time"), the open card (a tap opens it) and what triggered last. Below it is the **latest activity** across all watchers. **Everyone** sees the tab. **Administrators** create, change and pause watchers there; everyone else only sees what happens (if there is no watcher yet, a hint appears). Without a connection to Home Assistant the tab explains why there is nothing to see.
+**Home shows the state, not the rules.** The **Home** tab (fourth tab, for all adults) sorts the watchers by what is going on: **Waiting for someone** (a card is open: who is up, since when, **Nudge** button), **Running now** (the machine is running: since when, which card comes next), **Coming up** (the counter is at "2 of 3", or a calendar appointment is due) and a **Quiet** line with the watchers that report nothing. Without a connection to Home Assistant it says "No connection to Home Assistant since …" (boards and cards keep working). Administrators also see "Stups has found N more devices".
 
-**Setting up (without YAML):** Watchers tab › "+" (without watchers the templates are right there). A **template** pre-fills the form (washing machine, dishwasher, dryer, filter, battery, robot vacuum), everything stays editable. At the top there is always a sentence summarising what the watcher does.
+**Managing** (list, on/off, edit, delete, recent activity): *Settings › Household › Watchers*. All adults see the list, **administrators** change it.
 
-![Edit a watcher](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/waechter-bearbeiten-dunkel.png)
+**Setting up, easiest via "Found":** *Settings › Household › Watchers › Watchers from templates* (or the hint on Home). Stups looks in Home Assistant and shows what a watcher fits, with a reason ("Socket dryer measures the power"): washing machine, dryer, dishwasher (power sensor or the appliance's programme status), put the bins out (waste calendar), laundry in it is raining (weather), battery low, robot vacuum bin. **Set up** fills in the sentence; entities that a watcher already observes are left out. Below, **Also without a device**: cards that repeat by themselves (descale, test smoke detectors, change the filter, change the bedding), no watcher needed. "View all templates" also shows the ones nothing was found for.
 
-1. **When:** search for the entity (with its current state), then the condition:
+![Edit a watcher](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-bearbeiten-dunkel.png)
+
+**The form is a sentence:** "When [entity] stays below [5 W] for more than [3 min], [whoever is home, in turn] gets the card [title]." You tap every field in square brackets and change it. Below:
+
+- **Trial run:** Stups fetches the history of the entity for the last 7 days (at most 20,000 states) from Home Assistant and applies the rule to it without saving anything. You see a small chart of when the watcher would have fired and a sentence: "3 triggers detected, no false alarm" or "Fired 5 times, 4 of them within 10 minutes: increase the minimum duration?". Without history (recorder off, new entity) a notice replaces the chart.
+- **Suggest first:** the card appears without an assignee, every adult who is home gets the question "Who takes it?" with a **Take it** button (push) and on Today. Whoever taps first gets the card; the others learn who was faster. If nobody answers within **30 minutes**, the watcher's fallback applies. If nobody is home, it applies at once.
+- **Honest about self-completing:** a power sensor cannot prove that someone emptied the appliance. For templates where that is so, "Completes itself" is off, with the reason next to it. With the battery template the card completes itself when the sensor rises above 50 % again.
+- **More rules** opens everything else: name, board, column, description, categories, priority, due date, who exactly is in the circle, the fallbacks, "Completes itself when …", counter, lockout, duplicate cards, reminder.
+- **Calendar and weather:** two more kinds of triggers that Stups queries itself **every 30 minutes**. *Appointment in a calendar* with a lead time (for example 12 hours before the collection; every appointment gets exactly one card, all-day appointments start at midnight) and *rain in the forecast* of a weather entity (within the next 1 to 48 hours; after the rain the watcher is armed again). There is no trial run for them.
+
+The conditions in detail:
+
+1. **When:** the entity (with its current state), then the condition:
    - *Value drops below* or *rises above* a number, for example the washing machine's power below 5 W.
    - *State changes to* a value, for example `docked` for the robot vacuum.
    - **For at least … minutes:** the condition must hold uninterrupted for that long (default 3 minutes for numeric values so short dips trigger nothing).
@@ -304,6 +336,6 @@ New versions appear in the app store as soon as they are on GitHub. The Docker i
 ## Troubleshooting
 
 - **Diagnostics page:** `…/diagnose.html` in the panel (Settings › Diagnostics page) shows the detected user, the connection to Home Assistant and a test push.
-- **Push does not arrive:** is a device ticked for the person under Settings › People & Access? "Show status" in the settings shows who gets a message for which card. The diagnostics page marks services that no longer exist.
-- **"No access" when opening:** access is set to "Only these people" and you are not among them. An administrator approves you under Settings › People & Access.
+- **Push does not arrive:** is a device ticked under Settings › For me › Notifications (for you) or Household › People and children (for others)? "Why does nothing arrive?" › "Show status" shows who gets a message for which card. The diagnostics page marks services that no longer exist.
+- **"No access" when opening:** access is set to "Only these people" and you are not among them. An administrator approves you under Settings › Household › People and children.
 - **The panel opens nothing on the phone:** then the panel is only visible to administrators. Stups releases the panel to all users; if it is missing anyway, check "Show in sidebar" on the app in Home Assistant.

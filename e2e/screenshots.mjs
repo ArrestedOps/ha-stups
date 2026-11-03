@@ -212,9 +212,11 @@ const screens = [
     await page.getByRole('button', { name: x('Stupsen', 'Nudge') }).click();
     await page.getByRole('radio', { name: x(/Heute noch/, /Today still/) }).click();
   }],
-  ['agenda', async (page) => { await nav(page, 'Agenda').click(); await page.getByTestId('agenda').getByText(S.windows).waitFor(); }],
+  ['heute', async (page) => { await nav(page, x('Heute', 'Today')).click(); await page.getByTestId('today-sentence').waitFor(); }],
+  ['agenda', async (page) => { await nav(page, x('Kalender', 'Calendar')).click(); await mode(page, x('Liste', 'List')); await page.getByTestId('agenda').getByText(S.windows).waitFor(); }],
   ['agenda-gefiltert', async (page) => {
-    await nav(page, 'Agenda').click();
+    await nav(page, x('Kalender', 'Calendar')).click();
+    await mode(page, x('Liste', 'List'));
     await chip(page, x('Personen', 'People'), /Ben/);
     await chip(page, 'Boards', new RegExp(S.boardReno));
     await page.getByTestId('agenda').getByText(S.electrician).waitFor();
@@ -232,11 +234,15 @@ const screens = [
     await page.mouse.click(box.x + box.width / 2, box.y + 12 * 56 + 20);
     await page.getByLabel(x('Titel', 'Title')).fill(S.dentist);
   }],
+  ['einstellungen', async (page) => {
+    await nav(page, 'Boards').click();
+    await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
+    await page.getByTestId('settings-head').waitFor();
+  }],
   ['personen', async (page) => {
     await nav(page, 'Boards').click();
-    await page.getByRole('button', { name: x('Board wechseln', 'Switch board') }).click();
-    await page.getByRole('button', { name: x('Einstellungen', 'Settings'), exact: true }).click();
-    await page.getByRole('button', { name: x(/Personen & Zugriff/, /People & Access/) }).click();
+    await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
+    await page.getByRole('dialog').getByRole('button', { name: x(/Personen und Kinder/, /People and children/) }).click();
     await page.getByRole('dialog').getByText(x('Wer darf Stups öffnen?', 'Who may open Stups?')).waitFor();
   }],
 ];
@@ -301,16 +307,28 @@ async function seedWatchers() {
 }
 
 const watcherScreens = [
+  ['zuhause', async (page) => {
+    await nav(page, x('Zuhause', 'Home')).click();
+    await page.getByTestId('home-waiting').waitFor();
+  }],
+  ['gefunden', async (page) => {
+    await nav(page, x('Zuhause', 'Home')).click();
+    await page.getByTestId('home-found').click();
+    await page.getByTestId('found-hit').first().waitFor();
+  }],
   ['waechter-liste', async (page) => {
-    await nav(page, x('Wächter', 'Watchers')).click();
+    await nav(page, 'Boards').click();
+    await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
+    await page.getByRole('dialog').getByRole('button', { name: x('Wächter', 'Watchers'), exact: true }).click();
     await page.getByTestId('watcher-card').first().waitFor();
     await page.getByTestId('watcher-activity').waitFor();
   }],
   ['waechter-bearbeiten', async (page) => {
     await nav(page, 'Boards').click();
-    await nav(page, x('Wächter', 'Watchers')).click();
+    await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
+    await page.getByRole('dialog').getByRole('button', { name: x('Wächter', 'Watchers'), exact: true }).click();
     await page.getByRole('button', { name: x(/Wächter Waschmaschine fertig bearbeiten/, /Edit watcher Washing machine done/) }).click();
-    await page.getByTestId('watcher-preview').waitFor();
+    await page.getByTestId('watcher-sentence').waitFor();
   }],
   ['waechter-karte', async (page) => {
     await nav(page, 'Boards').click();

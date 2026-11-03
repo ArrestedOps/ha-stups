@@ -91,7 +91,7 @@ export const emptyForm = (boardId = '', columnId = ''): WatcherForm => ({
  * Wendet eine Vorlage des Servers auf das Formular an. Mit einem Treffer aus „Gefunden" (`hit`) steht auch die Entität schon drin;
  * sonst wählt man sie danach in der Suche. Der Mensch kann alles ändern.
  */
-export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { entityId: string; name: string; draft?: TemplateDraft }): WatcherForm {
+export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft }): WatcherForm {
   const d = hit?.draft ?? tpl.draft;
   if (!d) return f;
   const out: WatcherForm = {
@@ -115,6 +115,7 @@ export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { enti
   if (hit) {
     out.entityId = hit.entityId;
     out.entityName = hit.name;
+    out.entityUnit = hit.unit ?? '';
   }
   // ein Sensor, der das Erledigen belegen kann (Batterie wieder voll): die Karte erledigt sich von selbst
   if (d.done && hit) {

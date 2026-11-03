@@ -17,39 +17,39 @@ A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your h
 
 <p align="center">
   <img src="docs/images/en/board-dunkel.png" alt="Board, dark" width="23%">
-  <img src="docs/images/en/agenda-dunkel.png" alt="Agenda, dark" width="23%">
+  <img src="docs/images/en/heute-dunkel.png" alt="Today, dark" width="23%">
   <img src="docs/images/en/kalender-woche-dunkel.png" alt="Calendar, week, dark" width="23%">
   <img src="docs/images/en/stupsen-dunkel.png" alt="Nudging, dark" width="23%">
 </p>
 <p align="center">
   <img src="docs/images/en/board-hell.png" alt="Board, light" width="23%">
-  <img src="docs/images/en/agenda-hell.png" alt="Agenda, light" width="23%">
+  <img src="docs/images/en/heute-hell.png" alt="Today, light" width="23%">
   <img src="docs/images/en/kalender-woche-hell.png" alt="Calendar, week, light" width="23%">
   <img src="docs/images/en/stupsen-hell.png" alt="Nudging, light" width="23%">
 </p>
 
 <p align="center">
-  <img src="docs/images/en/waechter-liste-dunkel.png" alt="Watchers, dark" width="23%">
-  <img src="docs/images/en/waechter-bearbeiten-dunkel.png" alt="Edit a watcher, dark" width="23%">
-  <img src="docs/images/en/waechter-karte-dunkel.png" alt="Card from a watcher, dark" width="23%">
-  <img src="docs/images/en/personen-dunkel.png" alt="People and access, dark" width="23%">
+  <img src="docs/images/en/zuhause-dunkel.png" alt="Home, dark" width="23%">
+  <img src="docs/images/en/gefunden-dunkel.png" alt="Found, dark" width="23%">
+  <img src="docs/images/en/waechter-bearbeiten-dunkel.png" alt="A watcher as a sentence, dark" width="23%">
+  <img src="docs/images/en/einstellungen-dunkel.png" alt="Settings, dark" width="23%">
 </p>
 
 ## What can it do?
 
 - **Boards** with their own columns and categories; cards with assignees, due date, priority, cost, description, checklist, links, photos/PDFs and comments. Swiping moves cards, a colour bar shows urgency.
 - **Quick entry:** a line like `Take out trash tomorrow 7pm @Ben #Home every week !!` becomes a finished card with due date, assignee, category, repeat and priority.
-- **Agenda:** all cards with a due date from all boards, by day, overdue first. Filter by people and boards.
-- **Calendar:** day, week and month. Tapping a free slot creates a card with that due date.
+- **Today:** what is on for you: cards from the house (from watchers), your cards due until tomorrow, a line about the others. Start page of the app.
+- **Calendar:** day, week, month and a list (all cards with a due date by day, overdue first; filter by people and boards). Tapping a free slot creates a card with that due date.
 - **Recurring tasks:** a fixed rhythm or counted from completion; the completed card stays with its history, the next one is created.
-- **Watchers:** Stups observes entities in Home Assistant and creates cards by itself: "The washing machine is done, so whoever is at home gets the card 'empty it'." With a counter (robot vacuum: after 3 cleanings) and "whoever gets home first". Set up without YAML.
+- **Watchers:** Stups observes entities in Home Assistant and creates cards by itself: "The washing machine is done, so whoever is at home gets the card 'empty it'." Stups **finds suitable devices itself** (washing machine, dryer, waste calendar, rain, batteries, robot vacuum), you set one up as a **sentence** with a **trial run** on the last 7 days. Also "pass on", "suggest first" (whoever taps first takes it) and "little time" for busy weeks. **Home** shows what the house is doing right now. Set up without YAML.
 - **Push through the Companion App:** when due, in advance, as a follow-up, and a daily summary. "Done" right in the message.
 - **Nudging:** send another person a nudge for their card ("Are you on it?"). With lock time and quiet time per person so nobody gets annoyed.
 - **House channels:** a nudge can also arrive in the house: an announcement on a speaker or a lamp that lights up in your colour, for children without a phone. Per channel you choose which messages arrive and what happens when someone is not at home.
-- **Fairness:** who completes how much this week or month, as a bar for the effort (small, medium, large). No ranking, no medals. Optional: a Sunday-evening summary.
+- **This week (fairness):** who completes how much this week or month, as a bar for the effort (small, medium, large). No ranking, no medals. Optional: a Sunday-evening summary.
 - **Child role:** children see and tick off only their own cards. With confirmation: the card waits until a parent says "Confirm" or "Again", then it counts for the child.
 - **Board templates:** start a board from Household, Moving house, Renovation and more, or save your own board as a template.
-- **Several people:** you control access under Settings › People & Access. Home Assistant administrators set things up; all approved people may create boards, cards and categories.
+- **Several people:** you control access under Settings › Household › People and children. Everyone gets a picture (from Home Assistant or uploaded). Home Assistant administrators set things up; all approved people may create boards, cards and categories.
 - **English and German:** the app follows your device language; Settings › Language switches it for you on all your devices, push messages included.
 - **Sensors** for Home Assistant: overdue and due-today cards, in total and per person, open nudges.
 - Everything stays with you: SQLite in the add-on storage, part of the normal HA backup.
@@ -72,7 +72,7 @@ New versions appear first as **Stups (Beta)**, a second app with its own data, a
 https://github.com/ArrestedOps/ha-stups#beta
 ```
 
-**Stups (Beta)** appears there (with a "BETA" icon). From this address a second "Stups" also appears: do not install that one. In the beta, push and watchers are off at first so nobody gets messages twice; **Settings › Move** copies real data into it once. Everything about it: [stups-beta/DOCS.md](stups-beta/DOCS.md).
+**Stups (Beta)** appears there (with a "BETA" icon). From this address a second "Stups" also appears: do not install that one. In the beta, push and watchers are off at first so nobody gets messages twice; **Settings › Help and data › Bin, archive, move** copies real data into it once. Everything about it: [stups-beta/DOCS.md](stups-beta/DOCS.md).
 
 ### Without Home Assistant (Docker, beta)
 
@@ -125,5 +125,7 @@ Stups is under the [PolyForm Strict License 1.0.0](LICENSE). The source code is 
 - **Not allowed:** **distributing** it (including uploading it to another repository), **modifying** it and making derivative works, sublicensing. **Commercial use** (for example in a company) needs my explicit permission.
 - **GitHub:** GitHub's terms of service let anyone fork a public repository within GitHub. The license grants no further rights for that: a fork must not be used to distribute or modify.
 - **Earlier versions:** Stups 1.9.0 and all earlier versions were under the MIT license; for those versions, as they were published at the time, it continues to apply.
+
+The headings use the font **Bricolage Grotesque** (SIL Open Font License 1.1, bundled locally from the npm package `@fontsource-variable/bricolage-grotesque`, no download from a font server).
 
 The license text is the unmodified English standard text from [PolyForm](https://polyformproject.org/licenses/strict/1.0.0).

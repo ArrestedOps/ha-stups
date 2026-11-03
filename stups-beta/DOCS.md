@@ -7,13 +7,13 @@ This is the **beta version** of Stups: the same app as "Stups", but with **its o
 ## What is different from the normal app
 
 - **Its own data.** The beta has its own storage. Boards and cards of the normal app are not in it, unless you copy them in once (see below).
-- **Push and watchers are off at first.** Otherwise the family would get reminders twice. Under **Settings › Beta** an administrator switches both on selectively, for example push only for themselves.
+- **Push and watchers are off at first.** Otherwise the family would get reminders twice. Under **Settings › Help and data › Beta** an administrator switches both on selectively, for example push only for themselves.
 - **Its own names.** Push titles begin with "Beta ·", sensors are called `sensor.stups_beta_…`, the event for automations is called `stups_beta_create_card`, and the buttons in messages belong to the beta only.
 - **Its own icon** ("BETA") and its own entry in the sidebar ("Stups Beta").
 
 ## Copying real data to test with
 
-1. In the **normal** Stups app: **Settings › Move › Export**. The data lands in `/share/stups-umzug`.
+1. In the **normal** Stups app: **Settings › Help and data › Bin, archive, move › Export**. The data lands in `/share/stups-umzug`.
 2. **Only afterwards** start the beta for the first time. It takes over the export on first start, but only if it has no data of its own yet.
 3. The beta takes the data **as a copy**; the normal app stays untouched.
 

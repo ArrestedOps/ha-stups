@@ -37,7 +37,7 @@
   const recurring = $derived(templates.filter((x) => x.kind === 'recurring'));
 
   function setup(s: WatcherSuggestion) {
-    openSheet({ type: 'watcher', id: null, template: s.templateId, hit: { entityId: s.entityId, name: s.name, ...(s.draft ? { draft: s.draft } : {}) } });
+    openSheet({ type: 'watcher', id: null, template: s.templateId, hit: { entityId: s.entityId, name: s.name, ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) } });
   }
 
   /** Eine wiederkehrende Karte aus der Vorlage: morgen zur Standard-Uhrzeit, danach wie die Wiederholung es sagt */

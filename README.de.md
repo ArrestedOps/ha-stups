@@ -13,39 +13,39 @@ Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haus
 
 <p align="center">
   <img src="docs/images/board-dunkel.png" alt="Board, dunkel" width="23%">
-  <img src="docs/images/agenda-dunkel.png" alt="Agenda, dunkel" width="23%">
+  <img src="docs/images/heute-dunkel.png" alt="Heute, dunkel" width="23%">
   <img src="docs/images/kalender-woche-dunkel.png" alt="Kalender, Woche, dunkel" width="23%">
   <img src="docs/images/stupsen-dunkel.png" alt="Stupsen, dunkel" width="23%">
 </p>
 <p align="center">
   <img src="docs/images/board-hell.png" alt="Board, hell" width="23%">
-  <img src="docs/images/agenda-hell.png" alt="Agenda, hell" width="23%">
+  <img src="docs/images/heute-hell.png" alt="Heute, hell" width="23%">
   <img src="docs/images/kalender-woche-hell.png" alt="Kalender, Woche, hell" width="23%">
   <img src="docs/images/stupsen-hell.png" alt="Stupsen, hell" width="23%">
 </p>
 
 <p align="center">
-  <img src="docs/images/waechter-liste-dunkel.png" alt="Wächter, dunkel" width="23%">
-  <img src="docs/images/waechter-bearbeiten-dunkel.png" alt="Wächter bearbeiten, dunkel" width="23%">
-  <img src="docs/images/waechter-karte-dunkel.png" alt="Karte von einem Wächter, dunkel" width="23%">
-  <img src="docs/images/personen-dunkel.png" alt="Personen und Zugriff, dunkel" width="23%">
+  <img src="docs/images/zuhause-dunkel.png" alt="Zuhause, dunkel" width="23%">
+  <img src="docs/images/gefunden-dunkel.png" alt="Gefunden, dunkel" width="23%">
+  <img src="docs/images/waechter-bearbeiten-dunkel.png" alt="Ein Wächter als Satz, dunkel" width="23%">
+  <img src="docs/images/einstellungen-dunkel.png" alt="Einstellungen, dunkel" width="23%">
 </p>
 
 ## Was kann es?
 
 - **Boards** mit eigenen Spalten und Kategorien, Karten mit Zuständigen, Termin, Priorität, Kosten, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt Karten, ein Farbbalken zeigt die Dringlichkeit.
 - **Schnell-Eingabe:** Eine Zeile wie `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` wird zur fertigen Karte mit Termin, Zuständigem, Kategorie, Wiederholung und Priorität.
-- **Agenda:** alle Karten mit Termin aus allen Boards, nach Tagen, Überfälliges zuerst. Filter nach Personen und Boards.
-- **Kalender:** Tag, Woche und Monat. Auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an.
+- **Heute:** was für dich dran ist: Karten vom Haus (von Wächtern), deine Karten mit Termin bis morgen, eine Zeile zu den anderen. Startseite der App.
+- **Kalender:** Tag, Woche, Monat und eine Liste (alle Karten mit Termin nach Tagen, Überfälliges zuerst; Filter nach Personen und Boards). Auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an.
 - **Wiederkehrende Aufgaben:** fester Rhythmus oder ab Erledigung; die erledigte Karte bleibt samt Verlauf erhalten, die nächste entsteht neu.
-- **Wächter:** Stups beobachtet Entitäten in Home Assistant und legt von selbst Karten an: „Die Waschmaschine ist fertig, also bekommt eine Person, die zu Hause ist, die Karte ‚ausräumen'." Mit Zähler (Saugroboter: nach 3 Reinigungen) und „wer zuerst nach Hause kommt". Einrichtung ohne YAML.
+- **Wächter:** Stups beobachtet Entitäten in Home Assistant und legt von selbst Karten an: „Die Waschmaschine ist fertig, also bekommt eine Person, die zu Hause ist, die Karte ‚ausräumen'." Stups **findet passende Geräte selbst** (Waschmaschine, Trockner, Abfallkalender, Regen, Batterien, Saugroboter), du richtest einen Wächter als **Satz** ein, mit **Probelauf** auf den letzten 7 Tagen. Dazu „Weitergeben", „Erst vorschlagen" (wer zuerst tippt, übernimmt) und „Wenig Zeit" für stressige Wochen. **Zuhause** zeigt, was das Haus gerade tut. Einrichtung ohne YAML.
 - **Push über die Companion App:** zur Fälligkeit, vorab, nachhaken, Tageszusammenfassung. „Erledigt" direkt in der Nachricht.
 - **Stupsen:** einer anderen Person zu ihrer Karte einen Stups schicken („Denkst du dran?"). Mit Sperrzeit und Ruhezeit pro Person, damit niemand genervt wird.
 - **Haus-Kanäle:** Ein Stups kann auch im Haus ankommen: als Ansage über einen Lautsprecher oder als Lampe, die in deiner Farbe aufleuchtet, für Kinder ohne Handy. Je Kanal wählst du, welche Nachrichten ankommen und was geschieht, wenn jemand nicht zu Hause ist.
-- **Fairness:** Wer diese Woche oder diesen Monat wie viel erledigt hat, als Balken für den Aufwand (klein, mittel, groß). Keine Rangliste, keine Medaillen. Auf Wunsch eine Zusammenfassung am Sonntagabend.
+- **Diese Woche (Fairness):** Wer diese Woche oder diesen Monat wie viel erledigt hat, als Balken für den Aufwand (klein, mittel, groß). Keine Rangliste, keine Medaillen. Auf Wunsch eine Zusammenfassung am Sonntagabend.
 - **Rolle Kind:** Kinder sehen und haken nur ihre eigenen Karten ab. Mit Bestätigung: Die Karte wartet, bis ein Elternteil „Bestätigen“ oder „Nochmal“ sagt, und zählt dann für das Kind.
 - **Board-Vorlagen:** Ein Board aus Haushalt, Umzug, Renovierung und mehr starten oder ein eigenes Board als Vorlage speichern.
-- **Mehrere Personen:** Zugriff steuerst du unter Einstellungen › Personen & Zugriff. Wer Administrator in Home Assistant ist, stellt ein; alle freigegebenen Personen dürfen Boards, Karten und Kategorien anlegen.
+- **Mehrere Personen:** Zugriff steuerst du unter Einstellungen › Haushalt › Personen und Kinder. Jede Person bekommt ein Bild (aus Home Assistant oder hochgeladen). Wer Administrator in Home Assistant ist, stellt ein; alle freigegebenen Personen dürfen Boards, Karten und Kategorien anlegen.
 - **Sensoren** für Home Assistant: überfällige und heute fällige Karten, gesamt und je Person, offene Stupse.
 - Alles bleibt bei dir: SQLite im Add-on-Speicher, Teil des normalen HA-Backups.
 
@@ -67,7 +67,7 @@ Neue Versionen erscheinen zuerst als **Stups (Beta)**, einer zweiten App mit eig
 https://github.com/ArrestedOps/ha-stups#beta
 ```
 
-Dort erscheint **Stups (Beta)** (mit „BETA"-Symbol). Aus dieser Adresse erscheint auch ein zweites „Stups": das nicht installieren. In der Beta sind Push und Wächter zunächst aus, damit niemand Nachrichten doppelt bekommt; über **Einstellungen › Umzug** lassen sich echte Daten einmal hineinkopieren. Alles dazu: [stups-beta/DOCS.md](stups-beta/DOCS.md).
+Dort erscheint **Stups (Beta)** (mit „BETA"-Symbol). Aus dieser Adresse erscheint auch ein zweites „Stups": das nicht installieren. In der Beta sind Push und Wächter zunächst aus, damit niemand Nachrichten doppelt bekommt; über **Einstellungen › Hilfe und Daten › Papierkorb, Archiv, Umzug** lassen sich echte Daten einmal hineinkopieren. Alles dazu: [stups-beta/DOCS.md](stups-beta/DOCS.md).
 
 ### Ohne Home Assistant (Docker, Beta)
 
@@ -117,5 +117,7 @@ Stups steht unter der [PolyForm Strict License 1.0.0](LICENSE). Der Quelltext is
 - **Nicht erlaubt:** **Weitergeben** (auch Hochladen in ein anderes Repository), **Verändern** und abgeleitete Werke, Unterlizenzieren. **Kommerzielle Nutzung** (zum Beispiel in einer Firma) braucht meine ausdrückliche Genehmigung.
 - **GitHub:** Die Nutzungsbedingungen von GitHub erlauben jedem, ein öffentliches Repository innerhalb von GitHub zu forken. Die Lizenz gibt dafür keine weiteren Rechte: Ein Fork darf nicht zum Weitergeben oder Verändern benutzt werden.
 - **Frühere Versionen:** Stups 1.9.0 und alle früheren Versionen standen unter der MIT-Lizenz; für diese Versionen, so wie sie damals veröffentlicht wurden, gilt sie weiter.
+
+Die Überschriften nutzen die Schrift **Bricolage Grotesque** (SIL Open Font License 1.1, lokal aus dem npm-Paket `@fontsource-variable/bricolage-grotesque` eingebunden, kein Download von einem Schriftserver).
 
 Der Lizenztext ist der unveränderte englische Standardtext von [PolyForm](https://polyformproject.org/licenses/strict/1.0.0).

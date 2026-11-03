@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
 
-// Fairness: Aufwand an der Karte setzen und die Fairness-Ansicht in der Agenda. Die Zahlen werden gegen den Stand VOR dem Test
+// Fairness: Aufwand an der Karte setzen und die Seite „Diese Woche". Die Zahlen werden gegen den Stand VOR dem Test
 // verglichen (der Server ist mit anderen Tests geteilt) und hängen nicht von der Tageszeit ab.
 test.describe.configure({ mode: 'serial' });
 
@@ -26,6 +26,21 @@ async function board(request: APIRequestContext) {
   return { id: b.id, name, columnId: view.columns[0]!.id };
 }
 
+/** „Diese Woche" öffnen: über „Bei den anderen" auf Heute (dafür hat eine andere Person eine offene Karte) */
+async function openWeek(page: import('@playwright/test').Page, request: APIRequestContext) {
+  const myId = await me(request);
+  const people = (await (await request.get('/api/people')).json()) as { id: string; isPerson: boolean }[];
+  const other = people.find((p) => p.isPerson && p.id !== myId);
+  if (other) {
+    const b = await board(request);
+    await request.post(`/api/boards/${b.id}/cards`, { data: { title: `Für andere ${unique()}`, columnId: b.columnId, assigneeIds: [other.id] } });
+  }
+  await page.goto('/');
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Heute' }).click();
+  await page.getByRole('button', { name: /Karten? offen/ }).click();
+  await expect(page.getByTestId('fairness')).toBeVisible();
+}
+
 test('Aufwand an der Karte wählen: gespeichert und als Chip zu sehen', async ({ page, request }) => {
   const b = await board(request);
   const title = `Groß ${unique()}`;
@@ -40,7 +55,7 @@ test('Aufwand an der Karte wählen: gespeichert und als Chip zu sehen', async ({
   await expect(dialog.getByRole('button', { name: 'Groß', exact: true }).first()).toBeVisible();
 });
 
-test('Fairness-Ansicht: Umschalter in der Agenda, Zahlen steigen mit dem Erledigen, keine Rangliste', async ({ page, request }) => {
+test('Diese Woche (Heute › Bei den anderen): Zahlen steigen mit dem Erledigen, keine Rangliste', async ({ page, request }) => {
   const before = await fairness(request);
   const myId = await me(request);
   const mineBefore = before.people.find((p) => p.id === myId)!;
@@ -52,11 +67,8 @@ test('Fairness-Ansicht: Umschalter in der Agenda, Zahlen steigen mit dem Erledig
     expect(done.status()).toBe(200);
   }
 
-  await page.goto('/');
-  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Agenda' }).click();
-  const group = page.getByRole('group', { name: 'Ansicht der Agenda' });
-  await expect(group.getByRole('button', { name: 'Termine' })).toHaveAttribute('aria-pressed', 'true');
-  await group.getByRole('button', { name: 'Fairness' }).click();
+  // „Diese Woche": über „Bei den anderen" auf Heute (gibt es nur, wenn andere offene Karten haben; sonst über die Schnittstelle prüfbar)
+  await openWeek(page, request);
   await page.getByRole('group', { name: 'Zeitraum' }).getByRole('button', { name: 'Dieser Monat' }).click();
 
   const view = page.getByTestId('fairness');
@@ -72,10 +84,7 @@ test('Fairness-Ansicht: Umschalter in der Agenda, Zahlen steigen mit dem Erledig
   expect(names).toEqual(after.people.map((p) => p.name));
   await expect(view).not.toContainText(/Platz|Rang|Sieger|🥇|🏆/);
 
-  // Zurück zu den Terminen: die Wahl wird gemerkt
-  await group.getByRole('button', { name: 'Termine' }).click();
+  // Schließen: zurück auf Heute
+  await page.keyboard.press('Escape');
   await expect(view).toHaveCount(0);
-  await page.reload();
-  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Agenda' }).click();
-  await expect(page.getByRole('group', { name: 'Ansicht der Agenda' }).getByRole('button', { name: 'Termine' })).toHaveAttribute('aria-pressed', 'true');
 });

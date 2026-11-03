@@ -14,7 +14,7 @@ test.describe.configure({ timeout: 90_000 });
 async function openPeople(page: Page) {
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
-  await page.getByRole('button', { name: /Personen & Zugriff/ }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Personen und Kinder/ }).click();
   await expect(page.getByRole('radiogroup', { name: 'Zugriff' })).toBeVisible();
 }
 
@@ -123,14 +123,14 @@ test('Nur freigegebene: Fremder sieht „Kein Zugriff", der Administrator gibt i
 
     await fremd.reload();
     await expect(fremd.getByRole('tablist', { name: 'Spalten' })).toBeVisible();
-    // Als Mitglied darf er das Dashboard nicht ändern
+    // Als Mitglied sieht er weder „Haushalt" noch „Home Assistant": Personen, Zugriff und Dashboard ändern nur Administratoren
     await fremd.getByRole('button', { name: 'Board wechseln' }).click();
     await fremd.getByRole('button', { name: 'Einstellungen', exact: true }).click();
-    await expect(fremd.getByText(/Administratoren von Home Assistant vorbehalten/)).toBeVisible();
-    await expect(fremd.getByLabel('Dashboard', { exact: true })).toBeDisabled();
-    await fremd.getByRole('button', { name: /Personen & Zugriff/ }).click();
-    await expect(fremd.getByText('Das ändern nur Administratoren von Home Assistant.')).toBeVisible();
-    await expect(fremd.getByRole('radio', { name: 'Nur diese Personen' })).toBeDisabled();
+    const dialog = fremd.getByRole('dialog');
+    await expect(dialog.getByRole('button', { name: 'Sprache und Farbe' })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: /Personen und Kinder/ })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Dashboard und Kopfzeile' })).toHaveCount(0);
+    await expect(dialog.getByText('Haushalt', { exact: true })).toHaveCount(0);
   } finally {
     fremdRef = fremd;
   }

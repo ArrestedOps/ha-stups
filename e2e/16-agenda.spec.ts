@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openList } from './helpers';
 
 // Fehler aus der Praxis: Karten, die mehr als 60 Tage entfernt sind, standen nicht in der Agenda, und bei leerer Liste fehlte der Knopf „Weitere Tage laden".
 const DAY = 86_400_000;
@@ -13,8 +14,7 @@ test('Agenda: Karten in über 60 Tagen sind einen Tipp entfernt, auch wenn die L
   expect(far.status()).toBe(201);
 
   await page.goto('/');
-  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Agenda' }).click();
-  await expect(page.getByTestId('agenda')).toBeVisible();
+  await openList(page);
 
   // nur dieses Board zeigen (wie in der Praxis: ein Board-Filter, in dem nichts in den nächsten 60 Tagen liegt)
   await page.getByRole('group', { name: 'Boards' }).getByRole('button', { name: new RegExp('^' + name) }).click();

@@ -281,7 +281,6 @@
           {#each view?.columns ?? [] as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
         </SelectField>
       </Row>
-      <div class="p-2"><input class={field} bind:value={form.title} maxlength="200" placeholder={t('Titel der Karte')} aria-label={t('Titel der Karte')} /></div>
       <div class="p-2"><textarea class="{field} py-2" rows="2" bind:value={form.description} placeholder={t('Beschreibung (optional)')} aria-label={t('Beschreibung')}></textarea></div>
       {#if view?.categories.length}
         <div class="flex flex-wrap gap-2 p-3" role="group" aria-label={t('Kategorien')}>

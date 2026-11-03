@@ -20,6 +20,7 @@ test('Die Beta meldet ihren Kanal; Push und Wächter sind zunächst aus', async 
   expect(await (await request.get('/api/beta')).json()).toEqual({ push: { mode: 'off' }, watchers: false });
 
   const dialog = await einstellungen(page);
+  await dialog.getByRole('button', { name: 'Beta', exact: true }).click();
   await expect(dialog.getByTestId('beta-banner')).toContainText('Beta-Version');
   await expect(dialog.getByRole('radio', { name: 'Aus' })).toHaveAttribute('aria-checked', 'true');
   await expect(dialog.getByRole('checkbox', { name: 'Wächter in der Beta einschalten' })).not.toBeChecked();

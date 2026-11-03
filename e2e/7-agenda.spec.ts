@@ -1,3 +1,4 @@
+import { openList } from './helpers';
 import { expect, test, type APIRequestContext } from '@playwright/test';
 
 test.describe.configure({ timeout: 90_000 });
@@ -26,7 +27,7 @@ async function seed(request: APIRequestContext) {
 test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Agenda' }).click();
+  await openList(page);
 
   const agenda = page.getByTestId('agenda');
   for (const title of Object.values(s.t)) await expect(agenda.getByText(title)).toBeVisible();
@@ -53,7 +54,7 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
   // Der Filter bleibt auf dem Gerät erhalten
   await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Agenda' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Kalender' })).toHaveAttribute('aria-current', 'page');
   await expect(agenda.getByText(s.t.fenster)).toBeVisible();
   await expect(agenda.getByText(s.t.papier)).toBeHidden();
 });
@@ -61,7 +62,7 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
 test('Agenda: Karte aus einem anderen Board öffnen und von dort erledigen', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Agenda' }).click();
+  await openList(page);
   const agenda = page.getByTestId('agenda');
 
   await agenda.getByText(s.t.elektriker).click();
@@ -79,7 +80,7 @@ test('Agenda: Karte aus einem anderen Board öffnen und von dort erledigen', asy
 test('Karte löschen fragt vorher nach', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Agenda' }).click();
+  await openList(page);
   const agenda = page.getByTestId('agenda');
 
   await agenda.getByText(s.t.fenster).click();

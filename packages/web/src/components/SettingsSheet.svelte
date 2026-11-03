@@ -35,6 +35,7 @@
       watchers: feat.watchers,
       haUi: feat.haUi,
       house: feat.house,
+      migration: feat.migration,
     }),
   );
 </script>
@@ -76,11 +77,10 @@
       </Group>
     {/each}
 
-    {#if !feat.standalone}
-      <p class="mt-5 px-3 text-center text-[13px] text-fg2">
-        {t('Angemeldet als {name}', { name: ui.me?.displayName ?? '—' })}
-        {#if feat.haUi}· <a class="text-accent-text" href="diagnose.html">{t('Diagnose-Seite')}</a>{/if}
-      </p>
-    {/if}
+    <p class="mt-5 px-3 text-center text-[13px] text-fg2">
+      {#if !feat.standalone}{t('Angemeldet als {name}', { name: ui.me?.displayName ?? '—' })}{/if}
+      {#if ui.caps?.version}{!feat.standalone ? '· ' : ''}{t('Version {version}', { version: ui.caps.version })}{/if}
+      {#if feat.haUi}· <a class="text-accent-text" href="diagnose.html">{t('Diagnose-Seite')}</a>{/if}
+    </p>
   </Sheet>
 {/if}

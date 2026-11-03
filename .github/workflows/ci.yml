@@ -87,6 +87,7 @@ jobs:
           file: stups/Dockerfile
           build-args: |
             STUPS_CHANNEL=${{ steps.version.outputs.channel }}
+            STUPS_VERSION=${{ steps.version.outputs.value }}
           push: true
           # verknüpft das Paket mit dem Repository (Sichtbarkeit und Rechte kommen von dort)
           labels: |

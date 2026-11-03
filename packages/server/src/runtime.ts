@@ -198,4 +198,6 @@ export interface Capabilities {
   publicUrl: string | null;
   /** Anmeldung mit Passkey (eigene Konten und STUPS_PUBLIC_URL mit HTTPS) */
   passkeys: boolean;
+  /** Version der App (kommt mit dem Image; null, wenn unbekannt) */
+  version?: string | null;
 }

@@ -260,6 +260,7 @@ const capabilities: Capabilities = {
   push: [...(runtime.ha ? (['ha-notify'] as const) : []), ...(runtime.ntfy ? (['ntfy'] as const) : [])],
   publicUrl: runtime.publicUrl,
   passkeys: passkeys !== undefined,
+  version: process.env.STUPS_VERSION?.trim() || null,
 };
 // Knöpfe in ntfy-Nachrichten melden sich ohne Sitzung zurück; erlaubt ist nur, was das signierte Token trägt
 if (runtime.ntfy) {

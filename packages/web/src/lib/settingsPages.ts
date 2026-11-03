@@ -30,6 +30,8 @@ export interface SettingsCtx {
   haUi: boolean;
   /** Haus-Kanäle (Ansage, Lampe) gibt es */
   house: boolean;
+  /** Umzug zwischen zwei Add-ons (nur im Add-on) */
+  migration: boolean;
 }
 
 export interface SettingsGroup {
@@ -78,7 +80,7 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
       title: t('Hilfe und Daten'),
       pages: [
         ...page('report', t('Warum kommt nichts an?'), 'message', ctx.push && !ctx.isChild),
-        ...page('data', t('Papierkorb, Archiv, Umzug'), 'archive', !ctx.isChild),
+        ...page('data', admin && ctx.migration ? t('Papierkorb, Archiv, Umzug') : t('Papierkorb und Archiv'), 'archive', !ctx.isChild),
         ...page('beta', t('Beta'), 'flag', ctx.beta && !ctx.isChild),
       ],
     },

@@ -416,7 +416,6 @@ export const en: Catalog = {
   'geschlossen': 'closed',
   'YAML kopiert': 'YAML copied',
   'Kopieren nicht möglich, bitte den Text markieren': 'Copying is not possible, please select the text',
-  'Personen & Zugriff': 'People & Access',
   'Vorgaben': 'Defaults',
   'Gilt für alle: Schreibst du beim Anlegen einer Karte nur ein Datum („morgen“) ohne Uhrzeit, bekommt der Termin diese Uhrzeit. Nur Administratoren ändern sie.': 'Applies to everyone: if you only write a date (“tomorrow”) without a time when creating a card, the due date gets this time. Only administrators can change it.',
   'Standard-Uhrzeit für Termine': 'Default time for due dates',
@@ -967,4 +966,6 @@ export const en: Catalog = {
   'Anlegen fehlgeschlagen': 'Creating failed',
   'Stups hat {n} weiteres Gerät gefunden': ['Stups has found {n} more device', 'Stups has found {n} more devices'],
   'Wächter aus Vorlagen': 'Watchers from templates',
+  'Papierkorb und Archiv': 'Bin and archive',
+  'Version {version}': 'Version {version}',
 };

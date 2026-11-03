@@ -16,7 +16,10 @@ RUN npm install -g pnpm@12.16.1
 WORKDIR /app
 # Normale App oder Beta: das Image trägt den Kanal (siehe packages/server/src/channel.ts); die CI setzt ihn je Branch
 ARG STUPS_CHANNEL=stable
+# Die Version der App (für den Fuß der Einstellungen); die CI setzt sie aus config.yaml
+ARG STUPS_VERSION=
 ENV STUPS_CHANNEL=$STUPS_CHANNEL \
+    STUPS_VERSION=$STUPS_VERSION \
     NODE_ENV=production \
     PORT=8099
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./

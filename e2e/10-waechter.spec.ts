@@ -34,10 +34,14 @@ async function setup(request: APIRequestContext) {
 const cardsOf = async (request: APIRequestContext, boardId: string) =>
   ((await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { id: string; title: string; columnId: string; assigneeIds: string[]; completedAt: string | null; dueAt: string | null; watcherId: string | null }[] }).cards;
 
-const watchersTab = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' });
+/** Einstellungen › Haushalt › Wächter (die Verwaltung; den Zustand zeigt der Reiter Zuhause) */
+async function openWatchersPage(page: Page) {
+  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Wächter' }).click();
+}
 
 async function openWatcherForm(page: Page) {
-  await watchersTab(page).click();
+  await openWatchersPage(page);
   await page.getByRole('button', { name: 'Wächter hinzufügen' }).first().click();
 }
 
@@ -56,11 +60,14 @@ test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Karte erscheint live 
   // Vorlage, Entität suchen, Board wählen, Wartezeit 0 (sonst müsste der Test 3 Minuten warten)
   await page.getByRole('dialog').getByRole('button', { name: 'Waschmaschine fertig' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Waschmaschine Leistung/ }).click();
+  await page.getByRole('button', { name: 'Mehr Regeln' }).click();
   await page.getByLabel('Board', { exact: true }).selectOption(s.boardId);
   await expect(page.getByLabel('Spalte', { exact: true })).toHaveValue(s.columnId);
+  await page.locator('[data-field=duration]').click();
   await page.getByLabel('Wartezeit in Minuten').fill('0');
+  await page.locator('[data-field=title]').click();
   await page.getByLabel('Titel der Karte').fill(title);
-  await expect(page.getByTestId('watcher-preview')).toContainText(`bekommt eine anwesende Person abwechselnd die Karte „${title}“ (fällig in 30 Min.)`);
+  await expect(page.getByTestId('watcher-sentence')).toContainText(`bekommt wer zu Hause ist, reihum die Karte ${title}.`);
   await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Wächter gespeichert')).toBeVisible();
   await expect(page.getByRole('button', { name: /Wächter Waschmaschine fertig bearbeiten/ })).toBeVisible();
@@ -87,14 +94,13 @@ test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Karte erscheint live 
 
     await expect(conny.locator('[role=presentation]').filter({ hasText: title }).getByTestId('card-watcher')).toBeVisible({ timeout: 15_000 });
 
-    // Der Reiter „Wächter": Conny ist keine Administratorin, sieht ihn aber (es gibt einen Wächter), nur lesend
-    await conny.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
-    const cardOnTab = conny.getByTestId('watcher-card').filter({ hasText: 'Waschmaschine fertig' });
-    await expect(cardOnTab).toBeVisible();
-    await expect(cardOnTab.getByText(title)).toBeVisible(); // die offene Karte des Wächters
+    // Der Reiter „Zuhause": Conny ist keine Administratorin, sieht ihn aber, nur lesend. Die Karte wartet auf Rene.
+    await conny.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Zuhause' }).click();
+    const waiting = conny.getByTestId('home-waiting');
+    await expect(waiting).toContainText(title);
+    await expect(waiting).toContainText('Waschmaschine fertig');
+    await expect(conny.getByRole('button', { name: 'Wächter einrichten' })).toHaveCount(0);
     await expect(conny.getByRole('button', { name: 'Wächter hinzufügen' })).toHaveCount(0);
-    await expect(cardOnTab.getByRole('checkbox')).toHaveCount(0);
-    await expect(conny.getByTestId('watcher-activity')).toContainText('Karte angelegt');
 
     // Push an Rene mit „Erledigt"
     const pushes = (await (await request.get(`${MOCK}/mock/pushes`)).json()) as { service: string; title: string; message: string; data: { actions?: unknown[] } }[];
@@ -181,7 +187,7 @@ test('Eigene Automation: das Ereignis stups_create_card legt eine Karte an, ohne
   expect(await cardsOf(request, s.boardId)).toHaveLength(1);
 });
 
-test('„Testen" legt eine Karte an, und der Reiter zeigt den Wächter mit letztem Lauf', async ({ page, request }) => {
+test('„Testen" legt eine Karte an (Einstellungen › Wächter)', async ({ page, request }) => {
   const s = await setup(request);
   await setState(request, 'person.rene', 'home');
   const created = await request.post('/api/watchers', {
@@ -196,7 +202,7 @@ test('„Testen" legt eine Karte an, und der Reiter zeigt den Wächter mit letzt
 
   await page.addInitScript((bid) => localStorage.setItem('stups.board', bid), s.boardId);
   await page.goto('/');
-  await watchersTab(page).click();
+  await openWatchersPage(page);
   await page.getByRole('button', { name: new RegExp(`Wächter Test ${s.tag} bearbeiten`) }).click();
   await page.getByRole('button', { name: /Testen: Karte jetzt anlegen/ }).click();
   await expect(page.getByText('Testkarte angelegt')).toBeVisible();

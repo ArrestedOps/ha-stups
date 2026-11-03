@@ -67,11 +67,11 @@ test('Erster Start mit Home Assistant: Einrichtung, dann Wächter-Reiter und Ver
     push: ['ha-notify'],
   });
   await expect(nav(page).getByRole('button')).toHaveCount(4);
-  await expect(nav(page).getByRole('button', { name: 'Wächter' })).toBeVisible();
+  await expect(nav(page).getByRole('button', { name: 'Zuhause' })).toBeVisible();
 
   const dialog = await einstellungen(page);
-  await expect(dialog.getByText('Benachrichtigungen', { exact: true })).toBeVisible();
-  await expect(dialog.getByText('Wächter', { exact: true }).first()).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Benachrichtigungen' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Wächter' })).toBeVisible();
   // Stups sitzt hier nicht in Home Assistant: kein Dashboard-Button, keine Kopfzeile, kein Umzug zwischen Apps
   for (const weg of ['Zurück zum Dashboard', 'Darstellung', 'Bubble Card', 'Umzug', 'Diagnose-Seite']) {
     await expect(dialog.getByText(weg, { exact: false })).toHaveCount(0);
@@ -84,7 +84,7 @@ test('Erster Start mit Home Assistant: Einrichtung, dann Wächter-Reiter und Ver
 test('Personen aus Home Assistant werden vorgeschlagen; Ben kommt dazu und wählt sein Handy', async ({ page }) => {
   await anmelden(page);
   const dialog = await einstellungen(page);
-  await dialog.getByRole('button', { name: 'Personen & Zugriff' }).click();
+  await dialog.getByRole('button', { name: 'Personen und Kinder' }).click();
 
   const group = page.getByText('Aus Home Assistant', { exact: true });
   await expect(group).toBeVisible();
@@ -187,6 +187,7 @@ test('Passkeys: Knopf auf der Anmeldeseite, Verwaltung in den Einstellungen, Abb
 
   await anmelden(page);
   const dialog = await einstellungen(page);
+  await dialog.getByRole('button', { name: 'Konto und Anmeldung' }).click();
   await expect(dialog.getByText('Passkeys', { exact: true })).toBeVisible();
   await expect(dialog.getByText('Noch kein Passkey')).toBeVisible();
   await dialog.getByRole('button', { name: 'Passkey hinzufügen' }).click();

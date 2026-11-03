@@ -43,7 +43,16 @@ export async function startMockHa({ port, first, second, token }) {
 
   setState(`person.${first}`, 'home', { friendly_name: cap(first), user_id: `dev-${first}` });
   setState(`person.${second}`, 'home', { friendly_name: cap(second), user_id: `ha-${second}-e2e` });
-  setState('sensor.waschmaschine_leistung', '120', { friendly_name: 'Waschmaschine Leistung', unit_of_measurement: 'W' });
+  setState('sensor.waschmaschine_leistung', '120', { friendly_name: 'Waschmaschine Leistung', unit_of_measurement: 'W', device_class: 'power' });
+  // Dazu, was „Gefunden" erkennen soll: Trockner (Leistung), Abfallkalender, Wetter, Batterie
+  setState('sensor.trockner_leistung', '2', { friendly_name: 'Steckdose Trockner Leistung', unit_of_measurement: 'W', device_class: 'power' });
+  setState('calendar.abfall', 'off', { friendly_name: 'Abfallkalender' });
+  setState('weather.zuhause', 'sunny', { friendly_name: 'Zuhause' });
+  setState('sensor.bad_batterie', '12', { friendly_name: 'Bad Fenster Batterie', unit_of_measurement: '%', device_class: 'battery' });
+  /** Historie je Entität für den Probelauf (POST /mock/history), Kalendertermine (POST /mock/calendar), Vorhersagen (POST /mock/forecast) */
+  const histories = new Map();
+  const calendars = new Map();
+  const forecasts = new Map();
   setState('binary_sensor.waschmaschine_tuer', 'off', { friendly_name: 'Waschmaschine Tür' });
   // Haus-Kanäle: ein Lautsprecher, eine Lampe und ein Sprachdienst
   setState('media_player.kinderzimmer', 'idle', { friendly_name: 'Kinderzimmer', volume_level: 0.3 });
@@ -105,7 +114,26 @@ export async function startMockHa({ port, first, second, token }) {
       }
       return send([]);
     }
+    if (req.method === 'GET' && url.pathname.startsWith('/api/calendars/')) {
+      const entity = decodeURIComponent(url.pathname.slice('/api/calendars/'.length));
+      return send(calendars.get(entity) ?? []);
+    }
     // Fernsteuerung für die Tests
+    if (req.method === 'POST' && url.pathname === '/mock/history') {
+      const b = await body(req);
+      histories.set(b.entityId, b.points);
+      return send({ ok: true });
+    }
+    if (req.method === 'POST' && url.pathname === '/mock/calendar') {
+      const b = await body(req);
+      calendars.set(b.entityId, b.events);
+      return send({ ok: true });
+    }
+    if (req.method === 'POST' && url.pathname === '/mock/forecast') {
+      const b = await body(req);
+      forecasts.set(b.entityId, b.forecast);
+      return send({ ok: true });
+    }
     if (req.method === 'POST' && url.pathname === '/mock/state') {
       const b = await body(req);
       setState(b.entityId, b.state, b.attributes ?? {});
@@ -175,6 +203,18 @@ export async function startMockHa({ port, first, second, token }) {
           return ok({ storage: [{ name: cap(first), user_id: `dev-${first}` }, { name: cap(second), user_id: `ha-${second}-e2e` }], config: [] });
         case 'lovelace/dashboards/list':
           return ok([]);
+        case 'history/history_during_period': {
+          // wie Home Assistant mit minimal_response: { entity_id: [{ s, lu }] }, lu = Sekunden seit 1970
+          const out = {};
+          for (const id of msg.entity_ids ?? []) out[id] = (histories.get(id) ?? []).map((p) => ({ s: p.state, lu: Date.parse(p.at) / 1000 }));
+          return ok(out);
+        }
+        case 'call_service':
+          if (msg.domain === 'weather' && msg.service === 'get_forecasts') {
+            const id = msg.target?.entity_id;
+            return ok({ response: { [id]: { forecast: forecasts.get(id) ?? [] } } });
+          }
+          return ok();
         default:
           return ws.send(JSON.stringify({ id: msg.id, type: 'result', success: false, error: { message: `unbekannter Befehl ${msg.type}` } }));
       }

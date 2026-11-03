@@ -73,7 +73,7 @@ test('Einrichtung: der Administrator macht eine Person zum Kind, ein Administrat
 
   await page.goto('/');
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
-  await page.getByRole('button', { name: 'Personen & Zugriff' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Personen und Kinder' }).click();
   await page.getByRole('button', { name: new RegExp(KID) }).click();
   const setup = page.getByTestId('child-setup');
   await setup.scrollIntoViewIfNeeded();
@@ -102,15 +102,20 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
     // Einstellungen: nur Sprache und Farbe
     await sheet.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     const settings = page.getByRole('dialog');
-    await expect(settings.getByText('Sprache').first()).toBeVisible();
-    await expect(settings.getByTestId('accent-wheel')).toBeVisible();
-    await expect(settings.getByRole('button', { name: 'Personen & Zugriff' })).toHaveCount(0);
+    await expect(settings.getByRole('button', { name: 'Sprache und Farbe' })).toBeVisible();
+    await expect(settings.getByRole('button', { name: 'Personen und Kinder' })).toHaveCount(0);
     await expect(settings.getByText('Benachrichtigungen')).toHaveCount(0);
+    await settings.getByRole('button', { name: 'Sprache und Farbe' }).click();
+    await expect(settings.getByTestId('accent-wheel')).toBeVisible();
     await page.keyboard.press('Escape');
 
-    // Agenda: keine Fairness-Wahl
-    await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Agenda' }).click();
-    await expect(page.getByRole('group', { name: 'Ansicht der Agenda' })).toHaveCount(0);
+    // Drei Reiter (ohne Zuhause), auf Heute keine Zeile „Bei den anderen", keine Wochenseite
+    const nav = page.getByRole('navigation', { name: 'Ansicht' });
+    await expect(nav.getByRole('button')).toHaveCount(3);
+    await expect(nav.getByRole('button', { name: 'Zuhause' })).toHaveCount(0);
+    await nav.getByRole('button', { name: 'Heute' }).click();
+    await expect(page.getByTestId('today-sentence')).toBeVisible();
+    await expect(page.getByText('Bei den anderen')).toHaveCount(0);
   } finally {
     await kid.close();
   }

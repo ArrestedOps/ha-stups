@@ -15,6 +15,7 @@ async function openWheel(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Sprache und Farbe' }).click();
   const wheel = page.getByTestId('accent-wheel');
   await wheel.scrollIntoViewIfNeeded();
   return wheel;
@@ -38,6 +39,7 @@ test('Farbkreis: Antippen ändert die Farbe sofort, speichert sie und sie bleibt
   expect(await accentVar(page)).toMatch(/^#[0-9a-f]{6}$/);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Sprache und Farbe' }).click();
   await expect(page.getByTestId('accent-wheel')).toHaveAttribute('aria-valuenow', '90');
 });
 
@@ -48,11 +50,11 @@ test('Farbkreis: Ziehen folgt dem Finger, gespeichert wird beim Loslassen', asyn
   const cy = box.y + box.height / 2;
   await page.mouse.move(cx + 96, cy); // 90°
   await page.mouse.down();
-  await page.mouse.move(cx, cy + 96, { steps: 6 }); // 180°
-  await expect(wheel).toHaveAttribute('aria-valuenow', '180');
+  await page.mouse.move(cx, cy - 96, { steps: 6 }); // 0° (oben, über Rot hinweg)
+  await expect(wheel).toHaveAttribute('aria-valuenow', '0');
   expect(await savedHue(page)).toBeNull(); // noch nicht gespeichert
   await page.mouse.up();
-  await expect.poll(() => savedHue(page)).toBe(180);
+  await expect.poll(() => savedHue(page)).toBe(0);
 });
 
 test('Farbkreis: Orange (Standard) stellt die Farbe der App wieder her', async ({ page }) => {
@@ -74,6 +76,17 @@ test('Farbkreis: mit der Tastatur bedienbar (Pfeile, Shift = große Schritte)', 
   await page.keyboard.press('Shift+ArrowLeft');
   await expect(wheel).toHaveAttribute('aria-valuenow', '15');
   await expect.poll(() => savedHue(page)).toBe(15);
+});
+
+test('Türkis gehört dem Haus: der Farbkreis lässt Grün und Türkis aus, ein Tipp dorthin rückt an den Rand', async ({ page }) => {
+  const wheel = await openWheel(page);
+  const box = (await wheel.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2 + 96); // 180° liegt mitten in der Lücke
+  await expect(wheel).toHaveAttribute('aria-valuenow', '211');
+  await expect.poll(() => savedHue(page)).toBe(211);
+  // und das Haus bleibt Türkis, egal welche Farbe man wählt
+  const house = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--house').trim());
+  expect(house).toMatch(/^#[0-9a-f]{6}$/);
 });
 
 test('Antippen der Mitte oder weit außerhalb ändert nichts', async ({ page }) => {

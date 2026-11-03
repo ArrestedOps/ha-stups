@@ -21,7 +21,7 @@
   }
 </script>
 
-<Page title={t('Papierkorb, Archiv, Umzug')}>
+<Page title={ui.isAdmin && feat.migration ? t('Papierkorb, Archiv, Umzug') : t('Papierkorb und Archiv')}>
   <Group title={t('Gelöschtes und Erledigtes')} hint={t('Der Papierkorb und das Archiv gehören zum gerade geöffneten Board.')}>
     <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => openSheet({ type: 'trash' })}>
       <Icon name="trash" size={20} /><span class="flex-1">{t('Papierkorb')}</span><Icon name="chevron-right" size={18} />

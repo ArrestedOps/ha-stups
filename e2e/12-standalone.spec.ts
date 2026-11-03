@@ -62,17 +62,20 @@ test('Ohne Home Assistant: drei Reiter, kein Dashboard-Button, nichts von Home A
   await expect(page.getByRole('button', { name: 'Dashboard' })).toHaveCount(0);
 
   const dialog = await einstellungen(page);
+  await dialog.getByRole('button', { name: 'Konto und Anmeldung' }).click();
   await expect(dialog.getByText('Konto', { exact: true })).toBeVisible();
   await expect(dialog.getByText('Angemeldet als')).toBeVisible();
   for (const weg of ['Zurück zum Dashboard', 'Darstellung', 'Wächter', 'Bubble Card', 'Umzug', 'Diagnose-Seite', 'Notify-Dienste']) {
     await expect(dialog.getByText(weg, { exact: false })).toHaveCount(0);
   }
-  // Push gibt es hier über ntfy (der Testserver hat einen eingerichtet)
-  await expect(dialog.getByText('Benachrichtigungen', { exact: true })).toBeVisible();
-  // kein Fehler, keine leere Gruppe
-  await expect(page.getByRole('alert').filter({ hasText: /\S/ })).toHaveCount(0);
   // Passkeys gehen nicht mit einer IP-Adresse als STUPS_PUBLIC_URL: weder Verwaltung noch Anmelde-Routen
   await expect(dialog.getByText('Passkeys', { exact: true })).toHaveCount(0);
+  // Push gibt es hier über ntfy (der Testserver hat einen eingerichtet)
+  await dialog.getByRole('button', { name: 'Zurück zu den Einstellungen' }).click();
+  await expect(dialog.getByRole('button', { name: 'Benachrichtigungen' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: /Umzug/ })).toHaveCount(0);
+  // kein Fehler, keine leere Gruppe
+  await expect(page.getByRole('alert').filter({ hasText: /\S/ })).toHaveCount(0);
   expect((await page.request.get('/api/capabilities').then((r) => r.json())).passkeys).toBe(false);
   expect((await page.request.post('/api/auth/passkey/options', { headers: { 'x-stups-client': 'e2e' } })).status()).toBe(404);
 });
@@ -104,7 +107,7 @@ test('Anmelden, Karte anlegen, nach dem Neuladen noch angemeldet; Abmelden sperr
 test('Administrator legt Ben an; Ben meldet sich an und sieht keine Verwaltung', async ({ page, browser, baseURL }) => {
   await melden(page, 'anna', PW);
   const dialog = await einstellungen(page);
-  await dialog.getByRole('button', { name: 'Personen & Zugriff' }).click();
+  await dialog.getByRole('button', { name: 'Personen und Kinder' }).click();
 
   const form = page.getByRole('form', { name: 'Benutzer anlegen' });
   await form.getByLabel('Name der neuen Person').fill('Ben');
@@ -125,7 +128,8 @@ test('Administrator legt Ben an; Ben meldet sich an und sieht keine Verwaltung',
     await expect(ben.getByText('Fenster putzen').first()).toBeVisible(); // gemeinsame Boards
 
     const d = await einstellungen(ben);
-    await d.getByRole('button', { name: 'Personen & Zugriff' }).click();
+    // ein Mitglied sieht keine Verwaltung der Personen
+    await expect(d.getByRole('button', { name: 'Personen und Kinder' })).toHaveCount(0);
     await expect(ben.getByRole('form', { name: 'Benutzer anlegen' })).toHaveCount(0);
     // die Verwaltung der Benutzer ist auch per API zu
     expect((await ctx.request.get('/api/auth/users')).status()).toBe(403);
@@ -193,8 +197,7 @@ async function tap(request: import('@playwright/test').APIRequestContext, button
 test('ntfy: Thema eintragen, Test-Nachricht kommt an, der Knopf meldet sich zurück', async ({ page, request }) => {
   await anmelden(page);
   const dialog = await einstellungen(page);
-  await dialog.getByRole('button', { name: 'Personen & Zugriff' }).click();
-  await page.getByRole('button', { name: /Anna.*Benutzername anna/ }).click();
+  await dialog.getByRole('button', { name: 'Benachrichtigungen' }).click();
 
   // Thema prüfen und speichern
   const field = page.getByLabel('ntfy-Thema von Anna');
@@ -206,13 +209,13 @@ test('ntfy: Thema eintragen, Test-Nachricht kommt an, der Knopf meldet sich zur�
   await field.fill('anna-e2e-topf');
   await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('ntfy-Thema gespeichert')).toBeVisible();
-  await expect(page.getByRole('button', { name: /Anna.*Push über ntfy/ })).toBeVisible();
   await expect(page.getByText('http://127.0.0.1:18431').first()).toBeVisible(); // die Anleitung nennt den Server
 
   // Test-Nachricht aus den Einstellungen
   await request.get(`${NTFY}/__reset`);
   await page.goto('/');
   const settings = await einstellungen(page);
+  await settings.getByRole('button', { name: 'Benachrichtigungen' }).click();
   await settings.getByRole('button', { name: 'An mich senden' }).click();
   await expect(page.getByText('Test-Nachricht gesendet.')).toBeVisible();
 
@@ -231,6 +234,7 @@ test('ntfy: Thema eintragen, Test-Nachricht kommt an, der Knopf meldet sich zur�
   expect(ok.status()).toBe(200);
   expect(await ok.json()).toEqual({ result: 'test' });
 
+  await settings.getByRole('button', { name: 'Etwas kommt nicht an? Prüfen' }).click();
   await settings.getByRole('button', { name: 'Stand anzeigen' }).click();
   await expect(settings.getByTestId('ntfy-status')).toContainText('Rückweg der Knöpfe zuletzt geprüft');
   await expect(settings.getByTestId('ntfy-status')).toContainText('Anna: Thema eingetragen');

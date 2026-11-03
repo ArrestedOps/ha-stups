@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
 import { settingsGroups, type SettingsCtx } from '../src/lib/settingsPages';
 
-const addon: SettingsCtx = { isAdmin: true, isChild: false, standalone: false, beta: false, push: true, watchers: true, haUi: true, house: true };
+const addon: SettingsCtx = { isAdmin: true, isChild: false, standalone: false, beta: false, push: true, watchers: true, haUi: true, house: true, migration: true };
 const ids = (ctx: SettingsCtx) => settingsGroups(ctx).flatMap((g) => g.pages.map((p) => p.id));
 const groupIds = (ctx: SettingsCtx) => settingsGroups(ctx).map((g) => g.id);
 

@@ -138,7 +138,7 @@
 
 </script>
 
-<Sheet title={t('Personen & Zugriff')} onclose={closeSheet}>
+<Sheet title={t('Personen und Kinder')} onclose={closeSheet}>
   {#snippet left()}
     <button class="flex min-h-11 items-center pr-3 pl-1 text-[17px] text-accent-text" onclick={() => openSettings()} aria-label={t('Zurück zu den Einstellungen')}>
       <Icon name="chevron-left" size={24} stroke={2.6} />{t('Einstellungen')}

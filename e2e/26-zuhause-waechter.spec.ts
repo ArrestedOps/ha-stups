@@ -1,0 +1,141 @@
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+
+// Läuft nur im Projekt „waechter": nachgebautes Home Assistant (e2e/server-ha.mjs). Zuhause zeigt den Zustand der Wächter;
+// Heute zeigt, was vom Haus kam, mit Erledigen und Weitergeben.
+const MOCK = 'http://127.0.0.1:18411';
+test.describe.configure({ timeout: 90_000, mode: 'serial' });
+
+const setState = (request: APIRequestContext, entityId: string, state: string) => request.post(`${MOCK}/mock/state`, { data: { entityId, state } });
+const nav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
+
+interface Person {
+  id: string;
+  name: string;
+}
+
+async function setup(request: APIRequestContext) {
+  const people = (await (await request.get('/api/people')).json()) as Person[];
+  const rene = people.find((p) => p.name === 'Rene')!;
+  const conny = people.find((p) => p.name === 'Conny')!;
+  await request.patch(`/api/access/people/${rene.id}`, { data: { notifyServices: ['mobile_app_rene_e2e'], quietOff: true } });
+  await request.patch(`/api/access/people/${conny.id}`, { data: { notifyServices: ['mobile_app_conny_e2e'], quietOff: true } });
+  const tag = Date.now().toString(36);
+  const board = (await (await request.post('/api/boards', { data: { name: `Zuhause ${tag}` } })).json()) as { id: string };
+  const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
+  const columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;
+  return { rene, conny, boardId: board.id, columnId, tag };
+}
+
+const cardsOf = async (request: APIRequestContext, boardId: string) =>
+  ((await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { id: string; title: string; assigneeIds: string[]; completedAt: string | null }[] }).cards;
+
+test('Zuhause: läuft gerade → wartet auf jemanden; Heute zeigt die Karte vom Haus, Erledigen nimmt sie weg', async ({ page, request }) => {
+  const s = await setup(request);
+  await setState(request, 'person.rene', 'home');
+  await setState(request, 'person.conny', 'not_home');
+  await setState(request, 'sensor.waschmaschine_leistung', '2');
+  const name = `Maschine ${s.tag}`;
+  const title = `Aufhängen ${s.tag}`;
+  const created = await request.post('/api/watchers', {
+    data: {
+      name,
+      trigger: { entityId: 'sensor.waschmaschine_leistung', kind: 'below', value: 5, forMin: 0 },
+      card: { boardId: s.boardId, columnId: s.columnId, title, due: { kind: 'none' } },
+      assign: { mode: 'fixed', personIds: [s.rene.id] },
+      cooldownMin: 0,
+    },
+  });
+  expect(created.status()).toBe(201);
+
+  await page.goto('/');
+  await nav(page).getByRole('button', { name: 'Zuhause' }).click();
+  await expect(page.getByTestId('home-quiet')).toContainText(name);
+
+  // Die Maschine läuft: Leistung über der Schwelle
+  await setState(request, 'sensor.waschmaschine_leistung', '120');
+  await expect(page.getByTestId('home-running')).toContainText(name, { timeout: 20_000 });
+  await expect(page.getByTestId('home-running')).toContainText(`danach: ${title}`);
+
+  // Fertig: die Karte entsteht, der Wächter wartet auf Rene
+  await setState(request, 'sensor.waschmaschine_leistung', '2');
+  await expect(page.getByTestId('home-waiting')).toContainText(title, { timeout: 20_000 });
+  expect((await cardsOf(request, s.boardId)).some((c) => c.title === title)).toBe(true);
+
+  // Heute: „Vom Haus", mit Türkis-Quelle; Erledigen
+  await nav(page).getByRole('button', { name: 'Heute' }).click();
+  const house = page.getByTestId('today-house');
+  await expect(house).toContainText(name);
+  await expect(house.getByText(title)).toBeVisible();
+  await house.getByRole('button', { name: 'Erledigt' }).first().click();
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).find((c) => c.title === title)?.completedAt ?? null).not.toBeNull();
+  await expect(house.getByText(title)).toHaveCount(0);
+});
+
+test('Heute: Weitergeben schiebt die Karte an die nächste Person, ohne sie zu erledigen', async ({ page, request }) => {
+  const s = await setup(request);
+  await setState(request, 'person.rene', 'home');
+  await setState(request, 'person.conny', 'not_home'); // nur Rene ist da: die Karte entsteht bei ihm
+  await setState(request, 'sensor.waschmaschine_leistung', '120');
+  const title = `Weiterreichen ${s.tag}`;
+  const created = await request.post('/api/watchers', {
+    data: {
+      name: `Reihum ${s.tag}`,
+      trigger: { entityId: 'sensor.waschmaschine_leistung', kind: 'below', value: 5, forMin: 0 },
+      card: { boardId: s.boardId, columnId: s.columnId, title, due: { kind: 'none' } },
+      assign: { mode: 'rotation_present', personIds: [s.rene.id, s.conny.id] },
+      cooldownMin: 0,
+    },
+  });
+  expect(created.status()).toBe(201);
+  await setState(request, 'sensor.waschmaschine_leistung', '2');
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).length, { timeout: 20_000 }).toBe(1);
+  expect((await cardsOf(request, s.boardId))[0]!.assigneeIds).toEqual([s.rene.id]);
+
+  await page.goto('/');
+  await nav(page).getByRole('button', { name: 'Heute' }).click();
+  const house = page.getByTestId('today-house');
+  await expect(house.getByText(title)).toBeVisible();
+
+  // Ist niemand sonst zu Hause, bleibt die Karte bei mir, mit Hinweis
+  await house.getByRole('button', { name: 'Weitergeben' }).first().click();
+  await expect(page.getByText('Gerade ist niemand sonst dran')).toBeVisible();
+  expect((await cardsOf(request, s.boardId))[0]!.assigneeIds).toEqual([s.rene.id]);
+
+  // Conny kommt heim: jetzt geht die Karte an sie
+  await setState(request, 'person.conny', 'home');
+  await house.getByRole('button', { name: 'Weitergeben' }).first().click();
+  await expect(page.getByText('Weitergegeben an Conny')).toBeVisible();
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).find((c) => c.title === title)?.assigneeIds).toEqual([s.conny.id]);
+  expect((await cardsOf(request, s.boardId)).find((c) => c.title === title)?.completedAt).toBeNull();
+  await expect(house.getByText(title)).toHaveCount(0);
+});
+
+test('Erst vorschlagen: die Karte entsteht ohne Zuständige, „Übernehmen" auf Heute gibt sie dem, der tippt', async ({ page, request }) => {
+  const s = await setup(request);
+  await setState(request, 'person.rene', 'home');
+  await setState(request, 'person.conny', 'home');
+  await setState(request, 'sensor.waschmaschine_leistung', '120');
+  const title = `Wer übernimmt ${s.tag}`;
+  const created = await request.post('/api/watchers', {
+    data: {
+      name: `Vorschlag ${s.tag}`,
+      trigger: { entityId: 'sensor.waschmaschine_leistung', kind: 'below', value: 5, forMin: 0 },
+      card: { boardId: s.boardId, columnId: s.columnId, title, due: { kind: 'none' } },
+      assign: { mode: 'suggest', personIds: [], fallback: 'none' },
+      cooldownMin: 0,
+    },
+  });
+  expect(created.status()).toBe(201);
+  await setState(request, 'sensor.waschmaschine_leistung', '2');
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).length, { timeout: 20_000 }).toBe(1);
+  expect((await cardsOf(request, s.boardId))[0]!.assigneeIds).toEqual([]);
+
+  await page.goto('/');
+  await nav(page).getByRole('button', { name: 'Heute' }).click();
+  const house = page.getByTestId('today-house');
+  await expect(house.getByText(title)).toBeVisible();
+  await expect(house.getByText('Wer übernimmt?')).toBeVisible();
+  await house.getByRole('button', { name: 'Übernehmen' }).first().click();
+  await expect.poll(async () => (await cardsOf(request, s.boardId))[0]!.assigneeIds).toEqual([s.rene.id]);
+  await expect(house.getByRole('button', { name: 'Weitergeben' }).first()).toBeVisible();
+});

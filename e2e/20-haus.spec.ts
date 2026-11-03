@@ -88,15 +88,21 @@ async function openPeople(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
-  await page.getByRole('button', { name: /Personen & Zugriff/ }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Personen und Kinder/ }).click();
   await expect(page.getByRole('radiogroup', { name: 'Zugriff' })).toBeVisible();
 }
 
 test('Einrichten in den Einstellungen: Sprachdienst wählen, Ansage-Kanal anlegen, testen', async ({ page, request }) => {
-  await openPeople(page);
+  // Sprachdienst: Home Assistant › Ansage und Lampe
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Ansage und Lampe' }).click();
   const tts = page.getByLabel('Sprachdienst für Ansagen');
   await tts.selectOption('tts.piper');
   await expect(tts).toHaveValue('tts.piper');
+  await page.getByRole('button', { name: 'Zurück zu den Einstellungen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Personen und Kinder/ }).click();
+  await expect(page.getByRole('radiogroup', { name: 'Zugriff' })).toBeVisible();
 
   await page.getByRole('dialog').getByRole('button', { name: /Conny.*Push-Gerät/ }).click();
   const house = page.getByTestId(`house-${conny.id}`);

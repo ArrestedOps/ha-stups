@@ -73,10 +73,9 @@ test('Englisches Gerät: Agenda, Kalender, Einstellungen, Karten-Fenster', async
   await page.goto('/');
   const nav = page.getByRole('navigation', { name: 'View' });
 
-  await nav.getByRole('button', { name: 'Agenda' }).click();
-  await expect(page.getByRole('heading', { name: 'Agenda' })).toBeVisible();
-  await expect(page.getByText('All cards with a due date, by day')).toBeVisible();
-  await noGerman(page, 'Agenda', 'header, nav');
+  await nav.getByRole('button', { name: 'Today' }).click();
+  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible();
+  await noGerman(page, 'Heute', 'header, nav');
   await noSideScroll(page);
 
   await nav.getByRole('button', { name: 'Calendar' }).click();
@@ -84,9 +83,14 @@ test('Englisches Gerät: Agenda, Kalender, Einstellungen, Karten-Fenster', async
   await expect(page.getByRole('button', { name: 'Week', exact: true })).toBeVisible();
   await noGerman(page, 'Kalender', 'header, nav');
   await noSideScroll(page);
+  // die Liste (die frühere Agenda)
+  await page.getByRole('group', { name: 'View' }).getByRole('button', { name: 'List' }).click();
+  await expect(page.getByText('Dentist').first()).toBeVisible();
+  await noGerman(page, 'Liste', 'header, nav');
+  await noSideScroll(page);
 
-  await nav.getByRole('button', { name: 'Watchers' }).click();
-  await noGerman(page, 'Wächter');
+  await nav.getByRole('button', { name: 'Home' }).click();
+  await noGerman(page, 'Zuhause');
   await noSideScroll(page);
 
   await nav.getByRole('button', { name: 'Boards' }).click();
@@ -100,15 +104,19 @@ test('Englisches Gerät: Agenda, Kalender, Einstellungen, Karten-Fenster', async
 
   await page.getByRole('button', { name: 'Open settings' }).click();
   await expect(page.getByRole('dialog').getByText('Settings', { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole('dialog').getByText('Language', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('For me', { exact: true }).first()).toBeVisible();
   await noGerman(page, 'Einstellungen');
   await noSideScroll(page);
+  await page.getByRole('dialog').getByRole('button', { name: 'Language and colour' }).click();
+  await expect(page.getByRole('dialog').getByText('Language', { exact: true }).first()).toBeVisible();
+  await noGerman(page, 'Sprache und Farbe');
 });
 
 test('Sprache wechseln: Deutsch sofort, zurück auf Automatisch wieder Englisch; die Wahl gilt für die Person', async ({ page, request }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Open settings' }).click();
   const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Language and colour' }).click();
   await dialog.getByLabel('Language').selectOption('de');
 
   // sofort deutsch, ohne Neuladen
@@ -120,6 +128,7 @@ test('Sprache wechseln: Deutsch sofort, zurück auf Automatisch wieder Englisch;
   await expect(page.getByRole('button', { name: 'Einstellungen öffnen' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Sprache und Farbe' }).click();
   await page.getByRole('dialog').getByLabel('Sprache').selectOption('auto');
   await expect(page.getByRole('dialog').getByText('Language', { exact: true }).first()).toBeVisible();
   expect((await (await request.get('/api/me')).json()).user.languageChoice).toBe('auto');

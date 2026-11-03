@@ -408,6 +408,8 @@ export interface Capabilities {
   publicUrl: string | null;
   /** Anmeldung mit Passkey ist eingerichtet (eigene Konten, STUPS_PUBLIC_URL mit HTTPS) */
   passkeys: boolean;
+  /** Version der App (null, wenn unbekannt) */
+  version?: string | null;
 }
 
 /** Beta: Push und Wächter sind zunächst aus, ein Administrator schaltet sie ein */

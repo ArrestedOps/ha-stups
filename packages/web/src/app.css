@@ -16,9 +16,13 @@
   --color-accent2: var(--accent2);
   --color-accent-text: var(--accent-text);
   --color-on-accent: var(--on-accent);
+  --color-house: var(--house);
+  --color-house-bg: var(--house-bg);
+  --color-house-line: var(--house-line);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
 }
 
 :root {
@@ -33,6 +37,10 @@
   --accent2: #ff8a4d;
   --accent-text: #ff8a4d;
   --on-accent: #ffffff;
+  /* Zweite Stimme: Türkis für alles, was vom Haus kommt (unabhängig vom wählbaren Akzent) */
+  --house: #4fd6c8;
+  --house-bg: #11302d;
+  --house-line: #1f5a54;
   --danger: #ff8a8a;
   --danger-bg: #3a1d22;
   --scrim: rgba(0, 0, 0, 0.55);
@@ -72,6 +80,9 @@
     --accent2: #f2601f;
     --accent-text: #c23c06;
     --on-accent: #ffffff;
+    --house: #0a6b63;
+    --house-bg: #dff4f0;
+    --house-line: #9fd8d0;
     --danger: #b0001a;
     --danger-bg: #ffe5e7;
     --scrim: rgba(43, 29, 21, 0.4);
@@ -114,6 +125,9 @@
   pointer-events: none;
   z-index: 0;
 }
+
+/* Überschriften der Reiter: eigene Schrift (lokal gebündelt, kein CDN) */
+.font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
 
 /* Karten im hellen Thema mit weichem Schatten statt Rahmenlinie */
 .card-shadow { box-shadow: var(--shadow-card); }

@@ -9,6 +9,19 @@ export type Scheme = 'dark' | 'light';
 /** Der Farbton des Orange, mit dem die Auswahl auf dem Kreis beginnt, solange nichts gewählt ist */
 export const DEFAULT_HUE = 40;
 
+/**
+ * Grün und Türkis wählt niemand als Akzent: Türkis ist die Farbe für alles, was vom Haus kommt (--house in app.css), und beide
+ * Stimmen müssen unterscheidbar bleiben. Der Farbkreis lässt diesen Bereich aus.
+ */
+export const BLOCKED_HUES = { from: 140, to: 210 } as const;
+
+/** Schiebt einen Farbton im gesperrten Bereich an den näheren Rand */
+export function snapHue(hue: number): number {
+  if (hue < BLOCKED_HUES.from || hue > BLOCKED_HUES.to) return hue;
+  const mid = (BLOCKED_HUES.from + BLOCKED_HUES.to) / 2;
+  return hue < mid ? BLOCKED_HUES.from - 1 : BLOCKED_HUES.to + 1;
+}
+
 interface Look {
   /** Fläche (Knopf, aktiver Reiter) */
   accent: [l: number, c: number];
@@ -108,7 +121,7 @@ export const ACCENT_PROPS = Object.keys(accentVars(0, 'dark'));
 export function hueFromStorage(raw: string | null): number | null {
   if (raw === null || raw === '') return null;
   const n = Number(raw);
-  return Number.isInteger(n) && n >= 0 && n <= 359 ? n : null;
+  return Number.isInteger(n) && n >= 0 && n <= 359 ? snapHue(n) : null;
 }
 
 /** Setzt die Farbe auf der Seite; null entfernt sie, dann gilt wieder das Orange aus app.css */

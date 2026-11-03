@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ACCENT_PROPS, accentVars, applyAccent, contrast, DEFAULT_HUE, hueFromStorage, oklchToRgb, swatch } from '../src/lib/accent';
+import { ACCENT_PROPS, accentVars, applyAccent, BLOCKED_HUES, contrast, DEFAULT_HUE, hueFromStorage, oklchToRgb, snapHue, swatch } from '../src/lib/accent';
 
 const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
 
@@ -64,6 +64,22 @@ describe('Farbberechnung', () => {
     expect(accentVars(180, 'dark')['--on-accent']).not.toBe('#ffffff');
     for (const hue of [25, DEFAULT_HUE, 260]) expect(accentVars(hue, 'dark')['--on-accent'], String(hue)).toBe('#ffffff');
     expect(accentVars(160, 'light')['--on-accent']).toBe('#ffffff');
+  });
+});
+
+describe('Türkis gehört dem Haus', () => {
+  it('snapHue lässt erlaubte Töne unverändert und schiebt Grün/Türkis an den nächsten Rand', () => {
+    for (const h of [0, 40, 139, 211, 260, 359]) expect(snapHue(h), String(h)).toBe(h);
+    expect(snapHue(BLOCKED_HUES.from)).toBe(BLOCKED_HUES.from - 1);
+    expect(snapHue(BLOCKED_HUES.to)).toBe(BLOCKED_HUES.to + 1);
+    expect(snapHue(160)).toBe(BLOCKED_HUES.from - 1);
+    expect(snapHue(190)).toBe(BLOCKED_HUES.to + 1);
+    for (let h = 0; h < 360; h++) expect(snapHue(h) < BLOCKED_HUES.from || snapHue(h) > BLOCKED_HUES.to, String(h)).toBe(true);
+  });
+
+  it('ein gemerkter Farbton im Türkis-Bereich fällt auf den Rand zurück', () => {
+    expect(hueFromStorage('180')).toBe(BLOCKED_HUES.to + 1);
+    expect(hueFromStorage('100')).toBe(100);
   });
 });
 

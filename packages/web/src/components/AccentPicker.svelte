@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { DEFAULT_HUE, swatch } from '../lib/accent';
+  import { BLOCKED_HUES, DEFAULT_HUE, snapHue, swatch } from '../lib/accent';
   import { t } from '../lib/i18n/index.svelte';
   import { applyAccentHue, changeAccent, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
@@ -18,7 +18,12 @@
   const hue = $derived(drag ?? saved ?? DEFAULT_HUE);
 
   // Der Kreis zeigt alle Farbtöne in der Helligkeit des Dunkelmodus: so sieht man, was man bekommt
-  const stops = Array.from({ length: 37 }, (_, i) => `${swatch(Math.min(i * 10, 359), 'dark')} ${i * 10}deg`).join(', ');
+  // Grün und Türkis fehlen: diese Farbe gehört dem Haus (siehe BLOCKED_HUES)
+  const stops = Array.from({ length: 37 }, (_, i) => {
+    const h = Math.min(i * 10, 359);
+    const blocked = h >= BLOCKED_HUES.from && h <= BLOCKED_HUES.to;
+    return `${blocked ? 'var(--surface2)' : swatch(h, 'dark')} ${i * 10}deg`;
+  }).join(', ');
   const ringStyle = `background: conic-gradient(from 0deg, ${stops}); -webkit-mask-image: radial-gradient(farthest-side, transparent ${INNER - 1}px, #000 ${INNER}px); mask-image: radial-gradient(farthest-side, transparent ${INNER - 1}px, #000 ${INNER}px);`;
 
   const handle = $derived.by(() => {
@@ -35,7 +40,7 @@
     const dy = e.clientY - (r.top + r.height / 2);
     const dist = Math.hypot(dx, dy);
     if (dist < INNER - 10 || dist > SIZE / 2 + 24) return null;
-    return Math.round((Math.atan2(dx, -dy) * 180) / Math.PI + 360) % 360;
+    return snapHue(Math.round((Math.atan2(dx, -dy) * 180) / Math.PI + 360) % 360);
   }
 
   function move(e: PointerEvent) {
@@ -65,7 +70,7 @@
     const delta = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? step : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -step : 0;
     if (!delta) return;
     e.preventDefault();
-    const h = (((hue + delta) % 360) + 360) % 360;
+    const h = snapHue((((hue + delta) % 360) + 360) % 360);
     drag = h;
     applyAccentHue(h);
     // Mehrere Tastendrücke hintereinander werden einmal gespeichert

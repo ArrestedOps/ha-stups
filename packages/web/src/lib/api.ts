@@ -25,6 +25,8 @@ export interface User {
   language: 'de' | 'en' | null;
   /** Eigener Farbton der Oberfläche (0–359); null: das Orange der App */
   accentHue: number | null;
+  /** Sonntags-Zusammenfassung als Push (aus, bis die Person sie einschaltet) */
+  weeklySummary: boolean;
 }
 
 export type AccessMode = 'everyone' | 'selected';
@@ -447,7 +449,7 @@ export const api = {
   addPerson: (b: { name: string; haUserId?: string | null }) => post<User>('access/people', b),
   updatePerson: (
     id: string,
-    b: Partial<{ displayName: string; notifyServices: string[]; ntfyTopic: string; quietStart: string; quietEnd: string; quietOff: boolean }>,
+    b: Partial<{ displayName: string; notifyServices: string[]; ntfyTopic: string; quietStart: string; quietEnd: string; quietOff: boolean; weeklySummary: boolean }>,
   ) =>
     patch<User>(`access/people/${id}`, b),
   removePerson: (id: string) => del(`access/people/${id}`),

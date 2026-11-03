@@ -227,6 +227,14 @@ export function createPeople(c: Ctx, late: unknown) {
   }
 
   /** Eigener Farbton der Oberfläche: eine ganze Zahl von 0 bis 359, null = das Orange der App */
+  /** Sonntags-Zusammenfassung als Push: je Person ein- oder ausgeschaltet (aus, bis jemand sie einschaltet) */
+  function setWeeklySummary(id: string, on: unknown): User {
+    if (typeof on !== 'boolean') throw new ValidationError(t('„Wöchentliche Zusammenfassung" muss wahr oder falsch sein'));
+    userRow(id);
+    run('update users set weekly_summary = ? where id = ?', on ? 1 : 0, id);
+    return toUser(userRow(id));
+  }
+
   function setAccentHue(id: string, hue: number | null): void {
     if (hue !== null && (!Number.isInteger(hue) || hue < 0 || hue > 359)) throw new ValidationError(t('Der Farbton muss eine Zahl von 0 bis 359 sein'));
     userRow(id);
@@ -367,6 +375,7 @@ export function createPeople(c: Ctx, late: unknown) {
     languageOf,
     setLanguage,
     setAccentHue,
+    setWeeklySummary,
     getSetting,
     putSetting,
     rawSetting,

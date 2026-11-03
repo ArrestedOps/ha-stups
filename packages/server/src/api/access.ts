@@ -110,6 +110,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
     if (b.quietStart !== undefined || b.quietEnd !== undefined || b.quietOff !== undefined) {
       person = store.setNudgeQuiet(person.id, { start: b.quietStart, end: b.quietEnd, off: b.quietOff });
     }
+    if (b.weeklySummary !== undefined) person = store.setWeeklySummary(person.id, b.weeklySummary);
     return person;
   });
   // ----- Konten (nur ohne Home Assistant: eigene Anmeldung) -----

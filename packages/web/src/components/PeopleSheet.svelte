@@ -438,6 +438,28 @@
                 </div>
               {/if}
 
+              {#if canEdit(p.id)}
+                <div>
+                  <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Zusammenfassung')}</p>
+                  <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                    <span>{t('Wöchentliche Zusammenfassung am Sonntag')}</span>
+                    <input
+                      type="checkbox"
+                      class="h-5 w-5 accent-[var(--accent)]"
+                      checked={p.weeklySummary}
+                      disabled={busy}
+                      aria-label={t('Wöchentliche Zusammenfassung von {name}', { name: p.displayName })}
+                      onchange={(e) => {
+                        // sofort lesen: `run` führt die Änderung erst später aus
+                        const on = e.currentTarget.checked;
+                        void run(() => api.updatePerson(p.id, { weeklySummary: on }));
+                      }}
+                    />
+                  </label>
+                  <p class="text-[13px] text-fg2">{t('Am Sonntagabend eine Nachricht, wie viel ihr diese Woche zusammen erledigt habt. Aus, bis du es einschaltest.')}</p>
+                </div>
+              {/if}
+
               {#if admin && !info.managed}
                 {#if confirmRemove === p.id}
                   <p class="text-[13px] text-fg2">{t('Zugewiesene Karten behalten die Zuweisung, falls {name} zurückkommt.', { name: p.displayName })}</p>

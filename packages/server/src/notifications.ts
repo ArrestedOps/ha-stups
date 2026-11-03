@@ -2,6 +2,8 @@ import { t, tn, withLanguage, type Lang } from './i18n/index.js';
 import type { Options } from './config.js';
 import type { NotificationAction } from './ha.js';
 import type { PushGateway, PushMessage } from './push.js';
+import { quietEnd } from './quiet.js';
+import { toLocal } from './recurrence.js';
 import { dayDiff, formatDue, formatLead, localDateKey, minutesOfDay, parseHm } from './time.js';
 import { NUDGE_LATER_MAX, type ClosedNudge, type DueNudge, type NotificationKey, type NotificationKind, type OpenDueCard, type Store } from './store.js';
 
@@ -209,6 +211,45 @@ export function createNotifier(deps: NotifierDeps) {
     return sent;
   }
 
+  /**
+   * Sonntags-Zusammenfassung (nur für Personen, die sie eingeschaltet haben): eine wertschätzende Nachricht je Woche, ab 18:00
+   * Ortszeit innerhalb von vier Stunden, nicht in der Ruhezeit der Person, nie bei null erledigten Karten. Nur aufs Handy.
+   */
+  async function weeklySummaries(nowMs: number, tz: string): Promise<number> {
+    const local = toLocal(nowMs, tz);
+    if (new Date(Date.UTC(local.y, local.m - 1, local.d)).getUTCDay() !== 0) return 0; // nur sonntags
+    const minutes = minutesOfDay(nowMs, tz);
+    const start = 18 * 60;
+    if (minutes < start) return 0;
+    const wanted = store.people().filter((p) => p.weeklySummary && push.canReach(p.id));
+    if (wanted.length === 0) return 0;
+    const week = store.fairness('week');
+    const date = localDateKey(nowMs, tz);
+    const inWindow = (minutes - start) * MINUTE < SUMMARY_WINDOW_MS;
+    let sent = 0;
+    for (const person of wanted) {
+      const k: NotificationKey = { cardId: 'weekly', userId: person.id, kind: 'summary', key: date };
+      if (!inWindow || week.total.done === 0) {
+        store.claimNotification(k, 'skipped'); // diese Woche nichts mehr nachholen
+        continue;
+      }
+      if (quietEnd(nowMs, tz, person.nudgeQuiet) !== null) continue; // später im Fenster noch einmal versuchen
+      const payload = inLang(person.id, (): PushMessage => {
+        const names = week.people.filter((p) => p.done > 0).map((p) => `${p.name} ${p.done}`).join(', ');
+        return {
+          title: 'Stups',
+          body: `${tn('Diese Woche habt ihr {n} Aufgabe erledigt.', 'Diese Woche habt ihr {n} Aufgaben erledigt.', week.total.done)} ${names}. 💪`,
+          tag: 'stups-weekly',
+          group: GROUP,
+          open: {},
+          level: 'active',
+        };
+      });
+      if (await deliver(k, payload)) sent += 1;
+    }
+    return sent;
+  }
+
   /** Ein Durchlauf. Gibt die Zahl der gesendeten Nachrichten (je Person) zurück. */
   async function tick(): Promise<number> {
     if (running) return 0;
@@ -275,6 +316,7 @@ export function createNotifier(deps: NotifierDeps) {
         }
       }
       sent += await summaries(cards, nowMs, tz);
+      sent += await weeklySummaries(nowMs, tz);
       sent += await deliverNudges(nowMs);
       return sent;
     } finally {

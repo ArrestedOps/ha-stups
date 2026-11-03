@@ -8,6 +8,9 @@ export type Catalog = Record<string, string | [string, string]>;
 export const en: Catalog = {
   // Einstellungen › Sprache
   'Sprache': 'Language',
+  'Wöchentliche Zusammenfassung am Sonntag': 'Weekly summary on Sunday',
+  'Wöchentliche Zusammenfassung von {name}': 'Weekly summary for {name}',
+  'Am Sonntagabend eine Nachricht, wie viel ihr diese Woche zusammen erledigt habt. Aus, bis du es einschaltest.': 'A message on Sunday evening about how much you got done together this week. Off until you switch it on.',
   'Wer erledigt wie viel? Ohne Rangliste.': 'Who does how much? No ranking.',
   'Ansicht der Agenda': 'Agenda view',
   'Termine': 'Due dates',

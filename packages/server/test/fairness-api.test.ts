@@ -44,3 +44,18 @@ describe('GET /api/fairness', () => {
     expect((await app.inject({ url: '/api/fairness', headers: as('ha-fremd', 'Fremd') })).statusCode).toBe(403);
   });
 });
+
+describe('Sonntags-Zusammenfassung einschalten', () => {
+  const patch = (who: object, id: string, payload: object) => app.inject({ method: 'PATCH', url: `/api/access/people/${id}`, headers: who as Record<string, string>, payload });
+
+  it('die Person selbst darf, ein anderes Mitglied nicht; nur wahr oder falsch', async () => {
+    const benId = store.people().find((p) => p.name === 'Ben')!.id;
+    const res = await patch(ben, benId, { weeklySummary: true });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().weeklySummary).toBe(true);
+    expect(store.people().find((p) => p.id === benId)!.weeklySummary).toBe(true);
+    expect((await patch(ben, benId, { weeklySummary: 'ja' })).statusCode).toBe(400);
+    const annaId = store.people().find((p) => p.name === 'Anna')!.id;
+    expect((await patch(ben, annaId, { weeklySummary: true })).statusCode).toBe(403);
+  });
+});

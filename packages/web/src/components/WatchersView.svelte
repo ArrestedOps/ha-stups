@@ -76,6 +76,7 @@
     {#if ui.isAdmin && found > 0 && data?.available}
       <div class="mb-3.5" data-testid="home-found">
         <Banner
+          wrap
           title={tn('Stups hat {n} weiteres Gerät gefunden', 'Stups hat {n} weitere Geräte gefunden', found)}
           sub={t('Tippe, um passende Wächter anzulegen.')}
           onclick={() => openSheet({ type: 'found' })}

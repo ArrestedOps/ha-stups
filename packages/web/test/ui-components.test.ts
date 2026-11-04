@@ -160,6 +160,12 @@ describe('ListRow', () => {
 });
 
 describe('Banner', () => {
+  it('der Titel wird abgeschnitten oder bricht auf Wunsch auf zwei Zeilen um', () => {
+    expect(html(Banner, { title: 'Ein langer Hinweis' })).toContain('truncate');
+    const wrapped = html(Banner, { title: 'Ein langer Hinweis', wrap: true });
+    expect(wrapped).toContain('line-clamp-2');
+    expect(wrapped).not.toContain('truncate text-[15px]');
+  });
   it('lila und warm über die Variablen aus app.css, Höhe wie die Zeile', () => {
     const p = html(Banner, { title: 'Conny stupst dich! 👋', sub: 'Müll raus', variant: 'purple' });
     expect(p).toContain('var(--banner-purple)');

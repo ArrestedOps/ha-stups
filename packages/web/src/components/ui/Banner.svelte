@@ -6,6 +6,7 @@
     title,
     sub,
     variant = 'purple',
+    wrap = false,
     leading,
     trailing,
     onclick,
@@ -13,6 +14,8 @@
     title: string;
     sub?: string;
     variant?: 'purple' | 'warm';
+    /** der Titel darf auf zwei Zeilen umbrechen (lange Hinweise), sonst wird er abgeschnitten */
+    wrap?: boolean;
     leading?: Snippet;
     trailing?: Snippet;
     onclick?: (e: MouseEvent) => void;
@@ -23,7 +26,7 @@
 {#snippet inner()}
   {#if leading}<span class="flex h-11 w-11 shrink-0 items-center justify-center">{@render leading()}</span>{/if}
   <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
-    <span class="truncate text-[15px] font-bold">{title}</span>
+    <span class="text-[15px] leading-tight font-bold {wrap ? 'line-clamp-2' : 'truncate'}">{title}</span>
     {#if sub}<span class="truncate text-[13px]" style:color="var(--banner-{variant}-sub)">{sub}</span>{/if}
   </span>
   {#if trailing}<span class="flex shrink-0 items-center">{@render trailing()}</span>{/if}

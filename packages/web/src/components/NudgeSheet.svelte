@@ -5,9 +5,12 @@
   import { preselected, sentMessage, targetHint } from '../lib/nudge';
   import { closeSheet, hopCard, refresh, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
-  import Group from './Group.svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
+  import CtaButton from './ui/CtaButton.svelte';
+  import ListRow from './ui/ListRow.svelte';
+  import SectionHeader from './ui/SectionHeader.svelte';
+  import SheetFooter from './ui/SheetFooter.svelte';
 
   let { id }: { id: string } = $props();
 
@@ -35,6 +38,7 @@
   const templateText = (k: string): string =>
     ({ think: t('Denkst du dran?'), today: t('Heute noch?'), help: t('Brauch deine Hilfe'), thanks: t('Danke dir! ❤️') })[k as 'think'] ?? (info?.templates as Record<string, string> | undefined)?.[k] ?? k;
   const nameOf = (pid: string) => ui.people.find((p) => p.id === pid)?.displayName ?? t('Jemand');
+  const previewText = $derived(custom.trim() || (info ? templateText(template) : ''));
   const ready = $derived(selected.length > 0 && (custom.trim().length > 0 || !!template));
 
   function toggle(pid: string, on: boolean) {
@@ -74,67 +78,68 @@
   {:else if !info.canNudge}
     <p class="py-10 text-center text-fg2">{t('Stupsen können nur Personen, die unter Einstellungen › Personen & Zugriff stehen.')}</p>
   {:else}
-    <p class="mt-1 px-3 text-[15px] text-fg2">{card?.title ?? ''}</p>
+    <p class="mt-1 px-1 text-[17px] font-bold">{card?.title ?? ''}</p>
 
-    <Group title={t('An wen')} hint={t('Es bekommt jeder einen eigenen Stups. Pro Karte und Person geht höchstens einer alle 30 Minuten.')}>
-      {#each info.people as t (t.id)}
-        {@const hint = targetHint(t)}
-        <label class="flex min-h-[56px] items-center gap-3 px-4 {t.selectable ? '' : 'opacity-50'}">
-          <input
-            type="checkbox"
-            class="h-5 w-5 accent-[var(--accent)]"
-            checked={selected.includes(t.id)}
-            disabled={!t.selectable}
-            aria-label={t.name}
-            onchange={(e) => toggle(t.id, e.currentTarget.checked)}
-          />
-          <Avatar person={{ displayName: t.name, color: t.color }} size={30} />
-          <span class="min-w-0 flex-1">
-            <span class="block truncate text-[17px] font-medium">{t.name}</span>
-            {#if hint}<span class="block text-[13px] text-fg2">{hint}</span>{/if}
-          </span>
-        </label>
+    <SectionHeader title={t('An wen')} />
+    <div class="flex flex-col gap-2">
+      {#each info.people as p (p.id)}
+        {@const hint = targetHint(p)}
+        <div class={p.selectable ? '' : 'opacity-50'}>
+          <ListRow title={p.name} check={{ done: selected.includes(p.id), label: p.name, onchange: () => toggle(p.id, !selected.includes(p.id)), disabled: !p.selectable }}>
+            {#snippet tile()}<Avatar person={{ displayName: p.name, color: p.color }} size={32} />{/snippet}
+            {#snippet meta()}{hint ?? ''}{/snippet}
+          </ListRow>
+        </div>
       {:else}
-        <p class="px-4 py-4 text-[15px] text-fg2">{t('Es gibt keine andere Person, die du stupsen könntest.')}</p>
+        <p class="px-1 py-2 text-[15px] text-fg2">{t('Es gibt keine andere Person, die du stupsen könntest.')}</p>
       {/each}
-    </Group>
+    </div>
+    <p class="mt-2 px-1 text-[13px] text-fg2">{t('Es bekommt jeder einen eigenen Stups. Pro Karte und Person geht höchstens einer alle 30 Minuten.')}</p>
 
-    <Group title={t('Nachricht')}>
-      <div class="flex flex-wrap gap-2 px-4 py-3" role="radiogroup" aria-label={t('Nachricht')}>
-        {#each TEMPLATES as k (k)}
-          <button
-            type="button"
-            role="radio"
-            aria-checked={template === k && !custom.trim()}
-            class="min-h-10 rounded-xl border px-3.5 text-[15px] {template === k && !custom.trim() ? 'border-accent bg-surface2 font-semibold' : 'border-line text-fg2'}"
-            onclick={() => {
-              template = k;
-              custom = '';
-            }}
-          >
-            {templateText(k)}
-          </button>
-        {/each}
+    <SectionHeader title={t('Nachricht')} />
+    <div class="flex flex-wrap gap-2" role="radiogroup" aria-label={t('Nachricht')}>
+      {#each TEMPLATES as k (k)}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={template === k && !custom.trim()}
+          class="min-h-10 rounded-full border px-4 text-[15px] font-semibold {template === k && !custom.trim() ? 'bg-accent-grad border-transparent' : 'border-line bg-surface'}"
+          onclick={() => {
+            template = k;
+            custom = '';
+          }}
+        >
+          {templateText(k)}
+        </button>
+      {/each}
+    </div>
+    <label class="mt-3 flex items-center gap-3 rounded-row border border-line bg-surface px-4">
+      <input
+        bind:value={custom}
+        maxlength={info.maxText}
+        placeholder={t('Oder ein eigener Text')}
+        enterkeyhint="send"
+        class="min-w-0 flex-1 bg-transparent py-3.5"
+        aria-label={t('Eigener Text')}
+      />
+      {#if custom}<span class="text-[13px] text-fg2">{custom.length}/{info.maxText}</span>{/if}
+    </label>
+
+    <SectionHeader title={t('So kommt es an')} />
+    <div class="flex gap-3 rounded-row border border-line bg-surface p-3" aria-label={t('Vorschau der Push-Nachricht')} data-testid="nudge-preview">
+      <span class="bg-accent-grad flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-[18px] font-extrabold">s</span>
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-[15px] font-bold">{t('{names} stupst dich', { names: ui.me?.displayName ?? '' })}</p>
+        <p class="truncate text-[14px] text-fg2">{card?.title ?? ''} · {previewText}</p>
+        <p class="mt-2 flex gap-2 text-[13px] font-semibold">
+          {#each [t('Erledigt'), t('Mach ich'), t('Später')] as label (label)}<span class="rounded-full bg-surface2 px-3 py-1">{label}</span>{/each}
+        </p>
       </div>
-      <label class="flex items-center gap-3 px-4">
-        <input
-          bind:value={custom}
-          maxlength={info.maxText}
-          placeholder={t('Oder ein eigener Text')}
-          enterkeyhint="send"
-          class="min-w-0 flex-1 bg-transparent py-3.5"
-          aria-label={t('Eigener Text')}
-        />
-        {#if custom}<span class="text-[13px] text-fg2">{custom.length}/{info.maxText}</span>{/if}
-      </label>
-    </Group>
+    </div>
+    <p class="mt-2 flex items-center gap-2 px-1 text-[13px] text-fg2"><Icon name="clock" size={14} />{t('Während der Ruhezeit kommen Stupse erst am Morgen an.')}</p>
 
-    <button
-      class="mt-4 mb-2 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-accent-grad text-[17px] font-bold disabled:opacity-40"
-      disabled={!ready || busy}
-      onclick={send}
-    >
-      <Icon name="hand" size={20} />{t('Stups senden')}
-    </button>
+    <SheetFooter>
+      <CtaButton disabled={!ready || busy} onclick={send}><Icon name="hand" size={20} />{t('Stups senden')}</CtaButton>
+    </SheetFooter>
   {/if}
 </Sheet>

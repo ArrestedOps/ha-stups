@@ -29,6 +29,10 @@
   import Sheet from './Sheet.svelte';
   import SubmitPill from './SubmitPill.svelte';
   import CardProps from './CardProps.svelte';
+  import { cardIcon, tileColorOf } from '../lib/cardTile';
+  import { boardColorKey } from '../lib/schedule';
+  import Banner from './ui/Banner.svelte';
+  import Tile from './ui/Tile.svelte';
 
   let { id }: { id: string } = $props();
 
@@ -108,6 +112,19 @@
             ),
         )
       : columns,
+  );
+
+  // Kachel im Kopf: Farbe der ersten Kategorie, sonst des Boards (Symbole pro Karte folgen mit Phase 3)
+  const tileColor = $derived(
+    card
+      ? tileColorOf(
+          (ui.view?.categories ?? []).find((c) => card!.categoryIds.includes(c.id))?.color ??
+            boardColorKey(ui.boards.find((b) => b.id === card!.boardId)?.color ?? null, ui.boards.findIndex((b) => b.id === card!.boardId)),
+        )
+      : 'gray',
+  );
+  const nudgeNames = $derived(
+    card ? card.assigneeIds.filter((pid) => pid !== ui.me?.id).map((pid) => personById(pid)?.displayName ?? t('Jemand')).join(' & ') : '',
   );
 
   const save = (patch: Parameters<typeof api.updateCard>[1]) => act(() => api.updateCard(id, patch));
@@ -202,21 +219,24 @@
   {:else if !card}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
-    <textarea
-      rows="1"
-      use:autogrow={titleDraft}
-      class="mt-1 block w-full resize-none overflow-hidden bg-transparent text-[26px] leading-tight font-bold tracking-tight"
-      aria-label={t('Titel')}
-      bind:value={titleDraft}
-      readonly={child}
-      onfocus={() => (editing = 'title')}
-      onblur={() => {
-        editing = null;
-        const t = titleDraft.trim();
-        if (!child && t && t !== card!.title) void save({ title: t });
-        else titleDraft = card!.title;
-      }}
-    ></textarea>
+    <div class="mt-1 flex items-start gap-3">
+      <Tile color={tileColor} size="lg"><Icon name={cardIcon(card)} size={26} /></Tile>
+      <textarea
+        rows="1"
+        use:autogrow={titleDraft}
+        class="block min-w-0 flex-1 resize-none overflow-hidden bg-transparent pt-1 text-[22px] leading-tight font-extrabold tracking-tight"
+        aria-label={t('Titel')}
+        bind:value={titleDraft}
+        readonly={child}
+        onfocus={() => (editing = 'title')}
+        onblur={() => {
+          editing = null;
+          const t = titleDraft.trim();
+          if (!child && t && t !== card!.title) void save({ title: t });
+          else titleDraft = card!.title;
+        }}
+      ></textarea>
+    </div>
 
     <CardProps
       card={card}
@@ -261,12 +281,12 @@
     {/if}
 
     {#if !child && !card.completedAt && ui.me?.isPerson && canNudge(card, ui.me.id)}
-      <button
-        class="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-accent/60 text-[16px] font-semibold text-accent-text"
-        onclick={() => openSheet({ type: 'nudge', id: card!.id })}
-      >
-        <Icon name="hand" size={18} />{t('Stupsen')}
-      </button>
+      <div class="mt-3">
+        <Banner title={t('{names} stupsen', { names: nudgeNames })} sub={t('Freundlich erinnern, mit Antwort-Knöpfen')} onclick={() => openSheet({ type: 'nudge', id: card!.id })}>
+          {#snippet leading()}<Icon name="hand" size={24} />{/snippet}
+          {#snippet trailing()}<Icon name="chevron-right" size={18} />{/snippet}
+        </Banner>
+      </div>
     {/if}
 
     {#if card.completedAt}

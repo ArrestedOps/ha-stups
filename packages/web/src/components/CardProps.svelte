@@ -145,11 +145,11 @@
 {#snippet chip(name: string, icon: string, text: string, filled: boolean, tone = '')}
   <button
     type="button"
-    class="flex min-h-10 max-w-full items-center gap-1.5 rounded-full px-3.5 text-[15px] {panel === name
-      ? 'bg-accent font-semibold text-on-accent'
+    class="flex h-[34px] max-w-full items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold {panel === name
+      ? 'bg-accent-grad border-transparent'
       : filled
-        ? `bg-surface2 text-fg ${tone}`
-        : 'border border-dashed border-line text-fg2'}"
+        ? `border-line bg-surface text-fg ${tone}`
+        : 'border-dashed border-line text-fg2'}"
     aria-expanded={panel === name}
     onclick={() => toggle(name)}
   >
@@ -160,29 +160,29 @@
 {#if readonly}
   <!-- Rolle „Kind": die Werte nur zum Ansehen (Aufwand und Kosten gehören nicht dazu) -->
   <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('Eigenschaften')} data-testid="card-props-readonly">
-    <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]"><Icon name="columns" size={16} />{column?.name ?? 'Status'}</span>
+    <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold"><Icon name="columns" size={16} />{column?.name ?? 'Status'}</span>
     {#if people.length}
-      <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]"><Icon name="user" size={16} />{people.map((p) => p.displayName).join(' & ')}</span>
+      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold"><Icon name="user" size={16} />{people.map((p) => p.displayName).join(' & ')}</span>
     {/if}
     {#if card.dueAt}
-      <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px] {late ? 'text-danger' : ''}">
+      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold {late ? 'text-danger' : ''}">
         <Icon name="clock" size={16} />{formatDue(card.dueAt)}{late ? ` · ${t('überfällig')}` : ''}
       </span>
     {/if}
     {#if card.recurrence}
-      <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]"><Icon name="repeat" size={16} />{describeRecurrence(card.recurrence)}</span>
+      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold"><Icon name="repeat" size={16} />{describeRecurrence(card.recurrence)}</span>
     {/if}
     {#if card.priority}
-      <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]"><Icon name="flag" size={16} />{PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? ''}</span>
+      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold"><Icon name="flag" size={16} />{PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? ''}</span>
     {/if}
     {#if catNames.length}
-      <span class="flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]"><Icon name="tag" size={16} />{catNames.join(', ')}</span>
+      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold"><Icon name="tag" size={16} />{catNames.join(', ')}</span>
     {/if}
   </div>
 {:else}
 <!-- Eigenschaften als kleine Chips: leer gestrichelt, gefüllt mit Wert. Antippen öffnet darunter ein Feld. -->
 <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('Eigenschaften')}>
-  <label class="relative flex min-h-10 items-center gap-1.5 rounded-full bg-surface2 px-3.5 text-[15px]">
+  <label class="relative flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold">
     <Icon name="columns" size={16} />{column?.name ?? 'Status'}<Icon name="chevron-down" size={14} />
     <select
       class="absolute inset-0 h-full w-full opacity-0"
@@ -221,7 +221,7 @@
 </div>
 
 {#if panel}
-  <div class="mt-3 rounded-[18px] border border-line bg-surface p-4">
+  <div class="mt-3 rounded-row border border-line bg-surface p-4">
     {#if panel === 'who'}
       <PeoplePicker selected={card.assigneeIds} onchange={(ids) => onsave({ assigneeIds: ids })} />
       <p class="mt-3 text-[13px] text-fg2">{t('Benachrichtigt werden nur zugewiesene Personen.')}</p>

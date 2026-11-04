@@ -2,6 +2,19 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.18.3-beta.1
+
+Fehlerbehebungen aus einer Durchsicht des Codes, keine neuen Funktionen.
+
+- **Sicherheit:** Die Anmeldung im eigenständigen Container-Betrieb (ohne Home Assistant) wird strenger geprüft; die Diagnose-Seite ist für Kinder gesperrt, und Senden und Zurücksetzen dort dürfen nur Administratoren. **Update empfohlen**
+- **Rückgängig bei wiederkehrenden Karten** löscht die neue Karte nicht mehr, wenn schon mit ihr gearbeitet wurde (Kommentar, Anhang, Checkliste, geänderter Titel oder Beschreibung). Stattdessen kommt ein Hinweis
+- **Bestätigung (Kinder):** Eine offene Anfrage kommt nicht mehr von selbst zurück, wenn die Karte nach „Erledigt“ und wieder heraus gezogen oder aus dem Archiv geholt wird
+- **Erledigt-Spalte** löschen oder abwählen öffnet die Karten darin wieder; die Zahl der offenen Karten zählt keine erledigten mehr
+- **Eingaben:** Falsche Werte (zum Beispiel ein Objekt als Beschreibung) ergeben eine Meldung statt eines Serverfehlers. Wiederholungen sind auf „alle 999“ begrenzt
+- **Live-Sync:** Nach dem Entsperren des iPhones entsteht keine doppelte Verbindung mehr; Änderungen anderer Geräte kommen wieder gezielt an, statt dass jedes Mal alles neu geladen wird
+- **Oberfläche:** „Karte gelöscht“ erscheint nur, wenn das Löschen geklappt hat. Wer den Zugriff zurückbekommt, sieht „Kein Zugriff“ nicht mehr bis zum Neuladen. Escape schließt in der Foto-Ansicht nur das Foto. Uploads führen bei abgelaufener Sitzung zur Anmeldung. Einige Texte waren auf Englisch noch deutsch
+- Keine Änderung an der Datenbank
+
 ## 1.18.2-beta.1
 
 - **Gefunden: Treffer ausblenden.** Bei jedem Treffer (Waschmaschine, Abfallkalender, Batterie …) gibt es **Ausblenden**. Was du nicht hast, schlägt Stups nie wieder vor, auch nicht nach einem Neustart. Unter **Ausgeblendet (n)** steht es mit **Wieder anzeigen**, falls du es doch brauchst. Gilt für alle Administratoren; der nächste Treffer derselben Art rückt nach

@@ -132,6 +132,7 @@ export const en: Catalog = {
   'Überfällig': 'Overdue',
   'Heute': 'Today',
   'Aufgaben': 'Tasks',
+  'Später': 'Later',
   'Morgen': 'Tomorrow',
   'Gestern': 'Yesterday',
 

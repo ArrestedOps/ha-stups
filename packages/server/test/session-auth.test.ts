@@ -71,6 +71,22 @@ describe('Öffentliche Pfade und Sperre', () => {
     }
   });
 
+  it('prozentcodierte Pfade umgehen die Sperre nicht (/%61pi = /api)', async () => {
+    for (const url of ['/%61pi/boards', '/%61pi/me', '/a%70i/people', '/%2561pi/boards', '/api%2Fboards']) {
+      const res = await app.inject({ url });
+      expect(res.statusCode, url).not.toBe(200);
+      expect([401, 404], url).toContain(res.statusCode);
+    }
+    const post = await app.inject({ method: 'POST', url: '/%61pi/boards', headers: CLIENT, payload: { name: 'X' } });
+    expect(post.statusCode).not.toBe(201);
+    expect(post.statusCode).toBe(401);
+    // ohne Kopfzeile des Clients gilt auch hier der Schutz
+    const noHeader = await app.inject({ method: 'POST', url: '/%61pi/auth/login', payload: { username: 'a', password: 'b' } });
+    expect(noHeader.statusCode).toBe(403);
+    // ungültige Codierung wird nicht als öffentlich gewertet
+    expect([400, 401]).toContain((await app.inject({ url: '/api/%E0%A4%A' })).statusCode);
+  });
+
   it('Status und Fähigkeiten sind öffentlich', async () => {
     expect((await app.inject({ url: '/api/auth/status' })).json()).toEqual({ authenticated: false, setupRequired: true, user: null });
     expect((await app.inject({ url: '/api/capabilities' })).statusCode).toBe(200);

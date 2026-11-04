@@ -12,6 +12,14 @@ export function cleanText(value: unknown, what: string, max: number): string {
   return text;
 }
 
+/** Freier Text oder `null`/fehlend (Beschreibung, Symbol, Farbe): alles andere ist ein Fehler, nie ein Wert für die Datenbank */
+export function optionalText(value: unknown, what: string, max: number): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'string') throw new ValidationError(t('{what} muss Text sein', { what }));
+  if (value.length > max) throw new ValidationError(t('{what} ist zu lang (höchstens {max} Zeichen)', { what, max }));
+  return value;
+}
+
 export function parseDue(value: unknown): string | null {
   if (value === null || value === undefined) return null;
   if (typeof value !== 'string' || !DUE_RE.test(value) || Number.isNaN(Date.parse(value))) {
@@ -93,13 +101,16 @@ export function isPosInt(n: unknown): n is number {
   return typeof n === 'number' && Number.isInteger(n) && n >= 1;
 }
 
+/** Obergrenze für „alle n …“: darüber rechnet der nächste Termin ins Ungültige, und die Karte ließe sich nie mehr erledigen */
+const MAX_EVERY = 999;
+
 export function parseRecurrence(value: unknown): Recurrence | null {
   if (value === null || value === undefined) return null;
   const r = value as Record<string, unknown>;
   const bad = () => new ValidationError(t('Die Wiederholung ist ungültig'));
-  if (typeof r !== 'object') throw bad();
+  if (typeof r !== 'object' || Array.isArray(r)) throw bad();
   if (r.type === 'fixed') {
-    if (!['daily', 'weekly', 'monthly', 'yearly'].includes(r.freq as string) || !isPosInt(r.every)) throw bad();
+    if (!['daily', 'weekly', 'monthly', 'yearly'].includes(r.freq as string) || !isPosInt(r.every) || r.every > MAX_EVERY) throw bad();
     if (r.weekdays !== undefined) {
       if (!Array.isArray(r.weekdays) || r.weekdays.some((d) => !Number.isInteger(d) || d < 1 || d > 7)) throw bad();
     }
@@ -108,11 +119,18 @@ export function parseRecurrence(value: unknown): Recurrence | null {
         throw bad();
       }
     }
-    return value as Recurrence;
+    // nur bekannte Felder werden gespeichert
+    return {
+      type: 'fixed',
+      freq: r.freq as 'daily' | 'weekly' | 'monthly' | 'yearly',
+      every: r.every,
+      ...(r.weekdays !== undefined ? { weekdays: r.weekdays as number[] } : {}),
+      ...(r.monthDay !== undefined ? { monthDay: r.monthDay as number } : {}),
+    };
   }
   if (r.type === 'after_completion') {
-    if (!isPosInt(r.every) || !['days', 'weeks', 'months'].includes(r.unit as string)) throw bad();
-    return value as Recurrence;
+    if (!isPosInt(r.every) || r.every > MAX_EVERY || !['days', 'weeks', 'months'].includes(r.unit as string)) throw bad();
+    return { type: 'after_completion', every: r.every, unit: r.unit as 'days' | 'weeks' | 'months' };
   }
   throw bad();
 }

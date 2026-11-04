@@ -269,3 +269,63 @@ describe('trash', () => {
     expect((await call('POST', `/api/trash/unsinn/${card.id}/restore`)).status).toBe(400);
   });
 });
+
+describe('Falsche Feldtypen ergeben 400, nie 500 oder stilles Nichtstun', () => {
+  async function karte() {
+    const { b, columns } = await boardWithColumns();
+    const c = (await call('POST', `/api/boards/${b.id}/cards`, { columnId: columns[0]!.id, title: 'Test' })).body;
+    return { b, c, columns };
+  }
+
+  it('Beschreibung muss Text sein', async () => {
+    const { c } = await karte();
+    for (const description of [{}, { a: 1 }, 5, ['x'], true]) {
+      const res = await call('PATCH', `/api/cards/${c.id}`, { description });
+      expect(res.status, JSON.stringify(description)).toBe(400);
+    }
+    expect((await call('GET', `/api/cards/${c.id}`)).body.version).toBe(c.version);
+    expect((await call('PATCH', `/api/cards/${c.id}`, { description: null })).status).toBe(200);
+    expect((await call('PATCH', `/api/cards/${c.id}`, { description: 'Text' })).status).toBe(200);
+  });
+
+  it('beim Anlegen ebenso', async () => {
+    const { b, columns } = await boardWithColumns();
+    const res = await call('POST', `/api/boards/${b.id}/cards`, { columnId: columns[0]!.id, title: 'X', description: { a: 1 } });
+    expect(res.status).toBe(400);
+  });
+
+  it('Zuständige und Kategorien: nur Texte als Kennungen', async () => {
+    const { c } = await karte();
+    expect((await call('PATCH', `/api/cards/${c.id}`, { assigneeIds: [{}] })).status).toBe(400);
+    expect((await call('PATCH', `/api/cards/${c.id}`, { assigneeIds: [5] })).status).toBe(400);
+    expect((await call('PATCH', `/api/cards/${c.id}`, { categoryIds: [{ a: 1 }] })).status).toBe(400);
+  });
+
+  it('Symbol und Farbe eines Boards müssen Text sein', async () => {
+    const { b } = await karte();
+    expect((await call('PATCH', `/api/boards/${b.id}`, { icon: {} })).status).toBe(400);
+    expect((await call('PATCH', `/api/boards/${b.id}`, { color: { a: 1 } })).status).toBe(400);
+    expect((await call('PATCH', `/api/boards/${b.id}`, { icon: '🏠', color: '#ff8a1f' })).status).toBe(200);
+  });
+
+  it('Titel eines Links muss Text sein', async () => {
+    const { c } = await karte();
+    expect((await call('POST', `/api/cards/${c.id}/links`, { url: 'https://example.org', title: 5 })).status).toBe(400);
+  });
+
+  it('Wiederholung: Obergrenze, unbekannte Felder werden verworfen', async () => {
+    const { c } = await karte();
+    const bad = await call('PATCH', `/api/cards/${c.id}`, { recurrence: { type: 'fixed', freq: 'daily', every: 1e9 } });
+    expect(bad.status).toBe(400);
+    const bad2 = await call('PATCH', `/api/cards/${c.id}`, { recurrence: { type: 'after_completion', every: 1e9, unit: 'days' } });
+    expect(bad2.status).toBe(400);
+    const ok = await call('PATCH', `/api/cards/${c.id}`, {
+      dueAt: '2026-11-01T08:00:00Z',
+      recurrence: { type: 'fixed', freq: 'weekly', every: 2, weekdays: [1], evil: 'x'.repeat(100) },
+    });
+    expect(ok.status).toBe(200);
+    expect(ok.body.recurrence).toEqual({ type: 'fixed', freq: 'weekly', every: 2, weekdays: [1] });
+    // und die Karte lässt sich erledigen
+    expect((await call('POST', `/api/cards/${c.id}/complete`, {})).status).toBe(200);
+  });
+});

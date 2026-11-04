@@ -3,7 +3,7 @@ import { generateKeyBetween, generateNKeysBetween } from 'fractional-indexing';
 import { ConflictError, NotFoundError, ValidationError } from '../errors.js';
 import { startOfTomorrow } from '../time.js';
 import { type Board, type BoardSummary, type Column, type Category, type BoardView, type Row } from './types.js';
-import { cleanText } from './validate.js';
+import { cleanText, optionalText } from './validate.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
@@ -51,8 +51,8 @@ export function createBoards(c: Ctx, late: unknown) {
         'insert into boards (id, name, icon, color, position, archive_after_days, created_at, updated_at) values (?, ?, ?, ?, ?, 7, ?, ?)',
         id,
         name,
-        input.icon ?? null,
-        input.color ?? null,
+        optionalText(input.icon, t('Das Symbol'), 40),
+        optionalText(input.color, t('Die Farbe'), 40),
         generateKeyBetween(lastPos('boards', '1 = 1'), null),
         stamp,
         stamp,
@@ -84,7 +84,7 @@ export function createBoards(c: Ctx, late: unknown) {
       ...toBoard(r),
       openCards: one(
         `select count(*) as n from cards c join columns col on col.id = c.column_id
-         where c.board_id = ? and c.deleted_at is null and c.archived_at is null
+         where c.board_id = ? and c.deleted_at is null and c.archived_at is null and c.completed_at is null
            and col.is_done = 0 and col.is_planned = 0`,
         r.id,
       )!.n as number,
@@ -104,11 +104,11 @@ export function createBoards(c: Ctx, late: unknown) {
     }
     if (patch.icon !== undefined) {
       sets.push('icon = ?');
-      params.push(patch.icon);
+      params.push(optionalText(patch.icon, t('Das Symbol'), 40));
     }
     if (patch.color !== undefined) {
       sets.push('color = ?');
-      params.push(patch.color);
+      params.push(optionalText(patch.color, t('Die Farbe'), 40));
     }
     if (patch.archiveAfterDays !== undefined) {
       if (!Number.isInteger(patch.archiveAfterDays) || patch.archiveAfterDays < 0 || patch.archiveAfterDays > 3650) {
@@ -149,6 +149,30 @@ export function createBoards(c: Ctx, late: unknown) {
 
   const visibleColumns = (boardId: string): Row[] =>
     all('select * from columns where board_id = ? and deleted_at is null order by position, id', boardId);
+
+  /**
+   * Öffnet erledigte (nicht archivierte) Karten wieder, weil ihre Spalte keine „Erledigt“-Spalte mehr ist oder sie in eine
+   * offene Spalte verschoben wurden. Sonst blieben erledigte Karten in offenen Spalten stehen, und der Geplant-Abgleich
+   * und die Zahl der offenen Karten würden sie falsch behandeln.
+   */
+  function reopenCompleted(cardIds: string[], fromName: string, toName: string): void {
+    for (const cardId of cardIds) {
+      const c = one('select completed_at, archived_at from cards where id = ? and deleted_at is null', cardId);
+      if (!c || c.completed_at === null || c.archived_at !== null) continue;
+      run('update cards set completed_at = null where id = ?', cardId);
+      run(
+        'insert into card_events (id, card_id, kind, by_user, at, from_v, to_v) values (?, ?, ?, ?, ?, ?, ?)',
+        randomUUID(),
+        cardId,
+        'reopened',
+        null,
+        iso(),
+        fromName,
+        toName,
+      );
+      touchCard(cardId);
+    }
+  }
 
   function addColumn(boardId: string, input: { name: string; isDone?: boolean; isPlanned?: boolean }): Column {
     visibleBoard(boardId);
@@ -191,6 +215,10 @@ export function createBoards(c: Ctx, late: unknown) {
         run('update columns set is_done = 1 where id = ?', id);
       } else if (patch.isDone === false) {
         run('update columns set is_done = 0 where id = ?', id);
+        if (col.is_done === 1) {
+          const ids = all('select id from cards where column_id = ? and deleted_at is null', id).map((r) => r.id as string);
+          reopenCompleted(ids, col.name, col.name);
+        }
       }
       if (patch.isPlanned === true) {
         run('update columns set is_planned = 0 where board_id = ? and is_planned = 1 and id <> ?', col.board_id, id);
@@ -321,6 +349,7 @@ export function createBoards(c: Ctx, late: unknown) {
           run('update cards set column_id = ?, position = ?, updated_at = ?, version = version + 1 where id = ?', target.id, pos, iso(), c.id);
           prev = pos;
         }
+        if (target.is_done === 0) reopenCompleted(cards.map((c) => c.id as string), col.name, target.name);
       }
       run('update columns set deleted_at = ? where id = ?', iso(), id);
     });

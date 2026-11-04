@@ -12,31 +12,71 @@ export interface SyncInfo {
  * Der Client holt dann nur diese nach. Nach einem Verbindungsabbruch (z. B. iPhone im Hintergrund) wird
  * neu verbunden und alles neu geladen; ebenso, wenn eine Meldung fehlt.
  */
-export function startSync(onChange: (info?: SyncInfo) => void, setOnline: (online: boolean) => void): void {
+/** Was `startSync` von der Umgebung braucht; im Browser die echten Objekte, im Test Ersatz */
+export interface SyncEnv {
+  create(url: string): WebSocket;
+  url(): string;
+  onVisible(cb: () => void): void;
+}
+
+const browserEnv: SyncEnv = {
+  create: (url) => new WebSocket(url),
+  url: () => {
+    const u = new URL('api/events', location.href);
+    u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+    return u.toString();
+  },
+  onVisible: (cb) =>
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') cb();
+    }),
+};
+
+export function startSync(
+  onChange: (info?: SyncInfo) => void,
+  setOnline: (online: boolean) => void,
+  env: SyncEnv = browserEnv,
+): void {
   let ws: WebSocket | null = null;
   let retry = 0;
   let first = true;
   /** Nummer der letzten Meldung; null: noch keine seit dem (Wieder-)Verbinden bekannt */
   let last: number | null = null;
+  /** Höchstens ein geplanter Verbindungsversuch zugleich */
+  let timer: ReturnType<typeof setTimeout> | null = null;
 
-  const url = () => {
-    const u = new URL('api/events', location.href);
-    u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
-    return u.toString();
-  };
+  function schedule(ms: number) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = null;
+      connect();
+    }, ms);
+  }
 
   function connect() {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    // Es gibt nie zwei Verbindungen: läuft eine (verbindend oder offen), bleibt es dabei
+    if (ws && ws.readyState <= 1) return;
+    let sock: WebSocket;
     try {
-      ws = new WebSocket(url());
+      sock = env.create(env.url());
     } catch {
-      setTimeout(connect, 5000);
+      schedule(5000);
       return;
     }
-    ws.onopen = () => {
+    ws = sock;
+    // Ereignisse einer ersetzten Verbindung zählen nicht (sonst „offline“ und falsche Lücken trotz offener Verbindung)
+    const current = () => ws === sock;
+    sock.onopen = () => {
+      if (!current()) return;
       retry = 0;
       setOnline(true);
     };
-    ws.onmessage = (e) => {
+    sock.onmessage = (e) => {
+      if (!current()) return;
       let msg: { type?: string; seq?: number; changes?: Changes };
       try {
         msg = JSON.parse(String(e.data));
@@ -54,16 +94,16 @@ export function startSync(onChange: (info?: SyncInfo) => void, setOnline: (onlin
         onChange({ changes: msg.changes, gap });
       }
     };
-    ws.onclose = () => {
+    sock.onclose = () => {
+      if (!current()) return;
       setOnline(false);
       last = null;
-      setTimeout(connect, Math.min(1000 * 2 ** retry++, 15_000));
+      schedule(Math.min(1000 * 2 ** retry++, 15_000));
     };
-    ws.onerror = () => ws?.close();
+    sock.onerror = () => sock.close();
   }
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible') return;
+  env.onVisible(() => {
     if (!ws || ws.readyState > 1) connect();
     onChange();
   });

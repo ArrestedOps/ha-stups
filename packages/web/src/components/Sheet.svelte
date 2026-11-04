@@ -76,7 +76,7 @@
   <div
     role="dialog"
     aria-modal="true"
-    aria-label={title || 'Details'}
+    aria-label={title || t('Details')}
     class="absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col rounded-t-3xl border-t border-line bg-bg lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[480px] lg:rounded-none lg:border-t-0 lg:border-l"
     style:transform={dy ? `translateY(${dy}px)` : undefined}
     style:transition={dragging ? 'none' : undefined}

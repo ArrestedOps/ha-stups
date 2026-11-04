@@ -1,4 +1,6 @@
 import type { FastifyInstance } from 'fastify';
+import { ValidationError } from '../errors.js';
+import { t } from '../i18n/index.js';
 import { normalizeUrl } from '../links.js';
 import { type ApiKit, type Params } from './kit.js';
 
@@ -36,7 +38,8 @@ export function registerCardExtraRoutes(app: FastifyInstance, k: ApiKit): void {
     // Google-Kurzlinks werden durch die Maps-URL ersetzt, die die Maps-App aus der Companion App öffnet
     const resolved = await resolveMapsLink(normalized);
     const url = resolved?.url ?? normalized;
-    const title: string | null | undefined = b.title?.trim() ? b.title : resolved?.title;
+    if (b.title !== undefined && b.title !== null && typeof b.title !== 'string') throw new ValidationError(t('Der Titel muss Text sein'));
+    const title: string | null | undefined = typeof b.title === 'string' && b.title.trim() ? b.title : resolved?.title;
     if (!title?.trim()) {
       const probe = store.addLink(req.params.id, { url });
       const fetched = await fetchTitle(probe.url);

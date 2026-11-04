@@ -227,17 +227,26 @@ export function dismissToast(id: number): void {
 
 const errorText = (e: unknown) => (e instanceof ApiError ? e.message : t('Etwas ist schiefgelaufen'));
 
-/** Führt eine Aktion aus, lädt danach neu und meldet Fehler als Hinweis. */
-export async function act<T>(fn: () => Promise<T>): Promise<T | undefined> {
+/**
+ * Wie `act`, sagt aber, ob es geklappt hat. `act` gibt bei einem Fehler und bei einer Aktion ohne Ergebnis (löschen)
+ * beide `undefined` zurück; wer danach etwas bestätigt („Karte gelöscht“, „Gespeichert“), braucht dieses Ergebnis.
+ */
+export async function actResult<T>(fn: () => Promise<T>): Promise<{ ok: true; value: T } | { ok: false }> {
   try {
-    const result = await fn();
+    const value = await fn();
     await refresh();
-    return result;
+    return { ok: true, value };
   } catch (e) {
     toast(errorText(e), { tone: 'error' });
     await refresh();
-    return undefined;
+    return { ok: false };
   }
+}
+
+/** Führt eine Aktion aus, lädt danach neu und meldet Fehler als Hinweis. */
+export async function act<T>(fn: () => Promise<T>): Promise<T | undefined> {
+  const r = await actResult(fn);
+  return r.ok ? r.value : undefined;
 }
 
 // ---------- Laden ----------
@@ -312,6 +321,7 @@ async function load(): Promise<void> {
     ui.watchers = await api.watchers().catch(() => ui.watchers);
     ui.rev += 1;
     ui.online = true;
+    ui.allowed = true; // der Zugriff war entzogen und ist zurück: die Erklärung verschwindet ohne Neuladen
   } catch (e) {
     if (e instanceof ApiError && e.status === 0) ui.online = false;
     else if (e instanceof ApiError && e.status === 403) ui.allowed = false; // Zugriff wurde entzogen
@@ -623,7 +633,8 @@ export function removeCard(card: Card): void {
     text: t('„{title}“ kommt in den Papierkorb und lässt sich von dort wiederherstellen.', { title: card.title }),
     label: t('Löschen'),
     run: async () => {
-      await act(() => api.deleteCard(card.id));
+      const r = await actResult(() => api.deleteCard(card.id));
+      if (!r.ok) return; // der Fehler steht schon als Hinweis da; die Karte bleibt offen
       closeSheet();
       toast(t('Karte gelöscht'), { action: { label: t('Rückgängig'), run: () => void act(() => api.restore('card', card.id)) } });
     },

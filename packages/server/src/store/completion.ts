@@ -208,6 +208,29 @@ export function createCompletion(c: Ctx, late: unknown) {
   /** Die Karte einer Erledigung (für die Rechte-Prüfung); null, wenn es sie nicht gibt */
   const cardIdOfCompletion = (id: string): string | null => (one('select card_id from completions where id = ?', id)?.card_id as string | undefined) ?? null;
 
+  /**
+   * Hat jemand mit der bei der Wiederholung angelegten Karte gearbeitet? Dann würde „Rückgängig“ sie samt Kommentaren,
+   * Anhängen und Checkliste endgültig löschen. Die Version zählt nicht (der Geplant-Abgleich erhöht sie von selbst);
+   * geprüft werden die Daten: so wie `spawnNextCard` sie anlegt, sind Kommentare, Anhänge, Stupse und Erledigungen leer,
+   * Checkliste und Links entsprechen der Vorgängerin (oder fehlen), Titel, Beschreibung und Priorität stimmen überein.
+   */
+  function spawnedHasOwnWork(spawnedId: string, src: Row): boolean {
+    const n = (sql: string, ...args: unknown[]): number => Number(one(sql, ...args)?.n ?? 0);
+    const carry = resolveCarry(src.carry_over);
+    if (n('select count(*) as n from comments where card_id = ?', spawnedId) > 0) return true;
+    if (n('select count(*) as n from attachments where card_id = ?', spawnedId) !== (carry.includes('attachments') ? n('select count(*) as n from attachments where card_id = ?', src.id) : 0)) return true;
+    if (n('select count(*) as n from nudges where card_id = ?', spawnedId) > 0) return true;
+    if (n('select count(*) as n from checklist_items where card_id = ? and done = 1', spawnedId) > 0) return true;
+    const expected = (table: 'checklist_items' | 'links', key: 'checklist' | 'links'): number =>
+      carry.includes(key) ? n(`select count(*) as n from ${table} where card_id = ?`, src.id) : 0;
+    if (n('select count(*) as n from checklist_items where card_id = ?', spawnedId) !== expected('checklist_items', 'checklist')) return true;
+    if (n('select count(*) as n from links where card_id = ?', spawnedId) !== expected('links', 'links')) return true;
+    const sp = one('select title, description, priority from cards where id = ?', spawnedId);
+    if (!sp) return false;
+    const description = carry.includes('description') ? (src.description ?? null) : null;
+    return sp.title !== src.title || (sp.description ?? null) !== description || sp.priority !== src.priority;
+  }
+
   function undoCompletion(completionId: string): CardDetail {
     const c = one('select * from completions where id = ?', completionId);
     if (!c) throw new NotFoundError(t('Erledigung nicht gefunden'));
@@ -224,6 +247,9 @@ export function createCompletion(c: Ctx, late: unknown) {
       if (snap.spawnedId) {
         if (one('select 1 as x from completions where card_id = ?', snap.spawnedId)) {
           throw new ConflictError(t('Die nächste Karte wurde schon erledigt, deshalb lässt sich das nicht mehr rückgängig machen'));
+        }
+        if (spawnedHasOwnWork(snap.spawnedId, card)) {
+          throw new ConflictError(t('Die nächste Karte wurde schon bearbeitet, deshalb lässt sich das nicht mehr rückgängig machen'));
         }
         run('delete from cards where id = ?', snap.spawnedId);
       }
@@ -273,7 +299,7 @@ export function createCompletion(c: Ctx, late: unknown) {
     if (col.board_id !== card.board_id) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
     return tx(() => {
       placeCard(cardId, col, null);
-      run('update cards set archived_at = null, completed_at = null where id = ?', cardId);
+      run('update cards set archived_at = null, completed_at = null, confirm_requested_at = null, confirm_requested_by = null where id = ?', cardId);
       logEvent(cardId, 'reopened', by, columnName(card.column_id), col.name);
       touchCard(cardId);
       return getCard(cardId);

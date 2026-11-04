@@ -34,7 +34,7 @@ import { createHousePush, createHouseSubscription } from './house.js';
 import { createHouseDrivers } from './house-drivers.js';
 import { createPresence } from './presence.js';
 import { createSensors } from './sensors.js';
-import { spikeRoutes } from './spike.js';
+import { spikeGuard, spikeRoutes } from './spike.js';
 import { createStore, type ClosedNudge } from './store.js';
 import { ensureWebsocket } from './ws.js';
 
@@ -267,11 +267,7 @@ if (runtime.ntfy) {
   await app.register(pushActionRoutes, { tokens: actionTokens, notifier, store, roundTrips, log });
 }
 // Die Diagnose-Seite liegt außerhalb der API-Routen und braucht dieselbe Sperre
-app.addHook('onRequest', async (req, reply) => {
-  if (!req.url.startsWith('/api/spike') || !req.principal) return;
-  const r = await access.evaluate({ id: req.principal.id, name: req.principal.name, displayName: req.principal.displayName });
-  if (!r.allowed) return reply.code(403).send({ error: 'Kein Zugriff' });
-});
+app.addHook('onRequest', spikeGuard((who) => access.evaluate(who)));
 
 app.get('/healthz', async () => ({ ok: true }));
 // Die Diagnose-Seite liest die Personen aus der Datenbank, nicht aus den (nur einmal übernommenen) Optionen

@@ -14,4 +14,5 @@
   const items = $derived(columns.map((c) => ({ id: c.id, label: `${c.name} · ${counts[c.id] ?? 0}` })));
 </script>
 
-<Segmented {items} value={ui.columnId} label={t('Spalten')} kind="tabs" scroll onchange={selectColumn} />
+<!-- bis vier Spalten stehen gleich breit nebeneinander (wie im Mockup), bei mehr wischt die Leiste seitlich -->
+<Segmented {items} value={ui.columnId} label={t('Spalten')} kind="tabs" scroll={items.length > 4} onchange={selectColumn} />

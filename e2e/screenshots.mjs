@@ -15,7 +15,10 @@ const EN = lang === 'en';
 const x = (de, en) => (EN ? en : de);
 
 const root = join(import.meta.dirname, '..');
-const out = EN ? join(root, 'docs', 'images', 'en') : join(root, 'docs', 'images');
+// SHOTS_OUT leitet die Aufnahmen in einen anderen Ordner um, SHOTS_ONLY (kommagetrennt) nimmt nur diese Bilder und SHOTS_SCHEMES (zum Beispiel dunkel) nur diese Themen auf
+const out = process.env.SHOTS_OUT ?? (EN ? join(root, 'docs', 'images', 'en') : join(root, 'docs', 'images'));
+const only = process.env.SHOTS_ONLY ? process.env.SHOTS_ONLY.split(',') : null;
+const schemes = process.env.SHOTS_SCHEMES ? process.env.SHOTS_SCHEMES.split(',') : ['dunkel', 'hell'];
 mkdirSync(out, { recursive: true });
 const PORT = 18500;
 const base = `http://127.0.0.1:${PORT}`;
@@ -162,25 +165,37 @@ async function seed() {
   for (const [title, days] of Object.entries(back)) {
     db.prepare('update cards set created_at = ? where title = ?').run(at(-days * D), title);
   }
+  // Ein offener Stups von Ben an Anna (für das Banner in Aufgaben und die Glocke): die Aufnahmen laufen als Anna
+  const windows = db.prepare('select id from cards where title = ?').get(S.windows);
+  db.prepare('insert into nudges (id, card_id, from_user, to_user, template, text, created_at, deliver_at, delivered_at, delivered_round) values (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)').run(
+    'shots-nudge-1', windows.id, ben.id, anna.id, 'today', x('Heute noch?', 'Today still?'), at(-2 * H), at(-2 * H), at(-2 * H),
+  );
   db.close();
 
   return { anna, ben, haushalt: haushalt.id, c1: c1.id, c2: c2.id };
 }
 
 // ---------- Aufnahmen ----------
-const phone = devices['iPhone 13'];
+// iPhone 13 mit der vollen Bildschirmhöhe (390 × 844, Faktor 3 = 1170 × 2532), wie die Mockups
+const phone = { ...devices['iPhone 13'], viewport: { width: 390, height: 844 }, screen: { width: 390, height: 844 } };
 const shot = async (page, name, scheme) => {
   await page.waitForTimeout(450);
+  // SHOTS_MEASURE=1: Maße aller sichtbaren Elemente neben das Bild schreiben (zum genauen Vergleich mit den Mockups)
+  if (process.env.SHOTS_MEASURE) {
+    const rects = await page.evaluate(() => [...document.querySelectorAll('#app *')].map((e) => { const r = e.getBoundingClientRect(); const c = (e.getAttribute('class') ?? '').split(' ').slice(0, 3).join('.'); return r.width && r.height ? `${e.tagName.toLowerCase()}.${c} x=${r.x.toFixed(1)} y=${r.y.toFixed(1)} w=${r.width.toFixed(1)} h=${r.height.toFixed(1)}` : null; }).filter(Boolean));
+    writeFileSync(join(out, `${name}-${scheme}.txt`), rects.join('\n'));
+  }
   await page.screenshot({ path: join(out, `${name}-${scheme}.png`) });
   console.log('geschrieben:', `${name}-${scheme}.png`);
 };
 
 export async function capture(screens, baseUrl = base) {
   const browser = await webkit.launch();
-  for (const scheme of ['dunkel', 'hell']) {
+  for (const scheme of schemes) {
     const context = await browser.newContext({ ...phone, locale: x('de-DE', 'en-GB'), timezoneId: 'Europe/Berlin', colorScheme: scheme === 'dunkel' ? 'dark' : 'light' });
     const page = await context.newPage();
     for (const [name, run] of screens) {
+      if (only && !only.includes(name)) continue;
       await page.goto(baseUrl + '/');
       await page.evaluate(() => localStorage.clear()); // gemerkte Ansicht und Filter wegräumen
       await page.reload();
@@ -197,10 +212,14 @@ await waitUp();
 const seeded = await seed();
 
 const nav = (page, name) => page.getByRole('navigation', { name: x('Ansicht', 'View') }).getByRole('button', { name });
-const mode = (page, name) => page.getByRole('radiogroup', { name: x('Ansicht', 'View') }).getByRole('radio', { name }).click();
 const all = (page) => chip(page, x('Personen', 'People'), x('Alle', 'All'));
-/** Aufgaben öffnen, eine Ansicht wählen (Liste, Tag, Woche, Monat) und „Alle“ statt „Meine“ zeigen */
-const tasks = async (page, view) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await mode(page, view); await all(page); };
+/** Aufgaben öffnen und „Alle“ statt „Meine“ zeigen */
+const tasks = async (page) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await all(page); };
+/** Der Kalender (Tag, Woche, Monat) ist eine Seite unter Aufgaben: über den Kalender-Knopf der Wochenleiste, dann die Ansicht wählen */
+const calendar = async (page, view) => {
+  await page.getByRole('button', { name: x('Kalender öffnen', 'Open calendar') }).click();
+  await page.getByRole('radiogroup', { name: x('Ansicht', 'View') }).getByRole('radio', { name: view }).click();
+};
 const chip = (page, group, name) => page.getByRole('group', { name: group }).getByRole('button', { name, exact: typeof name === 'string' }).click();
 const re = (s) => new RegExp(`^${s}`);
 
@@ -215,14 +234,26 @@ const screens = [
     await page.getByRole('button', { name: x(/stupsen/, /nudge/i) }).click();
     await page.getByRole('radio', { name: x(/Heute noch/, /Today still/) }).click();
   }],
-  ['aufgaben', async (page) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await page.getByTestId('today-sentence').waitFor(); await page.getByTestId('week-strip').waitFor(); }],
-  ['aufgaben-alle', async (page) => { await tasks(page, x('Liste', 'List')); await page.getByTestId('tasks').getByText(S.windows).waitFor(); }],
+  ['aufgaben', async (page) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await page.getByTestId('tasks-sub').waitFor(); await page.getByTestId('week-strip').waitFor(); }],
+  ['aufgaben-alle', async (page) => { await tasks(page); await page.getByTestId('tasks').getByText(S.windows).first().waitFor(); }],
   ['aufgaben-gefiltert', async (page) => {
-    await tasks(page, x('Liste', 'List'));
+    await tasks(page);
     await chip(page, x('Personen', 'People'), /Ben/);
     await page.getByRole('button', { name: 'Filter' }).click();
     await chip(page, 'Boards', new RegExp(S.boardReno));
-    await page.getByTestId('tasks').getByText(S.electrician).waitFor();
+    await page.getByRole('button', { name: x(/Aufgaben? anzeigen/, /Show \d+ tasks?/) }).click();
+    await page.getByTestId('tasks').getByText(S.electrician).first().waitFor();
+  }],
+  ['mitteilungen', async (page) => {
+    await nav(page, x('Aufgaben', 'Tasks')).click();
+    await page.getByTestId('bell-dot').waitFor();
+    await page.getByTestId('bell').click();
+    await page.getByTestId('notifications').waitFor();
+  }],
+  ['filter', async (page) => {
+    await tasks(page);
+    await page.getByRole('button', { name: 'Filter' }).click();
+    await page.getByTestId('filter-sheet').waitFor();
   }],
   ['karte-menu', async (page) => {
     await nav(page, 'Boards').click();
@@ -230,11 +261,12 @@ const screens = [
     await page.getByRole('button', { name: x(/^Menü für/, /^Menu for/) }).first().click();
     await page.getByRole('dialog').getByText(x('Verschieben nach', 'Move to')).waitFor();
   }],
-  ['kalender-woche', async (page) => { await tasks(page, x('Woche', 'Week')); if (new Date().getDay() === 0) await page.getByRole('button', { name: x('Weiter', 'Next') }).click(); /* sonntags liegt morgen in der nächsten Woche */ await page.getByRole('button', { name: re(S.windows) }).first().waitFor(); }],
-  ['kalender-tag', async (page) => { await tasks(page, x('Tag', 'Day')); await page.getByRole('button', { name: re(S.parcel) }).waitFor(); }],
-  ['kalender-monat', async (page) => { await tasks(page, x('Monat', 'Month')); await page.locator('[data-today]').waitFor(); }],
+  ['kalender-woche', async (page) => { await tasks(page); await calendar(page, x('Woche', 'Week')); if (new Date().getDay() === 0) await page.getByRole('button', { name: x('Weiter', 'Next') }).click(); /* sonntags liegt morgen in der nächsten Woche */ await page.getByRole('button', { name: re(S.windows) }).first().waitFor(); }],
+  ['kalender-tag', async (page) => { await tasks(page); await calendar(page, x('Tag', 'Day')); await page.getByRole('button', { name: re(S.parcel) }).waitFor(); }],
+  ['kalender-monat', async (page) => { await tasks(page); await calendar(page, x('Monat', 'Month')); await page.locator('[data-today]').waitFor(); }],
   ['kalender-neue-karte', async (page) => {
-    await tasks(page, x('Tag', 'Day'));
+    await tasks(page);
+    await calendar(page, x('Tag', 'Day'));
     await page.getByRole('button', { name: re(S.parcel) }).waitFor();
     const grid = page.getByTestId('calendar-grid');
     await grid.evaluate((el) => (el.scrollTop = 11 * 56));

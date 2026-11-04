@@ -65,3 +65,19 @@ describe('weekStrip: die sieben Tage der Woche mit Punkten', () => {
     expect(w.every((d) => d.dots.length === 0)).toBe(true);
   });
 });
+
+describe('shortMonthTitle: „Jan 2025" über der Wochenleiste', () => {
+  it('kurzer Monatsname und Jahr, in der Zeitzone des Haushalts', async () => {
+    const { shortMonthTitle } = await import('../src/lib/week');
+    expect(shortMonthTitle(Date.parse('2026-11-04T10:00:00Z'), 'Europe/Berlin')).toBe('Nov 2026');
+    // 31.12. 23:30 UTC ist in Berlin schon der 1.1.
+    expect(shortMonthTitle(Date.parse('2026-12-31T23:30:00Z'), 'Europe/Berlin')).toBe('Jan 2027');
+    expect(shortMonthTitle(Date.parse('2026-03-10T10:00:00Z'), 'Europe/Berlin')).toBe('Mär 2026');
+  });
+  it('auf Englisch', async () => {
+    const { setLanguage } = await import('../src/lib/i18n/index.svelte');
+    const { shortMonthTitle } = await import('../src/lib/week');
+    setLanguage('en');
+    expect(shortMonthTitle(Date.parse('2026-03-10T10:00:00Z'), 'Europe/Berlin')).toBe('Mar 2026');
+  });
+});

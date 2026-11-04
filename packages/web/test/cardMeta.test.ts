@@ -83,3 +83,20 @@ describe('Meta-Zeile einer Karte', () => {
     expect(kinds({ checklist: { done: 0, total: 0 } })).toEqual([]);
   });
 });
+
+describe('Meta-Zeile: Zuständige mit Namen (wie im Mockup)', () => {
+  const texts = (card: object, people?: string[]) =>
+    cardMeta({ ...base, ...card } as never, { overdue: false, isDone: false }, fmt, { people }).filter((m) => m.kind === 'person').map((m) => (m as { text: string }).text);
+
+  it('ein Name, bei mehreren der erste mit „+n", ohne Zuständige nichts', () => {
+    expect(texts({}, ['Ben'])).toEqual(['Ben']);
+    expect(texts({}, ['Ben', 'Conny', 'Anna'])).toEqual(['Ben +2']);
+    expect(texts({}, [])).toEqual([]);
+    expect(texts({})).toEqual([]);
+  });
+
+  it('steht nach der Priorität und vor der Checkliste', () => {
+    const k = cardMeta({ ...base, dueAt: '2026-11-04T10:00:00Z', priority: 'high', checklist: { done: 0, total: 3 }, linkCount: 1 } as never, { overdue: false, isDone: false }, fmt, { people: ['Ben'] }).map((m) => m.kind);
+    expect(k).toEqual(['due', 'priority', 'person', 'checklist', 'links']);
+  });
+});

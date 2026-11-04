@@ -7,6 +7,7 @@ export type MetaItem =
   | { kind: 'watcher' }
   | { kind: 'recurrence'; label: string }
   | { kind: 'priority'; level: 'medium' | 'high' }
+  | { kind: 'person'; text: string }
   | { kind: 'checklist'; done: number; total: number }
   | { kind: 'comments'; count: number }
   | { kind: 'links'; count: number }
@@ -21,13 +22,18 @@ export interface MetaFormat {
 
 type MetaCard = Pick<Card, 'dueAt' | 'completedAt' | 'recurrence' | 'priority' | 'checklist' | 'linkCount' | 'attachmentCount' | 'commentCount' | 'costCents' | 'watcherId'>;
 
-export function cardMeta(card: MetaCard, state: { overdue: boolean; isDone: boolean }, fmt: MetaFormat): MetaItem[] {
+/**
+ * `opts.people`: die Namen der Zuständigen. Sie stehen (wie im Mockup „Mo, 27. Jan • Ben") nach der Priorität und vor der Checkliste;
+ * bei mehreren der erste Name mit „+n".
+ */
+export function cardMeta(card: MetaCard, state: { overdue: boolean; isDone: boolean }, fmt: MetaFormat, opts: { people?: string[] } = {}): MetaItem[] {
   const out: MetaItem[] = [];
   if (card.completedAt) out.push({ kind: 'done', text: fmt.due(card.completedAt) });
   if (card.dueAt) out.push({ kind: 'due', text: fmt.due(card.dueAt), overdue: state.overdue && !state.isDone });
   if (card.watcherId) out.push({ kind: 'watcher' });
   if (card.recurrence) out.push({ kind: 'recurrence', label: fmt.recurrence(card.recurrence) });
   if (card.priority === 'medium' || card.priority === 'high') out.push({ kind: 'priority', level: card.priority });
+  if (opts.people?.length) out.push({ kind: 'person', text: opts.people.length > 1 ? `${opts.people[0]} +${opts.people.length - 1}` : opts.people[0]! });
   if (card.checklist.total > 0) out.push({ kind: 'checklist', done: card.checklist.done, total: card.checklist.total });
   if (card.commentCount) out.push({ kind: 'comments', count: card.commentCount });
   if (card.linkCount) out.push({ kind: 'links', count: card.linkCount });

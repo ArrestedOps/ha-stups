@@ -10,6 +10,8 @@
     left,
     right,
     hideClose = false,
+    fit = false,
+    bare = false,
     children,
   }: {
     title?: string;
@@ -18,6 +20,10 @@
     left?: Snippet;
     right?: Snippet;
     hideClose?: boolean;
+    /** so hoch wie der Inhalt (Aktionsblatt wie das Karten-Menü); sonst von der Kopfzeile des Geräts bis unten, wie in den Mockups */
+    fit?: boolean;
+    /** ohne Kopfzeile (Griff, dann gleich der Inhalt) */
+    bare?: boolean;
     children: Snippet;
   } = $props();
 
@@ -77,7 +83,7 @@
     role="dialog"
     aria-modal="true"
     aria-label={title || t('Details')}
-    class="absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col rounded-t-sheet border-t border-line bg-bg lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[480px] lg:rounded-none lg:border-t-0 lg:border-l"
+    class="absolute inset-x-0 bottom-0 flex flex-col rounded-t-sheet border-t border-line bg-bg shadow-[0_-10px_40px_rgba(0,0,0,0.6)] {fit ? 'max-h-[calc(100dvh-54px)]' : 'h-[calc(100dvh-54px)]'} lg:h-auto lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[480px] lg:rounded-none lg:border-t-0 lg:border-l"
     style:transform={dy ? `translateY(${dy}px)` : undefined}
     style:transition={dragging ? 'none' : undefined}
     style:bottom={insets.bottom ? `${insets.bottom}px` : undefined}
@@ -85,7 +91,7 @@
     transition:fly={{ y: 500, duration: 220 }}
   >
     <div
-      class="flex touch-none justify-center pt-2 pb-1 lg:hidden"
+      class="-mb-2 flex shrink-0 touch-none justify-center pt-2 pb-2 lg:hidden"
       onpointerdown={down}
       onpointermove={move}
       onpointerup={up}
@@ -94,19 +100,22 @@
     >
       <span class="h-[5px] w-10 rounded-full bg-track"></span>
     </div>
-    <div class="flex items-center justify-between px-2 pt-1">
-      {#if left}
-        {@render left()}
-      {:else if !hideClose}
-        <button class="min-h-11 px-3 text-[16px] font-semibold text-accent-text" onclick={onclose}>{t('Schließen')}</button>
-      {:else}
-        <span></span>
-      {/if}
-      {#if title}<span class="truncate text-[17px] font-extrabold">{title}</span>{/if}
-      <div class="flex min-w-[88px] justify-end">{@render right?.()}</div>
-    </div>
+    {#if !bare}
+      <!-- Kopf: links, Titel in der Mitte, rechts (drei gleich breite Spalten außen, Höhe 52) -->
+      <div class="relative z-[1] grid h-[52px] shrink-0 grid-cols-[1fr_auto_1fr] items-center px-2">
+        <div class="flex min-w-0 justify-self-start">
+          {#if left}
+            {@render left()}
+          {:else if !hideClose}
+            <button class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" onclick={onclose}>{t('Schließen')}</button>
+          {/if}
+        </div>
+        <span class="max-w-[60vw] truncate text-center text-[17px] font-extrabold">{title}</span>
+        <div class="flex min-w-0 justify-self-end">{@render right?.()}</div>
+      </div>
+    {/if}
     <div
-      class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(16px,var(--safe-bottom))]"
+      class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 {bare ? 'pb-[max(34px,var(--safe-bottom))]' : 'pb-[max(40px,var(--safe-bottom))]'}"
       onfocusin={keepFieldVisible}
     >
       {@render children()}

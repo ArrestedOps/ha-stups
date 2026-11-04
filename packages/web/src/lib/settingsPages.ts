@@ -38,6 +38,8 @@ export interface SettingsGroup {
   id: 'me' | 'household' | 'ha' | 'help';
   title: string;
   pages: { id: SettingsPageId; title: string; icon: string }[];
+  /** Zeilen, die gleich etwas tun statt eine Unterseite zu öffnen (nur „Home Assistant"): zurück zum Dashboard, HA-Kopfzeile ausblenden */
+  actions?: ('back' | 'header')[];
 }
 
 /**
@@ -86,4 +88,19 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
     },
   ];
   return groups.filter((g) => g.pages.length > 0);
+}
+
+/**
+ * Die Übersicht der Einstellungen: wie `settingsGroups`, dazu im Add-on in der Gruppe „Home Assistant" für **jede** Rolle „Zurück zum Dashboard"
+ * und „HA-Kopfzeile ausblenden". Beides stand früher oben links in der Kopfzeile (für alle) und gehört nach dem neuen Design hierher.
+ */
+export function settingsOverview(ctx: SettingsCtx): SettingsGroup[] {
+  const groups = settingsGroups(ctx);
+  if (!ctx.haUi) return groups;
+  const actions: ('back' | 'header')[] = ['back', 'header'];
+  const have = groups.find((g) => g.id === 'ha');
+  if (have) return groups.map((g) => (g === have ? { ...g, actions } : g));
+  const ha: SettingsGroup = { id: 'ha', title: t('Home Assistant'), pages: [], actions };
+  const at = groups.findIndex((g) => g.id === 'help');
+  return at < 0 ? [...groups, ha] : [...groups.slice(0, at), ha, ...groups.slice(at)];
 }

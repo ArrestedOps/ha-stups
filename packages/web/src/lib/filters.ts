@@ -12,6 +12,8 @@ export interface FilterableCard {
 export interface Filter {
   categoryIds: string[];
   onlyMine: boolean;
+  /** nur Karten dieser Personen (eine davon genügt); leer = alle */
+  personIds?: string[];
   /** nur Karten mit einem offenen Stups an mich */
   nudged?: boolean;
   search: string;
@@ -22,6 +24,7 @@ export function filterCards<T extends FilterableCard>(cards: T[], f: Filter, meI
   return cards.filter((c) => {
     if (f.categoryIds.length > 0 && !c.categoryIds.some((id) => f.categoryIds.includes(id))) return false;
     if (f.onlyMine && (!meId || !c.assigneeIds.includes(meId))) return false;
+    if (f.personIds?.length && !c.assigneeIds.some((id) => f.personIds!.includes(id))) return false;
     if (f.nudged && (!meId || !(c.openNudges ?? []).some((n) => n.toId === meId))) return false;
     if (q && !`${c.title}\n${c.description ?? ''}`.toLowerCase().includes(q)) return false;
     return true;

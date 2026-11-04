@@ -42,7 +42,7 @@
       role={kind === 'tabs' ? 'tab' : 'radio'}
       aria-selected={kind === 'tabs' ? on : undefined}
       aria-checked={kind === 'choice' ? on : undefined}
-      class="inline-flex min-h-0 items-center justify-center gap-1.5 rounded-[12px] px-3 text-[14px] whitespace-nowrap {scroll ? 'shrink-0 flex-1' : ''} {on ? 'bg-accent-grad font-bold' : 'text-fg2'}"
+      class="inline-flex min-h-0 items-center justify-center gap-1.5 rounded-[12px] text-[14px] whitespace-nowrap {scroll ? 'px-3' : 'px-0.5'} {scroll ? 'shrink-0 flex-1' : ''} {on ? 'bg-accent-grad glow-seg font-bold' : 'text-text-soft2'}"
       onclick={() => onchange(item.id)}
     >
       {item.label}

@@ -28,6 +28,22 @@
   --color-house: var(--house);
   --color-house-bg: var(--house-bg);
   --color-house-line: var(--house-line);
+  --color-text-soft: var(--text-soft);
+  --color-text-soft2: var(--text-soft2);
+  --color-sep: var(--sep);
+  --color-ring: var(--ring);
+  --color-line-chip: var(--line-chip);
+  --color-count: var(--count-bg);
+  --color-avatar-ring: var(--avatar-ring);
+  --color-dim: var(--dim);
+  --color-stat-line: var(--avatar-ring);
+  --color-sig-orange: var(--sig-orange);
+  --color-sig-red: var(--sig-red);
+  --color-sig-green: var(--sig-green);
+  --color-sig-blue: var(--sig-blue);
+  --color-brand-dot: var(--brand-dot);
+  --color-banner-icon: var(--banner-purple-icon);
+  --color-banner-radio: var(--banner-radio);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
   --font-sans: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
@@ -64,9 +80,25 @@
   --house: #4fd6c8;
   --house-bg: #11302d;
   --house-line: #1f5a54;
-  --danger: #ff8a8a;
+  --danger: #ff5a5f;
   --danger-bg: #3a1d22;
-  --scrim: rgba(0, 0, 0, 0.55);
+  /* Feinere Stufen der Mockups: Symbole und Chips (hell), Trenner, Erledigt-Kreis, Rand der Chips, Zähler */
+  --text-soft: #e4e4e7;
+  --text-soft2: #d4d4d8;
+  --sep: #57525a;
+  --ring: #71717a;
+  --line-chip: #2e2a2c;
+  --count-bg: #232022;
+  --avatar-ring: #2a2a2e;
+  --dim: #8a8588;
+  --count-on: rgba(255, 255, 255, 0.2); /* Zähler im aktiven Chip */
+  /* Signalfarben für Zahlen, Punkte und Abschnittssymbole: heute (orange), überfällig (rot), erledigt (grün), später (blau) */
+  --sig-orange: #ffa51f;
+  --sig-red: #ff5a5f;
+  --sig-green: #7be07b;
+  --sig-blue: #7fc8ff;
+  --brand-dot: #fd6305; /* der Punkt der Wortmarke */
+  --scrim: rgba(0, 0, 0, 0.6);
   --glow: radial-gradient(ellipse at 85% -5%, rgba(255, 90, 31, 0.32), transparent 62%);
   --shadow-card: none;
   --shadow-accent: 0 10px 24px rgba(255, 90, 31, 0.4);
@@ -90,6 +122,8 @@
   --banner-purple: linear-gradient(90deg, #4a1a6e, #632b90 55%, #4e1e73);
   --banner-purple-line: rgba(180, 110, 240, 0.5);
   --banner-purple-sub: #e3d4ff;
+  --banner-purple-icon: #ebddff;
+  --banner-radio: #ff5c8a; /* Symbol im Banner „Stups hat passende Automationen gefunden“ */
   --banner-warm: linear-gradient(100deg, #24140f, #3b1d10 55%, #5a2a0e);
   --banner-warm-line: rgba(255, 140, 80, 0.35);
   --banner-warm-sub: #f2dccb;
@@ -170,6 +204,13 @@
   color: var(--on-accent);
 }
 
+/* Leuchten je Baustein (Größe und Stärke wie in den Mockups): Chip, Segment, Tag der Wochenleiste, großer Knopf */
+.bg-accent-grad.glow-chip { box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent); }
+.bg-accent-grad.glow-seg { box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 35%, transparent); }
+.bg-accent-grad.glow-day { box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent); }
+.bg-accent-grad.glow-pill { box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent); }
+.bg-accent-grad.glow-cta { box-shadow: 0 8px 26px color-mix(in srgb, var(--accent) 45%, transparent); }
+
 /* Kachel mit Symbol: Verlauf und feiner heller Rand; Farbe über die Klasse */
 .tile {
   display: flex;
@@ -189,7 +230,14 @@
 .tile-red { background-image: linear-gradient(160deg, var(--tile-red-a), var(--tile-red-b)); color: var(--tile-red-fg); }
 .tile-gray { background-image: linear-gradient(160deg, var(--tile-gray-a), var(--tile-gray-b)); color: var(--tile-gray-fg); }
 
-/* Schimmer hinter der Kopfzeile */
+/* Neu und offen (Mitteilungen): oranger Rand an der Zeile, oranger Punkt mit Leuchten */
+.row-new { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.dot-new { background: var(--brand-dot); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 70%, transparent); }
+
+/* Schimmer hinter der Kopfzeile (nur im hellen Thema: das dunkle Mockup hat einen ruhigen, flachen Grund) */
+@media (prefers-color-scheme: dark) {
+  .header-glow { display: none; }
+}
 .header-glow {
   position: fixed;
   inset: 0 0 auto 0;
@@ -217,6 +265,11 @@
   :root.embedded {
     --safe-top: 0px;
     --safe-bottom: 0px;
+  }
+  /* Zeilenhöhe „normal" wie in den Mockups (Tailwind setzt sonst 1,5 und macht jede Zeile höher als im Entwurf) */
+  html,
+  body {
+    line-height: normal;
   }
   html,
   body {
@@ -286,10 +339,18 @@
 .hop { animation: hop 0.7s ease-out; }
 
 .no-scrollbar { scrollbar-width: none; touch-action: pan-x pan-y; }
-/* unten Platz für die schwebende Leiste */
-.pb-tabbar { padding-bottom: calc(max(10px, var(--safe-bottom)) + 100px); }
-/* mit dem „+"-Knopf über der Leiste (60 px hoch, 80 px über dem Rand): auch die letzte Karte lässt sich darüber hinaus scrollen */
-.pb-fab { padding-bottom: calc(max(10px, var(--safe-bottom)) + 164px); }
+/* Leiste unten: 88 px hoch (8 oben, 30 unten für den Home-Balken; mit größerem Sicherheitsabstand entsprechend mehr) */
+:root { --nav-h: calc(58px + max(30px, var(--safe-bottom))); }
+/* unten Platz für die Leiste */
+.pb-tabbar { padding-bottom: calc(var(--nav-h) + 24px); }
+/* mit dem „+"-Knopf über der Leiste (58 px hoch, 16 px über der Leiste): auch die letzte Karte lässt sich darüber hinaus scrollen */
+.pb-fab { padding-bottom: calc(var(--nav-h) + 102px); }
+/* Der „+"-Knopf: 58 × 58, Rundung 18, Verlauf 160° mit Leuchten (wie die Mockups) */
+.fab-grad {
+  background-image: linear-gradient(160deg, var(--accent), var(--accent-end));
+  box-shadow: 0 8px 26px color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--on-accent);
+}
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
 /* Leisten, die seitlich scrollen: ein Verlauf am Rand zeigt, dass es weitergeht (siehe lib/scrollStrip.ts) */

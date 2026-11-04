@@ -119,3 +119,19 @@ describe('filterCards: Gestupst', () => {
     expect(filterCards(cards, f, null)).toEqual([]);
   });
 });
+describe('filterCards: Personen-Chips der Boards (Meine, Alle, je Person)', () => {
+  const f = (personIds: string[], onlyMine = false) => ({ categoryIds: [], onlyMine, personIds, search: '' });
+
+  it('eine Person gewählt: ihre Karten', () => {
+    expect(filterCards(cards, f(['conny']), 'rene').map((c) => c.id)).toEqual(['Bad putzen', 'Rasen']);
+  });
+
+  it('mehrere Personen: eine davon genügt', () => {
+    expect(filterCards(cards, f(['conny', 'rene']), 'rene').map((c) => c.id)).toEqual(['Bad putzen', 'Filter wechseln', 'Rasen']);
+  });
+
+  it('ohne Auswahl bleibt alles; zusammen mit „nur meine" gelten beide', () => {
+    expect(filterCards(cards, f([]), 'rene')).toHaveLength(4);
+    expect(filterCards(cards, f(['conny'], true), 'rene').map((c) => c.id)).toEqual(['Rasen']);
+  });
+});

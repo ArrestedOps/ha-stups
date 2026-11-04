@@ -79,6 +79,6 @@
 
 {#if items.length === 0 && !ui.dragging}
   <p class="pointer-events-none -mt-24 pb-10 text-center text-[15px] text-fg2">
-    {ui.filter.categoryIds.length || ui.filter.onlyMine || ui.filter.nudged || ui.filter.search ? t('Keine Karten passen zum Filter') : t('Noch keine Karten')}
+    {ui.filter.categoryIds.length || ui.filter.onlyMine || ui.filter.personIds.length || ui.filter.nudged || ui.filter.search ? t('Keine Karten passen zum Filter') : t('Noch keine Karten')}
   </p>
 {/if}

@@ -20,7 +20,6 @@
   import { boardColorKey, dayKeyOf, filterSchedule, type ScheduleCard } from '../lib/schedule';
   import { openCardAnywhere, openSheet, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
-  import ScheduleFilterBar from './ScheduleFilterBar.svelte';
 
   const HOUR_PX = 56;
 
@@ -31,9 +30,8 @@
   let {
     mode,
     day = $bindable(),
-    filterOpen = false,
     onopenday,
-  }: { mode: CalMode; day: string; filterOpen?: boolean; onopenday: (day: string) => void } = $props();
+  }: { mode: CalMode; day: string; onopenday: (day: string) => void } = $props();
   const todayKey = () => dayKeyOf(Date.now());
 
   let loaded = $state<ScheduleCard[]>([]);
@@ -112,8 +110,6 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
-  {#if filterOpen}<div class="mt-2"><ScheduleFilterBar cards={loaded} people={false} /></div>{/if}
-
   <div class="mt-2 flex items-center gap-1.5">
     <button class="flex h-10 w-10 items-center justify-center rounded-xl text-fg2" aria-label={t('Zurück')} onclick={() => (day = step(mode, day, -1))}>
       <Icon name="chevron-left" size={22} stroke={2.6} />

@@ -25,10 +25,19 @@
   import WatcherSheet from './components/WatcherSheet.svelte';
   import FoundSheet from './components/FoundSheet.svelte';
   import WatchersView from './components/WatchersView.svelte';
+  import NotificationsSheet from './components/NotificationsSheet.svelte';
+  import FilterSheet from './components/FilterSheet.svelte';
+  import { loadAgenda } from './lib/agenda.svelte';
   import { columnForNew } from './lib/calendar';
   import { init, openSheet, ui } from './lib/store.svelte';
 
   onMount(init);
+
+  // Aufgaben und die Glocke oben (Punkt für „etwas ist offen") teilen sich dieselben Daten; sie laden bei jeder Änderung neu
+  $effect(() => {
+    void ui.rev;
+    if (ui.ready && ui.allowed && !ui.gate) void loadAgenda();
+  });
 
   // Ab 1024 px: klassische Kanban-Ansicht mit allen Spalten nebeneinander
   onMount(() => {
@@ -68,13 +77,13 @@
     <WatchersView />
   {/if}
 
-  {#if (tab === 'boards' || tab === 'tasks') && view && newCardColumn && !ui.isChild}
+  {#if (tab === 'boards' || (tab === 'tasks' && !ui.tasksCalendar)) && view && newCardColumn && !ui.isChild}
     <button
-      class="fixed right-5 bottom-[calc(max(10px,var(--safe-bottom))+80px)] z-30 flex h-[58px] w-[58px] items-center justify-center rounded-btn bg-accent-grad"
+      class="fab-grad fixed right-4 bottom-[calc(var(--nav-h)+16px)] z-30 flex h-[58px] w-[58px] items-center justify-center rounded-btn"
       aria-label={t('Neue Karte')}
       onclick={() => openSheet({ type: 'new', columnId: newCardColumn! })}
     >
-      <Icon name="plus" size={26} stroke={2.8} />
+      <Icon name="plus" size={28} stroke={2.4} />
     </button>
   {/if}
 
@@ -108,6 +117,10 @@
     <ArchiveSheet />
   {:else if ui.sheet?.type === 'week'}
     <WeekSheet />
+  {:else if ui.sheet?.type === 'notifications'}
+    <NotificationsSheet />
+  {:else if ui.sheet?.type === 'filter'}
+    <FilterSheet />
   {/if}
 
   <Lightbox />

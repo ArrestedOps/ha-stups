@@ -159,10 +159,10 @@
       onclick={() => !suppressClick && openSheet({ type: 'card', id: card.id })}
     >
       {#snippet tile()}
-        <Tile color={tileColor}><Icon name={cardIcon(card)} size={20} /></Tile>
+        <Tile color={tileColor}><Icon name={cardIcon(card)} size={24} /></Tile>
       {/snippet}
       {#snippet meta()}
-        <span class="flex min-w-0 items-center gap-2">
+        <span class="flex min-w-0 items-center gap-1.5">
           {#if waiting}
             <span class="flex shrink-0 items-center gap-1 font-semibold text-accent-text" data-testid="card-waiting"><Icon name="clock" size={13} />{t('Wartet auf Bestätigung')}</span>
           {/if}
@@ -175,28 +175,20 @@
               <Icon name="hand" size={12} />{t('Du hast {names} gestupst', { names: names(nudge.fromMe.map((n) => n.toId)) })}
             </span>
           {/if}
-          <CardMeta {card} done={isDoneColumn} {overdue} {categories} />
+          <CardMeta {card} done={isDoneColumn} {overdue} people={assignees.map((p) => p.displayName)} />
         </span>
       {/snippet}
       {#snippet right()}
-        <span class="flex items-center gap-1">
-          {#if assignees.length}
-            <span class="flex gap-1">
-              {#each assignees.slice(0, 2) as p (p.id)}<Avatar person={p} size={28} />{/each}
-            </span>
-          {/if}
-          {#if ui.isChild}
-            <span class="w-1 shrink-0" aria-hidden="true"></span>
-          {:else}
-            <button
-              class="flex h-11 w-8 shrink-0 items-center justify-center text-fg2"
-              aria-label={t('Menü für „{title}“', { title: card.title })}
-              onclick={() => !suppressClick && openSheet({ type: 'cardMenu', id: card.id })}
-            >
-              <Icon name="more" size={18} />
-            </button>
-          {/if}
-        </span>
+        {#if assignees.length}<Avatar person={assignees[0]!} size={28} ring={1.5} />{/if}
+        {#if !ui.isChild}
+          <button
+            class="flex h-11 w-7 shrink-0 items-center justify-center text-text-soft2"
+            aria-label={t('Menü für „{title}“', { title: card.title })}
+            onclick={() => !suppressClick && openSheet({ type: 'cardMenu', id: card.id })}
+          >
+            <Icon name="more" size={20} stroke={2.6} />
+          </button>
+        {/if}
       {/snippet}
     </ListRow>
   </div>

@@ -46,3 +46,20 @@ describe('durationText', () => {
     expect(durationText('2026-11-04T09:30:00Z', now)).toBe('seit 2 Std.');
   });
 });
+
+describe('openSinceText: „offen seit 12 Min." in der Zeile der wartenden Karte', () => {
+  const now = Date.parse('2026-11-04T12:00:00Z');
+  it('Minuten, Stunden, gerade erst', async () => {
+    const { openSinceText } = await import('../src/lib/home');
+    expect(openSinceText('2026-11-04T11:59:50Z', now)).toBe('gerade erst offen');
+    expect(openSinceText('2026-11-04T11:48:00Z', now)).toBe('offen seit 12 Min.');
+    expect(openSinceText('2026-11-04T09:00:00Z', now)).toBe('offen seit 3 Std.');
+  });
+  it('auf Englisch', async () => {
+    const { openSinceText } = await import('../src/lib/home');
+    const { setLanguage } = await import('../src/lib/i18n/index.svelte');
+    setLanguage('en');
+    expect(openSinceText('2026-11-04T11:48:00Z', now)).toBe('open for 12 min');
+    expect(openSinceText('2026-11-04T11:59:50Z', now)).toBe('just opened');
+  });
+});

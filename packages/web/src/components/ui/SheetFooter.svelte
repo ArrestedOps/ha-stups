@@ -5,6 +5,6 @@
   let { children }: { children: Snippet } = $props();
 </script>
 
-<div class="pointer-events-none sticky bottom-0 -mx-4 px-3 pt-5 pb-[max(16px,var(--safe-bottom))]" style="background-image: linear-gradient(to bottom, transparent, var(--bg) 34%)">
+<div class="pointer-events-none sticky bottom-0 -mx-3 px-3 pt-[22px] pb-[max(30px,var(--safe-bottom))]" style="background-image: linear-gradient(to bottom, transparent, var(--bg) 34%)">
   <div class="pointer-events-auto">{@render children()}</div>
 </div>

@@ -16,3 +16,11 @@ export function durationText(sinceIso: string, nowMs = Date.now()): string {
   if (min < 60) return t('seit {n} Min.', { n: min });
   return t('seit {n} Std.', { n: Math.floor(min / 60) });
 }
+
+/** „offen seit 12 Min.", „offen seit 3 Std.", „gerade erst offen" (wie lange eine Karte vom Haus schon auf jemanden wartet) */
+export function openSinceText(sinceIso: string, nowMs = Date.now()): string {
+  const min = Math.max(0, Math.floor((nowMs - Date.parse(sinceIso)) / 60_000));
+  if (min < 1) return t('gerade erst offen');
+  if (min < 60) return t('offen seit {n} Min.', { n: min });
+  return t('offen seit {n} Std.', { n: Math.floor(min / 60) });
+}

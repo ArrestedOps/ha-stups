@@ -39,7 +39,9 @@ export type Sheet =
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
   | { type: 'archive' }
-  | { type: 'week' };
+  | { type: 'week' }
+  | { type: 'notifications' }
+  | { type: 'filter' };
 
 export type { Tab };
 
@@ -73,13 +75,15 @@ export const ui = $state({
   settings: null as Settings | null,
   /** Wächter (null = noch nicht geladen); bestimmt mit, ob der Reiter „Wächter" erscheint */
   watchers: null as { available: boolean; items: WatcherItem[] } | null,
-  filter: { categoryIds: [] as string[], onlyMine: false, nudged: false, search: '' },
+  filter: { categoryIds: [] as string[], onlyMine: false, personIds: [] as string[], nudged: false, search: '' },
   searchOpen: false,
   sheet: null as Sheet,
   /** Karte, die gerade „hüpft" (nach dem Stupsen) */
   hop: null as string | null,
   /** Ansicht unten in der Leiste: Aufgaben, Boards oder Wächter */
   tab: 'tasks' as Tab,
+  /** Aufgaben zeigt gerade den Kalender (Tag, Woche, Monat) statt der Liste: der „+"-Knopf ruht dann */
+  tasksCalendar: false,
   /** Filter für Agenda und Kalender (Personen, Boards, Erledigtes) */
   sf: { ...DEFAULT_FILTER } as ScheduleFilter,
   /** zählt bei jedem Nachladen hoch, damit offene Detailansichten und die Agenda sich aktualisieren */
@@ -522,6 +526,12 @@ export function setScheduleFilter(patch: Partial<ScheduleFilter>): void {
 export async function openCardAnywhere(card: { id: string; boardId: string }): Promise<void> {
   if (card.boardId !== ui.boardId) await selectBoard(card.boardId);
   ui.sheet = { type: 'card', id: card.id };
+}
+
+/** Öffnet das Karten-Menü („…") einer Karte aus Aufgaben, auch wenn sie in einem anderen Board liegt */
+export async function openCardMenuAnywhere(card: { id: string; boardId: string }): Promise<void> {
+  if (card.boardId !== ui.boardId) await selectBoard(card.boardId);
+  ui.sheet = { type: 'cardMenu', id: card.id };
 }
 
 /** Lässt eine Karte kurz hüpfen: die Rückmeldung nach dem Stupsen */

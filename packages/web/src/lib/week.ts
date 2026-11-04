@@ -1,4 +1,5 @@
 import { dayNumber, weekDays } from './calendar';
+import { names } from './i18n/names';
 import { deviceTz } from './datetime';
 import { dayKeyOf, type ScheduleCard } from './schedule';
 
@@ -39,4 +40,10 @@ export function weekStrip(cards: ScheduleCard[], nowMs: number, tz = deviceTz())
     today: key === todayKey,
     dots: kinds.get(key)!.sort((a, b) => ORDER[a] - ORDER[b]).slice(0, MAX_DOTS),
   }));
+}
+
+/** „Jan 2025": kurzer Monatsname und Jahr des heutigen Tags (über der Wochenleiste, neben „Monatsansicht") */
+export function shortMonthTitle(nowMs: number, tz = deviceTz()): string {
+  const [y, m] = dayKeyOf(nowMs, tz).split('-');
+  return `${names().monthsShort[Number(m) - 1]} ${y}`;
 }

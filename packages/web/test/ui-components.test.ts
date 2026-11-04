@@ -135,9 +135,10 @@ describe('ListRow', () => {
     expect(done).toContain('line-through');
     expect(done).toContain('bg-accent-grad');
   });
-  it('Erledigt-Kreis: überfällig mit rotem Ring, wartend mit Uhr, gesperrt auf Wunsch', () => {
+  it('Erledigt-Kreis: grauer Ring (auch überfällig, wie im Mockup: das sagt die Gruppe), wartend mit Uhr, gesperrt auf Wunsch', () => {
     const over = html(ListRow, { title: 'A', check: { done: false, label: 'x', onchange: () => {}, state: 'overdue' } });
-    expect(over).toContain('border-danger');
+    expect(over).toContain('border-ring');
+    expect(over).not.toContain('border-danger');
     const wait = html(ListRow, { title: 'A', check: { done: false, label: 'x', onchange: () => {}, state: 'waiting' } });
     expect(wait).toContain('border-accent');
     expect(wait).toContain('<svg');
@@ -190,9 +191,9 @@ describe('StatsBar', () => {
   });
   it('Zahlen auf Wunsch farbig (Akzent, Gefahr, Grün)', () => {
     const out = html(StatsBar, { label: 'Stand', items: [{ id: 'a', label: 'A', value: 1, tone: 'accent' }, { id: 'b', label: 'B', value: 2, tone: 'danger' }, { id: 'c', label: 'C', value: 3, tone: 'ok' }] });
-    expect(out).toContain('text-accent-text');
-    expect(out).toContain('text-danger');
-    expect(out).toContain('--c-green-fg');
+    expect(out).toContain('text-sig-orange');
+    expect(out).toContain('text-sig-red');
+    expect(out).toContain('text-sig-green');
   });
 });
 

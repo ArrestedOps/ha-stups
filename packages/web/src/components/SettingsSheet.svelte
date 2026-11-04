@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { settingsGroups } from '../lib/settingsPages';
+  import { settingsOverview } from '../lib/settingsPages';
+  import { applyHeaderHiding, isHeaderHidingWanted, setHeaderHidingWanted, showHaHeader } from '../lib/hideHaHeader';
   import { t } from '../lib/i18n/index.svelte';
-  import { closeSheet, feat, openSettings, ui } from '../lib/store.svelte';
+  import { closeSheet, feat, goToDashboard, openSettings, ui } from '../lib/store.svelte';
   import AccountPage from './settings/AccountPage.svelte';
   import BetaPage from './settings/BetaPage.svelte';
   import DashboardPage from './settings/DashboardPage.svelte';
@@ -18,6 +19,7 @@
   import Icon from './Icon.svelte';
   import PeopleSheet from './PeopleSheet.svelte';
   import Sheet from './Sheet.svelte';
+  import Toggle from './ui/Toggle.svelte';
 
   /**
    * Einstellungen: eine Übersicht mit Gruppen („Für mich", „Haushalt", „Home Assistant", „Hilfe und Daten"), jede Zeile öffnet eine
@@ -25,8 +27,9 @@
    */
   const page = $derived(ui.sheet?.type === 'settings' ? ui.sheet.page : undefined);
 
+  let headerHidden = $state(isHeaderHidingWanted());
   const groups = $derived(
-    settingsGroups({
+    settingsOverview({
       isAdmin: ui.isAdmin,
       isChild: ui.isChild,
       standalone: feat.standalone,
@@ -69,6 +72,26 @@
     <SettingsHead />
     {#each groups as g (g.id)}
       <Group title={g.title}>
+        {#if g.actions?.includes('back')}
+          <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={goToDashboard}>
+            <Icon name="home" size={20} /><span class="flex-1">{t('Zurück zum Dashboard')}</span><Icon name="chevron-right" size={18} />
+          </button>
+        {/if}
+        {#if g.actions?.includes('header')}
+          <div class="flex min-h-[52px] w-full items-center gap-3 px-4 text-[17px]">
+            <Icon name="columns" size={20} /><span class="flex-1">{t('HA-Kopfzeile ausblenden')}</span>
+            <Toggle
+              checked={headerHidden}
+              label={t('Kopfzeile von Home Assistant ausblenden')}
+              onchange={(on) => {
+                headerHidden = on;
+                setHeaderHidingWanted(on);
+                if (on) applyHeaderHiding();
+                else showHaHeader();
+              }}
+            />
+          </div>
+        {/if}
         {#each g.pages as p (p.id)}
           <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => openSettings(p.id)}>
             <Icon name={p.icon} size={20} /><span class="flex-1">{p.title}</span><Icon name="chevron-right" size={18} />

@@ -21,6 +21,7 @@
     right,
     check,
     label,
+    highlight = false,
     onclick,
     href,
   }: {
@@ -35,13 +36,15 @@
     check?: { done: boolean; label: string; onchange: () => void; state?: 'overdue' | 'waiting'; disabled?: boolean };
     /** Beschriftung des Antippbereichs für Screenreader, wenn der sichtbare Text nicht reicht (zum Beispiel „Wächter Waschmaschine öffnen“) */
     label?: string;
+    /** neu und noch offen (Mitteilungen): oranger Rand */
+    highlight?: boolean;
     onclick?: (e: MouseEvent) => void;
     href?: string;
   } = $props();
 </script>
 
 <div
-  class="flex h-row w-full items-center gap-3 rounded-row border border-line bg-surface text-fg {check ? 'gap-2.5 pr-2 pl-0.5' : 'pr-2.5 pl-3'}"
+  class="flex h-row w-full items-center rounded-row border bg-surface text-fg {highlight ? 'row-new' : 'border-line'} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
   data-variant={variant}
 >
   {#if check}
@@ -59,9 +62,9 @@
       {:else if check.state === 'waiting'}
         <span class="flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-accent text-accent-text"><Icon name="clock" size={12} stroke={2.6} /></span>
       {:else if check.state === 'overdue'}
-        <span class="h-[22px] w-[22px] rounded-full border-2 border-danger"></span>
+        <span class="h-[22px] w-[22px] rounded-full border-2 border-ring"></span>
       {:else}
-        <span class="h-[22px] w-[22px] rounded-full border-2 border-hint"></span>
+        <span class="h-[22px] w-[22px] rounded-full border-2 border-ring"></span>
       {/if}
     </button>
   {/if}
@@ -75,12 +78,12 @@
   {/snippet}
 
   {#if href}
-    <a {href} aria-label={label} class="flex h-full min-w-0 flex-1 items-center gap-3 text-left">{@render body()}</a>
+    <a {href} aria-label={label} class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left">{@render body()}</a>
   {:else if onclick}
-    <button type="button" aria-label={label} class="flex h-full min-w-0 flex-1 items-center gap-3 text-left" {onclick}>{@render body()}</button>
+    <button type="button" aria-label={label} class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left" {onclick}>{@render body()}</button>
   {:else}
-    <div class="flex h-full min-w-0 flex-1 items-center gap-3">{@render body()}</div>
+    <div class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'}">{@render body()}</div>
   {/if}
 
-  {#if right}<span class="flex shrink-0 items-center">{@render right()}</span>{/if}
+  {#if right}<span class="flex shrink-0 items-center {check ? 'gap-2.5' : 'gap-3'}">{@render right()}</span>{/if}
 </div>

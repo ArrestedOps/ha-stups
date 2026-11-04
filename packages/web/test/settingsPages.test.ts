@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
-import { settingsGroups, type SettingsCtx } from '../src/lib/settingsPages';
+import { settingsGroups, settingsOverview, type SettingsCtx } from '../src/lib/settingsPages';
 
 const addon: SettingsCtx = { isAdmin: true, isChild: false, standalone: false, beta: false, push: true, watchers: true, haUi: true, house: true, migration: true };
 const ids = (ctx: SettingsCtx) => settingsGroups(ctx).flatMap((g) => g.pages.map((p) => p.id));
@@ -56,5 +56,33 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
   it('die Titel folgen der Sprache', () => {
     setLanguage('en');
     expect(settingsGroups(addon).map((g) => g.title)).toEqual(['For me', 'Household', 'Home Assistant', 'Help and data']);
+  });
+});
+
+describe('Einstellungen › Home Assistant: „Zurück zum Dashboard" und „HA-Kopfzeile ausblenden" für alle im Add-on', () => {
+  const overview = (ctx: SettingsCtx) => settingsOverview(ctx).map((g) => [g.id, g.actions ?? []]);
+
+  it('im Add-on steht die Gruppe für jede Rolle da, auch für Mitglied und Kind (die Kopfzeile oben hat keinen Dashboard-Knopf mehr)', () => {
+    const member = { ...addon, isAdmin: false };
+    expect(overview(member)).toEqual([['me', []], ['ha', ['back', 'header']], ['help', []]]);
+    expect(overview({ ...member, isChild: true })).toEqual([['me', []], ['ha', ['back', 'header']]]);
+    expect(settingsOverview({ ...member, isChild: true }).find((g) => g.id === 'ha')!.pages).toEqual([]);
+  });
+
+  it('der Administrator behält dort Dashboard-Auswahl und Ansage, dazu die beiden Aktionen', () => {
+    const g = settingsOverview(addon).find((x) => x.id === 'ha')!;
+    expect(g.actions).toEqual(['back', 'header']);
+    expect(g.pages.map((p) => p.id)).toEqual(['dashboard', 'voice']);
+  });
+
+  it('im eigenen Container (kein Home-Assistant-Panel) gibt es die Aktionen nicht', () => {
+    const docker = { ...addon, standalone: true, haUi: false };
+    expect(settingsOverview(docker).flatMap((g) => g.actions ?? [])).toEqual([]);
+    expect(settingsOverview({ ...docker, isAdmin: false }).map((g) => g.id)).not.toContain('ha');
+  });
+
+  it('die Gruppe heißt Home Assistant, auch wo sie nur aus den Aktionen besteht', () => {
+    setLanguage('en');
+    expect(settingsOverview({ ...addon, isAdmin: false }).find((g) => g.id === 'ha')!.title).toBe('Home Assistant');
   });
 });

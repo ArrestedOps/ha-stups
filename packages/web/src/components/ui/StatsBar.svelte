@@ -4,6 +4,8 @@
     label: string;
     value: number;
     icon?: string;
+    /** Farbe der Zahl */
+    tone?: 'accent' | 'danger' | 'ok';
   }
 </script>
 
@@ -21,7 +23,7 @@
         {#if s.icon}<Icon name={s.icon} size={14} />{/if}
         <span class="truncate">{s.label}</span>
       </span>
-      <span class="text-[22px] leading-none font-extrabold tracking-tight">{s.value}</span>
+      <span class="text-[22px] leading-none font-extrabold tracking-tight {s.tone === 'accent' ? 'text-accent-text' : s.tone === 'danger' ? 'text-danger' : s.tone === 'ok' ? 'text-(--c-green-fg)' : ''}">{s.value}</span>
     </div>
   {/each}
 </div>

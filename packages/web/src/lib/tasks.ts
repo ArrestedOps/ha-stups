@@ -77,3 +77,15 @@ export function taskStats(cards: ScheduleCard[], meId: string | null, nowMs: num
   }
   return out;
 }
+
+/** Karten, bei denen ein Stups an mich offen ist (für das Banner oben): mit den Absendern, ohne Doppelte; Erledigtes zählt nicht */
+export function nudgesToMe(cards: ScheduleCard[], meId: string | null): { card: ScheduleCard; fromIds: string[] }[] {
+  if (!meId) return [];
+  const out: { card: ScheduleCard; fromIds: string[] }[] = [];
+  for (const card of cards) {
+    if (card.completedAt) continue;
+    const fromIds = [...new Set((card.openNudges ?? []).filter((n) => n.toId === meId).map((n) => n.fromId))];
+    if (fromIds.length > 0) out.push({ card, fromIds });
+  }
+  return out;
+}

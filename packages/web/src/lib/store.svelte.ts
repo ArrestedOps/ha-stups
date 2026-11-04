@@ -488,7 +488,11 @@ function restoreView(): void {
   ui.tab = startTab(memo.get('stups.tab'), visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }));
   try {
     const raw = JSON.parse(memo.get('stups.schedule') ?? 'null') as Partial<ScheduleFilter> | null;
-    if (!raw) return;
+    if (!raw) {
+      // Ein Gerät ohne Merkzettel startet bei „Meine": Aufgaben zeigt zuerst, was für mich dran ist
+      if (ui.me?.isPerson && !ui.isChild) ui.sf = { ...DEFAULT_FILTER, personIds: [ui.me.id] };
+      return;
+    }
     const ids = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
     ui.sf = {
       personIds: ids(raw.personIds).filter((id) => ui.people.some((p) => p.id === id)),

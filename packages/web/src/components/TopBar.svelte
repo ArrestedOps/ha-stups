@@ -5,15 +5,16 @@
   import Icon from './Icon.svelte';
 </script>
 
-<!-- Kopfzeile aller vier Reiter: links zurück zum Dashboard (nur im Add-on), rechts Offline-Hinweis und Avatar (öffnet die Einstellungen) -->
+<!-- Kopfzeile aller Reiter: links zurück zum Dashboard (nur im Add-on) und die Wortmarke, rechts Offline-Hinweis und Avatar (öffnet die Einstellungen) -->
 <div class="flex items-center justify-between">
-  {#if feat.haUi}
-    <button class="-ml-1.5 flex min-h-11 items-center text-[17px] text-accent-text" onclick={goToDashboard}>
-      <Icon name="chevron-left" size={24} stroke={2.6} />Dashboard
-    </button>
-  {:else}
-    <span class="min-h-11"></span>
-  {/if}
+  <div class="flex min-w-0 items-center gap-3">
+    {#if feat.haUi}
+      <button class="-ml-1.5 flex min-h-11 items-center text-[17px] text-accent-text" onclick={goToDashboard}>
+        <Icon name="chevron-left" size={24} stroke={2.6} />Dashboard
+      </button>
+    {/if}
+    <span class="min-h-11 content-center text-[24px] font-extrabold tracking-tight" aria-hidden="true">stups<span class="text-accent">.</span></span>
+  </div>
   <div class="flex items-center gap-2">
     {#if !ui.online}
       <span class="flex items-center gap-1.5 rounded-full bg-surface2 px-3 py-1 text-[13px] text-fg2" role="status">

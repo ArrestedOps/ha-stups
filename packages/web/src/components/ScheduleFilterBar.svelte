@@ -7,7 +7,7 @@
   import Icon from './Icon.svelte';
 
   /** alle geladenen Karten (ohne Personen- und Board-Filter), daraus kommen die Zahlen an den Chips */
-  let { cards }: { cards: ScheduleCard[] } = $props();
+  let { cards, people: showPeople = true }: { cards: ScheduleCard[]; people?: boolean } = $props();
 
   const sf = $derived(ui.sf);
   // ich zuerst, dann die übrigen Personen
@@ -21,6 +21,7 @@
 </script>
 
 <div class="space-y-2" role="group" aria-label="Filter">
+  {#if showPeople}
   <div class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label={t('Personen')} use:scrollStrip={sf.personIds.join() + sf.unassigned}>
     <button class={chip(!personFilterActive(sf))} aria-pressed={!personFilterActive(sf)} onclick={() => setScheduleFilter({ personIds: [], unassigned: false })}>
       {t('Alle')}
@@ -35,6 +36,7 @@
       {t('Niemand')}<span class="text-[13px] text-fg2">{pc.unassigned}</span>
     </button>
   </div>
+  {/if}
 
   {#if ui.boards.length > 1}
     <div class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Boards" use:scrollStrip={sf.boardIds.join()}>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupTasks, parseTasksView, taskStats } from '../src/lib/tasks';
+import { groupTasks, nudgesToMe, parseTasksView, taskStats } from '../src/lib/tasks';
 import type { ScheduleCard } from '../src/lib/schedule';
 
 const TZ = 'Europe/Berlin';
@@ -110,5 +110,27 @@ describe('parseTasksView: gemerkte Ansicht', () => {
     expect(parseTasksView(null)).toBe('list');
     expect(parseTasksView('unsinn')).toBe('list');
     for (const v of ['list', 'day', 'week', 'month'] as const) expect(parseTasksView(v)).toBe(v);
+  });
+});
+
+describe('nudgesToMe: das Stups-Banner oben', () => {
+  const n = (id: string, fromId: string, toId: string) => ({ id, fromId, toId, delivered: true });
+  const cards = [
+    mk('a', '2026-11-04T17:00:00Z', { openNudges: [n('1', 'conny', 'anna'), n('2', 'ben', 'anna')] }),
+    mk('b', '2026-11-05T17:00:00Z', { openNudges: [n('3', 'conny', 'ben')] }),
+    mk('c', '2026-11-05T17:00:00Z', { openNudges: [n('4', 'anna', 'conny')] }),
+    mk('d', '2026-11-06T17:00:00Z', { openNudges: [n('5', 'conny', 'anna')], completedAt: '2026-11-06T18:00:00Z' }),
+    mk('e', '2026-11-06T17:00:00Z', { openNudges: [n('6', 'conny', 'anna')] }),
+  ];
+  it('Karten mit einem offenen Stups an mich, mit den Absendern ohne Doppelte; Erledigtes nicht', () => {
+    expect(nudgesToMe(cards, 'anna').map((x) => [x.card.id, x.fromIds])).toEqual([
+      ['a', ['conny', 'ben']],
+      ['e', ['conny']],
+    ]);
+  });
+  it('ohne Person oder ohne Stups nichts', () => {
+    expect(nudgesToMe(cards, null)).toEqual([]);
+    expect(nudgesToMe(cards, 'nobody')).toEqual([]);
+    expect(nudgesToMe([mk('x', '2026-11-04T17:00:00Z', { openNudges: undefined })], 'anna')).toEqual([]);
   });
 });

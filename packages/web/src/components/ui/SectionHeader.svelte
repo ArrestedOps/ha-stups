@@ -9,6 +9,7 @@
     icon,
     open,
     large = false,
+    tone,
     ontoggle,
     children,
   }: {
@@ -18,14 +19,17 @@
     /** gesetzt: der Kopf ist ein Knopf zum Ein- und Ausklappen */
     open?: boolean;
     large?: boolean;
+    /** Farbe der Überschrift: Gefahr (überfällig) oder Haus (Türkis, immer mit Wort oder Zeichen dazu) */
+    tone?: 'danger' | 'house';
     ontoggle?: () => void;
     /** Platz rechts, zum Beispiel ein kleiner Knopf */
     children?: Snippet;
   } = $props();
   const collapsible = $derived(open !== undefined);
+  const toneClass = $derived(tone === 'danger' ? 'text-danger' : tone === 'house' ? 'text-house' : '');
 </script>
 
-<div class="flex h-[34px] items-center gap-2 px-1">
+<div class="flex h-[34px] items-center gap-2 px-1 {toneClass}">
   {#if collapsible}
     <button type="button" class="flex min-h-11 min-w-0 flex-1 items-center gap-2 text-left" aria-expanded={open} onclick={ontoggle}>
       {#if icon}<Icon name={icon} size={18} />{/if}

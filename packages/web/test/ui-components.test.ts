@@ -99,6 +99,13 @@ describe('SectionHeader', () => {
     expect(html(SectionHeader, { title: 'Später', open: true })).toContain('aria-expanded="true"');
     expect(html(SectionHeader, { title: 'Später', open: false })).toContain('aria-expanded="false"');
   });
+  it('Farbe der Überschrift: Gefahr oder Haus, sonst keine', () => {
+    expect(html(SectionHeader, { title: 'Überfällig', tone: 'danger' })).toContain('text-danger');
+    expect(html(SectionHeader, { title: 'Vom Haus', tone: 'house' })).toContain('text-house');
+    const plain = html(SectionHeader, { title: 'Heute' });
+    expect(plain).not.toContain('text-danger');
+    expect(plain).not.toContain('text-house');
+  });
 });
 
 describe('ListRow', () => {
@@ -127,6 +134,16 @@ describe('ListRow', () => {
     expect(done).toContain('aria-checked="true"');
     expect(done).toContain('line-through');
     expect(done).toContain('bg-accent-grad');
+  });
+  it('Erledigt-Kreis: überfällig mit rotem Ring, wartend mit Uhr, gesperrt auf Wunsch', () => {
+    const over = html(ListRow, { title: 'A', check: { done: false, label: 'x', onchange: () => {}, state: 'overdue' } });
+    expect(over).toContain('border-danger');
+    const wait = html(ListRow, { title: 'A', check: { done: false, label: 'x', onchange: () => {}, state: 'waiting' } });
+    expect(wait).toContain('border-accent');
+    expect(wait).toContain('<svg');
+    const off = html(ListRow, { title: 'A', check: { done: false, label: 'x', onchange: () => {}, disabled: true } });
+    expect(off).toMatch(/<button[^>]*disabled/);
+    expect(html(ListRow, { title: 'A', check: { done: false, label: 'x', onchange: () => {} } })).not.toMatch(/<button[^>]*disabled/);
   });
   it('gefährlich: Titel in Gefahr-Farbe', () => {
     expect(html(ListRow, { title: 'Löschen', variant: 'danger' })).toContain('text-danger');
@@ -160,6 +177,12 @@ describe('StatsBar', () => {
     for (const s of ['Heute fällig', 'Überfällig', 'Erledigt']) expect(out).toContain(s);
     expect(out).toMatch(/>4</);
     expect(out).toMatch(/>7</);
+  });
+  it('Zahlen auf Wunsch farbig (Akzent, Gefahr, Grün)', () => {
+    const out = html(StatsBar, { label: 'Stand', items: [{ id: 'a', label: 'A', value: 1, tone: 'accent' }, { id: 'b', label: 'B', value: 2, tone: 'danger' }, { id: 'c', label: 'C', value: 3, tone: 'ok' }] });
+    expect(out).toContain('text-accent-text');
+    expect(out).toContain('text-danger');
+    expect(out).toContain('--c-green-fg');
   });
 });
 

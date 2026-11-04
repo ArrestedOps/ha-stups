@@ -2,7 +2,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { checkPassword, checkUsername, type Account, type Accounts } from './accounts.js';
 import { AppError, ConflictError, ValidationError } from './errors.js';
-import type { Identity } from './identity.js';
+import { requestPath, type Identity } from './identity.js';
 import type { Passkeys } from './passkeys.js';
 import { PUSH_ACTION_PATH } from './push.js';
 import { t } from './i18n/index.js';
@@ -62,9 +62,10 @@ export function createSessionIdentity(deps: { accounts: Accounts }): Identity {
 export async function clientGuard(app: FastifyInstance): Promise<void> {
   app.addHook('onRequest', async (req, reply) => {
     if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return;
-    if (!req.url.startsWith('/api/')) return;
+    const path = requestPath(req.url);
+    if (path !== null && !path.startsWith('/api/')) return;
     // Die Knöpfe in Push-Nachrichten kommen von der ntfy-App und tragen statt der Kopfzeile ein signiertes Token
-    if (req.url.split('?')[0] === PUSH_ACTION_PATH) return;
+    if (path === PUSH_ACTION_PATH) return;
     if (!req.headers[CLIENT_HEADER]) return reply.code(403).send({ error: 'Anfrage abgelehnt' });
   });
 }

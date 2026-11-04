@@ -34,12 +34,32 @@ declare module 'fastify' {
 /** Ohne Anmeldung erreichbar */
 const OPEN_PATHS = new Set(['/healthz']);
 
+/**
+ * Der Pfad einer Anfrage so, wie ihn das Routing sieht: ohne Abfrage und prozentdecodiert.
+ * Fastify decodiert erst beim Routing; wer den rohen Pfad prüft, lässt `/%61pi/boards` als „kein API-Pfad“ durch.
+ * Mehrfach codierte Pfade werden bis zum festen Stand decodiert (lieber zu streng als zu offen).
+ * Ungültige Codierung ergibt `null`: Der Aufrufer behandelt sie wie einen geschützten Pfad.
+ */
+export function requestPath(url: string): string | null {
+  let path = url.split('?')[0] ?? '';
+  try {
+    for (let i = 0; i < 4; i++) {
+      const next = decodeURIComponent(path);
+      if (next === path) return path;
+      path = next;
+    }
+  } catch {
+    return null;
+  }
+  return path;
+}
+
 export async function identityAuth(app: FastifyInstance, opts: { identity: Identity }): Promise<void> {
   app.decorateRequest('principal', null);
 
   app.addHook('onRequest', async (req, reply) => {
-    const path = req.url.split('?')[0] ?? '';
-    if (OPEN_PATHS.has(path) || opts.identity.isPublic?.(path)) return;
+    const path = requestPath(req.url);
+    if (path !== null && (OPEN_PATHS.has(path) || opts.identity.isPublic?.(path))) return;
     const result = await opts.identity.authenticate({ ip: req.ip, url: req.url, headers: req.headers });
     if (!result.ok) return reply.code(result.status).send({ error: result.error });
     req.principal = result.principal;

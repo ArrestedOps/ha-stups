@@ -1,6 +1,7 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Options } from './config.js';
 import type { HaStatus, NotificationAction } from './ha.js';
+import { requestPath } from './identity.js';
 import { ensureWebsocket } from './ws.js';
 
 export interface SpikeHa {
@@ -101,4 +102,30 @@ export async function spikeRoutes(app: FastifyInstance, deps: SpikeDeps): Promis
     socket.send('hello');
     socket.on('message', (m: Buffer) => socket.send(`pong:${m.toString()}`));
   });
+}
+
+/** Was die Sperre der Diagnose-Routen vom Zugriff wissen muss (Teil von `AccessResult`) */
+export interface SpikeAccess {
+  allowed: boolean;
+  isAdmin: boolean;
+  isChild: boolean;
+}
+
+/**
+ * onRequest-Hook für `/api/spike…`. Die Diagnose-Routen liegen außerhalb der API-Routen und damit außerhalb von
+ * Zugriffsprüfung und Kinder-Wächter. Hier gilt: kein Zugriff → 403, Kinder → 403, Senden und Zurücksetzen
+ * (alles außer GET) nur für Administratoren. Der Pfad wird wie beim Routing decodiert.
+ */
+export function spikeGuard(
+  evaluate: (who: { id: string; name: string; displayName: string }) => Promise<SpikeAccess>,
+) {
+  return async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const path = requestPath(req.url);
+    if (path !== null && !path.startsWith('/api/spike')) return;
+    if (!req.principal) return reply.code(401).send({ error: 'Bitte anmelden' });
+    const r = await evaluate({ id: req.principal.id, name: req.principal.name, displayName: req.principal.displayName });
+    if (!r.allowed) return reply.code(403).send({ error: 'Kein Zugriff' });
+    if (r.isChild) return reply.code(403).send({ error: 'Das darf ein Kind nicht' });
+    if (req.method !== 'GET' && req.method !== 'HEAD' && !r.isAdmin) return reply.code(403).send({ error: 'Nur für Administratoren' });
+  };
 }

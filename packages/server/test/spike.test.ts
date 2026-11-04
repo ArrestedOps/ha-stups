@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
 import { ingressAuth } from '../src/ingress.js';
 import { parseOptions } from '../src/config.js';
-import { spikeRoutes, type SpikeDeps } from '../src/spike.js';
+import { spikeGuard, spikeRoutes, type SpikeAccess, type SpikeDeps } from '../src/spike.js';
 
 const headers = {
   'x-remote-user-id': 'u1',
@@ -156,5 +156,56 @@ describe('spike routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(sent[0]?.data).toEqual({ message: 'clear_notification', data: { tag: 'stups-spike' } });
+  });
+});
+
+describe('spikeGuard (Sperre der Diagnose-Routen)', () => {
+  async function guarded(access: SpikeAccess) {
+    const { deps, sent } = makeDeps();
+    const app = Fastify();
+    await app.register(ingressAuth, { enforceIp: false });
+    app.addHook('onRequest', spikeGuard(async () => access));
+    await app.register(spikeRoutes, deps);
+    return { app, sent };
+  }
+  const push = { person: 'Rene', url: 'https://evil.example/x' };
+  const ADMIN = { allowed: true, isAdmin: true, isChild: false };
+  const MEMBER = { allowed: true, isAdmin: false, isChild: false };
+  const CHILD = { allowed: true, isAdmin: false, isChild: true };
+
+  it('ein Kind darf nichts an den Diagnose-Routen, auch nicht über einen codierten Pfad', async () => {
+    const { app, sent } = await guarded(CHILD);
+    for (const url of ['/api/spike/info', '/api/spike/actions', '/%61pi/spike/info']) {
+      expect((await app.inject({ url, headers })).statusCode, url).toBe(403);
+    }
+    for (const url of ['/api/spike/test-push', '/%61pi/spike/test-push', '/api/spike/clear']) {
+      expect((await app.inject({ method: 'POST', url, headers, payload: push })).statusCode, url).toBe(403);
+    }
+    expect(sent).toEqual([]);
+  });
+
+  it('wer nicht Administrator ist, darf lesen, aber nichts senden oder zurücksetzen', async () => {
+    const { app, sent } = await guarded(MEMBER);
+    expect((await app.inject({ url: '/api/spike/info', headers })).statusCode).toBe(200);
+    expect((await app.inject({ method: 'POST', url: '/api/spike/test-push', headers, payload: push })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'POST', url: '/api/spike/clear', headers, payload: { person: 'Rene' } })).statusCode).toBe(403);
+    expect(sent).toEqual([]);
+  });
+
+  it('Administratoren dürfen senden', async () => {
+    const { app } = await guarded(ADMIN);
+    expect((await app.inject({ method: 'POST', url: '/api/spike/test-push', headers, payload: { person: 'Rene' } })).statusCode).toBe(200);
+  });
+
+  it('ohne Zugriff ist alles gesperrt, ohne Anmeldung ebenso', async () => {
+    const { app } = await guarded({ allowed: false, isAdmin: false, isChild: false });
+    expect((await app.inject({ url: '/api/spike/info', headers })).statusCode).toBe(403);
+    expect((await app.inject({ url: '/api/spike/info' })).statusCode).toBe(401);
+  });
+
+  it('andere Pfade berührt die Sperre nicht', async () => {
+    const { app } = await guarded(CHILD);
+    app.get('/healthz', async () => 'ok');
+    expect((await app.inject({ url: '/healthz' })).statusCode).toBe(200);
   });
 });

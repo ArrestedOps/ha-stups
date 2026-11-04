@@ -69,7 +69,7 @@ test('Erledigen per Kreis, „Rückgängig" stellt die Karte wieder her', async 
   const title = uniqueTitle('Erledigen');
   await addCard(page, title);
 
-  await page.getByRole('button', { name: `„${title}“ erledigen` }).click();
+  await page.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
   await expect(card(page, title)).toHaveCount(0);
   await tab(page, 'Erledigt').click();
   await expect(card(page, title)).toBeVisible();
@@ -188,7 +188,7 @@ test('Erledigte Karte: nicht mehr „überfällig", zeigt die Erledigt-Zeit und 
   await addCard(page, title, '2020-01-15T09:00');
   await expect(card(page, title).getByTestId('card-due')).toHaveAttribute('data-overdue', 'true');
 
-  await page.getByRole('button', { name: `„${title}“ erledigen` }).click();
+  await page.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
   await tab(page, 'Erledigt').click();
   await expect(card(page, title).getByTestId('card-due')).toHaveAttribute('data-overdue', 'false');
   await expect(card(page, title).getByTestId('card-done-at')).toContainText('Erledigt heute');
@@ -236,13 +236,16 @@ test('Neue Karte: alle Felder gleich beim Anlegen (Priorität, Beschreibung, Che
   expect(detail.links.map((l: { url: string }) => l.url)).toEqual(['https://maps.apple.com/?q=Restaurant']);
 });
 
-test('Karte zeigt einen Farbbalken für die Dringlichkeit; „Angelegt …“ steht nur im Karten-Fenster', async ({ page }) => {
+test('Überfälliges ist rot (Kreis und Termin, kein Balken mehr); „Angelegt …“ steht nur im Karten-Fenster', async ({ page }) => {
   const title = uniqueTitle('Balken');
   await addCard(page, title, '2020-01-15T09:00'); // längst überfällig
   const row = card(page, title);
   await expect(row.getByText(/^Angelegt/)).toHaveCount(0); // nicht mehr in der Liste
-  const color = await row.locator('span[aria-hidden=true]').first().evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(color).toMatch(/^rgb\(/); // der Balken ist gefärbt (rot, überfällig)
+  // Seit dem neuen Design trägt der rote Ring des Erledigt-Kreises und die rote Uhrzeit die Dringlichkeit
+  const ring = await row.getByRole('checkbox').locator('span').first().evaluate((el) => getComputedStyle(el).borderTopColor);
+  const due = await row.getByTestId('card-due').evaluate((el) => getComputedStyle(el).color);
+  expect(ring).toMatch(/^rgb\(/);
+  expect(ring).toBe(due); // beide in der Gefahr-Farbe (rot, überfällig)
 
   await row.getByText(title).click();
   await expect(page.getByTestId('created-note')).toContainText('Angelegt heute');

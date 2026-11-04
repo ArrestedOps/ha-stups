@@ -34,7 +34,7 @@ async function setup(request: APIRequestContext) {
 const cardsOf = async (request: APIRequestContext, boardId: string) =>
   ((await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { id: string; title: string; columnId: string; assigneeIds: string[]; completedAt: string | null; dueAt: string | null; watcherId: string | null }[] }).cards;
 
-/** Einstellungen › Haushalt › Wächter (die Verwaltung; den Zustand zeigt der Reiter Zuhause) */
+/** Einstellungen › Haushalt › Wächter (die Verwaltung; den Zustand zeigt der Reiter Wächter) */
 async function openWatchersPage(page: Page) {
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Wächter' }).click();
@@ -94,8 +94,8 @@ test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Karte erscheint live 
 
     await expect(conny.locator('[role=presentation]').filter({ hasText: title }).getByTestId('card-watcher')).toBeVisible({ timeout: 15_000 });
 
-    // Der Reiter „Zuhause": Conny ist keine Administratorin, sieht ihn aber, nur lesend. Die Karte wartet auf Rene.
-    await conny.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Zuhause' }).click();
+    // Der Reiter „Wächter": Conny ist keine Administratorin, sieht ihn aber, nur lesend. Die Karte wartet auf Rene.
+    await conny.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
     const waiting = conny.getByTestId('home-waiting');
     await expect(waiting).toContainText(title);
     await expect(waiting).toContainText('Waschmaschine fertig');

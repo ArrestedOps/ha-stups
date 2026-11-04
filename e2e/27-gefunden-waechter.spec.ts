@@ -8,7 +8,7 @@ test.describe.configure({ timeout: 90_000, mode: 'serial' });
 const nav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
 const post = (request: APIRequestContext, path: string, data: unknown) => request.post(`${MOCK}${path}`, { data });
 
-test('Gefunden: Hinweis auf Zuhause, Treffer mit Begründung, Wächter aus dem Treffer mit Probelauf anlegen', async ({ page, request }) => {
+test('Gefunden: Hinweis im Reiter Wächter, Treffer mit Begründung, Wächter aus dem Treffer mit Probelauf anlegen', async ({ page, request }) => {
   // Historie: drei Trocknergänge in den letzten Tagen (120 W, dann 2 W)
   const at = (hoursAgo: number) => new Date(Date.now() - hoursAgo * 3_600_000).toISOString();
   const points: { state: string; at: string }[] = [{ state: '2', at: at(150) }];
@@ -21,7 +21,7 @@ test('Gefunden: Hinweis auf Zuhause, Treffer mit Begründung, Wächter aus dem T
 
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
   await page.goto('/');
-  await nav(page).getByRole('button', { name: 'Zuhause' }).click();
+  await nav(page).getByRole('button', { name: 'Wächter' }).click();
   const hint = page.getByTestId('home-found');
   await expect(hint).toContainText(/Stups hat \d+ weitere Geräte gefunden|Stups hat 1 weiteres Gerät gefunden/);
   await hint.click();
@@ -57,9 +57,9 @@ test('Gefunden: Hinweis auf Zuhause, Treffer mit Begründung, Wächter aus dem T
   const list = (await (await request.get('/api/watchers')).json()) as { items: { name: string; trigger: { entityId: string; kind: string; value: number } }[] };
   expect(list.items.find((w) => w.name === 'Trockner fertig')?.trigger).toMatchObject({ entityId: 'sensor.trockner_leistung', kind: 'below', value: 5 });
 
-  // Der Trockner steht jetzt unter Zuhause (ruhig) und fehlt in „Gefunden"
+  // Der Trockner steht jetzt im Reiter Wächter (ruhig) und fehlt in „Gefunden"
   await page.keyboard.press('Escape');
-  await nav(page).getByRole('button', { name: 'Zuhause' }).click();
+  await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('home-quiet')).toContainText('Trockner fertig');
 });
 

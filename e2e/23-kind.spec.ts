@@ -109,13 +109,16 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
     await expect(settings.getByTestId('accent-wheel')).toBeVisible();
     await page.keyboard.press('Escape');
 
-    // Drei Reiter (ohne Zuhause), auf Heute keine Zeile „Bei den anderen", keine Wochenseite
+    // Zwei Reiter (Aufgaben, Boards, kein Wächter); in Aufgaben kein „Wer"-Filter, kein „Vom Haus", keine Zeilen „Bei den anderen" und Fairness
     const nav = page.getByRole('navigation', { name: 'Ansicht' });
-    await expect(nav.getByRole('button')).toHaveCount(3);
-    await expect(nav.getByRole('button', { name: 'Zuhause' })).toHaveCount(0);
-    await nav.getByRole('button', { name: 'Heute' }).click();
+    await expect(nav.getByRole('button')).toHaveText(['Aufgaben', 'Boards']);
+    await expect(nav.getByRole('button', { name: 'Wächter' })).toHaveCount(0);
+    await nav.getByRole('button', { name: 'Aufgaben' }).click();
     await expect(page.getByTestId('today-sentence')).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Personen' })).toHaveCount(0);
+    await expect(page.getByTestId('today-house')).toHaveCount(0);
     await expect(page.getByText('Bei den anderen')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Fairness/ })).toHaveCount(0);
   } finally {
     await kid.close();
   }
@@ -138,11 +141,11 @@ test('Kind hakt ab: die Karte wartet auf Bestätigung, ein Elternteil bestätigt
   const kid = await kidPage(browser, baseURL);
   try {
     const kp = kid.page;
-    await kp.getByRole('button', { name: `„${mineName}“ erledigen` }).click();
+    await kp.getByRole('checkbox', { name: `„${mineName}“ erledigen` }).click();
     await expect(kp.getByText('Gemeldet: wartet auf Bestätigung')).toBeVisible();
     const waiting = kp.getByTestId('card-waiting');
     await expect(waiting).toHaveCount(1);
-    await expect(kp.getByRole('button', { name: 'Wartet auf Bestätigung' }).first()).toBeDisabled();
+    await expect(kp.getByRole('checkbox', { name: 'Wartet auf Bestätigung' }).first()).toBeDisabled();
     expect((await state(request, mineId)).completedAt).toBeNull();
     expect((await state(request, mineId)).confirmRequestedAt).not.toBeNull();
 
@@ -174,7 +177,7 @@ test('„Nochmal": die Anfrage entfällt, die Karte bleibt offen und das Kind ka
   const id = cardIds[title]!;
   const kid = await kidPage(browser, baseURL);
   try {
-    await kid.page.getByRole('button', { name: `„${title}“ erledigen` }).click();
+    await kid.page.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
     await expect(kid.page.getByTestId('card-waiting')).toHaveCount(1);
 
     await page.addInitScript((boardId) => localStorage.setItem('stups.board', boardId), boardIds[0]!);
@@ -187,7 +190,7 @@ test('„Nochmal": die Anfrage entfällt, die Karte bleibt offen und das Kind ka
     // Das Kind sieht es nach dem Laden wieder als offen und kann erneut abhaken
     await kid.page.reload();
     await expect(kid.page.getByTestId('card-waiting')).toHaveCount(0);
-    await kid.page.getByRole('button', { name: `„${title}“ erledigen` }).click();
+    await kid.page.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
     await expect(kid.page.getByTestId('card-waiting')).toHaveCount(1);
   } finally {
     await kid.close();

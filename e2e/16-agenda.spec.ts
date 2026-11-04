@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { openList } from './helpers';
 
-// Fehler aus der Praxis: Karten, die mehr als 60 Tage entfernt sind, standen nicht in der Agenda, und bei leerer Liste fehlte der Knopf „Weitere Tage laden".
+// Fehler aus der Praxis: Karten, die mehr als 60 Tage entfernt sind, standen nicht in der Agenda. Die Liste in Aufgaben schaut jetzt über Jahre voraus.
 const DAY = 86_400_000;
 
-test('Agenda: Karten in über 60 Tagen sind einen Tipp entfernt, auch wenn die Liste sonst leer ist', async ({ page, request }) => {
+test('Liste: Karten in über 60 Tagen stehen unter „Später", auch wenn sonst nichts ansteht', async ({ page, request }) => {
   // eindeutiger Name: das Projekt läuft in dunkel und hell auf demselben Server
   const name = `Fern ${Date.now().toString(36)}`;
   const board = (await (await request.post('/api/boards', { data: { name } })).json()) as { id: string };
@@ -16,17 +16,9 @@ test('Agenda: Karten in über 60 Tagen sind einen Tipp entfernt, auch wenn die L
   await page.goto('/');
   await openList(page);
 
+  await page.getByRole('button', { name: 'Filter' }).click();
   // nur dieses Board zeigen (wie in der Praxis: ein Board-Filter, in dem nichts in den nächsten 60 Tagen liegt)
   await page.getByRole('group', { name: 'Boards' }).getByRole('button', { name: new RegExp('^' + name) }).click();
-  const agenda = page.getByTestId('agenda');
-  // die Karte liegt in 100 Tagen: entweder schon sichtbar (die Agenda hat ein Jahr vorausgeschaut) oder über den Knopf erreichbar
-  const card = agenda.getByText('Treppen mit Spots versehen');
-  if (!(await card.isVisible().catch(() => false))) {
-    const more = agenda.getByRole('button', { name: /Weitere 60 Tage laden/ });
-    await expect(more).toBeVisible(); // auch bei leerer Liste
-    await expect(agenda.getByText(/gibt es mit diesem Filter keine Karte mit Termin/)).toBeVisible();
-    await more.click();
-    await more.click().catch(() => undefined);
-  }
-  await expect(card).toBeVisible();
+  // die Karte liegt in 100 Tagen: die Liste schaut über Jahre voraus, sie steht in „Später" (kein Knopf „Weitere Tage laden" mehr nötig)
+  await expect(page.getByTestId('group-later').getByText('Treppen mit Spots versehen')).toBeVisible();
 });

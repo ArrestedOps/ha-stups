@@ -2,6 +2,17 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.20.0-beta.1
+
+**Neues Design, Phase 2: drei Reiter.** Unten gibt es jetzt **Aufgaben, Boards und Wächter**. Wer ein Kind ist oder Stups ohne Home Assistant nutzt, sieht nur Aufgaben und Boards.
+
+- **Aufgaben** (vorher Heute und Kalender): oben „Vom Haus“, dann eine Leiste mit deinen Zahlen (heute fällig, überfällig, heute erledigt), die Woche mit Punkten, ein Banner „Conny stupst dich! 👋“, wenn dich jemand gestupst hat, und die Chips **Meine · Alle · Personen · Niemand**. Die Karten stehen in den Gruppen Überfällig, Heute, Diese Woche und Später. Über der Liste wechselst du zwischen **Liste, Tag, Woche und Monat** (der frühere Kalender, freie Zeit antippen geht weiter). Ganz unten stehen „Fairness diese Woche“ und „Bei den anderen“. Ein früher gemerkter Reiter führt ohne Fehler zu Aufgaben. **Neu für dich:** Aufgaben starten bei „Meine“; „Alle“ zeigt auch Karten ohne Zuständige
+- **Boards:** neue Leiste mit dem Namen des Boards, die Karten sind einheitliche Zeilen mit Kachel, Erledigt-Kreis und einer Zeile für Termin und Details. Wischen und Ziehen bleiben
+- **Wächter** (vorher Zuhause): derselbe Stand (wartet, läuft, kommt bald, ruhig) in der neuen Optik, mit kleinem Roboter, dem Banner „weitere Geräte gefunden“ und dem Knopf „+“ für einen neuen Wächter
+- **Karte, Menü und Stupsen** im neuen Stil: Kachel und Chips in der Karte, „Verschieben nach“ als Auswahl, beim Stupsen eine **Vorschau der Push-Nachricht** und der Hinweis zur Ruhezeit
+- **Kinder:** zwei Reiter, nur die eigenen Karten, kein „Vom Haus“, keine Fairness
+- Alle Funktionen von 1.19 sind weiter erreichbar. Keine Änderung an der Datenbank. Der Roboter ist ein Platzhalter, bis das Original geliefert ist
+
 ## 1.19.0-beta.1
 
 **Neues Design, Phase 1: das Gestaltungssystem.** Alles sieht schon ein Stück wärmer und ruhiger aus, bedient wird es wie bisher. Die neuen Bildschirme (Aufgaben, Boards, Wächter) folgen in den nächsten Versionen.

@@ -132,6 +132,7 @@ export const en: Catalog = {
   'Überfällig': 'Overdue',
   'Heute': 'Today',
   'Aufgaben': 'Tasks',
+  'Fairness diese Woche': 'Fairness this week',
   'Mach ich': 'On it',
   'Karten-Menü': 'Card menu',
   'So kommt es an': 'How it arrives',

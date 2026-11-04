@@ -1,5 +1,5 @@
 name: "Stups (Beta)"
-version: "1.19.0-beta.1"
+version: "1.20.0-beta.1"
 slug: stups_beta
 description: "Beta-Version von Stups mit eigenen Daten, zum Testen neuer Versionen vor der Veröffentlichung"
 url: https://github.com/ArrestedOps/ha-stups

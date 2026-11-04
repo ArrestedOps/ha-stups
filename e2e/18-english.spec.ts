@@ -36,7 +36,7 @@ test('Englisches Gerät: Board, Schnell-Eingabe, Erledigen, alles auf Englisch',
 
   await expect(page.getByRole('button', { name: 'Switch board' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'View' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Calendar' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'View' }).getByRole('button', { name: 'Tasks' })).toBeVisible();
   await expect(page.getByPlaceholder('Search cards')).toHaveCount(0);
   await noGerman(page, 'Board');
   await noSideScroll(page);
@@ -57,12 +57,12 @@ test('Englisches Gerät: Board, Schnell-Eingabe, Erledigen, alles auf Englisch',
   await noGerman(page, 'Karte in der Liste');
 
   // Erledigen: Hinweis mit „Undo“
-  await page.getByRole('button', { name: /^Complete .Take out trash.$/ }).click();
+  await page.getByRole('checkbox', { name: /^Complete .Take out trash.$/ }).click();
   await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible();
   await noGerman(page, 'Hinweis');
 });
 
-test('Englisches Gerät: Agenda, Kalender, Einstellungen, Karten-Fenster', async ({ page, request }) => {
+test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Einstellungen, Karten-Fenster', async ({ page, request }) => {
   const board = await (await request.post('/api/boards', { data: { name: 'English test 2' } })).json();
   const view = await (await request.get(`/api/boards/${board.id}`)).json();
   await request.post(`/api/boards/${board.id}/cards`, {
@@ -73,23 +73,28 @@ test('Englisches Gerät: Agenda, Kalender, Einstellungen, Karten-Fenster', async
   await page.goto('/');
   const nav = page.getByRole('navigation', { name: 'View' });
 
-  await nav.getByRole('button', { name: 'Today' }).click();
-  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible();
-  await noGerman(page, 'Heute', 'header, nav');
+  await nav.getByRole('button', { name: 'Tasks' }).click();
+  await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
+  await noGerman(page, 'Aufgaben', 'header, nav');
   await noSideScroll(page);
-
-  await nav.getByRole('button', { name: 'Calendar' }).click();
-  await expect(page.getByRole('heading', { name: 'Calendar' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Week', exact: true })).toBeVisible();
-  await noGerman(page, 'Kalender', 'header, nav');
-  await noSideScroll(page);
-  // die Liste (die frühere Agenda)
-  await page.getByRole('group', { name: 'View' }).getByRole('button', { name: 'List' }).click();
-  await expect(page.getByText('Dentist').first()).toBeVisible();
+  // die Liste (die frühere Agenda): Gruppen und Chips auf Englisch
+  await page.getByRole('group', { name: 'People' }).getByRole('button', { name: 'All', exact: true }).click();
+  await expect(page.getByTestId('tasks').getByText('Dentist').first()).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Your numbers' })).toBeVisible();
   await noGerman(page, 'Liste', 'header, nav');
   await noSideScroll(page);
 
-  await nav.getByRole('button', { name: 'Home' }).click();
+  // Tag, Woche, Monat (der frühere Kalender)
+  const views = page.getByRole('radiogroup', { name: 'View' });
+  await expect(views.getByRole('radio', { name: 'Week', exact: true })).toBeVisible();
+  await views.getByRole('radio', { name: 'Week', exact: true }).click();
+  await noGerman(page, 'Kalender', 'header, nav');
+  await noSideScroll(page);
+  await views.getByRole('radio', { name: 'Month', exact: true }).click();
+  await noSideScroll(page);
+  await views.getByRole('radio', { name: 'List', exact: true }).click();
+
+  await nav.getByRole('button', { name: 'Watchers' }).click();
   await noGerman(page, 'Zuhause');
   await noSideScroll(page);
 

@@ -239,7 +239,7 @@
           {#if !ui.isChild}
             <!-- Fairness und die Karten der anderen: ohne Rangliste, Prozente und Punkte -->
             <div class="flex flex-col gap-2">
-              <ListRow title={t('Diese Woche')} onclick={() => openSheet({ type: 'week' })}>
+              <ListRow title={t('Fairness diese Woche')} onclick={() => openSheet({ type: 'week' })}>
                 {#snippet tile()}<Tile color="teal"><Icon name="user" size={20} /></Tile>{/snippet}
                 {#snippet meta()}{t('Wer erledigt wie viel, ohne Rangliste')}{/snippet}
                 {#snippet right()}<Icon name="chevron-right" size={18} />{/snippet}

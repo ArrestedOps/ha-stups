@@ -23,7 +23,7 @@ test('Live-Sync: Änderung auf Gerät A erscheint auf Gerät B ohne Neuladen', a
     await expect(b.locator('[role=presentation]').filter({ hasText: title })).toBeVisible({ timeout: 8000 });
 
     // und wieder zurück: A erledigt, B sieht die Karte nicht mehr in „Offen"
-    await a.getByRole('button', { name: `„${title}“ erledigen` }).click();
+    await a.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
     await expect(b.locator('[role=presentation]').filter({ hasText: title })).toHaveCount(0, { timeout: 8000 });
   } finally {
     await contextA.close();

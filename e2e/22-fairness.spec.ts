@@ -26,7 +26,7 @@ async function board(request: APIRequestContext) {
   return { id: b.id, name, columnId: view.columns[0]!.id };
 }
 
-/** „Diese Woche" öffnen: über „Bei den anderen" auf Heute (dafür hat eine andere Person eine offene Karte) */
+/** „Diese Woche" öffnen: über die Zeile „Fairness diese Woche" am Ende von Aufgaben */
 async function openWeek(page: import('@playwright/test').Page, request: APIRequestContext) {
   const myId = await me(request);
   const people = (await (await request.get('/api/people')).json()) as { id: string; isPerson: boolean }[];
@@ -36,8 +36,8 @@ async function openWeek(page: import('@playwright/test').Page, request: APIReque
     await request.post(`/api/boards/${b.id}/cards`, { data: { title: `Für andere ${unique()}`, columnId: b.columnId, assigneeIds: [other.id] } });
   }
   await page.goto('/');
-  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Heute' }).click();
-  await page.getByRole('button', { name: /Karten? offen/ }).click();
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
+  await page.getByRole('button', { name: /Fairness diese Woche/ }).click();
   await expect(page.getByTestId('fairness')).toBeVisible();
 }
 
@@ -55,7 +55,7 @@ test('Aufwand an der Karte wählen: gespeichert und als Chip zu sehen', async ({
   await expect(dialog.getByRole('button', { name: 'Groß', exact: true }).first()).toBeVisible();
 });
 
-test('Diese Woche (Heute › Bei den anderen): Zahlen steigen mit dem Erledigen, keine Rangliste', async ({ page, request }) => {
+test('Diese Woche (Aufgaben › Fairness): Zahlen steigen mit dem Erledigen, keine Rangliste', async ({ page, request }) => {
   const before = await fairness(request);
   const myId = await me(request);
   const mineBefore = before.people.find((p) => p.id === myId)!;
@@ -67,7 +67,7 @@ test('Diese Woche (Heute › Bei den anderen): Zahlen steigen mit dem Erledigen,
     expect(done.status()).toBe(200);
   }
 
-  // „Diese Woche": über „Bei den anderen" auf Heute (gibt es nur, wenn andere offene Karten haben; sonst über die Schnittstelle prüfbar)
+  // „Diese Woche": über die Zeile am Ende von Aufgaben
   await openWeek(page, request);
   await page.getByRole('group', { name: 'Zeitraum' }).getByRole('button', { name: 'Dieser Monat' }).click();
 
@@ -84,7 +84,7 @@ test('Diese Woche (Heute › Bei den anderen): Zahlen steigen mit dem Erledigen,
   expect(names).toEqual(after.people.map((p) => p.name));
   await expect(view).not.toContainText(/Platz|Rang|Sieger|🥇|🏆/);
 
-  // Schließen: zurück auf Heute
+  // Schließen: zurück auf Aufgaben
   await page.keyboard.press('Escape');
   await expect(view).toHaveCount(0);
 });

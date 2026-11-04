@@ -29,7 +29,7 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
   await page.goto('/');
   await openList(page);
 
-  const agenda = page.getByTestId('agenda');
+  const agenda = page.getByTestId('tasks');
   for (const title of Object.values(s.t)) await expect(agenda.getByText(title)).toBeVisible();
 
   // Person: nur Conny
@@ -42,7 +42,8 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
   await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Niemand/ }).click();
   await expect(agenda.getByText(s.t.elektriker)).toBeVisible();
 
-  // Board: nur „Umbau"
+  // Board: nur „Umbau" (die Boards stehen hinter dem Knopf „Filter")
+  await page.getByRole('button', { name: 'Filter' }).click();
   await page.getByRole('group', { name: 'Boards' }).getByRole('button', { name: new RegExp(s.boardBName) }).click();
   await expect(agenda.getByText(s.t.elektriker)).toBeVisible();
   await expect(agenda.getByText(s.t.fenster)).toBeHidden();
@@ -54,7 +55,8 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
   // Der Filter bleibt auf dem Gerät erhalten
   await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
   await page.reload();
-  await expect(page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Kalender' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('radio', { name: 'Liste' })).toHaveAttribute('aria-checked', 'true');
   await expect(agenda.getByText(s.t.fenster)).toBeVisible();
   await expect(agenda.getByText(s.t.papier)).toBeHidden();
 });
@@ -63,16 +65,17 @@ test('Agenda: Karte aus einem anderen Board öffnen und von dort erledigen', asy
   const s = await seed(request);
   await page.goto('/');
   await openList(page);
-  const agenda = page.getByTestId('agenda');
+  const agenda = page.getByTestId('tasks');
 
   await agenda.getByText(s.t.elektriker).click();
   await expect(page.getByRole('dialog').locator('input, textarea').first()).toHaveValue(s.t.elektriker);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
 
-  await agenda.getByRole('button', { name: `„${s.t.papier}“ erledigen` }).click();
+  await agenda.getByRole('checkbox', { name: `„${s.t.papier}“ erledigen` }).click();
   await expect(agenda.getByText(s.t.papier)).toBeHidden();
   // auf Wunsch weiter sichtbar
+  await page.getByRole('button', { name: 'Filter' }).click();
   await page.getByRole('button', { name: 'Erledigte' }).click();
   await expect(agenda.getByText(s.t.papier)).toBeVisible();
 });
@@ -81,7 +84,7 @@ test('Karte löschen fragt vorher nach', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
   await openList(page);
-  const agenda = page.getByTestId('agenda');
+  const agenda = page.getByTestId('tasks');
 
   await agenda.getByText(s.t.fenster).click();
   await page.getByRole('button', { name: 'Karte löschen' }).click();

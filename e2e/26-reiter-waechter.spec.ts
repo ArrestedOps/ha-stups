@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
-// Läuft nur im Projekt „waechter": nachgebautes Home Assistant (e2e/server-ha.mjs). Zuhause zeigt den Zustand der Wächter;
-// Heute zeigt, was vom Haus kam, mit Erledigen und Weitergeben.
+// Läuft nur im Projekt „waechter": nachgebautes Home Assistant (e2e/server-ha.mjs). Der Reiter Wächter zeigt den Zustand der Wächter;
+// Aufgaben zeigt, was vom Haus kam, mit Erledigen und Weitergeben.
 const MOCK = 'http://127.0.0.1:18411';
 test.describe.configure({ timeout: 90_000, mode: 'serial' });
 
@@ -20,7 +20,7 @@ async function setup(request: APIRequestContext) {
   await request.patch(`/api/access/people/${rene.id}`, { data: { notifyServices: ['mobile_app_rene_e2e'], quietOff: true } });
   await request.patch(`/api/access/people/${conny.id}`, { data: { notifyServices: ['mobile_app_conny_e2e'], quietOff: true } });
   const tag = Date.now().toString(36);
-  const board = (await (await request.post('/api/boards', { data: { name: `Zuhause ${tag}` } })).json()) as { id: string };
+  const board = (await (await request.post('/api/boards', { data: { name: `Wächter ${tag}` } })).json()) as { id: string };
   const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
   const columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;
   return { rene, conny, boardId: board.id, columnId, tag };
@@ -29,7 +29,7 @@ async function setup(request: APIRequestContext) {
 const cardsOf = async (request: APIRequestContext, boardId: string) =>
   ((await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { id: string; title: string; assigneeIds: string[]; completedAt: string | null }[] }).cards;
 
-test('Zuhause: läuft gerade → wartet auf jemanden; Heute zeigt die Karte vom Haus, Erledigen nimmt sie weg', async ({ page, request }) => {
+test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Karte vom Haus, Erledigen nimmt sie weg', async ({ page, request }) => {
   const s = await setup(request);
   await setState(request, 'person.rene', 'home');
   await setState(request, 'person.conny', 'not_home');
@@ -48,7 +48,7 @@ test('Zuhause: läuft gerade → wartet auf jemanden; Heute zeigt die Karte vom 
   expect(created.status()).toBe(201);
 
   await page.goto('/');
-  await nav(page).getByRole('button', { name: 'Zuhause' }).click();
+  await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('home-quiet')).toContainText(name);
 
   // Die Maschine läuft: Leistung über der Schwelle
@@ -61,8 +61,8 @@ test('Zuhause: läuft gerade → wartet auf jemanden; Heute zeigt die Karte vom 
   await expect(page.getByTestId('home-waiting')).toContainText(title, { timeout: 20_000 });
   expect((await cardsOf(request, s.boardId)).some((c) => c.title === title)).toBe(true);
 
-  // Heute: „Vom Haus", mit Türkis-Quelle; Erledigen
-  await nav(page).getByRole('button', { name: 'Heute' }).click();
+  // Aufgaben: „Vom Haus", mit Türkis-Quelle; Erledigen
+  await nav(page).getByRole('button', { name: 'Aufgaben' }).click();
   const house = page.getByTestId('today-house');
   await expect(house).toContainText(name);
   await expect(house.getByText(title)).toBeVisible();
@@ -71,7 +71,7 @@ test('Zuhause: läuft gerade → wartet auf jemanden; Heute zeigt die Karte vom 
   await expect(house.getByText(title)).toHaveCount(0);
 });
 
-test('Heute: Weitergeben schiebt die Karte an die nächste Person, ohne sie zu erledigen', async ({ page, request }) => {
+test('Aufgaben: Weitergeben schiebt die Karte an die nächste Person, ohne sie zu erledigen', async ({ page, request }) => {
   const s = await setup(request);
   await setState(request, 'person.rene', 'home');
   await setState(request, 'person.conny', 'not_home'); // nur Rene ist da: die Karte entsteht bei ihm
@@ -92,7 +92,7 @@ test('Heute: Weitergeben schiebt die Karte an die nächste Person, ohne sie zu e
   expect((await cardsOf(request, s.boardId))[0]!.assigneeIds).toEqual([s.rene.id]);
 
   await page.goto('/');
-  await nav(page).getByRole('button', { name: 'Heute' }).click();
+  await nav(page).getByRole('button', { name: 'Aufgaben' }).click();
   const house = page.getByTestId('today-house');
   await expect(house.getByText(title)).toBeVisible();
 
@@ -131,7 +131,7 @@ test('Erst vorschlagen: die Karte entsteht ohne Zuständige, „Übernehmen" auf
   expect((await cardsOf(request, s.boardId))[0]!.assigneeIds).toEqual([]);
 
   await page.goto('/');
-  await nav(page).getByRole('button', { name: 'Heute' }).click();
+  await nav(page).getByRole('button', { name: 'Aufgaben' }).click();
   const house = page.getByTestId('today-house');
   await expect(house.getByText(title)).toBeVisible();
   await expect(house.getByText('Wer übernimmt?')).toBeVisible();
@@ -142,7 +142,7 @@ test('Erst vorschlagen: die Karte entsteht ohne Zuständige, „Übernehmen" auf
 
 const connyHeaders = { 'x-remote-user-id': 'ha-conny-e2e', 'x-remote-user-name': 'conny', 'x-remote-user-display-name': 'Conny' };
 
-test('Zuhause: Administratoren bearbeiten einen Wächter direkt, Mitglieder sehen ihn lesend, mit Verlauf', async ({ page, browser, request, baseURL }) => {
+test('Wächter: Administratoren bearbeiten einen Wächter direkt, Mitglieder sehen ihn lesend, mit Verlauf', async ({ page, browser, request, baseURL }) => {
   const s = await setup(request);
   const name = `Bearbeiten ${s.tag}`;
   const created = await request.post('/api/watchers', {
@@ -159,7 +159,7 @@ test('Zuhause: Administratoren bearbeiten einen Wächter direkt, Mitglieder sehe
 
   // Administrator: Tipp auf den Wächter öffnet das Bearbeiten (Satz, Speichern), der Verlauf steht unten
   await page.goto('/');
-  await nav(page).getByRole('button', { name: 'Zuhause' }).click();
+  await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('home-activity')).toContainText(name);
   await page.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
   const dialog = page.getByRole('dialog');
@@ -176,7 +176,7 @@ test('Zuhause: Administratoren bearbeiten einen Wächter direkt, Mitglieder sehe
   const conny = await ctx.newPage();
   try {
     await conny.goto('/');
-    await conny.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Zuhause' }).click();
+    await conny.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
     await conny.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
     const d = conny.getByRole('dialog');
     await expect(d.getByTestId('watcher-readonly')).toBeVisible();

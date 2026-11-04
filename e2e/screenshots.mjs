@@ -197,8 +197,11 @@ await waitUp();
 const seeded = await seed();
 
 const nav = (page, name) => page.getByRole('navigation', { name: x('Ansicht', 'View') }).getByRole('button', { name });
-const mode = (page, name) => page.getByRole('group', { name: x('Ansicht', 'View') }).getByRole('button', { name }).click();
-const chip = (page, group, name) => page.getByRole('group', { name: group }).getByRole('button', { name }).click();
+const mode = (page, name) => page.getByRole('radiogroup', { name: x('Ansicht', 'View') }).getByRole('radio', { name }).click();
+const all = (page) => chip(page, x('Personen', 'People'), x('Alle', 'All'));
+/** Aufgaben öffnen, eine Ansicht wählen (Liste, Tag, Woche, Monat) und „Alle“ statt „Meine“ zeigen */
+const tasks = async (page, view) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await mode(page, view); await all(page); };
+const chip = (page, group, name) => page.getByRole('group', { name: group }).getByRole('button', { name, exact: typeof name === 'string' }).click();
 const re = (s) => new RegExp(`^${s}`);
 
 const screens = [
@@ -209,24 +212,29 @@ const screens = [
     await nav(page, 'Boards').click();
     await page.getByRole('tab', { name: re(S.planned) }).click();
     await page.getByText(S.windows).first().click();
-    await page.getByRole('button', { name: x('Stupsen', 'Nudge') }).click();
+    await page.getByRole('button', { name: x(/stupsen/, /nudge/i) }).click();
     await page.getByRole('radio', { name: x(/Heute noch/, /Today still/) }).click();
   }],
-  ['heute', async (page) => { await nav(page, x('Heute', 'Today')).click(); await page.getByTestId('today-sentence').waitFor(); }],
-  ['agenda', async (page) => { await nav(page, x('Kalender', 'Calendar')).click(); await mode(page, x('Liste', 'List')); await page.getByTestId('agenda').getByText(S.windows).waitFor(); }],
-  ['agenda-gefiltert', async (page) => {
-    await nav(page, x('Kalender', 'Calendar')).click();
-    await mode(page, x('Liste', 'List'));
+  ['aufgaben', async (page) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await page.getByTestId('today-sentence').waitFor(); await page.getByTestId('week-strip').waitFor(); }],
+  ['aufgaben-alle', async (page) => { await tasks(page, x('Liste', 'List')); await page.getByTestId('tasks').getByText(S.windows).waitFor(); }],
+  ['aufgaben-gefiltert', async (page) => {
+    await tasks(page, x('Liste', 'List'));
     await chip(page, x('Personen', 'People'), /Ben/);
+    await page.getByRole('button', { name: 'Filter' }).click();
     await chip(page, 'Boards', new RegExp(S.boardReno));
-    await page.getByTestId('agenda').getByText(S.electrician).waitFor();
+    await page.getByTestId('tasks').getByText(S.electrician).waitFor();
   }],
-  ['kalender-woche', async (page) => { await nav(page, x('Kalender', 'Calendar')).click(); await mode(page, x('Woche', 'Week')); if (new Date().getDay() === 0) await page.getByRole('button', { name: x('Weiter', 'Next') }).click(); /* sonntags liegt morgen in der nächsten Woche */ await page.getByRole('button', { name: re(S.windows) }).waitFor(); }],
-  ['kalender-tag', async (page) => { await nav(page, x('Kalender', 'Calendar')).click(); await mode(page, x('Tag', 'Day')); await page.getByRole('button', { name: re(S.parcel) }).waitFor(); }],
-  ['kalender-monat', async (page) => { await nav(page, x('Kalender', 'Calendar')).click(); await mode(page, x('Monat', 'Month')); await page.locator('[data-today]').waitFor(); }],
+  ['karte-menu', async (page) => {
+    await nav(page, 'Boards').click();
+    await page.getByRole('tab', { name: re(S.open) }).click();
+    await page.getByRole('button', { name: x(/^Menü für/, /^Menu for/) }).first().click();
+    await page.getByRole('dialog').getByText(x('Verschieben nach', 'Move to')).waitFor();
+  }],
+  ['kalender-woche', async (page) => { await tasks(page, x('Woche', 'Week')); if (new Date().getDay() === 0) await page.getByRole('button', { name: x('Weiter', 'Next') }).click(); /* sonntags liegt morgen in der nächsten Woche */ await page.getByRole('button', { name: re(S.windows) }).first().waitFor(); }],
+  ['kalender-tag', async (page) => { await tasks(page, x('Tag', 'Day')); await page.getByRole('button', { name: re(S.parcel) }).waitFor(); }],
+  ['kalender-monat', async (page) => { await tasks(page, x('Monat', 'Month')); await page.locator('[data-today]').waitFor(); }],
   ['kalender-neue-karte', async (page) => {
-    await nav(page, x('Kalender', 'Calendar')).click();
-    await mode(page, x('Tag', 'Day'));
+    await tasks(page, x('Tag', 'Day'));
     await page.getByRole('button', { name: re(S.parcel) }).waitFor();
     const grid = page.getByTestId('calendar-grid');
     await grid.evaluate((el) => (el.scrollTop = 11 * 56));
@@ -307,12 +315,12 @@ async function seedWatchers() {
 }
 
 const watcherScreens = [
-  ['zuhause', async (page) => {
-    await nav(page, x('Zuhause', 'Home')).click();
+  ['waechter', async (page) => {
+    await nav(page, x('Wächter', 'Watchers')).click();
     await page.getByTestId('home-waiting').waitFor();
   }],
   ['gefunden', async (page) => {
-    await nav(page, x('Zuhause', 'Home')).click();
+    await nav(page, x('Wächter', 'Watchers')).click();
     await page.getByTestId('home-found').click();
     await page.getByTestId('found-hit').first().waitFor();
   }],

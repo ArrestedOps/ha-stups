@@ -1,3 +1,4 @@
+import { openTasksView } from './helpers';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
 test.describe.configure({ timeout: 90_000 });
@@ -28,13 +29,11 @@ const block = (page: Page, title: string, board: string) => page.getByRole('butt
 test('Kalender: Tagesansicht zeigt die Karte zur Uhrzeit, Filter nach Person', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Kalender' }).click();
-  await page.getByRole('group', { name: 'Ansicht' }).getByRole('button', { name: 'Tag' }).click();
+  await openTasksView(page, 'Tag');
 
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
   await expect(block(page, s.t.offen, s.boardName)).toBeVisible();
 
-  await page.getByRole('button', { name: 'Filter' }).click();
   await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
   await expect(block(page, s.t.offen, s.boardName)).toBeHidden();
@@ -47,14 +46,13 @@ test('Kalender: Tagesansicht zeigt die Karte zur Uhrzeit, Filter nach Person', a
 test('Kalender: Monatsansicht, Tipp auf einen Tag öffnet die Tagesansicht', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Kalender' }).click();
-  await page.getByRole('group', { name: 'Ansicht' }).getByRole('button', { name: 'Monat' }).click();
+  await openTasksView(page, 'Monat');
 
   const today = page.locator('[data-testid="calendar-month"] [data-today]');
   await expect(today).toBeVisible();
   await expect(today).toHaveAttribute('aria-label', /[2-9]\d* Karten|[1-9]\d+ Karten/);
   await today.click();
-  await expect(page.getByRole('group', { name: 'Ansicht' }).getByRole('button', { name: 'Tag' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('radiogroup', { name: 'Ansicht' }).getByRole('radio', { name: 'Tag' })).toHaveAttribute('aria-checked', 'true');
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
 });
 
@@ -64,8 +62,7 @@ test('Kalender: auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Ter
   const s = await seed(request);
   const title = `Elektriker ${Date.now().toString(36)}`;
   await page.goto('/');
-  await page.getByRole('button', { name: 'Kalender' }).click();
-  await page.getByRole('group', { name: 'Ansicht' }).getByRole('button', { name: 'Tag' }).click();
+  await openTasksView(page, 'Tag');
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
 
   // auf die Stunde scrollen und die Spalte dort antippen (erst warten, bis die Ansicht ihren Startpunkt angesprungen ist)

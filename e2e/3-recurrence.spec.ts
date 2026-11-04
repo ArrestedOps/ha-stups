@@ -27,7 +27,7 @@ test('Wiederkehrende Karte: erledigt landet sie in „Erledigt", die nächste wa
 
   await page.goto('/');
   await page.getByRole('tab', { name: /^Offen/ }).click();
-  await page.getByRole('button', { name: `„${title}“ erledigen` }).click();
+  await page.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
   await expect(page.getByRole('status').filter({ hasText: /Erledigt · nächste Karte/ })).toBeVisible();
 
   // Die erledigte Karte liegt in „Erledigt", mit der Zeit und ohne „überfällig"
@@ -63,10 +63,10 @@ test('„Rückgängig" nimmt die nächste Karte wieder weg', async ({ page, requ
   });
   await page.goto('/');
   await page.getByRole('tab', { name: /^Offen/ }).click();
-  await page.getByRole('button', { name: `„${title}“ erledigen` }).click();
+  await page.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
   await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).click();
 
-  await expect(page.getByRole('button', { name: `„${title}“ erledigen` })).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: `„${title}“ erledigen` })).toBeVisible();
   await expect.poll(async () => (await cardsWith(request, boardId, title)).length).toBe(1);
 });
 

@@ -48,16 +48,17 @@ test('Mindestens vier typische Karten stehen vollständig über der Leiste, jede
   await expect(page.getByText(/^Angelegt/)).toHaveCount(0);
 });
 
-test('Ein langer Titel braucht höchstens zwei Zeilen, auch die Karte bleibt kompakt', async ({ page, request }) => {
+test('Ein langer Titel braucht genau eine Zeile (hinten abgeschnitten), die Zeile bleibt 68 px hoch', async ({ page, request }) => {
   const { boardId, openId } = await typicalBoard(request, page, 'Langer Titel', 1);
-  const long = 'Ein sehr langer Titel, der in der Liste nicht mehr als zwei Zeilen brauchen darf, auch wenn er viel länger ist als jeder Bildschirm breit sein kann';
+  const long = 'Ein sehr langer Titel, der in der Liste nicht mehr als eine Zeile brauchen darf, auch wenn er viel länger ist als jeder Bildschirm breit sein kann';
   await request.post(`/api/boards/${boardId}/cards`, { data: { columnId: openId, title: long } });
   await page.goto('/');
   const card = page.locator('[role=presentation]').filter({ hasText: 'Ein sehr langer Titel' });
   await expect(card).toBeVisible();
-  const title = card.locator('span.font-semibold').first();
+  const title = card.locator('span.truncate').first();
   const lineHeight = await title.evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
-  expect(await title.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThanOrEqual(lineHeight * 2 + 1);
+  expect(await title.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThanOrEqual(lineHeight + 1);
+  expect(Math.round(await card.evaluate((el) => el.getBoundingClientRect().height))).toBeLessThanOrEqual(70);
 });
 
 test('Termin: überfällig ist rot und erledigt nie, Wiederholung, Priorität und Checkliste erscheinen in der Zeile', async ({ page, request }) => {

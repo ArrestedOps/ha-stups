@@ -111,7 +111,7 @@ await snap(160);
 await nav('Boards').click();
 await page.getByRole('tab', { name: new RegExp(`^${x('Offen', 'Open')}`) }).click();
 await snap(90);
-await page.getByRole('button', { name: new RegExp(x('„Müll rausbringen“ erledigen', 'Complete .Take out the trash.')) }).click();
+await page.getByRole('checkbox', { name: new RegExp(x('„Müll rausbringen“ erledigen', 'Complete .Take out the trash.')) }).click();
 await page.getByRole('button', { name: x('Rückgängig', 'Undo') }).waitFor();
 await snap(170);
 

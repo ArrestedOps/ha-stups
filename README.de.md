@@ -4,7 +4,7 @@
 
 > Deutsche Fassung. Die englische Fassung ([README.md](README.md)) ist maßgeblich.
 
-Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haushalt, die Familie oder die WG: Aufgaben auf Boards, wiederkehrende Termine, Fotos und Links, Push-Erinnerungen mit „Erledigt"-Knopf über die Companion App und ein freundlicher **Stups** an die, die etwas vergessen haben. Fürs iPhone gebaut, mit Dunkel- und Hellmodus.
+Kanban-Board, Aufgabenliste und Kalender als Home-Assistant-App (Add-on). Für den Haushalt, die Familie oder die WG: Aufgaben auf Boards, wiederkehrende Termine, Fotos und Links, Push-Erinnerungen mit „Erledigt"-Knopf über die Companion App und ein freundlicher **Stups** an die, die etwas vergessen haben. Fürs iPhone gebaut, mit Dunkel- und Hellmodus.
 
 <p align="center">
   <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FArrestedOps%2Fha-stups"><img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Zu Home Assistant hinzufügen"></a>
@@ -13,19 +13,19 @@ Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haus
 
 <p align="center">
   <img src="docs/images/board-dunkel.png" alt="Board, dunkel" width="23%">
-  <img src="docs/images/heute-dunkel.png" alt="Heute, dunkel" width="23%">
+  <img src="docs/images/aufgaben-dunkel.png" alt="Aufgaben, dunkel" width="23%">
   <img src="docs/images/kalender-woche-dunkel.png" alt="Kalender, Woche, dunkel" width="23%">
   <img src="docs/images/stupsen-dunkel.png" alt="Stupsen, dunkel" width="23%">
 </p>
 <p align="center">
   <img src="docs/images/board-hell.png" alt="Board, hell" width="23%">
-  <img src="docs/images/heute-hell.png" alt="Heute, hell" width="23%">
+  <img src="docs/images/aufgaben-hell.png" alt="Aufgaben, hell" width="23%">
   <img src="docs/images/kalender-woche-hell.png" alt="Kalender, Woche, hell" width="23%">
   <img src="docs/images/stupsen-hell.png" alt="Stupsen, hell" width="23%">
 </p>
 
 <p align="center">
-  <img src="docs/images/zuhause-dunkel.png" alt="Zuhause, dunkel" width="23%">
+  <img src="docs/images/waechter-dunkel.png" alt="Wächter, dunkel" width="23%">
   <img src="docs/images/gefunden-dunkel.png" alt="Gefunden, dunkel" width="23%">
   <img src="docs/images/waechter-bearbeiten-dunkel.png" alt="Ein Wächter als Satz, dunkel" width="23%">
   <img src="docs/images/einstellungen-dunkel.png" alt="Einstellungen, dunkel" width="23%">
@@ -33,10 +33,9 @@ Kanban-Board, Agenda und Kalender als Home-Assistant-App (Add-on). Für den Haus
 
 ## Was kann es?
 
-- **Boards** mit eigenen Spalten und Kategorien, Karten mit Zuständigen, Termin, Priorität, Kosten, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt Karten, ein Farbbalken zeigt die Dringlichkeit.
+- **Boards** mit eigenen Spalten und Kategorien, Karten mit Zuständigen, Termin, Priorität, Kosten, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt Karten; jede Karte ist eine Zeile mit farbiger Kachel.
 - **Schnell-Eingabe:** Eine Zeile wie `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` wird zur fertigen Karte mit Termin, Zuständigem, Kategorie, Wiederholung und Priorität.
-- **Heute:** was für dich dran ist: Karten vom Haus (von Wächtern), deine Karten mit Termin bis morgen, eine Zeile zu den anderen. Startseite der App.
-- **Kalender:** Tag, Woche, Monat und eine Liste (alle Karten mit Termin nach Tagen, Überfälliges zuerst; Filter nach Personen und Boards). Auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an.
+- **Aufgaben** (Startseite, drei Reiter: Aufgaben, Boards, Wächter): was für dich dran ist. Oben Karten vom Haus (von Wächtern), deine Zahlen (heute fällig, überfällig, heute erledigt), die Woche mit Punkten, ein Banner, wenn dich jemand gestupst hat, und deine Karten in den Gruppen Überfällig, Heute, Diese Woche und Später. Chips wechseln zwischen Meine, Alle und jeder Person. Ein Umschalter darüber zeigt stattdessen **Tag, Woche oder Monat** (der frühere Kalender); auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an. Am Ende die Fairness dieser Woche, ohne Rangliste.
 - **Wiederkehrende Aufgaben:** fester Rhythmus oder ab Erledigung; die erledigte Karte bleibt samt Verlauf erhalten, die nächste entsteht neu.
 - **Wächter:** Stups beobachtet Entitäten in Home Assistant und legt von selbst Karten an: „Die Waschmaschine ist fertig, also bekommt eine Person, die zu Hause ist, die Karte ‚ausräumen'." Stups **findet passende Geräte selbst** (Waschmaschine, Trockner, Abfallkalender, Regen, Batterien, Saugroboter), du richtest einen Wächter als **Satz** ein, mit **Probelauf** auf den letzten 7 Tagen. Dazu „Weitergeben", „Erst vorschlagen" (wer zuerst tippt, übernimmt) und „Wenig Zeit" für stressige Wochen. **Zuhause** zeigt, was das Haus gerade tut. Einrichtung ohne YAML.
 - **Push über die Companion App:** zur Fälligkeit, vorab, nachhaken, Tageszusammenfassung. „Erledigt" direkt in der Nachricht.

@@ -17,19 +17,19 @@ A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your h
 
 <p align="center">
   <img src="docs/images/en/board-dunkel.png" alt="Board, dark" width="23%">
-  <img src="docs/images/en/heute-dunkel.png" alt="Today, dark" width="23%">
+  <img src="docs/images/en/aufgaben-dunkel.png" alt="Tasks, dark" width="23%">
   <img src="docs/images/en/kalender-woche-dunkel.png" alt="Calendar, week, dark" width="23%">
   <img src="docs/images/en/stupsen-dunkel.png" alt="Nudging, dark" width="23%">
 </p>
 <p align="center">
   <img src="docs/images/en/board-hell.png" alt="Board, light" width="23%">
-  <img src="docs/images/en/heute-hell.png" alt="Today, light" width="23%">
+  <img src="docs/images/en/aufgaben-hell.png" alt="Tasks, light" width="23%">
   <img src="docs/images/en/kalender-woche-hell.png" alt="Calendar, week, light" width="23%">
   <img src="docs/images/en/stupsen-hell.png" alt="Nudging, light" width="23%">
 </p>
 
 <p align="center">
-  <img src="docs/images/en/zuhause-dunkel.png" alt="Home, dark" width="23%">
+  <img src="docs/images/en/waechter-dunkel.png" alt="Watchers, dark" width="23%">
   <img src="docs/images/en/gefunden-dunkel.png" alt="Found, dark" width="23%">
   <img src="docs/images/en/waechter-bearbeiten-dunkel.png" alt="A watcher as a sentence, dark" width="23%">
   <img src="docs/images/en/einstellungen-dunkel.png" alt="Settings, dark" width="23%">
@@ -37,10 +37,9 @@ A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your h
 
 ## What can it do?
 
-- **Boards** with their own columns and categories; cards with assignees, due date, priority, cost, description, checklist, links, photos/PDFs and comments. Swiping moves cards, a colour bar shows urgency.
+- **Boards** with their own columns and categories; cards with assignees, due date, priority, cost, description, checklist, links, photos/PDFs and comments. Swiping moves cards; every card is one row with a coloured tile.
 - **Quick entry:** a line like `Take out trash tomorrow 7pm @Ben #Home every week !!` becomes a finished card with due date, assignee, category, repeat and priority.
-- **Today:** what is on for you: cards from the house (from watchers), your cards due until tomorrow, a line about the others. Start page of the app.
-- **Calendar:** day, week, month and a list (all cards with a due date by day, overdue first; filter by people and boards). Tapping a free slot creates a card with that due date.
+- **Tasks** (the start page, three tabs: Tasks, Boards, Watchers): what is on for you. Cards from the house (from watchers) on top, your numbers (due today, overdue, done today), the week with dots, a banner when someone nudged you, and your cards grouped as Overdue, Today, This week and Later. Chips switch between Mine, All and each person. A switch above the list shows **Day, Week or Month** instead (the former calendar); tapping a free slot creates a card with that due date. At the end: fairness for this week, without a ranking.
 - **Recurring tasks:** a fixed rhythm or counted from completion; the completed card stays with its history, the next one is created.
 - **Watchers:** Stups observes entities in Home Assistant and creates cards by itself: "The washing machine is done, so whoever is at home gets the card 'empty it'." Stups **finds suitable devices itself** (washing machine, dryer, waste calendar, rain, batteries, robot vacuum), you set one up as a **sentence** with a **trial run** on the last 7 days. Also "pass on", "suggest first" (whoever taps first takes it) and "little time" for busy weeks. **Home** shows what the house is doing right now. Set up without YAML.
 - **Push through the Companion App:** when due, in advance, as a follow-up, and a daily summary. "Done" right in the message.

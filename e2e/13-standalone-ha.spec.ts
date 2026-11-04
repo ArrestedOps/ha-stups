@@ -66,8 +66,8 @@ test('Erster Start mit Home Assistant: Einrichtung, dann Wächter-Reiter und Ver
     sensors: true,
     push: ['ha-notify'],
   });
-  await expect(nav(page).getByRole('button')).toHaveCount(4);
-  await expect(nav(page).getByRole('button', { name: 'Zuhause' })).toBeVisible();
+  await expect(nav(page).getByRole('button')).toHaveCount(3);
+  await expect(nav(page).getByRole('button', { name: 'Wächter' })).toBeVisible();
 
   const dialog = await einstellungen(page);
   await expect(dialog.getByRole('button', { name: 'Benachrichtigungen' })).toBeVisible();
@@ -152,9 +152,9 @@ test('Wächter: „wer ist zu Hause" findet die Personen über ihren Namen, die 
     .not.toBeNull();
 });
 
-test('Zuhause zeigt beide Wächter, die Verwaltung steht in den Einstellungen', async ({ page }) => {
+test('Wächter zeigt beide Wächter, die Verwaltung steht in den Einstellungen', async ({ page }) => {
   await anmelden(page);
-  await nav(page).getByRole('button', { name: 'Zuhause' }).click();
+  await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('home')).toContainText('Saugroboter');
   await expect(page.getByTestId('home')).toContainText('Zweiter Roboter');
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();

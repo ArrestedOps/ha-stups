@@ -55,9 +55,9 @@ test('Erster Start: ohne Konto sperrt die API, die Einrichtung verlangt den Code
   await expect(nav(page)).toBeVisible(); // gleich angemeldet
 });
 
-test('Ohne Home Assistant: drei Reiter, kein Dashboard-Button, nichts von Home Assistant in den Einstellungen', async ({ page }) => {
+test('Ohne Home Assistant: zwei Reiter (Aufgaben, Boards), kein Dashboard-Button, nichts von Home Assistant in den Einstellungen', async ({ page }) => {
   await melden(page, 'anna', PW);
-  await expect(nav(page).getByRole('button')).toHaveCount(3);
+  await expect(nav(page).getByRole('button')).toHaveText(['Aufgaben', 'Boards']);
   await expect(nav(page).getByRole('button', { name: 'Wächter' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Dashboard' })).toHaveCount(0);
 

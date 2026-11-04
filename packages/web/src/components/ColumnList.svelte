@@ -57,7 +57,7 @@
 </script>
 
 <div
-  class="flex min-h-28 flex-col gap-3"
+  class="flex min-h-28 flex-col gap-2"
   use:dndzone={{
     items,
     type: 'card',
@@ -65,7 +65,7 @@
     dragDisabled: !ui.desktop || ui.isChild,
     flipDurationMs: 150,
     delayTouchStart: 250,
-    dropTargetStyle: { outline: '2px dashed var(--accent)', 'outline-offset': '4px', 'border-radius': '20px' },
+    dropTargetStyle: { outline: '2px dashed var(--accent)', 'outline-offset': '4px', 'border-radius': '16px' },
   }}
   onconsider={consider}
   onfinalize={finalize}

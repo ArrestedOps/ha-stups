@@ -31,7 +31,7 @@
     meta?: Snippet;
     right?: Snippet;
     /** Erledigt-Kreis links (Tippfläche 32 × 44) */
-    check?: { done: boolean; label: string; onchange: () => void };
+    check?: { done: boolean; label: string; onchange: () => void; state?: 'overdue' | 'waiting'; disabled?: boolean };
     onclick?: (e: MouseEvent) => void;
     href?: string;
   } = $props();
@@ -42,9 +42,21 @@
   data-variant={variant}
 >
   {#if check}
-    <button type="button" role="checkbox" aria-checked={check.done} aria-label={check.label} class="-mr-0.5 flex h-11 w-8 shrink-0 items-center justify-center" onclick={check.onchange}>
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={check.done}
+      aria-label={check.label}
+      disabled={check.disabled}
+      class="-mr-0.5 flex h-11 w-8 shrink-0 items-center justify-center"
+      onclick={check.onchange}
+    >
       {#if check.done}
         <span class="bg-accent-grad flex h-[22px] w-[22px] items-center justify-center rounded-full !shadow-none"><Icon name="check" size={14} /></span>
+      {:else if check.state === 'waiting'}
+        <span class="flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-accent text-accent-text"><Icon name="clock" size={12} stroke={2.6} /></span>
+      {:else if check.state === 'overdue'}
+        <span class="h-[22px] w-[22px] rounded-full border-2 border-danger"></span>
       {:else}
         <span class="h-[22px] w-[22px] rounded-full border-2 border-hint"></span>
       {/if}

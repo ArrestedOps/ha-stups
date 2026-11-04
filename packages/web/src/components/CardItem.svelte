@@ -1,17 +1,18 @@
 <script lang="ts">
-  import { t, tn } from '../lib/i18n/index.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import type { Card } from '../lib/api';
-  import { catKey } from '../lib/colors';
-  import { cardMeta } from '../lib/cardMeta';
+  import { boardColorKey } from '../lib/schedule';
+  import { cardIcon, tileColorOf } from '../lib/cardTile';
   import { waitingForConfirmation } from '../lib/confirm';
-  import { formatCost, formatDue, isOverdue } from '../lib/datetime';
+  import { isOverdue } from '../lib/datetime';
   import { nudgeBadge } from '../lib/nudge';
-  import { describeRecurrence } from '../lib/recurrence';
   import { swipeTarget } from '../lib/swipe';
-  import { urgency, urgencyColor } from '../lib/urgency';
   import { completeCard, openSheet, personById, swipeCard, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
+  import CardMeta from './CardMeta.svelte';
   import Icon from './Icon.svelte';
+  import ListRow from './ui/ListRow.svelte';
+  import Tile from './ui/Tile.svelte';
 
   let { card }: { card: Card } = $props();
 
@@ -22,10 +23,10 @@
   const nudge = $derived(nudgeBadge(card, ui.me?.id ?? null));
   const names = (ids: string[]) => [...new Set(ids.map((id) => personById(id)?.displayName ?? t('Jemand')))].join(', ');
   const isDoneColumn = $derived(ui.view?.columns.find((c) => c.id === card.columnId)?.isDone ?? false);
-  const meta = $derived(cardMeta(card, { overdue, isDone: isDoneColumn }, { due: formatDue, cost: formatCost, recurrence: describeRecurrence }));
-
-  // Farbbalken links: wie dringend die Karte ist
-  const bar = $derived(urgencyColor(urgency(card, isDoneColumn)));
+  // Kachel: Farbe der ersten Kategorie, sonst des Boards; Symbol vorerst nach Art der Karte
+  const boardIndex = $derived(ui.boards.findIndex((b) => b.id === card.boardId));
+  const boardColor = $derived(ui.boards.find((b) => b.id === card.boardId)?.color ?? null);
+  const tileColor = $derived(tileColorOf(categories[0]?.color ?? boardColorKey(boardColor, boardIndex)));
 
   // ---------- Wischen: nach rechts in den nächsten Status, nach links in den vorigen ----------
   const THRESHOLD = 96;
@@ -114,7 +115,7 @@
   }
 </script>
 
-<div class="relative overflow-hidden rounded-[20px] {ui.hop === card.id ? 'hop' : ''}">
+<div class="relative overflow-hidden rounded-row {ui.hop === card.id ? 'hop' : ''}">
   {#if target && Math.abs(dx) > 4}
     <div
       class="pointer-events-none absolute inset-0 flex items-center px-5 {dx > 0 ? 'justify-start' : 'justify-end'} {armed
@@ -133,10 +134,9 @@
     </div>
   {/if}
 
+  <!-- Wischen und Ziehen hängen an dieser Hülle, die Zeile darin ist der Baustein ListRow -->
   <div
-    class="card-shadow relative flex touch-pan-y gap-1 overflow-hidden rounded-[20px] border border-line bg-surface pl-1 select-none [-webkit-touch-callout:none] {isDoneColumn
-      ? 'opacity-70'
-      : ''}"
+    class="relative touch-pan-y select-none [-webkit-touch-callout:none] {isDoneColumn ? 'opacity-70' : ''}"
     style:transform={dx ? `translateX(${dx}px)` : undefined}
     style:transition={animating ? 'transform 150ms ease-out' : 'none'}
     onpointerdown={down}
@@ -145,112 +145,59 @@
     onpointercancel={cancel}
     role="presentation"
   >
-    {#if bar}<span class="absolute inset-y-0 left-0 w-[5px]" style:background={bar} aria-hidden="true"></span>{/if}
-    <button
-      class="flex min-h-14 w-11 shrink-0 items-start justify-center pt-[17px]"
-      aria-label={isDoneColumn ? t('Bereits erledigt') : waiting && ui.isChild ? t('Wartet auf Bestätigung') : t('„{title}“ erledigen', { title: card.title })}
-      disabled={!canTick}
-      onclick={() => !suppressClick && completeCard(card)}
+    <ListRow
+      variant="task"
+      title={card.title}
+      strike={isDoneColumn}
+      check={{
+        done: isDoneColumn,
+        label: isDoneColumn ? t('Bereits erledigt') : waiting && ui.isChild ? t('Wartet auf Bestätigung') : t('„{title}“ erledigen', { title: card.title }),
+        onchange: () => !suppressClick && completeCard(card),
+        state: waiting ? 'waiting' : overdue && !isDoneColumn ? 'overdue' : undefined,
+        disabled: !canTick,
+      }}
+      onclick={() => !suppressClick && openSheet({ type: 'card', id: card.id })}
     >
-      <span
-        class="flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 {isDoneColumn
-          ? 'border-accent bg-accent text-on-accent'
-          : waiting
-            ? 'border-accent text-accent-text'
-            : overdue
-              ? 'border-danger'
-              : 'border-fg2'}"
-      >
-        {#if isDoneColumn}<Icon name="check" size={14} stroke={3} />{:else if waiting}<Icon name="clock" size={13} stroke={2.6} />{/if}
-      </span>
-    </button>
-
-    <button class="min-w-0 flex-1 py-3 text-left" onclick={() => !suppressClick && openSheet({ type: 'card', id: card.id })}>
-      <div class="flex items-start justify-between gap-2">
-        <span class="line-clamp-2 text-[17px] leading-snug font-semibold {isDoneColumn ? 'line-through' : ''}">{card.title}</span>
-        {#if assignees.length}
-          <span class="flex shrink-0 gap-1">
-            {#each assignees as p (p.id)}<Avatar person={p} />{/each}
-          </span>
-        {/if}
-      </div>
-
-      {#if waiting}
-        <span class="mt-1.5 inline-flex items-center gap-1.5 rounded-[9px] bg-surface2 px-2 py-0.5 text-[13px] font-semibold text-accent-text" data-testid="card-waiting">
-          <Icon name="clock" size={14} />{t('Wartet auf Bestätigung')}
-        </span>
-      {/if}
-      {#if nudge.toMe.length}
-        <span class="mt-1.5 inline-flex items-center gap-1.5 rounded-[9px] bg-accent px-2 py-0.5 text-[13px] font-bold text-on-accent" data-testid="nudge-to-me">
-          <Icon name="hand" size={14} />{t('{names} stupst dich', { names: names(nudge.toMe.map((n) => n.fromId)) })}
-        </span>
-      {:else if nudge.fromMe.length}
-        <span class="mt-1.5 flex items-center gap-1.5 text-[12px] text-fg2" data-testid="nudge-from-me">
-          <Icon name="hand" size={12} />{t('Du hast {names} gestupst', { names: names(nudge.fromMe.map((n) => n.toId)) })}
-        </span>
-      {/if}
-
-      <!-- Eine Zeile: Was nicht passt, wird hinten abgeschnitten. Alles Weitere steht im Karten-Fenster. -->
-      {#if meta.length || categories.length}
-        <div class="mt-1.5 flex items-center gap-2 text-[13px]" data-testid="card-meta">
-          <div class="flex min-w-0 flex-1 items-center gap-3 overflow-hidden whitespace-nowrap text-fg2">
-            {#each meta as m (m.kind)}
-              {#if m.kind === 'done'}
-                <span class="flex shrink-0 items-center gap-1 text-fg" data-testid="card-done-at"><Icon name="check" size={13} stroke={2.6} />{t('Erledigt {when}', { when: m.text })}</span>
-              {:else if m.kind === 'due'}
-                <span
-                  class="flex shrink-0 items-center gap-1 font-medium {m.overdue ? 'text-danger' : 'text-fg'}"
-                  data-testid="card-due"
-                  data-overdue={m.overdue}
-                  aria-label={m.overdue ? t('Überfällig, {text}', { text: m.text }) : undefined}
-                >
-                  <Icon name="clock" size={13} />{m.text}
-                </span>
-              {:else if m.kind === 'watcher'}
-                <span class="shrink-0" title={t('Von einem Wächter angelegt')} aria-label={t('Von einem Wächter angelegt')} data-testid="card-watcher"><Icon name="eye" size={13} /></span>
-              {:else if m.kind === 'recurrence'}
-                <span class="shrink-0" title={m.label} aria-label={t('Wiederholt: {label}', { label: m.label })}><Icon name="repeat" size={13} /></span>
-              {:else if m.kind === 'priority'}
-                <span
-                  class="shrink-0"
-                  style:color={m.level === 'high' ? 'var(--c-red-fg)' : 'var(--c-orange-fg)'}
-                  aria-label={m.level === 'high' ? t('Priorität hoch') : t('Priorität mittel')}
-                  data-testid="card-priority"
-                  data-level={m.level}
-                >
-                  <Icon name="flag" size={13} stroke={2.4} />
-                </span>
-              {:else if m.kind === 'checklist'}
-                <span class="flex shrink-0 items-center gap-1" aria-label={t('Checkliste {done} von {total}', { done: m.done, total: m.total })}><Icon name="checklist" size={13} />{m.done}/{m.total}</span>
-              {:else if m.kind === 'comments'}
-                <span class="flex shrink-0 items-center gap-1" aria-label={tn('{n} Kommentar', '{n} Kommentare', m.count)}><Icon name="message" size={13} />{m.count}</span>
-              {:else if m.kind === 'links'}
-                <span class="flex shrink-0 items-center gap-1" aria-label={tn('{n} Link', '{n} Links', m.count)}><Icon name="link" size={13} />{m.count}</span>
-              {:else if m.kind === 'attachments'}
-                <span class="flex shrink-0 items-center gap-1" aria-label={tn('{n} Anhang', '{n} Anhänge', m.count)}><Icon name="paperclip" size={13} />{m.count}</span>
-              {:else if m.kind === 'cost'}
-                <span class="flex shrink-0 items-center gap-1"><Icon name="euro" size={13} />{m.text}</span>
-              {/if}
-            {/each}
-          </div>
-          {#if categories.length}
-            <span class="flex shrink-0 items-center gap-1" aria-label={t('Kategorien: {names}', { names: categories.map((c) => c.name).join(', ') })} data-testid="card-categories">
-              {#each categories as c (c.id)}<i class="h-[9px] w-[9px] rounded-full" style:background="var(--c-{catKey(c.color)}-fg)"></i>{/each}
+      {#snippet tile()}
+        <Tile color={tileColor}><Icon name={cardIcon(card)} size={20} /></Tile>
+      {/snippet}
+      {#snippet meta()}
+        <span class="flex min-w-0 items-center gap-2">
+          {#if waiting}
+            <span class="flex shrink-0 items-center gap-1 font-semibold text-accent-text" data-testid="card-waiting"><Icon name="clock" size={13} />{t('Wartet auf Bestätigung')}</span>
+          {/if}
+          {#if nudge.toMe.length}
+            <span class="flex shrink-0 items-center gap-1 font-bold text-accent-text" data-testid="nudge-to-me">
+              <Icon name="hand" size={13} />{t('{names} stupst dich', { names: names(nudge.toMe.map((n) => n.fromId)) })}
+            </span>
+          {:else if nudge.fromMe.length}
+            <span class="flex shrink-0 items-center gap-1" data-testid="nudge-from-me">
+              <Icon name="hand" size={12} />{t('Du hast {names} gestupst', { names: names(nudge.fromMe.map((n) => n.toId)) })}
             </span>
           {/if}
-        </div>
-      {/if}
-    </button>
-    {#if ui.isChild}
-      <span class="w-2 shrink-0" aria-hidden="true"></span>
-    {:else}
-      <button
-        class="flex w-10 shrink-0 items-start justify-center pt-[18px] text-fg2"
-        aria-label={t('Menü für „{title}“', { title: card.title })}
-        onclick={() => !suppressClick && openSheet({ type: 'cardMenu', id: card.id })}
-      >
-        <Icon name="more" size={18} />
-      </button>
-    {/if}
+          <CardMeta {card} done={isDoneColumn} {overdue} {categories} />
+        </span>
+      {/snippet}
+      {#snippet right()}
+        <span class="flex items-center gap-1">
+          {#if assignees.length}
+            <span class="flex gap-1">
+              {#each assignees.slice(0, 2) as p (p.id)}<Avatar person={p} size={28} />{/each}
+            </span>
+          {/if}
+          {#if ui.isChild}
+            <span class="w-1 shrink-0" aria-hidden="true"></span>
+          {:else}
+            <button
+              class="flex h-11 w-8 shrink-0 items-center justify-center text-fg2"
+              aria-label={t('Menü für „{title}“', { title: card.title })}
+              onclick={() => !suppressClick && openSheet({ type: 'cardMenu', id: card.id })}
+            >
+              <Icon name="more" size={18} />
+            </button>
+          {/if}
+        </span>
+      {/snippet}
+    </ListRow>
   </div>
 </div>

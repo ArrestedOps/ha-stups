@@ -275,7 +275,7 @@
     <Group title={t('Beschreibung')}>
       <textarea
         rows="3"
-        placeholder="Notizen …"
+        placeholder={t('Notizen …')}
         use:autogrow={description}
         class="block min-h-[84px] w-full resize-none overflow-hidden bg-transparent px-4 py-3 text-[17px] leading-snug"
         aria-label={t('Beschreibung')}

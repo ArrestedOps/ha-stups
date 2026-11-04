@@ -50,7 +50,7 @@
 
   const problem = (w: WatcherItem): string | null =>
     w.status === 'target_missing'
-      ? 'Pausiert: Board oder Spalte gibt es nicht mehr'
+      ? t('Pausiert: Board oder Spalte gibt es nicht mehr')
       : w.status === 'entity_missing'
         ? t('Die Entität gibt es in Home Assistant nicht')
         : w.active && !w.subscribed

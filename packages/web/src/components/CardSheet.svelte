@@ -8,7 +8,7 @@
   import { tick } from 'svelte';
   import { mayConfirm, waitingForConfirmation } from '../lib/confirm';
   import {
-    act as rawAct,
+    actResult,
     answerConfirmation,
     closeSheet,
     completeCard,
@@ -36,13 +36,13 @@
   let saved = $state(false);
   let savedTimer: ReturnType<typeof setTimeout> | undefined;
   async function act<T>(fn: () => Promise<T>): Promise<T | undefined> {
-    const result = await rawAct(fn);
-    if (result !== undefined) {
+    const result = await actResult(fn);
+    if (result.ok) {
       saved = true;
       clearTimeout(savedTimer);
       savedTimer = setTimeout(() => (saved = false), 2200);
     }
-    return result;
+    return result.ok ? result.value : undefined;
   }
 
   async function finish() {
@@ -281,7 +281,7 @@
     <Group title={t('Beschreibung')}>
       <textarea
         rows="3"
-        placeholder="Notizen …"
+        placeholder={t('Notizen …')}
         use:autogrow={descDraft}
         class="block min-h-[84px] w-full resize-none overflow-hidden bg-transparent px-4 py-3 text-[17px] leading-snug"
         aria-label={t('Beschreibung')}
@@ -440,7 +440,7 @@
     </Group>
 
     {#if card.activity.length}
-      <Group title="Verlauf">
+      <Group title={t('Verlauf')}>
         {#each card.activity as a (a.id)}
           {@const d = describeActivity(a)}
           <div class="px-4 py-2.5">

@@ -36,13 +36,17 @@
 
   function onKey(e: KeyboardEvent) {
     if (!viewer) return;
-    if (e.key === 'Escape') closeViewer();
+    if (e.key === 'Escape') {
+      // Escape schließt nur das Foto, nicht auch noch die Karte dahinter
+      e.stopImmediatePropagation();
+      closeViewer();
+    }
     else if (e.key === 'ArrowRight' && many) go(1);
     else if (e.key === 'ArrowLeft' && many) go(-1);
   }
 </script>
 
-<svelte:window onkeydown={onKey} />
+<svelte:window onkeydowncapture={onKey} />
 
 {#if viewer && item}
   <div
@@ -89,7 +93,7 @@
       {/if}
 
       {#if many && !zoomed}
-        <button class="absolute top-1/2 left-1 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50" aria-label="Vorheriges" onclick={() => go(-1)}>
+        <button class="absolute top-1/2 left-1 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50" aria-label={t('Vorheriges')} onclick={() => go(-1)}>
           <Icon name="chevron-left" size={24} stroke={2.6} />
         </button>
         <button class="absolute top-1/2 right-1 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 [&>svg]:rotate-180" aria-label={t('Nächstes')} onclick={() => go(1)}>

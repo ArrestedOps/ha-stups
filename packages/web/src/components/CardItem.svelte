@@ -20,7 +20,7 @@
   const overdue = $derived(isOverdue(card.dueAt));
   // Stupse: deutlich, wenn ich gestupst wurde, dezent, wenn ich jemanden gestupst habe
   const nudge = $derived(nudgeBadge(card, ui.me?.id ?? null));
-  const names = (ids: string[]) => [...new Set(ids.map((id) => personById(id)?.displayName ?? 'Jemand'))].join(', ');
+  const names = (ids: string[]) => [...new Set(ids.map((id) => personById(id)?.displayName ?? t('Jemand')))].join(', ');
   const isDoneColumn = $derived(ui.view?.columns.find((c) => c.id === card.columnId)?.isDone ?? false);
   const meta = $derived(cardMeta(card, { overdue, isDone: isDoneColumn }, { due: formatDue, cost: formatCost, recurrence: describeRecurrence }));
 

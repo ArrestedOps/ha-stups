@@ -173,6 +173,7 @@ export const en: Catalog = {
   'Nur die letzte Erledigung lässt sich rückgängig machen': 'Only the last completion can be undone',
   'Diese Erledigung lässt sich nicht rückgängig machen': 'This completion cannot be undone',
   'Die nächste Karte wurde schon erledigt, deshalb lässt sich das nicht mehr rückgängig machen': 'The next card has already been completed, so this can no longer be undone',
+  'Die nächste Karte wurde schon bearbeitet, deshalb lässt sich das nicht mehr rückgängig machen': 'The next card has already been edited, so this can no longer be undone',
   'Die Karte ist nicht archiviert': 'The card is not archived',
   'Nur Personen von Stups können stupsen': 'Only people from Stups can nudge',
   'Die Karte ist schon erledigt': 'The card is already done',

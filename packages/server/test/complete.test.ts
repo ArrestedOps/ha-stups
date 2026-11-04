@@ -273,6 +273,63 @@ describe('Rückgängig', () => {
   });
 });
 
+describe('Rückgängig mit bearbeiteter Folgekarte', () => {
+  function erledigt() {
+    const { b, doing } = setup();
+    const card = store.createCard(
+      b.id,
+      { columnId: doing.id, title: 'Bad', dueAt: '2026-10-24T08:00:00Z', recurrence: saturday },
+      rene.id,
+    );
+    const res = store.completeCard(card.id, { by: rene.id, source: 'app' });
+    return { card, res, next: res.nextCardId! };
+  }
+  const exists = (id: string) => {
+    try {
+      store.getCard(id);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  it('unberührt: die Folgekarte verschwindet wie bisher', () => {
+    const { res, next } = erledigt();
+    store.undoCompletion(res.completionId!);
+    expect(exists(next)).toBe(false);
+  });
+
+  it('ein Kommentar auf der Folgekarte verhindert das Löschen, nichts geht verloren', () => {
+    const { res, next } = erledigt();
+    store.addComment(next, rene.id, 'Bitte Fenster mit putzen');
+    expect(() => store.undoCompletion(res.completionId!)).toThrow(ConflictError);
+    expect(exists(next)).toBe(true);
+    expect(store.getCard(next).commentCount).toBe(1);
+  });
+
+  it('ein abgehakter oder neuer Punkt der Checkliste ebenso', () => {
+    const a = erledigt();
+    const item = store.addChecklistItem(a.next, 'Spiegel');
+    store.updateChecklistItem(item.id, { done: true });
+    expect(() => store.undoCompletion(a.res.completionId!)).toThrow(ConflictError);
+    expect(exists(a.next)).toBe(true);
+  });
+
+  it('ein geänderter Titel ebenso', () => {
+    const { res, next } = erledigt();
+    store.updateCard(next, { title: 'Bad und Gäste-WC' });
+    expect(() => store.undoCompletion(res.completionId!)).toThrow(ConflictError);
+    expect(exists(next)).toBe(true);
+  });
+
+  it('eine Änderung an der Version allein (etwa Geplant-Abgleich) zählt nicht als Arbeit', () => {
+    const { res, next } = erledigt();
+    store.moveCard(next, { columnId: store.getCard(next).columnId });
+    store.undoCompletion(res.completionId!);
+    expect(exists(next)).toBe(false);
+  });
+});
+
 describe('Archiv-Job', () => {
   it('archiviert erledigte Karten nach der Frist des Boards und sonst nicht', () => {
     const { b, open } = setup();

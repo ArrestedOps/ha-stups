@@ -54,7 +54,7 @@
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col px-4 pt-[max(8px,var(--safe-top))]">
   <header class="shrink-0">
     <TopBar />
-    <h1 class="font-display text-[34px] leading-tight font-bold tracking-tight">{t('Zuhause')}</h1>
+    <h1 class="font-display text-[34px] leading-tight font-bold tracking-tight">{t('Wächter')}</h1>
     <p class="mb-3 text-[15px] text-fg2">{t('Was das Haus gerade tut')}{items.length > 0 ? ` · ${ui.isAdmin ? t('Tippe auf einen Wächter, um ihn zu bearbeiten.') : t('Tippe auf einen Wächter, um ihn anzusehen.')}` : ''}</p>
   </header>
 
@@ -67,7 +67,7 @@
       </button>
     {/if}
     {#if failed && !data}
-      <p class="py-10 text-center text-fg2">{t('Die Seite „Zuhause“ konnte nicht geladen werden.')}</p>
+      <p class="py-10 text-center text-fg2">{t('Die Seite „Wächter“ konnte nicht geladen werden.')}</p>
     {:else if !data}
       <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
     {:else if !data.available}

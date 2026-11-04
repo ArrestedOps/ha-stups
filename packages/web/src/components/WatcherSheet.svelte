@@ -24,7 +24,7 @@
   }: { id: string | null; template?: string; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } } = $props();
 
   // Aus dem Reiter „Wächter" geht es dorthin zurück, sonst in die Einstellungen
-  const back = () => (ui.tab === 'home' ? closeSheet() : openSettings('watchers'));
+  const back = () => (ui.tab === 'watchers' ? closeSheet() : openSettings('watchers'));
 
   const people = $derived(ui.people.filter((p) => p.isPerson));
   const personName = (pid: string) => personById(pid)?.displayName ?? '?';

@@ -78,8 +78,8 @@ export const ui = $state({
   sheet: null as Sheet,
   /** Karte, die gerade „hüpft" (nach dem Stupsen) */
   hop: null as string | null,
-  /** Ansicht unten in der Leiste: Heute, Boards, Kalender oder Zuhause */
-  tab: 'today' as Tab,
+  /** Ansicht unten in der Leiste: Aufgaben, Boards oder Wächter */
+  tab: 'tasks' as Tab,
   /** Filter für Agenda und Kalender (Personen, Boards, Erledigtes) */
   sf: { ...DEFAULT_FILTER } as ScheduleFilter,
   /** zählt bei jedem Nachladen hoch, damit offene Detailansichten und die Agenda sich aktualisieren */
@@ -484,7 +484,7 @@ export function selectColumn(id: string): void {
 
 /** Gemerkte Ansicht und gemerkter Filter von diesem Gerät (nur bekannte Boards und Personen bleiben im Filter) */
 function restoreView(): void {
-  // Start auf Heute; gemerkt werden nur Boards und Kalender (siehe startTab)
+  // Start auf Aufgaben; gemerkt wird nur Boards (siehe startTab)
   ui.tab = startTab(memo.get('stups.tab'), visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }));
   try {
     const raw = JSON.parse(memo.get('stups.schedule') ?? 'null') as Partial<ScheduleFilter> | null;

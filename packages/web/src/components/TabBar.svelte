@@ -5,12 +5,11 @@
   import Icon from './Icon.svelte';
 
   const all: Record<Tab, { label: string; icon: string }> = $derived({
-    today: { label: t('Heute'), icon: 'list' },
+    tasks: { label: t('Aufgaben'), icon: 'checklist' },
     boards: { label: 'Boards', icon: 'columns' },
-    calendar: { label: t('Kalender'), icon: 'calendar' },
-    home: { label: t('Zuhause'), icon: 'home' },
+    watchers: { label: t('Wächter'), icon: 'shield' },
   });
-  // Ohne Home Assistant (eigene Anmeldung) gibt es keine Wächter, ein Kind sieht sie nicht: dann sind es drei Reiter
+  // Ohne Home Assistant (eigene Anmeldung) gibt es keine Wächter, ein Kind sieht sie nicht: dann sind es zwei Reiter
   const tabs = $derived(visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }).map((id) => ({ id, ...all[id] })));
   const active = $derived(ui.tab);
 </script>

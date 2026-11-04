@@ -3,7 +3,6 @@
   import { onMount } from 'svelte';
   import ArchiveSheet from './components/ArchiveSheet.svelte';
   import AuthView from './components/AuthView.svelte';
-  import CalendarView from './components/CalendarView.svelte';
   import SlotSheet from './components/SlotSheet.svelte';
   import TabBar from './components/TabBar.svelte';
   import TodayView from './components/TodayView.svelte';
@@ -218,15 +217,13 @@
       </div>
     {/if}
   </main>
-  {:else if tab === 'today'}
+  {:else if tab === 'tasks'}
     <TodayView />
-  {:else if tab === 'calendar'}
-    <CalendarView />
-  {:else}
+    {:else}
     <HomeView />
   {/if}
 
-  {#if (tab === 'boards' || tab === 'today') && view && newCardColumn && !ui.isChild}
+  {#if (tab === 'boards' || tab === 'tasks') && view && newCardColumn && !ui.isChild}
     <button
       class="fixed right-5 bottom-[calc(max(10px,var(--safe-bottom))+80px)] z-30 flex h-[58px] w-[58px] items-center justify-center rounded-btn bg-accent-grad"
       aria-label={t('Neue Karte')}

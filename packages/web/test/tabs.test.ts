@@ -3,45 +3,46 @@ import { migrateTab, startTab, visibleTabs } from '../src/lib/tabs';
 
 describe('migrateTab', () => {
   it('bildet die alten Reiter auf die neuen ab', () => {
-    expect(migrateTab('agenda')).toBe('today');
-    expect(migrateTab('watchers')).toBe('home');
+    for (const old of ['today', 'agenda', 'calendar']) expect(migrateTab(old), old).toBe('tasks');
+    for (const old of ['home', 'watchers']) expect(migrateTab(old), old).toBe('watchers');
   });
   it('behält gültige Reiter', () => {
-    for (const t of ['today', 'boards', 'calendar', 'home'] as const) expect(migrateTab(t)).toBe(t);
+    for (const t of ['tasks', 'boards', 'watchers'] as const) expect(migrateTab(t)).toBe(t);
   });
-  it('Unbekanntes, Leeres und fehlender Wert ergeben Heute', () => {
-    for (const bad of [null, undefined, '', 'unsinn', 'Boards']) expect(migrateTab(bad as string | null), String(bad)).toBe('today');
+  it('Unbekanntes, Leeres und fehlender Wert ergeben Aufgaben', () => {
+    for (const bad of [null, undefined, '', 'unsinn', 'Boards']) expect(migrateTab(bad as string | null), String(bad)).toBe('tasks');
   });
 });
 
-describe('startTab: die App startet auf Heute, nie auf Zuhause', () => {
-  const all = ['today', 'boards', 'calendar', 'home'] as const;
-  it('gemerkt werden nur Boards und Kalender', () => {
+describe('startTab: die App startet auf Aufgaben, nie auf Wächter', () => {
+  const all = ['tasks', 'boards', 'watchers'] as const;
+  it('gemerkt wird nur Boards', () => {
     expect(startTab('boards', [...all])).toBe('boards');
-    expect(startTab('calendar', [...all])).toBe('calendar');
-    expect(startTab('today', [...all])).toBe('today');
+    expect(startTab('tasks', [...all])).toBe('tasks');
   });
-  it('Zuhause, auch als alter Name „watchers", führt zu Heute', () => {
-    expect(startTab('home', [...all])).toBe('today');
-    expect(startTab('watchers', [...all])).toBe('today');
-    expect(startTab('agenda', [...all])).toBe('today');
+  it('alte Namen für Heute und Kalender führen zu Aufgaben', () => {
+    for (const old of ['today', 'agenda', 'calendar']) expect(startTab(old, [...all]), old).toBe('tasks');
   });
-  it('Unbekanntes, Leeres und nicht vorhandene Reiter führen zu Heute', () => {
-    expect(startTab(null, [...all])).toBe('today');
-    expect(startTab('unsinn', [...all])).toBe('today');
-    expect(startTab('calendar', ['today', 'boards'])).toBe('today');
+  it('Wächter, auch als alte Namen „home" und „watchers", führt zu Aufgaben', () => {
+    for (const old of ['watchers', 'home']) expect(startTab(old, [...all]), old).toBe('tasks');
+  });
+  it('Unbekanntes, Leeres und nicht vorhandene Reiter führen zu Aufgaben', () => {
+    expect(startTab(null, [...all])).toBe('tasks');
+    expect(startTab('unsinn', [...all])).toBe('tasks');
+    expect(startTab('boards', ['tasks'])).toBe('tasks');
   });
 });
 
-describe('visibleTabs', () => {
-  it('Add-on (Administrator oder Mitglied): alle vier', () => {
-    expect(visibleTabs({ watchers: true, isChild: false })).toEqual(['today', 'boards', 'calendar', 'home']);
+describe('visibleTabs: drei Reiter, für Kind und Docker ohne Home Assistant zwei', () => {
+  it('Administrator und Mitglied im Add-on: alle drei', () => {
+    expect(visibleTabs({ watchers: true, isChild: false })).toEqual(['tasks', 'boards', 'watchers']);
   });
-  it('Kind: ohne Zuhause', () => {
-    expect(visibleTabs({ watchers: true, isChild: true })).toEqual(['today', 'boards', 'calendar']);
+  it('Kind: ohne Wächter, auch wenn Wächter laufen', () => {
+    expect(visibleTabs({ watchers: true, isChild: true })).toEqual(['tasks', 'boards']);
+    expect(visibleTabs({ watchers: false, isChild: true })).toEqual(['tasks', 'boards']);
   });
-  it('Docker ohne Home Assistant: ohne Zuhause; mit Wächtern im Container: mit Zuhause', () => {
-    expect(visibleTabs({ watchers: false, isChild: false })).toEqual(['today', 'boards', 'calendar']);
-    expect(visibleTabs({ watchers: true, isChild: false })).toContain('home');
+  it('Docker ohne Home Assistant: zwei; mit Wächtern im Container: drei', () => {
+    expect(visibleTabs({ watchers: false, isChild: false })).toEqual(['tasks', 'boards']);
+    expect(visibleTabs({ watchers: true, isChild: false })).toContain('watchers');
   });
 });

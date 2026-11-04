@@ -458,14 +458,11 @@ export function setUnauthorizedHandler(fn: (() => void) | null): void {
 const clientHeaders = () => ({ 'x-stups-client': '1', 'x-stups-language': i18n.lang });
 
 // Relative Adresse: funktioniert unter dem wechselnden Ingress-Pfad von Home Assistant.
-async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
+/** Eine Anfrage an die API mit gemeinsamer Fehlerbehandlung (auch für Uploads: 401 führt zur Anmeldung) */
+async function send<T>(path: string, init: RequestInit): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`api/${path}`, {
-      method,
-      headers: body === undefined ? clientHeaders() : { ...clientHeaders(), 'content-type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    res = await fetch(`api/${path}`, init);
   } catch {
     throw new ApiError(t('Keine Verbindung zum Server'), 0);
   }
@@ -474,6 +471,14 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
   if (res.status === 401 && !path.startsWith('auth/')) onUnauthorized?.();
   if (!res.ok) throw new ApiError((data as { error?: string }).error ?? t('Fehler {status}', { status: res.status }), res.status, data);
   return data as T;
+}
+
+function req<T>(method: string, path: string, body?: unknown): Promise<T> {
+  return send<T>(path, {
+    method,
+    headers: body === undefined ? clientHeaders() : { ...clientHeaders(), 'content-type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
 }
 
 const get = <T>(p: string) => req<T>('GET', p);
@@ -590,36 +595,19 @@ export const api = {
   deleteLink: (id: string) => del(`links/${id}`),
 
   /** Eigenes Personenbild (oder als Administrator das einer anderen Person) hochladen: die Bytes selbst, nicht als Formular */
-  uploadAvatar: async (personId: string, image: Blob): Promise<User> => {
-    let res: Response;
-    try {
-      res = await fetch(`api/people/${encodeURIComponent(personId)}/avatar`, {
-        method: 'PUT',
-        headers: { ...clientHeaders(), 'content-type': image.type || 'image/webp' },
-        body: image,
-      });
-    } catch {
-      throw new ApiError(t('Keine Verbindung zum Server'), 0);
-    }
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new ApiError((data as { error?: string }).error ?? t('Fehler {status}', { status: res.status }), res.status);
-    return data as User;
-  },
+  uploadAvatar: (personId: string, image: Blob): Promise<User> =>
+    send<User>(`people/${encodeURIComponent(personId)}/avatar`, {
+      method: 'PUT',
+      headers: { ...clientHeaders(), 'content-type': image.type || 'image/webp' },
+      body: image,
+    }),
   removeAvatar: (personId: string) => del(`people/${encodeURIComponent(personId)}/avatar`),
 
-  uploadAttachment: async (cardId: string, file: Blob, filename: string, thumb: Blob | null): Promise<Attachment> => {
+  uploadAttachment: (cardId: string, file: Blob, filename: string, thumb: Blob | null): Promise<Attachment> => {
     const form = new FormData();
     form.append('file', file, filename);
     if (thumb) form.append('thumb', thumb, 'vorschau.jpg');
-    let res: Response;
-    try {
-      res = await fetch(`api/cards/${cardId}/attachments`, { method: 'POST', headers: clientHeaders(), body: form });
-    } catch {
-      throw new ApiError(t('Keine Verbindung zum Server'), 0);
-    }
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new ApiError((data as { error?: string }).error ?? t('Fehler {status}', { status: res.status }), res.status);
-    return data as Attachment;
+    return send<Attachment>(`cards/${cardId}/attachments`, { method: 'POST', headers: clientHeaders(), body: form });
   },
   deleteAttachment: (id: string) => del(`attachments/${id}`),
 

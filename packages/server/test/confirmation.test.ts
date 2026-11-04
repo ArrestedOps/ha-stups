@@ -345,3 +345,33 @@ describe('Benachrichtigungen', () => {
     expect(to(benId)).toHaveLength(2);
   });
 });
+
+describe('Offene Anfrage und Verschieben der Karte', () => {
+  const doneCol = () => store.getBoardView(boardId).columns.find((c) => c.isDone)!.id;
+
+  it('Ablegen in „Erledigt“ beendet die Anfrage; Zurückziehen bringt sie nicht wieder', () => {
+    store.requestConfirmation(cardId, miaId);
+    expect(store.openConfirmations()).toHaveLength(1);
+    store.moveCard(cardId, { columnId: doneCol() }, benId);
+    expect(state().confirmRequestedAt).toBeNull();
+    store.moveCard(cardId, { columnId: colId }, benId);
+    expect(state().confirmRequestedAt).toBeNull();
+    expect(store.openConfirmations()).toHaveLength(0);
+  });
+
+  it('Wiedereröffnen aus „Erledigt“ löscht eine übrig gebliebene Anfrage', () => {
+    store.moveCard(cardId, { columnId: doneCol() }, benId);
+    store.requestConfirmation(cardId, miaId); // Anfrage trotz erledigter Karte (Altbestand)
+    store.moveCard(cardId, { columnId: colId }, benId);
+    expect(state().confirmRequestedAt).toBeNull();
+  });
+
+  it('Zurückholen aus dem Archiv ebenso', () => {
+    store.moveCard(cardId, { columnId: doneCol() }, benId);
+    store.setArchived(cardId, true);
+    store.requestConfirmation(cardId, miaId);
+    store.restoreArchived(cardId, colId, benId);
+    expect(state().confirmRequestedAt).toBeNull();
+    expect(store.openConfirmations()).toHaveLength(0);
+  });
+});

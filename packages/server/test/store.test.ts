@@ -151,6 +151,48 @@ describe('columns', () => {
   });
 });
 
+describe('Erledigt-Spalte löschen oder umstellen', () => {
+  const openCount = (id: string) => store.listBoards().find((x) => x.id === id)!.openCards;
+
+  it('Löschen der Erledigt-Spalte mit Ziel „Offen“ öffnet die Karten wieder und zählt sie als offen', () => {
+    const { b, open, done } = board();
+    const c = store.createCard(b.id, { columnId: open.id, title: 'A' }, rene.id);
+    store.moveCard(c.id, { columnId: done.id }, rene.id);
+    expect(openCount(b.id)).toBe(0);
+    store.deleteColumn(done.id, open.id);
+    const card = store.getCard(c.id);
+    expect(card.columnId).toBe(open.id);
+    expect(card.completedAt).toBeNull();
+    expect(openCount(b.id)).toBe(1);
+  });
+
+  it('Löschen mit Ziel „Erledigt“ lässt die Karten erledigt', () => {
+    const { b, doing, done } = board();
+    const c = store.createCard(b.id, { columnId: doing.id, title: 'A' }, rene.id);
+    store.moveCard(c.id, { columnId: done.id }, rene.id);
+    store.deleteColumn(doing.id, done.id);
+    expect(store.getCard(c.id).completedAt).not.toBeNull();
+  });
+
+  it('„Erledigt“ von einer Spalte nehmen öffnet ihre Karten wieder', () => {
+    const { b, open, done } = board();
+    const c = store.createCard(b.id, { columnId: open.id, title: 'A' }, rene.id);
+    store.moveCard(c.id, { columnId: done.id }, rene.id);
+    store.updateColumn(done.id, { isDone: false });
+    expect(store.getCard(c.id).completedAt).toBeNull();
+    expect(openCount(b.id)).toBe(1);
+  });
+
+  it('archivierte Karten bleiben archiviert', () => {
+    const { b, open, done } = board();
+    const c = store.createCard(b.id, { columnId: open.id, title: 'A' }, rene.id);
+    store.moveCard(c.id, { columnId: done.id }, rene.id);
+    store.setArchived(c.id, true);
+    store.deleteColumn(done.id, open.id);
+    expect(store.getCard(c.id).archivedAt).not.toBeNull();
+  });
+});
+
 describe('categories', () => {
   it('creates, renames and removes categories without touching the cards', () => {
     const { b, open } = board();

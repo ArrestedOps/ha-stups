@@ -299,7 +299,7 @@ export function createCompletion(c: Ctx, late: unknown) {
     if (col.board_id !== card.board_id) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
     return tx(() => {
       placeCard(cardId, col, null);
-      run('update cards set archived_at = null, completed_at = null where id = ?', cardId);
+      run('update cards set archived_at = null, completed_at = null, confirm_requested_at = null, confirm_requested_by = null where id = ?', cardId);
       logEvent(cardId, 'reopened', by, columnName(card.column_id), col.name);
       touchCard(cardId);
       return getCard(cardId);

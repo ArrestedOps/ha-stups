@@ -3,7 +3,7 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { NotFoundError, ValidationError } from '../errors.js';
 import { type Recurrence } from '../recurrence.js';
 import { type OpenNudge, type Card, type ScheduleCard, type ChecklistItem, type CardLink, type ActivityEntry, type CardDetail, type CardInput, type CardPatch, type Row } from './types.js';
-import { cleanText, parseDue, parsePriority, parseRemind, parseCost, parseEffort, parseConfirm, parseCarryOver, resolveCarry, parseBool, parseRecurrence } from './validate.js';
+import { cleanText, optionalText, parseDue, parsePriority, parseRemind, parseCost, parseEffort, parseConfirm, parseCarryOver, resolveCarry, parseBool, parseRecurrence } from './validate.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
@@ -215,6 +215,7 @@ export function createCards(c: Ctx, late: unknown) {
 
   function checkAssignees(ids: unknown): string[] {
     if (!Array.isArray(ids)) throw new ValidationError(t('Zuständige müssen eine Liste sein'));
+    if (ids.some((x) => typeof x !== 'string')) throw new ValidationError(t('Zuständige müssen eine Liste sein'));
     const unique = [...new Set(ids as string[])];
     for (const uid of unique) {
       if (!one('select 1 as ok from users where id = ? and is_person = 1', uid)) {
@@ -226,6 +227,7 @@ export function createCards(c: Ctx, late: unknown) {
 
   function checkCategories(boardId: string, ids: unknown): string[] {
     if (!Array.isArray(ids)) throw new ValidationError(t('Kategorien müssen eine Liste sein'));
+    if (ids.some((x) => typeof x !== 'string')) throw new ValidationError(t('Kategorien müssen eine Liste sein'));
     const unique = [...new Set(ids as string[])];
     for (const cid of unique) {
       if (!one('select 1 as ok from categories where id = ? and board_id = ? and deleted_at is null', cid, boardId)) {
@@ -249,6 +251,7 @@ export function createCards(c: Ctx, late: unknown) {
     const effort = parseEffort(input.effort);
     const carry = parseCarryOver(input.carryOver);
     const nag = parseBool(input.overdueNag, t('Nachhaken'));
+    const description = optionalText(input.description, t('Die Beschreibung'), 20000);
     if (remind !== null && !dueAt) throw new ValidationError(t('Eine Vorab-Erinnerung braucht eine Fälligkeit'));
     if (col.is_planned === 1 && !isFutureDue(dueAt)) {
       throw new ValidationError(t('In „Geplant" kommen nur Karten mit einem Termin nach heute'));
@@ -268,7 +271,7 @@ export function createCards(c: Ctx, late: unknown) {
         col.id,
         generateKeyBetween(lastPos('cards', 'column_id = ?', col.id), null),
         title,
-        input.description ?? null,
+        description,
         priority,
         dueAt,
         recurrence ? JSON.stringify(recurrence) : null,
@@ -316,7 +319,7 @@ export function createCards(c: Ctx, late: unknown) {
       }
       if (patch.description !== undefined) {
         sets.push('description = ?');
-        params.push(patch.description);
+        params.push(optionalText(patch.description, t('Die Beschreibung'), 20000));
       }
       if (patch.priority !== undefined) {
         sets.push('priority = ?');
@@ -513,11 +516,11 @@ export function createCards(c: Ctx, late: unknown) {
       const fromName = columnName(card.column_id);
       placeCard(id, target, afterId);
       if (snapshot) {
-        run('update cards set completed_at = ?, archived_at = null where id = ?', iso(), id);
+        run('update cards set completed_at = ?, archived_at = null, confirm_requested_at = null, confirm_requested_by = null where id = ?', iso(), id);
         recordCompletion(id, by, 'app', card.due_at, snapshot);
         closeOpenNudges(id, by, true);
       } else if (target.is_done === 0 && card.completed_at !== null) {
-        run('update cards set completed_at = null, archived_at = null where id = ?', id);
+        run('update cards set completed_at = null, archived_at = null, confirm_requested_at = null, confirm_requested_by = null where id = ?', id);
         logEvent(id, 'reopened', by, fromName, target.name);
       } else if (target.id !== card.column_id) {
         logEvent(id, 'moved', by, fromName, target.name);

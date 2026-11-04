@@ -15,12 +15,12 @@
   const active = $derived(ui.tab);
 </script>
 
-<!-- schwebende Leiste mit Abstand zum Rand: überdeckt nichts, die Listen lassen unten Platz (pb-tabbar) -->
-<nav class="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(10px,var(--safe-bottom))]" aria-label={t('Ansicht')}>
-  <div class="card-shadow pointer-events-auto mx-auto flex max-w-[440px] rounded-[26px] border border-line bg-surface p-1.5">
+<!-- Leiste am unteren Rand über die ganze Breite: die Listen lassen unten Platz (pb-tabbar) -->
+<nav class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg px-3 pt-2 pb-[max(10px,var(--safe-bottom))]" aria-label={t('Ansicht')}>
+  <div class="mx-auto grid max-w-[440px]" style:grid-template-columns="repeat({tabs.length}, minmax(0, 1fr))">
     {#each tabs as tb (tb.id)}
       <button
-        class="flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-[20px] text-[12px] font-semibold transition-colors {active === tb.id ? 'bg-surface2 text-accent-text' : 'text-fg2'}"
+        class="flex min-h-[52px] flex-col items-center justify-center gap-1 text-[12px] font-medium transition-colors {active === tb.id ? 'font-bold text-accent-text' : 'text-fg2'}"
         aria-current={active === tb.id ? 'page' : undefined}
         onclick={() => selectTab(tb.id)}
       >

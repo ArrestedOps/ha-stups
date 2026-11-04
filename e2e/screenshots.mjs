@@ -203,7 +203,7 @@ const re = (s) => new RegExp(`^${s}`);
 
 const screens = [
   ['board', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: re(S.open) }).click(); }],
-  ['karte', async (page) => { await nav(page, 'Boards').click(); await page.getByText(S.tax).first().click(); await page.getByTestId('created-note').waitFor(); }],
+  ['karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: re(S.open) }).click(); await page.getByText(S.tax).first().click(); await page.getByTestId('created-note').waitFor(); }],
   ['neue-karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Karte', 'New card'), exact: true }).click(); await page.getByLabel(x('Titel', 'Title')).fill(S.dentist); }],
   ['stupsen', async (page) => {
     await nav(page, 'Boards').click();

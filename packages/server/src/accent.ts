@@ -8,7 +8,7 @@
 export const ACCENT_DEFAULT_HUE = 40;
 
 /** Helligkeit und Sättigung der Fläche im Dunkelmodus */
-const LIGHTNESS = 0.66;
+const LIGHTNESS = 0.65;
 const CHROMA = 0.22;
 
 type Rgb = [number, number, number];

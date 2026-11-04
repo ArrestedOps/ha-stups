@@ -40,6 +40,24 @@ describe('Farbberechnung', () => {
     }
   });
 
+  it('Schrift auf dem Verlauf (accent → accent-end) ist an beiden Enden gut lesbar, bei jedem Farbton', () => {
+    for (let hue = 0; hue < 360; hue++) {
+      for (const scheme of ['dark', 'light'] as const) {
+        const v = accentVars(hue, scheme);
+        expect(contrast(rgb(v['--on-accent']!), rgb(v['--accent']!)), `${hue} ${scheme} Anfang`).toBeGreaterThanOrEqual(3);
+        expect(contrast(rgb(v['--on-accent']!), rgb(v['--accent-end']!)), `${hue} ${scheme} Ende`).toBeGreaterThanOrEqual(3);
+      }
+    }
+  });
+
+  it('beim Orange der App: Weiß auf dem Verlauf mindestens 3,5 : 1 an beiden Enden, dunkel und hell', () => {
+    for (const scheme of ['dark', 'light'] as const) {
+      const v = accentVars(DEFAULT_HUE, scheme);
+      expect(contrast(rgb('#ffffff'), rgb(v['--accent']!)), `${scheme} Anfang`).toBeGreaterThanOrEqual(3.5);
+      expect(contrast(rgb('#ffffff'), rgb(v['--accent-end']!)), `${scheme} Ende`).toBeGreaterThanOrEqual(3.5);
+    }
+  });
+
   it('Akzentschrift ist auf Karte und Hintergrund lesbar (Kontrast mindestens 4,5)', () => {
     const surface = { dark: rgb('#1a181d'), light: rgb('#ffffff') };
     const bg = { dark: rgb('#0e0d10'), light: rgb('#fff6ee') };
@@ -59,11 +77,15 @@ describe('Farbberechnung', () => {
     }
   });
 
-  it('helles Grün und Türkis bekommen im Dunkeln dunkle Schrift, Rot, Orange und Blau weiße', () => {
-    expect(accentVars(160, 'dark')['--on-accent']).not.toBe('#ffffff');
-    expect(accentVars(180, 'dark')['--on-accent']).not.toBe('#ffffff');
-    for (const hue of [25, DEFAULT_HUE, 260]) expect(accentVars(hue, 'dark')['--on-accent'], String(hue)).toBe('#ffffff');
-    expect(accentVars(160, 'light')['--on-accent']).toBe('#ffffff');
+  it('Rot, Orange und Blau bekommen weiße Schrift; dunkle Schrift nur, wo Weiß unter 3 : 1 fiele', () => {
+    for (const hue of [0, 25, DEFAULT_HUE, 260]) expect(accentVars(hue, 'dark')['--on-accent'], String(hue)).toBe('#ffffff');
+    for (let hue = 0; hue < 360; hue++) {
+      for (const scheme of ['dark', 'light'] as const) {
+        const v = accentVars(hue, scheme);
+        const white = contrast(rgb('#ffffff'), rgb(v['--accent']!));
+        expect(v['--on-accent'] === '#ffffff', `${hue} ${scheme}`).toBe(white >= 3);
+      }
+    }
   });
 });
 

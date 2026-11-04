@@ -77,7 +77,7 @@
     role="dialog"
     aria-modal="true"
     aria-label={title || t('Details')}
-    class="absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col rounded-t-3xl border-t border-line bg-bg lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[480px] lg:rounded-none lg:border-t-0 lg:border-l"
+    class="absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col rounded-t-sheet border-t border-line bg-bg lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[480px] lg:rounded-none lg:border-t-0 lg:border-l"
     style:transform={dy ? `translateY(${dy}px)` : undefined}
     style:transition={dragging ? 'none' : undefined}
     style:bottom={insets.bottom ? `${insets.bottom}px` : undefined}
@@ -92,17 +92,17 @@
       onpointercancel={up}
       role="presentation"
     >
-      <span class="h-[5px] w-10 rounded-full bg-line"></span>
+      <span class="h-[5px] w-10 rounded-full bg-track"></span>
     </div>
     <div class="flex items-center justify-between px-2 pt-1">
       {#if left}
         {@render left()}
       {:else if !hideClose}
-        <button class="min-h-11 px-3 text-[17px] text-accent-text" onclick={onclose}>{t('Schließen')}</button>
+        <button class="min-h-11 px-3 text-[16px] font-semibold text-accent-text" onclick={onclose}>{t('Schließen')}</button>
       {:else}
         <span></span>
       {/if}
-      {#if title}<span class="truncate text-[15px] font-semibold text-fg2" role="status">{title}</span>{/if}
+      {#if title}<span class="truncate text-[17px] font-extrabold">{title}</span>{/if}
       <div class="flex min-w-[88px] justify-end">{@render right?.()}</div>
     </div>
     <div

@@ -249,7 +249,7 @@ test('Karte zeigt einen Farbbalken für die Dringlichkeit; „Angelegt …“ st
 });
 test('Theme folgt dem System (hell/dunkel)', async ({ page }, info) => {
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(bg).toBe(info.project.name === 'dunkel' ? 'rgb(14, 13, 16)' : 'rgb(255, 246, 238)');
+  expect(bg).toBe(info.project.name === 'dunkel' ? 'rgb(14, 13, 13)' : 'rgb(255, 246, 238)');
 });
 
 test('Handy-Layout: nichts ragt seitlich heraus', async ({ page }) => {

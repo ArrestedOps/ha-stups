@@ -7,12 +7,12 @@ describe('Akzentfarbe im Server (für die Lampe)', () => {
   // Die Werte stammen aus der Rechnung im Browser (packages/web/src/lib/accent.ts, swatch(hue, 'dark')):
   // Die Lampe soll in genau der Farbe leuchten, die die Person in der App gewählt hat.
   it.each([
-    [0, '#f4428d'],
-    [40, '#f55500'],
-    [120, '#879f00'],
-    [200, '#00a6ad'],
-    [260, '#4b8eff'],
-    [330, '#d852d0'],
+    [0, '#f13f8a'],
+    [40, '#f05400'],
+    [120, '#849c00'],
+    [200, '#00a3aa'],
+    [260, '#448bff'],
+    [330, '#d54ecd'],
   ])('Farbton %i gibt dieselbe Farbe wie im Browser: %s', (hue, expected) => {
     expect(hex(accentRgb(hue))).toBe(expected);
   });

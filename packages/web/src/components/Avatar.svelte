@@ -10,11 +10,11 @@
 </script>
 
 <span
-  class="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-[9px] font-bold text-[#0e0f13]"
+  class="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold text-on-avatar"
   style:width="{size}px"
   style:height="{size}px"
   style:font-size="{Math.round(size * 0.46)}px"
-  style:background={person.color ?? '#a2a7b3'}
+  style:background={person.color ?? 'var(--track)'}
   title={person.displayName}
 >
   {#if showImage}

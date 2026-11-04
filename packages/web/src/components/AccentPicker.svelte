@@ -24,7 +24,7 @@
     const blocked = h >= BLOCKED_HUES.from && h <= BLOCKED_HUES.to;
     return `${blocked ? 'var(--surface2)' : swatch(h, 'dark')} ${i * 10}deg`;
   }).join(', ');
-  const ringStyle = `background: conic-gradient(from 0deg, ${stops}); -webkit-mask-image: radial-gradient(farthest-side, transparent ${INNER - 1}px, #000 ${INNER}px); mask-image: radial-gradient(farthest-side, transparent ${INNER - 1}px, #000 ${INNER}px);`;
+  const ringStyle = `background: conic-gradient(from 0deg, ${stops}); -webkit-mask-image: radial-gradient(farthest-side, transparent ${INNER - 1}px, black ${INNER}px); mask-image: radial-gradient(farthest-side, transparent ${INNER - 1}px, black ${INNER}px);`;
 
   const handle = $derived.by(() => {
     const a = (hue * Math.PI) / 180;
@@ -106,7 +106,7 @@
       <Icon name="plus" size={34} stroke={2.8} />
     </div>
     <div
-      class="pointer-events-none absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
+      class="pointer-events-none absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-on-media shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
       style:left="{handle.x}px"
       style:top="{handle.y}px"
       style:background={swatch(hue, 'dark')}

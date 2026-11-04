@@ -395,7 +395,7 @@
               </button>
               {#if !child}
                 <button
-                  class="absolute top-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white"
+                  class="absolute top-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-media/60 text-on-media"
                   aria-label={t('{name} entfernen', { name: a.filename })}
                   onclick={() => act(() => api.deleteAttachment(a.id))}
                 >

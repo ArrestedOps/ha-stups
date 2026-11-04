@@ -126,6 +126,6 @@ Stups is under the [PolyForm Strict License 1.0.0](LICENSE). The source code is 
 - **GitHub:** GitHub's terms of service let anyone fork a public repository within GitHub. The license grants no further rights for that: a fork must not be used to distribute or modify.
 - **Earlier versions:** Stups 1.9.0 and all earlier versions were under the MIT license; for those versions, as they were published at the time, it continues to apply.
 
-The headings use the font **Bricolage Grotesque** (SIL Open Font License 1.1, bundled locally from the npm package `@fontsource-variable/bricolage-grotesque`, no download from a font server).
+The app uses the font **Inter** (SIL Open Font License 1.1, bundled locally from the npm package `@fontsource-variable/inter`, no download from a font server).
 
 The license text is the unmodified English standard text from [PolyForm](https://polyformproject.org/licenses/strict/1.0.0).

@@ -27,6 +27,8 @@ interface Look {
   accent: [l: number, c: number];
   /** Das hellere Ende des Verlaufs */
   accent2: [l: number, c: number];
+  /** Das dunklere Ende des Verlaufs auf Flächen mit Schrift (Verlauf: accent → end); die Schrift bleibt an jedem Punkt lesbar */
+  end: [l: number, c: number];
   /** Schrift in Akzentfarbe, muss auf Karten und Hintergrund lesbar sein */
   text: [l: number, c: number];
   glowAlpha: number;
@@ -34,8 +36,8 @@ interface Look {
 }
 
 const LOOK: Record<Scheme, Look> = {
-  dark: { accent: [0.66, 0.22], accent2: [0.76, 0.17], text: [0.76, 0.17], glowAlpha: 0.32, shadowAlpha: 0.4 },
-  light: { accent: [0.55, 0.2], accent2: [0.66, 0.2], text: [0.5, 0.19], glowAlpha: 0.42, shadowAlpha: 0.3 },
+  dark: { accent: [0.65, 0.22], accent2: [0.76, 0.17], end: [0.59, 0.2], text: [0.76, 0.17], glowAlpha: 0.32, shadowAlpha: 0.4 },
+  light: { accent: [0.55, 0.2], accent2: [0.66, 0.2], end: [0.49, 0.19], text: [0.5, 0.19], glowAlpha: 0.42, shadowAlpha: 0.3 },
 };
 
 type Rgb = [number, number, number];
@@ -101,6 +103,7 @@ export function accentVars(hue: number, scheme: Scheme): Record<string, string> 
   const look = LOOK[scheme];
   const accent = oklchToRgb(...look.accent, hue);
   const accent2 = oklchToRgb(...look.accent2, hue);
+  const end = oklchToRgb(...look.end, hue);
   const text = oklchToRgb(...look.text, hue);
   // Weiße Schrift, solange sie auf der Fläche gut zu lesen ist; bei hellen Farben (Gelb, Grün) dunkle
   const onAccent = contrast(WHITE, accent) >= 3 ? WHITE : DARK_TEXT;
@@ -108,6 +111,7 @@ export function accentVars(hue: number, scheme: Scheme): Record<string, string> 
   return {
     '--accent': hex(accent),
     '--accent2': hex(accent2),
+    '--accent-end': hex(end),
     '--accent-text': hex(text),
     '--on-accent': hex(onAccent),
     '--glow': `radial-gradient(ellipse at 85% -5%, ${rgba(scheme === 'dark' ? accent : accent2, look.glowAlpha)}, transparent 62%)`,

@@ -1,6 +1,6 @@
 # Neues App-Design: Nachtrag zur Spec
 
-> **ENTWURF, nicht freigegeben.** Es ist noch kein Code geschrieben, nichts committet, nichts gepusht. Dieser Text bereitet nur die Entscheidung vor. Maßgeblich ist der Abschnitt **„Entscheidungen vom 04.11.2026" am Ende**: Er ersetzt abweichende Empfehlungen im übrigen Text (Abschnitte 2 bis 8 sind darauf nachgezogen, Abschnitt 9 bleibt als Verlauf der Fragen stehen). Offen ist nur, was dort unter „Noch offen" steht; wo dort eine Empfehlung steht, ist sie nicht beschlossen.
+> **Freigegeben am 04.11.2026** durch den Auftraggeber (ganzer Plan). Die vier zuvor offenen Punkte gelten mit der jeweiligen Empfehlung: Türkis „vom Haus“ bleibt (mit Wort oder Zeichen), Tageszusammenfassung in der App einstellbar, Banner-Text „weitere Geräte gefunden“, Beta pro Phase und stabil nach Phase 2, 3, 5 und 6. Die Board-Chips (Phase 6a) bindet der Entwickler nach eigenem Ermessen ans gemeinsame Filtermodell.
 
 Stand 04.11.2026, Ausgangslage **Stups 1.18.2** (Repository: Beta-Version 1.18.2-beta.1, stabil 1.18.2). Grundlage ist das Briefing „Neues App-Design für Stups umsetzen" (Stand 04.11.2026, geschrieben für 1.8.0) und das Design-Paket `stups-design-export` (31 Screens, 390 × 844, nur Dunkel, `stups.css`). Die Mockups sind kein Code: abgelesen werden Aufbau, Abstände, Farben und Texte.
 
@@ -221,3 +221,12 @@ Die sechs Fragen des Briefings (1 bis 6) und die beim Lesen gefundenen (7 bis 20
 | Bestehende Karten | Migration setzt nur das Standard-Symbol. Einstellungen bekommen „Symbole aus Titeln erkennen“, von der Person selbst ausgelöst. |
 
 Noch offen (bis zur Freigabe gilt die Empfehlung der Abschnitte oben): Türkis „vom Haus“ (Empfehlung: bleibt, zusätzlich mit Wort oder Zeichen), Tageszusammenfassung in der App einstellbar (Empfehlung: ja, `settings`-Eintrag ohne Migration), Banner-Text zu Automationen (Empfehlung: vorerst „weitere Geräte gefunden“), stabile Releases je Phase (Empfehlung: Beta pro Phase, stabil nach Phase 2, 3, 5 und 6).
+
+
+---
+
+## Ergebnisse Phase 0 (04.11.2026)
+
+- **Kontrast:** Das Mockup-Orange (`#FF8A1F` oben) hat mit Weiß nur 2,36 : 1, das bisherige App-Orange am hellen Ende 2,33 : 1. Der Verlauf läuft jetzt von `--accent` (L 0,65) nach `--accent-end` (L 0,59, je Thema) und hat mit Weißer Schrift an beiden Enden **mindestens 3,5 : 1** (Orange 40°: 3,52 und 4,47). Rechnung in `accent.ts`, gesichert durch `accent.test.ts` (alle 360 Farbtöne) und `design-tokens.test.ts` (Werte aus `app.css`). Kachel-Orange etwas dunkler (`#df670e`), damit das Symbol 3 : 1 hat. Der Server rechnet die Lampenfarbe mit derselben Helligkeit (0,65).
+- **Schrift:** Inter lokal über `@fontsource-variable/inter` (OFL-1.1), kein Verweis auf Schriftserver (Test). Bricolage entfällt.
+- **Tabs, Zeile, Push-Stand, Symbol-Bibliothek:** gehören zu Phase 2 und 3 und werden dort vor Beginn der jeweiligen Aufgabe geklärt. Die Frage „x / y Geräte erreichbar“ und die Größe der rund 300 Symbole stehen dann hier.

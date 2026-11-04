@@ -12,6 +12,15 @@
   --color-line: var(--border);
   --color-fg: var(--text);
   --color-fg2: var(--text2);
+  --color-hint: var(--hint);
+  --color-track: var(--track);
+  --color-bg-dim: var(--bg-dim);
+  --color-accent-end: var(--accent-end);
+  --color-on-banner: var(--on-banner);
+  --color-media: var(--media);
+  --color-on-media: var(--on-media);
+  --color-on-avatar: var(--on-avatar);
+  --color-on-danger: var(--on-danger);
   --color-accent: var(--accent);
   --color-accent2: var(--accent2);
   --color-accent-text: var(--accent-text);
@@ -21,21 +30,35 @@
   --color-house-line: var(--house-line);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
-  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
-  --font-display: 'Bricolage Grotesque Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --font-display: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  /* Rundungen: Zeile und Box 16, Kachel 11, großer Knopf 18, Sheet 26 */
+  --radius-row: 16px;
+  --radius-tile: 11px;
+  --radius-btn: 18px;
+  --radius-sheet: 26px;
+  /* Abstände: Seitenrand 12, zwischen Boxen 8, zwischen Blöcken 14 */
+  --spacing-gutter: 12px;
+  --spacing-box: 8px;
+  --spacing-block: 14px;
+  --spacing-row: 68px;
 }
 
 :root {
   color-scheme: dark;
-  --bg: #0e0d10;
-  --surface: #1a181d;
-  --surface2: #262329;
-  --border: #2d2a31;
-  --text: #f6f4f7;
-  --text2: #a8a2af;
-  --accent: #f2500f;
-  --accent2: #ff8a4d;
-  --accent-text: #ff8a4d;
+  --bg: #0e0d0d;
+  --bg-dim: #050404; /* hinter Sheets */
+  --surface: #171415;
+  --surface2: #2a2527;
+  --border: #2a2527;
+  --track: #3a3538; /* Schalter aus, Griff am Sheet */
+  --text: #ffffff;
+  --text2: #b5b5bd;
+  --hint: #a29da0;
+  --accent: #f05400;
+  --accent2: #ff8d65;
+  --accent-end: #d34800; /* dunkleres Ende des Verlaufs: --accent → --accent-end (Weiß darauf überall mindestens 3,5 : 1) */
+  --accent-text: #ff8d65;
   --on-accent: #ffffff;
   /* Zweite Stimme: Türkis für alles, was vom Haus kommt (unabhängig vom wählbaren Akzent) */
   --house: #4fd6c8;
@@ -52,6 +75,31 @@
   --u-today: #ff5a1f;
   --u-soon: #ffc83c;
   --u-later: #6b6573;
+
+
+  /* Kacheln: Verlauf von a nach b (160°) und Farbe des Symbols. In beiden Themen gleich: helles Symbol auf gesättigtem Grund */
+  --tile-orange-a: #df670e; --tile-orange-b: #b84402; --tile-orange-fg: #fff1e6;
+  --tile-purple-a: #7c3fda; --tile-purple-b: #4c1c9c; --tile-purple-fg: #f1e6ff;
+  --tile-violet-a: #9440db; --tile-violet-b: #5a1597; --tile-violet-fg: #f5e3ff;
+  --tile-blue-a: #2e74d0; --tile-blue-b: #153c86; --tile-blue-fg: #e1edff;
+  --tile-teal-a: #0f939b; --tile-teal-b: #045359; --tile-teal-fg: #d5fbfc;
+  --tile-green-a: #5a9a1c; --tile-green-b: #33610a; --tile-green-fg: #ecffd6;
+  --tile-red-a: #c8414a; --tile-red-b: #861c28; --tile-red-fg: #ffe1e3;
+  --tile-gray-a: #4a4547; --tile-gray-b: #2a2627; --tile-gray-fg: #edeaeb;
+  /* Banner: lila (Stups, Hinweise) und warm */
+  --banner-purple: linear-gradient(90deg, #4a1a6e, #632b90 55%, #4e1e73);
+  --banner-purple-line: rgba(180, 110, 240, 0.5);
+  --banner-purple-sub: #e3d4ff;
+  --banner-warm: linear-gradient(100deg, #24140f, #3b1d10 55%, #5a2a0e);
+  --banner-warm-line: rgba(255, 140, 80, 0.35);
+  --banner-warm-sub: #f2dccb;
+  --on-banner: #ffffff;
+  --shadow-tile: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 4px 12px rgba(0, 0, 0, 0.35);
+  /* Fotos und Dateien auf Schwarz (Foto-Ansicht), Schrift auf Fotos und Avataren, Schrift auf Gefahr-Knöpfen: in beiden Themen gleich */
+  --media: #000000;
+  --on-media: #ffffff;
+  --on-avatar: #0e0d0d;
+  --on-danger: #2a0a0e; /* auf dem hellen Rot des Dunkelmodus */
 
   --c-blue-bg: #1e2c45; --c-blue-fg: #7fb2ff;
   --c-teal-bg: #12332f; --c-teal-fg: #5ed7c4;
@@ -71,23 +119,29 @@
   :root {
     color-scheme: light;
     --bg: #fff6ee;
+    --bg-dim: #f3e4d6;
     --surface: #ffffff;
     --surface2: #f6e8dc;
     --border: #efdccb;
+    --track: #e2cdbb;
     --text: #2b1d15;
-    --text2: #7a6558;
-    --accent: #d03f09;
-    --accent2: #f2601f;
-    --accent-text: #c23c06;
+    --text2: #6e5a4d;
+    --hint: #7a6558;
+    --accent: #c04100;
+    --accent2: #f25914;
+    --accent-end: #a53600;
+    --accent-text: #a93800;
     --on-accent: #ffffff;
     --house: #0a6b63;
     --house-bg: #dff4f0;
     --house-line: #9fd8d0;
     --danger: #b0001a;
+    --on-danger: #ffffff;
     --danger-bg: #ffe5e7;
     --scrim: rgba(43, 29, 21, 0.4);
     --glow: radial-gradient(ellipse at 90% -10%, rgba(255, 138, 77, 0.42), transparent 60%);
     --shadow-card: 0 6px 18px rgba(120, 60, 20, 0.08);
+    --shadow-tile: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 10px rgba(120, 60, 20, 0.22);
     --shadow-accent: 0 10px 22px rgba(208, 63, 9, 0.3);
     --u-over: #d4382a;
     --u-today: #e0480d;
@@ -109,12 +163,31 @@
   }
 }
 
-/* Leuchtende Orange-Fläche: Knopf „+", aktiver Reiter, wichtige Knöpfe */
+/* Leuchtende Orange-Fläche: Knopf „+", aktiver Reiter, wichtige Knöpfe. Weiße Schrift darauf bleibt an jedem Punkt lesbar. */
 .bg-accent-grad {
-  background-image: linear-gradient(135deg, var(--accent2), var(--accent));
+  background-image: linear-gradient(180deg, var(--accent), var(--accent-end));
   box-shadow: var(--shadow-accent);
   color: var(--on-accent);
 }
+
+/* Kachel mit Symbol: Verlauf und feiner heller Rand; Farbe über die Klasse */
+.tile {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: var(--shadow-tile);
+}
+.tile-orange { background-image: linear-gradient(160deg, var(--tile-orange-a), var(--tile-orange-b)); color: var(--tile-orange-fg); }
+.tile-purple { background-image: linear-gradient(160deg, var(--tile-purple-a), var(--tile-purple-b)); color: var(--tile-purple-fg); }
+.tile-violet { background-image: linear-gradient(160deg, var(--tile-violet-a), var(--tile-violet-b)); color: var(--tile-violet-fg); }
+.tile-blue { background-image: linear-gradient(160deg, var(--tile-blue-a), var(--tile-blue-b)); color: var(--tile-blue-fg); }
+.tile-teal { background-image: linear-gradient(160deg, var(--tile-teal-a), var(--tile-teal-b)); color: var(--tile-teal-fg); }
+.tile-green { background-image: linear-gradient(160deg, var(--tile-green-a), var(--tile-green-b)); color: var(--tile-green-fg); }
+.tile-red { background-image: linear-gradient(160deg, var(--tile-red-a), var(--tile-red-b)); color: var(--tile-red-fg); }
+.tile-gray { background-image: linear-gradient(160deg, var(--tile-gray-a), var(--tile-gray-b)); color: var(--tile-gray-fg); }
 
 /* Schimmer hinter der Kopfzeile */
 .header-glow {

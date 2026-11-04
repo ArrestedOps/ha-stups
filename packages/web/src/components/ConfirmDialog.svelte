@@ -31,7 +31,7 @@
       <p class="mt-2 text-[15px] text-fg2">{c.text}</p>
       <div class="mt-5 flex gap-3">
         <button class="min-h-11 flex-1 rounded-xl border border-line font-semibold" onclick={close}>{t('Abbrechen')}</button>
-        <button class="min-h-11 flex-1 rounded-xl bg-danger font-semibold text-white" onclick={ok}>{c.label}</button>
+        <button class="min-h-11 flex-1 rounded-xl bg-danger font-semibold text-on-danger" onclick={ok}>{c.label}</button>
       </div>
     </div>
   </div>

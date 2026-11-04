@@ -2,6 +2,15 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.19.0-beta.1
+
+**Neues Design, Phase 1: das Gestaltungssystem.** Alles sieht schon ein Stück wärmer und ruhiger aus, bedient wird es wie bisher. Die neuen Bildschirme (Aufgaben, Boards, Wächter) folgen in den nächsten Versionen.
+
+- **Neue Farben und Schrift:** wärmeres Schwarz, das Orange als Verlauf mit Leuchten, die Schrift **Inter** (lokal in der App, kein Download). Hell und Dunkel bleiben beide. Das Orange ist so gewählt, dass weiße Schrift darauf überall mindestens 3,5 : 1 Kontrast hat; **deine gewählte Akzentfarbe gilt weiter**
+- **Neue Bausteine:** eine gemeinsame Zeile, Symbol-Kacheln, Chips, Umschalter, Schalter, Banner, Zahlenleiste und der große Knopf am Fuß eines Sheets. Die Spalten-Reiter im Board, die Leiste unten, die Sheets (runder, größerer Titel), die Gruppen in den Einstellungen und der Schalter „HA-Kopfzeile ausblenden“ nutzen sie schon
+- **Kleine Korrekturen:** Der Löschen-Knopf hat im Dunkelmodus jetzt dunkle Schrift auf dem hellen Rot (vorher kaum lesbar). Personenbilder sind rund. Die Lampe leuchtet in der Farbe der neuen Akzentfarbe
+- Keine Änderung an der Datenbank
+
 ## 1.18.3-beta.1
 
 Fehlerbehebungen aus einer Durchsicht des Codes, keine neuen Funktionen.

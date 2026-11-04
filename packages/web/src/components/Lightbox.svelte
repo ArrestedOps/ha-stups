@@ -50,7 +50,7 @@
 
 {#if viewer && item}
   <div
-    class="fixed inset-0 z-[60] flex flex-col bg-black/95 text-white"
+    class="fixed inset-0 z-[60] flex flex-col bg-media/95 text-on-media"
     role="dialog"
     aria-modal="true"
     aria-label={item.filename}
@@ -58,11 +58,11 @@
   >
     <header class="flex items-center justify-between gap-2 px-2 pt-[max(8px,var(--safe-top))] pb-2">
       <button class="min-h-11 shrink-0 px-3 text-[17px] font-semibold text-accent-text" onclick={closeViewer}>{t('Schließen')}</button>
-      <span class="min-w-0 truncate text-center text-[13px] text-white/70">
+      <span class="min-w-0 truncate text-center text-[13px] text-on-media/70">
         {item.filename} · {formatBytes(item.size)}{many ? ` · ${t('{n} von {total}', { n: viewer.index + 1, total: viewer.items.length })}` : ''}
       </span>
       <a
-        class="flex h-11 w-11 shrink-0 items-center justify-center text-white/80"
+        class="flex h-11 w-11 shrink-0 items-center justify-center text-on-media/80"
         href="api/attachments/{item.id}"
         target="_blank"
         rel="noopener noreferrer"
@@ -74,7 +74,7 @@
 
     <div class="relative min-h-0 flex-1 {zoomed ? 'overflow-auto' : 'overflow-hidden'}" onpointerdown={down} onpointerup={up} role="presentation">
       {#if isPdf}
-        <iframe title={item.filename} src="api/attachments/{item.id}" class="h-full w-full bg-white"></iframe>
+        <iframe title={item.filename} src="api/attachments/{item.id}" class="h-full w-full bg-on-media"></iframe>
       {:else}
         {#key item.id}
           <button
@@ -93,16 +93,16 @@
       {/if}
 
       {#if many && !zoomed}
-        <button class="absolute top-1/2 left-1 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50" aria-label={t('Vorheriges')} onclick={() => go(-1)}>
+        <button class="absolute top-1/2 left-1 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-media/50" aria-label={t('Vorheriges')} onclick={() => go(-1)}>
           <Icon name="chevron-left" size={24} stroke={2.6} />
         </button>
-        <button class="absolute top-1/2 right-1 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 [&>svg]:rotate-180" aria-label={t('Nächstes')} onclick={() => go(1)}>
+        <button class="absolute top-1/2 right-1 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-media/50 [&>svg]:rotate-180" aria-label={t('Nächstes')} onclick={() => go(1)}>
           <Icon name="chevron-left" size={24} stroke={2.6} />
         </button>
       {/if}
     </div>
 
-    <p class="px-4 pt-2 pb-[max(12px,var(--safe-bottom))] text-center text-[13px] text-white/60">
+    <p class="px-4 pt-2 pb-[max(12px,var(--safe-bottom))] text-center text-[13px] text-on-media/60">
       {#if isPdf}
         {t('Zeigt das Gerät das PDF nicht ganz, hilft „Im Browser öffnen" oben rechts.')}
       {:else}

@@ -228,7 +228,7 @@
 
   {#if (tab === 'boards' || tab === 'today') && view && newCardColumn && !ui.isChild}
     <button
-      class="fixed right-5 bottom-[calc(max(10px,var(--safe-bottom))+80px)] z-30 flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-accent-grad"
+      class="fixed right-5 bottom-[calc(max(10px,var(--safe-bottom))+80px)] z-30 flex h-[58px] w-[58px] items-center justify-center rounded-btn bg-accent-grad"
       aria-label={t('Neue Karte')}
       onclick={() => openSheet({ type: 'new', columnId: newCardColumn! })}
     >

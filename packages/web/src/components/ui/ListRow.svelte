@@ -20,6 +20,7 @@
     meta,
     right,
     check,
+    label,
     onclick,
     href,
   }: {
@@ -32,6 +33,8 @@
     right?: Snippet;
     /** Erledigt-Kreis links (Tippfläche 32 × 44) */
     check?: { done: boolean; label: string; onchange: () => void; state?: 'overdue' | 'waiting'; disabled?: boolean };
+    /** Beschriftung des Antippbereichs für Screenreader, wenn der sichtbare Text nicht reicht (zum Beispiel „Wächter Waschmaschine öffnen“) */
+    label?: string;
     onclick?: (e: MouseEvent) => void;
     href?: string;
   } = $props();
@@ -72,9 +75,9 @@
   {/snippet}
 
   {#if href}
-    <a {href} class="flex h-full min-w-0 flex-1 items-center gap-3 text-left">{@render body()}</a>
+    <a {href} aria-label={label} class="flex h-full min-w-0 flex-1 items-center gap-3 text-left">{@render body()}</a>
   {:else if onclick}
-    <button type="button" class="flex h-full min-w-0 flex-1 items-center gap-3 text-left" {onclick}>{@render body()}</button>
+    <button type="button" aria-label={label} class="flex h-full min-w-0 flex-1 items-center gap-3 text-left" {onclick}>{@render body()}</button>
   {:else}
     <div class="flex h-full min-w-0 flex-1 items-center gap-3">{@render body()}</div>
   {/if}

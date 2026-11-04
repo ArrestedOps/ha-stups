@@ -145,6 +145,10 @@ describe('ListRow', () => {
     expect(off).toMatch(/<button[^>]*disabled/);
     expect(html(ListRow, { title: 'A', check: { done: false, label: 'x', onchange: () => {} } })).not.toMatch(/<button[^>]*disabled/);
   });
+  it('Beschriftung des Antippbereichs für Screenreader', () => {
+    expect(html(ListRow, { title: 'A', label: 'Wächter A öffnen', onclick: () => {} })).toContain('aria-label="Wächter A öffnen"');
+    expect(html(ListRow, { title: 'A', onclick: () => {} })).not.toContain('aria-label');
+  });
   it('gefährlich: Titel in Gefahr-Farbe', () => {
     expect(html(ListRow, { title: 'Löschen', variant: 'danger' })).toContain('text-danger');
     expect(html(ListRow, { title: 'Löschen' })).not.toContain('text-danger');

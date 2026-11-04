@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api, type Today, type TodayCard } from '../lib/api';
-  import { addDays, rangeTitle, type CalMode } from '../lib/calendar';
+  import { rangeTitle, type CalMode } from '../lib/calendar';
   import { deviceTz } from '../lib/datetime';
   import { numberLocale, t, tn } from '../lib/i18n/index.svelte';
   import { DEFAULT_FILTER, dayKeyOf, filterSchedule, personFilterActive, toggleId, type ScheduleCard } from '../lib/schedule';

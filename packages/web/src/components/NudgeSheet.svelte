@@ -5,9 +5,7 @@
   import { preselected, sentMessage, targetHint } from '../lib/nudge';
   import { closeSheet, hopCard, refresh, toast, ui } from '../lib/store.svelte';
   import logo from '../assets/stups-icon.png';
-  import { cardIcon, tileColorOf } from '../lib/cardTile';
   import { formatDue } from '../lib/datetime';
-  import { boardColorKey } from '../lib/schedule';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
@@ -15,18 +13,12 @@
   import CtaButton from './ui/CtaButton.svelte';
   import ListRow from './ui/ListRow.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
-  import Tile from './ui/Tile.svelte';
+  import CardTile from './CardTile.svelte';
 
   let { id }: { id: string } = $props();
 
   const card = $derived(ui.view?.cards.find((c) => c.id === id));
   const board = $derived(ui.boards.find((b) => b.id === card?.boardId));
-  const tileColor = $derived(
-    tileColorOf(
-      (ui.view?.categories ?? []).find((c) => card?.categoryIds.includes(c.id))?.color ??
-        boardColorKey(board?.color ?? null, ui.boards.findIndex((b) => b.id === card?.boardId)),
-    ),
-  );
 
   let info = $state<NudgeInfo | null>(null);
   let loadError = $state('');
@@ -101,7 +93,7 @@
     <div class="flex flex-col gap-3.5 pt-1">
       {#if card}
         <ListRow title={card.title}>
-          {#snippet tile()}<Tile color={tileColor}><Icon name={cardIcon(card)} size={22} /></Tile>{/snippet}
+          {#snippet tile()}<CardTile {card} glyph={22} />{/snippet}
           {#snippet meta()}
             {#if card.dueAt}<span class="shrink-0">{formatDue(card.dueAt)}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span>{/if}
             <span class="truncate">{board?.name ?? ''}</span>

@@ -1,3 +1,8 @@
+<script lang="ts" module>
+  /** Offene Sheets, das oberste zuletzt: Escape schließt nur das oberste (ein Sheet über einem Sheet, zum Beispiel Symbol wählen über Neue Aufgabe) */
+  const stack: symbol[] = [];
+</script>
+
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
   import type { Snippet } from 'svelte';
@@ -33,6 +38,15 @@
     bare?: boolean;
     children: Snippet;
   } = $props();
+
+  const me = Symbol('sheet');
+  $effect(() => {
+    stack.push(me);
+    return () => {
+      const i = stack.indexOf(me);
+      if (i >= 0) stack.splice(i, 1);
+    };
+  });
 
   // Tastatur: das Sheet folgt der sichtbaren Fläche, damit das Feld nicht dahinter verschwindet
   let insets = $state<SheetInsets>({ bottom: 0, maxHeight: null });
@@ -76,7 +90,7 @@
   }
 </script>
 
-<svelte:window onkeydown={(e) => e.key === 'Escape' && onclose()} />
+<svelte:window onkeydown={(e) => e.key === 'Escape' && stack[stack.length - 1] === me && onclose()} />
 
 <div class="fixed inset-0 z-40">
   <button

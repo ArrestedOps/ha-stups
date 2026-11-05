@@ -71,6 +71,15 @@ describe('Kontrast der Farbpaare (aus app.css), Hell und Dunkel', () => {
         }
       });
 
+      it('Schrift auf den orange hinterlegten Chips (erkannte Teile, Auto) und Ziffern außerhalb des Monats: mindestens 4,5 : 1 bzw. 3 : 1', () => {
+        // der Chip ist die Akzentfarbe zu 14 % über der Fläche
+        const mix = (a: [number, number, number], b: [number, number, number], x: number) => a.map((c, i) => Math.round(c * x + b[i]! * (1 - x))) as [number, number, number];
+        const chip = mix(rgb(v['--accent']!), rgb(v['--surface']!), 0.14);
+        expect(contrast(rgb(v['--tok-fg']!), chip), 'Chip auf Fläche').toBeGreaterThanOrEqual(4.5);
+        expect(ratio(v['--ring']!, v['--surface']!), 'Tage außerhalb des Monats und ferne Werte im Rad').toBeGreaterThanOrEqual(3);
+        expect(ratio(v['--text']!, v['--soft-btn']!), 'Monatsknöpfe').toBeGreaterThanOrEqual(4.5);
+      });
+
       it('Erledigt-Kreis (Ring) und Trenner: mindestens 3 : 1 gegen die Fläche (nicht nur Text)', () => {
         expect(ratio(v['--ring']!, v['--surface']!), 'Ring').toBeGreaterThanOrEqual(3);
       });

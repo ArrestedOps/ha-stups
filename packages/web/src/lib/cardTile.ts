@@ -1,4 +1,5 @@
 import type { TileColor } from '../components/ui/Tile.svelte';
+import { DEFAULT_SYMBOL, symbolById, symbolColor } from './symbols/library';
 
 /** Aus der Kategorie- und Boardfarbe (zwölf Namen) wird die Kachelfarbe (acht Töne); Unbekanntes ist grau */
 const MAP: Record<string, TileColor> = {
@@ -18,8 +19,11 @@ const MAP: Record<string, TileColor> = {
 
 export const tileColorOf = (colorKey: string | null | undefined): TileColor => MAP[colorKey ?? ''] ?? 'gray';
 
-/** Das Standardsymbol einer Karte (bis es Symbole pro Karte gibt): Wächter ein Auge, wiederholte Karten Pfeile, sonst die Checkliste */
-export function cardIcon(card: { watcherId: string | null; recurrence: unknown }): string {
-  if (card.watcherId) return 'eye';
-  return card.recurrence ? 'repeat' : 'checklist';
+/**
+ * Symbol und Farbe der Kachel einer Karte: das Symbol der Karte, sonst „Aufgabe“ (Haken); die feste Farbe der Karte, sonst die
+ * des Bereichs ihres Symbols, ohne Symbol Orange. Kategorie und Board bestimmen die Kachel nicht mehr (Kategorien stehen als
+ * Wort in der Meta-Zeile und im Filter).
+ */
+export function cardTile(card: { icon: string | null; iconColor: string | null }): { icon: string; color: TileColor } {
+  return { icon: symbolById(card.icon) ? card.icon! : DEFAULT_SYMBOL, color: symbolColor(card) };
 }

@@ -1,15 +1,14 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
   import { isFuture } from '../lib/datetime';
-  import { cardIcon, tileColorOf } from '../lib/cardTile';
   import { canNudge } from '../lib/nudge';
-  import { boardColorKey } from '../lib/schedule';
   import { cardTargets } from '../lib/swipe';
   import { api } from '../lib/api';
   import { act, closeSheet, moveCard, openSheet, removeCard, toast, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
   import ListRow from './ui/ListRow.svelte';
+  import CardTile from './CardTile.svelte';
   import Tile from './ui/Tile.svelte';
 
   let { id }: { id: string } = $props();
@@ -18,7 +17,6 @@
   const columns = $derived(ui.view?.columns ?? []);
   const column = $derived(columns.find((c) => c.id === card?.columnId));
   const board = $derived(ui.boards.find((b) => b.id === card?.boardId));
-  const tileColor = $derived(tileColorOf(boardColorKey(board?.color ?? null, ui.boards.findIndex((b) => b.id === card?.boardId))));
   // „Geplant" nur für Karten mit Termin nach heute; solche Karten gehören nicht nach „Offen"
   const targets = $derived(
     cardTargets(columns, isFuture(card?.dueAt ?? null), columns.find((c) => !c.isDone && !c.isPlanned)?.id),
@@ -30,7 +28,7 @@
   {#if card}
     <div class="flex flex-col gap-3">
       <div class="flex items-center gap-3 px-1 pt-1.5 pb-0.5">
-        <Tile color={tileColor}><Icon name={cardIcon(card)} size={22} /></Tile>
+        <CardTile {card} glyph={22} />
         <span class="flex min-w-0 flex-1 flex-col gap-1">
           <span class="truncate text-[17px] font-bold tracking-tight">{card.title}</span>
           <span class="flex items-center gap-1.5 truncate text-[13px] text-fg2"><span class="truncate">{board?.name ?? ''}</span><span class="text-sep" aria-hidden="true">•</span><span>{column?.name ?? ''}</span></span>

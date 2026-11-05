@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CATEGORY_COLORS } from '../src/lib/colors';
-import { cardIcon, tileColorOf } from '../src/lib/cardTile';
+import { cardTile, tileColorOf } from '../src/lib/cardTile';
 import { TILE_COLORS } from '../src/components/ui/Tile.svelte';
 
 describe('tileColorOf', () => {
@@ -15,10 +15,21 @@ describe('tileColorOf', () => {
   });
 });
 
-describe('cardIcon', () => {
-  it('Wächter, Wiederholung, sonst Checkliste', () => {
-    expect(cardIcon({ watcherId: 'w', recurrence: null })).toBe('eye');
-    expect(cardIcon({ watcherId: null, recurrence: { every: 1 } })).toBe('repeat');
-    expect(cardIcon({ watcherId: null, recurrence: null })).toBe('checklist');
+describe('cardTile: Symbol und Farbe der Kachel einer Karte', () => {
+  it('ohne Symbol: „Aufgabe“ (Haken), orange, auch für Wächter-Karten und Wiederholungen', () => {
+    expect(cardTile({ icon: null, iconColor: null })).toEqual({ icon: 'checkbox-marked-outline', color: 'orange' });
+  });
+  it('das Symbol der Karte, Farbe nach Bereich (Auto)', () => {
+    expect(cardTile({ icon: 'leaf', iconColor: null })).toEqual({ icon: 'leaf', color: 'green' });
+    expect(cardTile({ icon: 'washing-machine', iconColor: null })).toEqual({ icon: 'washing-machine', color: 'orange' });
+    expect(cardTile({ icon: 'car-outline', iconColor: null })).toEqual({ icon: 'car-outline', color: 'red' });
+  });
+  it('eine feste Farbe geht vor Auto, auch beim Standardsymbol', () => {
+    expect(cardTile({ icon: 'leaf', iconColor: 'blue' })).toEqual({ icon: 'leaf', color: 'blue' });
+    expect(cardTile({ icon: null, iconColor: 'teal' })).toEqual({ icon: 'checkbox-marked-outline', color: 'teal' });
+  });
+  it('ein unbekanntes Symbol (aus einer neueren Fassung) zeigt das Standardsymbol, die Farbe bleibt', () => {
+    expect(cardTile({ icon: 'gibt-es-nicht', iconColor: 'red' })).toEqual({ icon: 'checkbox-marked-outline', color: 'red' });
+    expect(cardTile({ icon: 'gibt-es-nicht', iconColor: null })).toEqual({ icon: 'checkbox-marked-outline', color: 'orange' });
   });
 });

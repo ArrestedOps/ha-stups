@@ -1,13 +1,12 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
-  import { cardIcon, tileColorOf } from '../lib/cardTile';
-  import { boardColorKey, type ScheduleCard } from '../lib/schedule';
+  import type { ScheduleCard } from '../lib/schedule';
   import { completeCard, openCardAnywhere, openCardMenuAnywhere, personById, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import CardMeta from './CardMeta.svelte';
   import Icon from './Icon.svelte';
   import ListRow from './ui/ListRow.svelte';
-  import Tile from './ui/Tile.svelte';
+  import CardTile from './CardTile.svelte';
 
   /**
    * Eine Karte mit Termin in der Liste von Aufgaben (aus allen Boards), wie im Mockup: Erledigt-Kreis, Kachel, Titel,
@@ -17,7 +16,6 @@
 
   const done = $derived(!!card.completedAt);
   const overdue = $derived(!done && !!card.dueAt && Date.parse(card.dueAt) < nowMs);
-  const boardIndex = $derived(ui.boards.findIndex((b) => b.id === card.boardId));
   const assignees = $derived(card.assigneeIds.map(personById).filter((p) => p !== undefined));
 </script>
 
@@ -35,7 +33,7 @@
   onclick={() => void openCardAnywhere(card)}
 >
   {#snippet tile()}
-    <Tile color={tileColorOf(boardColorKey(card.boardColor, boardIndex))}><Icon name={cardIcon(card)} size={24} /></Tile>
+    <CardTile {card} />
   {/snippet}
   {#snippet meta()}
     <CardMeta {card} {done} {overdue} {nowMs} people={assignees.map((p) => p.displayName)} quietDue />

@@ -1,8 +1,6 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
   import type { Card } from '../lib/api';
-  import { boardColorKey } from '../lib/schedule';
-  import { cardIcon, tileColorOf } from '../lib/cardTile';
   import { waitingForConfirmation } from '../lib/confirm';
   import { isOverdue } from '../lib/datetime';
   import { nudgeBadge } from '../lib/nudge';
@@ -12,7 +10,7 @@
   import CardMeta from './CardMeta.svelte';
   import Icon from './Icon.svelte';
   import ListRow from './ui/ListRow.svelte';
-  import Tile from './ui/Tile.svelte';
+  import CardTile from './CardTile.svelte';
 
   let { card }: { card: Card } = $props();
 
@@ -23,10 +21,6 @@
   const nudge = $derived(nudgeBadge(card, ui.me?.id ?? null));
   const names = (ids: string[]) => [...new Set(ids.map((id) => personById(id)?.displayName ?? t('Jemand')))].join(', ');
   const isDoneColumn = $derived(ui.view?.columns.find((c) => c.id === card.columnId)?.isDone ?? false);
-  // Kachel: Farbe der ersten Kategorie, sonst des Boards; Symbol vorerst nach Art der Karte
-  const boardIndex = $derived(ui.boards.findIndex((b) => b.id === card.boardId));
-  const boardColor = $derived(ui.boards.find((b) => b.id === card.boardId)?.color ?? null);
-  const tileColor = $derived(tileColorOf(categories[0]?.color ?? boardColorKey(boardColor, boardIndex)));
 
   // ---------- Wischen: nach rechts in den nächsten Status, nach links in den vorigen ----------
   const THRESHOLD = 96;
@@ -159,7 +153,7 @@
       onclick={() => !suppressClick && openSheet({ type: 'card', id: card.id })}
     >
       {#snippet tile()}
-        <Tile color={tileColor}><Icon name={cardIcon(card)} size={24} /></Tile>
+        <CardTile {card} />
       {/snippet}
       {#snippet meta()}
         <span class="flex min-w-0 items-center gap-1.5">

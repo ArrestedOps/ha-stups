@@ -114,6 +114,12 @@ export interface Card {
   description: string | null;
   priority: Priority | null;
   effort: Effort | null;
+  /** Symbol der Karte (Name aus lib/symbols); leer = Standard „Aufgabe“ */
+  icon: string | null;
+  /** feste Kachelfarbe; leer = Auto (nach Bereich des Symbols) */
+  iconColor: string | null;
+  /** auto = aus dem Titel erkannt (Funken-Abzeichen), manual = von Hand gewählt */
+  iconSource: 'auto' | 'manual' | null;
   dueAt: string | null;
   recurrence: Recurrence | null;
   completedAt: string | null;
@@ -247,6 +253,9 @@ export interface CardInput {
   description?: string | null;
   priority?: Priority | null;
   effort?: Effort | null;
+  icon?: string | null;
+  iconColor?: string | null;
+  iconSource?: 'auto' | 'manual' | null;
   dueAt?: string | null;
   recurrence?: Recurrence | null;
   remindBeforeMin?: number | null;
@@ -583,6 +592,9 @@ export const api = {
   confirmCard: (id: string) => post<CompleteResult>(`cards/${id}/confirm`),
   rejectCard: (id: string) => post<CardDetail>(`cards/${id}/reject`),
   duplicateCard: (id: string) => post<CardDetail>(`cards/${id}/duplicate`),
+  /** Symbole aus Titeln erkennen (Administrator): Karten ohne Symbol holen, erkannte Symbole zurückgeben */
+  iconCandidates: () => get<{ id: string; title: string }[]>('icons/candidates'),
+  applyIcons: (items: { id: string; icon: string }[]) => post<{ updated: number; skipped: number }>('icons/apply', { items }),
   undo: (completionId: string) => post<CardDetail>(`completions/${completionId}/undo`),
   restoreArchived: (id: string, columnId: string) => post<CardDetail>(`cards/${id}/restore-archived`, { columnId }),
 

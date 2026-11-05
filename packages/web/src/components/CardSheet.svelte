@@ -28,8 +28,11 @@
   import Sheet from './Sheet.svelte';
   import SubmitPill from './SubmitPill.svelte';
   import CardProps from './CardProps.svelte';
-  import { cardIcon, tileColorOf } from '../lib/cardTile';
-  import { boardColorKey } from '../lib/schedule';
+  import { detectSymbol } from '../lib/symbols/detect';
+  import { i18n } from '../lib/i18n/index.svelte';
+  import { symbolName } from '../lib/symbols/library';
+  import CardTile from './CardTile.svelte';
+  import SymbolSheet from './SymbolSheet.svelte';
   import Avatar from './Avatar.svelte';
   import Banner from './ui/Banner.svelte';
   import ListRow from './ui/ListRow.svelte';
@@ -116,20 +119,18 @@
       : columns,
   );
 
-  // Kachel im Kopf: Farbe der ersten Kategorie, sonst des Boards (Symbole pro Karte folgen mit Phase 3)
-  const tileColor = $derived(
-    card
-      ? tileColorOf(
-          (ui.view?.categories ?? []).find((c) => card!.categoryIds.includes(c.id))?.color ??
-            boardColorKey(ui.boards.find((b) => b.id === card!.boardId)?.color ?? null, ui.boards.findIndex((b) => b.id === card!.boardId)),
-        )
-      : 'gray',
-  );
+  // Symbol der Karte: antippen öffnet „Symbol wählen" (nicht für ein Kind: es ändert keine Karten)
+  let symbolOpen = $state(false);
   const nudgeNames = $derived(
     card ? card.assigneeIds.filter((pid) => pid !== ui.me?.id).map((pid) => personById(pid)?.displayName ?? t('Jemand')).join(' & ') : '',
   );
 
   const save = (patch: Parameters<typeof api.updateCard>[1]) => act(() => api.updateCard(id, patch));
+  /** Das Symbol zum neuen Titel (nur bei Quelle „auto"): erkannt, sonst Standard */
+  const retag = (title: string) => {
+    const hit = detectSymbol(title, i18n.lang);
+    return hit ? { icon: hit, iconSource: 'auto' as const } : { icon: null, iconSource: null };
+  };
 
   async function addItem(e: Event) {
     e.preventDefault();
@@ -225,7 +226,22 @@
   {:else}
     <div class="flex flex-col gap-3.5 pt-1">
       <div class="flex items-center gap-3">
-        <Tile color={tileColor} size="lg"><Icon name={cardIcon(card)} size={28} /></Tile>
+        {#if child}
+          <CardTile {card} size="lg" glyph={28} />
+        {:else}
+          <button
+            type="button"
+            class="relative block shrink-0 rounded-[14px]"
+            aria-label={t('Symbol ändern, gerade: {name}', { name: symbolName(card.icon) })}
+            data-testid="symbol-tile"
+            onclick={() => (symbolOpen = true)}
+          >
+            <CardTile {card} size="lg" glyph={28} />
+            {#if card.iconSource === 'auto'}
+              <span class="bg-accent-grad absolute -right-[5px] -bottom-[5px] flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-bg !shadow-none" data-testid="symbol-spark"><Icon name="spark" size={12} fill /></span>
+            {/if}
+          </button>
+        {/if}
         <textarea
           rows="1"
           use:autogrow={titleDraft}
@@ -237,7 +253,8 @@
           onblur={() => {
             editing = null;
             const t = titleDraft.trim();
-            if (!child && t && t !== card!.title) void save({ title: t });
+            // Ein erkanntes Symbol (Funken) folgt dem Titel; ein von Hand gewähltes bleibt, wie es ist
+            if (!child && t && t !== card!.title) void save({ title: t, ...(card!.iconSource === 'auto' ? retag(t) : {}) });
             else titleDraft = card!.title;
           }}
         ></textarea>
@@ -494,3 +511,17 @@
     </div>
   {/if}
 </Sheet>
+
+{#if symbolOpen && card}
+  <SymbolSheet
+    title={card.title}
+    icon={card.icon}
+    color={card.iconColor}
+    source={card.iconSource}
+    onpick={(v) => {
+      symbolOpen = false;
+      void save({ icon: v.icon, iconColor: v.color, iconSource: 'manual' });
+    }}
+    onclose={() => (symbolOpen = false)}
+  />
+{/if}

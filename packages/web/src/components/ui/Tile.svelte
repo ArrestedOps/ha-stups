@@ -10,10 +10,24 @@
   import type { Snippet } from 'svelte';
 
   // Farbige Kachel mit Verlauf und feinem hellem Rand; trägt ein Symbol (children). Die Farben stehen in app.css.
-  let { color = 'orange', size = 'md', children }: { color?: TileColor; size?: TileSize; children?: Snippet } = $props();
-  const radius = $derived(size === 'sm' ? 9 : size === 'lg' ? 14 : 11);
+  let {
+    color = 'orange',
+    size = 'md',
+    px,
+    radius: round,
+    children,
+  }: {
+    color?: TileColor;
+    size?: TileSize;
+    /** eine andere Kantenlänge als die drei Größen (Symbol-Fenster: 48 und 44) */
+    px?: number;
+    radius?: number;
+    children?: Snippet;
+  } = $props();
+  const edge = $derived(px ?? TILE_PX[size]);
+  const radius = $derived(round ?? (size === 'sm' ? 9 : size === 'lg' ? 14 : 11));
 </script>
 
-<span class="tile tile-{color}" style:width="{TILE_PX[size]}px" style:height="{TILE_PX[size]}px" style:border-radius="{radius}px" aria-hidden="true">
+<span class="tile tile-{color}" style:width="{edge}px" style:height="{edge}px" style:border-radius="{radius}px" aria-hidden="true">
   {@render children?.()}
 </span>

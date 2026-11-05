@@ -92,6 +92,8 @@
   --avatar-ring: #2a2a2e;
   --dim: #8a8588;
   --count-on: rgba(255, 255, 255, 0.2); /* Zähler im aktiven Chip */
+  --tok-fg: #ffd2b0; /* Schrift auf den orange hinterlegten Chips (erkannte Teile, gewählte Farbe „Auto“) */
+  --soft-btn: #211d1f; /* kleine Knöpfe auf Flächen (Monat vor und zurück) */
   /* Signalfarben für Zahlen, Punkte und Abschnittssymbole: heute (orange), überfällig (rot), erledigt (grün), später (blau) */
   --sig-orange: #ffa51f;
   --sig-red: #ff5a5f;
@@ -181,6 +183,8 @@
     --avatar-ring: #efdccb;
     --dim: #7a6558;
     --count-on: rgba(255, 255, 255, 0.22);
+    --tok-fg: #7a3000;
+    --soft-btn: #f6e8dc;
     --sig-orange: #a85200;
     --sig-red: #c0121f;
     --sig-green: #1c7a3a;
@@ -243,6 +247,49 @@
 .tile-green { background-image: linear-gradient(160deg, var(--tile-green-a), var(--tile-green-b)); color: var(--tile-green-fg); }
 .tile-red { background-image: linear-gradient(160deg, var(--tile-red-a), var(--tile-red-b)); color: var(--tile-red-fg); }
 .tile-gray { background-image: linear-gradient(160deg, var(--tile-gray-a), var(--tile-gray-b)); color: var(--tile-gray-fg); }
+
+/* Erkannte Teile der Schnell-Eingabe und die gewählte Farbe „Auto“: orange hinterlegter Chip, wie im Mockup */
+.tok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 4px 0 10px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--tok-fg);
+  font-size: 13px;
+  font-weight: 600;
+}
+.tok-warn { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); }
+
+/* Feld mit Fokus: orange Rand und weicher Ring (Notiz, Suche, neue Kategorie) */
+.focus-ring-in:focus-within { border-color: var(--brand-dot); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+
+/* Uhrzeit-Rad: das gewählte Feld liegt in einem Band */
+.wheel-band {
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+/* „Mehr“ in Neue Aufgabe: gestrichelte Felder (Checkliste, Foto / Link) */
+.more-btn {
+  display: flex;
+  height: 68px;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 16px;
+  border: 1px dashed var(--track);
+  background: color-mix(in srgb, var(--surface) 70%, var(--bg));
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
 
 /* Das Feld der aktuellen Spalte im Karten-Menü: orange Rand, heller Orange-Ton */
 .move-current { border-color: var(--brand-dot); color: var(--accent-text); background: color-mix(in srgb, var(--accent) 12%, transparent); }

@@ -2,6 +2,11 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.22.1-beta.1
+
+- **Home Assistant 2026.8: oben kein doppelter Abstand, unten bis zum Rand.** In 1.21.1 meldete sich Stups bei Home Assistant an und übernahm die Abstände zu Statusleiste und Home-Balken. Die Funktion „HA-Kopfzeile ausblenden“ meldete sich danach ein zweites Mal an, ohne diese Angabe, und schaltete die Übernahme wieder ab: Home Assistant polsterte das Fenster erneut, und Stups zählte die Abstände zusätzlich. Das ergab viel Schwarz über dem Kopf der App und einen Streifen unter der Leiste. Jetzt tragen alle Anmeldungen die Angabe; die Leiste reicht bis zum unteren Rand, der Kopf der App beginnt direkt unter der Statusleiste
+- Keine Änderung an der Datenbank
+
 ## 1.22.0-beta.1
 
 **Neues Design, Phase 4: Wächter bearbeiten als Ablauf, neuer Wächter in vier Schritten, Verlauf der Entität.** *Keine Änderung an der Datenbank.*

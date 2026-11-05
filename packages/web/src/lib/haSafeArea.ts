@@ -9,7 +9,16 @@
  * Home Assistant vor 2026.8 kennt die Nachricht nicht und antwortet nicht: Dann gelten die Werte aus app.css (eingebettet 0).
  */
 
-export const SUBSCRIBE_MESSAGE = { type: 'home-assistant/subscribe-properties', handleSafeArea: true } as const;
+/**
+ * Die Anmeldung bei Home Assistant. Home Assistant liest bei jeder Anmeldung `handleSafeArea` neu: Es muss in JEDER Anmeldung stehen,
+ * auch in der für den Kiosk-Modus (Kopfzeile ausblenden), sonst schaltet die letzte Nachricht die Übernahme wieder ab.
+ */
+export function subscribeMessage(opts: { kioskMode?: boolean } = {}) {
+  return { type: 'home-assistant/subscribe-properties', handleSafeArea: true, ...(opts.kioskMode ? { kioskMode: true } : {}) } as const;
+}
+
+export const SUBSCRIBE_MESSAGE = subscribeMessage();
+export const UNSUBSCRIBE_MESSAGE = { type: 'home-assistant/unsubscribe-properties' } as const;
 
 export interface Insets {
   top: number;

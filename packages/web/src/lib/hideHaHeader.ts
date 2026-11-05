@@ -5,6 +5,8 @@
  * darum hineinsehen, in der sie eingebettet ist. Es wirkt nur auf die Elemente rund um dieses eine Panel,
  * nie auf andere Seiten. Sieht danach etwas falsch aus (Seite zu klein), wird alles sofort zurückgenommen.
  */
+import { subscribeMessage, UNSUBSCRIBE_MESSAGE } from './haSafeArea';
+
 const STYLE_ID = 'stups-hide-header';
 // ha-panel-app (Add-on-Panel) baut die Kopfzeile als <div class="header"> und verkürzt dafür das iframe,
 // hass-subpage nutzt <div class="toolbar">. Beides wird ausgeblendet und das iframe wieder voll groß gemacht.
@@ -63,10 +65,15 @@ function containsComposed(outer: Element, inner: Element): boolean {
 function requestKioskMode(on: boolean): void {
   try {
     if (window.parent === window) return;
-    window.parent.postMessage(
-      on ? { type: 'home-assistant/subscribe-properties', id: 1, kioskMode: true } : { type: 'home-assistant/unsubscribe-properties', id: 1 },
-      window.location.origin,
-    );
+    const to = window.location.origin;
+    if (on) {
+      // mit handleSafeArea: Home Assistant liest es bei jeder Anmeldung neu (siehe lib/haSafeArea.ts)
+      window.parent.postMessage(subscribeMessage({ kioskMode: true }), to);
+    } else {
+      // Kiosk-Modus zurücknehmen, aber die Abstände weiter selbst übernehmen
+      window.parent.postMessage(UNSUBSCRIBE_MESSAGE, to);
+      window.parent.postMessage(subscribeMessage(), to);
+    }
   } catch {
     /* egal */
   }

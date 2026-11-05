@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { effectiveInsets, insetsFromMessage, parseInset, startSafeArea, SUBSCRIBE_MESSAGE, type SafeAreaEnv } from '../src/lib/haSafeArea';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { effectiveInsets, insetsFromMessage, parseInset, startSafeArea, subscribeMessage, SUBSCRIBE_MESSAGE, UNSUBSCRIBE_MESSAGE, type SafeAreaEnv } from '../src/lib/haSafeArea';
 
 describe('parseInset', () => {
   it('nimmt Pixelwerte als Text oder Zahl, alles andere ist 0', () => {
@@ -112,5 +114,31 @@ describe('startSafeArea', () => {
     f.reply({ top: '0px', bottom: '21px' });
     expect(f.props.get('--safe-top')).toBe('0px');
     expect(f.props.get('--safe-bottom')).toBe('21px');
+  });
+});
+
+describe('Anmeldung bei Home Assistant (nur eine Form, immer mit handleSafeArea)', () => {
+  // Home Assistant setzt handleSafeArea bei JEDER Anmeldung neu (`!!data.handleSafeArea`): Eine spätere Anmeldung ohne das Feld
+  // würde die Übernahme der Abstände wieder abschalten und das Panel polsterte den iframe zusätzlich.
+  it('jede Anmeldung trägt handleSafeArea: true, auch mit Kiosk-Modus', () => {
+    expect(subscribeMessage()).toEqual({ type: 'home-assistant/subscribe-properties', handleSafeArea: true });
+    expect(subscribeMessage({ kioskMode: true })).toEqual({ type: 'home-assistant/subscribe-properties', handleSafeArea: true, kioskMode: true });
+    expect(SUBSCRIBE_MESSAGE).toEqual(subscribeMessage());
+    expect(UNSUBSCRIBE_MESSAGE).toEqual({ type: 'home-assistant/unsubscribe-properties' });
+  });
+
+  it('nirgendwo sonst im Quelltext wird eine Anmeldung von Hand gebaut', () => {
+    const SRC = new URL('../src/', import.meta.url).pathname;
+    const files: string[] = [];
+    const walk = (dir: string) => {
+      for (const f of readdirSync(dir)) {
+        const p = join(dir, f);
+        if (statSync(p).isDirectory()) walk(p);
+        else if (/\.(ts|svelte)$/.test(f)) files.push(p);
+      }
+    };
+    walk(SRC);
+    const offenders = files.filter((f) => !f.endsWith('lib/haSafeArea.ts') && /subscribe-properties/.test(readFileSync(f, 'utf8')) && !/subscribeMessage|SUBSCRIBE_MESSAGE|UNSUBSCRIBE_MESSAGE/.test(readFileSync(f, 'utf8')));
+    expect(offenders.map((f) => f.slice(SRC.length))).toEqual([]);
   });
 });

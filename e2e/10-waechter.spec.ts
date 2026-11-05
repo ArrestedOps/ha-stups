@@ -59,18 +59,21 @@ test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Karte erscheint live 
   await openBoards(page);
   await openWatcherForm(page);
 
-  // Vorlage, Entität suchen, Board wählen, Wartezeit 0 (sonst müsste der Test 3 Minuten warten)
-  await page.getByRole('dialog').getByRole('button', { name: 'Waschmaschine fertig' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /Waschmaschine Leistung/ }).click();
-  await page.getByRole('button', { name: 'Mehr Regeln' }).click();
-  await page.getByLabel('Board', { exact: true }).selectOption(s.boardId);
-  await expect(page.getByLabel('Spalte', { exact: true })).toHaveValue(s.columnId);
-  await page.locator('[data-field=duration]').click();
-  await page.getByLabel('Wartezeit in Minuten').fill('0');
-  await page.locator('[data-field=title]').click();
-  await page.getByLabel('Titel der Karte').fill(title);
-  await expect(page.getByTestId('watcher-sentence')).toContainText(`bekommt wer zu Hause ist, reihum die Karte ${title}.`);
-  await page.getByRole('button', { name: 'Speichern' }).click();
+  // Assistent: Vorlage und Entität (Schritt 1), Wartezeit 0 (sonst müsste der Test 3 Minuten warten), Titel und Board (Schritt 2), Wer (3), Feinschliff (4)
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Waschmaschine fertig' }).click();
+  await dialog.getByRole('button', { name: /Waschmaschine Leistung/ }).click();
+  await expect(dialog.getByTestId('entity-graph')).toBeVisible();
+  await dialog.getByRole('group', { name: 'Wartezeit in Minuten' }).getByRole('button', { name: 'sofort' }).click();
+  await dialog.getByRole('button', { name: 'Weiter: Dann' }).click();
+  await dialog.getByLabel('Board', { exact: true }).selectOption(s.boardId);
+  await expect(dialog.getByLabel('Spalte', { exact: true })).toHaveValue(s.columnId);
+  await dialog.getByLabel('Titel der Karte').fill(title);
+  await dialog.getByRole('button', { name: 'Weiter: Wer' }).click();
+  await expect(dialog.getByRole('radio', { name: /Eine anwesende Person, abwechselnd/ })).toHaveAttribute('aria-checked', 'true'); // die Vorlage will es so
+  await dialog.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
+  await expect(dialog.getByTestId('watcher-sentence')).toContainText(`bekommt wer zu Hause ist, reihum die Karte „${title}“`);
+  await dialog.getByRole('button', { name: 'Wächter anlegen' }).click();
   await expect(page.getByText('Wächter gespeichert')).toBeVisible();
   await expect(page.getByRole('button', { name: /Wächter Waschmaschine fertig bearbeiten/ })).toBeVisible();
 

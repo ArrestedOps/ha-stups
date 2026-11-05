@@ -133,6 +133,9 @@ test('der Server verweigert, was die Oberfläche nicht zeigt', async ({ browser,
   try {
     const api = ctx.request;
     expect((await api.get('/api/fairness')).status()).toBe(403);
+    // Wächter-Editor: Verlauf der Entität und Reihenfolge für „An wen“ bleiben für Kinder verboten
+    expect((await api.get('/api/watchers/history?entityId=sensor.waschmaschine_leistung')).status()).toBe(403);
+    expect((await api.get('/api/watchers/order?mode=rotation')).status()).toBe(403);
     expect((await api.post('/api/boards', { data: { name: 'Nein' } })).status()).toBe(403);
     expect((await api.delete(`/api/cards/${mineId}`)).status()).toBe(403);
     expect((await api.get(`/api/cards/${cardIds[otherName]}`)).status()).toBe(404); // fremdes Board: gibt es nicht

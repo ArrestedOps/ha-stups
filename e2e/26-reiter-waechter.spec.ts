@@ -166,7 +166,7 @@ test('Wächter: Administratoren bearbeiten einen Wächter direkt, Mitglieder seh
   // ein Lauf für den Verlauf („Test")
   expect((await request.post(`/api/watchers/${id}/test`)).status()).toBe(200);
 
-  // Administrator: Tipp auf den Wächter öffnet das Bearbeiten (Satz, Speichern), der Verlauf steht unten
+  // Administrator: Tipp auf den Wächter öffnet den Ablauf (Karten, Satz als Zusammenfassung, Speichern), der Status steht unten
   await page.goto('/');
   await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
@@ -174,7 +174,8 @@ test('Wächter: Administratoren bearbeiten einen Wächter direkt, Mitglieder seh
   await page.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByTestId('watcher-sentence')).toBeVisible();
-  await expect(dialog.getByRole('button', { name: 'Speichern' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Speichern', exact: true }).first()).toBeVisible();
+  await expect(dialog.getByTestId('watcher-flow').getByRole('button', { name: 'Ändern' }).first()).toBeVisible();
   await expect(dialog.getByTestId('watcher-readonly')).toHaveCount(0);
   await expect(dialog.getByText('Status', { exact: true })).toBeVisible();
   await expect(dialog.getByRole('button', { name: /Testen: Karte jetzt anlegen/ })).toBeVisible();
@@ -191,7 +192,11 @@ test('Wächter: Administratoren bearbeiten einen Wächter direkt, Mitglieder seh
     const d = conny.getByRole('dialog');
     await expect(d.getByTestId('watcher-readonly')).toBeVisible();
     await expect(d.getByTestId('watcher-sentence')).toBeVisible();
-    await expect(d.locator('[data-field=title]')).toBeDisabled();
+    // die vier Karten und der Verlauf der Entität sind zu sehen, aber nichts lässt sich ändern
+    await expect(d.getByTestId('watcher-flow')).toBeVisible();
+    await expect(d.getByTestId('entity-graph')).toBeVisible();
+    await expect(d.getByRole('button', { name: 'Ändern' })).toHaveCount(0);
+    await expect(d.getByRole('switch', { name: 'Automatisch erledigen' })).toBeDisabled();
     await expect(d.getByRole('button', { name: 'Speichern' })).toHaveCount(0);
     await expect(d.getByRole('button', { name: /Testen: Karte jetzt anlegen/ })).toHaveCount(0);
     await expect(d.getByRole('button', { name: 'Wächter löschen' })).toHaveCount(0);

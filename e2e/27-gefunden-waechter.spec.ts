@@ -1,8 +1,8 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { openBoards } from './helpers';
 
-// Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Gefunden: Stups erkennt Geräte und füllt den Satz vor;
-// der Probelauf rechnet die Regel auf die Historie der letzten 7 Tage.
+// Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Gefunden: Stups erkennt Geräte und füllt den Assistenten vor;
+// „Testen" (Probelauf) rechnet die Regel auf die Historie der letzten 7 Tage.
 const MOCK = 'http://127.0.0.1:18411';
 test.describe.configure({ timeout: 90_000, mode: 'serial' });
 
@@ -39,22 +39,27 @@ test('Gefunden: Hinweis im Reiter Wächter, Treffer mit Begründung, Wächter au
   await expect(dialog.getByText('Rauchmelder testen')).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Alle Vorlagen ansehen' })).toBeVisible();
 
-  // Einrichten: der Satz ist schon ausgefüllt
+  // Einrichten: der Assistent beginnt mit der Entität aus dem Treffer, Schritt 1 zeigt ihren Verlauf
   await hit.getByRole('button', { name: 'Einrichten' }).click();
-  const sentence = page.getByTestId('watcher-sentence');
-  await expect(sentence).toContainText('Wenn Steckdose Trockner Leistung länger als 3 Min. unter 5 W liegt, bekommt wer zu Hause ist, reihum die Karte Wäsche aus dem Trockner holen.');
+  await expect(dialog.getByTestId('graph-card')).toContainText('Steckdose Trockner Leistung');
+  await expect(dialog.getByTestId('entity-graph')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Weiter: Dann' }).click();
+  // Board wählen (Schritt 2)
+  await dialog.getByLabel('Board', { exact: true }).selectOption(board.id);
+  await dialog.getByRole('button', { name: 'Weiter: Wer' }).click();
+  await dialog.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
+  // Schritt 4: der Satz ist schon ausgefüllt
+  await expect(dialog.getByTestId('watcher-sentence')).toContainText('Wenn Steckdose Trockner Leistung länger als 3 Min. unter 5 W liegt, bekommt wer zu Hause ist, reihum die Karte „Wäsche aus dem Trockner holen“');
   // Ehrlich beim Selbst-Erledigen: der Leistungssensor kann das Ausräumen nicht belegen
-  await page.getByRole('button', { name: 'Mehr Regeln' }).click();
-  await expect(page.getByLabel('Automatisch erledigen')).toBeDisabled();
-  await expect(page.getByTestId('self-note')).toContainText('weiß nicht, ob jemand das Gerät schon ausgeräumt hat');
+  await expect(dialog.getByRole('switch', { name: 'Automatisch erledigen' })).toBeDisabled();
+  await expect(dialog.getByTestId('self-note')).toContainText('weiß nicht, ob jemand das Gerät schon ausgeräumt hat');
 
-  // Probelauf: drei Gänge, kein Fehlalarm
-  await page.getByRole('button', { name: 'Probelauf', exact: true }).click();
+  // Testen (Probelauf über 7 Tage): drei Gänge, kein Fehlalarm
+  await dialog.getByRole('button', { name: 'Testen', exact: true }).click();
   await expect(page.getByTestId('dry-run-result')).toContainText('3 Auslösungen erkannt, kein Fehlalarm', { timeout: 20_000 });
 
-  // Board wählen und speichern
-  await page.getByLabel('Board', { exact: true }).selectOption(board.id);
-  await page.getByRole('button', { name: 'Speichern' }).click();
+  // Anlegen
+  await dialog.getByRole('button', { name: 'Wächter anlegen' }).click();
   await expect(page.getByText('Wächter gespeichert')).toBeVisible();
   const list = (await (await request.get('/api/watchers')).json()) as { items: { name: string; trigger: { entityId: string; kind: string; value: number } }[] };
   expect(list.items.find((w) => w.name === 'Trockner fertig')?.trigger).toMatchObject({ entityId: 'sensor.trockner_leistung', kind: 'below', value: 5 });
@@ -90,7 +95,9 @@ test('Probelauf: ohne Historie ein Hinweis statt eines Diagramms; Wackeln wird g
   await page.getByRole('dialog').getByRole('button', { name: 'Wächter' }).click();
   await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
   await page.getByRole('dialog').getByTestId('found-hit').filter({ hasText: 'Bad Fenster Batterie' }).getByRole('button', { name: 'Einrichten' }).click();
-  await page.getByRole('button', { name: 'Probelauf', exact: true }).click();
+  const d = page.getByRole('dialog');
+  for (const next of ['Weiter: Dann', 'Weiter: Wer', 'Weiter: Feinschliff']) await d.getByRole('button', { name: next }).click();
+  await d.getByRole('button', { name: 'Testen', exact: true }).click();
   await expect(page.getByTestId('dry-run-result')).toContainText('keine Historie');
 });
 

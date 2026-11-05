@@ -1,5 +1,6 @@
 import { ValidationError } from './errors.js';
 import { t } from './i18n/index.js';
+import { assertPublicUrl, defaultResolve, pinnedFetch, type Resolve } from './safe-fetch.js';
 
 export type LinkKind = 'web' | 'maps';
 
@@ -73,8 +74,9 @@ function placeFromGoogleMapsUrl(u: URL): { url: string; title: string | null } |
  */
 export async function resolveMapsLink(
   rawUrl: string,
-  fetchFn: typeof fetch = fetch,
+  fetchFn: typeof fetch = pinnedFetch(),
   timeoutMs = 4000,
+  resolve: Resolve = defaultResolve,
 ): Promise<{ url: string; title: string | null } | null> {
   let start: URL;
   try {
@@ -89,6 +91,7 @@ export async function resolveMapsLink(
   try {
     let current = start.toString();
     for (let hop = 0; hop < 5; hop++) {
+      await assertPublicUrl(current, resolve); // jede Weiterleitung neu prüfen: nie ins eigene Netz
       const res = await fetchFn(current, {
         signal: controller.signal,
         redirect: 'manual',
@@ -123,21 +126,41 @@ function decodeEntities(s: string): string {
     .replace(/&amp;/g, '&');
 }
 
-/** Best effort: returns null on any problem (offline, timeout, no HTML, no title). */
+const MAX_REDIRECTS = 3;
+
+/**
+ * Best effort: gibt bei jedem Problem null zurück (offline, Zeitlimit, kein HTML, kein Titel).
+ * Nur öffentliche Adressen: Jede Adresse, auch nach jeder Weiterleitung (höchstens 3), wird vor dem Abruf geprüft;
+ * die Standardverbindung geht an genau die geprüfte Adresse (siehe safe-fetch.ts).
+ */
 export async function fetchPageTitle(
   url: string,
-  fetchFn: typeof fetch = fetch,
+  fetchFn: typeof fetch = pinnedFetch(),
   timeoutMs = 3000,
+  resolve: Resolve = defaultResolve,
 ): Promise<string | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetchFn(url, {
-      signal: controller.signal,
-      redirect: 'follow',
-      headers: { accept: 'text/html', 'user-agent': 'Stups/1.0 (+link-title)' },
-    });
-    if (!res.ok || !(res.headers.get('content-type') ?? '').includes('html')) return null;
+    let current = url;
+    let res: Response | null = null;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      await assertPublicUrl(current, resolve);
+      const r = await fetchFn(current, {
+        signal: controller.signal,
+        redirect: 'manual',
+        headers: { accept: 'text/html', 'user-agent': 'Stups/1.0 (+link-title)' },
+      });
+      const location = r.headers.get('location');
+      if (r.status >= 300 && r.status < 400 && location) {
+        void r.body?.cancel().catch(() => undefined);
+        current = new URL(location, current).toString();
+        continue;
+      }
+      res = r;
+      break;
+    }
+    if (!res || !res.ok || !(res.headers.get('content-type') ?? '').includes('html')) return null;
 
     let text = '';
     if (res.body) {
@@ -152,7 +175,7 @@ export async function fetchPageTitle(
       }
       void reader.cancel().catch(() => undefined);
     } else {
-      text = await res.text();
+      text = (await res.text()).slice(0, MAX_READ_BYTES);
     }
     const m = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(text);
     const title = m ? decodeEntities(m[1]!).replace(/\s+/g, ' ').trim().slice(0, 200) : '';

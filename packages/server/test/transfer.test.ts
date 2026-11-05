@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { openDb } from '../src/db.js';
 import { migrations } from '../src/migrations.js';
 import { createStore } from '../src/store.js';
-import { exportData, importTransfer, transferStatus, TRANSFER_DIR } from '../src/transfer.js';
+import { exportData, importTransfer, purgeExpiredExport, transferStatus, TRANSFER_DIR } from '../src/transfer.js';
 
 const tmp = () => mkdtempSync(join(tmpdir(), 'stups-umzug-'));
 
@@ -168,5 +168,80 @@ describe('Umzug', () => {
       expect(s.state).toBe('none');
       expect(s.text).toMatch(/nicht eingebunden/);
     });
+  });
+});
+
+describe('Umzug: Export ohne Geheimnisse, mit Ablaufdatum', () => {
+  function withSecrets() {
+    const dataDir = tmp();
+    const db = openDb(join(dataDir, 'stups.sqlite'));
+    const store = createStore(db);
+    const rene = store.addPerson({ haUserId: 'local:abc', name: 'Rene' });
+    const secret = store.pushSecret();
+    db.exec(`insert into local_accounts (user_id, username, password_hash, is_admin, created_at, password_changed_at)
+             values ('${rene.id}', 'rene', 'scrypt$GEHEIMER-HASH', 1, '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z')`);
+    db.exec(`insert into sessions (token_hash, user_id, created_at, last_seen_at, expires_at)
+             values ('SITZUNGS-HASH', '${rene.id}', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z', '2099-01-01T00:00:00.000Z')`);
+    db.exec(`insert into passkeys (id, user_id, credential_id, public_key, name, created_at)
+             values ('p1', '${rene.id}', 'CRED-ID', x'0102', 'Handy', '2026-01-01T00:00:00.000Z')`);
+    return { dataDir, db, rene, secret };
+  }
+
+  it('S7: schreibt weder Push-Geheimnis noch Passwort-Hashes, Sitzungen oder Passkeys in den Export', () => {
+    const { dataDir, db, rene, secret } = withSecrets();
+    const share = tmp();
+    const res = exportData(db, dataDir, share, new Date('2026-11-01T10:00:00Z'));
+    const raw = readFileSync(join(res.dir, 'data.sqlite'));
+    for (const needle of [secret, 'GEHEIMER-HASH', 'SITZUNGS-HASH', 'CRED-ID']) expect(raw.includes(needle)).toBe(false);
+
+    const copy = new DatabaseSync(join(res.dir, 'data.sqlite'));
+    expect(copy.prepare('select count(*) as n from sessions').get()).toEqual({ n: 0 });
+    expect(copy.prepare('select count(*) as n from passkeys').get()).toEqual({ n: 0 });
+    expect(copy.prepare(`select count(*) as n from settings where key = 'pushSecret'`).get()).toEqual({ n: 0 });
+    // Das Konto bleibt, aber ohne Passwort: ein Administrator vergibt ein neues
+    expect(copy.prepare('select username, password_hash from local_accounts').get()).toEqual({ username: 'rene', password_hash: '!' });
+    copy.close();
+    // Die laufende App behält ihre Daten
+    expect(db.prepare('select count(*) as n from sessions').get()).toEqual({ n: 1 });
+    expect(createStore(db).pushSecret()).toBe(secret);
+    expect(rene.id).toBeTruthy();
+  });
+
+  it('S7: Rechte 0700 für den Ordner und 0600 für Dateien, Ablaufdatum nach 24 Stunden', () => {
+    const { dataDir, db } = withSecrets();
+    mkdirSync(join(dataDir, 'files'));
+    writeFileSync(join(dataDir, 'files', 'a.txt'), 'x');
+    const share = tmp();
+    const res = exportData(db, dataDir, share, new Date('2026-11-01T10:00:00Z'));
+    expect(statSync(res.dir).mode & 0o777).toBe(0o700);
+    for (const f of ['data.sqlite', 'info.json', 'files/a.txt']) expect(statSync(join(res.dir, f)).mode & 0o777).toBe(0o600);
+    const info = JSON.parse(readFileSync(join(res.dir, 'info.json'), 'utf8'));
+    expect(info.expiresAt).toBe('2026-11-02T10:00:00.000Z');
+    expect(res.expiresAt).toBe('2026-11-02T10:00:00.000Z');
+  });
+
+  it('S7: die neue App löscht den Export nach dem erfolgreichen Import', () => {
+    const { dataDir, db } = withSecrets();
+    const share = tmp();
+    exportData(db, dataDir, share);
+    const newData = tmp();
+    expect(importTransfer(join(newData, 'stups.sqlite'), join(newData, 'files'), share)).toBe(true);
+    expect(existsSync(join(share, TRANSFER_DIR))).toBe(false);
+  });
+
+  it('S7: ein abgelaufener Export wird beim Start gelöscht, ein gültiger und ein älterer ohne Ablaufdatum bleiben', () => {
+    const { dataDir, db } = withSecrets();
+    const share = tmp();
+    exportData(db, dataDir, share, new Date('2026-11-01T10:00:00Z'));
+    expect(purgeExpiredExport(share, new Date('2026-11-02T09:59:00Z'))).toBe(false);
+    expect(existsSync(join(share, TRANSFER_DIR, 'data.sqlite'))).toBe(true);
+    expect(purgeExpiredExport(share, new Date('2026-11-02T10:01:00Z'))).toBe(true);
+    expect(existsSync(join(share, TRANSFER_DIR))).toBe(false);
+
+    exportData(db, dataDir, share);
+    writeFileSync(join(share, TRANSFER_DIR, 'info.json'), JSON.stringify({ exportedAt: '2026-01-01T00:00:00.000Z' })); // älterer Export
+    expect(purgeExpiredExport(share, new Date('2030-01-01T00:00:00Z'))).toBe(false);
+    const target = tmp();
+    expect(importTransfer(join(target, 'stups.sqlite'), join(target, 'files'), share)).toBe(true);
   });
 });

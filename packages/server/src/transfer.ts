@@ -1,31 +1,92 @@
-import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import type { DatabaseSync } from 'node:sqlite';
+import { DatabaseSync } from 'node:sqlite';
 
 /** Unterordner in /share, über den Daten von einer App zur anderen wandern (andere Adresse in Home Assistant = andere App) */
 export const TRANSFER_DIR = 'stups-umzug';
 const DB_NAME = 'data.sqlite';
 
+/** So lange liegt ein Export bereit; danach löscht ihn die App beim Start */
+export const EXPORT_TTL_MS = 24 * 3_600_000;
+
 export interface ExportResult {
   dir: string;
   bytes: number;
   files: boolean;
+  /** Danach wird der Export beim Start einer App gelöscht */
+  expiresAt: string;
 }
 
-/** Schreibt eine saubere Kopie der Datenbank und aller Anhänge nach <share>/stups-umzug. Ein früherer Export wird ersetzt. */
+/** Alle Dateien unterhalb von dir nur für den Besitzer lesbar machen (/share sehen auch andere Apps) */
+function restrict(dir: string): void {
+  chmodSync(dir, 0o700);
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) restrict(path);
+    else chmodSync(path, 0o600);
+  }
+}
+
+/** Entfernt aus der Kopie, was nicht mitwandern soll: Push-Geheimnis, Passwort-Hashes, Sitzungen, Passkeys */
+function scrubSecrets(file: string): void {
+  const copy = new DatabaseSync(file);
+  try {
+    copy.exec('pragma journal_mode = delete');
+    for (const sql of [
+      `delete from settings where key = 'pushSecret'`,
+      'delete from sessions',
+      'delete from passkeys',
+      // Das Konto bleibt, der Hash ist ungültig: ein Administrator vergibt in der neuen App ein neues Passwort
+      `update local_accounts set password_hash = '!'`,
+    ]) {
+      try {
+        copy.exec(sql);
+      } catch (err) {
+        if (!/no such table/i.test(String(err))) throw err; // Tabelle gibt es im älteren Stand nicht: nichts zu entfernen
+      }
+    }
+    copy.exec('vacuum'); // freie Seiten enthalten sonst noch die gelöschten Werte
+  } finally {
+    copy.close();
+  }
+}
+
+/**
+ * Schreibt eine Kopie der Datenbank (ohne Geheimnisse, nur für den Besitzer lesbar) und aller Anhänge nach
+ * <share>/stups-umzug. Ein früherer Export wird ersetzt. Der Export läuft nach 24 Stunden ab.
+ */
 export function exportData(db: DatabaseSync, dataDir: string, shareDir: string, now: Date = new Date()): ExportResult {
   if (!existsSync(shareDir)) throw new Error(`Der Ordner ${shareDir} ist nicht eingebunden`);
   const dir = join(shareDir, TRANSFER_DIR);
   rmSync(dir, { recursive: true, force: true });
-  mkdirSync(dir, { recursive: true });
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
 
   const target = join(dir, DB_NAME);
   db.exec(`vacuum into '${target.replace(/'/g, "''")}'`);
   const files = existsSync(join(dataDir, 'files'));
   if (files) cpSync(join(dataDir, 'files'), join(dir, 'files'), { recursive: true });
   if (existsSync(join(dataDir, 'avatars'))) cpSync(join(dataDir, 'avatars'), join(dir, 'avatars'), { recursive: true });
-  writeFileSync(join(dir, 'info.json'), JSON.stringify({ exportedAt: now.toISOString() }, null, 2));
-  return { dir, bytes: statSync(target).size, files };
+  scrubSecrets(target);
+  const expiresAt = new Date(now.getTime() + EXPORT_TTL_MS).toISOString();
+  writeFileSync(join(dir, 'info.json'), JSON.stringify({ exportedAt: now.toISOString(), expiresAt }, null, 2));
+  restrict(dir);
+  return { dir, bytes: statSync(target).size, files, expiresAt };
+}
+
+/**
+ * Löscht beim Start einen abgelaufenen Export. Ältere Exporte ohne Ablaufdatum bleiben liegen und lassen sich weiter
+ * übernehmen. true = gelöscht.
+ */
+export function purgeExpiredExport(shareDir: string, now: Date = new Date()): boolean {
+  const dir = join(shareDir, TRANSFER_DIR);
+  try {
+    const info = JSON.parse(readFileSync(join(dir, 'info.json'), 'utf8')) as { expiresAt?: unknown };
+    if (typeof info.expiresAt !== 'string' || !(Date.parse(info.expiresAt) < now.getTime())) return false;
+    rmSync(dir, { recursive: true, force: true });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -41,6 +102,12 @@ export function importTransfer(dbPath: string, filesDir: string, shareDir: strin
   copyFileSync(sourceDb, dbPath);
   if (existsSync(join(source, 'files'))) cpSync(join(source, 'files'), filesDir, { recursive: true });
   if (avatarsDir && existsSync(join(source, 'avatars'))) cpSync(join(source, 'avatars'), avatarsDir, { recursive: true });
+  // Der Export hat seinen Zweck erfüllt: weg damit, er liegt sonst weiter offen in /share
+  try {
+    rmSync(source, { recursive: true, force: true });
+  } catch {
+    /* bleibt liegen und läuft ab bzw. wird vom Besitzer gelöscht */
+  }
   return true;
 }
 

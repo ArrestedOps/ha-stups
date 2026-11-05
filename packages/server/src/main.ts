@@ -11,7 +11,7 @@ import { combinePush, createHaNotifyPush, type PushGateway } from './push.js';
 import { createActionTokens, createNtfyPush } from './ntfy.js';
 import { createRoundTrips, pushActionRoutes } from './push-action.js';
 import { openDb } from './db.js';
-import { exportData, importTransfer, transferStatus } from './transfer.js';
+import { exportData, importTransfer, purgeExpiredExport, transferStatus } from './transfer.js';
 import { createEventBus } from './events.js';
 import { createAvatars } from './avatars.js';
 import { createFileStore } from './files.js';
@@ -48,6 +48,7 @@ registerLanguageHook(app);
 
 const dbPath = `${dataDir}/stups.sqlite`;
 // Neue App ohne eigene Daten: Datenbank und Anhänge aus einem Export der alten App übernehmen (Einstellungen › Umzug)
+if (purgeExpiredExport(shareDir)) app.log.info('Ein abgelaufener Export in /share/stups-umzug wurde gelöscht');
 const transfer = transferStatus(dbPath, shareDir);
 if (importTransfer(dbPath, `${dataDir}/files`, shareDir, `${dataDir}/avatars`)) app.log.info('Daten aus dem Umzug (/share/stups-umzug) übernommen');
 else if (transfer.state === 'none') app.log.info(transfer.text);

@@ -529,11 +529,38 @@ describe('Erledigt-Button in der Push-Nachricht', () => {
     expect(await n.handleAction({ action: 'KANBAN_DONE:gibt-es-nicht:2026-11-01T09:00:00.000Z' })).toBe('unknown_card');
   });
 
-  it('trägt „per Push" ein, wenn die HA-Nutzer-ID unbekannt ist', async () => {
+  it('lehnt eine Aktion ab, wenn die handelnde Person nicht eindeutig ist (Protokolleintrag, nichts erledigt)', async () => {
+    const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id] });
+    const warnings: string[] = [];
+    const n = makeNotifier({ log: { info: () => {}, warn: (m) => warnings.push(m) } });
+    const action = `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`;
+    expect(await n.handleAction({ action, userId: 'unbekannt' })).toBe('ignored');
+    expect(await n.handleAction({ action })).toBe('ignored');
+    expect(store.listCompletions(c.id)).toHaveLength(0);
+    expect(warnings.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('S3: ein noch nicht verknüpftes Kind kann in der Nachricht nicht an der Bestätigung vorbei erledigen', async () => {
+    const mia = store.addPerson({ name: 'Mia' }); // noch nie angemeldet: ohne HA-Benutzer
+    store.setChild(mia.id, { isChild: true, confirmDefault: true });
+    const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [mia.id] });
+    const n = makeNotifier();
+    expect(await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'ha-mia' })).toBe('ignored');
+    expect(store.getCard(c.id).completedAt).toBeNull();
+    // Das verknüpfte Kind bekommt dagegen die Bestätigungsanfrage
+    store.resolveUser({ haId: 'ha-mia', name: 'mia', displayName: 'Mia' });
+    expect(await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'ha-mia' })).toBe('awaiting');
+  });
+
+  it('S3: wer der Karte nicht zugewiesen ist, kann sie in der Nachricht nicht erledigen', async () => {
     const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id] });
     const n = makeNotifier();
-    await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'unbekannt' });
-    expect(store.listCompletions(c.id)[0]).toMatchObject({ completedBy: null, source: 'push' });
+    expect(await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'ha-rene' })).toBe('ignored');
+    expect(store.getCard(c.id).completedAt).toBeNull();
+    // Eine Person, die kein HA-Benutzer-Konto ist (nur Gast), zählt nicht
+    const guest = store.resolveUser({ haId: 'ha-gast', name: 'gast', displayName: 'Gast' });
+    expect(guest.isPerson).toBe(false);
+    expect(await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'ha-gast' })).toBe('ignored');
   });
 
   it('clearFor räumt Nachrichten auf, wenn in der App erledigt wurde', async () => {

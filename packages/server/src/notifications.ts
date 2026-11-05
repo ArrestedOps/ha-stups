@@ -374,7 +374,7 @@ export function createNotifier(deps: NotifierDeps) {
 
   /** Tipp auf „Bestätigen" oder „Nochmal". Nur die Bestätiger des Kindes (und bei „Bestätigen" wer zuerst kommt) */
   async function handleConfirmAction(answer: 'confirm' | 'reject', cardId: string, a: PushAction): Promise<ActionResult> {
-    const user = actor(a);
+    const user = actorOrReject(a);
     if (!user) return 'ignored';
     let card;
     try {
@@ -614,10 +614,20 @@ export function createNotifier(deps: NotifierDeps) {
   };
 
   /** Tipp auf „Erledigt", „Mach ich" oder „Später" in einem Stups. Nur der Empfänger darf antworten. */
-  const actor = (a: PushAction) => (a.personId ? store.userById(a.personId) : a.userId ? store.userByHaId(a.userId) : null);
+  const actor = (a: PushAction) => {
+    const user = a.personId ? store.userById(a.personId) : a.userId ? store.userByHaId(a.userId) : null;
+    return user && user.isPerson ? user : null; // nur eine eindeutig bestimmte Person der Liste darf handeln
+  };
+
+  /** Die handelnde Person der Aktion; ist sie nicht eindeutig, wird abgelehnt und protokolliert (sonst liefe „Erledigt" an den Kinderregeln vorbei) */
+  function actorOrReject(a: PushAction): ReturnType<typeof actor> {
+    const user = actor(a);
+    if (!user) log.warn(`Push-Aktion „${a.action.split(':')[0]}" abgelehnt: die handelnde Person ist nicht eindeutig bestimmt`);
+    return user;
+  }
 
   async function handleNudgeAction(kind: string, nudgeId: string, a: PushAction): Promise<ActionResult> {
-    const user = actor(a);
+    const user = actorOrReject(a);
     if (!user) return 'ignored';
     const nudge = store.getNudge(nudgeId);
     if (!nudge) return 'stale';
@@ -660,7 +670,7 @@ export function createNotifier(deps: NotifierDeps) {
     if (nm) return handleNudgeAction(nm[1]!, nm[2]!, a);
     const claim = new RegExp(`^${aPrefix}${CLAIM_PREFIX}(.+)$`).exec(a.action);
     if (claim) {
-      const user = actor(a);
+      const user = actorOrReject(a);
       if (!user || !deps.claim) return 'ignored';
       try {
         await deps.claim(claim[1]!, user.id);
@@ -684,9 +694,14 @@ export function createNotifier(deps: NotifierDeps) {
     // Nur der Termin, für den die Nachricht gesendet wurde, zählt. Ein alter Tipp erledigt nichts Neues.
     if (!card.dueAt || Date.parse(card.dueAt) !== Date.parse(key)) return 'stale';
 
-    const user = actor(a);
-    if (user && (await requestInstead(card, user.id))) return 'awaiting';
-    const res = store.completeCard(cardId, { by: user?.id ?? null, source: 'push' });
+    const user = actorOrReject(a);
+    if (!user) return 'ignored';
+    if (!card.assigneeIds.includes(user.id)) {
+      log.warn(`Push-Aktion „Erledigt" für „${card.title}" von ${user.name} abgelehnt: nicht zugewiesen`);
+      return 'ignored';
+    }
+    if (await requestInstead(card, user.id)) return 'awaiting';
+    const res = store.completeCard(cardId, { by: user.id, source: 'push' });
     if (res.completionId === null) return 'already_done';
 
     if (res.nextDueAt) {
@@ -696,7 +711,7 @@ export function createNotifier(deps: NotifierDeps) {
       await clearFor(cardId, card.assigneeIds);
     }
     deps.onChange?.();
-    log.info(`Karte „${card.title}" per Push erledigt${user ? ` von ${user.name}` : ''}`);
+    log.info(`Karte „${card.title}" per Push erledigt von ${user.name}`);
     return 'completed';
   }
 

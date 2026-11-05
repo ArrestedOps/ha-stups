@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardTargets, columnForDue, swipeTarget, type SwipeColumn } from '../src/lib/swipe';
+import { cardTargets, columnForDue, swipeDirection, swipeTarget, type SwipeColumn } from '../src/lib/swipe';
 
 const col = (id: string, extra: Partial<SwipeColumn> = {}): SwipeColumn => ({
   id,
@@ -81,5 +81,22 @@ describe('columnForDue (neue Karte)', () => {
   it('ohne offene Spalte bleibt alles unverändert', () => {
     const only = [col('geplant', { isPlanned: true }), col('erledigt', { isDone: true })];
     expect(columnForDue(only, 'geplant', false)).toBe('geplant');
+  });
+});
+describe('swipeDirection (Finger rechts = nächster Status, Finger links = zurück)', () => {
+  it('nach rechts gewischt (dx > 0) geht es in den nächsten Status, nach links (dx < 0) in den vorigen', () => {
+    expect(swipeDirection(40)).toBe('right');
+    expect(swipeDirection(-40)).toBe('left');
+    expect(swipeDirection(0.5)).toBe('right');
+    expect(swipeDirection(-0.5)).toBe('left');
+  });
+  it('zusammen mit swipeTarget: Offen → In Arbeit nach rechts, zurück nach links', () => {
+    const cols = [
+      { id: 'offen', name: 'Offen', isDone: false, isPlanned: false },
+      { id: 'arbeit', name: 'In Arbeit', isDone: false, isPlanned: false },
+    ];
+    expect(swipeTarget(cols, 'offen', swipeDirection(120))?.id).toBe('arbeit');
+    expect(swipeTarget(cols, 'arbeit', swipeDirection(-120))?.id).toBe('offen');
+    expect(swipeTarget(cols, 'offen', swipeDirection(-120))).toBeNull(); // vor „Offen“ gibt es nichts
   });
 });

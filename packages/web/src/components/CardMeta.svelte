@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t, tn } from '../lib/i18n/index.svelte';
   import type { Card } from '../lib/api';
-  import { cardMeta } from '../lib/cardMeta';
+  import { cardMeta, priorityTone } from '../lib/cardMeta';
   import { formatCost, formatDue } from '../lib/datetime';
   import { describeRecurrence } from '../lib/recurrence';
   import Icon from './Icon.svelte';
@@ -56,12 +56,12 @@
         <span class="inline-flex shrink-0" title={m.label} aria-label={t('Wiederholt: {label}', { label: m.label })}><Icon name="repeat" size={ICON} stroke={1.9} /></span>
       {:else if m.kind === 'priority'}
         <span
-          class="inline-flex shrink-0 items-center gap-1 {m.level === 'high' ? 'text-accent-text' : ''}"
+          class="inline-flex shrink-0 items-center gap-1 {priorityTone(m.level).text} {m.level === 'high' ? 'font-bold' : ''}"
           aria-label={m.level === 'high' ? t('Priorität hoch') : t('Priorität mittel')}
           data-testid="card-priority"
           data-level={m.level}
         >
-          <Icon name="flag" size={ICON} stroke={1.9} />{m.level === 'high' ? t('Hoch') : t('Mittel')}
+          <span class={priorityTone(m.level).glow ? 'prio-glow flex' : 'flex'}><Icon name="flag" size={ICON} stroke={1.9} /></span>{m.level === 'high' ? t('Hoch') : t('Mittel')}
         </span>
       {:else if m.kind === 'person'}
         <span class="inline-flex shrink-0 items-center gap-1" data-testid="card-person"><Icon name="user" size={ICON} stroke={1.9} /><span class="max-w-[7rem] truncate">{m.text}</span></span>

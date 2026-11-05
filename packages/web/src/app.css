@@ -87,6 +87,7 @@
   --house-line: #1f5a54;
   --danger: #ff5a5f;
   --danger-bg: #3a1d22;
+  --danger-glow: rgba(255, 90, 95, 0.75); /* Leuchten der hohen Priorität */
   --danger-fill-a: #e5484d; /* roter Knopf im Bestätigen-Dialog: Verlauf a → b, Weiß darauf */
   --danger-fill-b: #b3262c;
   /* Feinere Stufen der Mockups: Symbole und Chips (hell), Trenner, Erledigt-Kreis, Rand der Chips, Zähler */
@@ -190,6 +191,7 @@
     --danger: #b0001a;
     --on-danger: #ffffff;
     --danger-bg: #ffe5e7;
+    --danger-glow: rgba(212, 56, 42, 0.5);
     --text-soft: #4a3a30;
     --text-soft2: #5c4a3d;
     --sep: #c9b8a8;
@@ -254,6 +256,7 @@
 .bg-accent-grad.glow-cta { box-shadow: 0 8px 26px color-mix(in srgb, var(--accent) 45%, transparent); }
 
 /* Kachel mit Symbol: Verlauf und feiner heller Rand; Farbe über die Klasse */
+.prio-glow { filter: drop-shadow(0 0 5px var(--danger-glow)); }
 .tile {
   display: flex;
   flex: none;

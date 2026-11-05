@@ -50,16 +50,16 @@ test('Karte anlegen: erscheint in „Offen"', async ({ page }) => {
   await expect(card(page, title)).toBeVisible();
 });
 
-test('Wischen: Finger nach links = nächster Status, nach rechts = zurück', async ({ page }) => {
+test('Wischen: Finger nach rechts = nächster Status, nach links = zurück', async ({ page }) => {
   const title = uniqueTitle('Wischtest');
   await addCard(page, title);
 
-  await swipe(page, title, 'left');
+  await swipe(page, title, 'right');
   await expect(card(page, title)).toHaveCount(0); // aus „Offen" weg
   await tab(page, 'In Arbeit').click();
   await expect(card(page, title)).toBeVisible();
 
-  await swipe(page, title, 'right');
+  await swipe(page, title, 'left');
   await tab(page, 'Offen').click();
   await expect(card(page, title)).toBeVisible();
 });

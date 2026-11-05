@@ -20,6 +20,11 @@ export interface MetaFormat {
   recurrence: (rule: NonNullable<Card['recurrence']>) => string;
 }
 
+/** Farbe der Priorität auf der Karte: hoch leuchtet rot, mittel ist orange */
+export function priorityTone(level: 'medium' | 'high'): { text: string; glow: boolean } {
+  return level === 'high' ? { text: 'text-danger', glow: true } : { text: 'text-accent-text', glow: false };
+}
+
 type MetaCard = Pick<Card, 'dueAt' | 'completedAt' | 'recurrence' | 'priority' | 'checklist' | 'linkCount' | 'attachmentCount' | 'commentCount' | 'costCents' | 'watcherId'>;
 
 /**

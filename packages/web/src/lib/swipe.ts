@@ -5,6 +5,11 @@ export interface SwipeColumn {
   isPlanned: boolean;
 }
 
+/** Welche Richtung eine Wischbewegung meint: Finger nach rechts (dx > 0) = nächster Status ('right'), Finger nach links = zurück ('left') */
+export function swipeDirection(dx: number): 'left' | 'right' {
+  return dx > 0 ? 'right' : 'left';
+}
+
 /**
  * Wohin eine Karte beim Wischen springt: in den nächsten Status nach rechts, in den vorigen nach links.
  * „Geplant" wird dabei übersprungen. Aus „Geplant" heraus gibt es nach links kein Ziel, weil die Karte

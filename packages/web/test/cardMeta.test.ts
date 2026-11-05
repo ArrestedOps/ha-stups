@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardMeta, type MetaFormat } from '../src/lib/cardMeta';
+import { cardMeta, type MetaFormat, priorityTone } from '../src/lib/cardMeta';
 
 const fmt: MetaFormat = {
   due: (iso) => `fällig ${iso.slice(5, 10)}`,
@@ -98,5 +98,12 @@ describe('Meta-Zeile: Zuständige mit Namen (wie im Mockup)', () => {
   it('steht nach der Priorität und vor der Checkliste', () => {
     const k = cardMeta({ ...base, dueAt: '2026-11-04T10:00:00Z', priority: 'high', checklist: { done: 0, total: 3 }, linkCount: 1 } as never, { overdue: false, isDone: false }, fmt, { people: ['Ben'] }).map((m) => m.kind);
     expect(k).toEqual(['due', 'priority', 'person', 'checklist', 'links']);
+  });
+});
+
+describe('priorityTone', () => {
+  it('hoch leuchtet rot, mittel ist orange ohne Leuchten', () => {
+    expect(priorityTone('high')).toEqual({ text: 'text-danger', glow: true });
+    expect(priorityTone('medium')).toEqual({ text: 'text-accent-text', glow: false });
   });
 });

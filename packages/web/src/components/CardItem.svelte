@@ -4,7 +4,7 @@
   import { waitingForConfirmation } from '../lib/confirm';
   import { isOverdue } from '../lib/datetime';
   import { nudgeBadge } from '../lib/nudge';
-  import { swipeTarget } from '../lib/swipe';
+  import { swipeDirection, swipeTarget } from '../lib/swipe';
   import { completeCard, openSheet, personById, swipeCard, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import CardMeta from './CardMeta.svelte';
@@ -22,7 +22,7 @@
   const names = (ids: string[]) => [...new Set(ids.map((id) => personById(id)?.displayName ?? t('Jemand')))].join(', ');
   const isDoneColumn = $derived(ui.view?.columns.find((c) => c.id === card.columnId)?.isDone ?? false);
 
-  // ---------- Wischen: nach rechts in den nächsten Status, nach links in den vorigen ----------
+  // ---------- Wischen: Finger nach rechts in den nächsten Status, Finger nach links in den vorigen ----------
   const THRESHOLD = 96;
   const columns = $derived(ui.view?.columns ?? []);
   // Ein Kind verschiebt keine Karten (auch nicht durch Wischen); es hakt nur eigene ab
@@ -41,8 +41,8 @@
   let pointer = -1;
   let suppressClick = false;
 
-  // Finger nach links = weiter in den nächsten Status, Finger nach rechts = zurück in den vorigen
-  const target = $derived(dx < 0 ? rightTarget : dx > 0 ? leftTarget : null);
+  // Finger nach rechts = weiter in den nächsten Status, Finger nach links = zurück in den vorigen
+  const target = $derived(dx > 0 ? rightTarget : dx < 0 ? leftTarget : null);
   const armed = $derived(!!target && Math.abs(dx) >= THRESHOLD);
 
   function down(e: PointerEvent) {
@@ -72,7 +72,7 @@
       }
     }
     if (mode === 'h') {
-      const t = mx < 0 ? rightTarget : leftTarget;
+      const t = mx > 0 ? rightTarget : leftTarget;
       // ohne Ziel gibt die Karte nur ein wenig nach (Gummiband)
       dx = t ? Math.max(-width * 0.7, Math.min(width * 0.7, mx)) : mx * 0.2;
     }
@@ -81,7 +81,7 @@
   function settle(fire: 'left' | 'right' | null) {
     animating = true;
     if (fire) {
-      dx = (fire === 'right' ? -1 : 1) * width; // 'right' = nächster Status = Karte fliegt nach links raus
+      dx = (fire === 'right' ? 1 : -1) * width; // 'right' = nächster Status = Karte fliegt nach rechts raus
       setTimeout(async () => {
         await swipeCard(card, fire);
         dx = 0;
@@ -99,7 +99,7 @@
     if (mode !== 'h') return;
     suppressClick = true;
     setTimeout(() => (suppressClick = false), 350);
-    settle(armed ? (dx < 0 ? 'right' : 'left') : null);
+    settle(armed ? swipeDirection(dx) : null);
   }
 
   function cancel(e: PointerEvent) {

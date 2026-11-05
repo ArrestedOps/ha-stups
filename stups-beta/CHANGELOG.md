@@ -2,6 +2,12 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.24.1-beta.1
+
+- **Wischen andersherum:** Finger nach **rechts** schiebt die Karte in den **nächsten** Status (zum Beispiel von Offen in In Arbeit), Finger nach **links** zurück. Vorher war es umgekehrt. Die Karte fliegt in die Richtung, in die du wischst
+- **Priorität in Farbe:** **Hoch** leuchtet rot, **Mittel** ist orange (vorher beide gleich)
+- Keine Änderung an der Datenbank
+
 ## 1.24.0-beta.1
 
 **Neues Design, Phase 6a: der Filter.** *Keine Änderung an der Datenbank.*

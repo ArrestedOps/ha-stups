@@ -8,6 +8,7 @@ export type SettingsPageId =
   | 'people'
   | 'watchers'
   | 'templates'
+  | 'icons'
   | 'dates'
   | 'dashboard'
   | 'voice'
@@ -66,6 +67,7 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
         ...page('people', t('Personen und Kinder'), 'user', admin),
         ...page('watchers', t('Wächter'), 'eye', admin && ctx.watchers),
         ...page('templates', t('Vorlagen'), 'columns', admin),
+        ...page('icons', t('Symbole'), 'spark', admin),
         ...page('dates', t('Termine'), 'clock', admin),
       ],
     },

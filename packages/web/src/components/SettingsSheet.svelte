@@ -8,6 +8,7 @@
   import DashboardPage from './settings/DashboardPage.svelte';
   import DataPage from './settings/DataPage.svelte';
   import DatesPage from './settings/DatesPage.svelte';
+  import IconsPage from './settings/IconsPage.svelte';
   import LookPage from './settings/LookPage.svelte';
   import NotificationsPage from './settings/NotificationsPage.svelte';
   import ReportPage from './settings/ReportPage.svelte';
@@ -57,6 +58,8 @@
   <WatchersPage />
 {:else if page === 'templates'}
   <TemplatesPage />
+{:else if page === 'icons'}
+  <IconsPage />
 {:else if page === 'dates'}
   <DatesPage />
 {:else if page === 'dashboard'}

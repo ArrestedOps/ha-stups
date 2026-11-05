@@ -11,7 +11,7 @@ beforeEach(() => setLanguage('de'));
 describe('Einstellungen nach Rolle und Betriebsart', () => {
   it('Administrator im Add-on: alle vier Gruppen, keine Konto-Seite', () => {
     expect(groupIds(addon)).toEqual(['me', 'household', 'ha', 'help']);
-    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'dates', 'dashboard', 'voice', 'report', 'data']);
+    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'dashboard', 'voice', 'report', 'data']);
   });
 
   it('Mitglied: nur „Für mich" und „Hilfe und Daten"', () => {
@@ -31,7 +31,7 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
   it('Docker ohne Home Assistant: Konto statt Home-Assistant-Gruppe, keine Wächter und kein Dashboard', () => {
     const docker = { ...addon, standalone: true, haUi: false, watchers: false, house: false, push: false };
     expect(groupIds(docker)).toEqual(['me', 'household', 'help']);
-    expect(ids(docker)).toEqual(['look', 'account', 'people', 'templates', 'dates', 'data']);
+    expect(ids(docker)).toEqual(['look', 'account', 'people', 'templates', 'icons', 'dates', 'data']);
   });
 
   it('Docker mit Home Assistant: Wächter und Ansage sind da, das Dashboard nicht', () => {
@@ -51,6 +51,13 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
     const quiet = ids({ ...addon, push: false });
     expect(quiet).not.toContain('notifications');
     expect(quiet).not.toContain('report');
+  });
+
+  it('„Symbole“ (Symbole aus Titeln erkennen) nur für Administratoren, nie für Mitglieder oder Kinder', () => {
+    expect(ids(addon)).toContain('icons');
+    expect(ids({ ...addon, isAdmin: false })).not.toContain('icons');
+    expect(ids({ ...addon, isAdmin: true, isChild: true })).not.toContain('icons');
+    expect(ids({ ...addon, isAdmin: false, isChild: true })).not.toContain('icons');
   });
 
   it('die Titel folgen der Sprache', () => {

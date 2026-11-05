@@ -180,6 +180,8 @@ export async function startMockHa({ port, first, second, token }) {
       const msg = JSON.parse(raw.toString());
       const ok = (result = null) => ws.send(JSON.stringify({ id: msg.id, type: 'result', success: true, result }));
       switch (msg.type) {
+        case 'ping': // der Heartbeat von Stups (Home Assistant antwortet mit pong)
+          return ws.send(JSON.stringify({ id: msg.id, type: 'pong' }));
         case 'auth':
           if (token && msg.access_token !== token) {
             wrongTokens += 1;

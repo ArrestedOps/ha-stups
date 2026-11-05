@@ -33,6 +33,7 @@
   import { catKey } from '../lib/colors';
   import Avatar from './Avatar.svelte';
   import CategoryPicker from './CategoryPicker.svelte';
+  import DateSheet from './DateSheet.svelte';
   import Icon from './Icon.svelte';
   import PeoplePicker from './PeoplePicker.svelte';
   import RecurrenceEditor from './RecurrenceEditor.svelte';
@@ -143,6 +144,9 @@
   function clearDue() {
     void saveDue({ dueAt: null, recurrence: null, remindBeforeMin: null });
   }
+
+  // „Termin wählen“: Monatskalender und Uhrzeit-Rad (Termin-Fenster)
+  let dateOpen = $state(false);
 </script>
 
 {#snippet chip(name: string, icon: string, text: string, filled: boolean, tone = '', lead?: 'photo' | 'dot', iconTone = '')}
@@ -249,6 +253,9 @@
             {label}
           </button>
         {/each}
+        <button type="button" class="min-h-11 rounded-xl bg-surface2 px-4 text-[15px] font-semibold" onclick={() => (dateOpen = true)}>
+          {t('Kalender …')}
+        </button>
         {#if card.dueAt}
           <button type="button" class="min-h-11 rounded-xl bg-surface2 px-4 text-[15px] font-semibold text-danger" onclick={clearDue}>{t('Entfernen')}</button>
         {/if}
@@ -355,4 +362,16 @@
     {/if}
   </div>
 {/if}
+{/if}
+
+{#if dateOpen}
+  <DateSheet
+    value={card.dueAt}
+    onpick={(iso) => {
+      dateOpen = false;
+      if (iso) void saveDue({ dueAt: iso });
+      else clearDue();
+    }}
+    onclose={() => (dateOpen = false)}
+  />
 {/if}

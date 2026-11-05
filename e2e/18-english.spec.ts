@@ -46,13 +46,13 @@ test('Englisches Gerät: Board, Schnell-Eingabe, Erledigen, alles auf Englisch',
   // Neue Karte mit der Schnell-Eingabe auf Englisch
   await page.getByRole('button', { name: 'New card', exact: true }).click();
   // „heute“, damit die Karte in der offenen Spalte landet (Termine nach heute kommen nach „Geplant“)
-  await page.getByLabel('Title').fill('Take out trash today 11:59pm !!');
+  await page.getByLabel('What needs doing?').fill('Take out trash today 11:59pm !!');
   const chips = page.getByTestId('quick-chip');
   await expect(chips.filter({ hasText: 'High priority' })).toHaveCount(1);
   await expect(chips.filter({ hasText: /\b23:59\b/ })).toHaveCount(1);
   await noGerman(page, 'Neue Karte');
   await noSideScroll(page);
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await page.getByRole('button', { name: 'Create task' }).click();
 
   const list = page.getByRole('list');
   await expect(list.getByText('Take out trash', { exact: true })).toBeVisible();

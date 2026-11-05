@@ -18,6 +18,7 @@ const nav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
 const setState = (request: APIRequestContext, entityId: string, state: string) => request.post(`${MOCK}/mock/state`, { data: { entityId, state } });
 
 async function einstellungen(page: Page) {
+  await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
   return page.getByRole('dialog');

@@ -100,6 +100,7 @@ const S = {
   parcel: x('Paket abholen', 'Pick up parcel'),
   wrapping: x('Geschenkpapier kaufen', 'Buy wrapping paper'),
   dentist: x('Zahnarzt anrufen', 'Call the dentist'),
+  quick: x('Müll rausbringen morgen 19 Uhr @Ben #Putzen jede Woche', 'Take out the trash tomorrow 7pm @Ben #Cleaning every week'),
   boardReno: x('Umbau', 'Renovation'),
   boardShop: x('Einkauf', 'Shopping'),
   catCleaning: x('Putzen', 'Cleaning'),
@@ -226,7 +227,9 @@ const re = (s) => new RegExp(`^${s}`);
 const screens = [
   ['board', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: re(S.open) }).click(); }],
   ['karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: re(S.open) }).click(); await page.getByText(S.tax).first().click(); await page.getByTestId('created-note').waitFor(); }],
-  ['neue-karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Karte', 'New card'), exact: true }).click(); await page.getByLabel(x('Titel', 'Title')).fill(S.dentist); }],
+  ['neue-karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Karte', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByTestId('symbol-chip').waitFor(); }],
+  ['symbol-waehlen', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Karte', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByTestId('symbol-tile').click(); await page.getByTestId('symbol-name').waitFor(); }],
+  ['termin-waehlen', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Karte', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByRole('button', { name: x(/^Termin wählen/, /^Choose due date/) }).click(); await page.getByTestId('termin-summary').waitFor(); }],
   ['stupsen', async (page) => {
     await nav(page, 'Boards').click();
     await page.getByRole('tab', { name: re(S.planned) }).click();

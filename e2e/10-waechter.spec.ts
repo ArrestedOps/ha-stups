@@ -80,6 +80,7 @@ test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Karte erscheint live 
   const conny = await connyCtx.newPage();
   try {
     await conny.goto('/');
+    await openBoards(conny);
     await conny.getByRole('tab', { name: /^Offen/ }).click();
 
     // die Waschmaschine ist fertig: Leistung fällt unter 5 W

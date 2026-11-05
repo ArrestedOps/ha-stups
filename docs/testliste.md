@@ -425,6 +425,40 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Sheets: Radius 26, Griff, Kopf links · Mitte · rechts, so hoch wie der Bildschirm minus 54 px (Karten-Menü nur so hoch wie der Inhalt)
 - [ ] Hell, Dunkel und Englisch: nichts läuft über den Rand, die Texte stehen übersetzt da
 
+## 32 · Neues Design, Phase 3 (Symbol pro Karte, Neue Aufgabe, Termin-Sheet, seit 1.21.0)
+
+**Start**
+
+- [ ] Die App startet **immer auf „Aufgaben“**, auch nach dem Neuladen und wenn du vorher auf Boards oder Wächter warst. Ein Link auf eine Karte öffnet sie wie bisher
+
+**Neue Aufgabe** (das „+“ auf Boards)
+
+- [ ] Oben links „Abbrechen“, Titel „Neue Aufgabe“, unten der große Knopf „Aufgabe anlegen“ (grau, solange kein Titel dasteht)
+- [ ] Feld „Was steht an?“: „Müll rausbringen morgen 19 Uhr @Ben #Haushalt jede Woche“ ergibt Chips für Datum, Uhrzeit, Person, Kategorie, Wiederholung; ein Tipp auf einen Chip nimmt ihn zurück (der Text bleibt). Darüber die **Kachel mit dem erkannten Symbol und dem Funken-Abzeichen**, daneben der Chip „Symbol: Mülleimer“ mit ✕ (entfernt das Symbol, die Karte bekommt dann das Standardsymbol „Aufgabe“)
+- [ ] Zeilen unter „Wann und wo“: Board • Spalte (Auswahl), **Termin** (öffnet das Termin-Fenster), Wiederholung (nur mit Termin), „Erinnern 30 Min. vorher“ mit Schalter (nur mit Termin; an: Erinnerung 30 Minuten vorher und Nachhaken, wenn überfällig). Ein Termin nach heute schickt die Karte von selbst nach „Geplant“, „Kein Termin“ oder heute zurück nach „Offen“
+- [ ] „Wer kümmert sich?“: Chips mit Bild, mehrere wählbar; „Ich“ ist vorgewählt. „Wer zuerst heimkommt“ gibt es hier nicht (nur bei Wächtern). Priorität: Niedrig · Mittel · Hoch, ein zweiter Tipp nimmt sie zurück
+- [ ] Kategorie: Chips mit Punkt; „Neue Kategorie“ klappt Name, Farbpunkte und „Anlegen“ auf; ein vorhandener Name wird wiederverwendet; die neue Kategorie ist gleich gewählt
+- [ ] „Notiz“ ist ein eigenes Feld (wird die Beschreibung der Karte). Unter „Mehr“: **Checkliste** und **Foto / Link** (klappen die Felder auf). Kosten und Aufwand gibt es erst an der Karte
+
+**Symbol wählen** (Tipp auf die Kachel)
+
+- [ ] Vorschau mit Namen und „Automatisch erkannt aus …“ bzw. „Von dir gewählt“; Suche („Wäsche“ findet die Waschmaschine, auch ohne Umlaute und mit einem Tippfehler); „Nichts gefunden“ mit Hinweis; Farbe „Auto“ oder fest (sieben Farben)
+- [ ] „Passt zu …“ (Vorschläge zum Titel), „Zuletzt benutzt“ (merkt sich dieses Gerät), sechs Bereiche mit Zähler; Pfeiltasten wandern durchs Raster; „Symbol übernehmen“ übernimmt, „Zurück“ lässt alles, wie es war
+- [ ] An einer bestehenden Karte: Tipp auf die Kachel im Karten-Fenster öffnet dasselbe Fenster; ein **erkanntes** Symbol (Funken) folgt dem Titel, wenn er sich ändert, ein **gewähltes** nie
+- [ ] Karten in Aufgaben, Boards, Karten-Menü und Stupsen zeigen ihr Symbol und ihre Farbe; ohne Symbol steht der orange Haken. Kind: sieht die Symbole, ändern kann es sie nicht
+
+**Termin-Fenster**
+
+- [ ] Oben der gewählte Termin („Morgen, 19:00“, darunter das ganze Datum); Monatskalender mit Pfeilen für den Monat, heute mit Rand, der gewählte Tag orange; Pfeiltasten wechseln den Tag, Bild auf/ab den Monat
+- [ ] Uhrzeit: zwei Listen (Stunde, Minute in Fünferschritten), mit Ziehen, Mausrad, Pfeiltasten und Ziffern bedienbar; „Übernehmen“, „Kein Termin“ (unten); „Abbrechen“ lässt alles, wie es war
+- [ ] Rund um Mitternacht: um 23:59 ist „morgen“ der nächste Tag, eine Minute später „heute“ (Zeitzone des Geräts)
+
+**Einstellungen › Symbole** (nur Administratoren)
+
+- [ ] „Symbole aus Titeln erkennen“: Rückfrage („N Karten haben noch kein Symbol …“), danach das Ergebnis als Zahl („N Karten haben jetzt ein Symbol. Zu M Karten passte keins.“); Karten mit Symbol bleiben, nichts läuft von allein, ein zweiter Lauf sagt „Alle Karten haben schon ein Symbol“, soweit etwas passt. Mitglieder und Kinder sehen die Seite nicht
+- [ ] Datenbank: Migration 22 (vorher legt die App eine Sicherung unter `/data/backups` an); vorhandene Karten bleiben ohne Symbol
+- [ ] Englisch, Hell, Dunkel: nichts läuft über den Rand, Namen der Symbole stehen auf Englisch da
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

@@ -43,6 +43,7 @@ test('Stupsen: Rene stupst Conny, Abzeichen und Verlauf erscheinen live bei ihr'
   const conny = await connyPage(browser, String(info.project.use.baseURL), boardId);
   try {
     await conny.goto('/');
+    await openBoards(conny);
     await expect(conny.getByRole('tablist', { name: 'Spalten' })).toBeVisible();
     await conny.getByRole('tab', { name: /^Offen/ }).click();
     await expect(conny.getByRole('button', { name: /Offline/ })).toHaveCount(0);

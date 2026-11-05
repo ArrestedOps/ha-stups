@@ -125,6 +125,7 @@ test('Nur freigegebene: Fremder sieht „Kein Zugriff", der Administrator gibt i
     await page.locator('div.justify-between').filter({ has: page.getByText('Fremd', { exact: true }) }).getByRole('button', { name: 'Freigeben' }).click();
 
     await fremd.reload();
+    await openBoards(fremd);
     await expect(fremd.getByRole('tablist', { name: 'Spalten' })).toBeVisible();
     // Als Mitglied sieht er weder „Haushalt" noch „Home Assistant": Personen, Zugriff und Dashboard ändern nur Administratoren
     await fremd.getByRole('button', { name: 'Board wechseln' }).click();

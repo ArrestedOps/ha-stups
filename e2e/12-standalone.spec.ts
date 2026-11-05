@@ -20,6 +20,7 @@ async function melden(page: Page, user: string, password: string) {
 }
 
 async function einstellungen(page: Page) {
+  await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
   return page.getByRole('dialog');
@@ -90,8 +91,8 @@ test('Anmelden, Karte anlegen, nach dem Neuladen noch angemeldet; Abmelden sperr
   await openBoards(page);
 
   await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
-  await page.getByLabel('Titel').fill('Fenster putzen');
-  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await page.getByLabel('Was steht an?').fill('Fenster putzen');
+  await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
   // in der Liste suchen: Solange das Fenster „Neue Karte" ausblendet, steht der Titel noch einmal im Eingabefeld
   await expect(page.getByRole('list').getByText('Fenster putzen')).toBeVisible();
 

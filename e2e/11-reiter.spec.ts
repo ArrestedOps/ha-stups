@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Läuft in den normalen Projekten (Server ohne Home Assistant-Verbindung): die drei Reiter und die gemeinsame Kopfzeile
 const nav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
@@ -86,6 +87,7 @@ test('Kopfzeile: auf jedem Reiter der Avatar oben rechts öffnet die Einstellung
 
 test('In den Einstellungen steht „Wächter" unter Haushalt', async ({ page }) => {
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: /^Wächter/ }).click();

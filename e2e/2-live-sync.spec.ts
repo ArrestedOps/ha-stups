@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openBoards } from './helpers';
 
 test('Live-Sync: Änderung auf Gerät A erscheint auf Gerät B ohne Neuladen', async ({ browser }) => {
   const contextA = await browser.newContext({ baseURL: test.info().project.use.baseURL });
@@ -10,6 +11,7 @@ test('Live-Sync: Änderung auf Gerät A erscheint auf Gerät B ohne Neuladen', a
     const b = await contextB.newPage();
     for (const p of [a, b]) {
       await p.goto('/');
+      await openBoards(p);
       await p.getByRole('tab', { name: /^Offen/ }).click();
     }
     // B ist verbunden, bevor A etwas ändert
@@ -17,8 +19,8 @@ test('Live-Sync: Änderung auf Gerät A erscheint auf Gerät B ohne Neuladen', a
 
     const title = `Sync ${Date.now().toString(36)}`;
     await a.getByRole('button', { name: 'Neue Karte', exact: true }).click();
-    await a.getByLabel('Titel').fill(title);
-    await a.getByRole('button', { name: 'Anlegen' }).click();
+    await a.getByLabel('Was steht an?').fill(title);
+    await a.getByRole('button', { name: 'Aufgabe anlegen' }).click();
 
     await expect(b.locator('[role=presentation]').filter({ hasText: title })).toBeVisible({ timeout: 8000 });
 

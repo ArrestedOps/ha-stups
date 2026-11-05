@@ -195,10 +195,32 @@ test('„Nochmal": die Anfrage entfällt, die Karte bleibt offen und das Kind ka
 
     // Das Kind sieht es nach dem Laden wieder als offen und kann erneut abhaken
     await kid.page.reload();
+    await openBoards(kid.page);
     await expect(kid.page.getByTestId('card-waiting')).toHaveCount(0);
     await kid.page.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
     await expect(kid.page.getByTestId('card-waiting')).toHaveCount(1);
   } finally {
     await kid.close();
+  }
+});
+
+test('Kind sieht die Symbole seiner Karten (Kachel in der Liste und im Karten-Fenster), ändern kann es sie nicht', async ({ browser, baseURL, request }) => {
+  const b = await board(request, `Symbolboard ${tag}`);
+  const title = `Pflanzen gießen ${tag}`;
+  const res = await request.post(`/api/boards/${b.id}/cards`, { data: { title, columnId: b.columnId, assigneeIds: [kidId], icon: 'leaf', iconColor: 'green', iconSource: 'manual' } });
+  expect(res.status()).toBe(201);
+  const kd = await kidPage(browser, baseURL);
+  try {
+    await kd.page.getByRole('button', { name: new RegExp(`^${title}`) }).first().waitFor();
+    await expect(kd.page.locator('[role=presentation]').filter({ hasText: title }).locator('.tile-green')).toHaveCount(1);
+    const dialog = await openCard(kd.page, title);
+    await expect(dialog.locator('.tile-green')).toHaveCount(1);
+    await expect(dialog.getByTestId('symbol-tile')).toHaveCount(0); // keine Schaltfläche zum Ändern
+    // der Server verbietet es ebenfalls
+    const cardId = ((await res.json()) as { id: string }).id;
+    const patch = await kd.page.request.patch(`/api/cards/${cardId}`, { data: { icon: 'dog' } });
+    expect(patch.status()).toBe(403);
+  } finally {
+    await kd.close();
   }
 });

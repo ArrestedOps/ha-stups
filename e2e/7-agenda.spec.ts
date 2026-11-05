@@ -58,7 +58,6 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
   // Der Filter bleibt auf dem Gerät erhalten
   await page.getByTestId('tasks').getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
   await page.reload();
-  await openBoards(page);
   await expect(page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByTestId('tasks')).toBeVisible();
   await expect(agenda.getByText(s.t.fenster)).toBeVisible();

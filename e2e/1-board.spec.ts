@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { newTaskSheet, openBoards, pickDue } from './helpers';
 
 let counter = 0;
 const uniqueTitle = (base: string) => `${base} ${Date.now().toString(36)}${counter++}`;
@@ -9,12 +9,9 @@ const card = (page: Page, title: string) => page.locator('[role=presentation]').
 
 async function addCard(page: Page, title: string, due?: string) {
   await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
-  await page.getByLabel('Titel').fill(title);
-  if (due) {
-    await page.getByRole('button', { name: /Fälligkeit/ }).click();
-    await page.getByLabel('Fälligkeit mit Datum und Uhrzeit').fill(due);
-  }
-  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await page.getByLabel('Was steht an?').fill(title);
+  if (due) await pickDue(page, due);
+  await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
 }
 
@@ -116,35 +113,49 @@ test('Termin auf heute gestellt: die Karte bleibt in „Offen", ohne Fehler', as
 
 test('Neue Karte: wer sie anlegt, ist zuerst selbst zuständig (sonst gäbe es keine Erinnerung)', async ({ page }) => {
   await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
-  await expect(page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /Rene/ })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Wer kümmert sich?' }).getByRole('button', { name: 'Ich' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('Neue Karte: Kategorie direkt anlegen und gleich wählen, ein vorhandener Name wird wiederverwendet', async ({ page }) => {
   const title = uniqueTitle('Kategorie');
   const cat = `Garten ${Date.now().toString(36)}`;
   await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
-  await page.getByLabel('Titel').fill(title);
-  const sheet = page.getByRole('dialog', { name: 'Neue Karte' });
-  // Auswahl-Chip im Fenster (die Filter-Chips über der Liste und der Eigenschaften-Knopf tragen denselben Namen)
-  const chip = sheet.locator('button[aria-pressed]', { hasText: new RegExp(`^${cat}$`, 'i') });
-  await page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /Kategorie/ }).click();
+  await page.getByLabel('Was steht an?').fill(title);
+  const sheet = newTaskSheet(page);
+  // Auswahl-Chip im Fenster (die Filter-Chips über der Liste tragen denselben Namen)
+  const chip = sheet.locator('button[aria-pressed]', { hasText: new RegExp(`^${cat}\\s*$`, 'i') });
+  const form = sheet.getByRole('group', { name: 'Neue Kategorie' });
+  await sheet.getByRole('button', { name: 'Neue Kategorie' }).click();
 
-  // neu anlegen: Enter im Feld, die Kategorie ist sofort gewählt
-  await page.getByLabel('Name der neuen Kategorie').fill(cat);
-  await page.getByLabel('Name der neuen Kategorie').press('Enter');
+  // neu anlegen: Enter im Feld, die Kategorie ist sofort gewählt, das Formular klappt zu
+  await form.getByRole('textbox', { name: 'Neue Kategorie' }).fill(cat);
+  await form.getByRole('textbox', { name: 'Neue Kategorie' }).press('Enter');
   await expect(chip).toHaveAttribute('aria-pressed', 'true');
+  await expect(form).toHaveCount(0);
 
   // derselbe Name (andere Schreibweise) legt keine zweite an
   await chip.click(); // abwählen
-  await page.getByLabel('Name der neuen Kategorie').fill(cat.toUpperCase());
-  await page.getByRole('button', { name: 'Erstellen' }).click();
+  await sheet.getByRole('button', { name: 'Neue Kategorie' }).click();
+  await form.getByRole('textbox', { name: 'Neue Kategorie' }).fill(cat.toUpperCase());
+  await form.getByRole('button', { name: 'Anlegen' }).click();
   await expect(chip).toHaveAttribute('aria-pressed', 'true');
   await expect(chip).toHaveCount(1);
 
-  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
   // in der Liste zeigen Punkte die Kategorie, der Name steht für Vorlese-Programme daran (und im Karten-Fenster)
   await expect(card(page, title).getByTestId('card-categories')).toHaveAttribute('aria-label', new RegExp(cat));
+});
+
+test('Neue Karte: eigene Farbe für die neue Kategorie, die Farbpunkte sind per Tastatur wählbar', async ({ page }) => {
+  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  const sheet = newTaskSheet(page);
+  await sheet.getByRole('button', { name: 'Neue Kategorie' }).click();
+  const colors = sheet.getByRole('radiogroup', { name: 'Farbe der Kategorie' });
+  await expect(colors.getByRole('radio')).toHaveCount(7);
+  await colors.getByRole('radio', { name: 'Pink' }).click();
+  await expect(colors.getByRole('radio', { name: 'Pink' })).toHaveAttribute('aria-checked', 'true');
+  await expect(colors.getByRole('radio', { name: 'Blau' })).toHaveAttribute('aria-checked', 'false');
 });
 
 test('Termin setzen ohne Zuständige: Hinweis, dass keine Erinnerung kommt, mit „Mir zuweisen“', async ({ page, request }) => {
@@ -206,26 +217,35 @@ test('Erledigte Karte: nicht mehr „überfällig", zeigt die Erledigt-Zeit und 
   await expect(verlauf).toContainText('Erledigt');
 });
 
-test('Neue Karte: alle Felder gleich beim Anlegen (Priorität, Beschreibung, Checkliste, Link, Kosten)', async ({ page, request }) => {
+test('Neue Karte: Felder gleich beim Anlegen (Priorität, Notiz, Checkliste, Link); Kosten gibt es danach an der Karte', async ({ page, request }) => {
   const title = uniqueTitle('Date-Idee');
   await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
-  await page.getByLabel('Titel').fill(title);
+  const sheet = newTaskSheet(page);
+  await page.getByLabel('Was steht an?').fill(title);
 
-  // Karten in der Liste tragen „Priorität hoch" im Namen: darum nur unter den Eigenschaften suchen
-  const props = page.getByRole('group', { name: 'Eigenschaften' });
-  await props.getByRole('button', { name: 'Priorität' }).click();
-  await page.getByRole('group', { name: 'Priorität' }).getByRole('button', { name: 'Hoch' }).click();
-  await props.getByRole('button', { name: 'Kosten' }).click();
-  await page.getByLabel('Kosten in Euro').fill('49,90');
-  await page.getByLabel('Beschreibung').fill('Tisch für zwei reservieren');
+  await sheet.getByRole('radiogroup', { name: 'Priorität' }).getByRole('radio', { name: 'Hoch' }).click();
+  await page.getByLabel('Freitext, Details, Maße …').fill('Tisch für zwei reservieren');
 
+  // „Mehr“: nur Checkliste und Foto / Link
+  await sheet.getByRole('button', { name: 'Checkliste' }).click();
   await page.getByLabel('Neuer Eintrag').fill('Reservieren');
   await page.getByLabel('Neuer Eintrag').press('Enter');
+  await sheet.getByRole('button', { name: /^Foto \/ Link/ }).click();
   await page.getByLabel('Neuer Link').fill('maps.apple.com/?q=Restaurant');
   await page.getByLabel('Neuer Link').press('Enter');
 
-  await page.getByRole('button', { name: 'Anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
+  const made = page.getByRole('status').filter({ hasText: 'Karte angelegt' });
+  await expect(made).toBeVisible();
+
+  // Kosten: an der Karte (im Fenster „Neue Aufgabe“ gibt es sie nicht mehr)
+  await made.getByRole('button', { name: 'Öffnen' }).click();
+  const props = page.getByRole('group', { name: 'Eigenschaften' });
+  await props.getByRole('button', { name: 'Kosten' }).click();
+  await page.getByLabel('Kosten in Euro').fill('49,90');
+  await page.getByLabel('Kosten in Euro').blur();
+  await expect(page.getByText('Kosten dieser Karte')).toBeVisible();
+  await page.getByRole('button', { name: 'Fertig' }).click();
 
   // Budget: steht im Blatt „Filter" des Boards (der Test läuft in Hell und Dunkel auf demselben Board, die Summe wächst also mit)
   await page.getByRole('button', { name: 'Filter' }).click();

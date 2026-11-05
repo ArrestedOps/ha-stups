@@ -2,6 +2,18 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.21.0-beta.1
+
+**Neues Design, Phase 3: Symbol und Farbe für jede Karte, „Neue Aufgabe“ nach dem Entwurf, Termin-Fenster.** *Datenbank: Migration 22, vorher wie immer eine Sicherung.*
+
+- **Die App startet immer auf „Aufgaben“**, auch nach dem Neuladen. Bisher blieb sie auf Boards, wenn du zuletzt dort warst
+- **Jede Karte hat ein Symbol und eine Farbe.** Karten in Aufgaben, Boards, im Karten-Menü und beim Stupsen zeigen sie in der Kachel; ohne Symbol steht wie bisher der orange Haken („Aufgabe“). Karten von Wächtern bekommen das Symbol ihrer Entität (Waschmaschine, Fenster, Batterie …). Duplizieren, Wiederholung und Board-Vorlagen nehmen das Symbol mit
+- **Neue Aufgabe:** Beim Tippen erkennt Stups das Symbol aus dem Titel („Müll raus“ → Mülleimer), sichtbar am **Funken** an der Kachel und als Chip „Symbol: …“, den du mit ✕ entfernen kannst. Erkannte Teile (Datum, Uhrzeit, @Person, #Kategorie, Wiederholung) stehen als Chips. Darunter „Wann und wo“ (Board und Spalte, Termin, Wiederholung, Erinnern), „Wer kümmert sich?“, Priorität, Kategorie (**neue Kategorie gleich hier anlegen**), Notiz und „Mehr“ (Checkliste, Foto / Link). Kosten und Aufwand stehen jetzt an der Karte
+- **Symbol wählen** (Tipp auf die Kachel, auch an bestehenden Karten): Suche, die auch ähnliche Wörter kennt („Wäsche“ findet die Waschmaschine), Vorschläge zum Titel, „Zuletzt benutzt“, sechs Bereiche mit rund 300 Symbolen und die Farbe („Auto“ oder fest). Ein erkanntes Symbol folgt dem Titel, wenn du ihn änderst; ein gewähltes bleibt
+- **Termin wählen:** Monatskalender und Uhrzeit als zwei Listen (Ziehen, Mausrad, Pfeiltasten, Ziffern), „Übernehmen“ und „Kein Termin“. Auch an bestehenden Karten über „Kalender …“
+- **Einstellungen › Symbole** (nur Administratoren): „Symbole aus Titeln erkennen“ setzt für alle Karten ohne Symbol das passende, nach einer Rückfrage und nur auf deinen Wunsch; am Ende steht, für wie viele Karten es geklappt hat
+- Bewusste Abweichungen vom Entwurf: Kosten und Aufwand fehlen im Fenster „Neue Aufgabe“ (sie gibt es an der Karte); die Suche kennt nur die eingebauten Symbole, nicht alle von Home Assistant; die erkannten Teile stehen als Chips, nicht farbig im Text
+
 ## 1.20.2-beta.1
 
 - **Leiste unten in der Home-Assistant-App:** Aufgaben, Boards und Wächter standen zu hoch, mit viel Leerraum darunter. Die Seite ließ unten 30 px für den Home-Balken frei, den Home Assistant dort aber schon selbst freihält. In Home Assistant bleibt jetzt nur ein kleiner Rand; im Browser bleibt der Platz für den Home-Balken. Dasselbe gilt für den großen Knopf am Fuß der Sheets, und der Plus-Knopf rückt mit herunter

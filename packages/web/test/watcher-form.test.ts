@@ -17,6 +17,7 @@ const filled = (extra: Partial<WatcherForm> = {}): WatcherForm => ({
   title: 'Waschmaschine ausräumen',
   dueKind: 'in',
   dueMinutes: '30',
+  assignMode: 'rotation_present',
   ...extra,
 });
 

@@ -7,9 +7,10 @@
 
   /**
    * Probelauf: Stups wendet die Regel auf die Historie der letzten 7 Tage an und zeigt, wann der Wächter ausgelöst hätte. Nichts wird
-   * gespeichert. Das gibt Vertrauen, bevor der Wächter wirklich Karten anlegt.
+   * gespeichert. Das gibt Vertrauen, bevor der Wächter wirklich Karten anlegt. Im Assistenten löst der Knopf „Testen" am Fuß ihn aus
+   * (`bind:this` und `run()`), im Ablauf hat der Abschnitt einen eigenen Knopf (`button`).
    */
-  let { form }: { form: WatcherForm } = $props();
+  let { form, button = true }: { form: WatcherForm; button?: boolean } = $props();
 
   let result = $state<DryRunResult | null>(null);
   let busy = $state(false);
@@ -25,7 +26,11 @@
     error = '';
   });
 
-  async function run() {
+  export async function run(): Promise<void> {
+    if (!ready) {
+      error = supported ? t('Wähle zuerst die Entität und den Schwellwert.') : t('Einen Probelauf gibt es nur für Zahlen und Zustände');
+      return;
+    }
     const input = toInput(form);
     busy = true;
     error = '';
@@ -58,24 +63,27 @@
   });
 </script>
 
-<section class="mt-3 rounded-2xl border border-line bg-surface p-4" data-testid="dry-run">
+{#if button || result || error || busy}
+<section class="flex flex-col gap-3 rounded-row border border-line bg-surface px-3.5 py-3.5" data-testid="dry-run">
   <div class="flex items-center justify-between gap-3">
     <div class="min-w-0">
-      <p class="text-[15px] font-semibold">{t('Probelauf')}</p>
-      <p class="text-[13px] text-fg2">
-        {supported ? t('Was hätte der Wächter in den letzten 7 Tagen getan?') : t('Einen Probelauf gibt es nur für Zahlen und Zustände')}
-      </p>
+      <p class="text-[15px] font-bold">{t('Probelauf')}</p>
+      <p class="text-[13px] text-fg2">{supported ? t('Was hätte der Wächter in den letzten 7 Tagen getan?') : t('Einen Probelauf gibt es nur für Zahlen und Zustände')}</p>
     </div>
-    <button type="button" class="min-h-11 shrink-0 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-40" disabled={!ready || busy} onclick={run}>
-      {busy ? t('Rechnet …') : t('Probelauf')}
-    </button>
+    {#if button}
+      <button type="button" class="inline-flex h-[34px] shrink-0 items-center rounded-xl bg-surface2 px-3.5 text-[13px] font-bold text-text-soft disabled:opacity-40" disabled={!ready || busy} onclick={run}>
+        {busy ? t('Rechnet …') : t('Probelauf')}
+      </button>
+    {:else if busy}
+      <span class="text-[13px] text-fg2">{t('Rechnet …')}</span>
+    {/if}
   </div>
 
-  {#if error}<p class="mt-3 text-[14px] text-danger">{error}</p>{/if}
+  {#if error}<p class="text-[14px] text-danger" role="alert">{error}</p>{/if}
 
   {#if result}
-    <div class="mt-3" data-testid="dry-run-result">
-      <p class="text-[16px] font-semibold">{result.sentence}</p>
+    <div data-testid="dry-run-result">
+      <p class="text-[15px] font-bold">{result.sentence}</p>
       {#if chart}
         <svg viewBox="0 0 {W} {H}" class="mt-2 h-16 w-full" role="img" aria-label={t('Verlauf der letzten 7 Tage')}>
           <path d={chart.line} fill="none" stroke="var(--text2)" stroke-width="1.5" vector-effect="non-scaling-stroke" />
@@ -93,3 +101,4 @@
     </div>
   {/if}
 </section>
+{/if}

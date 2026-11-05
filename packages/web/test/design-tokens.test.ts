@@ -47,6 +47,15 @@ describe('Kontrast der Farbpaare (aus app.css), Hell und Dunkel', () => {
         expect(ratio(v['--on-accent']!, v['--accent-end']!), 'Ende').toBeGreaterThanOrEqual(3.5);
       });
 
+      it('Wächter-Editor: Schilder (Wenn, Dann, An wen, Erledigt) und die grüne Marke auf ihrem Grund, Schrift auf der Einsatz-Fläche: mindestens 4,5 : 1', () => {
+        for (const kind of ['when', 'then', 'who', 'done']) expect(ratio(v[`--tag-${kind}-fg`]!, v[`--tag-${kind}-bg`]!), `Schild ${kind}`).toBeGreaterThanOrEqual(4.5);
+        expect(ratio(v['--ok-fg']!, v['--ok-bg']!), 'jetzt-Marke').toBeGreaterThanOrEqual(4.5);
+        expect(ratio(v['--step-done']!, v['--bg']!), 'erledigter Schritt').toBeGreaterThanOrEqual(4.5);
+        for (const fg of ['--text', '--text2', '--dim', '--tok-fg']) expect(ratio(v[fg]!, v['--surface-inset']!), `${fg} auf der Einsatz-Fläche`).toBeGreaterThanOrEqual(4.5);
+        expect(ratio(v['--graph-line']!, v['--bg']!), 'Linie im Verlauf (Grafik: 3 : 1)').toBeGreaterThanOrEqual(3);
+        expect(ratio(v['--sig-green']!, v['--bg']!), 'Schwellen-Linie (Grafik: 3 : 1)').toBeGreaterThanOrEqual(3);
+      });
+
       it('Haus-Türkis und Gefahr auf ihrem Grund: mindestens 4,5 : 1', () => {
         expect(ratio(v['--house']!, v['--house-bg']!)).toBeGreaterThanOrEqual(4.5);
         expect(ratio(v['--danger']!, v['--danger-bg']!)).toBeGreaterThanOrEqual(4.5);

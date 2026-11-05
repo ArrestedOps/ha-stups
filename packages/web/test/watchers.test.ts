@@ -16,6 +16,7 @@ const filled = (extra: Partial<WatcherForm> = {}): WatcherForm => ({
   title: 'Waschmaschine ausräumen',
   dueKind: 'in',
   dueMinutes: '30',
+  assignMode: 'rotation_present',
   ...extra,
 });
 
@@ -51,7 +52,7 @@ describe('Vorschau-Satz', () => {
   });
 
   it('unfertige Eingaben zeigen Auslassungspunkte statt zu scheitern', () => {
-    expect(previewSentence({ ...emptyForm(), kind: 'below' }, nameOf)).toBe('Wenn … 3 Minuten unter … liegt, bekommt eine anwesende Person abwechselnd die Karte „…“.');
+    expect(previewSentence({ ...emptyForm(), kind: 'below', assignMode: 'rotation_present' }, nameOf)).toBe('Wenn … 3 Minuten unter … liegt, bekommt eine anwesende Person abwechselnd die Karte „…“.');
   });
 });
 

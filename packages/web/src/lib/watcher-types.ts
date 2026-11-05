@@ -34,6 +34,9 @@ export interface WatcherCard {
   categoryIds: string[];
   priority: string | null;
   due: DueRule;
+  /** Symbol und Farbe der Karte von Hand (leer: das Symbol der beobachteten Entität) */
+  icon?: string | null;
+  iconColor?: string | null;
 }
 
 export interface AssignRule {
@@ -142,4 +145,14 @@ export interface DryRunResult {
   truncated: boolean;
   from: string;
   to: string;
+}
+
+/** Die Reihenfolge für „An wen" (`GET /api/watchers/order`): der Kreis in der Reihenfolge der Verteilung, wer als Nächstes dran ist, wer zu Hause ist */
+export interface OrderView {
+  mode: AssignMode;
+  circle: { id: string; present: boolean | null; next: boolean }[];
+  /** reihum: zwischen den Personen stehen Pfeile */
+  ordered: boolean;
+  /** wie viele aus dem Kreis zu Hause sind; null, wenn sich niemand zuordnen lässt */
+  home: number | null;
 }

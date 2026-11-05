@@ -44,6 +44,11 @@
   --color-brand-dot: var(--brand-dot);
   --color-banner-icon: var(--banner-purple-icon);
   --color-banner-radio: var(--banner-radio);
+  --color-surface-inset: var(--surface-inset);
+  --color-tok: var(--tok-fg);
+  --color-ok: var(--ok-fg);
+  --color-ok-bg: var(--ok-bg);
+  --color-step-done: var(--step-done);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
   --font-sans: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
@@ -100,6 +105,15 @@
   --sig-green: #7be07b;
   --sig-blue: #7fc8ff;
   --brand-dot: #fd6305; /* der Punkt der Wortmarke */
+  /* Wächter-Editor: Schilder der vier Karten (Grund und Schrift), grüne Marke „jetzt“, Linie im Verlauf, erledigte Schritte, Einsatz-Fläche */
+  --tag-when-bg: #2f213f; --tag-when-fg: #d7c2ff;
+  --tag-then-bg: #402212; --tag-then-fg: #ffc59a;
+  --tag-who-bg: #272f3f; --tag-who-fg: #c9ddff;
+  --tag-done-bg: #273525; --tag-done-fg: #b4f0b4;
+  --ok-bg: #253023; --ok-fg: #8fe88f;
+  --graph-line: #ff8a1f;
+  --step-done: #ffb07a;
+  --surface-inset: #0a0909;
   --scrim: rgba(0, 0, 0, 0.6);
   --glow: radial-gradient(ellipse at 85% -5%, rgba(255, 90, 31, 0.32), transparent 62%);
   --shadow-card: none;
@@ -191,6 +205,14 @@
     --sig-blue: #0a5ea8;
     --brand-dot: #e0480d;
     --scrim: rgba(43, 29, 21, 0.4);
+    --tag-when-bg: #efe6fb; --tag-when-fg: #5a2aa0;
+    --tag-then-bg: #ffe9d9; --tag-then-fg: #8a3000;
+    --tag-who-bg: #e4eefc; --tag-who-fg: #0a4f9c;
+    --tag-done-bg: #e3f4e6; --tag-done-fg: #14602e;
+    --ok-bg: #e4f7e9; --ok-fg: #1c7a3a;
+    --graph-line: #c04100;
+    --step-done: #a93800;
+    --surface-inset: #fbefe4;
     --glow: radial-gradient(ellipse at 90% -10%, rgba(255, 138, 77, 0.42), transparent 60%);
     --shadow-card: 0 6px 18px rgba(120, 60, 20, 0.08);
     --shadow-tile: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 10px rgba(120, 60, 20, 0.22);
@@ -304,6 +326,60 @@
 /* Neu und offen (Mitteilungen): oranger Rand an der Zeile, oranger Punkt mit Leuchten */
 .row-new { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
 .dot-new { background: var(--brand-dot); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 70%, transparent); }
+
+/* Wächter-Editor: Karte des Ablaufs (Rundung 20), Verbindung mit Pfeil nach unten, Schilder, Wert-Feld der Schwelle, Ring um „als Nächstes dran“ */
+.flow-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 12px 12px 14px;
+}
+.flow-link { position: relative; display: flex; justify-content: center; height: 22px; }
+.flow-link::before { content: ''; width: 2px; height: 100%; background-image: linear-gradient(180deg, var(--track), var(--brand-dot)); }
+.flow-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--brand-dot);
+  border-bottom: 2px solid var(--brand-dot);
+  transform: rotate(45deg);
+}
+.wtag {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.wtag-when { background: var(--tag-when-bg); color: var(--tag-when-fg); }
+.wtag-then { background: var(--tag-then-bg); color: var(--tag-then-fg); }
+.wtag-who { background: var(--tag-who-bg); color: var(--tag-who-fg); }
+.wtag-done { background: var(--tag-done-bg); color: var(--tag-done-fg); }
+.tok-pill {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--tok-fg);
+}
+.ring-next { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--brand-dot); }
+.ring-next-inset { box-shadow: 0 0 0 2px var(--surface-inset), 0 0 0 4px var(--brand-dot); }
+
+/* Schieberegler der Schwelle (Wächter-Editor): Rille grau mit orangem Anteil, runder oranger Griff; --fill steht in Prozent */
+.range-brand { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; }
+.range-brand::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background-image: linear-gradient(to right, var(--brand-dot) var(--fill, 0%), var(--track) var(--fill, 0%)); }
+.range-brand::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border: 0; border-radius: 50%; background: var(--brand-dot); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+.range-brand::-moz-range-track { height: 6px; border-radius: 3px; background: var(--track); }
+.range-brand::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--brand-dot); }
+.range-brand::-moz-range-thumb { width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--brand-dot); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
 
 /* Schimmer hinter der Kopfzeile (nur im hellen Thema: das dunkle Mockup hat einen ruhigen, flachen Grund) */
 @media (prefers-color-scheme: dark) {

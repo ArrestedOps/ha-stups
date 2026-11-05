@@ -1,6 +1,7 @@
 import { i18n, type LanguageChoice, t } from './i18n/index.svelte';
 import type { Recurrence } from './recurrence';
-import type { DryRunResult, HaEntity, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from './watcher-types';
+import type { EntityHistory } from './history';
+import type { DryRunResult, HaEntity, OrderView, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from './watcher-types';
 
 export type Priority = 'low' | 'medium' | 'high';
 /** Aufwand einer Karte für die Fairness-Ansicht; leer zählt wie mittel */
@@ -663,6 +664,22 @@ export const api = {
   unhideSuggestion: (templateId: string, entityId: string) => post<void>('watchers/suggestions/unhide', { templateId, entityId }),
   /** Probelauf: die Regel auf die Historie der letzten 7 Tage anwenden, ohne zu speichern */
   dryRun: (b: { trigger: WatcherInput['trigger']; cooldownMin: number }) => post<DryRunResult>('watchers/dry-run', b),
+  /** Verlauf einer Entität (letzte Stunden) mit den Stellen, an denen die Regel ausgelöst hätte; nie ein Fehler: der Status sagt, wenn es keinen gibt */
+  entityHistory: (q: { entityId: string; hours?: number; kind?: string; value?: string; to?: string; forMin?: string; count?: string; cooldownMin?: string }) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q)) if (v !== undefined && v !== '') p.set(k, String(v));
+    return get<EntityHistory>(`watchers/history?${p}`);
+  },
+  /** Die Reihenfolge für „An wen": für einen gespeicherten Wächter (`watcherId`) oder einen Entwurf */
+  watcherOrder: (q: { watcherId?: string; mode?: string; personIds?: string[]; fallback?: string; fallbackPersonId?: string }) => {
+    const p = new URLSearchParams();
+    if (q.watcherId) p.set('watcherId', q.watcherId);
+    if (q.mode) p.set('mode', q.mode);
+    if (q.personIds) p.set('personIds', q.personIds.join(','));
+    if (q.fallback) p.set('fallback', q.fallback);
+    if (q.fallbackPersonId) p.set('fallbackPersonId', q.fallbackPersonId);
+    return get<OrderView>(`watchers/order?${p}`);
+  },
   haEntities: (q: string, domain?: string) =>
     get<HaEntity[]>(`ha/entities?q=${encodeURIComponent(q)}${domain ? `&domain=${encodeURIComponent(domain)}` : ''}`),
   exportData: () => post<{ dir: string; bytes: number; files: boolean }>('admin/export'),

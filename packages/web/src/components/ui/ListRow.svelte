@@ -22,6 +22,7 @@
     check,
     label,
     highlight = false,
+    inset = false,
     onclick,
     href,
   }: {
@@ -38,13 +39,15 @@
     label?: string;
     /** neu und noch offen (Mitteilungen): oranger Rand */
     highlight?: boolean;
+    /** Zeile in einer Karte (Ablauf im Wächter-Editor): dunkler Grund, 64 px hoch statt 68 */
+    inset?: boolean;
     onclick?: (e: MouseEvent) => void;
     href?: string;
   } = $props();
 </script>
 
 <div
-  class="flex h-row w-full items-center rounded-row border bg-surface text-fg {highlight ? 'row-new' : 'border-line'} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
+  class="flex w-full items-center rounded-row border text-fg {inset ? 'h-16 bg-bg' : 'h-row bg-surface'} {highlight ? 'row-new' : 'border-line'} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
   data-variant={variant}
 >
   {#if check}

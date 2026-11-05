@@ -19,8 +19,11 @@ export interface WatcherForm {
   columnId: string;
   title: string;
   description: string;
+  /** Symbol der Karte von Hand ('' = das der Entität) und feste Farbe ('' = nach Bereich) */
+  icon: string;
+  iconColor: string;
   categoryIds: string[];
-  priority: '' | 'high';
+  priority: '' | 'low' | 'medium' | 'high';
   dueKind: 'none' | 'in' | 'at';
   dueMinutes: string;
   dueDay: 'today' | 'tomorrow';
@@ -61,13 +64,15 @@ export const emptyForm = (boardId = '', columnId = ''): WatcherForm => ({
   columnId,
   title: '',
   description: '',
+  icon: '',
+  iconColor: '',
   categoryIds: [],
   priority: '',
   dueKind: 'none',
   dueMinutes: '30',
   dueDay: 'tomorrow',
   dueTime: '08:00',
-  assignMode: 'rotation_present',
+  assignMode: 'rotation',
   personIds: [],
   fallback: 'next',
   waitFallback: 'none',
@@ -142,26 +147,43 @@ const intOr = (s: string, fallback: number): number => {
   return n === null ? fallback : Math.round(n);
 };
 
-/** Fehlermeldung, wenn das Formular noch nicht gespeichert werden kann, sonst null */
-export function formProblem(f: WatcherForm): string | null {
-  if (!f.name.trim()) return t('Gib dem Wächter einen Namen.');
-  if (!f.entityId) return t('Wähle die Entität, die beobachtet werden soll.');
-  if (f.kind === 'state' && !f.to.trim()) return t('Gib den Zustand an, in den die Entität wechseln soll.');
-  if ((f.kind === 'above' || f.kind === 'below') && num(f.value) === null) return t('Gib den Schwellwert als Zahl an.');
-  if (f.kind === 'calendar_event' && intOr(f.leadHours, -1) < 0) return t('Gib an, wie viele Stunden vor dem Termin die Karte entstehen soll.');
-  if (f.kind === 'forecast' && intOr(f.forecastHours, 0) < 1) return t('Gib an, für wie viele Stunden im Voraus nach Regen geschaut werden soll.');
-  if (!f.title.trim()) return t('Gib der Karte einen Titel.');
-  if (!f.boardId || !f.columnId) return t('Wähle Board und Spalte für die Karte.');
-  if (f.dueKind === 'in' && intOr(f.dueMinutes, -1) < 0) return t('Gib die Minuten bis zur Fälligkeit an.');
-  if ((f.assignMode === 'fixed') && f.personIds.length === 0) return t('Wähle mindestens eine Person.');
-  if ((f.fallback === 'fixed' || f.waitFallback === 'fixed') && !f.fallbackPersonId) return t('Wähle die Person für den Rückfall.');
-  if (f.doneOn) {
-    if (!f.doneEntityId) return t('Wähle die Entität, bei der sich die Karte von selbst erledigt.');
-    if (f.doneKind === 'state' && !f.doneTo.trim()) return t('Gib den Zustand zum Erledigen an.');
-    if (f.doneKind !== 'state' && num(f.doneValue) === null) return t('Gib den Schwellwert zum Erledigen an.');
-  }
-  return null;
+/** Bei diesen Arten gilt der Rückfall „wenn niemand zu Hause ist / sich niemand meldet“; bei den anderen bleibt er unbenutzt */
+export const usesFallback = (mode: AssignMode): boolean => mode === 'rotation_present' || mode === 'all_present' || mode === 'suggest';
+
+/** Ein Problem im Formular und der Schritt des Assistenten, in dem es sich beheben lässt (1 Wenn, 2 Dann, 3 Wer, 4 Feinschliff) */
+export interface FormProblem {
+  step: 1 | 2 | 3 | 4;
+  text: string;
 }
+
+/** Alles, was dem Formular noch fehlt, in der Reihenfolge, in der es gemeldet wird */
+export function formProblems(f: WatcherForm): FormProblem[] {
+  const out: FormProblem[] = [];
+  const add = (step: FormProblem['step'], text: string) => out.push({ step, text });
+  if (!f.name.trim()) add(4, t('Gib dem Wächter einen Namen.'));
+  if (!f.entityId) add(1, t('Wähle die Entität, die beobachtet werden soll.'));
+  if (f.kind === 'state' && !f.to.trim()) add(1, t('Gib den Zustand an, in den die Entität wechseln soll.'));
+  if ((f.kind === 'above' || f.kind === 'below') && num(f.value) === null) add(1, t('Gib den Schwellwert als Zahl an.'));
+  if (f.kind === 'calendar_event' && intOr(f.leadHours, -1) < 0) add(1, t('Gib an, wie viele Stunden vor dem Termin die Karte entstehen soll.'));
+  if (f.kind === 'forecast' && intOr(f.forecastHours, 0) < 1) add(1, t('Gib an, für wie viele Stunden im Voraus nach Regen geschaut werden soll.'));
+  if (!f.title.trim()) add(2, t('Gib der Karte einen Titel.'));
+  if (!f.boardId || !f.columnId) add(2, t('Wähle Board und Spalte für die Karte.'));
+  if (f.dueKind === 'in' && intOr(f.dueMinutes, -1) < 0) add(2, t('Gib die Minuten bis zur Fälligkeit an.'));
+  if (f.assignMode === 'fixed' && f.personIds.length === 0) add(3, t('Wähle mindestens eine Person.'));
+  if (((usesFallback(f.assignMode) && f.fallback === 'fixed') || (f.assignMode === 'first_home' && f.waitFallback === 'fixed')) && !f.fallbackPersonId) add(3, t('Wähle die Person für den Rückfall.'));
+  if (f.doneOn) {
+    if (!f.doneEntityId) add(4, t('Wähle die Entität, bei der sich die Karte von selbst erledigt.'));
+    if (f.doneKind === 'state' && !f.doneTo.trim()) add(4, t('Gib den Zustand zum Erledigen an.'));
+    if (f.doneKind !== 'state' && num(f.doneValue) === null) add(4, t('Gib den Schwellwert zum Erledigen an.'));
+  }
+  return out;
+}
+
+/** Fehlermeldung, wenn das Formular noch nicht gespeichert werden kann, sonst null */
+export const formProblem = (f: WatcherForm): string | null => formProblems(f)[0]?.text ?? null;
+
+/** Das erste Problem eines Schritts (der Assistent lässt erst weiter, wenn der Schritt stimmt), sonst null */
+export const stepProblem = (f: WatcherForm, step: FormProblem['step']): string | null => formProblems(f).find((p) => p.step === step)?.text ?? null;
 
 const dueOf = (f: WatcherForm): DueRule =>
   f.dueKind === 'in'
@@ -196,13 +218,16 @@ export function toInput(f: WatcherForm): WatcherInput {
       categoryIds: f.categoryIds,
       priority: f.priority || null,
       due: dueOf(f),
+      ...(f.icon ? { icon: f.icon } : {}),
+      ...(f.iconColor ? { iconColor: f.iconColor } : {}),
     },
     assign: {
       mode: f.assignMode,
       personIds: f.personIds,
-      fallback: f.fallback,
-      waitFallback: f.waitFallback,
-      fallbackPersonId: f.fallbackPersonId || null,
+      // Rückfälle gelten nur bei den Arten, die sie brauchen: ein übrig gebliebener Wert einer früheren Wahl darf das Speichern nicht verhindern
+      fallback: usesFallback(f.assignMode) ? f.fallback : 'next',
+      waitFallback: f.assignMode === 'first_home' ? f.waitFallback : 'none',
+      fallbackPersonId: (usesFallback(f.assignMode) && f.fallback === 'fixed') || (f.assignMode === 'first_home' && f.waitFallback === 'fixed') ? f.fallbackPersonId || null : null,
     },
     done: f.doneOn
       ? { entityId: f.doneEntityId, kind: f.doneKind, to: f.doneKind === 'state' ? f.doneTo.trim() : null, value: f.doneKind === 'state' ? null : num(f.doneValue) }
@@ -234,8 +259,10 @@ export function fromWatcher(w: WatcherItem, entities: Map<string, HaEntity> = ne
     columnId: w.card.columnId,
     title: w.card.title,
     description: w.card.description ?? '',
+    icon: w.card.icon ?? '',
+    iconColor: w.card.iconColor ?? '',
     categoryIds: w.card.categoryIds,
-    priority: w.card.priority === 'high' ? 'high' : '',
+    priority: w.card.priority === 'high' || w.card.priority === 'low' || w.card.priority === 'medium' ? w.card.priority : '',
     dueKind: w.card.due.kind,
     dueMinutes: w.card.due.kind === 'in' ? String(w.card.due.minutes) : '30',
     dueDay: w.card.due.kind === 'at' ? w.card.due.day : 'tomorrow',
@@ -287,7 +314,7 @@ export function previewSentence(f: WatcherForm, personName: (id: string) => stri
   const who: Record<AssignMode, string> = {
     none: t('entsteht {card} ohne Zuständige', { card }),
     fixed: t('bekommt {names} {card}', { names, card }),
-    rotation: t('bekommt abwechselnd {names} {card}', { names, card }),
+    rotation: f.personIds.length === 0 ? t('bekommt abwechselnd jede Person {card}', { card }) : t('bekommt abwechselnd {names} {card}', { names, card }),
     rotation_present: t('bekommt eine anwesende Person abwechselnd {card}', { card }),
     all_present: t('bekommen alle Anwesenden {card}', { card }),
     first_home: t('bekommt die Person, die als Erstes nach Hause kommt, {card}', { card }),

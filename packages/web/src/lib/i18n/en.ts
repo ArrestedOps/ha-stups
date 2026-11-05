@@ -1356,7 +1356,7 @@ export const en: Catalog = {
   '{n} Aufgabe auf {when} verschoben': ['{n} task moved to {when}', '{n} tasks moved to {when}'],
   '{n} Aufgabe ließ sich nicht verschieben': ['{n} task could not be moved', '{n} tasks could not be moved'],
   '„{title}“ ist wieder offen': '“{title}” is open again',
-  'Fehler gefunden oder eine Idee? Sag es uns': 'Found a bug or have an idea? Tell us',
+  'Fehler oder Idee? Sag es uns': 'Bug or idea? Tell us',
   'Bitte wähle ein Bild aus': 'Please choose an image',
   'Das Bild ist zu groß': 'The image is too large',
   'Das Bild konnte nicht geladen werden': 'The image could not be loaded',

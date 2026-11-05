@@ -44,7 +44,8 @@ describe('Feedback-Fenster: Schritt 2, Text', () => {
   it('Platzhalter und Titel richten sich nach der Art', () => {
     openFeedback('bug');
     let out = html();
-    expect(out).toContain('aria-label="Fehler melden"');
+    expect(out).toContain('aria-label="Feedback"');
+    expect(out).toContain('Fehler melden'); // die Art steht in der Zeile unter dem Titel
     expect(out).toContain('placeholder="Was ist passiert? Was hast du erwartet?"');
     openFeedback('praise');
     out = html();
@@ -120,7 +121,7 @@ describe('Öffnen-Funktion', () => {
 describe('Einstieg am Listenende', () => {
   it('Textknopf mit Sprechblase und Namen', () => {
     const out = render(FeedbackLink, { props: {} }).body;
-    expect(out).toContain('Fehler gefunden oder eine Idee? Sag es uns');
+    expect(out).toContain('Fehler oder Idee? Sag es uns');
     expect(out).toContain('data-testid="feedback-link"');
     expect(out).toMatch(/min-h-11/);
   });

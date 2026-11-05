@@ -9,6 +9,6 @@
 
 <div class="flex justify-center pt-1 pb-2">
   <button type="button" class="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-text-soft2" data-testid={testid} onclick={() => openFeedback()}>
-    <Icon name="message" size={18} stroke={1.9} />{t('Fehler gefunden oder eine Idee? Sag es uns')}
+    <Icon name="message" size={18} stroke={1.9} />{t('Fehler oder Idee? Sag es uns')}
   </button>
 </div>

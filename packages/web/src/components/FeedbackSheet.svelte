@@ -116,11 +116,16 @@
   <button class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" onclick={() => (feedbackSheet.kind = null)} aria-label={t('Andere Art wählen')}>{t('Zurück')}</button>
 {/snippet}
 
+{#snippet closeButton()}
+  <button class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" onclick={closeFeedback}>{t('Schließen')}</button>
+{/snippet}
+
 {#snippet footerCta()}
   <CtaButton disabled={!ready} onclick={send}><Icon name="send" size={22} stroke={2} />{busy ? t('Wird gesendet …') : t('Senden')}</CtaButton>
 {/snippet}
 
-<Sheet title={kind ? kindLabel(kind) : t('Feedback')} onclose={closeFeedback} left={kind ? backButton : undefined} footer={kind ? footerCta : undefined}>
+<!-- Der Titel bleibt „Feedback" (die Art steht in der Zeile darunter); im zweiten Schritt links „Zurück", rechts „Schließen" -->
+<Sheet title={t('Feedback')} onclose={closeFeedback} left={kind ? backButton : undefined} right={kind ? closeButton : undefined} footer={kind ? footerCta : undefined}>
   <div class="flex flex-col gap-3.5 pt-1" data-testid="feedback-sheet">
     {#if !kind || !info}
       <div class="px-1">
@@ -131,7 +136,7 @@
         {#each FEEDBACK_KINDS as k, i (k.id)}
           <button
             type="button"
-            class="flex rounded-row border border-line bg-surface text-left active:bg-surface2 {i === FEEDBACK_KINDS.length - 1 ? 'col-span-2 min-h-[76px] items-center gap-3.5 px-3.5 py-3' : 'min-h-[126px] flex-col items-start justify-between gap-3 p-3.5'}"
+            class="flex rounded-row border border-line bg-surface text-left active:bg-surface2 {i === FEEDBACK_KINDS.length - 1 ? 'col-span-2 min-h-[76px] items-center gap-3.5 px-3.5 py-3' : 'min-h-[126px] flex-col items-start gap-3 p-3.5'}"
             data-testid="feedback-kind-{k.id}"
             onclick={() => pick(k.id)}
           >
@@ -163,7 +168,7 @@
           rows="5"
           placeholder={messagePlaceholder(info.id)}
           aria-describedby="feedback-count"
-          class="block min-h-[120px] w-full resize-none bg-transparent p-0 text-[16px] leading-[1.45] font-medium wrap-anywhere placeholder:text-dim"
+          class="block max-h-[42dvh] min-h-[120px] w-full resize-none overflow-y-auto bg-transparent p-0 outline-none text-[16px] leading-[1.45] font-medium wrap-anywhere placeholder:text-dim"
           data-testid="feedback-text"
         ></textarea>
         <p

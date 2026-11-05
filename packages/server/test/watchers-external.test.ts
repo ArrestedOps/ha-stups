@@ -158,6 +158,48 @@ describe('Kalender: Termin mit Vorlauf', () => {
     expect(cards()).toHaveLength(2);
   });
 
+  it('ein hängender Kalender hält die Warteschlange nicht auf und ein zweiter Wächter wird trotzdem abgefragt', async () => {
+    engine = createWatchers({ store, data, ha, now: () => new Date(t), timeZone: () => TZ, pollTimeoutMs: 60 });
+    ha.hangCalendar = true;
+    const hanging = await calendarWatcher();
+    ha.forecasts.set(WEATHER, [{ datetime: inHours(1), condition: 'rainy' }]);
+    await forecastWatcher();
+    const tick = engine.tick();
+    // Während die Abfrage hängt, ist die Warteschlange frei (Zustandswechsel, „übernehmen" usw. kämen sofort dran)
+    const state = await Promise.race([engine.idle().then(() => 'frei'), new Promise((r) => setTimeout(() => r('blockiert'), 30))]);
+    expect(state).toBe('frei');
+    await tick; // nach dem Zeitlimit ist der Takt fertig
+    expect(cards().map((c) => c.title)).toEqual(['Wäsche rein']); // die Vorhersage lief trotz hängendem Kalender
+    expect(data.get(hanging.id).status).toBe('ok');
+    // und nach fünf Minuten gibt es einen neuen Versuch
+    ha.hangCalendar = false;
+    ha.calendars.set(CAL, [{ title: 'Bio', start: inHours(2), end: inHours(3) }]);
+    advance(6);
+    await engine.tick();
+    expect(cards().map((c) => c.title)).toContain('Tonnen rausstellen');
+  });
+
+  it('eine Ausnahme bei einem Wächter bricht den Rest des Takts nicht ab', async () => {
+    const warnings: string[] = [];
+    engine = createWatchers({ store, data, ha, now: () => new Date(t), timeZone: () => TZ, log: { info: () => undefined, warn: (m: string) => void warnings.push(m) } });
+    ha.calendars.set(CAL, [{ title: 'A', start: inHours(2), end: inHours(3) }]);
+    const bad = await calendarWatcher();
+    ha.forecasts.set(WEATHER, [{ datetime: inHours(1), condition: 'rainy' }]);
+    await forecastWatcher();
+    const original = store.hasCardWithDedupeKey;
+    store.hasCardWithDedupeKey = () => {
+      throw new Error('kaputt');
+    };
+    try {
+      await engine.tick();
+    } finally {
+      store.hasCardWithDedupeKey = original;
+    }
+    expect(warnings.join('\n')).toMatch(/kaputt/);
+    expect(cards().map((c) => c.title)).toEqual(['Wäsche rein']);
+    expect(bad.id).toBeTruthy();
+  });
+
   it('der Kalender wird höchstens alle 30 Minuten abgefragt', async () => {
     ha.calendars.set(CAL, []);
     await calendarWatcher();

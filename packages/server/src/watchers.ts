@@ -43,6 +43,8 @@ export interface WatcherDeps {
   timeZone: () => string;
   /** false = ausgeschaltet (Beta): keine Auswertung, keine Karten. Vorgabe: an */
   enabled?: () => boolean;
+  /** Zeitlimit für eine Abfrage von Kalender oder Vorhersage in Millisekunden (Vorgabe 20 Sekunden) */
+  pollTimeoutMs?: number;
   /** Karte ist (jetzt) jemandem zugewiesen: hier geht die Push-Nachricht raus */
   onAssigned?: (card: Card, userIds: string[]) => void;
   /** Die Karte ist nach der eingestellten Zeit noch offen: an die Zuständigen erinnern */
@@ -510,10 +512,15 @@ export function createWatchers(deps: WatcherDeps) {
     return m ? fromLocal({ y: Number(m[1]), m: Number(m[2]), d: Number(m[3]), h: 0, mi: 0, s: 0 }, timeZone()) : Date.parse(value);
   }
 
-  async function pollCalendar(w: Watcher, nowMs: number): Promise<void> {
-    if (!ha.getCalendarEvents) return;
+  type CalendarEvents = Awaited<ReturnType<NonNullable<typeof ha.getCalendarEvents>>>;
+  type ForecastItems = Awaited<ReturnType<NonNullable<typeof ha.getForecast>>>;
+
+  /** Nur die Abfrage (Netz), ohne Zugriff auf die Warteschlange: ein langsames Home Assistant hält nichts anderes auf */
+  const fetchCalendar = (w: Watcher, nowMs: number): Promise<CalendarEvents> | null =>
+    ha.getCalendarEvents ? ha.getCalendarEvents(w.trigger.entityId, new Date(nowMs).toISOString(), new Date(nowMs + 7 * 86_400_000).toISOString()) : null;
+
+  async function applyCalendar(w: Watcher, nowMs: number, events: CalendarEvents): Promise<void> {
     const lead = minutes(w.trigger.leadMin ?? 720);
-    const events = await ha.getCalendarEvents(w.trigger.entityId, new Date(nowMs).toISOString(), new Date(nowMs + 7 * 86_400_000).toISOString());
     const upcoming = events
       .map((e) => ({ ...e, startMs: eventMs(e.start), endMs: eventMs(e.end) }))
       .filter((e) => Number.isFinite(e.startMs) && Number.isFinite(e.endMs) && e.endMs > nowMs)
@@ -539,10 +546,10 @@ export function createWatchers(deps: WatcherDeps) {
   /** Regnet es in der Vorhersage? Condition „rainy" und Verwandte, oder eine Wahrscheinlichkeit ab 50 %, oder spürbarer Niederschlag */
   const RAINY = new Set(['rainy', 'pouring', 'lightning-rainy', 'snowy-rainy', 'hail']);
 
-  async function pollForecast(w: Watcher, nowMs: number): Promise<void> {
-    if (!ha.getForecast) return;
+  const fetchForecast = (w: Watcher): Promise<ForecastItems> | null => (ha.getForecast ? ha.getForecast(w.trigger.entityId) : null);
+
+  async function applyForecast(w: Watcher, nowMs: number, items: ForecastItems): Promise<void> {
     const hours = w.trigger.forecast?.hours ?? 3;
-    const items = await ha.getForecast(w.trigger.entityId);
     const wet = items.some((i) => {
       const at = Date.parse(i.datetime);
       if (!Number.isFinite(at) || at < nowMs - 30 * 60_000 || at > nowMs + hours * 3_600_000) return false;
@@ -558,19 +565,36 @@ export function createWatchers(deps: WatcherDeps) {
     if (st.armed) await fire(w);
   }
 
-  /** Fragt Kalender und Vorhersage ab, höchstens alle 30 Minuten je Wächter; nach einem Fehler nach 5 Minuten wieder */
-  async function pollExternal(w: Watcher, nowMs: number): Promise<void> {
-    const kind = w.trigger.kind;
-    if (kind !== 'calendar_event' && kind !== 'forecast') return;
-    if (nowMs - (lastPoll.get(w.id) ?? -Infinity) < POLL_MS) return;
-    lastPoll.set(w.id, nowMs);
-    try {
-      if (kind === 'calendar_event') await pollCalendar(w, nowMs);
-      else await pollForecast(w, nowMs);
-    } catch (err) {
-      lastPoll.set(w.id, nowMs - POLL_MS + POLL_RETRY_MS);
-      log.warn(`Wächter „${w.name}": Abfrage von ${w.trigger.entityId}: ${err instanceof Error ? err.message : String(err)}`);
-    }
+  /** Zeitlimit für eine Abfrage von Kalender oder Vorhersage */
+  const pollTimeoutMs = deps.pollTimeoutMs ?? 20_000;
+
+  function withTimeout<T>(p: Promise<T>): Promise<T> {
+    let timer: NodeJS.Timeout;
+    const limit = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Zeitüberschreitung')), pollTimeoutMs);
+    });
+    return Promise.race([p, limit]).finally(() => clearTimeout(timer));
+  }
+
+  /**
+   * Fragt Kalender und Vorhersage ab, höchstens alle 30 Minuten je Wächter; nach einem Fehler nach 5 Minuten wieder.
+   * Die Abfragen laufen parallel und außerhalb der Warteschlange (mit Zeitlimit); nur das Auswerten der Antworten geht durch sie.
+   */
+  async function fetchExternal(nowMs: number): Promise<{ w: Watcher; result: PromiseSettledResult<CalendarEvents | ForecastItems | null> }[]> {
+    const due = data.list().filter((w) => {
+      const kind = w.trigger.kind;
+      if (!w.active || (kind !== 'calendar_event' && kind !== 'forecast')) return false;
+      if (nowMs - (lastPoll.get(w.id) ?? -Infinity) < POLL_MS) return false;
+      lastPoll.set(w.id, nowMs);
+      return true;
+    });
+    const results = await Promise.allSettled(
+      due.map(async (w) => {
+        const pending: Promise<CalendarEvents | ForecastItems> | null = w.trigger.kind === 'calendar_event' ? fetchCalendar(w, nowMs) : fetchForecast(w);
+        return pending ? await withTimeout(pending) : null;
+      }),
+    );
+    return due.map((w, i) => ({ w, result: results[i]! }));
   }
 
   // ---------- Heimkehr ----------
@@ -766,22 +790,49 @@ export function createWatchers(deps: WatcherDeps) {
     return [...(await presence()).home];
   }
 
-  /** Takt (alle 30 Sekunden): Wartezeiten abwarten, Rückfall nach 24 Stunden */
+  /** Takt (alle 30 Sekunden): Wartezeiten abwarten, Rückfall nach 24 Stunden. Ein Fehler bei einem Wächter hält die anderen nicht auf. */
   async function tick(): Promise<void> {
+    if (deps.enabled && !deps.enabled()) return;
+    const nowMs = now().getTime();
+    const fetched = await fetchExternal(nowMs); // Netz: außerhalb der Warteschlange
     await guarded('Takt', async () => {
-      const nowMs = now().getTime();
+      const each = async (what: string, fn: () => Promise<void> | void): Promise<void> => {
+        try {
+          await fn();
+        } catch (err) {
+          log.warn(`Wächter: ${what}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      };
+      for (const { w, result } of fetched) {
+        if (result.status === 'rejected') {
+          lastPoll.set(w.id, nowMs - POLL_MS + POLL_RETRY_MS);
+          log.warn(`Wächter „${w.name}": Abfrage von ${w.trigger.entityId}: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`);
+          continue;
+        }
+        if (result.value === null) continue;
+        await each(`Abfrage „${w.name}"`, async () => {
+          try {
+            if (w.trigger.kind === 'calendar_event') await applyCalendar(w, nowMs, result.value as CalendarEvents);
+            else await applyForecast(w, nowMs, result.value as ForecastItems);
+          } catch (err) {
+            lastPoll.set(w.id, nowMs - POLL_MS + POLL_RETRY_MS);
+            throw err;
+          }
+        });
+      }
       for (const w of data.list()) {
         if (!w.active) continue;
-        await pollExternal(w, nowMs);
-        const st = data.getState(w.id);
-        if (!st.armed || !st.metSince) continue;
-        const s = seenOf(w.trigger.entityId);
-        if (!s || !conditionMet(w.trigger, s.state)) continue;
-        if (nowMs - Date.parse(st.metSince) >= minutes(w.trigger.forMin)) await fire(w);
+        await each(`Takt „${w.name}"`, async () => {
+          const st = data.getState(w.id);
+          if (!st.armed || !st.metSince) return;
+          const s = seenOf(w.trigger.entityId);
+          if (!s || !conditionMet(w.trigger, s.state)) return;
+          if (nowMs - Date.parse(st.metSince) >= minutes(w.trigger.forMin)) await fire(w);
+        });
       }
-      checkWaiting(nowMs);
-      checkSuggestions(nowMs);
-      checkNudges(nowMs);
+      await each('Warten', () => checkWaiting(nowMs));
+      await each('Vorschläge', () => checkSuggestions(nowMs));
+      await each('Stupsen', () => checkNudges(nowMs));
     });
   }
 

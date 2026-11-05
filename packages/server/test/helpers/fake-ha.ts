@@ -14,8 +14,11 @@ export class FakeHa implements WatcherHa {
   calendars = new Map<string, { title: string; start: string; end: string; uid?: string; recurrenceId?: string }[]>();
   calendarCalls = 0;
   failCalendar = false;
+  /** Der Kalender antwortet nie (Zeitlimit prüfen) */
+  hangCalendar = false;
   async getCalendarEvents(entityId: string, _from: string, _to: string) {
     this.calendarCalls += 1;
+    if (this.hangCalendar) return new Promise<never>(() => undefined);
     if (this.failCalendar) throw new Error('Kalender nicht erreichbar');
     return this.calendars.get(entityId) ?? [];
   }

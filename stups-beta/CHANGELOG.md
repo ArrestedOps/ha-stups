@@ -2,6 +2,11 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.26.2-beta.1
+
+- **Fehlerbehebung:** „Warum kommt nichts an?“ (Einstellungen › Benachrichtigungen) blieb bei „Lädt …“ stehen, wenn zwei offene Karten denselben Titel und denselben Termin hatten
+- Keine Änderung an der Datenbank
+
 ## 1.26.1-beta.1
 
 - **Sicherheit: mehrere Härtungen, Update empfohlen.** Betrifft Anmeldung und Zugriff, Push-Nachrichten, Abrufe von Webseiten, Uploads und den Umzug-Export. Der Umzug-Export enthält keine Geheimnisse mehr, ist nur für den Besitzer lesbar, läuft nach 24 Stunden ab und wird nach dem Import gelöscht (Konten ohne Passwort brauchen danach ein neues). Im Container gibt es `STUPS_TRUST_PROXY` für den Betrieb hinter einem Reverse Proxy (siehe Docker-Anleitung). Der Panel-Pfad lässt sich nur noch als Administrator ändern
@@ -24,7 +29,6 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 - Freundliche Leerzustände („Nichts überfällig 🎉“, „Heute noch nichts erledigt“)
 - **Kinder** sehen nur ihre eigenen Karten und haben weder „Morgen“ noch „Alle verschieben“; Abhaken und Rückgängig gelten wie bisher (mit Bestätigung, wenn eingestellt)
 - Die Blätter laden bei jeder Änderung neu (auch wenn jemand anderes etwas ändert)
-- **Fehlerbehebung:** „Warum kommt nichts an?“ (Einstellungen › Benachrichtigungen) blieb bei „Lädt …“ stehen, wenn zwei offene Karten denselben Titel und denselben Termin hatten
 - Keine Änderung an der Datenbank, keine neue Schnittstelle des Servers
 
 ## 1.25.1-beta.1

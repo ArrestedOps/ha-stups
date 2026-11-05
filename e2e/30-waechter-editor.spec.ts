@@ -177,7 +177,7 @@ test('Mitglied: Ablauf und Verlauf nur lesend; Verlauf nur für Entitäten eines
     await expect(d.getByTestId('assign-order')).toBeVisible();
     // Server: Mitglieder fragen nur Entitäten ab, die ein Wächter beobachtet
     expect((await ctx.request.get('/api/watchers/history?entityId=sensor.waschmaschine_leistung')).status()).toBe(200);
-    expect((await ctx.request.get('/api/watchers/history?entityId=sensor.trockner_leistung')).status()).toBe(403);
+    expect((await ctx.request.get('/api/watchers/history?entityId=sensor.nie_beobachtet_e2e')).status()).toBe(403);
   } finally {
     await ctx.close();
   }

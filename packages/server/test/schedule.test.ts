@@ -85,6 +85,22 @@ describe('Termine über alle Boards (Agenda und Kalender)', () => {
   });
 });
 
+describe('Karten ohne Termin (Filter „Ohne Termin")', () => {
+  it('undated liefert nur offene Karten ohne Termin aus sichtbaren Boards, nach Anlage sortiert', () => {
+    add(haushalt, colH, 'mit Termin', '2026-11-05T10:00:00Z');
+    add(haushalt, colH, 'erste', null);
+    now = new Date('2026-11-04T11:00:00Z');
+    add(umbau, colU, 'zweite', null);
+    const done = add(umbau, colU, 'fertig', null);
+    store.completeCard(done.id, { by: rene.id, source: 'app' });
+    expect(store.listSchedule({ undated: true }).map((c) => c.title)).toEqual(['erste', 'zweite']);
+    expect(store.listSchedule({ undated: true, includeDone: true }).map((c) => c.title)).toEqual(['erste', 'zweite']);
+    expect(store.listSchedule({ undated: true, boardIds: [umbau] }).map((c) => c.title)).toEqual(['zweite']);
+    // ohne den Schalter bleibt alles beim Alten: nur Karten mit Termin
+    expect(store.listSchedule({}).map((c) => c.title)).toEqual(['mit Termin']);
+  });
+});
+
 describe('GET /api/schedule', () => {
   let app: FastifyInstance;
   beforeEach(async () => {
@@ -106,6 +122,14 @@ describe('GET /api/schedule', () => {
 
     const r = await get(`/api/schedule?to=2026-11-10T00:00:00Z&boards=${haushalt}`);
     expect(r.body.map((c: { title: string }) => c.title)).toEqual(['H']);
+  });
+
+  it('undated=1 liefert die Karten ohne Termin', async () => {
+    add(haushalt, colH, 'H', '2026-11-05T10:00:00Z');
+    add(umbau, colU, 'offen ohne Termin', null);
+    const r = await get('/api/schedule?undated=1');
+    expect(r.status).toBe(200);
+    expect(r.body.map((c: { title: string }) => c.title)).toEqual(['offen ohne Termin']);
   });
 
   it('erledigte nur mit done=1', async () => {

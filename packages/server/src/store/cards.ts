@@ -612,15 +612,16 @@ export function createCards(c: Ctx, late: unknown) {
    * Alle Karten mit Termin über alle Boards (für Agenda und Kalender), nach Termin sortiert.
    * `from` ist eingeschlossen, `to` ausgeschlossen; ohne `from` kommt auch alles Überfällige.
    */
-  function listSchedule(opts: { boardIds?: string[]; from?: string; to?: string; includeDone?: boolean }): ScheduleCard[] {
-    const where = ['due_at is not null', 'deleted_at is null', 'archived_at is null', 'board_id in (select id from boards where deleted_at is null)'];
+  function listSchedule(opts: { boardIds?: string[]; from?: string; to?: string; includeDone?: boolean; undated?: boolean }): ScheduleCard[] {
+    // `undated`: nur offene Karten ohne Termin (Filter „Ohne Termin"); Zeitraum und Erledigte gibt es dort nicht
+    const where = [opts.undated ? 'due_at is null' : 'due_at is not null', 'deleted_at is null', 'archived_at is null', 'board_id in (select id from boards where deleted_at is null)'];
     const params: unknown[] = [];
-    if (!opts.includeDone) where.push('completed_at is null');
-    if (opts.from) {
+    if (!opts.includeDone || opts.undated) where.push('completed_at is null');
+    if (opts.from && !opts.undated) {
       where.push('due_at >= ?');
       params.push(new Date(opts.from).toISOString());
     }
-    if (opts.to) {
+    if (opts.to && !opts.undated) {
       where.push('due_at < ?');
       params.push(new Date(opts.to).toISOString());
     }
@@ -631,7 +632,9 @@ export function createCards(c: Ctx, late: unknown) {
     const boards = new Map(all('select id, name, color from boards where deleted_at is null').map((b) => [b.id as string, b]));
     return loadCards(where.join(' and '), ...params)
       .map((c) => ({ ...c, boardName: boards.get(c.boardId)?.name ?? '', boardColor: (boards.get(c.boardId)?.color as string | null) ?? null }))
-      .sort((a, b) => (a.dueAt === b.dueAt ? (a.id < b.id ? -1 : 1) : a.dueAt! < b.dueAt! ? -1 : 1));
+      .sort((a, b) =>
+        a.dueAt === b.dueAt ? (a.createdAt === b.createdAt ? (a.id < b.id ? -1 : 1) : a.createdAt < b.createdAt ? -1 : 1) : a.dueAt! < b.dueAt! ? -1 : 1,
+      );
   }
 
   function listArchived(boardId: string): Card[] {

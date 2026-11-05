@@ -83,7 +83,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     return after;
   });
   // ----- Termine über alle Boards (Agenda, Kalender) -----
-  app.get<{ Querystring: { from?: string; to?: string; boards?: string; done?: string } }>('/api/schedule', async (req) => {
+  app.get<{ Querystring: { from?: string; to?: string; boards?: string; done?: string; undated?: string } }>('/api/schedule', async (req) => {
     const q = req.query;
     const time = (v: string | undefined, what: string): string | undefined => {
       if (v === undefined || v === '') return undefined;
@@ -92,7 +92,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     };
     const boardIds = q.boards ? q.boards.split(',').filter(Boolean) : undefined;
     return store
-      .listSchedule({ from: time(q.from, 'from'), to: time(q.to, 'to'), boardIds, includeDone: q.done === '1' })
+      .listSchedule({ from: time(q.from, 'from'), to: time(q.to, 'to'), boardIds, includeDone: q.done === '1', undated: q.undated === '1' })
       .slice(0, 2000);
   });
   app.post<{ Params: Params }>('/api/cards/:id/complete', async (req) => {

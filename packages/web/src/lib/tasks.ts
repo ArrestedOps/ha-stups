@@ -1,7 +1,6 @@
-import { addDays, mondayOf } from './calendar';
-import { deviceTz, fromInputValue } from './datetime';
+import { deviceTz } from './datetime';
 import { t } from './i18n/index.svelte';
-import { dayKeyOf, type ScheduleCard } from './schedule';
+import { dayKeyOf, sortCards, type ScheduleCard, type SortKey, whenBounds } from './schedule';
 
 /** Die Ansichten in Aufgaben: die gruppierte Liste und die Kalenderansichten Tag, Woche, Monat */
 export type TasksView = 'list' | 'day' | 'week' | 'month';
@@ -11,7 +10,7 @@ export function parseTasksView(raw: string | null | undefined): TasksView {
   return raw === 'day' || raw === 'week' || raw === 'month' ? raw : 'list';
 }
 
-export type TaskGroupKey = 'overdue' | 'today' | 'week' | 'later' | 'done';
+export type TaskGroupKey = 'overdue' | 'today' | 'week' | 'later' | 'undated' | 'done';
 
 export interface TaskGroup {
   key: TaskGroupKey;
@@ -19,31 +18,39 @@ export interface TaskGroup {
   cards: ScheduleCard[];
 }
 
-const byDue = (a: ScheduleCard, b: ScheduleCard): number => (a.dueAt! < b.dueAt! ? -1 : a.dueAt! > b.dueAt! ? 1 : a.id < b.id ? -1 : 1);
-
 /**
- * Teilt Karten mit Termin in Überfällig (Termin vorbei), Heute (noch heute), Diese Woche (ab morgen bis Sonntag) und Später.
- * Die Grenzen 00:00 gelten in der Zeitzone des Haushalts. Erledigte stehen nur mit `withDone` und dann in einer eigenen Gruppe am Ende.
+ * Teilt Karten in Überfällig (Termin vorbei), Heute (noch heute), Diese Woche (ab morgen bis Sonntag), Später und Ohne Termin
+ * (nur wenn der Filter „Ohne Termin" Karten ohne Termin hereinholt). Die Grenzen 00:00 gelten in der Zeitzone des Haushalts.
+ * Erledigte stehen nur mit `withDone` und dann in einer eigenen Gruppe am Ende. Innerhalb der Gruppen gilt `sort` (Standard: Fälligkeit).
  * Leere Gruppen fehlen.
  */
-export function groupTasks(cards: ScheduleCard[], nowMs: number, tz = deviceTz(), opts: { withDone?: boolean } = {}): TaskGroup[] {
-  const todayKey = dayKeyOf(nowMs, tz);
-  const startTomorrow = Date.parse(fromInputValue(`${addDays(todayKey, 1)}T00:00`, tz)!);
-  const startNextWeek = Date.parse(fromInputValue(`${addDays(mondayOf(todayKey), 7)}T00:00`, tz)!);
-  const groups: Record<TaskGroupKey, ScheduleCard[]> = { overdue: [], today: [], week: [], later: [], done: [] };
-  for (const c of [...cards].filter((x) => x.dueAt).sort(byDue)) {
+export function groupTasks(cards: ScheduleCard[], nowMs: number, tz = deviceTz(), opts: { withDone?: boolean; sort?: SortKey } = {}): TaskGroup[] {
+  const { startTomorrow, startNextWeek } = whenBounds(nowMs, tz);
+  const groups: Record<TaskGroupKey, ScheduleCard[]> = { overdue: [], today: [], week: [], later: [], undated: [], done: [] };
+  for (const c of sortCards(cards, opts.sort ?? 'due')) {
     if (c.completedAt) {
       groups.done.push(c);
       continue;
     }
-    const due = Date.parse(c.dueAt!);
+    if (!c.dueAt) {
+      groups.undated.push(c);
+      continue;
+    }
+    const due = Date.parse(c.dueAt);
     if (due < nowMs) groups.overdue.push(c);
     else if (due < startTomorrow) groups.today.push(c);
     else if (due < startNextWeek) groups.week.push(c);
     else groups.later.push(c);
   }
-  const titles: Record<TaskGroupKey, string> = { overdue: t('Überfällig'), today: t('Heute'), week: t('Diese Woche'), later: t('Später'), done: t('Erledigt') };
-  const keys: TaskGroupKey[] = opts.withDone ? ['overdue', 'today', 'week', 'later', 'done'] : ['overdue', 'today', 'week', 'later'];
+  const titles: Record<TaskGroupKey, string> = {
+    overdue: t('Überfällig'),
+    today: t('Heute'),
+    week: t('Diese Woche'),
+    later: t('Später'),
+    undated: t('Ohne Termin'),
+    done: t('Erledigt'),
+  };
+  const keys: TaskGroupKey[] = opts.withDone ? ['overdue', 'today', 'week', 'later', 'undated', 'done'] : ['overdue', 'today', 'week', 'later', 'undated'];
   return keys.filter((k) => groups[k].length > 0).map((key) => ({ key, title: titles[key], cards: groups[key] }));
 }
 

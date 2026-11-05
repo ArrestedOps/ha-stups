@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { clock } from '../lib/clock.svelte';
   import { onMount } from 'svelte';
   import { api, type HomeState, type WatcherActivity } from '../lib/api';
   import { formatDue } from '../lib/datetime';
@@ -47,7 +48,7 @@
     return () => clearInterval(timer);
   });
 
-  const nowMs = $derived((void data, Date.now()));
+  const nowMs = $derived((void data, void clock.tick, Date.now()));
   const items = $derived(data?.items ?? []);
   const sections = $derived(homeSections(items));
   const names = (ids: string[]) => ids.map((id) => personById(id)?.displayName ?? '?').join(', ');

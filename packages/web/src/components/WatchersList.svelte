@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createLatest } from '../lib/latest';
   import Toggle from './ui/Toggle.svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { api, ApiError, type WatcherActivity, type WatcherItem } from '../lib/api';
@@ -22,9 +23,15 @@
 
   let activity = $state<WatcherActivity[]>([]);
   // Mit jedem Nachladen (ui.rev zählt hoch, auch durch Live-Sync) auch die Aktivität holen
+  const latestActivity = createLatest();
   $effect(() => {
     void ui.rev;
-    api.watcherActivity().then((a) => (activity = a)).catch(() => undefined);
+    void latestActivity
+      .run(() => api.watcherActivity())
+      .then((r) => {
+        if (r.current) activity = r.value;
+      })
+      .catch(() => undefined);
   });
 
   async function toggle(w: WatcherItem) {

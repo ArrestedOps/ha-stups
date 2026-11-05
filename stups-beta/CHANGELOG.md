@@ -10,6 +10,8 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 - **Push-Wiederholung:** Scheitert die Nachricht an die Companion App, wird sie auch dann wiederholt, wenn eine Ansage im Haus bewusst übersprungen wurde
 - **Verbindung zu Home Assistant:** Heartbeat, wachsende Wartezeit beim Neuverbinden, keine Absturzgefahr durch ungültige Nachrichten; die Zeitzone wird regelmäßig erneuert
 - Weniger Doppelansagen und Doppelkarten bei gleichzeitigen Ereignissen, Lautstärke wird zuverlässiger zurückgestellt, eigene Sensornamen auch für Namen ohne lateinische Buchstaben
+- **Robuster beim Laden:** Anfragen an den Server haben ein Zeitlimit von 30 Sekunden (danach „Zeitüberschreitung“ statt endlosem Laden), langsame ältere Antworten überschreiben keine neueren mehr (Karten-Fenster, Wächter-Liste, Entitätssuche, Probelauf), und Anzeigen mit „in 5 Minuten“ oder „überfällig“ rechnen jede Minute neu
+- **Fenster per Tastatur:** Beim Öffnen liegt der Fokus im Fenster, Tab bleibt darin, und beim Schließen kehrt der Fokus zum Knopf zurück
 - Datenbank: keine neue Migration; Updates der Datenbank behalten künftig auch bei Tabellenumbauten alle abhängigen Daten (neuer Test mit befüllten alten Datenbanken)
 ## 1.26.0-beta.1
 

@@ -15,6 +15,40 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe('Zeitlimit', () => {
+  it('eine hängende Anfrage endet nach 30 Sekunden mit einem Fehler (nie endlos „lädt“)', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((_url: string, init: RequestInit) => new Promise((_res, rej) => init.signal?.addEventListener('abort', () => rej(new DOMException('abgebrochen', 'AbortError'))))),
+      );
+      const pending = api.boards();
+      const result = expect(pending).rejects.toMatchObject({ status: 0, message: expect.stringMatching(/Zeitüberschreitung|Timed out/) });
+      await vi.advanceTimersByTimeAsync(29_000);
+      let settled = false;
+      void pending.catch(() => (settled = true));
+      await Promise.resolve();
+      expect(settled).toBe(false);
+      await vi.advanceTimersByTimeAsync(2_000);
+      await result;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('eine schnelle Antwort ist nicht betroffen und der Zeitgeber bleibt nicht stehen', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal('fetch', answer(200, [{ id: 'b1' }]));
+      await expect(api.boards()).resolves.toEqual([{ id: 'b1' }]);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe('Abgelaufene Sitzung (401) führt zur Anmeldung, auch bei Uploads', () => {
   it('normale Anfragen', async () => {
     vi.stubGlobal('fetch', answer(401, { error: 'Bitte anmelden' }));

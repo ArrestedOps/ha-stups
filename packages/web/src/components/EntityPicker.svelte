@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createLatest } from '../lib/latest';
   import { api, ApiError, type HaEntity } from '../lib/api';
   import { t } from '../lib/i18n/index.svelte';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
@@ -10,6 +11,7 @@
    */
   let { ed }: { ed: WatcherEditor } = $props();
 
+  const latest = createLatest();
   let results = $state<HaEntity[]>([]);
   let error = $state('');
 
@@ -19,14 +21,20 @@
     const domain = ed.searchDomain;
     const timer = setTimeout(async () => {
       try {
-        results = await api.haEntities(q, domain || undefined);
+        // Die alte Suche wird abgebrochen; eine späte Antwort überschreibt nie die der aktuellen Eingabe
+        const res = await latest.run((signal) => api.haEntities(q, domain || undefined, signal));
+        if (!res.current) return;
+        results = res.value;
         error = '';
       } catch (e) {
         error = e instanceof ApiError ? e.message : t('Home Assistant antwortet nicht');
         results = [];
       }
     }, 250);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      latest.next(); // eine noch laufende Suche gehört zur alten Eingabe
+    };
   });
 </script>
 

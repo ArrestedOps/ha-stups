@@ -258,6 +258,7 @@ export const en: Catalog = {
   '„{title}“ kommt in den Papierkorb und lässt sich von dort wiederherstellen.': '“{title}” goes to the trash and can be restored from there.',
   'Karte gelöscht': 'Card deleted',
   'Keine Verbindung zum Server': 'No connection to the server',
+  'Zeitüberschreitung: der Server antwortet nicht': 'Timed out: the server is not answering',
   'Fehler {status}': 'Error {status}',
   'Das PDF ist größer als 20 MB': 'The PDF is larger than 20 MB',
   'Erlaubt sind nur Bilder und PDF': 'Only images and PDF are allowed',

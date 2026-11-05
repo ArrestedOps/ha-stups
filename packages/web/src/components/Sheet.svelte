@@ -9,6 +9,7 @@
   import { fade, fly } from 'svelte/transition';
   import { sheetInsets, type SheetInsets } from '../lib/viewport';
   import SheetFooter from './ui/SheetFooter.svelte';
+  import { focusScope } from '../lib/focusScope';
 
   let {
     title = '',
@@ -104,7 +105,9 @@
     role="dialog"
     aria-modal="true"
     aria-label={title || t('Details')}
-    class="absolute inset-x-0 bottom-0 flex flex-col rounded-t-sheet border-t border-line bg-bg shadow-[0_-10px_40px_rgba(0,0,0,0.6)] {fit ? 'max-h-[calc(100dvh-54px)]' : 'h-[calc(100dvh-54px)]'} lg:h-auto lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[480px] lg:rounded-none lg:border-t-0 lg:border-l"
+    tabindex="-1"
+    use:focusScope={{ isTop: () => stack[stack.length - 1] === me }}
+    class="outline-none absolute inset-x-0 bottom-0 flex flex-col rounded-t-sheet border-t border-line bg-bg shadow-[0_-10px_40px_rgba(0,0,0,0.6)] {fit ? 'max-h-[calc(100dvh-54px)]' : 'h-[calc(100dvh-54px)]'} lg:h-auto lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[480px] lg:rounded-none lg:border-t-0 lg:border-l"
     style:transform={dy ? `translateY(${dy}px)` : undefined}
     style:transition={dragging ? 'none' : undefined}
     style:bottom={insets.bottom ? `${insets.bottom}px` : undefined}

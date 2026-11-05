@@ -116,6 +116,27 @@ test('Neue Karte: wer sie anlegt, ist zuerst selbst zuständig (sonst gäbe es k
   await expect(page.getByRole('group', { name: 'Wer kümmert sich?' }).getByRole('button', { name: 'Ich' })).toHaveAttribute('aria-pressed', 'true');
 });
 
+test('Fenster: der Fokus kommt hinein, Tab bleibt darin, nach Escape liegt er wieder am Knopf', async ({ page }) => {
+  const opener = page.getByRole('button', { name: 'Neue Karte', exact: true });
+  await opener.focus();
+  await page.keyboard.press('Enter');
+  const sheet = newTaskSheet(page);
+  await expect(sheet).toBeVisible();
+  const inDialog = () => page.evaluate(() => !!document.activeElement?.closest('[role=dialog]'));
+  await expect.poll(inDialog).toBe(true);
+  for (let i = 0; i < 30; i += 1) {
+    await page.keyboard.press('Tab');
+    expect(await inDialog()).toBe(true);
+  }
+  for (let i = 0; i < 30; i += 1) {
+    await page.keyboard.press('Shift+Tab');
+    expect(await inDialog()).toBe(true);
+  }
+  await page.keyboard.press('Escape');
+  await expect(sheet).toHaveCount(0);
+  await expect(opener).toBeFocused();
+});
+
 test('Neue Karte: Kategorie direkt anlegen und gleich wählen, ein vorhandener Name wird wiederverwendet', async ({ page }) => {
   const title = uniqueTitle('Kategorie');
   const cat = `Garten ${Date.now().toString(36)}`;

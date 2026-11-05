@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { clock } from '../../lib/clock.svelte';
   import { onMount } from 'svelte';
   import { loadAgenda, agenda } from '../../lib/agenda.svelte';
   import { bubbleCounts, bubbleYaml } from '../../lib/bubble';
@@ -15,7 +16,7 @@
   onMount(() => {
     if (!agenda.loaded) void loadAgenda();
   });
-  const counts = $derived(bubbleCounts(agenda.open, Date.now()));
+  const counts = $derived((void clock.tick, bubbleCounts(agenda.open, Date.now())));
   const yaml = $derived(bubbleYaml({ panelPath: ui.settings?.panelPath, channel: ui.caps?.channel }));
   const lines = $derived(
     yaml.split('\n').map((line) => {

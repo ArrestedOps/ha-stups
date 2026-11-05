@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createLatest } from '../lib/latest';
   import { t, tx } from '../lib/i18n/index.svelte';
   import { api, ApiError, type CardDetail, type Comment } from '../lib/api';
   import { formatBytes, prepareUpload, uploadProblem } from '../lib/image';
@@ -74,9 +75,13 @@
   let newComment = $state('');
   let linkBusy = $state(false);
 
+  // Eine langsame ältere Antwort darf eine neuere (oder die einer anderen Karte) nicht überschreiben
+  const latest = createLatest();
   async function load() {
     try {
-      const [c, cm] = await Promise.all([api.card(id), api.comments(id)]);
+      const res = await latest.run(async () => Promise.all([api.card(id), api.comments(id)]));
+      if (!res.current) return;
+      const [c, cm] = res.value;
       card = c;
       comments = cm;
       failed = false;

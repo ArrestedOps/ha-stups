@@ -502,30 +502,52 @@ const clientHeaders = () => ({ 'x-stups-client': '1', 'x-stups-language': i18n.l
 
 // Relative Adresse: funktioniert unter dem wechselnden Ingress-Pfad von Home Assistant.
 /** Eine Anfrage an die API mit gemeinsamer Fehlerbehandlung (auch für Uploads: 401 führt zur Anmeldung) */
-async function send<T>(path: string, init: RequestInit): Promise<T> {
-  let res: Response;
+/** Zeitlimit je Anfrage; Uploads (Dateien) brauchen auf langsamem WLAN länger */
+export const REQUEST_TIMEOUT_MS = 30_000;
+export const UPLOAD_TIMEOUT_MS = 120_000;
+
+async function send<T>(path: string, init: RequestInit, timeoutMs = init.body instanceof FormData || init.body instanceof Blob ? UPLOAD_TIMEOUT_MS : REQUEST_TIMEOUT_MS): Promise<T> {
+  // Ohne Zeitlimit bliebe eine hängende Anfrage ewig „lädt": nach 30 Sekunden Fehler statt endlosem Warten
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+  init.signal?.addEventListener('abort', () => controller.abort(), { once: true });
   try {
-    res = await fetch(`api/${path}`, init);
-  } catch {
-    throw new ApiError(t('Keine Verbindung zum Server'), 0);
+    let res: Response;
+    try {
+      res = await fetch(`api/${path}`, { ...init, signal: controller.signal });
+    } catch {
+      throw timedOut ? new ApiError(t('Zeitüberschreitung: der Server antwortet nicht'), 0) : new ApiError(t('Keine Verbindung zum Server'), 0);
+    }
+    return await readResponse<T>(path, res, () => timedOut);
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+async function readResponse<T>(path: string, res: Response, timedOut: () => boolean): Promise<T> {
   if (res.status === 204) return undefined as T;
-  const data = await res.json().catch(() => ({}));
+  const data = await res.json().catch(() => (timedOut() ? undefined : {}));
+  if (data === undefined) throw new ApiError(t('Zeitüberschreitung: der Server antwortet nicht'), 0);
   if (res.status === 401 && !path.startsWith('auth/')) onUnauthorized?.();
   if (!res.ok) throw new ApiError((data as { error?: string }).error ?? t('Fehler {status}', { status: res.status }), res.status, data);
   return data as T;
 }
 
-function req<T>(method: string, path: string, body?: unknown): Promise<T> {
+function req<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   return send<T>(path, {
     method,
     headers: body === undefined ? clientHeaders() : { ...clientHeaders(), 'content-type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
+    signal,
   });
 }
 
-const get = <T>(p: string) => req<T>('GET', p);
-const post = <T>(p: string, b: unknown = {}) => req<T>('POST', p, b);
+const get = <T>(p: string, signal?: AbortSignal) => req<T>('GET', p, undefined, signal);
+const post = <T>(p: string, b: unknown = {}, signal?: AbortSignal) => req<T>('POST', p, b, signal);
 const patch = <T>(p: string, b: unknown) => req<T>('PATCH', p, b);
 const put = <T>(p: string, b: unknown) => req<T>('PUT', p, b);
 const del = (p: string) => req<void>('DELETE', p);
@@ -701,7 +723,7 @@ export const api = {
   hideSuggestion: (templateId: string, entityId: string) => post<void>('watchers/suggestions/hide', { templateId, entityId }),
   unhideSuggestion: (templateId: string, entityId: string) => post<void>('watchers/suggestions/unhide', { templateId, entityId }),
   /** Probelauf: die Regel auf die Historie der letzten 7 Tage anwenden, ohne zu speichern */
-  dryRun: (b: { trigger: WatcherInput['trigger']; cooldownMin: number }) => post<DryRunResult>('watchers/dry-run', b),
+  dryRun: (b: { trigger: WatcherInput['trigger']; cooldownMin: number }, signal?: AbortSignal) => post<DryRunResult>('watchers/dry-run', b, signal),
   /** Verlauf einer Entität (letzte Stunden) mit den Stellen, an denen die Regel ausgelöst hätte; nie ein Fehler: der Status sagt, wenn es keinen gibt */
   entityHistory: (q: { entityId: string; hours?: number; kind?: string; value?: string; to?: string; forMin?: string; count?: string; cooldownMin?: string }) => {
     const p = new URLSearchParams();
@@ -718,8 +740,8 @@ export const api = {
     if (q.fallbackPersonId) p.set('fallbackPersonId', q.fallbackPersonId);
     return get<OrderView>(`watchers/order?${p}`);
   },
-  haEntities: (q: string, domain?: string) =>
-    get<HaEntity[]>(`ha/entities?q=${encodeURIComponent(q)}${domain ? `&domain=${encodeURIComponent(domain)}` : ''}`),
+  haEntities: (q: string, domain?: string, signal?: AbortSignal) =>
+    get<HaEntity[]>(`ha/entities?q=${encodeURIComponent(q)}${domain ? `&domain=${encodeURIComponent(domain)}` : ''}`, signal),
   exportData: () => post<{ dir: string; bytes: number; files: boolean }>('admin/export'),
 
   nudgeInfo: (cardId: string) => get<NudgeInfo>(`cards/${cardId}/nudges`),

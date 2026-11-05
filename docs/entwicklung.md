@@ -310,6 +310,13 @@ Diese Regeln gelten für jede Änderung; zu jeder gibt es Tests.
 - **Anmeldesperre** (`session-auth.ts`): je Adresse gesperrt (5 Versuche, dann 1, 2, … höchstens 30 Minuten), je Konto nur **verzögert** (ab dem 6. Versuch in 15 Minuten nacheinander mit 0,5 bis 8 Sekunden Abstand, Staugrenze 15 Sekunden, richtiges Passwort setzt zurück), damit niemand einen Besitzer aussperren kann. Hinter einem Reverse Proxy `STUPS_TRUST_PROXY` setzen (siehe docs/docker.md).
 - **Migrationen** (`db.ts`): Fremdschlüssel sind während der Migrationen aus (sonst löst ein `drop table` im Stil von Migration 20 `on delete cascade` aus und löscht abhängige Zeilen); nach jeder Migration prüft `foreign_key_check`, neue Verstöße rollen zurück. Die Tabelle nach dem 12-Schritte-Verfahren von SQLite umbauen (neue Tabelle, kopieren, alte löschen, umbenennen). Test: `migration-filled.test.ts` hebt befüllte Datenbanken (Stand 9, 19, 21) über die echten Migrationen, bei jeder neuen Migration den Stand davor dort ergänzen.
 
+### Oberfläche: Anfragen, Uhr, Fenster (seit 1.25.2)
+
+- `req()` in `lib/api.ts` bricht nach 30 Sekunden ab (Uploads 120 Sekunden) mit `ApiError` Status 0 und dem Text „Zeitüberschreitung“; ein übergebenes `AbortSignal` wirkt ebenfalls. Nie eine Anfrage ohne Zeitlimit bauen.
+- `lib/latest.ts` (`createLatest().run(fn)`): gegen veraltete Antworten. Wer in einem `$effect` lädt (`void ui.rev`), nutzt es, statt eigene Zähler zu bauen; `run` bricht die alte Anfrage ab (Signal an `api.x(…, signal)` weitergeben) und liefert `{ current: false }`, wenn eine neuere begann. Angewendet in CardSheet, WatchersList, EntityPicker, DryRunPanel.
+- `lib/clock.svelte.ts`: Minutentakt. Zeitabhängige `$derived` lesen `void clock.tick`, statt `Date.now()` allein zu verlassen (es rechnet sonst nur bei anderen Änderungen neu).
+- `lib/focusScope.ts` (Aktion `use:focusScope` am Dialog in `Sheet.svelte`): Fokus beim Öffnen ins Fenster (ein `autofocus`-Feld behält ihn), Tab bleibt im obersten Fenster, beim Schließen zurück an den Auslöser. Der Titel des Fensters ist kein `role="status"`. Test: `focusScope.test.ts` (Logik) und der Browser-Test „Fenster: der Fokus kommt hinein …“ in `e2e/1-board.spec.ts`.
+
 ## 4. Bekannte Grenzen
 
 - Das Wischen und die Tastatur-Anpassung sind in den Browser-Tests nur mit Zeiger-Ereignissen bzw. per Rechenfunktion abgedeckt. Echtes Touch und die echte Bildschirmtastatur lassen sich nur am iPhone prüfen.

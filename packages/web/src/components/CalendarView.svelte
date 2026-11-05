@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { clock as minuteClock } from '../lib/clock.svelte';
   import { numberLocale, t, tn } from '../lib/i18n/index.svelte';
   import { tick } from 'svelte';
   import { api } from '../lib/api';
@@ -94,7 +95,7 @@
   }
 
   const placed = $derived(new Map(days.map((d) => [d, layoutDay(byDay.get(d) ?? [])])));
-  const nowTop = $derived((minutesOfDay(new Date().toISOString()) / 60) * HOUR_PX);
+  const nowTop = $derived((void minuteClock.tick, (minutesOfDay(new Date().toISOString()) / 60) * HOUR_PX));
 
   function tapSlot(e: MouseEvent, d: string) {
     if (ui.isChild) return; // ein Kind legt keine Karten an
@@ -124,7 +125,7 @@
     return new Date(Date.UTC(y!, m! - 1, d!)).toLocaleDateString(numberLocale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
   });
   const dotsOf = (list: ScheduleCard[]) => [...new Set(list.map((c) => boardColorKey(c.boardColor, boardIndex(c.boardId))))].slice(0, 3);
-  const nowMs = $derived(Date.now());
+  const nowMs = $derived((void minuteClock.tick, Date.now()));
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">

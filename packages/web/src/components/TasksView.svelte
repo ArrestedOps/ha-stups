@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { clock } from '../lib/clock.svelte';
   import { agenda } from '../lib/agenda.svelte';
   import { type TodayCard } from '../lib/api';
   import type { CalMode } from '../lib/calendar';
@@ -83,7 +84,7 @@
   const failed = $derived(agenda.failed);
 
   const tz = deviceTz();
-  const nowMs = $derived((void ui.rev, Date.now()));
+  const nowMs = $derived((void ui.rev, void clock.tick, Date.now()));
   const meId = $derived(ui.me?.id ?? null);
   /** Der Filter, wie er für diese Rolle gilt, und was er zum Rechnen braucht */
   const sf = $derived(activeScheduleFilter());

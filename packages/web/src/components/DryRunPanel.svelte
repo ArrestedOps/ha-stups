@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createLatest } from '../lib/latest';
   import { api, ApiError } from '../lib/api';
   import { formatDue } from '../lib/datetime';
   import { t } from '../lib/i18n/index.svelte';
@@ -20,10 +21,13 @@
   const ready = $derived(supported && !!form.entityId && (form.kind === 'state' ? form.to.trim() !== '' : form.value.trim() !== ''));
 
   // Ändert sich die Regel, ist das alte Ergebnis überholt
+  const latest = createLatest();
   $effect(() => {
     void [form.entityId, form.kind, form.to, form.value, form.forMin, form.count, form.cooldownMin];
+    latest.next(); // ein noch laufender Probelauf gehört zur alten Regel: seine Antwort zählt nicht mehr
     result = null;
     error = '';
+    busy = false;
   });
 
   export async function run(): Promise<void> {
@@ -35,7 +39,9 @@
     busy = true;
     error = '';
     try {
-      result = await api.dryRun({ trigger: input.trigger, cooldownMin: input.cooldownMin });
+      const res = await latest.run((signal) => api.dryRun({ trigger: input.trigger, cooldownMin: input.cooldownMin }, signal));
+      if (!res.current) return; // die Regel hat sich inzwischen geändert (oder ein neuer Lauf begann)
+      result = res.value;
     } catch (e) {
       result = null;
       error = e instanceof ApiError ? e.message : t('Der Probelauf ist fehlgeschlagen');

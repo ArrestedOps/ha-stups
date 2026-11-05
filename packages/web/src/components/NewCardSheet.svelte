@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { clock } from '../lib/clock.svelte';
   import { untrack } from 'svelte';
   import { api, ApiError, type CardPatch, type Priority } from '../lib/api';
   import { autogrow } from '../lib/autogrow';
@@ -312,7 +313,7 @@
     const wd = names().weekdaysShort[new Date(Date.UTC(get('year'), get('month') - 1, get('day'))).getUTCDay()];
     return `${wd}, ${dayOfMonth(get('day'))} ${names().monthsShort[get('month') - 1]}`;
   }
-  const dueTitle = $derived(fields.dueAt ? summaryTitle(fields.dueAt, Date.now(), tz) : t('Kein Termin'));
+  const dueTitle = $derived((void clock.tick, fields.dueAt ? summaryTitle(fields.dueAt, Date.now(), tz) : t('Kein Termin')));
   const dueMeta = $derived(
     !fields.dueAt ? t('Ohne Termin gibt es keine Erinnerung') : assignees.length ? `${shortDay(fields.dueAt)} • ${t('Push zur Fälligkeit')}` : `${shortDay(fields.dueAt)} • ${t('Niemand zuständig, keine Erinnerung')}`,
   );

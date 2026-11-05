@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { clock } from '../lib/clock.svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { filterEntries, groupByDay, entryView, isUnread, timeLabel, INBOX_CHIPS, type InboxChip, type InboxGroupKey } from '../lib/inbox';
   import { inbox, loadInbox, loadMoreInbox, markAllRead, unread } from '../lib/inbox.svelte';
@@ -19,7 +20,7 @@
    */
   let chip = $state<InboxChip>('all');
   const tz = deviceTz();
-  const nowMs = $derived((void ui.rev, Date.now()));
+  const nowMs = $derived((void ui.rev, void clock.tick, Date.now()));
   const shown = $derived(filterEntries(inbox.items, chip));
   const groups = $derived(groupByDay(shown, nowMs, tz));
   const ctx = { nameOf: (id: string | null) => ui.people.find((p) => p.id === id)?.displayName ?? t('Jemand'), tz };

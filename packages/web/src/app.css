@@ -290,6 +290,17 @@
     --safe-top: 0px;
     --safe-bottom: 0px;
   }
+  /*
+   * Platz unter der Leiste und unter dem großen Knopf eines Sheets. Im Browser mindestens 30 px für den Home-Balken (wie im
+   * Entwurf). In Home Assistant hält die Companion App diesen Platz schon frei: Dort nur ein kleiner Rand, sonst steht die
+   * Leiste um den Leerraum zu hoch.
+   */
+  :root {
+    --pad-bottom: max(30px, var(--safe-bottom));
+  }
+  :root.embedded {
+    --pad-bottom: 8px;
+  }
   /* Zeilenhöhe „normal" wie in den Mockups (Tailwind setzt sonst 1,5 und macht jede Zeile höher als im Entwurf) */
   html,
   body {
@@ -364,7 +375,7 @@
 
 .no-scrollbar { scrollbar-width: none; touch-action: pan-x pan-y; }
 /* Leiste unten: 88 px hoch (8 oben, 30 unten für den Home-Balken; mit größerem Sicherheitsabstand entsprechend mehr) */
-:root { --nav-h: calc(58px + max(30px, var(--safe-bottom))); }
+:root { --nav-h: calc(58px + var(--pad-bottom)); }
 /* unten Platz für die Leiste */
 .pb-tabbar { padding-bottom: calc(var(--nav-h) + 24px); }
 /* mit dem „+"-Knopf über der Leiste (58 px hoch, 16 px über der Leiste): auch die letzte Karte lässt sich darüber hinaus scrollen */

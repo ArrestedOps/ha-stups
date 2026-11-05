@@ -15,7 +15,7 @@
 </script>
 
 <!-- Leiste am unteren Rand über die ganze Breite, 88 px hoch (8 oben, 30 unten für den Home-Balken); die Listen lassen unten Platz (pb-tabbar, pb-fab) -->
-<nav class="fixed inset-x-0 bottom-0 z-30 bg-bg px-3 pt-2 pb-[max(30px,var(--safe-bottom))]" aria-label={t('Ansicht')}>
+<nav class="fixed inset-x-0 bottom-0 z-30 bg-bg px-3 pt-2 pb-[var(--pad-bottom)]" aria-label={t('Ansicht')}>
   <div class="mx-auto grid max-w-[440px]" style:grid-template-columns="repeat({tabs.length}, minmax(0, 1fr))">
     {#each tabs as tb (tb.id)}
       <button

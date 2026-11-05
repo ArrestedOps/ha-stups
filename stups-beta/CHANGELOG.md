@@ -2,6 +2,11 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.20.2-beta.1
+
+- **Leiste unten in der Home-Assistant-App:** Aufgaben, Boards und Wächter standen zu hoch, mit viel Leerraum darunter. Die Seite ließ unten 30 px für den Home-Balken frei, den Home Assistant dort aber schon selbst freihält. In Home Assistant bleibt jetzt nur ein kleiner Rand; im Browser bleibt der Platz für den Home-Balken. Dasselbe gilt für den großen Knopf am Fuß der Sheets, und der Plus-Knopf rückt mit herunter
+- Keine Änderung an der Datenbank
+
 ## 1.20.1-beta.1
 
 **Korrektur zu 1.20.0: Aufgaben, Boards, Wächter, Karte, Menü und Stupsen sind jetzt nach den Entwürfen gebaut.** 1.20.0 hatte die Reiter, aber Anordnung und Maße wichen von den Entwürfen ab. Das ist jetzt gemessen und angeglichen (Abstände, Höhen, Schriftgrößen, Symbole, Reihenfolge).

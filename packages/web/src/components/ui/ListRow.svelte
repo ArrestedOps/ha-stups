@@ -90,7 +90,7 @@
   {#snippet body()}
     {#if tile}{@render tile()}{/if}
     <span class="flex min-w-0 flex-1 flex-col gap-1">
-      <span class="{wrap ? 'break-words' : 'truncate'} text-[15px] font-bold tracking-tight {variant === 'danger' ? 'text-danger' : ''} {strike ? 'text-hint line-through' : ''}">{title}</span>
+      <span class="{wrap ? 'wrap-anywhere' : 'truncate'} text-[15px] font-bold tracking-tight {variant === 'danger' ? 'text-danger' : ''} {strike ? 'text-hint line-through' : ''}">{title}</span>
       {#if meta}<span class="flex items-center gap-1.5 text-[13px] text-fg2 {wrap ? 'flex-wrap' : 'truncate'}">{@render meta()}</span>{/if}
     </span>
   {/snippet}

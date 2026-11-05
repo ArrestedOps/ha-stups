@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import TopBar from '../src/components/TopBar.svelte';
 import { inbox } from '../src/lib/inbox.svelte';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
+import { PATHS } from '../src/lib/symbols/paths';
 import { ui } from '../src/lib/store.svelte';
 
 // Kopf aller Reiter, auf dem Server gerendert: Reihenfolge der Knöpfe, Home nur im Add-on, Punkt an der Glocke nur für Ungelesenes
@@ -39,6 +40,14 @@ describe('Kopfzeile', () => {
     const btn = html().match(/<button[^>]*home-button[^>]*>/)![0];
     expect(btn).toContain('h-11 w-11');
     expect(btn).toContain('aria-label="Zurück zu Home Assistant"');
+  });
+
+  it('der Home-Knopf zeigt das Home-Assistant-Logo (nicht das Haus)', () => {
+    const out = html();
+    const start = out.indexOf('data-testid="home-button"');
+    const btn = out.slice(start, out.indexOf('</button>', start));
+    expect(btn).toContain(PATHS['home-assistant']!.slice(0, 24)); // Pfad des Logos
+    expect(btn).not.toContain('M3 11l9-8 9 8'); // der frühere Haus-Pfad
   });
 
   it('Punkt an der Glocke nur bei Ungelesenem', () => {

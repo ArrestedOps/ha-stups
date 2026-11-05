@@ -10,7 +10,7 @@
 
 <div class="flex items-center gap-3" data-testid={testid}>
   <span class="min-w-0 flex-1">
-    <span class="block text-[15px] font-bold break-words">{name || empty || ''}</span>
+    <span class="block text-[15px] font-bold wrap-anywhere">{name || empty || ''}</span>
     {#if id}<span class="block text-[12px] break-all text-fg2">{id}</span>{/if}
   </span>
   {#if onchange}

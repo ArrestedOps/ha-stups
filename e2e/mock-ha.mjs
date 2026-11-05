@@ -48,6 +48,8 @@ export async function startMockHa({ port, first, second, token }) {
   setState('sensor.trockner_leistung', '2', { friendly_name: 'Steckdose Trockner Leistung', unit_of_measurement: 'W', device_class: 'power' });
   setState('calendar.abfall', 'off', { friendly_name: 'Abfallkalender' });
   setState('weather.zuhause', 'sunny', { friendly_name: 'Zuhause' });
+  // Sehr lange Namen (wie bei Geräten, deren Name die Kennung ist): sie dürfen die Seite nicht breiter machen
+  setState('sensor.flur_schliesszylinder_wohnungseingangstuer_batterie_ladestand_zusatzmodul', '85', { friendly_name: 'sensor.flur_schliesszylinder_wohnungseingangstuer_batterie_ladestand_zusatzmodul', unit_of_measurement: '%', device_class: 'battery' });
   setState('sensor.bad_batterie', '12', { friendly_name: 'Bad Fenster Batterie', unit_of_measurement: '%', device_class: 'battery' });
   /** Historie je Entität für den Probelauf (POST /mock/history), Kalendertermine (POST /mock/calendar), Vorhersagen (POST /mock/forecast) */
   const histories = new Map();

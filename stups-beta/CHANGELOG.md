@@ -2,6 +2,12 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.25.1-beta.1
+
+- **Lange Namen machen die Seite nicht mehr breiter:** Sehr lange Entitätsnamen wie `sensor.flur_schliesszylinder_…` ragten im Wächter-Editor (Zusammenfassung, Karten, Entitätszeile) aus dem Fenster und zerschossen das Layout. Sie brechen jetzt um, in allen Fenstern der App. Ein Browser-Test mit einem 80 Zeichen langen Namen sichert das ab
+- **Home-Knopf mit dem Home-Assistant-Logo** statt des Hauses
+- Keine Änderung an der Datenbank
+
 ## 1.25.0-beta.1
 
 **Neues Design, Phase 6b: Mitteilungen, dazu der Home-Knopf und dein Dashboard.** *Datenbank: Migration 23, vorher wie immer eine Sicherung.*

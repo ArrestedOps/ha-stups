@@ -136,7 +136,7 @@
       </div>
     {/if}
     <div
-      class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 {footer ? 'pb-[150px]' : bare ? 'pb-[max(34px,var(--safe-bottom))]' : 'pb-[max(40px,var(--safe-bottom))]'}"
+      class="min-h-0 flex-1 overflow-y-auto overscroll-contain wrap-anywhere px-3 {footer ? 'pb-[150px]' : bare ? 'pb-[max(34px,var(--safe-bottom))]' : 'pb-[max(40px,var(--safe-bottom))]'}"
       onfocusin={keepFieldVisible}
     >
       {@render children()}

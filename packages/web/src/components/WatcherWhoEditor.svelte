@@ -43,7 +43,7 @@
 {#snippet selectRow(label: string, value: string)}
   <Tile size="sm" color="gray"><Icon name="home" size={18} stroke={2} /></Tile>
   <span class="flex shrink-0 flex-col"><span class="text-[15px] font-bold tracking-tight">{label}</span></span>
-  <span class="min-w-0 flex-1 break-words text-right text-[14px] text-fg2">{value}</span>
+  <span class="min-w-0 flex-1 wrap-anywhere text-right text-[14px] text-fg2">{value}</span>
   <span class="flex shrink-0 text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
 {/snippet}
 

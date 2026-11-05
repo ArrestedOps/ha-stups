@@ -11,7 +11,7 @@
 </script>
 
 <p
-  class="rounded-row border px-4 py-3.5 text-[14.5px] leading-[1.5]"
+  class="rounded-row border px-4 py-3.5 text-[14.5px] leading-[1.5] wrap-anywhere"
   style="background-image: var(--banner-warm); border-color: var(--banner-warm-line); color: var(--banner-warm-sub)"
   data-testid="watcher-sentence"
 >

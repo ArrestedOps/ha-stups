@@ -236,3 +236,36 @@ test('ohne Verlauf: ein Hinweis statt des Diagramms, der Assistent bleibt bedien
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
   await expect(d.getByTestId('wizard-question')).toHaveText('Welche Aufgabe soll dann entstehen?');
 });
+
+test('Sehr lange Entitätsnamen brechen um und machen die Seite nicht breiter (Ablauf und Zusammenfassung)', async ({ page, request }) => {
+  const s = await setup(request);
+  const LONG = 'sensor.flur_schliesszylinder_wohnungseingangstuer_batterie_ladestand_zusatzmodul';
+  const name = `Lang ${s.tag}`;
+  const created = await request.post('/api/watchers', {
+    data: {
+      name,
+      trigger: { entityId: LONG, kind: 'below', value: 20, forMin: 10 },
+      card: { boardId: s.boardId, columnId: s.columnId, title: `Akku ${s.tag}`, due: { kind: 'none' } },
+      assign: { mode: 'rotation', personIds: [] },
+      done: { entityId: LONG, kind: 'above', to: null, value: 50 },
+    },
+  });
+  expect([200, 201]).toContain(created.status());
+
+  await page.goto('/');
+  await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  await page.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByTestId('watcher-sentence')).toBeVisible();
+
+  // nichts ragt über den Bildschirm hinaus: weder die Seite noch Zusammenfassung, Karten oder Entitätszeile
+  const m = await page.evaluate(() => {
+    const vw = window.innerWidth;
+    const overflowing = [...document.querySelectorAll('[role=dialog] *')]
+      .filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.right > vw + 1; })
+      .map((e) => `${e.tagName}.${(e.getAttribute('class') ?? '').slice(0, 40)}`);
+    return { scroll: document.documentElement.scrollWidth - vw, overflowing: overflowing.slice(0, 5) };
+  });
+  expect(m.scroll).toBeLessThanOrEqual(0);
+  expect(m.overflowing).toEqual([]);
+});

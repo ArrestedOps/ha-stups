@@ -145,7 +145,7 @@
           <div class="flex items-center gap-2">{@render tag('then', t('DANN KARTE'))}{@render change('then')}</div>
           <ListRow wrap inset variant="task" title={f.title.trim() || '…'} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
             {#snippet tile()}<CardTile card={look} />{/snippet}
-            {#snippet meta()}<span class="shrink-0">{dueText(f)}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span><span class="break-words">{board?.name ?? ''}</span>{/snippet}
+            {#snippet meta()}<span class="shrink-0">{dueText(f)}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span><span class="wrap-anywhere">{board?.name ?? ''}</span>{/snippet}
             {#snippet right()}<span class="flex text-fg2"><Icon name="shield" size={18} stroke={1.8} /></span>{/snippet}
           </ListRow>
           <p class="text-[12px] text-fg2">{t('So erscheint sie in den Aufgaben.')}</p>
@@ -157,7 +157,7 @@
         <section class="flow-card" aria-label={t('An wen')}>
           <div class="flex items-center gap-2">
             {@render tag('who', t('AN WEN'))}
-            <span class="min-w-0 break-words text-[13px] text-fg2">{modeSummary(f.assignMode)}</span>
+            <span class="min-w-0 wrap-anywhere text-[13px] text-fg2">{modeSummary(f.assignMode)}</span>
             {@render change('who')}
           </div>
           <AssignOrder order={ed.order} />
@@ -239,7 +239,7 @@
           </ListRow>
           {#each runs as r (r.id)}
             <ListRow wrap title={`${RUN_TEXT[r.result] ?? r.result}${r.note ? ` · ${noteText(r.note)}` : ''}`}>
-              {#snippet meta()}<span class="break-words">{t('{time} Uhr', { time: clock(r.at) })}{r.assignedTo.length ? ` · ${r.assignedTo.map(ed.personName).join(', ')}` : ''}</span>{/snippet}
+              {#snippet meta()}<span class="wrap-anywhere">{t('{time} Uhr', { time: clock(r.at) })}{r.assignedTo.length ? ` · ${r.assignedTo.map(ed.personName).join(', ')}` : ''}</span>{/snippet}
             </ListRow>
           {:else}
             <p class="px-1 text-[15px] text-fg2">{t('Noch keine Läufe.')}</p>

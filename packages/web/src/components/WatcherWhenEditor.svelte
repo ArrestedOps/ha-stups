@@ -62,8 +62,8 @@
     <button type="button" class="flex min-h-row py-2 w-full items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 text-left" onclick={() => ed.startPicking('trigger')}>
       <Tile color="purple"><Icon name="search" size={22} stroke={1.8} /></Tile>
       <span class="flex min-w-0 flex-1 flex-col gap-1">
-        <span class="break-words text-[15px] font-bold tracking-tight">{t('Entität wählen')}</span>
-        <span class="break-words text-[13px] text-fg2">{t('Was soll Stups beobachten?')}</span>
+        <span class="wrap-anywhere text-[15px] font-bold tracking-tight">{t('Entität wählen')}</span>
+        <span class="wrap-anywhere text-[13px] text-fg2">{t('Was soll Stups beobachten?')}</span>
       </span>
       <span class="flex shrink-0 text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
     </button>
@@ -76,8 +76,8 @@
         <div class="flex items-center gap-3">
           <Tile color="purple">{#if icon}<SymbolIcon id={icon} size={24} />{:else}<Icon name="eye" size={24} />{/if}</Tile>
           <span class="flex min-w-0 flex-1 flex-col gap-1">
-            <span class="break-words text-[15px] font-bold tracking-tight">{f.entityName || f.entityId}</span>
-            <span class="break-words text-[13px] text-fg2">{t('letzte 3 Stunden')}</span>
+            <span class="wrap-anywhere text-[15px] font-bold tracking-tight">{f.entityName || f.entityId}</span>
+            <span class="wrap-anywhere text-[13px] text-fg2">{t('letzte 3 Stunden')}</span>
           </span>
           <span class="ml-auto shrink-0 text-right">
             <span class="block text-[24px] leading-none font-extrabold">{current}</span>
@@ -90,16 +90,16 @@
     {#if f.kind === 'calendar_event'}
       <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
         <span class="flex min-w-0 flex-1 flex-col gap-1">
-          <span class="break-words text-[15px] font-bold">{t('Wie viele Stunden vorher?')}</span>
-          <span class="break-words text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Karte')}</span>
+          <span class="wrap-anywhere text-[15px] font-bold">{t('Wie viele Stunden vorher?')}</span>
+          <span class="wrap-anywhere text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Karte')}</span>
         </span>
         <NumberField bind:value={f.leadHours} label={t('Vorlauf in Stunden')} unit={t('Std.')} />
       </div>
     {:else if f.kind === 'forecast'}
       <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
         <span class="flex min-w-0 flex-1 flex-col gap-1">
-          <span class="break-words text-[15px] font-bold">{t('Regen in den nächsten …')}</span>
-          <span class="break-words text-[13px] text-fg2">{t('Stups schaut in die Vorhersage')}</span>
+          <span class="wrap-anywhere text-[15px] font-bold">{t('Regen in den nächsten …')}</span>
+          <span class="wrap-anywhere text-[13px] text-fg2">{t('Stups schaut in die Vorhersage')}</span>
         </span>
         <NumberField bind:value={f.forecastHours} label={t('Stunden im Voraus')} unit={t('Std.')} />
       </div>
@@ -109,8 +109,8 @@
       {#if f.kind === 'state'}
         <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
           <span class="flex min-w-0 flex-1 flex-col gap-1">
-            <span class="break-words text-[15px] font-bold">{t('Zustand')}</span>
-            <span class="break-words text-[13px] text-fg2">{t('grüne Linie im Verlauf')}</span>
+            <span class="wrap-anywhere text-[15px] font-bold">{t('Zustand')}</span>
+            <span class="wrap-anywhere text-[13px] text-fg2">{t('grüne Linie im Verlauf')}</span>
           </span>
           <input class="h-10 w-32 rounded-xl border border-track bg-bg px-2 text-center text-[15px] font-bold placeholder:text-dim" bind:value={f.to} placeholder={t('z. B. off')} aria-label={t('Zielzustand')} />
         </div>
@@ -122,8 +122,8 @@
       {:else}
         <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3.5">
           <span class="flex min-w-0 flex-1 basis-0 flex-col gap-1">
-            <span class="break-words text-[15px] font-bold">{t('Schwelle')}</span>
-            <span class="break-words text-[13px] text-fg2">{t('grüne Linie im Verlauf')}</span>
+            <span class="wrap-anywhere text-[15px] font-bold">{t('Schwelle')}</span>
+            <span class="wrap-anywhere text-[13px] text-fg2">{t('grüne Linie im Verlauf')}</span>
           </span>
           <span class="flex min-w-0 flex-[1.4] basis-0 items-center gap-2.5">
             <input

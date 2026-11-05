@@ -5,6 +5,7 @@
   import { feat, goToDashboard, openSheet, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
+  import SymbolIcon from './SymbolIcon.svelte';
 
   /**
    * Kopf aller drei Reiter wie im Mockup: Zeile mit Logo und Wortmarke, rechts Home (nur in Home Assistant: zurück zum Dashboard der Person),
@@ -28,7 +29,7 @@
     {/if}
     {#if feat.haUi}
       <button class="flex h-11 w-11 items-center justify-center rounded-full text-text-soft" aria-label={t('Zurück zu Home Assistant')} data-testid="home-button" onclick={goToDashboard}>
-        <Icon name="home" size={24} />
+        <SymbolIcon id="home-assistant" size={26} />
       </button>
     {/if}
     <button

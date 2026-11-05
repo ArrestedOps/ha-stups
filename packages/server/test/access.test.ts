@@ -112,6 +112,29 @@ describe('Verzeichnis (Personen und Administratoren aus Home Assistant)', () => 
   });
 });
 
+describe('Verzeichnis: Gültigkeit des letzten bekannten Stands', () => {
+  it('S4: ein alter Stand gilt nur begrenzt; danach sind die Rollen wieder unbekannt (null)', async () => {
+    let t = 0;
+    let fail = false;
+    const ws = {
+      wsCommand: async (type: string) => {
+        if (fail) throw new Error('weg');
+        if (type === 'person/list') return { storage: [], config: [] };
+        return [{ id: 'u-admin', is_owner: true, is_active: true, system_generated: false }];
+      },
+    };
+    const dir = createDirectory({ ha: ws, ttlMs: 10, maxStaleMs: 60_000, now: () => t });
+    expect(await dir.isAdmin('u-admin')).toBe(true);
+    fail = true;
+    t += 30_000;
+    expect(await dir.isAdmin('u-admin')).toBe(true); // letzter bekannter Stand
+    t += 40_000;
+    await dir.isAdmin('u-admin'); // Erneuerung scheitert im Hintergrund
+    await new Promise((r) => setTimeout(r, 0));
+    expect(await dir.isAdmin('u-admin')).toBeNull(); // zu alt
+  });
+});
+
 describe('Zugriffsregeln', () => {
   let store: Store;
   const who = (id: string, name = id) => ({ id, name, displayName: name });
@@ -161,8 +184,36 @@ describe('Zugriffsregeln', () => {
     expect((await access.evaluate(who('ha-anna'))).allowed).toBe(false);
   });
 
-  it('ohne Verzeichnis (Home Assistant nicht erreichbar) gelten Personen als Administratoren', async () => {
+  it('S4: ohne bekannte Rollen (Verzeichnis liefert null) wird niemand zum Administrator befördert', async () => {
     const access = createAccess({ store, directory: dirWith(null) });
+    store.addPerson({ haUserId: 'ha-anna', name: 'Anna' });
+    expect((await access.evaluate(who('ha-anna'))).isAdmin).toBe(false);
+    expect((await access.evaluate(who('ha-gast'))).isAdmin).toBe(false);
+  });
+
+  it('S4: ein Kind bleibt auch ohne bekannte Rollen ein Kind (aus der Datenbank)', async () => {
+    const access = createAccess({ store, directory: dirWith(null) });
+    const kind = store.addPerson({ haUserId: 'ha-mia', name: 'Mia' });
+    store.setChild(kind.id, { isChild: true });
+    expect(await access.evaluate(who('ha-mia'))).toMatchObject({ isAdmin: false, isChild: true });
+  });
+
+  it('S4: sobald das Verzeichnis antwortet, gelten die echten Rollen', async () => {
+    let admins: string[] | null = null;
+    const access = createAccess({
+      store,
+      directory: { isAdmin: async (id) => (admins === null ? null : admins.includes(id)), persons: async () => [] },
+    });
+    store.addPerson({ haUserId: 'ha-anna', name: 'Anna' });
+    expect((await access.evaluate(who('ha-anna'))).isAdmin).toBe(false);
+    admins = ['ha-anna'];
+    expect((await access.evaluate(who('ha-anna'))).isAdmin).toBe(true);
+    admins = [];
+    expect((await access.evaluate(who('ha-anna'))).isAdmin).toBe(false);
+  });
+
+  it('ohne jedes Verzeichnis (lokale Entwicklung) gelten Personen als Administratoren', async () => {
+    const access = createAccess({ store });
     store.addPerson({ haUserId: 'ha-anna', name: 'Anna' });
     expect((await access.evaluate(who('ha-anna'))).isAdmin).toBe(true);
     expect((await access.evaluate(who('ha-gast'))).isAdmin).toBe(false);

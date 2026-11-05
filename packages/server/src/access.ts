@@ -19,17 +19,19 @@ export interface Access {
  * Zugriffsregeln:
  * - „alle": jeder Home-Assistant-Benutzer darf die App öffnen.
  * - „nur freigegebene": nur Personen der Liste und Administratoren. Wer sonst öffnet, steht unter „Wartet auf Freigabe".
- * Administrator ist, wer es in Home Assistant ist. Liefert Home Assistant die Benutzerliste nicht, gelten die
- * Personen der Liste als Administratoren, und gibt es noch gar keine Person, darf der Erste einrichten.
+ * Administrator ist, wer es in Home Assistant ist. Sind die Rollen unbekannt (Home Assistant antwortet nicht), wird
+ * niemand befördert: kein Administrator, ein Kind bleibt Kind (aus der Datenbank). Nur wenn es noch gar keine Person
+ * gibt, darf der Erste einrichten. Ganz ohne Verzeichnis (lokale Entwicklung) gelten Personen als Administratoren.
  */
 export function createAccess(deps: { store: Store; directory?: Directory }): Access {
   const { store, directory } = deps;
   return {
     async evaluate(who) {
       const user = store.resolveUser({ haId: who.id, name: who.name, displayName: who.displayName });
-      const fromHa = directory ? await directory.isAdmin(who.id) : null;
       const noPeople = store.people().length === 0;
-      const isAdmin = fromHa ?? (user.isPerson || noPeople);
+      let isAdmin: boolean;
+      if (!directory) isAdmin = user.isPerson || noPeople;
+      else isAdmin = (await directory.isAdmin(who.id)) ?? noPeople; // unbekannte Rollen: keine Beförderung
       const allowed = store.getAccessMode() === 'everyone' || isAdmin || user.isPerson;
       const isChild = user.isChild && user.isPerson && !isAdmin;
       return { user, isAdmin, allowed, isChild };

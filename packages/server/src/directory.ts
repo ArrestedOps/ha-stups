@@ -6,7 +6,7 @@ export interface DirectoryPerson {
 
 /** Port: Personen und Administratoren. Adapter: Home Assistant (unten), feste Liste (Entwicklung und Tests). */
 export interface Directory {
-  /** null = die Quelle liefert die Benutzerliste nicht (dann entscheidet der Rückfall in access.ts) */
+  /** null = die Rollen sind unbekannt (Quelle antwortet nicht, nie geklappt oder Stand zu alt): dann wird niemand befördert */
   isAdmin(userId: string): Promise<boolean | null>;
   /** null = nicht abfragbar */
   persons(): Promise<DirectoryPerson[] | null>;
@@ -38,6 +38,8 @@ interface DirectoryDeps {
   ttlMs?: number;
   /** Zeitlimit je Abfrage; jede App-Anfrage hängt daran, wenn noch nichts im Speicher liegt */
   timeoutMs?: number;
+  /** Wie lange der letzte bekannte Stand nach der letzten gelungenen Abfrage noch gilt, wenn Home Assistant nicht antwortet */
+  maxStaleMs?: number;
   now?: () => number;
 }
 
@@ -52,17 +54,20 @@ export function createDirectory(deps: DirectoryDeps): Directory {
   const ttl = deps.ttlMs ?? 60_000;
   const failedTtl = Math.min(ttl, 10_000);
   const timeout = deps.timeoutMs ?? 3000;
+  const maxStale = deps.maxStaleMs ?? 15 * 60_000;
   const now = deps.now ?? (() => Date.now());
 
   function cached<T>(load: () => Promise<T>): () => Promise<T | null> {
     let value: T | null = null;
     let freshUntil = -Infinity;
+    let loadedAt = -Infinity;
     let inflight: Promise<void> | null = null;
 
     const start = (): Promise<void> => {
       inflight ??= load()
         .then((v) => {
           value = v;
+          loadedAt = now();
           freshUntil = now() + ttl;
         })
         .catch(() => {
@@ -74,11 +79,14 @@ export function createDirectory(deps: DirectoryDeps): Directory {
       return inflight;
     };
 
+    // Ein zu alter Stand zählt nicht mehr: lieber unbekannt (null) als veraltete Rechte
+    const known = (): T | null => (value !== null && now() - loadedAt > maxStale ? null : value);
+
     return async () => {
-      if (now() < freshUntil) return value;
+      if (now() < freshUntil) return known();
       const refreshing = start();
       if (value === null) await refreshing; // nur beim allerersten Mal warten
-      return value;
+      return known();
     };
   }
 

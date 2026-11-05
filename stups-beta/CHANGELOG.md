@@ -2,6 +2,19 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.23.0-beta.1
+
+**Neues Design, Phase 5: die restlichen Bildschirme.** *Keine Änderung an der Datenbank.*
+
+- **Kalender:** Wochen- und Tagesansicht im Raster mit farbigen Terminen, orange Jetzt-Linie und gestrichelt markierter freier Zeit, auf die du tippst, um eine Karte mit genau diesem Termin anzulegen. Der **Monat** zeigt Punkte unter den Tagen; ein Tipp wählt den Tag und zeigt seine Karten darunter, „Tagesansicht öffnen“ wechselt zum Tag.
+- **Boards verwalten:** „Board wechseln“ mit Kacheln für jedes Board und **Vorlagen als Kacheln** für neue Boards; die Board-Einstellungen mit Spalten (Erledigt-Spalte, Pfeile, „⋯“), Kategorien als Chips, Archiv und Papierkorb als Zeilen; Archiv nach Erledigungstag gruppiert, Papierkorb mit den Tagen, die noch bleiben.
+- **Einstellungen als Zeilen** mit Kachel, Erklärung und Pfeil. Die Zeile „Wächter“ ist weg (die Verwaltung öffnet im Reiter Wächter über „Alle Wächter verwalten“). **Neu: Tageszusammenfassung** – die Uhrzeit stellst du jetzt in der App ein (nur Administratoren); sie hat Vorrang vor der Option des Add-ons, „Zurücksetzen“ gibt der Option den Vorrang zurück. **Neu: Dashboard-Button** mit Vorschau und YAML für die Bubble Card (in der Beta mit dem Sensor `sensor.stups_beta_heute_faellig`).
+- **Personen und Zugriff** (vorher „Personen und Kinder“): Personen mit Foto, Admin-Abzeichen, Geräten und Ruhezeit, „Wartet auf Freigabe“ und „Person hinzufügen“. Alle bisherigen Kontrollkästchen sind **Schalter** (nur die Übernahme-Liste der Wiederholung bleibt eine Auswahlliste).
+- **„Warum kommt nichts an?“** zeigt den Stand gleich beim Öffnen: Verbindung, pro Person „x / y Geräte erreichbar“, Ruhezeit, bei einem unbekannten oder fehlenden Gerät ein Banner mit der Lösung und das Protokoll der zuletzt gesendeten Nachrichten.
+- **Docker, Dialoge, Foto:** Anmelden, Konto mit Passkeys, „Noch kein Zugriff“, Bestätigen-Dialog, Hinweise unten und die Foto-Ansicht (Sichern, Original, Entfernen mit Rückfrage) im neuen Stil; „Diese Woche“ (Fairness) mit Umschalter und Zeilen, weiter ohne Rangliste.
+- Bewusste Abweichungen vom Entwurf: im Papierkorb gibt es „Zurückholen“, aber kein „endgültig löschen“ und kein „Papierkorb leeren“ (Phase 5 ändert keine Daten); im Kalender stehen zusätzlich Zurück, Weiter und Heute; die Gruppen der Einstellungen behalten ihre Namen.
+- Keine Änderung an der Datenbank
+
 ## 1.22.1-beta.1
 
 - **Home Assistant 2026.8: oben kein doppelter Abstand, unten bis zum Rand.** In 1.21.1 meldete sich Stups bei Home Assistant an und übernahm die Abstände zu Statusleiste und Home-Balken. Die Funktion „HA-Kopfzeile ausblenden“ meldete sich danach ein zweites Mal an, ohne diese Angabe, und schaltete die Übernahme wieder ab: Home Assistant polsterte das Fenster erneut, und Stups zählte die Abstände zusätzlich. Das ergab viel Schwarz über dem Kopf der App und einen Streifen unter der Leiste. Jetzt tragen alle Anmeldungen die Angabe; die Leiste reicht bis zum unteren Rand, der Kopf der App beginnt direkt unter der Statusleiste

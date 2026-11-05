@@ -26,7 +26,7 @@
 <svelte:window onkeydowncapture={key} />
 
 {#if c}
-  <div class="fixed inset-0 z-50 flex items-center justify-center px-6" transition:fade={{ duration: 120 }}>
+  <div class="fixed inset-0 z-[70] flex items-center justify-center px-6" transition:fade={{ duration: 120 }}>
     <button class="absolute inset-0 bg-(--scrim)" aria-label={t('Abbrechen')} tabindex="-1" onclick={close}></button>
     <div
       role="alertdialog"

@@ -65,7 +65,7 @@ test('Ohne Home Assistant: zwei Reiter (Aufgaben, Boards), kein Dashboard-Button
 
   const dialog = await einstellungen(page);
   await dialog.getByRole('button', { name: 'Konto und Anmeldung' }).click();
-  await expect(dialog.getByText('Konto', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Passwort ändern', { exact: true })).toBeVisible();
   await expect(dialog.getByText('Angemeldet als')).toBeVisible();
   for (const weg of ['Zurück zum Dashboard', 'Darstellung', 'Wächter', 'Bubble Card', 'Umzug', 'Diagnose-Seite', 'Notify-Dienste']) {
     await expect(dialog.getByText(weg, { exact: false })).toHaveCount(0);

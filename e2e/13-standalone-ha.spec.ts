@@ -99,7 +99,7 @@ test('Personen aus Home Assistant werden vorgeschlagen; Ben kommt dazu und wähl
 
   // Handys der Companion App stehen zur Wahl (Home Assistant liefert sie)
   await page.getByRole('button', { name: /Ben.*Ohne Anmeldung/ }).click();
-  await page.getByLabel('ben_e2e').check();
+  await page.getByLabel('ben_e2e').click();
   await expect.poll(async () => (await people(page)).find((p) => p.name === 'Ben')?.notifyServices).toEqual(['mobile_app_ben_e2e']);
 });
 

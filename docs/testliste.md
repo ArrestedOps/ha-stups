@@ -190,7 +190,7 @@ Nach dem Abschnitt „Anmelden mit Passkey" in `docs/docker.md`. Dieser Ablauf l
 Nach `stups-beta/DOCS.md`. Die normale App bleibt in diesem Abschnitt unberührt: nichts davon darf ihre Daten, Nachrichten oder Sensoren verändern.
 
 - [ ] In Home Assistant die Adresse `https://github.com/ArrestedOps/ha-stups#beta` unter Repositories hinzufügen: **Stups (Beta)** mit „BETA"-Symbol erscheint. Daneben ein zweites „Stups" aus dieser Adresse: **nicht** installieren
-- [ ] In der **normalen** App Einstellungen › Umzug › Exportieren, **danach** Stups (Beta) installieren und starten: Die Daten sind da (Boards, Karten, Personen). In der Seitenleiste steht „Stups Beta" neben „Stups"
+- [ ] In der **normalen** App Einstellungen › Umzug › Export, **danach** Stups (Beta) installieren und starten: Die Daten sind da (Boards, Karten, Personen). In der Seitenleiste steht „Stups Beta" neben „Stups"
 - [ ] Beta › Einstellungen: oben das Band „Beta" mit „Push-Nachrichten: Aus" und „Wächter" aus
 - [ ] Mit Push **Aus** und einer Karte, die gleich fällig wird: **keine** Nachricht, auch nicht „Beta ·". Die normale App meldet sich wie gewohnt
 - [ ] Push auf **Nur für mich**: Eine fällige Karte, die dir zugewiesen ist, schickt „Beta · …" nur an dich, nicht an die anderen Personen. Der Knopf „Erledigt" erledigt die Karte in der Beta, **nicht** in der normalen App (dort bleibt sie offen)
@@ -478,6 +478,37 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] **Mitglied:** dieselbe Seite, aber ohne „Ändern“, Speichern und Testen; Verlauf der Entität und Status sind lesbar. **Kind:** kein Reiter Wächter
 - [ ] Hell, Dunkel, Englisch: nichts läuft über den Rand; die Titel der Schritte und Schilder (WHEN, THEN, TO WHOM, COMPLETES ITSELF) stehen auf Englisch da
 - [ ] Datenbank: keine Änderung
+
+## 34 · Neues Design, Phase 5 (restliche Screens, seit 1.23.0)
+
+**Kalender** (Aufgaben › Kalender-Knopf)
+
+- [ ] Woche und Tag: Termine als farbige Kacheln im Raster (44 px je Stunde), die orange Jetzt-Linie über allen Tagen, der gewählte Tag oben mit Verlauf. Auf eine freie Stelle tippen: Fenster „Neue Karte“ mit genau dieser Zeit, die Stelle ist gestrichelt markiert. Karte antippen öffnet sie
+- [ ] Monat: Punkte unter den Tagen, heute mit Verlauf, der gewählte Tag mit orangem Rand; ein Tipp zeigt unten „Freitag, 31. Januar“ mit den Karten (abhaken, Menü). „Tagesansicht öffnen“ wechselt zur Tagesansicht. Das gilt auch für ein Kind (nur eigene Karten, kein Anlegen)
+
+**Boards verwalten**
+
+- [ ] Board wechseln: Kacheln mit Symbol und Farbe, das offene mit orangem Rand und Haken; „Bearbeiten“ oben rechts, „Neues Board“ mit Vorlagen als Kacheln (Leer, Haushalt, Umzug …, eigene Vorlagen) und dem Namensfeld, großer Knopf „Board anlegen“. Ein Kind sieht nur seine Boards und „Einstellungen“
+- [ ] Board-Einstellungen: Name, „Erledigte archivieren nach … Tagen“, Spalten (Pfeile, „⋯“ mit Erledigt-Spalte, Geplant, Löschen), Kategorien als Chips (antippen: Name, Farbe, Löschen; „Neu“), Archiv und Papierkorb mit Zahl, „Board löschen“ mit Rückfrage
+- [ ] Archiv: Suche, Gruppen „Diese Woche“ und je Monat, „Zurück“ holt die Karte in die erste offene Spalte. Papierkorb: 30 Tage Bedenkzeit, „noch n Tage“ (rot ab 3), Wiederherstellen
+
+**Einstellungen**
+
+- [ ] Zeilen mit Kachel, Titel, Erklärung und Pfeil in Gruppen; **keine Zeile „Wächter“** (die Verwaltung steht im Reiter Wächter unter „Alle Wächter verwalten“, „Zurück“ führt dorthin zurück)
+- [ ] Zeile **Tageszusammenfassung** (Administrator mit Push) zeigt die Uhrzeit, die Seite ändert sie und „Zurücksetzen“ stellt die Option der App wieder her. Die Zusammenfassung kommt zur neuen Uhrzeit
+- [ ] Home Assistant: „Zurück zum Dashboard“, „HA-Kopfzeile ausblenden“ als Schalter, „Dashboard-Button“ mit Vorschau („n heute fällig • m überfällig“), YAML (Beta: `sensor.stups_beta_heute_faellig`) und „YAML kopieren“
+- [ ] Daten: Papierkorb, Archiv, Umzug („Export“ nach /share/stups-umzug)
+- [ ] **Personen und Zugriff:** Zugriff als Umschalter, Personen mit Foto, Admin-Abzeichen, Geräten, Ruhezeit; Antippen klappt Name, Geräte (Schalter), Ruhezeit, Zusammenfassung, Haus, Rolle Kind (Schalter) auf. „Wartet auf Freigabe“ (gestrichelt) mit „Freigeben“, „Person hinzufügen“
+- [ ] **Warum kommt nichts an?** öffnet gleich mit dem Stand: Verbindung, pro Person „x / y“ (grün, orange „Ruhe“, rot bei 0), Banner mit der Lösung bei einer Person ohne erreichbares Gerät, „Zuletzt gesendet“ mit Zeit und Ergebnis, darunter die Einzelheiten. Kind: Seite nicht erreichbar
+- [ ] Alle früheren Auswahlfelder sind Schalter (Wächter aktiv, Beta-Wächter, Täglich nachhaken, Geräte, Ruhezeit, Zusammenfassung, Haus-Kanäle, Kind, Bestätigung, Administrator); nur die Übernahme-Liste der Wiederholung bleibt ein Kontrollkästchen
+
+**Docker, Dialoge, Foto**
+
+- [ ] Anmelden: Logo, „stups.“, Passkey-Knopf, „oder mit Passwort“, Felder, Hinweis; Einrichtung mit Code. Konto: Passkeys als Zeilen („Passkey hinzufügen“ gestrichelt), Passwort ändern über „Ändern“, „Auf diesem Gerät abmelden“
+- [ ] Kein Zugriff: Schloss, „Noch kein Zugriff“, „Hallo Name! …“, „Erneut prüfen“, im Add-on „Zurück zum Dashboard“
+- [ ] Bestätigen-Dialog (rote Kachel, Abbrechen und Löschen) und Hinweise unten über der Leiste (mit „Öffnen“ bei Karte angelegt). Foto-Ansicht: runder Schließen-Knopf, „1 von 2“, Name und Größe, Punkte, „Sichern“, „Original“, „Entfernen“ (mit Rückfrage, nicht für Kinder)
+- [ ] Fairness „Diese Woche“: Umschalter Woche und Monat, Zeilen mit Foto und Balken, keine Rangliste
+- [ ] Hell, Dunkel, Englisch: nichts läuft über den Rand; Datenbank: keine Änderung
 
 ## Bekannte Lücken
 

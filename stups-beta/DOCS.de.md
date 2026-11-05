@@ -13,7 +13,7 @@ Das ist die **Beta-Version** von Stups: dieselbe App wie „Stups", aber mit **e
 
 ## Echte Daten zum Testen kopieren
 
-1. In der **normalen** Stups-App: **Einstellungen › Hilfe und Daten › Papierkorb, Archiv, Umzug › Exportieren**. Die Daten landen in `/share/stups-umzug`.
+1. In der **normalen** Stups-App: **Einstellungen › Hilfe und Daten › Papierkorb, Archiv, Umzug › Export**. Die Daten landen in `/share/stups-umzug`.
 2. **Erst danach** die Beta zum ersten Mal starten. Sie übernimmt den Export beim ersten Start, aber nur dann, wenn sie noch keine eigenen Daten hat.
 3. Die Beta nimmt die Daten **als Kopie**; die normale App bleibt unberührt.
 

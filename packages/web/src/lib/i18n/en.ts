@@ -204,7 +204,6 @@ export const en: Catalog = {
   'Abbrechen': 'Cancel',
   'Hinzufügen': 'Add',
   '{n} von {total}': '{n} of {total}',
-  'Im Browser öffnen oder sichern': 'Open in browser or save',
   'Nächstes': 'Next',
   'Antippen zum Vergrößern': 'Tap to enlarge',
   'Du bist noch nicht für Stups freigegeben.': 'You are not yet approved for Stups.',
@@ -1282,4 +1281,5 @@ export const en: Catalog = {
   'mindestens 10 Zeichen': 'at least 10 characters',
   'Danach melden sich deine anderen Geräte ab.': 'Your other devices sign out afterwards.',
   'Auf diesem Gerät abmelden': 'Sign out on this device',
+  'Original im Browser öffnen': 'Open original in the browser',
 };

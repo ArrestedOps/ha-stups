@@ -78,7 +78,7 @@ All settings are environment variables. Without a value, the defaults apply.
 | `STUPS_NTFY_URL` | – | Address of the ntfy server, switches push on (see below) |
 | `STUPS_NTFY_TOKEN` | – | Access token (`tk_…`) for a server with sign-in |
 | `STUPS_NTFY_USER`, `STUPS_NTFY_PASSWORD` | – | instead of the token: user and password, only both together |
-| `STUPS_DAILY_SUMMARY_TIME` | `08:00` | Time of the daily summary (HH:MM) |
+| `STUPS_DAILY_SUMMARY_TIME` | `08:00` | Time of the daily summary (HH:MM); can be changed in the app under Settings › Daily summary, which then takes precedence |
 | `STUPS_OVERDUE_NAG_TIME` | `18:00` | From when overdue cards are followed up (HH:MM) |
 | `STUPS_LOG_LEVEL` | `info` | `error`, `warn`, `info`, `debug` |
 | `STUPS_CONFIG` | `<data folder>/options.json` | JSON file with the same settings as the add-on options, if you prefer a file |

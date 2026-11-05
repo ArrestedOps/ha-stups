@@ -137,7 +137,7 @@
       <a class="flex h-14 flex-col items-center justify-center gap-1 rounded-row border border-line bg-surface text-[12px] font-semibold text-fg" href="api/attachments/{item.id}" download={item.filename}>
         <Icon name="download" size={20} stroke={1.8} />{t('Sichern')}
       </a>
-      <a class="flex h-14 flex-col items-center justify-center gap-1 rounded-row border border-line bg-surface text-[12px] font-semibold text-fg" href="api/attachments/{item.id}" target="_blank" rel="noopener noreferrer" aria-label={t('Im Browser öffnen oder sichern')}>
+      <a class="flex h-14 flex-col items-center justify-center gap-1 rounded-row border border-line bg-surface text-[12px] font-semibold text-fg" href="api/attachments/{item.id}" target="_blank" rel="noopener noreferrer" aria-label={t('Original im Browser öffnen')}>
         <Icon name="external" size={20} stroke={1.8} />{t('Original')}
       </a>
       {#if !ui.isChild}

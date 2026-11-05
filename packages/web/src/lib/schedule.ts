@@ -101,13 +101,18 @@ export const effectiveFilter = (f: ScheduleFilter, isChild: boolean): ScheduleFi
 
 /** Beginn von morgen und von nächster Woche (Montag 00:00) in der Zeitzone des Haushalts, in Millisekunden */
 export function whenBounds(nowMs: number, tz = deviceTz()): { todayKey: string; startTomorrow: number; startNextWeek: number } {
+  // gleiche Anfrage wie eben (jede Karte fragt nach denselben Grenzen): nicht neu rechnen
+  if (lastBounds && lastBounds.nowMs === nowMs && lastBounds.tz === tz) return lastBounds.value;
   const todayKey = dayKeyOf(nowMs, tz);
-  return {
+  const value = {
     todayKey,
     startTomorrow: Date.parse(fromInputValue(`${addDays(todayKey, 1)}T00:00`, tz)!),
     startNextWeek: Date.parse(fromInputValue(`${addDays(mondayOf(todayKey), 7)}T00:00`, tz)!),
   };
+  lastBounds = { nowMs, tz, value };
+  return value;
 }
+let lastBounds: { nowMs: number; tz: string; value: { todayKey: string; startTomorrow: number; startNextWeek: number } } | null = null;
 
 /**
  * Die Gruppe von „Wann", in die eine Karte fällt. Offen: Termin vorbei = Überfällig, sonst Heute (bis 24 Uhr), Diese Woche (ab morgen bis Sonntag),

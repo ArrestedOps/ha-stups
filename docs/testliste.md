@@ -515,6 +515,19 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Fairness „Diese Woche“: Umschalter Woche und Monat, Zeilen mit Foto und Balken, keine Rangliste
 - [ ] Hell, Dunkel, Englisch: nichts läuft über den Rand; Datenbank: keine Änderung
 
+## 35 · Neues Design, Phase 6a (Filter, seit 1.24.0)
+
+- [ ] Aufgaben: der Knopf „Filter“ neben den Chips öffnet das Blatt (Wer, Wann, Boards, Priorität, Außerdem, Sortieren nach; unten „N Aufgaben anzeigen“, bei einer Aufgabe „1 Aufgabe“); bei gesetztem Filter hat der Knopf einen orangen Umriss und einen Zähler
+- [ ] Jede Person-Chip zeigt ihr eigenes Bild (Foto oder farbige Initiale), nur „Alle“ das Personen-Symbol: in Aufgaben, im Filterblatt und in Boards
+- [ ] Wann: Überfällig, Heute, Diese Woche, Später, Ohne Termin, auch mehrere zusammen; die Zahlen an den Chips ändern sich mit der übrigen Auswahl, Nullen stehen nicht da; „Ohne Termin“ zeigt Karten ohne Termin in einer eigenen Gruppe
+- [ ] Priorität Hoch, Mittel, Niedrig, Alle; „Nur mit offenem Stups“ (an dich), „Nur von Wächtern“, „Erledigte anzeigen“; Sortieren nach Fälligkeit, Priorität (hoch zuerst), Neueste – innerhalb der Gruppen
+- [ ] Die Trefferzahl im großen Knopf stimmt mit den Karten in der Liste überein; „Zurücksetzen“ stellt alles auf Anfang
+- [ ] Dasselbe Filtermodell im Kalender (Tag, Woche, Monat): der Filter-Knopf dort zeigt denselben Zähler
+- [ ] Nach dem Schließen der App und erneutem Öffnen steht die Auswahl noch so (pro Gerät); ein anderes Gerät hat seine eigene
+- [ ] Kind: der Filter hat kein „Wer“, kein „Nur von Wächtern“, keinen Stups-Schalter; „Ohne Termin“ zeigt nur die eigenen Karten
+- [ ] Boards: Chips Meine, Alle, Personen, Kategorien und die Suche im Filterblatt des Boards funktionieren wie bisher
+- [ ] Hell, Dunkel, Englisch: nichts läuft über den Rand; Datenbank: keine Änderung
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

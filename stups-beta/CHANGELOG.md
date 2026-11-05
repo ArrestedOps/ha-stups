@@ -2,6 +2,18 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.24.0-beta.1
+
+**Neues Design, Phase 6a: der Filter.** *Keine Änderung an der Datenbank.*
+
+- **Filter-Blatt nach dem Entwurf:** Wer, **Wann** (Überfällig, Heute, Diese Woche, Später, Ohne Termin – auch mehrere zusammen), Boards, **Priorität**, „Nur mit offenem Stups“, **„Nur von Wächtern“**, „Erledigte anzeigen“ und **Sortieren nach** (Fälligkeit, Priorität, Neueste). Der große Knopf unten zeigt die Trefferzahl („3 Aufgaben anzeigen“), die Zahlen an den Chips sind gegen die übrige Auswahl gerechnet.
+- **Ein Filter für Aufgaben und Kalender.** Der Knopf „Filter“ neben den Chips (und im Kalender) bekommt bei gesetztem Filter einen orangen Umriss und einen Zähler. Deine Auswahl bleibt pro Gerät erhalten; ein früher gemerkter Filter wird weiter gelesen, Gelöschtes fällt weg.
+- **„Ohne Termin“** holt Karten ohne Termin in die Liste (eigene Gruppe). Dafür gibt es am Server den Zusatz `GET /api/schedule?undated=1`, keine neue Route.
+- **Kinder:** kein „Wer“, kein „Nur von Wächtern“, kein Stups-Schalter; sie sehen weiter nur ihre eigenen Karten.
+- **Personenbilder in den Chips:** Jede Person (Ben, Conny …) zeigt in Aufgaben, im Filter und in Boards ihr eigenes Bild oder die farbige Initiale, nicht mehr das Personen-Symbol; nur „Alle“ behält es.
+- Bewusste Abweichungen vom Entwurf: Die Chips der Boards haben keine Zahlen (wie im Entwurf); die Schnellwahl im Board (Meine, Personen, Kategorien, Suche) bleibt eigenständig und ist nicht an den Aufgaben-Filter gebunden; „Vom Haus“ steht weiter immer oben und wird vom Filter nicht ausgeblendet.
+- Keine Änderung an der Datenbank
+
 ## 1.23.0-beta.1
 
 **Neues Design, Phase 5: die restlichen Bildschirme.** *Keine Änderung an der Datenbank.*

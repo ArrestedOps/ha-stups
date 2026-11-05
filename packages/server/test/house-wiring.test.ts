@@ -159,6 +159,18 @@ describe('Abonnement auf die Heimkehr', () => {
     expect(subs).toHaveLength(2);
   });
 
+  it('ändert sich nur die Zuordnung einer Person zu ihrer Entität, gilt beim nächsten Ereignis die neue (nicht die vom Abonnieren)', async () => {
+    store.addHouseChannel(ben, { type: 'speak', entityId: 'media_player.ben', whenAway: 'wait' });
+    const s = make();
+    await s.sync();
+    owners = new Map([['person.ben', 'u-anna'], ['person.anna', ben]]); // dieselben Entitäten, andere Besitzer
+    await s.sync();
+    expect(subs).toHaveLength(1); // keine neue Anmeldung nötig
+    subs[0]!.onEvent({ variables: { trigger: { entity_id: 'person.ben' } } });
+    await Promise.resolve();
+    expect(arrivals).toEqual(['u-anna']);
+  });
+
   it('fällt der letzte wartende Kanal weg, wird das Abonnement beendet', async () => {
     const c = store.addHouseChannel(ben, { type: 'speak', entityId: 'media_player.ben', whenAway: 'wait' });
     const s = make();

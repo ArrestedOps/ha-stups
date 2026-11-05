@@ -168,8 +168,21 @@ export function createHousePush(deps: HouseDeps) {
     return true;
   }
 
+  /** Je Person nur ein Ausliefern zugleich: Takt und Heimkehr würden sonst dieselbe Nachricht beide sehen und doppelt ansagen */
+  const flushing = new Map<string, Promise<void>>();
+  function flush(userId: string, fresh: boolean): Promise<void> {
+    const previous = flushing.get(userId) ?? Promise.resolve();
+    const run = previous.then(() => flushNow(userId, fresh));
+    const settled = run.catch(() => undefined);
+    flushing.set(userId, settled);
+    void settled.then(() => {
+      if (flushing.get(userId) === settled) flushing.delete(userId);
+    });
+    return run;
+  }
+
   /** Liefert aus, was für diese Person auf die Heimkehr wartet */
-  async function flush(userId: string, fresh: boolean): Promise<void> {
+  async function flushNow(userId: string, fresh: boolean): Promise<void> {
     store.purgeHousePending(deps.now().toISOString());
     if (deps.allowed && !deps.allowed(userId)) return; // Beta mit Push aus: es bleibt, wo es ist, bis es wieder erlaubt ist (oder abläuft)
     for (const p of store.housePendingOf(userId)) {
@@ -259,6 +272,8 @@ export interface HouseSubscriptionDeps {
  */
 export function createHouseSubscription(deps: HouseSubscriptionDeps) {
   let signature = '';
+  /** Wem welche Entität gehört: bei jedem Abgleich neu, auch wenn das Abonnement bleibt (sonst gälte im Ereignis der Stand vom Abonnieren) */
+  let currentOwners = new Map<string, string>();
 
   function stop(): void {
     if (signature !== '') deps.ha.unsubscribe(ARRIVAL_KEY);
@@ -270,12 +285,13 @@ export function createHouseSubscription(deps: HouseSubscriptionDeps) {
     const owners = await deps.presence.entityOwners();
     const entities = [...owners.keys()].sort();
     if (entities.length === 0) return stop();
+    currentOwners = owners;
     const next = entities.join(',');
     if (next === signature) return;
     signature = next;
     deps.ha.subscribe(ARRIVAL_KEY, { type: 'subscribe_trigger', trigger: { platform: 'state', entity_id: entities, to: 'home' } }, (ev) => {
       const entityId = ev.variables?.trigger?.entity_id;
-      const userId = typeof entityId === 'string' ? owners.get(entityId) : undefined;
+      const userId = typeof entityId === 'string' ? currentOwners.get(entityId) : undefined;
       if (userId) void deps.house.arrival(userId).catch((err) => deps.log?.warn(`Haus: Heimkehr: ${String(err)}`));
     });
   }

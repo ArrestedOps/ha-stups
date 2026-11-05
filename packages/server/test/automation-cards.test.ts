@@ -86,6 +86,18 @@ describe('Ereignis stups_create_card', () => {
     expect(auto.log()[0]!.note).toMatch(/Unbekannte Personen übersprungen: Niemand/);
   });
 
+  it('dedupe_key: zwei gleichzeitige Ereignisse (mit asynchroner Zuweisung) legen nur eine Karte an', async () => {
+    present = [anna];
+    const auto = engine();
+    await Promise.all([
+      auto.handle({ title: 'Filter', dedupe_key: 'filter-luft', assignees: 'present' }),
+      auto.handle({ title: 'Filter', dedupe_key: 'filter-luft', assignees: 'present' }),
+      auto.handle({ title: 'Filter', dedupe_key: 'filter-luft', assignees: 'present' }),
+    ]);
+    expect(cards().filter((c) => c.title === 'Filter')).toHaveLength(1);
+    expect(auto.log().filter((l) => l.result === 'duplicate')).toHaveLength(2);
+  });
+
   it('dedupe_key: solange die Karte offen ist, entsteht keine zweite; nach dem Erledigen wieder', async () => {
     const auto = engine();
     await auto.handle({ title: 'Filter', dedupe_key: 'filter-luft' });

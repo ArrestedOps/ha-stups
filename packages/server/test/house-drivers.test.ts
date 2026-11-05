@@ -110,6 +110,18 @@ describe('Ansage', () => {
     expect(names().filter((n) => n === 'media_player.volume_set')).toHaveLength(3); // zweimal setzen, einmal zurück
   });
 
+  it('zwei gleichzeitige Ansagen: nur ein Zeitgeber bleibt übrig (der alte wird gelöscht), die Lautstärke geht einmal zurück', async () => {
+    const d = drivers();
+    const c = { ...channel, volume: 70 };
+    await Promise.all([d.speak(c, 'Eins', { tts: 'tts.piper', language: 'de' }), d.speak(c, 'Zwei', { tts: 'tts.piper', language: 'de' })]);
+    const live = timers.filter((x) => !x.cleared);
+    expect(live).toHaveLength(1);
+    await fireLast();
+    expect(names().filter((n) => n === 'media_player.volume_set').length).toBeGreaterThanOrEqual(3);
+    expect(calls.at(-1)!.data.volume_level).toBe(0.3);
+    expect(timers.filter((x) => !x.cleared)).toHaveLength(0);
+  });
+
   it('kennt der Lautsprecher seine Lautstärke nicht, wird nur gesetzt und nichts zurückgestellt', async () => {
     states = [{ entity_id: 'media_player.kinderzimmer', state: 'off', attributes: {} }] as HaState[];
     await drivers().speak({ ...channel, volume: 50 }, 'Hallo', { tts: 'tts.piper', language: 'en' });

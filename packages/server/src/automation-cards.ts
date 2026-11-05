@@ -106,7 +106,10 @@ export function createAutomationCards(deps: AutomationDeps) {
 
       const { ids, unknown } = await resolveAssignees(data.assignees);
       const minutes = typeof data.due_in_minutes === 'number' && Number.isFinite(data.due_in_minutes) ? Math.max(0, Math.round(data.due_in_minutes)) : null;
+      // Prüfen und Anlegen ohne Unterbrechung: zwischen der ersten Prüfung oben und hier lag ein await (Zuweisung „present"),
+      // in dem ein zweites Ereignis mit demselben Schlüssel dieselbe Prüfung bestanden hätte
       const card = store.transaction(() => {
+        if (key && store.openCardByDedupeKey(key)) return null;
         const created = store.createCard(
           board.id,
           {
@@ -122,6 +125,10 @@ export function createAutomationCards(deps: AutomationDeps) {
         if (key) store.setCardOrigin(created.id, { dedupeKey: key });
         return created;
       });
+      if (!card) {
+        record('duplicate', title, `Für „${key}" gibt es schon eine offene Karte`);
+        return;
+      }
       record('created', title, unknown.length ? `Unbekannte Personen übersprungen: ${unknown.join(', ')}` : `in „${board.name}"`);
       deps.onChange?.();
       if (ids.length > 0) deps.onAssigned?.(card, ids);

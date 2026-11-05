@@ -11,6 +11,7 @@ import { combinePush, createHaNotifyPush, type PushGateway } from './push.js';
 import { createActionTokens, createNtfyPush } from './ntfy.js';
 import { createRoundTrips, pushActionRoutes } from './push-action.js';
 import { openDb } from './db.js';
+import { startTimeZoneRefresh } from './timezone-refresh.js';
 import { exportData, importTransfer, purgeExpiredExport, transferStatus } from './transfer.js';
 import { createEventBus } from './events.js';
 import { createAvatars } from './avatars.js';
@@ -317,15 +318,18 @@ if (token) {
     notifier.handleAction(a).catch((err) => app.log.error(err, 'Push-Aktion fehlgeschlagen'));
   });
 
-  const loadTimeZone = () =>
-    ha
-      .getConfig()
-      .then((c) => {
-        timeZone = c.time_zone;
-        app.log.info(`Zeitzone aus Home Assistant: ${timeZone}`);
-      })
-      .catch(() => setTimeout(loadTimeZone, 30_000).unref());
-  void loadTimeZone();
+  // Die Zeitzone kommt von Home Assistant: beim Start, nach jeder neuen Verbindung und stündlich (nicht nur einmal)
+  startTimeZoneRefresh({
+    getConfig: () => ha.getConfig(),
+    set: (zone) => (timeZone = zone),
+    onConnected: (cb) => ha.onConnected(cb),
+    setTimer: (fn, ms) => {
+      const handle = setTimeout(fn, ms);
+      handle.unref();
+      return () => clearTimeout(handle);
+    },
+    log: app.log,
+  });
 
   if (watchers) setInterval(() => void watchers.tick(), 30_000).unref();
 

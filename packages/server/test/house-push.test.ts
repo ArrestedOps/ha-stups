@@ -249,6 +249,14 @@ describe('Warteschlange', () => {
     expect(freshAsked).toContain(true);
   });
 
+  it('Heimkehr und Takt gleichzeitig: die Ansage kommt nur einmal (Sperre je Person)', async () => {
+    const { h } = await queue();
+    home[ben] = 'home';
+    await Promise.all([h.arrival(ben), h.tick(), h.arrival(ben)]);
+    expect(speakCalls).toHaveLength(1);
+    expect(store.housePendingOf(ben)).toEqual([]);
+  });
+
   it('der Takt liefert ebenfalls aus, sobald die Person zu Hause ist, vorher nicht', async () => {
     const { h } = await queue();
     await h.tick();

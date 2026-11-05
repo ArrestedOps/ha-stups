@@ -3,7 +3,7 @@ import { channelNames } from '../src/channel.js';
 import { parseOptions } from '../src/config.js';
 import { openDb } from '../src/db.js';
 import { createEventBus } from '../src/events.js';
-import { createSensors, slugify } from '../src/sensors.js';
+import { createSensors, personSlugs, slugify } from '../src/sensors.js';
 import { createStore, type Store } from '../src/store.js';
 
 describe('Event-Bus', () => {
@@ -93,6 +93,23 @@ describe('Sensoren', () => {
     expect(states['sensor.stups_heute_faellig_conny']!.state).toBe('1');
     expect(states['sensor.stups_ueberfaellig_rene']!.state).toBe('0');
     expect(states['sensor.stups_heute_faellig_rene']!.state).toBe('2');
+  });
+
+  it('Namen ohne lateinische Buchstaben oder mit gleichem Kürzel bekommen eigene, stabile Sensornamen (keine Kollision)', async () => {
+    const lena = store.addPerson({ name: 'Лена' });
+    const li = store.addPerson({ name: '李雷' });
+    const rene2 = store.addPerson({ name: 'Réne' }); // gleiches Kürzel wie Rene
+    await make().publish();
+    const keys = Object.keys(states).filter((k) => k.startsWith('sensor.stups_gestupst_'));
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys).toHaveLength(5); // Rene, Conny und die drei neuen: je ein eigener Sensor
+    expect(keys.every((k) => /^sensor\.stups_gestupst_[a-z0-9_]+$/.test(k) && !k.endsWith('_'))).toBe(true);
+    const slugs = personSlugs(store.people());
+    expect(slugs.get(lena.id)).toMatch(/^[a-z0-9_]+$/);
+    expect(slugs.get(li.id)).not.toBe(slugs.get(lena.id));
+    expect(slugs.get(rene2.id)).not.toBe(slugs.get(rene.id));
+    // dieselben Personen ergeben dieselben Namen
+    expect(personSlugs(store.people()).get(li.id)).toBe(slugs.get(li.id));
   });
 
   it('Beta: eigene Namen (sensor.stups_beta_…, „Stups Beta …"), nichts davon heißt wie bei der normalen App', async () => {

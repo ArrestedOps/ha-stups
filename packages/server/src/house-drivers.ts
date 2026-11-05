@@ -113,7 +113,11 @@ export function createHouseDrivers(deps: HouseDriverDeps) {
     if (changedVolume && entry) {
       // Ohne bekannten früheren Wert gibt es nichts zurückzustellen
       if (entry.previous === null) volumes.delete(channel.entityId);
-      else entry.timer = deps.setTimer(() => void restoreVolume(channel.entityId), estimateSpeechMs(text));
+      else {
+        // Ein Zeitgeber einer gleichzeitigen Ansage wird ersetzt, nicht daneben stehen gelassen (er stellte sonst zu früh zurück)
+        if (entry.timer !== null) deps.clearTimer(entry.timer);
+        entry.timer = deps.setTimer(() => void restoreVolume(channel.entityId), estimateSpeechMs(text));
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { describe, expect, it } from 'vitest';
 import { openDb } from '../src/db.js';
+import { migrations } from '../src/migrations.js';
 import { createStore } from '../src/store.js';
 import { exportData, importTransfer, transferStatus, TRANSFER_DIR } from '../src/transfer.js';
 
@@ -22,6 +23,40 @@ function oldInstall() {
   writeFileSync(join(dataDir, 'files', 'foto.jpg'), 'bilddaten');
   return { dataDir, db, boardId: board.id };
 }
+
+describe('Umzug: Dashboard je Person und Gelesen-Marker', () => {
+  it('nimmt dashboard_path und inbox_seen_at mit', () => {
+    const { dataDir, db } = oldInstall();
+    const store = createStore(db);
+    const id = store.people()[0]!.id;
+    store.setDashboardPath(id, '/dashboard-handy');
+    store.markInboxSeen(id);
+    const seen = store.inbox(id).seenAt;
+    const share = tmp();
+    exportData(db, dataDir, share);
+    const newData = tmp();
+    const dbPath = join(newData, 'stups.sqlite');
+    expect(importTransfer(dbPath, join(newData, 'files'), share)).toBe(true);
+    const copy = createStore(openDb(dbPath));
+    expect(copy.people()[0]).toMatchObject({ id, dashboardPath: '/dashboard-handy' });
+    expect(copy.inbox(id).seenAt).toBe(seen);
+  });
+
+  it('ein Export aus einer älteren Version (Stand 22) bleibt lesbar: Dashboard Standard, Marker „jetzt"', () => {
+    const dataDir = tmp();
+    const file = join(dataDir, 'alt.sqlite');
+    const old = openDb(file, { migrations: migrations.filter((m) => m.version <= 22) });
+    old.exec(`insert into users (id, name, display_name, is_person, created_at) values ('u1', 'rene', 'Rene', 1, '2026-01-01T00:00:00.000Z')`);
+    const share = tmp();
+    exportData(old, dataDir, share);
+    const newData = tmp();
+    const dbPath = join(newData, 'stups.sqlite');
+    expect(importTransfer(dbPath, join(newData, 'files'), share)).toBe(true);
+    const store = createStore(openDb(dbPath));
+    expect(store.people()[0]).toMatchObject({ id: 'u1', dashboardPath: null });
+    expect(store.inbox('u1').seenAt).toMatch(/^2\d{3}-/);
+  });
+});
 
 describe('Umzug', () => {
   it('exportiert Datenbank und Anhänge, die neue App übernimmt sie beim ersten Start', () => {

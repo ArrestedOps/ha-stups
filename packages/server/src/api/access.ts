@@ -1,5 +1,6 @@
 import { type Account } from '../accounts.js';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../errors.js';
+import { checkDashboardPath } from '../dashboard-path.js';
 import { sessionToken } from '../session-auth.js';
 import { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { type ApiKit, type Params } from './kit.js';
@@ -35,6 +36,13 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
     const b = body(req);
     if (!req.user) throw new ForbiddenError();
     store.setAccentHue(req.user.id, b.hue === null ? null : typeof b.hue === 'number' ? b.hue : Number.NaN);
+    return noContent(reply);
+  });
+  // Dashboard der Person: wohin der Home-Knopf führt (Pfad in Home Assistant, null = Standard); gilt auf allen Geräten. Kind: verboten.
+  app.put('/api/me/dashboard', async (req, reply) => {
+    const b = body(req);
+    if (!req.user) throw new ForbiddenError();
+    store.setDashboardPath(req.user.id, checkDashboardPath(b.path === undefined ? Number.NaN : b.path));
     return noContent(reply);
   });
   app.get('/api/people', async () => store.people());

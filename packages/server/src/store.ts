@@ -80,6 +80,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     languageOf: s.languageOf,
     setLanguage: s.setLanguage,
     setAccentHue: s.setAccentHue,
+    setDashboardPath: s.setDashboardPath,
     setWeeklySummary: s.setWeeklySummary,
     setChild: s.setChild,
     needsConfirmation: s.needsConfirmation,

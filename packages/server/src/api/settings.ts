@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { isDashboardPath } from '../dashboard-path.js';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../errors.js';
 import { TEST_ACTION } from '../push.js';
 import { type Capabilities } from '../runtime.js';
@@ -123,12 +124,30 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
       }
     );
   });
-  app.get('/api/dashboards', async () => {
+  // Die Dashboards, zu denen der Home-Knopf führen kann (Einstellungen › Home Assistant › Dashboard). Kind: verboten.
+  // Ohne Verbindung zu Home Assistant, bei Fehler oder Zeitüberschreitung: nur „Standard" und die Option der App, nie ein 500.
+  app.get('/api/ha/dashboards', async () => {
+    const addonPath = effectiveSettings().effectiveDashboardPath;
+    const standard = { path: '/', title: t('Standard von Home Assistant') };
+    const fallback = [standard, ...(addonPath !== '/' ? [{ path: addonPath, title: t('Option der App: {path}', { path: addonPath }) }] : [])];
+    if (!deps.ha) return { items: fallback, addonPath, connected: false };
     try {
-      return (await deps.ha?.listDashboards()) ?? [];
+      const timeout = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Zeitüberschreitung')), deps.dashboardsTimeoutMs ?? 6000).unref?.();
+      });
+      const list = await Promise.race([deps.ha.listDashboards(), timeout]);
+      const seen = new Set(['/', '/lovelace']);
+      const items = [standard, { path: '/lovelace', title: t('Übersicht') }];
+      // Nur, was sich als Pfad öffnen lässt: gültiger Pfad mit genau einem Teil (Dashboard-Kennung), ohne Doppelte
+      for (const d of list) {
+        if (!isDashboardPath(d.path) || d.path.indexOf('/', 1) !== -1 || seen.has(d.path)) continue;
+        seen.add(d.path);
+        items.push({ path: d.path, title: d.title || d.path.slice(1) });
+      }
+      return { items, addonPath, connected: true };
     } catch (err) {
       app.log.warn(`Dashboards konnten nicht gelesen werden: ${String(err)}`);
-      return [];
+      return { items: fallback, addonPath, connected: false };
     }
   });
   // ----- Umzug in eine andere App (nur Administratoren) -----

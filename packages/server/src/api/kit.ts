@@ -67,6 +67,8 @@ export interface ApiDeps {
   access?: Access;
   /** Vorgabe aus den Add-on-Optionen */
   defaultDashboardPath?: string;
+  /** Wie lange die Liste der Dashboards von Home Assistant höchstens braucht (Standard 6 Sekunden) */
+  dashboardsTimeoutMs?: number;
   /** Uhrzeit der Tageszusammenfassung aus den Add-on-Optionen (gilt, solange die App keine eigene hat) */
   defaultDailySummaryTime?: string;
   /** Eigene Konten mit Passwort (Betrieb ohne Home Assistant); ohne sie gibt es keine Routen für die Benutzerverwaltung */

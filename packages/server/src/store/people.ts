@@ -29,6 +29,7 @@ export function createPeople(c: Ctx, late: unknown) {
     languageChoice: r.language_choice === 'de' || r.language_choice === 'en' ? r.language_choice : 'auto',
     language: r.language === 'de' || r.language === 'en' ? r.language : null,
     accentHue: typeof r.accent_hue === 'number' ? r.accent_hue : null,
+    dashboardPath: typeof r.dashboard_path === 'string' && r.dashboard_path !== '' ? r.dashboard_path : null,
     weeklySummary: r.weekly_summary === 1,
     isChild: r.is_child === 1,
     childScope: r.child_scope === 'assigned' ? 'assigned' : 'all',
@@ -307,6 +308,12 @@ export function createPeople(c: Ctx, late: unknown) {
     run('update users set accent_hue = ? where id = ?', hue, id);
   }
 
+  /** Das Dashboard der Person (null = Standard); die Prüfung des Pfads macht der Aufrufer (dashboard-path.ts) */
+  function setDashboardPath(id: string, path: string | null): void {
+    userRow(id);
+    run('update users set dashboard_path = ? where id = ?', path, id);
+  }
+
   const getSetting = (key: string): string | null =>
     (one('select value from settings where key = ?', key)?.value as string | undefined) ?? null;
 
@@ -465,6 +472,7 @@ export function createPeople(c: Ctx, late: unknown) {
     languageOf,
     setLanguage,
     setAccentHue,
+    setDashboardPath,
     setWeeklySummary,
     setBusyUntil,
     setChild,

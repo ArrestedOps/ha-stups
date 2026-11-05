@@ -23,6 +23,7 @@ const ALLOWED_WRITES = [
   'POST /api/cards/:id/links',
   'PUT /api/me/language',
   'PUT /api/me/accent',
+  'PUT /api/me/inbox-seen',
 ];
 const ALLOWED_READS = [
   'GET /api/attachments/:id',
@@ -35,6 +36,7 @@ const ALLOWED_READS = [
   'GET /api/cards/:id/comments',
   'GET /api/cards/:id/completions',
   'GET /api/events',
+  'GET /api/inbox',
   'GET /api/me',
   'GET /api/people',
   'GET /api/people/:id/avatar',
@@ -167,6 +169,37 @@ describe('Ein Kind darf nur, was ausdrücklich erlaubt ist', () => {
 
   it('der Live-Sync-Weg (WebSocket) steht in der Erlaubnisliste und wird nicht blockiert', () => {
     expect(ALLOWED_READS).toContain('GET /api/events');
+  });
+});
+
+describe('Mitteilungen eines Kindes: nur Eigenes', () => {
+  const inbox = async (who: object, qs = '') => (await app.inject({ method: 'GET', url: `/api/inbox${qs}`, headers: who as Record<string, string> })).json() as { items: { cardId: string; kind: string }[]; seenAt: string | null };
+
+  it('Einträge zu eigenen Karten erscheinen, fremde Karten, fremde Boards und fremde Stupse nie', async () => {
+    const benId = store.people().find((p) => p.name === 'Ben')!.id;
+    const garden = store.createBoard({ name: 'Garten' });
+    const gardenCol = store.getBoardView(garden.id).columns[0]!.id;
+    const foreignBoard = store.createCard(garden.id, { columnId: gardenCol, title: 'Rasen', assigneeIds: [benId] }, benId).id;
+    for (const id of [mine, others, foreignBoard]) store.addComment(id, benId, 'Hallo');
+    const kids = (await inbox(mia)).items;
+    expect(kids.map((i) => [i.kind, i.cardId])).toEqual([['comment', mine]]);
+    // ein Erwachsener mit Bezug zu den Karten sieht seine, aber das Kind sieht nie mehr als das eigene
+    expect((await inbox(mia, `?before=${encodeURIComponent('2000-01-01T00:00:00.000Z')}`)).items).toEqual([]);
+    for (const i of kids) expect(i.cardId).not.toBe(others);
+  });
+
+  it('Alle gelesen geht für ein Kind und gilt nur für es selbst', async () => {
+    const res = await app.inject({ method: 'PUT', url: '/api/me/inbox-seen', headers: mia, payload: {} });
+    expect(res.statusCode).toBe(200);
+    const seen = res.json().seenAt as string;
+    expect((await inbox(mia)).seenAt).toBe(seen);
+    expect((await inbox(ben)).seenAt).not.toBe(seen);
+  });
+
+  it('das Dashboard wählen und die Liste der Dashboards sind für ein Kind verboten', async () => {
+    expect((await app.inject({ method: 'PUT', url: '/api/me/dashboard', headers: mia, payload: { path: '/lovelace' } })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'GET', url: '/api/ha/dashboards', headers: mia })).statusCode).toBe(403);
+    expect(store.people().find((p) => p.id === miaId)!.dashboardPath).toBeNull();
   });
 });
 

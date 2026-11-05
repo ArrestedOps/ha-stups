@@ -158,10 +158,15 @@ describe('Einstellungen und Dashboards', () => {
     expect((await call('PUT', '/api/settings', { dashboardPath: 'https://evil.example' })).status).toBe(400);
   });
 
-  it('listet die Dashboards von Home Assistant, bei Fehlern leer', async () => {
-    expect((await call('GET', '/api/dashboards')).body.map((d: any) => d.path)).toEqual(['/', '/dashboard-handy']);
+  it('listet die Dashboards von Home Assistant, bei Fehlern nur Standard und die Option der App', async () => {
+    const ok = (await call('GET', '/api/ha/dashboards')).body;
+    expect(ok.items.map((d: any) => d.path)).toEqual(['/', '/lovelace', '/dashboard-handy']);
+    expect(ok).toMatchObject({ connected: true, addonPath: '/lovelace/0' });
     dashboardsFail = true;
-    expect((await call('GET', '/api/dashboards')).body).toEqual([]);
+    const fail = await call('GET', '/api/ha/dashboards');
+    expect(fail.status).toBe(200);
+    expect(fail.body.items.map((d: any) => d.path)).toEqual(['/', '/lovelace/0']);
+    expect(fail.body.connected).toBe(false);
   });
 });
 

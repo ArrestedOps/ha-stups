@@ -23,6 +23,8 @@ export interface User {
   language: 'de' | 'en' | null;
   /** Eigener Farbton der Oberfläche (0–359); null: das Orange der App */
   accentHue: number | null;
+  /** Das Dashboard, zu dem der Home-Knopf diese Person führt (Pfad in Home Assistant); null: Standard */
+  dashboardPath: string | null;
   /** Sonntags-Zusammenfassung als Push (aus, bis die Person sie einschaltet) */
   weeklySummary: boolean;
   /** Rolle „Kind": eingeschränkte Rechte (der Administrator legt sie fest; ein Administrator ist nie Kind) */

@@ -38,6 +38,9 @@ const ALLOWED: Record<string, Own> = {
   'GET /api/cards/:id/comments': 'none',
   'GET /api/cards/:id/completions': 'none',
   'GET /api/events': 'none',
+  // Mitteilungen: der Store filtert auf Einträge zu eigenen Karten (store/inbox.ts)
+  'GET /api/inbox': 'none',
+  'PUT /api/me/inbox-seen': 'none',
   'GET /api/me': 'none',
   'GET /api/people': 'none',
   'GET /api/people/:id/avatar': 'none',

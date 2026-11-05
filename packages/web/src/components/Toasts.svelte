@@ -5,7 +5,7 @@
 </script>
 
 <div
-  class="pointer-events-none fixed inset-x-0 bottom-[calc(var(--nav-h)+20px)] z-50 flex flex-col items-center gap-2 px-3"
+  class="pointer-events-none fixed inset-x-0 bottom-[calc(var(--nav-h)+20px)] z-50 flex flex-col items-center gap-2 px-3 lg:bottom-6 lg:pl-[calc(16rem+0.75rem)]"
   role="status"
   aria-live="polite"
 >

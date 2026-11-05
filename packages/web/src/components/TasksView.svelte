@@ -7,14 +7,16 @@
   import { names as monthNames } from '../lib/i18n/names';
   import { t, tn } from '../lib/i18n/index.svelte';
   import { activeFilterCount, DEFAULT_FILTER, dayKeyOf, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId } from '../lib/schedule';
+  import { matchesQuery } from '../lib/search';
   import { scrollStrip } from '../lib/scrollStrip';
   import type { StatsKind } from '../lib/statsSheets';
   import { groupTasks, nudgesToMe, parseTasksView, taskStats, type TaskGroupKey, type TasksView } from '../lib/tasks';
   import { ageText, sourceLine } from '../lib/today';
   import { shortMonthTitle, weekStrip } from '../lib/week';
-  import { activeScheduleFilter, claimCard, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
+  import { activeScheduleFilter, claimCard, closeDetail, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import CalendarView from './CalendarView.svelte';
+  import CardSheet from './CardSheet.svelte';
   import FeedbackLink from './FeedbackLink.svelte';
   import Icon from './Icon.svelte';
   import TaskRow from './TaskRow.svelte';
@@ -71,6 +73,8 @@
   const back = () => (view = 'list');
   $effect(() => {
     ui.tasksCalendar = view !== 'list';
+    // Im Kalender gibt es keine Detailspalte: eine gewählte Karte öffnet dort als Fenster
+    if (ui.tasksCalendar) closeDetail();
     return () => {
       ui.tasksCalendar = false;
     };
@@ -91,9 +95,13 @@
   const sf = $derived(activeScheduleFilter());
   const fctx = $derived(filterContext());
   /** Ein Kind sieht nur die eigenen Karten; Erwachsene wählen mit den Chips und dem Blatt „Filter" */
+  /** Desktop: das Suchfeld oben filtert die geladenen Karten (Titel, Beschreibung, Board, Kategorien) */
+  const query = $derived(ui.desktop ? ui.query : '');
   const visible = (list: typeof open) =>
-    filterSchedule(ui.isChild ? list.filter((c) => !!meId && c.assigneeIds.includes(meId)) : list, sf, fctx);
-  const house = $derived<TodayCard[]>(ui.isChild ? [] : (today?.house ?? []));
+    filterSchedule(ui.isChild ? list.filter((c) => !!meId && c.assigneeIds.includes(meId)) : list, sf, fctx).filter(
+      (c) => !query || matchesQuery(query, c.title, c.description, c.boardName, ...c.categories.map((x) => x.name)),
+    );
+  const house = $derived<TodayCard[]>(ui.isChild ? [] : (today?.house ?? []).filter((c) => !query || matchesQuery(query, c.title, c.why, c.boardName)));
   const houseIds = $derived(new Set(house.map((c) => c.id)));
   const shownOpen = $derived(visible([...open, ...undated]).filter((c) => !houseIds.has(c.id)));
   const groups = $derived(
@@ -135,6 +143,19 @@
     done: { icon: 'done', tone: 'green' },
   };
 
+  /** Desktop: Pfeil auf und ab springt in der Liste von Zeile zu Zeile (Enter öffnet sie in der Detailspalte) */
+  function arrows(e: KeyboardEvent) {
+    if (!ui.desktop || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') || e.altKey || e.metaKey || e.ctrlKey) return;
+    const el = e.target as HTMLElement;
+    if (!el.matches?.('[data-row-open]')) return;
+    const rows = [...(e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[data-row-open]')];
+    const next = rows[rows.indexOf(el) + (e.key === 'ArrowDown' ? 1 : -1)];
+    if (!next) return;
+    e.preventDefault();
+    next.focus();
+    next.scrollIntoView({ block: 'nearest' });
+  }
+
   const done = (c: TodayCard) => void completeCard(c);
   const openHouse = (c: TodayCard) => void openCardAnywhere(c);
   /** Ein Stups: die Karte öffnen (dort die Antwort); mehrere: die Liste der Mitteilungen */
@@ -161,17 +182,17 @@
   </span>
 {/snippet}
 
-<main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col">
+<main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col lg:max-w-none lg:flex-row lg:gap-6">
   {#if view !== 'list'}
     <!-- Kalender: eigene Seite unter Aufgaben (Zurück, Titel, Monat, Tag/Woche/Monat) -->
-    <div class="flex min-h-0 flex-1 flex-col px-3 pt-[calc(var(--safe-top)+8px)]" data-testid="calendar-page">
+    <div class="flex min-h-0 flex-1 flex-col px-3 pt-[calc(var(--safe-top)+8px)] lg:px-0 lg:pt-0" data-testid="calendar-page">
       <div class="flex flex-col gap-3">
         <div>
           <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[16px] font-semibold text-accent-text" onclick={back}>
             <Icon name="chevron-left" size={22} stroke={2.2} />{t('Aufgaben')}
           </button>
           <div class="flex items-end justify-between gap-2">
-            <h1 class="mt-0.5 text-[30px] leading-[1.1] font-extrabold tracking-tight">{t('Kalender')}</h1>
+            <h1 class="mt-0.5 text-[30px] leading-[1.1] font-extrabold tracking-tight lg:sr-only">{t('Kalender')}</h1>
             <div class="mb-0.5 flex items-center gap-2">
               {@render filterButton(activeFilterCount(sf), true)}
               <Chip small onclick={() => setCalMode('month')}>{calMonthTitle}<Icon name="chevron-down" size={16} stroke={2} /></Chip>
@@ -183,7 +204,7 @@
       <CalendarView mode={calMode} bind:day onopenday={openDay} />
     </div>
   {:else}
-    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab" data-testid="tasks">
+    <div class="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab lg:-mx-1 lg:px-1 lg:pt-0" data-testid="tasks" role="presentation" onkeydown={arrows}>
       <div class="flex flex-col gap-3.5">
         <TopBar title={t('Aufgaben')} sub={t('Deine Aufgaben, Termine und To-dos an einem Ort.')} subTestid="tasks-sub" />
 
@@ -331,5 +352,21 @@
         {/if}
       </div>
     </div>
+  {/if}
+
+  {#if ui.desktop && view === 'list'}
+    <!-- Detailspalte (nur Desktop): die gewählte Karte neben der Liste. Ab 1280 px steht sie fest daneben (ohne Auswahl ein Platzhalter), darunter legt sie sich über die Liste. -->
+    {#if ui.detailId}
+      <aside class="w-[380px] shrink-0 pb-6 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-20" aria-label={t('Karte')} data-testid="detail">
+        {#key ui.detailId}<CardSheet id={ui.detailId} panel />{/key}
+      </aside>
+    {:else}
+      <aside class="hidden w-[380px] shrink-0 pb-6 xl:block" data-testid="detail-empty">
+        <div class="flex h-full flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-line px-8 text-center text-fg2">
+          <Icon name="checklist" size={32} stroke={1.6} />
+          <p class="text-[15px]">{t('Wähle eine Aufgabe, um Details zu sehen.')}</p>
+        </div>
+      </aside>
+    {/if}
   {/if}
 </main>

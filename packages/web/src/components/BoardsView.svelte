@@ -43,16 +43,18 @@
 {#snippet head()}
   <TopBar title="Boards" sub={t('Organisiere deine Aufgaben in Kanban-Boards.')} />
 
-  <!-- Board-Leiste: ein Tipp öffnet „Board wechseln" -->
-  <button
-    class="flex h-[52px] w-full min-w-0 items-center gap-2.5 rounded-row border border-line-chip bg-surface px-4 text-left text-[17px] font-semibold"
-    onclick={() => openSheet({ type: 'boards' })}
-    aria-label={t('Board wechseln')}
-  >
-    <span class="shrink-0 text-text-soft"><Icon name="layers" size={22} /></span>
-    <span class="min-w-0 flex-1 truncate" data-testid="board-name">{board?.name ?? 'Stups'}</span>
-    <span class="shrink-0 text-text-soft"><Icon name="chevron-down" size={20} stroke={2} /></span>
-  </button>
+  <!-- Board-Leiste: ein Tipp öffnet „Board wechseln" (Desktop: die Seitenleiste wechselt das Board, der Name steht in der Kopfzeile) -->
+  {#if !desktop}
+    <button
+      class="flex h-[52px] w-full min-w-0 items-center gap-2.5 rounded-row border border-line-chip bg-surface px-4 text-left text-[17px] font-semibold"
+      onclick={() => openSheet({ type: 'boards' })}
+      aria-label={t('Board wechseln')}
+    >
+      <span class="shrink-0 text-text-soft"><Icon name="layers" size={22} /></span>
+      <span class="min-w-0 flex-1 truncate" data-testid="board-name">{board?.name ?? 'Stups'}</span>
+      <span class="shrink-0 text-text-soft"><Icon name="chevron-down" size={20} stroke={2} /></span>
+    </button>
+  {/if}
 
   {#if view}
     <div class="flex flex-col gap-2">
@@ -93,19 +95,33 @@
   {/if}
 {/snippet}
 
-<main class="relative z-[1] mx-auto flex h-full max-w-[1400px] flex-col">
+<main class="relative z-[1] mx-auto flex h-full flex-col {desktop ? '' : 'max-w-[720px]'}">
   {#if view}
     {#if desktop}
-      <div class="flex shrink-0 flex-col gap-3.5 px-3 pt-[calc(var(--safe-top)+8px)]">{@render head()}</div>
-      <div class="mt-4 flex min-h-0 flex-1 gap-4 overflow-x-auto px-3 pb-6">
-        {#each columns as col (col.id)}
-          <section class="flex w-[320px] shrink-0 flex-col" aria-label={col.name}>
-            <div class="mb-3 flex items-center justify-between px-1">
-              <h2 class="text-[15px] font-semibold text-fg2">{col.name} · {counts[col.id] ?? 0}</h2>
-            </div>
-            <div class="min-h-0 flex-1 overflow-y-auto pb-4"><ColumnList columnId={col.id} /></div>
-          </section>
-        {/each}
+      <div class="flex shrink-0 flex-col gap-3">{@render head()}</div>
+      <!-- Kanban über die ganze Breite: Spalten gleich breit (mindestens 264 px, danach scrollt die Fläche seitlich), Kopf mit Name, Zähler und „+“ -->
+      <div class="mt-4 min-h-0 flex-1 overflow-x-auto pb-6" data-testid="kanban">
+        <div class="grid h-full min-w-0 grid-flow-col auto-cols-[minmax(264px,1fr)] gap-4">
+          {#each columns as col (col.id)}
+            <section class="flex min-h-0 flex-col rounded-[20px] border border-line bg-surface/40" aria-label={col.name}>
+              <div class="flex h-14 shrink-0 items-center gap-2 pr-2 pl-4">
+                <h2 class="min-w-0 truncate text-[15px] font-bold">{col.name}</h2>
+                <span class="inline-flex h-[22px] min-w-6 shrink-0 items-center justify-center rounded-full bg-count px-2 text-[12px] font-bold text-text-soft" data-testid="column-count">{counts[col.id] ?? 0}</span>
+                <span class="flex-1"></span>
+                {#if !ui.isChild && !col.isDone && !col.isPlanned}
+                  <button
+                    class="flex h-9 w-9 items-center justify-center rounded-[10px] bg-surface2 text-text-soft hover:text-fg"
+                    aria-label={t('Neue Karte in „{name}“', { name: col.name })}
+                    onclick={() => openSheet({ type: 'new', columnId: col.id })}
+                  >
+                    <Icon name="plus" size={20} stroke={2} />
+                  </button>
+                {/if}
+              </div>
+              <div class="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 pb-3" data-testid="column-list-{col.id}"><ColumnList columnId={col.id} /></div>
+            </section>
+          {/each}
+        </div>
       </div>
     {:else}
       <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab" data-testid="boards-scroll">
@@ -119,7 +135,7 @@
       </div>
     {/if}
   {:else}
-    <div class="min-h-0 flex-1 overflow-y-auto px-3 pt-[calc(var(--safe-top)+8px)] pb-fab">
+    <div class="min-h-0 flex-1 overflow-y-auto px-3 pt-[calc(var(--safe-top)+8px)] pb-fab lg:px-0 lg:pt-0">
       <div class="flex flex-col gap-3.5">
         <TopBar title="Boards" sub={t('Organisiere deine Aufgaben in Kanban-Boards.')} />
         <div class="flex flex-col items-center justify-center gap-3 py-16 text-center text-fg2">

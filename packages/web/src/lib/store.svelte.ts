@@ -25,6 +25,7 @@ import type { TemplateDraft } from './watcher-types';
 import { startTab, type Tab } from './tabs';
 import { applyCards, deltaIds } from './delta';
 import { startSync, type SyncInfo } from './sync';
+import { isDesktop } from './viewport';
 
 export type Sheet =
   | null
@@ -92,8 +93,12 @@ export const ui = $state({
   /** zählt bei jedem Nachladen hoch, damit offene Detailansichten und die Agenda sich aktualisieren */
   rev: 0,
   dragging: false,
-  /** ab 1024 px Breite: alle Spalten nebeneinander, Ziehen mit der Maus */
-  desktop: false,
+  /** ab 1024 px Breite: Seitenleiste, Detailspalte, alle Spalten nebeneinander, Ziehen mit der Maus (App.svelte hält es aktuell) */
+  desktop: isDesktop(),
+  /** Desktop, Aufgaben: die Karte in der Detailspalte rechts (statt im Sheet); null: keine gewählt */
+  detailId: null as string | null,
+  /** Desktop: Eingabe im Suchfeld oben (Aufgaben und Wächter; die Boards nutzen filter.search, das Blatt „Filter“ zeigt dasselbe Feld) */
+  query: '',
   /** geöffnetes Foto oder PDF (Vollbild in der App) */
   viewer: null as null | { items: Attachment[]; index: number },
   toasts: [] as Toast[],
@@ -419,7 +424,7 @@ export async function init(): Promise<void> {
 
   if (feat.haUi) applyHeaderHiding();
   const cardId = takeDeepLink();
-  if (cardId) ui.sheet = { type: 'card', id: cardId };
+  if (cardId) openCard(cardId);
   reportPanelPath();
   startSync(
     (info) => void refresh(info),
@@ -516,6 +521,34 @@ function restoreView(): void {
 export function selectTab(tab: Tab): void {
   ui.tab = tab;
   ui.sheet = null;
+  ui.detailId = null;
+  ui.query = '';
+}
+
+/**
+ * Wo eine Karte aufgeht. Auf dem Desktop steht sie in Aufgaben in der Detailspalte rechts (die Liste bleibt sichtbar), überall sonst
+ * (Boards, Kalender, Handy) als Sheet. Alle Wege, eine Karte zu öffnen, laufen hierüber.
+ */
+export function openCard(id: string): void {
+  if (ui.desktop && ui.tab === 'tasks' && !ui.tasksCalendar) {
+    ui.sheet = null;
+    ui.detailId = id;
+  } else {
+    ui.sheet = { type: 'card', id };
+  }
+}
+export const closeDetail = (): void => void (ui.detailId = null);
+
+/** Das Fenster wird breiter oder schmaler als 1024 px: eine offene Karte wechselt zwischen Detailspalte und Sheet */
+export function setDesktop(on: boolean): void {
+  ui.desktop = on;
+  if (!on && ui.detailId) {
+    const id = ui.detailId;
+    ui.detailId = null;
+    ui.sheet = { type: 'card', id };
+  } else if (on && ui.sheet?.type === 'card') {
+    openCard(ui.sheet.id);
+  }
 }
 
 /** Was das Filtern außer dem Filter braucht: ich, die Uhr (neu gerechnet bei jeder Änderung der Daten) und die Zeitzone des Geräts */
@@ -536,7 +569,7 @@ export function setScheduleFilter(patch: Partial<ScheduleFilter>): void {
 /** Öffnet eine Karte aus Agenda oder Kalender, auch wenn sie in einem anderen Board liegt */
 export async function openCardAnywhere(card: { id: string; boardId: string }): Promise<void> {
   if (card.boardId !== ui.boardId) await selectBoard(card.boardId);
-  ui.sheet = { type: 'card', id: card.id };
+  openCard(card.id);
 }
 
 /** Öffnet das Karten-Menü („…") einer Karte aus Aufgaben, auch wenn sie in einem anderen Board liegt */
@@ -554,7 +587,8 @@ export function hopCard(id: string): void {
 }
 
 export function openSheet(s: Sheet): void {
-  ui.sheet = s;
+  if (s?.type === 'card') openCard(s.id);
+  else ui.sheet = s;
 }
 /** Öffnet die Einstellungen, auf Wunsch gleich eine Unterseite */
 export function openSettings(page?: SettingsPageId): void {
@@ -724,6 +758,7 @@ export function removeCard(card: Card): void {
       const r = await actResult(() => api.deleteCard(card.id));
       if (!r.ok) return; // der Fehler steht schon als Hinweis da; die Karte bleibt offen
       closeSheet();
+      if (ui.detailId === card.id) closeDetail();
       toast(t('Karte gelöscht'), { action: { label: t('Rückgängig'), run: () => void act(() => api.restore('card', card.id)) } });
     },
   };

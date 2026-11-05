@@ -7,7 +7,7 @@
   import { t } from '../lib/i18n/index.svelte';
   import type { Snippet } from 'svelte';
   import { fade, fly } from 'svelte/transition';
-  import { sheetInsets, type SheetInsets } from '../lib/viewport';
+  import { isDesktop, sheetInsets, type SheetInsets } from '../lib/viewport';
   import SheetFooter from './ui/SheetFooter.svelte';
   import { focusScope } from '../lib/focusScope';
 
@@ -39,6 +39,9 @@
     bare?: boolean;
     children: Snippet;
   } = $props();
+
+  /** Desktop: das Fenster blendet kurz ein, statt von unten hereinzufahren */
+  const desktop = isDesktop();
 
   const me = Symbol('sheet');
   $effect(() => {
@@ -93,7 +96,12 @@
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && stack[stack.length - 1] === me && onclose()} />
 
-<div class="fixed inset-0 z-40">
+<!--
+  Eine Regel für alle Sheets. Handy: unten verankert, fast bis oben, Griff zum Wegwischen. Tablet (ab 640 px): dasselbe, aber höchstens 640 px
+  breit und mittig. Desktop (ab 1024 px): ein Dialog in der Mitte, 600 px breit, mit Rand, Rundung und Schatten (kein Griff, Escape und
+  „Schließen" schließen). Der Rahmen zentriert (flex), das Fenster selbst wird nur bewegt (Wischen, Tastatur), nie positioniert.
+-->
+<div class="fixed inset-0 z-40 flex items-end justify-center lg:items-center">
   <button
     class="absolute inset-0 bg-(--scrim)"
     aria-label={t('Schließen')}
@@ -107,12 +115,15 @@
     aria-label={title || t('Details')}
     tabindex="-1"
     use:focusScope={{ isTop: () => stack[stack.length - 1] === me }}
-    class="outline-none absolute inset-x-0 bottom-0 flex flex-col rounded-t-sheet border-t border-line bg-bg shadow-[0_-10px_40px_rgba(0,0,0,0.6)] {fit ? 'max-h-[calc(100dvh-54px)]' : 'h-[calc(100dvh-54px)]'} lg:h-auto lg:inset-y-0 lg:right-0 lg:left-auto lg:max-h-none lg:w-[480px] lg:rounded-none lg:border-t-0 lg:border-l"
+    data-sheet
+    class="relative flex w-full flex-col rounded-t-sheet border-t border-line bg-bg shadow-[0_-10px_40px_rgba(0,0,0,0.6)] outline-none md:max-w-[640px] md:border-x lg:w-[600px] lg:max-w-[calc(100vw-48px)] lg:overflow-hidden lg:rounded-sheet lg:border lg:shadow-[0_24px_80px_rgba(0,0,0,0.5)] {fit
+      ? 'max-h-[calc(100dvh-54px)] lg:max-h-[calc(100dvh-64px)]'
+      : 'h-[calc(100dvh-54px)] lg:h-[min(780px,calc(100dvh-64px))]'}"
     style:transform={dy ? `translateY(${dy}px)` : undefined}
     style:transition={dragging ? 'none' : undefined}
     style:bottom={insets.bottom ? `${insets.bottom}px` : undefined}
     style:max-height={insets.maxHeight ? `${insets.maxHeight}px` : undefined}
-    transition:fly={{ y: 500, duration: 220 }}
+    transition:fly={{ y: desktop ? 14 : 500, duration: 220 }}
   >
     <div
       class="-mb-2 flex shrink-0 touch-none justify-center pt-2 pb-2 lg:hidden"

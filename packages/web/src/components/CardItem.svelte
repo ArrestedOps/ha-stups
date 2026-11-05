@@ -139,51 +139,107 @@
     onpointercancel={cancel}
     role="presentation"
   >
-    <ListRow
-      variant="task"
-      title={card.title}
-      strike={isDoneColumn}
-      check={{
-        done: isDoneColumn,
-        label: isDoneColumn ? t('Bereits erledigt') : waiting && ui.isChild ? t('Wartet auf Bestätigung') : t('„{title}“ erledigen', { title: card.title }),
-        onchange: () => !suppressClick && completeCard(card),
-        state: waiting ? 'waiting' : overdue && !isDoneColumn ? 'overdue' : undefined,
-        disabled: !canTick,
-      }}
-      onclick={() => !suppressClick && openSheet({ type: 'card', id: card.id })}
-    >
-      {#snippet tile()}
-        <CardTile {card} />
-      {/snippet}
-      {#snippet meta()}
-        <span class="flex min-w-0 items-center gap-1.5">
-          {#if waiting}
-            <span class="flex shrink-0 items-center gap-1 font-semibold text-accent-text" data-testid="card-waiting"><Icon name="clock" size={13} />{t('Wartet auf Bestätigung')}</span>
-          {/if}
-          {#if nudge.toMe.length}
-            <span class="flex shrink-0 items-center gap-1 font-bold text-accent-text" data-testid="nudge-to-me">
-              <Icon name="hand" size={13} />{t('{names} stupst dich', { names: names(nudge.toMe.map((n) => n.fromId)) })}
-            </span>
-          {:else if nudge.fromMe.length}
-            <span class="flex shrink-0 items-center gap-1" data-testid="nudge-from-me">
-              <Icon name="hand" size={12} />{t('Du hast {names} gestupst', { names: names(nudge.fromMe.map((n) => n.toId)) })}
-            </span>
-          {/if}
-          <CardMeta {card} done={isDoneColumn} {overdue} {categories} />
-        </span>
-      {/snippet}
-      {#snippet right()}
-        <AvatarStack people={assignees} />
-        {#if !ui.isChild}
-          <button
-            class="flex h-11 w-7 shrink-0 items-center justify-center text-text-soft2"
-            aria-label={t('Menü für „{title}“', { title: card.title })}
-            onclick={() => !suppressClick && openSheet({ type: 'cardMenu', id: card.id })}
-          >
-            <Icon name="more" size={20} stroke={2.6} />
+    {#if ui.desktop}
+      <!-- Desktop (Kanban, schmale Spalten): Kachel und Titel (bis zu drei Zeilen), darunter Erledigt-Kreis, Meta-Zeile (bricht um) und Zuständige -->
+      <div class="row-hover flex flex-col gap-2.5 rounded-row border bg-surface p-3 text-fg {nudge.toMe.length ? 'row-new' : 'border-line'}" data-variant="task">
+        <div class="flex items-start gap-2.5">
+          <button type="button" data-row-open class="flex min-w-0 flex-1 items-start gap-2.5 text-left" onclick={() => !suppressClick && openSheet({ type: 'card', id: card.id })}>
+            <CardTile {card} size="sm" />
+            <span class="min-w-0 flex-1 pt-1 text-[15px] leading-snug font-bold tracking-tight wrap-anywhere hyphens-auto {isDoneColumn ? 'text-hint line-through' : ''}">{card.title}</span>
           </button>
-        {/if}
-      {/snippet}
-    </ListRow>
+          {#if !ui.isChild}
+            <button
+              class="-mt-0.5 -mr-1 flex h-9 w-7 shrink-0 items-center justify-center text-text-soft2 hover:text-fg"
+              aria-label={t('Menü für „{title}“', { title: card.title })}
+              onclick={() => !suppressClick && openSheet({ type: 'cardMenu', id: card.id })}
+            >
+              <Icon name="more" size={20} stroke={2.6} />
+            </button>
+          {/if}
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={isDoneColumn}
+            aria-label={isDoneColumn ? t('Bereits erledigt') : waiting && ui.isChild ? t('Wartet auf Bestätigung') : t('„{title}“ erledigen', { title: card.title })}
+            disabled={!canTick}
+            class="-my-1.5 -ml-1 flex h-9 w-7 shrink-0 items-center justify-center"
+            onclick={() => !suppressClick && completeCard(card)}
+          >
+            {#if isDoneColumn}
+              <span class="bg-accent-grad flex h-[22px] w-[22px] items-center justify-center rounded-full !shadow-none"><Icon name="check" size={14} /></span>
+            {:else if waiting}
+              <span class="flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-accent text-accent-text"><Icon name="clock" size={12} stroke={2.6} /></span>
+            {:else}
+              <span class="h-[22px] w-[22px] rounded-full border-2 border-ring"></span>
+            {/if}
+          </button>
+          <span class="flex min-w-0 flex-1 flex-col gap-1 text-[13px] text-fg2">
+            {#if waiting}
+              <span class="flex items-center gap-1 font-semibold text-accent-text" data-testid="card-waiting"><Icon name="clock" size={13} />{t('Wartet auf Bestätigung')}</span>
+            {/if}
+            {#if nudge.toMe.length}
+              <span class="flex items-center gap-1 font-bold text-accent-text" data-testid="nudge-to-me">
+                <Icon name="hand" size={13} />{t('{names} stupst dich', { names: names(nudge.toMe.map((n) => n.fromId)) })}
+              </span>
+            {:else if nudge.fromMe.length}
+              <span class="flex items-center gap-1" data-testid="nudge-from-me">
+                <Icon name="hand" size={12} />{t('Du hast {names} gestupst', { names: names(nudge.fromMe.map((n) => n.toId)) })}
+              </span>
+            {/if}
+            <CardMeta {card} done={isDoneColumn} {overdue} {categories} wrap />
+          </span>
+          <AvatarStack people={assignees} size={26} />
+        </div>
+      </div>
+    {:else}
+      <ListRow
+        variant="task"
+        title={card.title}
+        strike={isDoneColumn}
+        check={{
+          done: isDoneColumn,
+          label: isDoneColumn ? t('Bereits erledigt') : waiting && ui.isChild ? t('Wartet auf Bestätigung') : t('„{title}“ erledigen', { title: card.title }),
+          onchange: () => !suppressClick && completeCard(card),
+          state: waiting ? 'waiting' : overdue && !isDoneColumn ? 'overdue' : undefined,
+          disabled: !canTick,
+        }}
+        onclick={() => !suppressClick && openSheet({ type: 'card', id: card.id })}
+      >
+        {#snippet tile()}
+          <CardTile {card} />
+        {/snippet}
+        {#snippet meta()}
+          <span class="flex min-w-0 items-center gap-1.5">
+            {#if waiting}
+              <span class="flex shrink-0 items-center gap-1 font-semibold text-accent-text" data-testid="card-waiting"><Icon name="clock" size={13} />{t('Wartet auf Bestätigung')}</span>
+            {/if}
+            {#if nudge.toMe.length}
+              <span class="flex shrink-0 items-center gap-1 font-bold text-accent-text" data-testid="nudge-to-me">
+                <Icon name="hand" size={13} />{t('{names} stupst dich', { names: names(nudge.toMe.map((n) => n.fromId)) })}
+              </span>
+            {:else if nudge.fromMe.length}
+              <span class="flex shrink-0 items-center gap-1" data-testid="nudge-from-me">
+                <Icon name="hand" size={12} />{t('Du hast {names} gestupst', { names: names(nudge.fromMe.map((n) => n.toId)) })}
+              </span>
+            {/if}
+            <CardMeta {card} done={isDoneColumn} {overdue} {categories} />
+          </span>
+        {/snippet}
+        {#snippet right()}
+          <AvatarStack people={assignees} />
+          {#if !ui.isChild}
+            <button
+              class="flex h-11 w-7 shrink-0 items-center justify-center text-text-soft2"
+              aria-label={t('Menü für „{title}“', { title: card.title })}
+              onclick={() => !suppressClick && openSheet({ type: 'cardMenu', id: card.id })}
+            >
+              <Icon name="more" size={20} stroke={2.6} />
+            </button>
+          {/if}
+        {/snippet}
+      </ListRow>
+    {/if}
   </div>
 </div>

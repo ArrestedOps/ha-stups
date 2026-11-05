@@ -62,7 +62,7 @@
 </script>
 
 <div
-  class="flex w-full items-center rounded-row border text-fg {inset ? (wrap ? 'min-h-16 bg-bg py-2' : 'h-16 bg-bg') : wrap ? `min-h-row py-2.5 ${current ? '' : 'bg-surface'}` : current ? 'h-row' : 'h-row bg-surface'} {highlight ? 'row-new' : current ? 'row-current' : 'border-line'} {dashed ? 'border-dashed' : ''} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
+  class="flex w-full items-center rounded-row border text-fg {inset ? (wrap ? 'min-h-16 bg-bg py-2' : 'h-16 bg-bg') : wrap ? `min-h-row py-2.5 ${current ? '' : 'bg-surface'}` : current ? 'h-row' : 'h-row bg-surface'} {highlight ? 'row-new' : current ? 'row-current' : 'border-line'} {dashed ? 'border-dashed' : ''} {onclick || href ? 'row-hover' : ''} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
   data-variant={variant}
 >
   {#if check}
@@ -96,9 +96,9 @@
   {/snippet}
 
   {#if href}
-    <a {href} aria-label={label} class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left">{@render body()}</a>
+    <a {href} aria-label={label} aria-current={current ? 'true' : undefined} data-row-open class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left">{@render body()}</a>
   {:else if onclick}
-    <button type="button" aria-label={label} aria-expanded={expanded} aria-pressed={pressed} class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left" {onclick}>{@render body()}</button>
+    <button type="button" aria-label={label} aria-current={current ? 'true' : undefined} aria-expanded={expanded} aria-pressed={pressed} data-row-open class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left" {onclick}>{@render body()}</button>
   {:else}
     <div class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'}">{@render body()}</div>
   {/if}

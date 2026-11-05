@@ -56,29 +56,42 @@
   }
 </script>
 
-<div
-  class="flex min-h-28 flex-col gap-2"
-  use:dndzone={{
-    items,
-    type: 'card',
-    // Am Handy wird gewischt, gezogen wird nur mit der Maus (große Bildschirme)
-    dragDisabled: !ui.desktop || ui.isChild,
-    flipDurationMs: 150,
-    delayTouchStart: 250,
-    dropTargetStyle: { outline: '2px dashed var(--accent)', 'outline-offset': '4px', 'border-radius': '16px' },
-  }}
-  onconsider={consider}
-  onfinalize={finalize}
->
-  {#each items as card (card.id)}
-    <div animate:flip={{ duration: 150 }}>
-      <CardItem {card} />
-    </div>
-  {/each}
-</div>
+{#snippet zone()}
+  <div
+    class="flex min-h-28 flex-col gap-2 {ui.desktop ? 'flex-1' : ''}"
+    use:dndzone={{
+      items,
+      type: 'card',
+      // Am Handy wird gewischt, gezogen wird nur mit der Maus (große Bildschirme)
+      dragDisabled: !ui.desktop || ui.isChild,
+      flipDurationMs: 150,
+      delayTouchStart: 250,
+      dropTargetStyle: { outline: '2px dashed var(--accent)', 'outline-offset': '4px', 'border-radius': '16px' },
+    }}
+    onconsider={consider}
+    onfinalize={finalize}
+  >
+    {#each items as card (card.id)}
+      <div animate:flip={{ duration: 150 }}>
+        <CardItem {card} />
+      </div>
+    {/each}
+  </div>
+{/snippet}
 
-{#if items.length === 0 && !ui.dragging}
-  <p class="pointer-events-none -mt-24 pb-10 text-center text-[15px] text-fg2">
+{#snippet empty(cls: string)}
+  <p class={cls}>
     {ui.filter.categoryIds.length || ui.filter.onlyMine || ui.filter.personIds.length || ui.filter.nudged || ui.filter.search ? t('Keine Karten passen zum Filter') : t('Noch keine Karten')}
   </p>
+{/snippet}
+
+{#if ui.desktop}
+  <!-- Desktop: die Liste füllt die Spalte (auch der leere Teil nimmt eine gezogene Karte an), der Hinweis liegt darüber -->
+  <div class="relative flex min-h-full flex-1 flex-col">
+    {@render zone()}
+    {#if items.length === 0 && !ui.dragging}{@render empty('pointer-events-none absolute inset-x-0 top-4 text-center text-[15px] text-fg2')}{/if}
+  </div>
+{:else}
+  {@render zone()}
+  {#if items.length === 0 && !ui.dragging}{@render empty('pointer-events-none -mt-24 pb-10 text-center text-[15px] text-fg2')}{/if}
 {/if}

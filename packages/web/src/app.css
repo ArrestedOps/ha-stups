@@ -541,3 +541,68 @@
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+/*
+ * Desktop (ab 1024 px, Tailwind `lg:`): Seitenleiste, Kopfzeile, Detailspalte. Nur Tokens, keine festen Farben.
+ * Aktiver Eintrag der Seitenleiste: Akzent-getönte Fläche, feiner Akzentrand und ein Balken links.
+ */
+.side-item,
+.side-board {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  color: var(--text-soft);
+}
+.side-item:hover,
+.side-board:hover { background: var(--surface); color: var(--text); }
+.side-item[aria-current='page'] {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent-text);
+}
+.side-item[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--brand-dot);
+}
+.side-board[aria-current='true'] { background: var(--surface); border-color: var(--line-chip); color: var(--text); }
+
+/* Runde Knöpfe in der Kopfzeile des Desktops (Home Assistant, Glocke) */
+.head-icon {
+  display: flex;
+  height: 48px;
+  width: 48px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: 1px solid var(--line-chip);
+  background: var(--surface);
+  color: var(--text-soft);
+}
+.head-icon:hover { border-color: var(--sep); color: var(--text); }
+
+/* Suchfeld: das eingebaute „x“ von WebKit weglassen, die Kopfzeile hat ihren eigenen Knopf */
+.desktop-search::-webkit-search-cancel-button,
+.desktop-search::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
+
+/* Die gewählte Zeile in der Liste (Detailspalte offen) und Zeilen, die sich anklicken lassen, reagieren auf die Maus */
+@media (hover: hover) {
+  .row-hover:not(.row-current, .row-new):hover { border-color: var(--sep); }
+}
+
+/* Der Schimmer hinter der Kopfzeile beginnt rechts neben der Seitenleiste (Desktop) */
+@media (min-width: 1024px) {
+  .header-glow { left: 16rem; }
+  /* oben und unten Platz nur für die Leiste des Handys: auf dem Desktop gibt es sie nicht */
+  .pb-tabbar { padding-bottom: 32px; }
+  .pb-fab { padding-bottom: 32px; }
+}

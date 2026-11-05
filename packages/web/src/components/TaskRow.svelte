@@ -24,6 +24,7 @@
 <ListRow
   variant="task"
   title={card.title}
+  current={ui.desktop && ui.detailId === card.id}
   strike={done}
   check={{
     done,

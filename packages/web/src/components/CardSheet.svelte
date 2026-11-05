@@ -11,6 +11,7 @@
   import {
     actResult,
     answerConfirmation,
+    closeDetail,
     closeSheet,
     completeCard,
     moveCard,
@@ -40,7 +41,12 @@
   import SectionHeader from './ui/SectionHeader.svelte';
   import Tile from './ui/Tile.svelte';
 
-  let { id }: { id: string } = $props();
+  /**
+   * `panel`: auf dem Desktop (Aufgaben) steht die Karte in der Detailspalte neben der Liste statt im Sheet: gleicher Inhalt und dieselbe
+   * Logik, aber eine eigene Kopfzeile („Karte“, Schließen) und unten „Stupsen“ und „Erledigt“. Alles speichert sofort.
+   */
+  let { id, panel = false }: { id: string; panel?: boolean } = $props();
+  const close = () => (panel ? closeDetail() : closeSheet());
 
   // Jede Änderung speichert sofort. „Gespeichert" bestätigt das kurz, damit klar ist, dass nichts fehlt.
   let saved = $state(false);
@@ -59,7 +65,7 @@
     // Ein gerade bearbeitetes Feld speichert beim Verlassen; erst danach schließen
     (document.activeElement as HTMLElement | null)?.blur();
     await tick();
-    closeSheet();
+    close();
   }
 
   let card = $state<CardDetail | null>(null);
@@ -129,6 +135,19 @@
   const nudgeNames = $derived(
     card ? card.assigneeIds.filter((pid) => pid !== ui.me?.id).map((pid) => personById(pid)?.displayName ?? t('Jemand')).join(' & ') : '',
   );
+
+  // „Erledigt“ (oder „Wieder öffnen“) in Kopf des Sheets und in der Detailspalte
+  const canFinish = $derived(!!card && (!child || (mine && !waiting && !done)));
+  async function toggleDone() {
+    if (!card) return;
+    if (done) {
+      if (firstOpen) await moveCard(card, firstOpen.id, null);
+    } else {
+      await completeCard(card);
+    }
+    close();
+  }
+  const canStupse = $derived(!!card && !child && !card.completedAt && !!ui.me?.isPerson && canNudge(card, ui.me.id));
 
   const save = (patch: Parameters<typeof api.updateCard>[1]) => act(() => api.updateCard(id, patch));
   /** Das Symbol zum neuen Titel (nur bei Quelle „auto"): erkannt, sonst Standard */
@@ -202,17 +221,10 @@
 
 <!-- Oben wie im Mockup: links „Erledigt", mittig klein „Gespeichert", rechts „Fertig" (schließt). Alles speichert sofort, „Fertig" schließt nur. Nichts liegt unten im Weg. -->
 {#snippet doneButton()}
-  {#if card && (!child || (mine && !waiting && !done))}
+  {#if canFinish}
     <button
       class="ml-1 inline-flex h-9 items-center gap-1.5 rounded-full border border-track bg-surface px-3.5 text-[14px] font-bold"
-      onclick={async () => {
-        if (done) {
-          if (firstOpen) await moveCard(card!, firstOpen.id, null);
-        } else {
-          await completeCard(card!);
-        }
-        closeSheet();
-      }}
+      onclick={toggleDone}
     >
       <Icon name={done ? 'undo' : 'check'} size={16} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
     </button>
@@ -223,7 +235,7 @@
   <button class="inline-flex h-11 items-center px-2 text-[16px] font-bold text-accent-text" onclick={finish}>{t('Fertig')}</button>
 {/snippet}
 
-<Sheet title={saved ? t('Gespeichert') : ''} titleClass="text-[13px] font-semibold text-sig-green" onclose={closeSheet} left={doneButton} right={saveButton} hideClose>
+{#snippet content()}
   {#if failed}
     <p class="py-10 text-center text-fg2">{t('Diese Karte gibt es nicht mehr.')}</p>
   {:else if !card}
@@ -280,7 +292,7 @@
                 class="min-h-11 flex-1 rounded-xl bg-accent text-[16px] font-semibold text-on-accent"
                 onclick={async () => {
                   await answerConfirmation(card!, 'confirm');
-                  closeSheet();
+                  close();
                 }}
               >
                 {t('Bestätigen')}
@@ -289,7 +301,7 @@
                 class="min-h-11 flex-1 rounded-xl border border-line text-[16px] font-semibold"
                 onclick={async () => {
                   await answerConfirmation(card!, 'reject');
-                  closeSheet();
+                  close();
                 }}
               >
                 {t('Nochmal')}
@@ -299,7 +311,7 @@
         </div>
       {/if}
 
-      {#if !child && !card.completedAt && ui.me?.isPerson && canNudge(card, ui.me.id)}
+      {#if canStupse && !panel}
         <Banner title={t('{names} stupsen', { names: nudgeNames })} sub={t('Freundlich erinnern, mit Antwort-Knöpfen')} onclick={() => openSheet({ type: 'nudge', id: card!.id })}>
           {#snippet leading()}<span class="text-banner-icon"><Icon name="hand" size={30} /></span>{/snippet}
           {#snippet trailing()}<Icon name="chevron-right" size={20} stroke={2} />{/snippet}
@@ -515,7 +527,38 @@
       {/if}
     </div>
   {/if}
-</Sheet>
+{/snippet}
+
+{#if panel}
+  <section class="flex h-full flex-col overflow-hidden rounded-[20px] border border-line bg-bg max-xl:shadow-[0_16px_48px_rgba(0,0,0,0.5)]" aria-label={t('Karte')}>
+    <div class="flex h-14 shrink-0 items-center gap-2 pr-2 pl-4">
+      <h2 class="text-[12px] font-bold tracking-[0.12em] text-fg2 uppercase">{t('Karte')}</h2>
+      <span class="min-w-0 flex-1 truncate text-[13px] font-semibold text-sig-green" aria-live="polite">{saved ? t('Gespeichert') : ''}</span>
+      <button class="flex h-10 w-10 items-center justify-center rounded-full text-text-soft hover:bg-surface2" aria-label={t('Schließen')} data-testid="detail-close" onclick={finish}>
+        <Icon name="x" size={20} stroke={2} />
+      </button>
+    </div>
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 wrap-anywhere">{@render content()}</div>
+    {#if card && (canFinish || canStupse)}
+      <div class="flex shrink-0 gap-2.5 border-t border-line px-4 py-3.5">
+        {#if canStupse}
+          <button class="flex h-12 flex-1 items-center justify-center gap-2 rounded-[14px] border border-line-chip bg-surface text-[15px] font-extrabold hover:border-sep" onclick={() => openSheet({ type: 'nudge', id: card!.id })}>
+            <Icon name="hand" size={18} />{t('Stupsen')}
+          </button>
+        {/if}
+        {#if canFinish}
+          <button class="bg-accent-grad glow-pill flex h-12 flex-1 items-center justify-center gap-2 rounded-[14px] text-[15px] font-extrabold hover:brightness-110" data-testid="detail-done" onclick={toggleDone}>
+            <Icon name={done ? 'undo' : 'check'} size={18} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
+          </button>
+        {/if}
+      </div>
+    {/if}
+  </section>
+{:else}
+  <Sheet title={saved ? t('Gespeichert') : ''} titleClass="text-[13px] font-semibold text-sig-green" onclose={closeSheet} left={doneButton} right={saveButton} hideClose>
+    {@render content()}
+  </Sheet>
+{/if}
 
 {#if symbolOpen && card}
   <SymbolSheet

@@ -17,6 +17,8 @@
   const fresh = $derived(unread() > 0);
 </script>
 
+<!-- Auf dem Desktop (ab 1024 px) steht der Kopf in DesktopHeader.svelte, über allen Reitern; hier bleibt nichts -->
+{#if !ui.desktop}
 <div>
   <div class="flex h-11 items-center gap-0.5 px-0.5">
     <img src={logo} alt="" class="block h-8 w-8 rounded-lg" width="32" height="32" />
@@ -53,3 +55,4 @@
   <h1 class="mt-2.5 px-0.5 text-[30px] leading-[1.1] font-extrabold tracking-tight">{title}</h1>
   <p class="mt-1 px-0.5 text-[14px] text-fg2" data-testid={subTestid}>{sub}</p>
 </div>
+{/if}

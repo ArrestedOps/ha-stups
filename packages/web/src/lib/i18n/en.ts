@@ -1413,4 +1413,9 @@ export const en: Catalog = {
   'Bild ansehen': 'View image',
   'Als Text kopieren': 'Copy as text',
   'Text zum Kopieren': 'Text to copy',
+  // Desktop-Ansicht (ab 1024 px)
+  'Strg': 'Ctrl',
+  'Keine Treffer': 'No matches',
+  'Wähle eine Aufgabe, um Details zu sehen.': 'Select a task to see its details.',
+  'Neue Karte in „{name}“': 'New card in “{name}”',
 };

@@ -6,6 +6,7 @@
   import { durationText, homeSections, openSinceText } from '../lib/home';
   import { t, tn } from '../lib/i18n/index.svelte';
   import { canNudge } from '../lib/nudge';
+  import { matchesQuery } from '../lib/search';
   import { noteText, RUN_TEXT } from '../lib/watchers';
   import { completeCard, openCardAnywhere, openSettings, openSheet, personById, ui } from '../lib/store.svelte';
   import robot from '../assets/waechter-robot.webp';
@@ -49,7 +50,10 @@
   });
 
   const nowMs = $derived((void data, void clock.tick, Date.now()));
-  const items = $derived(data?.items ?? []);
+  const allItems = $derived(data?.items ?? []);
+  /** Desktop: das Suchfeld oben filtert nach Name, offener Karte und der Karte, die danach kommt */
+  const query = $derived(ui.desktop ? ui.query : '');
+  const items = $derived(query ? allItems.filter((i) => matchesQuery(query, i.name, i.openCard?.title, i.nextCard)) : allItems);
   const sections = $derived(homeSections(items));
   const names = (ids: string[]) => ids.map((id) => personById(id)?.displayName ?? '?').join(', ');
   /** Ein Wächter öffnet sich: Administratoren bearbeiten ihn dort, alle anderen sehen Einstellungen und Verlauf lesend */
@@ -63,13 +67,14 @@
   const quietMissing = $derived(sections.quiet.filter((i) => i.entityMissing));
 </script>
 
-<main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col">
-  <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab" data-testid="home">
+<main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col lg:max-w-none">
+  <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab lg:-mx-1 lg:px-1 lg:pt-0" data-testid="home">
     <div class="flex flex-col gap-3.5">
       <TopBar title={t('Wächter')} sub={t('Automatische Aufgaben aus Home Assistant.')} />
 
       <!-- „Deine Wächter": Karte mit dem Roboter (Text echt und übersetzbar, nur der Roboter ist ein Bild) -->
-      <div class="relative h-[88px] overflow-hidden rounded-[18px]" style="background-image: var(--banner-warm)" data-testid="watchers-hero">
+      <div class="flex items-stretch gap-3">
+      <div class="relative h-[88px] min-w-0 flex-1 overflow-hidden rounded-[18px]" style="background-image: var(--banner-warm)" data-testid="watchers-hero">
         <img
           src={robot}
           alt=""
@@ -82,6 +87,12 @@
           <h2 class="text-[17px] leading-tight font-extrabold tracking-tight text-on-banner">{t('Deine Wächter')}</h2>
           <p class="text-[12px] leading-[1.3] text-(--banner-warm-sub)">{t('Behalten dein Zuhause im Blick und erstellen automatisch Aufgaben – direkt aus Home Assistant.')}</p>
         </div>
+      </div>
+      {#if ui.desktop && ui.isAdmin && data?.available}
+        <button class="fab-grad flex w-[200px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-[18px] text-[15px] font-extrabold hover:brightness-110" data-testid="new-watcher" onclick={() => openSheet({ type: 'watcher', id: null })}>
+          <Icon name="plus" size={26} stroke={2.4} />{t('Neuer Wächter')}
+        </button>
+      {/if}
       </div>
 
       {#if ui.isAdmin && found > 0 && data?.available}
@@ -125,11 +136,14 @@
           {/if}
         </div>
       {:else}
+        {#if query && items.length === 0}
+          <p class="py-10 text-center text-fg2" data-testid="home-no-match">{t('Keine Treffer')}</p>
+        {/if}
         {#if sections.waiting.length > 0}
           <section aria-label={t('Wartet auf jemanden')} data-testid="home-waiting">
             <SectionHeader title={t('Wartet auf jemanden')} icon="alert" iconTone="red" count={sections.waiting.length} large open={!closed.includes('waiting')} ontoggle={() => toggle('waiting')} />
             {#if !closed.includes('waiting')}
-              <ul class="mt-2 flex flex-col gap-2">
+              <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
                 {#each sections.waiting as i (i.watcherId)}
                   {@const card = i.openCard!}
                   {@const canStupse = canNudge(card, ui.me?.id ?? null)}
@@ -176,7 +190,7 @@
           <section aria-label={t('Läuft gerade')} data-testid="home-running">
             <SectionHeader title={t('Läuft gerade')} icon="play" iconTone="green" count={sections.running.length} large open={!closed.includes('running')} ontoggle={() => toggle('running')} />
             {#if !closed.includes('running')}
-              <ul class="mt-2 flex flex-col gap-2">
+              <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
                 {#each sections.running as i (i.watcherId)}
                   <li>
                     <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
@@ -199,7 +213,7 @@
           <section aria-label={t('Kommt bald')} data-testid="home-soon">
             <SectionHeader title={t('Kommt bald')} icon="calendar" iconTone="orange" count={sections.soon.length} large open={!closed.includes('soon')} ontoggle={() => toggle('soon')} />
             {#if !closed.includes('soon')}
-              <ul class="mt-2 flex flex-col gap-2">
+              <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
                 {#each sections.soon as i (i.watcherId)}
                   <li>
                     <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
@@ -232,7 +246,7 @@
           <section aria-label={t('Ruhig')} data-testid="home-quiet">
             <SectionHeader title={t('Ruhig')} icon="done" iconTone="green" count={sections.quiet.length} large open={!closed.includes('quiet')} ontoggle={() => toggle('quiet')} />
             {#if !closed.includes('quiet')}
-              <ul class="mt-2 flex flex-col gap-2">
+              <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
                 {#each quietMissing as i (i.watcherId)}
                   <li>
                     <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
@@ -270,7 +284,7 @@
         {#if activity.length > 0}
           <section aria-label={t('Letzte Aktivität')} data-testid="home-activity">
             <SectionHeader title={t('Letzte Aktivität')} large />
-            <ul class="mt-2 flex flex-col gap-2">
+            <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
               {#each activity as r (r.id)}
                 <li>
                   <ListRow title="{r.watcherName} · {RUN_TEXT[r.result] ?? r.result}" label={t('Wächter {name} öffnen', { name: r.watcherName })} onclick={() => openWatcher(r.watcherId)}>
@@ -293,9 +307,9 @@
     </div>
   </div>
 
-  {#if ui.isAdmin && data?.available}
+  {#if !ui.desktop && ui.isAdmin && data?.available}
     <button
-      class="fab-grad fixed right-4 bottom-[calc(var(--nav-h)+16px)] z-30 flex h-[58px] w-[58px] items-center justify-center rounded-btn"
+      class="fab-grad fixed right-[max(1rem,calc((100vw-720px)/2+1rem))] bottom-[calc(var(--nav-h)+16px)] z-30 flex h-[58px] w-[58px] items-center justify-center rounded-btn"
       aria-label={t('Neuer Wächter')}
       onclick={() => openSheet({ type: 'watcher', id: null })}
     >

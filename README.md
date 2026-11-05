@@ -31,7 +31,7 @@ A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your h
 <p align="center">
   <img src="docs/images/en/waechter-dunkel.png" alt="Watchers, dark" width="23%">
   <img src="docs/images/en/gefunden-dunkel.png" alt="Found, dark" width="23%">
-  <img src="docs/images/en/waechter-bearbeiten-dunkel.png" alt="A watcher as a sentence, dark" width="23%">
+  <img src="docs/images/en/waechter-bearbeiten-dunkel.png" alt="A watcher as a flow, dark" width="23%">
   <img src="docs/images/en/einstellungen-dunkel.png" alt="Settings, dark" width="23%">
 </p>
 
@@ -41,7 +41,7 @@ A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your h
 - **Quick entry:** a line like `Take out trash tomorrow 7pm @Ben #Home every week !!` becomes a finished card with due date, assignee, category, repeat and priority.
 - **Tasks** (the start page, three tabs: Tasks, Boards, Watchers): what is on for you. Cards from the house (from watchers) on top, your numbers (due today, overdue, done today), the week with dots, a banner when someone nudged you, and your cards grouped as Overdue, Today, This week and Later. Chips switch between Mine, All and each person. A switch above the list shows **Day, Week or Month** instead (the former calendar); tapping a free slot creates a card with that due date. At the end: fairness for this week, without a ranking.
 - **Recurring tasks:** a fixed rhythm or counted from completion; the completed card stays with its history, the next one is created.
-- **Watchers:** Stups observes entities in Home Assistant and creates cards by itself: "The washing machine is done, so whoever is at home gets the card 'empty it'." Stups **finds suitable devices itself** (washing machine, dryer, waste calendar, rain, batteries, robot vacuum), you set one up as a **sentence** with a **trial run** on the last 7 days. Also "pass on", "suggest first" (whoever taps first takes it) and "little time" for busy weeks. **Home** shows what the house is doing right now. Set up without YAML.
+- **Watchers:** Stups observes entities in Home Assistant and creates cards by itself: "The washing machine is done, so whoever is at home gets the card 'empty it'." Stups **finds suitable devices itself** (washing machine, dryer, waste calendar, rain, batteries, robot vacuum), you set one up as a **four-step assistant** (When, Then, Who, Fine-tuning) with the **history of the entity** for the last 3 hours, and edit it as a **flow of cards** with a **trial run** on the last 7 days; the sentence stays as the summary. Also "pass on", "suggest first" (whoever taps first takes it) and "little time" for busy weeks. **Home** shows what the house is doing right now. Set up without YAML.
 - **Push through the Companion App:** when due, in advance, as a follow-up, and a daily summary. "Done" right in the message.
 - **Nudging:** send another person a nudge for their card ("Are you on it?"). With lock time and quiet time per person so nobody gets annoyed.
 - **House channels:** a nudge can also arrive in the house: an announcement on a speaker or a lamp that lights up in your colour, for children without a phone. Per channel you choose which messages arrive and what happens when someone is not at home.

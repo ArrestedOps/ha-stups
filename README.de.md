@@ -27,7 +27,7 @@ Kanban-Board, Aufgabenliste und Kalender als Home-Assistant-App (Add-on). Für d
 <p align="center">
   <img src="docs/images/waechter-dunkel.png" alt="Wächter, dunkel" width="23%">
   <img src="docs/images/gefunden-dunkel.png" alt="Gefunden, dunkel" width="23%">
-  <img src="docs/images/waechter-bearbeiten-dunkel.png" alt="Ein Wächter als Satz, dunkel" width="23%">
+  <img src="docs/images/waechter-bearbeiten-dunkel.png" alt="Ein Wächter als Ablauf, dunkel" width="23%">
   <img src="docs/images/einstellungen-dunkel.png" alt="Einstellungen, dunkel" width="23%">
 </p>
 
@@ -37,7 +37,7 @@ Kanban-Board, Aufgabenliste und Kalender als Home-Assistant-App (Add-on). Für d
 - **Schnell-Eingabe:** Eine Zeile wie `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` wird zur fertigen Karte mit Termin, Zuständigem, Kategorie, Wiederholung und Priorität.
 - **Aufgaben** (Startseite, drei Reiter: Aufgaben, Boards, Wächter): was für dich dran ist. Oben Karten vom Haus (von Wächtern), deine Zahlen (heute fällig, überfällig, heute erledigt), die Woche mit Punkten, ein Banner, wenn dich jemand gestupst hat, und deine Karten in den Gruppen Überfällig, Heute, Diese Woche und Später. Chips wechseln zwischen Meine, Alle und jeder Person. Ein Umschalter darüber zeigt stattdessen **Tag, Woche oder Monat** (der frühere Kalender); auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an. Am Ende die Fairness dieser Woche, ohne Rangliste.
 - **Wiederkehrende Aufgaben:** fester Rhythmus oder ab Erledigung; die erledigte Karte bleibt samt Verlauf erhalten, die nächste entsteht neu.
-- **Wächter:** Stups beobachtet Entitäten in Home Assistant und legt von selbst Karten an: „Die Waschmaschine ist fertig, also bekommt eine Person, die zu Hause ist, die Karte ‚ausräumen'." Stups **findet passende Geräte selbst** (Waschmaschine, Trockner, Abfallkalender, Regen, Batterien, Saugroboter), du richtest einen Wächter als **Satz** ein, mit **Probelauf** auf den letzten 7 Tagen. Dazu „Weitergeben", „Erst vorschlagen" (wer zuerst tippt, übernimmt) und „Wenig Zeit" für stressige Wochen. **Zuhause** zeigt, was das Haus gerade tut. Einrichtung ohne YAML.
+- **Wächter:** Stups beobachtet Entitäten in Home Assistant und legt von selbst Karten an: „Die Waschmaschine ist fertig, also bekommt eine Person, die zu Hause ist, die Karte ‚ausräumen'." Stups **findet passende Geräte selbst** (Waschmaschine, Trockner, Abfallkalender, Regen, Batterien, Saugroboter), du richtest einen Wächter im **Assistenten in vier Schritten** ein (Wenn, Dann, Wer, Feinschliff), mit dem **Verlauf der Entität** der letzten 3 Stunden, und bearbeitest ihn als **Ablauf aus Karten** mit **Probelauf** auf den letzten 7 Tagen; der Satz bleibt als Zusammenfassung. Dazu „Weitergeben", „Erst vorschlagen" (wer zuerst tippt, übernimmt) und „Wenig Zeit" für stressige Wochen. **Zuhause** zeigt, was das Haus gerade tut. Einrichtung ohne YAML.
 - **Push über die Companion App:** zur Fälligkeit, vorab, nachhaken, Tageszusammenfassung. „Erledigt" direkt in der Nachricht.
 - **Stupsen:** einer anderen Person zu ihrer Karte einen Stups schicken („Denkst du dran?"). Mit Sperrzeit und Ruhezeit pro Person, damit niemand genervt wird.
 - **Haus-Kanäle:** Ein Stups kann auch im Haus ankommen: als Ansage über einen Lautsprecher oder als Lampe, die in deiner Farbe aufleuchtet, für Kinder ohne Handy. Je Kanal wählst du, welche Nachrichten ankommen und was geschieht, wenn jemand nicht zu Hause ist.

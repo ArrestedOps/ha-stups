@@ -2,6 +2,17 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.22.0-beta.1
+
+**Neues Design, Phase 4: Wächter bearbeiten als Ablauf, neuer Wächter in vier Schritten, Verlauf der Entität.** *Keine Änderung an der Datenbank.*
+
+- **Neuer Wächter als Assistent in vier Schritten:** Wenn, Dann, Wer, Feinschliff, mit Fortschrittsbalken und je einer Frage. Vorlagen und „Gefunden“ führen in Schritt 1. Der **Satz** („Wenn die Waschmaschine unter 5 W liegt, bekommt …“) steht in Schritt 4 als Zusammenfassung
+- **Verlauf der Entität:** Schritt 1 zeigt die **letzten 3 Stunden** der beobachteten Entität mit einer grünen **Schwellen-Linie** und einem grünen Punkt **dort, wo der Wächter ausgelöst hätte** („heute 10:58 ausgelöst“). Die Schwelle stellst du mit Regler oder Zahl, die Dauer mit Chips; ein Satz sagt, wie oft der Wächter mit dieser Dauer ausgelöst hätte. Ohne Verlauf (neue Entität, Recorder aus, keine Verbindung) steht ein Hinweis statt des Diagramms
+- **„Wer“ mit allen sieben Arten:** immer dieselbe Person, abwechselnd (egal, wer da ist), eine anwesende Person abwechselnd, wer zuerst heimkommt, alle Anwesenden, erst vorschlagen, niemand. **Vorausgewählt ist „abwechselnd“ (reihum)**, mit dem Hinweis, dass „fair“ hier reihum heißt und nicht nach Aufwand gewichtet. Die **Reihenfolge** zeigt Fotos oder Initialen, wer als Nächstes dran ist (oranger Ring) und wer unterwegs ist; die Rotation rückt dadurch nicht weiter
+- **Wächter bearbeiten als Ablauf:** vier verbundene Karten WENN, DANN KARTE, AN WEN, ERLEDIGT SICH SELBST. „Ändern“ klappt die Einstellungen der Karte auf. Der **Feinschliff** (Name, Sperrzeit, keine zweite Karte, Stupsen, erst beim N-ten Mal) steht als Chips darunter; Probelauf, Status, Pausieren und Löschen bleiben darunter erreichbar
+- Administratoren bearbeiten, **Mitglieder sehen alles lesend**, auch den Verlauf der Entität (nur für Entitäten, die ein Wächter beobachtet). **Kinder** haben weiter keinen Wächter-Reiter, und der Server verweigert ihnen die neuen Abfragen
+- Bewusste Abweichungen vom Entwurf: oben im Ablauf steht der Satz als Zusammenfassung; im Schritt 2 kommen eine eigene Zeile für die Spalte, Kategorien und Beschreibung dazu, im Schritt 4 Name und „keine zweite Karte“; die Dauer hat zusätzlich „sofort“; die Schwelle lässt sich auch als Zahl eingeben; eine Vorlage bringt ihre eigene Zuweisung mit (zum Beispiel „wer zuerst heimkommt“), nur ein leerer neuer Wächter beginnt mit „reihum“; das Vorschlags-Banner „passende Automationen“ gehört zu einem späteren Auftrag; sein Platz ist der Hinweis „weitere Geräte gefunden“ oben auf dem Reiter Wächter
+
 ## 1.21.1-beta.1
 
 - **Home Assistant 2026.8: kein Leerstreifen mehr unter der Leiste.** Seit dieser Version polstert Home Assistant das Fenster der App selbst mit Statusleiste und Home-Balken; darunter blieb ein Streifen, den die Leiste (Aufgaben, Boards, Wächter) nicht füllen konnte. Stups meldet sich jetzt bei Home Assistant an, übernimmt die Abstände selbst und füllt das Fenster ganz aus: Die Leiste reicht bis zum unteren Rand, die Knöpfe stehen über dem Home-Balken, nichts wird doppelt gezählt. Ältere Home-Assistant-Versionen und der Browser verhalten sich wie bisher

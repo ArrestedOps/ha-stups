@@ -347,6 +347,12 @@ async function seedWatchers() {
     assign: { mode: 'rotation_present', personIds: [] },
   });
   await call('POST', `watchers/${wash.id}/test`);
+  // Verlauf der Waschmaschine für den Wächter-Editor: zwei Waschgänge in den letzten drei Stunden, jetzt 412 W (erfundene Werte)
+  const minAgo = (m) => new Date(Date.now() - m * 60_000).toISOString();
+  const pts = [[175, 2], [168, 2], [162, 900], [155, 1800], [148, 700], [143, 1500], [137, 400], [131, 1200], [127, 60], [123, 2], [100, 2], [95, 2], [90, 900], [84, 1900], [78, 600], [72, 1700], [66, 800], [60, 1300], [50, 500], [40, 120], [30, 40], [20, 150], [10, 300], [2, 412]];
+  await fetch(`${mock}/mock/history`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ entityId: 'sensor.waschmaschine_leistung', points: pts.map(([m, v]) => ({ state: String(v), at: minAgo(m) })) }) });
+  await setState('sensor.waschmaschine_leistung', '412', { friendly_name: 'Waschmaschine Leistung', unit_of_measurement: 'W' });
+  await setState('person.anna', 'not_home', { friendly_name: 'Anna', user_id: 'dev-anna' });
 }
 
 const watcherScreens = [
@@ -371,8 +377,20 @@ const watcherScreens = [
     await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
     await page.getByRole('dialog').getByRole('button', { name: x('Wächter', 'Watchers'), exact: true }).click();
     await page.getByRole('button', { name: x(/Wächter Waschmaschine fertig bearbeiten/, /Edit watcher Washing machine done/) }).click();
-    await page.getByTestId('watcher-sentence').waitFor();
+    await page.getByTestId('graph-fired').waitFor();
   }],
+  // Neuer Wächter in vier Schritten (mit der Vorlage Waschmaschine, damit der Verlauf gleich da ist)
+  ...[1, 2, 3, 4].map((step) => [`waechter-neu-${step}`, async (page) => {
+    await nav(page, x('Wächter', 'Watchers')).click();
+    await page.getByRole('button', { name: x('Neuer Wächter', 'New watcher'), exact: true }).click();
+    const d = page.getByRole('dialog');
+    await d.getByRole('button', { name: W.washer }).click();
+    await d.getByRole('button', { name: /Waschmaschine Leistung/ }).click();
+    await d.getByTestId('graph-fired').waitFor();
+    const next = [x('Weiter: Dann', 'Next: Then'), x('Weiter: Wer', 'Next: Who'), x('Weiter: Feinschliff', 'Next: Fine-tuning')];
+    for (let i = 0; i < step - 1; i++) await d.getByRole('button', { name: next[i] }).click();
+    if (step === 3) await d.getByTestId('assign-order').waitFor();
+  }]),
   ['waechter-karte', async (page) => {
     await nav(page, 'Boards').click();
     await page.getByRole('tab', { name: re(S.open) }).click();

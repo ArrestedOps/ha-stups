@@ -202,3 +202,32 @@ describe('Satz unter der Dauer', () => {
     expect(durationHint(5, 1, 2)).toBe('Mit 5 Min. hätte Stups in den letzten 1 Stunde 2 Mal ausgelöst – kurze Pausen zählen nicht.');
   });
 });
+
+import { fromWatcher } from '../src/lib/watchers';
+import type { WatcherItem } from '../src/lib/watcher-types';
+
+describe('Symbol der Karte bleibt beim Bearbeiten erhalten', () => {
+  const item = (icon?: string): WatcherItem =>
+    ({
+      id: 'w1',
+      name: 'Trockner fertig',
+      active: true,
+      trigger: { entityId: 'sensor.trockner', kind: 'below', to: null, value: 5, forMin: 3, count: 1 },
+      card: { boardId: 'b1', columnId: 'c1', title: 'Wäsche holen', description: null, categoryIds: [], priority: 'medium', due: { kind: 'none' }, ...(icon ? { icon, iconColor: 'teal' } : {}) },
+      assign: { mode: 'rotation', personIds: [], fallback: 'next', waitFallback: 'none', fallbackPersonId: null },
+      done: null,
+      cooldownMin: 10,
+      dedupe: true,
+      nudgeAfterMin: null,
+    }) as unknown as WatcherItem;
+
+  it('Symbol und Farbe aus einer Vorlage gehen beim Speichern wieder an den Server', () => {
+    const f = fromWatcher(item('washing-machine'));
+    expect(f).toMatchObject({ icon: 'washing-machine', iconColor: 'teal', priority: 'medium' });
+    expect(toInput(f).card).toMatchObject({ icon: 'washing-machine', iconColor: 'teal', priority: 'medium' });
+  });
+
+  it('ohne Symbol bleibt das Feld weg (das Symbol der Entität gilt)', () => {
+    expect(toInput(fromWatcher(item())).card).not.toHaveProperty('icon');
+  });
+});

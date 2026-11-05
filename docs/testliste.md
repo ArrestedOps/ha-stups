@@ -352,12 +352,12 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Home Assistant ausschalten oder trennen: „Keine Verbindung zu Home Assistant seit …", Boards und Heute gehen weiter
 - [ ] Administratoren sehen „Stups hat N weitere Geräte gefunden"
 
-**Gefunden und Wächter als Satz**
+**Gefunden und Wächter (der Satz ist seit 1.22.0 die Zusammenfassung, siehe Abschnitt 33)**
 
 - [ ] Einstellungen › Haushalt › Wächter › „Wächter aus Vorlagen": Treffer zu deinen echten Geräten mit Begründung; schon beobachtete fehlen. „Auch ohne Gerät" legt eine wiederkehrende Karte an. „Alle Vorlagen ansehen"
 - [ ] **Ausblenden:** bei einem Treffer, den du nicht brauchst, „Ausblenden" tippen: er verschwindet und kommt auch nach dem Neuladen und nach einem Neustart der App nicht wieder; die anderen Treffer bleiben, der nächste ähnliche rückt nach. Unter „Ausgeblendet (n)" steht er mit „Wieder anzeigen"; danach ist er wieder in der Liste
-- [ ] „Einrichten" füllt den Satz („Wenn … länger als … unter … liegt, bekommt … die Karte …"); jedes Feld lässt sich antippen und ändern. „Mehr Regeln" zeigt Board, Spalte, Fälligkeit, Zähler, Sperrzeit, Erledigt-Bedingung
-- [ ] **Probelauf** mit einem echten Gerät: Diagramm und Satz („3 Auslösungen erkannt, kein Fehlalarm"); bei einem wackelnden Sensor der Hinweis „Mindestdauer erhöhen?"; bei einer neuen Entität ein Hinweis statt Diagramm
+- [ ] „Einrichten" öffnet den Assistenten mit der Entität aus dem Treffer und den Werten der Vorlage (Wenn, Dann, Wer, Feinschliff; der Satz steht in Schritt 4 als Zusammenfassung). Alles bleibt änderbar: Board, Spalte, Fälligkeit, Zähler, Sperrzeit, Erledigt-Bedingung. Bei Vorlagen mit Leistungssensor ist „Erledigt sich selbst" aus, mit Begründung
+- [ ] **Probelauf** (im Assistenten der Knopf „Testen“ in Schritt 4, im Ablauf der Abschnitt „Probelauf“) mit einem echten Gerät: Diagramm und Satz („3 Auslösungen erkannt, kein Fehlalarm"); bei einem wackelnden Sensor der Hinweis „Mindestdauer erhöhen?"; bei einer neuen Entität ein Hinweis statt Diagramm
 - [ ] Bei Vorlagen mit Leistungssensor ist „Automatisch erledigen" aus, mit Begründung
 - [ ] **Erst vorschlagen:** Alle Anwesenden bekommen „Wer übernimmt?" mit Knopf; wer zuerst tippt, bekommt die Karte, der Zweite erfährt, wer schneller war. Nach 30 Minuten ohne Antwort greift der Rückfall
 - [ ] **Tonnen rausstellen** (Abfallkalender, Vorlauf 12 Stunden) legt am Vorabend eine Karte an, genau eine je Termin; **Wäsche rein, es regnet** reagiert auf Regen in der Vorhersage (Abfrage alle 30 Minuten)
@@ -365,8 +365,8 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 **Zuhause bearbeiten und lesen (seit 1.18.1)**
 
 - [ ] Die App öffnet immer auf **Aufgaben**, auch wenn du zuletzt auf Wächter warst. Nur Boards wird gemerkt
-- [ ] Als Administrator: Tipp auf einen Wächter unter Zuhause öffnet das Bearbeiten (Satz, Mehr Regeln, Speichern, Testen, Pausieren, Löschen) mit dem Verlauf seiner Läufe; unten auf Zuhause steht die letzte Aktivität
-- [ ] Als Mitglied (kein Administrator): derselbe Tipp zeigt den Wächter lesend (Hinweis oben, Felder gesperrt, kein Speichern, Testen, Löschen), der Verlauf ist lesbar
+- [ ] Als Administrator: Tipp auf einen Wächter unter Zuhause öffnet das Bearbeiten als Ablauf (vier Karten, Feinschliff, Speichern, Testen, Pausieren, Löschen) mit dem Status seiner Läufe; unten auf Zuhause steht die letzte Aktivität
+- [ ] Als Mitglied (kein Administrator): derselbe Tipp zeigt den Wächter lesend (Hinweis oben, kein „Ändern“, kein Speichern, Testen, Löschen), der Verlauf der Entität und der Status sind lesbar
 
 **Einstellungen**
 
@@ -458,6 +458,26 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] „Symbole aus Titeln erkennen“: Rückfrage („N Karten haben noch kein Symbol …“), danach das Ergebnis als Zahl („N Karten haben jetzt ein Symbol. Zu M Karten passte keins.“); Karten mit Symbol bleiben, nichts läuft von allein, ein zweiter Lauf sagt „Alle Karten haben schon ein Symbol“, soweit etwas passt. Mitglieder und Kinder sehen die Seite nicht
 - [ ] Datenbank: Migration 22 (vorher legt die App eine Sicherung unter `/data/backups` an); vorhandene Karten bleiben ohne Symbol
 - [ ] Englisch, Hell, Dunkel: nichts läuft über den Rand, Namen der Symbole stehen auf Englisch da
+
+## 33 · Neues Design, Phase 4 (Wächter-Editor, seit 1.22.0)
+
+**Neuer Wächter** (Reiter Wächter › „+“, oder Einstellungen › Wächter, oder „Einrichten“ bei Gefunden)
+
+- [ ] Oben „Schließen“ und „Neuer Wächter“, darunter vier Balken „1 · Wenn“ bis „4 · Feinschliff“ (der aktuelle halb gefüllt, frühere orange und antippbar), unten „Zurück“ und der große Knopf „Weiter: …“
+- [ ] **Schritt 1:** Mit einer Vorlage oder „Entität wählen“ (Suche) erscheint die Karte mit **Verlauf der letzten 3 Stunden**: orange Linie, grün gestrichelte **Schwelle**, grüner Punkt **dort, wo der Wächter ausgelöst hätte**, darunter „heute 10:58 ausgelöst“ (Uhrzeit deiner Zeitzone). „unter / über / Zustand“, Regler **und** Zahlenfeld für die Schwelle (die grüne Linie wandert mit), Dauer als Chips; der Satz darunter nennt, wie oft er in den 3 Stunden ausgelöst hätte
+- [ ] Ohne Verlauf (neue Entität, Recorder aus, keine Verbindung) steht an der Stelle des Diagramms ein Hinweis; der Assistent lässt sich trotzdem weiterbedienen. Ohne Schwellwert meldet „Weiter“, was fehlt, und bleibt im Schritt
+- [ ] **Schritt 2:** Titel der Karte mit Symbol (Funken: automatisch; Tipp wählt ein eigenes), Board und Spalte, Fälligkeit als Chips (sofort, in 30 Min., in 1 Std., heute Abend, ohne Termin, „Anders …“), Priorität, Kategorien, Beschreibung, darunter „So erscheint sie“
+- [ ] **Schritt 3:** sieben Arten, **vorausgewählt „Abwechselnd, egal wer da ist“ (reihum)** (bei einer Vorlage deren Art), Hinweis „Fair heißt hier reihum, nicht nach Aufwand gewichtet“. „Reihenfolge“ zeigt Fotos oder Initialen, wer als **Nächstes dran** ist (oranger Ring), wer **unterwegs** ist (blass, „… unterwegs“) und „gerade zu Hause: N“; die Rotation rückt dabei nicht weiter. Rückfall („Ist niemand zu Hause …“) je nach Art
+- [ ] **Schritt 4:** Extras (erledigt sich selbst, stupsen, erst beim N-ten Mal, Sperrzeit, keine zweite Karte, Name), Zusammenfassung als Satz; „Testen“ rechnet den Probelauf über 7 Tage, „Wächter anlegen“ speichert. Ein Wächter, in dem nichts geändert wurde, steht danach mit „reihum“ in der Liste
+
+**Bearbeiten als Ablauf** (Tipp auf einen Wächter)
+
+- [ ] Oben der Satz als Zusammenfassung, darunter die Karten **WENN → DANN KARTE → AN WEN → ERLEDIGT SICH SELBST**, verbunden mit Pfeilen; WENN mit „jetzt 412 W“ und kleinem Verlauf samt Schwelle und Auslösepunkt, AN WEN mit der Reihenfolge
+- [ ] „Ändern“ klappt die Einstellungen der Karte auf (dieselben wie im Assistenten), „Fertig“ klappt sie zu; „Speichern“ oben und unten, „Testen“ legt eine Testkarte an
+- [ ] **Feinschliff** als Chips (Name, Sperrzeit, keine zweite Karte, Stupsen nach …, erst beim N-ten Mal) öffnen ein kleines Feld; darunter Probelauf, Status (Zähler zurücksetzen, Verbindung, Läufe), Pausieren, Wächter löschen
+- [ ] **Mitglied:** dieselbe Seite, aber ohne „Ändern“, Speichern und Testen; Verlauf der Entität und Status sind lesbar. **Kind:** kein Reiter Wächter
+- [ ] Hell, Dunkel, Englisch: nichts läuft über den Rand; die Titel der Schritte und Schilder (WHEN, THEN, TO WHOM, COMPLETES ITSELF) stehen auf Englisch da
+- [ ] Datenbank: keine Änderung
 
 ## Bekannte Lücken
 

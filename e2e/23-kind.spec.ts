@@ -212,7 +212,7 @@ test('Kind: Filter ohne „Wer" und ohne „nur von Wächtern", mit Wann, Priori
   try {
     await kd.page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
     await expect(kd.page.getByRole('group', { name: 'Personen' })).toHaveCount(0);
-    await kd.page.getByRole('button', { name: /^Filter/ }).click();
+    await kd.page.getByRole('button', { name: /^Filter(, \d+ aktiv)?$/ }).click();
     const sheet = kd.page.getByTestId('filter-sheet');
     await expect(sheet.getByRole('group', { name: 'Wann' })).toBeVisible();
     await expect(sheet.getByRole('radiogroup', { name: 'Priorität' })).toBeVisible();
@@ -224,7 +224,7 @@ test('Kind: Filter ohne „Wer" und ohne „nur von Wächtern", mit Wann, Priori
     // „Ohne Termin" zeigt die eigenen Karten ohne Termin, nie die Karte aus dem Erwachsenenboard
     await sheet.getByRole('group', { name: 'Wann' }).getByRole('button', { name: /^Ohne Termin/ }).click();
     await kd.page.getByRole('dialog').getByRole('button', { name: /Aufgaben? anzeigen$/ }).click();
-    await expect(kd.page.getByTestId('group-undated').getByText(mineName)).toBeVisible();
+    await expect(kd.page.getByTestId('group-undated').getByText(`Noch eine ${tag}`)).toBeVisible();
     await expect(kd.page.getByText(otherName)).toHaveCount(0);
   } finally {
     await kd.close();

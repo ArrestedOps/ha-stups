@@ -18,6 +18,8 @@ async function seed(request: APIRequestContext) {
   const me = ((await (await request.get('/api/me')).json()) as { user: { id: string } }).user.id;
   const board = (await (await request.post('/api/boards', { data: { name: `Filterboard ${tag}` } })).json()) as { id: string };
   boardIds.push(board.id);
+  // ein zweites Board, damit der Abschnitt „Boards" im Filter erscheint (er steht erst ab zwei Boards da)
+  boardIds.push(((await (await request.post('/api/boards', { data: { name: `Zweitboard ${tag}` } })).json()) as { id: string }).id);
   const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
   const columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;
   const mk = async (title: string, extra: Record<string, unknown>) => {
@@ -35,7 +37,7 @@ async function seed(request: APIRequestContext) {
 
 const cta = (page: Page, text: RegExp) => page.getByRole('dialog').getByRole('button', { name: text });
 const openFilter = async (page: Page) => {
-  await page.getByRole('button', { name: /^Filter/ }).click();
+  await page.getByRole('button', { name: /^Filter(, \d+ aktiv)?$/ }).click();
   await page.getByTestId('filter-sheet').waitFor();
 };
 

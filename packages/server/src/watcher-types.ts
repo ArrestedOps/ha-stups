@@ -1,5 +1,6 @@
 import { ValidationError } from './errors.js';
 import { t } from './i18n/index.js';
+import { parseIcon, parseIconColor } from './store/validate.js';
 
 /** Bedingungen auf dem Zustand einer Entität (live über subscribe_trigger beobachtet) */
 export type ConditionKind = 'state' | 'above' | 'below';
@@ -50,6 +51,9 @@ export interface CardTemplate {
   categoryIds: string[];
   priority: string | null;
   due: DueRule;
+  /** Symbol und Farbe der Karte; ohne Angabe nimmt der Wächter das Symbol der beobachteten Entität */
+  icon?: string | null;
+  iconColor?: string | null;
 }
 
 export type AssignMode = 'fixed' | 'rotation' | 'rotation_present' | 'all_present' | 'first_home' | 'suggest' | 'none';
@@ -201,6 +205,8 @@ export function parseTemplate(raw: unknown): CardTemplate {
     categoryIds: strings(o.categoryIds, t('Kategorien')),
     priority: text(o.priority, t('Die Priorität'), 20, false),
     due: parseDue(o.due),
+    ...(o.icon !== undefined && o.icon !== null ? { icon: parseIcon(o.icon) } : {}),
+    ...(o.iconColor !== undefined && o.iconColor !== null ? { iconColor: parseIconColor(o.iconColor) } : {}),
   };
 }
 

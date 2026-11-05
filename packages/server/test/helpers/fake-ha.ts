@@ -54,8 +54,8 @@ export class FakeHa implements WatcherHa {
     else this.states.push(s);
   }
   /** Zustandsänderung live melden */
-  emit(key: string, state: string, lastChanged = '2026-11-04T10:00:00Z') {
-    this.subs.get(key)!.onEvent({ variables: { trigger: { to_state: { state, last_changed: lastChanged } } } });
+  emit(key: string, state: string, lastChanged = '2026-11-04T10:00:00Z', attributes?: Record<string, any>) {
+    this.subs.get(key)!.onEvent({ variables: { trigger: { to_state: { state, last_changed: lastChanged, ...(attributes ? { attributes } : {}) } } } });
   }
   arrive(entityId: string) {
     this.subs.get('presence')!.onEvent({ variables: { trigger: { entity_id: entityId, to_state: { state: 'home' } } } });

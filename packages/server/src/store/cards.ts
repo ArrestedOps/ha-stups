@@ -3,7 +3,7 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { NotFoundError, ValidationError } from '../errors.js';
 import { type Recurrence } from '../recurrence.js';
 import { type OpenNudge, type Card, type ScheduleCard, type ChecklistItem, type CardLink, type ActivityEntry, type CardDetail, type CardInput, type CardPatch, type Row } from './types.js';
-import { cleanText, optionalText, parseDue, parsePriority, parseRemind, parseCost, parseEffort, parseConfirm, parseCarryOver, resolveCarry, parseBool, parseRecurrence } from './validate.js';
+import { cleanText, optionalText, parseDue, parsePriority, parseRemind, parseCost, parseEffort, parseIcon, parseIconColor, parseIconSource, parseConfirm, parseCarryOver, resolveCarry, parseBool, parseRecurrence } from './validate.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
@@ -103,6 +103,9 @@ export function createCards(c: Ctx, late: unknown) {
       overdueNag: r.overdue_nag === 1,
       costCents: r.cost_cents,
       effort: r.effort ?? null,
+      icon: r.icon ?? null,
+      iconColor: r.icon_color ?? null,
+      iconSource: r.icon_source ?? null,
       confirm: r.confirm === 'on' || r.confirm === 'off' ? r.confirm : null,
       confirmRequestedAt: r.confirm_requested_at ?? null,
       confirmRequestedBy: r.confirm_requested_by ?? null,
@@ -237,6 +240,51 @@ export function createCards(c: Ctx, late: unknown) {
     return unique;
   }
 
+  /**
+   * Symbol, Farbe und Quelle aus Eingabe (und bisherigem Stand beim Ändern). Wer ein Symbol angibt, ohne die Quelle zu nennen,
+   * hat es von Hand gewählt; ohne Symbol gibt es keine Quelle. Prüft die Form (ungültig → Fehler), nicht die Bibliothek.
+   */
+  function resolveIcon(
+    input: { icon?: unknown; iconColor?: unknown; iconSource?: unknown },
+    before: { icon: string | null; iconColor: string | null; iconSource: string | null } = { icon: null, iconColor: null, iconSource: null },
+  ) {
+    const icon = input.icon !== undefined ? parseIcon(input.icon) : before.icon;
+    const iconColor = input.iconColor !== undefined ? parseIconColor(input.iconColor) : before.iconColor;
+    let iconSource = input.iconSource !== undefined ? parseIconSource(input.iconSource) : before.iconSource;
+    if (input.iconSource === undefined && input.icon !== undefined) iconSource = icon ? 'manual' : null;
+    if (!icon) iconSource = null;
+    return { icon, iconColor, iconSource };
+  }
+
+  /** Karten ohne Symbol (offen, erledigt, archiviert; nicht im Papierkorb) für „Symbole aus Titeln erkennen“ */
+  function cardsWithoutIcon(): { id: string; title: string }[] {
+    return all('select id, title from cards where icon is null and deleted_at is null order by created_at, id').map((r) => ({ id: r.id as string, title: r.title as string }));
+  }
+
+  /**
+   * Setzt erkannte Symbole (Quelle „auto“), aber nur bei Karten, die noch keins haben: Was jemand zwischendurch von Hand
+   * gewählt hat, bleibt. Ändert weder Fassung noch Änderungszeit, denn es ist kein Eingriff der Person in die Karte.
+   */
+  function applyDetectedIcons(items: unknown): { updated: number; skipped: number } {
+    if (!Array.isArray(items)) throw new ValidationError(t('Die Liste der Symbole fehlt'));
+    if (items.length > 2000) throw new ValidationError(t('Höchstens {max} Karten auf einmal', { max: 2000 }));
+    const clean = items.map((it) => {
+      const o = (it ?? {}) as Record<string, unknown>;
+      if (typeof o.id !== 'string') throw new ValidationError(t('Die Liste der Symbole fehlt'));
+      const icon = parseIcon(o.icon);
+      if (!icon) throw new ValidationError(t('Das Symbol ist ungültig'));
+      return { id: o.id, icon };
+    });
+    let updated = 0;
+    tx(() => {
+      for (const it of clean) {
+        const res = run(`update cards set icon = ?, icon_source = 'auto' where id = ? and icon is null and deleted_at is null`, it.icon, it.id);
+        if (res.changes > 0) updated += 1;
+      }
+    });
+    return { updated, skipped: clean.length - updated };
+  }
+
   function createCard(boardId: string, input: CardInput, createdBy: string | null): CardDetail {
     visibleBoard(boardId);
     const col = visibleColumn(input.columnId);
@@ -249,6 +297,7 @@ export function createCards(c: Ctx, late: unknown) {
     const remind = parseRemind(input.remindBeforeMin);
     const cost = parseCost(input.costCents);
     const effort = parseEffort(input.effort);
+    const ico = resolveIcon(input);
     const carry = parseCarryOver(input.carryOver);
     const nag = parseBool(input.overdueNag, t('Nachhaken'));
     const description = optionalText(input.description, t('Die Beschreibung'), 20000);
@@ -264,8 +313,9 @@ export function createCards(c: Ctx, late: unknown) {
       const t = iso();
       run(
         `insert into cards (id, board_id, column_id, position, title, description, priority, due_at, recurrence,
-                            remind_before_min, overdue_nag, cost_cents, carry_over, created_by, created_at, updated_at, effort)
-         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                            remind_before_min, overdue_nag, cost_cents, carry_over, created_by, created_at, updated_at, effort,
+                            icon, icon_color, icon_source)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         id,
         boardId,
         col.id,
@@ -283,6 +333,9 @@ export function createCards(c: Ctx, late: unknown) {
         t,
         t,
         effort,
+        ico.icon,
+        ico.iconColor,
+        ico.iconSource,
       );
       for (const u of assignees) run('insert into card_assignees (card_id, user_id) values (?, ?)', id, u);
       for (const c of categories) run('insert into card_categories (card_id, category_id) values (?, ?)', id, c);
@@ -365,6 +418,11 @@ export function createCards(c: Ctx, late: unknown) {
         sets.push('effort = ?');
         params.push(parseEffort(patch.effort));
       }
+      if (patch.icon !== undefined || patch.iconColor !== undefined || patch.iconSource !== undefined) {
+        const ico = resolveIcon(patch, { icon: card.icon ?? null, iconColor: card.icon_color ?? null, iconSource: card.icon_source ?? null });
+        sets.push('icon = ?', 'icon_color = ?', 'icon_source = ?');
+        params.push(ico.icon, ico.iconColor, ico.iconSource);
+      }
       if (patch.confirm !== undefined) {
         sets.push('confirm = ?');
         params.push(parseConfirm(patch.confirm));
@@ -419,8 +477,9 @@ export function createCards(c: Ctx, late: unknown) {
         : generateKeyBetween(lastPos('cards', 'column_id = ?', col.id), null);
       run(
         `insert into cards (id, board_id, column_id, position, title, description, priority, due_at, recurrence,
-                            remind_before_min, overdue_nag, cost_cents, carry_over, created_by, created_at, updated_at, effort)
-         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                            remind_before_min, overdue_nag, cost_cents, carry_over, created_by, created_at, updated_at, effort,
+                            icon, icon_color, icon_source)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         newId,
         src.board_id,
         col.id,
@@ -438,6 +497,9 @@ export function createCards(c: Ctx, late: unknown) {
         t,
         t,
         src.effort ?? null,
+        src.icon ?? null,
+        src.icon_color ?? null,
+        src.icon_source ?? null,
       );
       run('update cards set confirm = ? where id = ?', src.confirm ?? null, newId);
       run('insert into card_assignees (card_id, user_id) select ?, user_id from card_assignees where card_id = ?', newId, id);
@@ -595,6 +657,8 @@ export function createCards(c: Ctx, late: unknown) {
     syncPlannedCard,
     updateCard,
     duplicateCard,
+    cardsWithoutIcon,
+    applyDetectedIcons,
     touchCard,
     placeCard,
     moveCard,

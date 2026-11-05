@@ -71,8 +71,9 @@ export function createCompletion(c: Ctx, late: unknown) {
     const col = toPlanned ? planned! : firstOpenColumn(src.board_id);
     run(
       `insert into cards (id, board_id, column_id, position, title, description, priority, due_at, recurrence,
-                          remind_before_min, overdue_nag, cost_cents, carry_over, repeated_from, created_by, created_at, updated_at, effort)
-       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                          remind_before_min, overdue_nag, cost_cents, carry_over, repeated_from, created_by, created_at, updated_at, effort,
+                          icon, icon_color, icon_source)
+       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       newId,
       src.board_id,
       col.id,
@@ -91,6 +92,9 @@ export function createCompletion(c: Ctx, late: unknown) {
       t,
       t,
       src.effort ?? null,
+      src.icon ?? null, // das Symbol gehört zur Aufgabe und wird immer übernommen
+      src.icon_color ?? null,
+      src.icon_source ?? null,
     );
     run('update cards set confirm = ? where id = ?', src.confirm ?? null, newId); // die Bestätigungspflicht gehört zur Aufgabe
     run('insert into card_assignees (card_id, user_id) select ?, user_id from card_assignees where card_id = ?', newId, src.id);

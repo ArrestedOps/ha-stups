@@ -141,6 +141,8 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     moveCard: s.moveCard,
     completeCard: s.completeCard,
     duplicateCard: s.duplicateCard,
+    cardsWithoutIcon: s.cardsWithoutIcon,
+    applyDetectedIcons: s.applyDetectedIcons,
     undoCompletion: s.undoCompletion,
     cardIdOfCompletion: s.cardIdOfCompletion,
     cardIdOfChecklistItem: s.cardIdOfChecklistItem,

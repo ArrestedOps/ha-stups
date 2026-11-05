@@ -1,6 +1,6 @@
 import { ValidationError } from '../errors.js';
 import { type Recurrence } from '../recurrence.js';
-import { CARRY_FIELDS, DEFAULT_CARRY, EFFORTS, type CarryField, type Effort, type Priority } from './types.js';
+import { CARRY_FIELDS, DEFAULT_CARRY, EFFORTS, ICON_COLORS, type CarryField, type Effort, type IconColor, type IconSource, type Priority } from './types.js';
 import { DUE_RE, PRIORITIES } from './constants.js';
 import { t } from '../i18n/index.js';
 
@@ -49,6 +49,26 @@ export function parseEffort(value: unknown): Effort | null {
   if (value === null || value === undefined) return null;
   if (typeof value !== 'string' || !EFFORTS.includes(value as Effort)) throw new ValidationError(t('Der Aufwand muss klein, mittel oder groß sein'));
   return value as Effort;
+}
+
+/** Name eines Symbols (mdi-Name ohne Präfix, z. B. `washing-machine`); ob er zur Bibliothek der Oberfläche gehört, weiß nur sie (unbekannt = Standardsymbol) */
+export const ICON_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export function parseIcon(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'string' || value.length > 48 || !ICON_RE.test(value)) throw new ValidationError(t('Das Symbol ist ungültig'));
+  return value;
+}
+
+export function parseIconColor(value: unknown): IconColor | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'string' || !ICON_COLORS.includes(value as IconColor)) throw new ValidationError(t('Die Farbe des Symbols ist unbekannt'));
+  return value as IconColor;
+}
+
+export function parseIconSource(value: unknown): IconSource | null {
+  if (value === null || value === undefined) return null;
+  if (value !== 'auto' && value !== 'manual') throw new ValidationError(t('Die Quelle des Symbols muss auto oder manual sein'));
+  return value;
 }
 
 /** „Bestätigung" an einer Karte: ein = braucht sie, aus = braucht sie nicht, leer = Vorgabe der zuständigen Person */

@@ -218,6 +218,11 @@ export const DEFAULT_CARRY: readonly CarryField[] = ['description', 'checklist',
 /** Aufwand einer Karte: klein, mittel oder groß */
 export type Effort = 'small' | 'medium' | 'large';
 export const EFFORTS: readonly Effort[] = ['small', 'medium', 'large'];
+
+/** Die acht Kachelfarben der Oberfläche (Symbol an der Karte) */
+export type IconColor = 'orange' | 'purple' | 'violet' | 'blue' | 'teal' | 'green' | 'red' | 'gray';
+export const ICON_COLORS: readonly IconColor[] = ['orange', 'purple', 'violet', 'blue', 'teal', 'green', 'red', 'gray'];
+export type IconSource = 'auto' | 'manual';
 /** Gewichte für die Fairness-Ansicht; eine Karte ohne Angabe zählt wie mittel */
 export const EFFORT_WEIGHT: Record<Effort, number> = { small: 1, medium: 2, large: 3 };
 
@@ -246,6 +251,12 @@ export interface Card {
   costCents: number | null;
   /** Aufwand für die Fairness-Ansicht; leer zählt wie mittel */
   effort: Effort | null;
+  /** Symbol aus der Bibliothek der Oberfläche (mdi-Name ohne Präfix); leer = Standard „Aufgabe“ */
+  icon: string | null;
+  /** Kachelfarbe des Symbols; leer = Auto (nach Bereich des Symbols) */
+  iconColor: IconColor | null;
+  /** auto = aus dem Titel erkannt (Funken-Abzeichen), manual = von Hand gewählt */
+  iconSource: IconSource | null;
   /** Bestätigung: leer = Vorgabe der zuständigen Person, on = immer, off = nie */
   confirm: 'on' | 'off' | null;
   /** Das Kind hat erledigt gesagt, die Karte wartet auf Bestätigung (sonst null) */
@@ -403,6 +414,9 @@ export interface CardInput {
   overdueNag?: unknown;
   costCents?: number | null;
   effort?: unknown;
+  icon?: unknown;
+  iconColor?: unknown;
+  iconSource?: unknown;
   carryOver?: unknown;
   assigneeIds?: string[];
   categoryIds?: string[];

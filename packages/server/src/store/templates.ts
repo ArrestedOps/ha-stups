@@ -93,6 +93,8 @@ export function createTemplates(c: Ctx, late: unknown) {
             recurrence: card.recurrence,
             categoryIds: card.categories.map((i) => categoryIds[i]!),
             effort: card.effort,
+            icon: card.icon ?? null,
+            iconColor: card.iconColor ?? null,
           },
           input.by,
         );
@@ -127,6 +129,8 @@ export function createTemplates(c: Ctx, late: unknown) {
         checklist: all('select text from checklist_items where card_id = ? order by position, id', card.id).map((r: Row) => r.text as string),
         priority: card.priority,
         effort: card.effort,
+        icon: card.icon,
+        iconColor: card.iconColor,
         recurrence: (card.recurrence as Record<string, unknown> | null) ?? null,
         dueInDays: card.dueAt && earliest !== null ? Math.max(0, dayDiff(Date.parse(card.dueAt), earliest, tz)) : null,
       })),

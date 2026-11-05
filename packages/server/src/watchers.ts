@@ -1,3 +1,4 @@
+import { watcherIcon } from './watcher-icons.js';
 import { ConflictError, ForbiddenError } from './errors.js';
 import type { HaState } from './ha.js';
 import { t } from './i18n/index.js';
@@ -69,6 +70,9 @@ interface Seen {
   lastChanged: string | null;
   name?: string;
   unit?: string;
+  /** Für das Symbol der Karte (watcher-icons.ts) */
+  deviceClass?: string;
+  icon?: string;
 }
 
 const minutes = (n: number) => n * 60_000;
@@ -121,11 +125,15 @@ export function createWatchers(deps: WatcherDeps) {
     if (!s || typeof s.state !== 'string') return null;
     const name = s.attributes?.friendly_name;
     const unit = s.attributes?.unit_of_measurement;
+    const deviceClass = s.attributes?.device_class;
+    const icon = s.attributes?.icon;
     return {
       state: s.state,
       lastChanged: typeof s.last_changed === 'string' ? s.last_changed : null,
       ...(typeof name === 'string' ? { name } : {}),
       ...(typeof unit === 'string' ? { unit } : {}),
+      ...(typeof deviceClass === 'string' ? { deviceClass } : {}),
+      ...(typeof icon === 'string' ? { icon } : {}),
     };
   }
 
@@ -332,6 +340,14 @@ export function createWatchers(deps: WatcherDeps) {
     await createCard(w, nowMs, test);
   }
 
+  /** Symbol der Karte: das der Vorlage (von Hand), sonst das der beobachteten Entität (automatisch), sonst keins (Standard) */
+  function cardIconFor(w: Watcher): { icon?: string; iconColor?: string | null; iconSource?: 'auto' | 'manual' } {
+    if (w.card.icon) return { icon: w.card.icon, iconColor: w.card.iconColor ?? null, iconSource: 'manual' };
+    const s = seenOf(w.trigger.entityId);
+    const icon = watcherIcon({ entityId: w.trigger.entityId, deviceClass: s?.deviceClass, icon: s?.icon, name: s?.name });
+    return icon ? { icon, iconColor: w.card.iconColor ?? null, iconSource: 'auto' } : w.card.iconColor ? { iconColor: w.card.iconColor } : {};
+  }
+
   async function createCard(w: Watcher, nowMs: number, test: boolean, dedupeKey: string | null = null): Promise<void> {
     const people = store.people();
     const needsPresence = w.assign.mode === 'rotation_present' || w.assign.mode === 'all_present' || w.assign.mode === 'first_home' || w.assign.mode === 'suggest';
@@ -356,6 +372,7 @@ export function createWatchers(deps: WatcherDeps) {
             dueAt,
             assigneeIds: decision.ids,
             categoryIds: w.card.categoryIds,
+            ...cardIconFor(w),
           },
           null,
         );

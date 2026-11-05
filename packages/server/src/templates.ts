@@ -30,6 +30,9 @@ export interface TemplateData {
     recurrence: Record<string, unknown> | null;
     /** Termin in ganzen Tagen ab heute (um die Standardzeit); null = ohne Termin */
     dueInDays: number | null;
+    /** Symbol und Farbe der Karte (Symbol-Bibliothek der Oberfläche); ältere eigene Vorlagen haben beides nicht */
+    icon?: string | null;
+    iconColor?: string | null;
   }[];
 }
 
@@ -43,6 +46,7 @@ interface BuiltinCard {
   effort?: TemplateEffort;
   recurrence?: Record<string, unknown>;
   dueInDays?: number;
+  icon?: string;
 }
 
 export interface BuiltinTemplate {
@@ -77,21 +81,23 @@ export const BUILTIN_TEMPLATES: BuiltinTemplate[] = [
       { name: l('Garten', 'Garden'), color: 'green' },
     ],
     cards: [
-      { title: l('Müll rausbringen', 'Take out the rubbish'), categories: [0], effort: 'small', recurrence: weekly(2), dueInDays: 1 },
-      { title: l('Wäsche waschen', 'Do the laundry'), categories: [2], effort: 'medium', recurrence: weekly(6), dueInDays: 2 },
-      { title: l('Staubsaugen', 'Vacuum'), effort: 'medium', recurrence: weekly(6), dueInDays: 2 },
-      { title: l('Bad putzen', 'Clean the bathroom'), categories: [1], effort: 'medium', recurrence: afterWeeks(2), dueInDays: 3 },
+      { title: l('Müll rausbringen', 'Take out the rubbish'), icon: 'trash-can-outline', categories: [0], effort: 'small', recurrence: weekly(2), dueInDays: 1 },
+      { title: l('Wäsche waschen', 'Do the laundry'), icon: 'washing-machine', categories: [2], effort: 'medium', recurrence: weekly(6), dueInDays: 2 },
+      { title: l('Staubsaugen', 'Vacuum'), icon: 'vacuum-outline', effort: 'medium', recurrence: weekly(6), dueInDays: 2 },
+      { title: l('Bad putzen', 'Clean the bathroom'), icon: 'water-outline', categories: [1], effort: 'medium', recurrence: afterWeeks(2), dueInDays: 3 },
       {
         title: l('Einkaufen', 'Go shopping'),
+        icon: 'cart-outline',
         categories: [3],
         effort: 'medium',
         recurrence: weekly(5),
         dueInDays: 1,
         checklist: [l('Milch', 'Milk'), l('Brot', 'Bread'), l('Obst und Gemüse', 'Fruit and vegetables')],
       },
-      { title: l('Blumen gießen', 'Water the plants'), categories: [4], effort: 'small', recurrence: afterDays(3), dueInDays: 1 },
+      { title: l('Blumen gießen', 'Water the plants'), icon: 'watering-can-outline', categories: [4], effort: 'small', recurrence: afterDays(3), dueInDays: 1 },
       {
         title: l('Frühjahrsputz', 'Spring cleaning'),
+        icon: 'spray-bottle',
         description: l('Fenster, Schränke und Keller. Ohne Termin: verteil es auf mehrere Wochenenden.', 'Windows, cupboards and basement. No due date: spread it over a few weekends.'),
         effort: 'large',
       },
@@ -238,6 +244,8 @@ export function resolveTemplate(t: BuiltinTemplate, lang: Lang): TemplateData {
       effort: c.effort ?? null,
       recurrence: c.recurrence ?? null,
       dueInDays: c.dueInDays ?? null,
+      icon: c.icon ?? null,
+      iconColor: null,
     })),
   };
 }

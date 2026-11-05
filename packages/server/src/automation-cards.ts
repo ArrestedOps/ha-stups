@@ -1,4 +1,5 @@
 import type { Card, Store } from './store.js';
+import { parseIcon, parseIconColor } from './store/validate.js';
 import type { WatcherHa } from './watchers.js';
 
 /** Name des Home-Assistant-Ereignisses, mit dem eigene Automationen eine Karte anlegen */
@@ -38,6 +39,28 @@ export function createAutomationCards(deps: AutomationDeps) {
   function record(result: AutomationEntry['result'], title: string | null, note: string): void {
     log.unshift({ at: now().toISOString(), result, title, note });
     log.length = Math.min(log.length, KEEP);
+  }
+
+  /** `icon` (mdi:name oder name) und `icon_color`: ungültige Angaben werden ignoriert, die Karte entsteht trotzdem */
+  function iconOf(data: Record<string, unknown>): { icon?: string; iconColor?: string } {
+    const out: { icon?: string; iconColor?: string } = {};
+    const raw = asText(data.icon);
+    if (raw) {
+      try {
+        out.icon = parseIcon(raw.replace(/^mdi:/, '')) ?? undefined;
+      } catch {
+        /* unbekanntes Format: Standardsymbol */
+      }
+    }
+    const color = asText(data.icon_color);
+    if (color) {
+      try {
+        out.iconColor = parseIconColor(color) ?? undefined;
+      } catch {
+        /* unbekannte Farbe: Auto */
+      }
+    }
+    return out;
   }
 
   const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -92,6 +115,7 @@ export function createAutomationCards(deps: AutomationDeps) {
             description: asText(data.description),
             dueAt: minutes === null ? null : new Date(now().getTime() + minutes * 60_000).toISOString(),
             assigneeIds: ids,
+            ...iconOf(data),
           },
           null,
         );

@@ -5,6 +5,7 @@ import { DEFAULT_SYMBOL, SECTIONS, SYMBOLS, SYMBOL_COLORS, sectionColor, symbolB
 import { PATHS } from '../src/lib/symbols/paths';
 import { DE } from '../src/lib/symbols/keywords.de';
 import { EN } from '../src/lib/symbols/keywords.en';
+import { BUILTIN_TEMPLATES } from '../../server/src/templates';
 import { WATCHER_ICON_IDS } from '../../server/src/watcher-icons';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
 
@@ -73,5 +74,12 @@ describe('Symbol-Bibliothek', () => {
     const ids = new Set(SYMBOLS.map((s) => s.id));
     expect(WATCHER_ICON_IDS.length).toBeGreaterThan(10);
     for (const n of WATCHER_ICON_IDS) expect(ids.has(n), n).toBe(true);
+  });
+
+  it('die Symbole der eingebauten Board-Vorlagen gehören zur Bibliothek', () => {
+    const ids = new Set(SYMBOLS.map((s) => s.id));
+    const used = BUILTIN_TEMPLATES.flatMap((b) => b.cards.flatMap((c) => (c.icon ? [c.icon] : [])));
+    expect(used.length).toBeGreaterThan(3);
+    for (const n of used) expect(ids.has(n), n).toBe(true);
   });
 });

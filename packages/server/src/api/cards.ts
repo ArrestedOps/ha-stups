@@ -7,7 +7,7 @@ const MAX_IDS = 50;
 
 /** Karten, Termine über alle Boards, Erledigen und Archiv */
 export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
-  const { deps, store, body, noContent } = k;
+  const { deps, store, body, noContent, requireAdmin } = k;
 
   // ----- cards -----
   app.post<{ Params: Params }>('/api/boards/:id/cards', async (req, reply) => {
@@ -25,6 +25,9 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
         overdueNag: b.overdueNag,
         costCents: b.costCents,
         effort: b.effort,
+        icon: b.icon,
+        iconColor: b.iconColor,
+        iconSource: b.iconSource,
         carryOver: b.carryOver,
         assigneeIds: b.assigneeIds,
         categoryIds: b.categoryIds,
@@ -53,6 +56,9 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
       'overdueNag',
       'costCents',
       'effort',
+      'icon',
+      'iconColor',
+      'iconSource',
       'confirm',
       'carryOver',
       'assigneeIds',
@@ -130,6 +136,18 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
   app.post<{ Params: Params }>('/api/cards/:id/restore-archived', async (req) =>
     store.restoreArchived(req.params.id, body(req).columnId, req.user?.id ?? null),
   );
+  // Symbole aus Titeln erkennen (Einstellungen, nur Administratoren, von der Person selbst ausgelöst). Erkannt wird in der
+  // Oberfläche (die Bibliothek und die Suchwörter liegen dort): Der Server liefert die Karten ohne Symbol und nimmt das Ergebnis an.
+  app.get('/api/icons/candidates', async (req) => {
+    requireAdmin(req);
+    return store.cardsWithoutIcon();
+  });
+  app.post('/api/icons/apply', async (req) => {
+    requireAdmin(req);
+    const result = store.applyDetectedIcons(body(req).items);
+    if (result.updated > 50) store.markAllChanged(); // viele Karten auf einmal: die Geräte laden alles neu
+    return result;
+  });
   app.post<{ Params: Params }>('/api/cards/:id/duplicate', async (req, reply) =>
     reply.code(201).send(store.duplicateCard(req.params.id, req.user?.id ?? null)),
   );

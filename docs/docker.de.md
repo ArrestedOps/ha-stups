@@ -72,6 +72,7 @@ Alle Einstellungen sind Umgebungsvariablen. Ohne Angabe gelten die Vorgaben.
 | `STUPS_PORT` | `8099` | Port im Container |
 | `STUPS_SHARE_DIR` | `/share` | Ordner, aus dem ein Umzug (`stups-umzug`) beim ersten Start übernommen wird |
 | `STUPS_PUBLIC_URL` | – | Adresse, unter der Stups erreichbar ist. `https://…` schaltet das Secure-Cookie ein und, mit einem Namen statt einer IP-Adresse, die Passkeys (siehe „Anmelden mit Passkey") |
+| `STUPS_TRUST_PROXY` | `false` | Nur hinter einem Reverse Proxy: wie viele Proxys vor Stups stehen (zum Beispiel `1`), eine Liste ihrer Adressen oder Netze (`172.18.0.0/16`) oder `true`. Dann sieht die Anmeldesperre die echte Adresse aus `X-Forwarded-For`; ohne die Angabe teilen sich alle hinter dem Proxy eine Adresse. Nur setzen, wenn Stups **ausschließlich** über diesen Proxy erreichbar ist, sonst kann jeder seine Adresse vortäuschen |
 | `STUPS_ADMIN_USER`, `STUPS_ADMIN_PASSWORD` | – | erster Administrator, nur beide zusammen. Gilt nur, solange es noch kein Konto gibt |
 | `HA_URL` | – | Adresse deines Home Assistant, zum Beispiel `http://homeassistant.local:8123` (siehe „Mit Home Assistant verbinden") |
 | `HA_TOKEN` | – | Long-Lived-Zugangs-Token aus Home Assistant. Nur zusammen mit `HA_URL` |
@@ -175,7 +176,7 @@ Aktualisieren: `docker compose pull && docker compose up -d`; im Container Manag
 ## Sicherheit
 
 - **HTTPS.** Passwörter und das Sitzungs-Cookie sollten nie unverschlüsselt durchs Internet gehen. Stelle einen Reverse Proxy mit Zertifikat davor (bei Synology: **Systemsteuerung › Anmeldeportal › Erweitert › Reverse Proxy**, Ziel `http://localhost:8099`) und trage die https-Adresse als `STUPS_PUBLIC_URL` ein. Für WebSockets (Live-Sync) muss der Proxy die Kopfzeilen `Upgrade` und `Connection` durchreichen; bei Synology unter **Benutzerdefinierte Kopfzeile › WebSocket**.
-- **Anmeldung.** Passwörter werden mit scrypt gespeichert, Sitzungen laufen 30 Tage und verlängern sich bei Nutzung. Nach fünf Fehlversuchen wartet man eine Minute, jeder weitere Fehlversuch verdoppelt die Wartezeit (höchstens 30 Minuten). Ändert jemand sein Passwort, melden sich seine anderen Geräte ab (Passkeys bleiben bestehen). Passkeys: siehe „Anmelden mit Passkey".
+- **Anmeldung.** Passwörter werden mit scrypt gespeichert, Sitzungen laufen 30 Tage und verlängern sich bei Nutzung. Die Sperre gilt **je Adresse und je Konto, getrennt**: Nach fünf Fehlversuchen von einer Adresse wartet diese Adresse eine Minute, jeder weitere Fehlversuch verdoppelt die Wartezeit (höchstens 30 Minuten). Ein Konto wird nie gesperrt, nur gebremst: Ab dem sechsten Versuch innerhalb von 15 Minuten reihen sich weitere Versuche mit 0,5 bis höchstens 8 Sekunden Abstand ein (bei mehr als 15 Sekunden Stau werden sie abgewiesen), ein richtiges Passwort setzt es zurück. So kann niemand den Besitzer von vielen Adressen aus aussperren, und Raten wird langsam. Hinter einem Reverse Proxy `STUPS_TRUST_PROXY` setzen, sonst teilen sich alle Nutzer eine Adresse. Ändert jemand sein Passwort, melden sich seine anderen Geräte ab (Passkeys bleiben bestehen). Passkeys: siehe „Anmelden mit Passkey".
 - **Kopfzeilen.** Anmelde-Kopfzeilen von Home Assistant oder einem Proxy werden im eigenen Container nie beachtet.
 - **Offen ist nur ein Weg ohne Anmeldung:** `/api/push/action` für die Knöpfe in ntfy-Nachrichten, und nur mit gültigem, signiertem Token.
 - **Datensicherung.** Alles liegt im Datenordner (`stups.sqlite`, `files`, `backups`). Eine Kopie dieses Ordners genügt.
@@ -191,3 +192,5 @@ In der App unter **Einstellungen › Hilfe und Daten › Papierkorb, Archiv, Umz
 ```
 
 Ist der Datenordner noch leer, übernimmt Stups Datenbank und Anhänge daraus. Die Personen kommen mit, ihre Anmeldung nicht. Richte den ersten Administrator wie oben ein; gibst du ihm als Namen den einer vorhandenen Person, bekommt diese Person das Konto, ihre Karten bleiben ihr. Für jede weitere Person legst du unter **Personen & Zugriff** eine Anmeldung an.
+
+Der Export enthält **keine Geheimnisse**: Das Push-Geheimnis (es wird neu erzeugt, alte Knöpfe in Nachrichten funktionieren dann nicht mehr), Passwort-Hashes, Sitzungen und Passkeys bleiben draußen. Konten ohne Passwort brauchen von einem Administrator ein neues (nach dem Umzug neu einrichten). Der Export ist nur für den Besitzer lesbar (Rechte 0600), läuft nach **24 Stunden** ab (ein veralteter Export wird beim nächsten Start einer Stups-App gelöscht) und wird von der neuen App nach einem erfolgreichen Import gelöscht. Exporte aus früheren Versionen lassen sich weiter importieren.

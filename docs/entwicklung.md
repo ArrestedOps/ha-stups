@@ -27,7 +27,7 @@ Stups ist ein Kanban-Board mit Agenda und Kalender als Home-Assistant-App. Es l�
 
 Ein HA-Backup einschließlich der App enthält Datenbank und Anhänge. Zusätzlich legt die App vor jeder Datenbank-Änderung eine Kopie unter `/data/backups` an (die letzten 5).
 
-Für den Umzug in eine andere Stups-App (andere Repository-Adresse = andere App in Home Assistant) exportiert ein Administrator unter Einstellungen › Umzug die Daten nach `/share/stups-umzug`. Eine neue Stups-App ohne eigene Daten übernimmt den Export beim ersten Start.
+Für den Umzug in eine andere Stups-App (andere Repository-Adresse = andere App in Home Assistant) exportiert ein Administrator unter Einstellungen › Umzug die Daten nach `/share/stups-umzug`. Eine neue Stups-App ohne eigene Daten übernimmt den Export beim ersten Start und löscht ihn danach. Der Export enthält keine Geheimnisse (kein `pushSecret`, keine Passwort-Hashes, Sitzungen, Passkeys), ist 0600/0700 geschützt und läuft nach 24 Stunden ab (`purgeExpiredExport` beim Start); Exporte ohne Ablaufdatum aus älteren Versionen bleiben importierbar.
 
 ### Wenn etwas nicht stimmt
 
@@ -295,6 +295,20 @@ Die CI bricht ab, wenn die Version nicht zum Branch passt (eine Beta-Version ohn
 - Anfragen an HA haben ein Zeitlimit von 15 Sekunden.
 - Das Wischen ist nur mit Touch aktiv, die Maus zieht (Drag & Drop, ab 1024 px Breite).
 - Der Server nimmt Anfragen nur vom Ingress-Proxy (`172.30.32.2`) an.
+
+### Sicherheitsregeln (seit 1.25.2)
+
+Diese Regeln gelten für jede Änderung; zu jeder gibt es Tests.
+
+- **Push-Aktionen** (`notifications.ts`, `actor()`): Eine Aktion aus einer Nachricht läuft nur, wenn die handelnde Person eindeutig bestimmt ist (Person der Liste mit bekannter Kennung bzw. signiertem Token) und der Karte zugewiesen ist. Sonst `ignored` mit Protokolleintrag. Die Kind-Bestätigung (`requestInstead`) gilt dort wie in der App; nie `completeCard(…, by: null)` für Push.
+- **Verzeichnis und Rollen** (`directory.ts`, `access.ts`): Kennt Stups die Rollen nicht (Home Assistant antwortet nicht, nie geklappt, Stand älter als 15 Minuten), liefert `isAdmin` `null`, und niemand wird befördert; ein Kind bleibt Kind (aus der Datenbank). Nur ohne jedes Verzeichnis (lokale Entwicklung) und ohne jede Person gilt der Rückfall „der Erste richtet ein".
+- **Verknüpfung Konto und Person** (`resolveUser`): nur über die Kennung oder den Benutzernamen, **nie über den Anzeigenamen** (den ändert jeder im Profil). Passt nur der Anzeigename, wartet das Konto auf Freigabe.
+- **Abrufe ins Netz** (`safe-fetch.ts`, `links.ts`): Link-Titel und Kurzlinks rufen nur http/https auf öffentliche Adressen ab. Aufgelöste Adressen (IPv4 und IPv6; Loopback, privat, Link-Local, Metadaten, Mehrfachadressen, Namen ohne Punkt) werden vor jedem Abruf und jeder Weiterleitung (höchstens 3) geprüft, die Verbindung geht an genau die geprüfte Adresse (kein zweites Auflösen: DNS-Rebinding). Neue Abrufe nach außen immer über `pinnedFetch`/`assertPublicUrl`.
+- **Export** (`transfer.ts`): ohne Geheimnisse, 0600, Ablauf 24 Stunden, nach dem Import gelöscht.
+- **Uploads** (`upload-quota.ts`): je Karte 20 Dateien und 200 MB, je Person und Stunde 60 Dateien und 400 MB, zwei Uploads gleichzeitig, 20 Profilbilder je Stunde; Antwort 413 oder 429 mit Text. Die Typprüfung am Inhalt bleibt.
+- **Panel-Pfad und Dashboard-Pfad**: nur Administratoren ändern sie, beide laufen durch `checkDashboardPath` (beginnt mit `/`, kein `//`, kein `\`, kein Schema, höchstens 200 Zeichen).
+- **Anmeldesperre** (`session-auth.ts`): je Adresse gesperrt (5 Versuche, dann 1, 2, … höchstens 30 Minuten), je Konto nur **verzögert** (ab dem 6. Versuch in 15 Minuten nacheinander mit 0,5 bis 8 Sekunden Abstand, Staugrenze 15 Sekunden, richtiges Passwort setzt zurück), damit niemand einen Besitzer aussperren kann. Hinter einem Reverse Proxy `STUPS_TRUST_PROXY` setzen (siehe docs/docker.md).
+- **Migrationen** (`db.ts`): Fremdschlüssel sind während der Migrationen aus (sonst löst ein `drop table` im Stil von Migration 20 `on delete cascade` aus und löscht abhängige Zeilen); nach jeder Migration prüft `foreign_key_check`, neue Verstöße rollen zurück. Die Tabelle nach dem 12-Schritte-Verfahren von SQLite umbauen (neue Tabelle, kopieren, alte löschen, umbenennen). Test: `migration-filled.test.ts` hebt befüllte Datenbanken (Stand 9, 19, 21) über die echten Migrationen, bei jeder neuen Migration den Stand davor dort ergänzen.
 
 ## 4. Bekannte Grenzen
 

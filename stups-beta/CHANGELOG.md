@@ -2,6 +2,15 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.26.1-beta.1
+
+- **Sicherheit: mehrere Härtungen, Update empfohlen.** Betrifft Anmeldung und Zugriff, Push-Nachrichten, Abrufe von Webseiten, Uploads und den Umzug-Export. Der Umzug-Export enthält keine Geheimnisse mehr, ist nur für den Besitzer lesbar, läuft nach 24 Stunden ab und wird nach dem Import gelöscht (Konten ohne Passwort brauchen danach ein neues). Im Container gibt es `STUPS_TRUST_PROXY` für den Betrieb hinter einem Reverse Proxy (siehe Docker-Anleitung). Der Panel-Pfad lässt sich nur noch als Administrator ändern
+- **Kalender-Wächter:** Eine gelöschte oder erledigte Karte kommt für denselben Termin nicht mehr wieder, und ein geänderter Titel oder Beginn erzeugt keine zweite Karte
+- **Wächter bleiben flott:** Abfragen von Kalender und Vorhersage laufen nebenher mit Zeitlimit, ein langsames Home Assistant hält Auswertungen, „Übernehmen“ und „Weitergeben“ nicht mehr auf
+- **Push-Wiederholung:** Scheitert die Nachricht an die Companion App, wird sie auch dann wiederholt, wenn eine Ansage im Haus bewusst übersprungen wurde
+- **Verbindung zu Home Assistant:** Heartbeat, wachsende Wartezeit beim Neuverbinden, keine Absturzgefahr durch ungültige Nachrichten; die Zeitzone wird regelmäßig erneuert
+- Weniger Doppelansagen und Doppelkarten bei gleichzeitigen Ereignissen, Lautstärke wird zuverlässiger zurückgestellt, eigene Sensornamen auch für Namen ohne lateinische Buchstaben
+- Datenbank: keine neue Migration; Updates der Datenbank behalten künftig auch bei Tabellenumbauten alle abhängigen Daten (neuer Test mit befüllten alten Datenbanken)
 ## 1.26.0-beta.1
 
 **Aufgaben: die drei Zahlen sind antippbar.** Jede Zahl öffnet ein Blatt von unten (nach dem freigegebenen Entwurf „Variante 3“). Alle Blätter zeigen **deine eigenen** Karten, wie die Zahlen selbst.

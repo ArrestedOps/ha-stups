@@ -72,6 +72,7 @@ All settings are environment variables. Without a value, the defaults apply.
 | `STUPS_PORT` | `8099` | Port in the container |
 | `STUPS_SHARE_DIR` | `/share` | Folder from which a move (`stups-umzug`) is taken over on first start |
 | `STUPS_PUBLIC_URL` | – | Address under which Stups is reachable. `https://…` switches the secure cookie on and, with a name instead of an IP address, passkeys (see "Signing in with a passkey") |
+| `STUPS_TRUST_PROXY` | `false` | Only behind a reverse proxy: how many proxies sit in front of Stups (for example `1`), a list of their addresses or networks (`172.18.0.0/16`) or `true`. Then the sign-in lock sees the real address from `X-Forwarded-For`; without it everyone behind the proxy shares one address. Set it **only** when Stups is reachable solely through that proxy, otherwise anyone can fake their address |
 | `STUPS_ADMIN_USER`, `STUPS_ADMIN_PASSWORD` | – | first administrator, only both together. Only applies while there is no account yet |
 | `HA_URL` | – | Address of your Home Assistant, for example `http://homeassistant.local:8123` (see "Connecting to Home Assistant") |
 | `HA_TOKEN` | – | Long-lived access token from Home Assistant. Only together with `HA_URL` |
@@ -175,7 +176,7 @@ Updating: `docker compose pull && docker compose up -d`; in Container Manager do
 ## Security
 
 - **HTTPS.** Passwords and the session cookie should never travel unencrypted across the internet. Put a reverse proxy with a certificate in front (on Synology: **Control Panel › Login Portal › Advanced › Reverse Proxy**, target `http://localhost:8099`) and enter the https address as `STUPS_PUBLIC_URL`. For WebSockets (live sync) the proxy must pass on the `Upgrade` and `Connection` headers; on Synology under **Custom header › WebSocket**.
-- **Sign-in.** Passwords are stored with scrypt, sessions last 30 days and extend with use. After five failed attempts you wait a minute, every further failed attempt doubles the waiting time (at most 30 minutes). If someone changes their password, their other devices are signed out (passkeys stay). Passkeys: see "Signing in with a passkey".
+- **Sign-in.** Passwords are stored with scrypt, sessions last 30 days and extend with use. The lock works **per address and per account, separately**: after five failed attempts from one address that address waits a minute, every further failed attempt doubles the waiting time (at most 30 minutes). An account is never locked, only slowed down: from the sixth attempt within 15 minutes, further attempts queue with 0.5 to at most 8 seconds between them (beyond 15 seconds of queue they are turned away), and a correct password resets it. So nobody can lock the owner out of their own account from many addresses, and guessing gets slow. Behind a reverse proxy set `STUPS_TRUST_PROXY`, otherwise all users share one address. If someone changes their password, their other devices are signed out (passkeys stay). Passkeys: see "Signing in with a passkey".
 - **Headers.** Sign-in headers from Home Assistant or a proxy are never considered in the standalone container.
 - **Only one path is open without sign-in:** `/api/push/action` for the buttons in ntfy messages, and only with a valid, signed token.
 - **Backup.** Everything lives in the data folder (`stups.sqlite`, `files`, `backups`). A copy of this folder is enough.
@@ -191,3 +192,5 @@ In the app, export the data under **Settings › Help and data › Bin, archive,
 ```
 
 If the data folder is still empty, Stups takes over database and attachments from it. The people come along, their sign-in does not. Set up the first administrator as above; if you give them the name of an existing person, that person gets the account and keeps their cards. For every other person you create a sign-in under **People & Access**.
+
+The export contains **no secrets**: the push secret (it is created anew, old buttons in messages stop working), password hashes, sessions and passkeys are left out. Accounts without a password need a new one from an administrator (sign-in after the move: set it up again). The export is readable only by its owner (mode 0600), expires after **24 hours** (a stale export is deleted at the next start of a Stups app) and is deleted by the new app after a successful import. Exports from earlier versions can still be imported.

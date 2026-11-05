@@ -11,12 +11,12 @@ import {
   type User,
   type WatcherItem,
 } from './api';
-import { formatDue } from './datetime';
+import { deviceTz, formatDue } from './datetime';
 import { applyHeaderHiding } from './hideHaHeader';
 import { applyAccent, hueFromStorage, type Scheme } from './accent';
 import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLanguage, t } from './i18n/index.svelte';
 import { passkeysSupported } from './passkeys';
-import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
+import { DEFAULT_FILTER, effectiveFilter, parseScheduleFilter, type FilterContext, type ScheduleFilter } from './schedule';
 import { swipeTarget } from './swipe';
 import type { SettingsPageId } from './settingsPages';
 import type { TemplateDraft } from './watcher-types';
@@ -490,30 +490,29 @@ export function selectColumn(id: string): void {
 function restoreView(): void {
   // Start immer auf Aufgaben (siehe startTab)
   ui.tab = startTab();
-  try {
-    const raw = JSON.parse(memo.get('stups.schedule') ?? 'null') as Partial<ScheduleFilter> | null;
-    if (!raw) {
-      // Ein Gerät ohne Merkzettel startet bei „Meine": Aufgaben zeigt zuerst, was für mich dran ist
-      if (ui.me?.isPerson && !ui.isChild) ui.sf = { ...DEFAULT_FILTER, personIds: [ui.me.id] };
-      return;
-    }
-    const ids = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
-    ui.sf = {
-      personIds: ids(raw.personIds).filter((id) => ui.people.some((p) => p.id === id)),
-      unassigned: raw.unassigned === true,
-      boardIds: ids(raw.boardIds).filter((id) => ui.boards.some((b) => b.id === id)),
-      showDone: raw.showDone === true,
-    };
-  } catch {
-    /* kaputter Merkzettel: Standardfilter */
-  }
+  const stored = parseScheduleFilter(
+    memo.get('stups.schedule'),
+    { personIds: ui.people.map((p) => p.id), boardIds: ui.boards.map((b) => b.id) },
+    { isChild: ui.isChild },
+  );
+  // Ein Gerät ohne Merkzettel startet bei „Meine": Aufgaben zeigt zuerst, was für mich dran ist
+  if (stored) ui.sf = stored;
+  else if (ui.me?.isPerson && !ui.isChild) ui.sf = { ...DEFAULT_FILTER, personIds: [ui.me.id] };
 }
-
 
 export function selectTab(tab: Tab): void {
   ui.tab = tab;
   ui.sheet = null;
 }
+
+/** Was das Filtern außer dem Filter braucht: ich, die Uhr (neu gerechnet bei jeder Änderung der Daten) und die Zeitzone des Geräts */
+export function filterContext(): FilterContext {
+  void ui.rev;
+  return { meId: ui.me?.id ?? null, nowMs: Date.now(), tz: deviceTz() };
+}
+
+/** Der Filter von Aufgaben und Kalender, wie er für diese Rolle gilt (ein Kind: ohne „Wer" und „nur von Wächtern") */
+export const activeScheduleFilter = (): ScheduleFilter => effectiveFilter(ui.sf, ui.isChild);
 
 /** Ändert den Filter von Agenda und Kalender und merkt ihn sich auf diesem Gerät */
 export function setScheduleFilter(patch: Partial<ScheduleFilter>): void {

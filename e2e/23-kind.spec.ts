@@ -207,6 +207,30 @@ test('„Nochmal": die Anfrage entfällt, die Karte bleibt offen und das Kind ka
   }
 });
 
+test('Kind: Filter ohne „Wer" und ohne „nur von Wächtern", mit Wann, Priorität und Sortierung; nur eigene Karten', async ({ browser, baseURL }) => {
+  const kd = await kidPage(browser, baseURL);
+  try {
+    await kd.page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
+    await expect(kd.page.getByRole('group', { name: 'Personen' })).toHaveCount(0);
+    await kd.page.getByRole('button', { name: /^Filter/ }).click();
+    const sheet = kd.page.getByTestId('filter-sheet');
+    await expect(sheet.getByRole('group', { name: 'Wann' })).toBeVisible();
+    await expect(sheet.getByRole('radiogroup', { name: 'Priorität' })).toBeVisible();
+    await expect(sheet.getByRole('radiogroup', { name: 'Sortierung' })).toBeVisible();
+    await expect(sheet.getByRole('group', { name: 'Personen' })).toHaveCount(0);
+    await expect(sheet.getByRole('switch', { name: 'Nur von Wächtern' })).toHaveCount(0);
+    await expect(sheet.getByRole('switch', { name: 'Nur mit offenem Stups' })).toHaveCount(0);
+    await expect(sheet.getByRole('switch', { name: 'Erledigte anzeigen' })).toBeVisible();
+    // „Ohne Termin" zeigt die eigenen Karten ohne Termin, nie die Karte aus dem Erwachsenenboard
+    await sheet.getByRole('group', { name: 'Wann' }).getByRole('button', { name: /^Ohne Termin/ }).click();
+    await kd.page.getByRole('dialog').getByRole('button', { name: /Aufgaben? anzeigen$/ }).click();
+    await expect(kd.page.getByTestId('group-undated').getByText(mineName)).toBeVisible();
+    await expect(kd.page.getByText(otherName)).toHaveCount(0);
+  } finally {
+    await kd.close();
+  }
+});
+
 test('Kind sieht die Symbole seiner Karten (Kachel in der Liste und im Karten-Fenster), ändern kann es sie nicht', async ({ browser, baseURL, request }) => {
   const b = await board(request, `Symbolboard ${tag}`);
   const title = `Pflanzen gießen ${tag}`;

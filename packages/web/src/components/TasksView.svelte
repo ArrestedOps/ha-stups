@@ -5,12 +5,12 @@
   import { deviceTz } from '../lib/datetime';
   import { names as monthNames } from '../lib/i18n/names';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { DEFAULT_FILTER, dayKeyOf, filterSchedule, personFilterActive, toggleId } from '../lib/schedule';
+  import { activeFilterCount, DEFAULT_FILTER, dayKeyOf, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId } from '../lib/schedule';
   import { scrollStrip } from '../lib/scrollStrip';
   import { groupTasks, nudgesToMe, parseTasksView, taskStats, type TaskGroupKey, type TasksView } from '../lib/tasks';
   import { ageText, sourceLine } from '../lib/today';
   import { shortMonthTitle, weekStrip } from '../lib/week';
-  import { claimCard, completeCard, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
+  import { activeScheduleFilter, claimCard, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import CalendarView from './CalendarView.svelte';
   import Icon from './Icon.svelte';
@@ -76,6 +76,7 @@
   // ---------- Daten (Store: dieselben wie für die Glocke) ----------
   const today = $derived(agenda.today);
   const open = $derived(agenda.open);
+  const undated = $derived(agenda.undated);
   const recentDone = $derived(agenda.recentDone);
   const loaded = $derived(agenda.loaded);
   const failed = $derived(agenda.failed);
@@ -83,13 +84,20 @@
   const tz = deviceTz();
   const nowMs = $derived((void ui.rev, Date.now()));
   const meId = $derived(ui.me?.id ?? null);
-  /** Ein Kind sieht nur die eigenen Karten; Erwachsene wählen mit den Chips */
-  const visible = (list: typeof open) => (ui.isChild ? list.filter((c) => !!meId && c.assigneeIds.includes(meId)) : filterSchedule(list, ui.sf));
+  /** Der Filter, wie er für diese Rolle gilt, und was er zum Rechnen braucht */
+  const sf = $derived(activeScheduleFilter());
+  const fctx = $derived(filterContext());
+  /** Ein Kind sieht nur die eigenen Karten; Erwachsene wählen mit den Chips und dem Blatt „Filter" */
+  const visible = (list: typeof open) =>
+    filterSchedule(ui.isChild ? list.filter((c) => !!meId && c.assigneeIds.includes(meId)) : list, sf, fctx);
   const house = $derived<TodayCard[]>(ui.isChild ? [] : (today?.house ?? []));
   const houseIds = $derived(new Set(house.map((c) => c.id)));
-  const shownOpen = $derived(visible(open).filter((c) => !houseIds.has(c.id)));
+  const shownOpen = $derived(visible([...open, ...undated]).filter((c) => !houseIds.has(c.id)));
   const groups = $derived(
-    groupTasks(ui.sf.showDone ? [...shownOpen, ...visible(recentDone).filter((c) => !houseIds.has(c.id))] : shownOpen, nowMs, tz, { withDone: ui.sf.showDone }),
+    groupTasks(sf.showDone ? [...shownOpen, ...visible(recentDone).filter((c) => !houseIds.has(c.id))] : shownOpen, nowMs, tz, {
+      withDone: sf.showDone,
+      sort: sf.sort,
+    }),
   );
   const stats = $derived(taskStats([...open, ...recentDone], meId, nowMs, tz));
   const strip = $derived(weekStrip(visible(open), nowMs, tz));
@@ -109,9 +117,9 @@
   const nameList = (ids: string[]) => ids.map((id) => personById(id)?.displayName ?? t('Jemand')).join(', ');
 
   // ---------- Chips: Meine, Alle, Personen, Filter ----------
-  const sf = $derived(ui.sf);
   const people = $derived(ui.people.filter((p) => p.isPerson && p.id !== meId));
-  const extraFilter = $derived(sf.boardIds.length > 0 || sf.showDone || sf.unassigned);
+  /** Zähler am Knopf „Filter": was das Blatt eingestellt hat und die Chips daneben nicht zeigen */
+  const extraFilter = $derived(extraFilterCount(sf));
   let closed = $state<string[]>([]);
   const toggleGroup = (key: string) => (closed = toggleId(closed, key));
 
@@ -120,6 +128,7 @@
     today: { icon: 'calendar', tone: 'orange' },
     week: { icon: 'calendar', tone: 'blue' },
     later: { icon: 'calendar', tone: 'soft' },
+    undated: { icon: 'calendar', tone: 'soft' },
     done: { icon: 'done', tone: 'green' },
   };
 
@@ -128,6 +137,26 @@
   /** Ein Stups: die Karte öffnen (dort die Antwort); mehrere: die Liste der Mitteilungen */
   const openNudge = () => (nudges.length === 1 ? void openCardAnywhere(nudges[0]!.card) : openSheet({ type: 'notifications' }));
 </script>
+
+{#snippet filterButton(count: number, small: boolean)}
+  <!-- Knopf „Filter" (wie im Mockup neben den Chips): mit gesetztem Filter Umriss und Zähler -->
+  <span class="relative inline-flex shrink-0" data-testid="filter-button">
+    <Chip
+      {small}
+      square
+      label={count > 0 ? t('Filter, {n} aktiv', { n: count }) : t('Filter')}
+      outline={count > 0}
+      onclick={() => openSheet({ type: 'filter' })}
+    ><Icon name="sliders" size={small ? 18 : 20} /></Chip>
+    {#if count > 0}
+      <span
+        class="pointer-events-none absolute -top-1 -right-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent-grad px-1 text-[11px] leading-none font-extrabold"
+        data-testid="filter-count"
+        aria-hidden="true">{count}</span
+      >
+    {/if}
+  </span>
+{/snippet}
 
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col">
   {#if view !== 'list'}
@@ -141,9 +170,7 @@
           <div class="flex items-end justify-between gap-2">
             <h1 class="mt-0.5 text-[30px] leading-[1.1] font-extrabold tracking-tight">{t('Kalender')}</h1>
             <div class="mb-0.5 flex items-center gap-2">
-              {#if !ui.isChild}
-                <Chip small square label={t('Filter')} outline={extraFilter || personFilterActive(sf)} onclick={() => openSheet({ type: 'filter' })}><Icon name="sliders" size={18} /></Chip>
-              {/if}
+              {@render filterButton(activeFilterCount(sf), true)}
               <Chip small onclick={() => setCalMode('month')}>{calMonthTitle}<Icon name="chevron-down" size={16} stroke={2} /></Chip>
             </div>
           </div>
@@ -203,13 +230,16 @@
                   <Icon name="user" size={20} />{t('Alle')}
                 </Chip>
                 {#each people as p (p.id)}
-                  <Chip active={sf.personIds.includes(p.id)} pressed={sf.personIds.includes(p.id)} onclick={() => setScheduleFilter({ personIds: toggleId(sf.personIds, p.id) })}>
-                    <Icon name="user" size={20} />{p.displayName}
+                  <Chip photo active={sf.personIds.includes(p.id)} pressed={sf.personIds.includes(p.id)} onclick={() => setScheduleFilter({ personIds: toggleId(sf.personIds, p.id) })}>
+                    <Avatar person={p} size={32} />{p.displayName}
                   </Chip>
                 {/each}
               </div>
-              <Chip square label={t('Filter')} outline={extraFilter} onclick={() => openSheet({ type: 'filter' })}><Icon name="sliders" size={20} /></Chip>
+              {@render filterButton(extraFilter, false)}
             </div>
+          {:else}
+            <!-- Kind: kein „Wer", der Knopf steht allein rechts -->
+            <div class="flex justify-end">{@render filterButton(extraFilter, false)}</div>
           {/if}
 
           {#if house.length > 0}
@@ -267,7 +297,7 @@
             <div class="py-6 text-center" data-testid="tasks-empty">
               <p class="text-[17px] font-semibold">{t('Keine Aufgaben mit Termin')}</p>
               <p class="mt-1 text-[15px] text-fg2">{t('Karten mit Termin erscheinen hier, nach Fälligkeit geordnet.')}</p>
-              {#if extraFilter || personFilterActive(sf)}
+              {#if isFiltered(sf)}
                 <button class="mt-3 min-h-11 rounded-xl border border-line px-4 text-[15px]" onclick={() => setScheduleFilter({ ...DEFAULT_FILTER })}>{t('Zurücksetzen')}</button>
               {/if}
             </div>

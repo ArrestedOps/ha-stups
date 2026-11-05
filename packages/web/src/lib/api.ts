@@ -643,12 +643,14 @@ export const api = {
   testPushOwn: () => post<{ sent: boolean }>('push/test'),
   pushStatus: () => get<PushStatus>('notifications/status'),
 
-  schedule: (q: { from?: string; to?: string; boards?: string[]; done?: boolean }) => {
+  schedule: (q: { from?: string; to?: string; boards?: string[]; done?: boolean; undated?: boolean }) => {
     const p = new URLSearchParams();
     if (q.from) p.set('from', q.from);
     if (q.to) p.set('to', q.to);
     if (q.boards?.length) p.set('boards', q.boards.join(','));
     if (q.done) p.set('done', '1');
+    /** nur offene Karten ohne Termin (Filter „Ohne Termin") */
+    if (q.undated) p.set('undated', '1');
     return get<ScheduleCard[]>(`schedule${p.size ? `?${p}` : ''}`);
   },
 

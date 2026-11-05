@@ -18,7 +18,7 @@
     type CalMode,
   } from '../lib/calendar';
   import { boardColorKey, dayKeyOf, filterSchedule, type ScheduleCard } from '../lib/schedule';
-  import { openCardAnywhere, openSheet, ui } from '../lib/store.svelte';
+  import { activeScheduleFilter, filterContext, openCardAnywhere, openSheet, ui } from '../lib/store.svelte';
   import { tileColorOf } from '../lib/cardTile';
   import Icon from './Icon.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
@@ -65,7 +65,7 @@
   });
 
   // Ein Kind sieht nur die eigenen Karten
-  const shown = $derived(filterSchedule(loaded, ui.sf).filter((c) => !ui.isChild || c.assigneeIds.includes(ui.me?.id ?? '')));
+  const shown = $derived(filterSchedule(loaded, activeScheduleFilter(), filterContext()).filter((c) => !ui.isChild || c.assigneeIds.includes(ui.me?.id ?? '')));
   const byDay = $derived(cardsByDay(shown));
   const days = $derived(visibleDays(mode, day));
   const weeks = $derived(monthGrid(day));

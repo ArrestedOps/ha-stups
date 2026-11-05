@@ -73,8 +73,8 @@
               }}><Icon name="user" size={20} />{t('Alle')}</Chip
             >
             {#each people as p (p.id)}
-              <Chip active={f.personIds.includes(p.id)} pressed={f.personIds.includes(p.id)} onclick={() => (ui.filter.personIds = toggleId(ui.filter.personIds, p.id))}>
-                <Icon name="user" size={20} />{p.displayName}
+              <Chip photo active={f.personIds.includes(p.id)} pressed={f.personIds.includes(p.id)} onclick={() => (ui.filter.personIds = toggleId(ui.filter.personIds, p.id))}>
+                <Avatar person={p} size={32} />{p.displayName}
               </Chip>
             {/each}
           </div>

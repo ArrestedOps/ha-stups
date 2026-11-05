@@ -312,6 +312,34 @@ const screens = [
     await page.getByRole('button', { name: 'Filter' }).click();
     await page.getByTestId('filter-sheet').waitFor();
   }],
+  ['filter-aktiv', async (page) => {
+    await tasks(page);
+    await page.getByRole('button', { name: 'Filter' }).click();
+    const sheet = page.getByTestId('filter-sheet');
+    await sheet.waitFor();
+    const pick = (group, name) => sheet.getByRole('group', { name: group }).getByRole('button', { name: typeof name === 'string' ? re(name) : name }).click();
+    await pick(x('Personen', 'People'), /Ben/);
+    await pick(x('Wann', 'When'), x('Heute', 'Today'));
+    await pick(x('Wann', 'When'), x('Diese Woche', 'This week'));
+    await pick('Boards', new RegExp(S.boardReno));
+    await page.getByRole('radiogroup', { name: x('Priorität', 'Priority') }).getByRole('radio', { name: x('Hoch', 'High') }).click();
+    await sheet.getByRole('switch', { name: x('Erledigte anzeigen', 'Show completed') }).click();
+  }],
+  ['filter-unten', async (page) => {
+    await tasks(page);
+    await page.getByRole('button', { name: 'Filter' }).click();
+    const sheet = page.getByTestId('filter-sheet');
+    await sheet.waitFor();
+    await sheet.getByRole('radiogroup', { name: x('Sortierung', 'Sort order') }).scrollIntoViewIfNeeded();
+  }],
+  ['aufgaben-filter-aktiv', async (page) => {
+    await tasks(page);
+    await page.getByRole('button', { name: 'Filter' }).click();
+    await page.getByTestId('filter-sheet').getByRole('group', { name: x('Wann', 'When') }).getByRole('button', { name: re(x('Diese Woche', 'This week')) }).click();
+    await page.getByRole('radiogroup', { name: x('Sortierung', 'Sort order') }).getByRole('radio', { name: x('Priorität', 'Priority') }).click();
+    await page.getByRole('button', { name: x(/Aufgaben? anzeigen/, /Show \d+ tasks?/) }).click();
+    await page.getByTestId('filter-count').waitFor();
+  }],
   ['karte-menu', async (page) => {
     await nav(page, 'Boards').click();
     await page.getByRole('tab', { name: re(S.open) }).click();

@@ -39,9 +39,8 @@ function buildV21(file: string): void {
 }
 
 describe('Migration 22 (Symbol und Farbe an Karten)', () => {
-  it('ist die letzte Migration und hängt nur Spalten an', () => {
-    const last = migrations[migrations.length - 1]!;
-    expect(last.version).toBe(22);
+  it('hängt nur Spalten an', () => {
+    const last = migrations.find((m) => m.version === 22)!;
     expect(last.sql).toMatch(/alter table cards add column icon /);
     expect(last.sql).not.toMatch(/drop table|rename/i);
   });
@@ -60,7 +59,8 @@ describe('Migration 22 (Symbol und Farbe an Karten)', () => {
     const nudgesBefore = before.prepare('select * from nudges').all();
     before.close();
 
-    const db = openDb(file, { migrations, backupDir, now: () => new Date('2026-11-05T10:00:00Z') });
+    const upTo22 = migrations.filter((m) => m.version <= 22);
+    const db = openDb(file, { migrations: upTo22, backupDir, now: () => new Date('2026-11-05T10:00:00Z') });
     expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(22);
 
     const cardsAfter = db.prepare('select * from cards order by id').all() as Record<string, unknown>[];

@@ -490,4 +490,23 @@ export const migrations: Migration[] = [
       alter table cards add column icon_source text check (icon_source in ('auto', 'manual'));
     `,
   },
+  {
+    version: 23,
+    // Neues Design, Phase 6b und Dashboard je Person.
+    // inbox_seen_at: bis wann die Person ihre Mitteilungen gelesen hat (ein Eintrag ist ungelesen, wenn er jünger ist). Bei der Migration
+    // auf „jetzt" gesetzt, damit die Glocke nicht mit Altlasten startet; null bei später angelegten Personen heißt: noch nichts gelesen.
+    // dashboard_path: das Dashboard, zu dem der Home-Knopf diese Person führt (null = Standard). Dazu Indexe für die Abfrage des Posteingangs.
+    sql: `
+      alter table users add column inbox_seen_at text;
+      update users set inbox_seen_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now');
+      alter table users add column dashboard_path text;
+      create index ix_nudges_to on nudges(to_user, created_at);
+      create index ix_nudges_from on nudges(from_user, reply_at);
+      create index ix_comments_at on comments(created_at);
+      create index ix_completions_at on completions(completed_at);
+      create index ix_watcher_runs_at on watcher_runs(at);
+      create index ix_card_events_at on card_events(at);
+      create index ix_sent_user_at on sent_notifications(user_id, sent_at);
+    `,
+  },
 ];

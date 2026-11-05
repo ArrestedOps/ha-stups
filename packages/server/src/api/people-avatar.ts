@@ -3,10 +3,12 @@ import { AppError, ForbiddenError, NotFoundError } from '../errors.js';
 import { MAX_AVATAR_BYTES } from '../avatars.js';
 import { t } from '../i18n/index.js';
 import { type ApiKit, type Params } from './kit.js';
+import { createUploadQuota } from '../upload-quota.js';
 
 /** Bilder der Personen: ansehen darf jeder (auch ein Kind), ändern nur die Person selbst und Administratoren */
 export function registerAvatarRoutes(app: FastifyInstance, k: ApiKit): void {
   const { deps, store, noContent } = k;
+  const quota = createUploadQuota(deps.now);
   const avatars = () => {
     if (!deps.avatars) throw new AppError(t('Die Dateiablage ist nicht verfügbar'), 501);
     return deps.avatars;
@@ -38,6 +40,7 @@ export function registerAvatarRoutes(app: FastifyInstance, k: ApiKit): void {
   app.put<{ Params: Params }>('/api/people/:id/avatar', { bodyLimit: MAX_AVATAR_BYTES + 1024 }, async (req) => {
     const p = person(req.params.id);
     mayChange(req, p.id);
+    quota.avatar(req.user?.id ?? 'anonym'); // höchstens 20 Bilder je Person und Stunde
     const bytes = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
     avatars().save(p.id, bytes);
     return store.userById(p.id);

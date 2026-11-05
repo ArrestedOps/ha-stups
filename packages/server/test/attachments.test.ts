@@ -139,6 +139,63 @@ describe('Anhänge', () => {
     expect(store.getCard(cardId).attachments).toHaveLength(0);
   });
 
+  describe('Obergrenzen (Speicher und Platte schützen)', () => {
+    const pdf = (n: number) => Buffer.concat([PDF, Buffer.alloc(n)]);
+    const send = (data: Buffer) => upload([{ name: 'file', filename: 'x.pdf', type: 'application/pdf', data }]);
+    async function withLimits(limits: object) {
+      app = Fastify();
+      await app.register(ingressAuth, { enforceIp: false });
+      await app.register(apiRoutes, { store, files: createFileStore(dir), uploadLimits: limits, now: () => new Date('2026-10-30T10:00:00Z') });
+    }
+
+    it('je Karte höchstens so viele Anhänge (413 mit klarem Text)', async () => {
+      await withLimits({ cardFiles: 3 });
+      for (let i = 0; i < 3; i += 1) expect((await send(pdf(10))).statusCode).toBe(201);
+      const res = await send(pdf(10));
+      expect(res.statusCode).toBe(413);
+      expect(res.json().error).toMatch(/3 Anhänge/);
+      expect(store.getCard(cardId).attachments).toHaveLength(3);
+    });
+
+    it('je Karte höchstens so viele Bytes insgesamt (413)', async () => {
+      await withLimits({ cardBytes: 1000 });
+      expect((await send(pdf(600))).statusCode).toBe(201);
+      const res = await send(pdf(600));
+      expect(res.statusCode).toBe(413);
+      expect(store.getCard(cardId).attachments).toHaveLength(1);
+    });
+
+    it('je Person und Stunde höchstens so viele Dateien (429), nach einer Stunde wieder frei', async () => {
+      let t = new Date('2026-10-30T10:00:00Z').getTime();
+      app = Fastify();
+      await app.register(ingressAuth, { enforceIp: false });
+      await app.register(apiRoutes, { store, files: createFileStore(dir), uploadLimits: { hourFiles: 2 }, now: () => new Date(t) });
+      const b = store.createBoard({ name: 'Zwei' });
+      const col = store.getBoardView(b.id).columns[0]!.id;
+      const others = [store.createCard(b.id, { columnId: col, title: 'A' }, null).id, store.createCard(b.id, { columnId: col, title: 'B' }, null).id, store.createCard(b.id, { columnId: col, title: 'C' }, null).id];
+      const to = async (id: string) => {
+        const form = new FormData();
+        form.append('file', new Blob([new Uint8Array(pdf(10))], { type: 'application/pdf' }), 'x.pdf');
+        const res = new Response(form);
+        return app.inject({ method: 'POST', url: `/api/cards/${id}/attachments`, headers: { ...headers, 'content-type': res.headers.get('content-type')! }, payload: Buffer.from(await res.arrayBuffer()) });
+      };
+      expect((await to(others[0]!)).statusCode).toBe(201);
+      expect((await to(others[1]!)).statusCode).toBe(201);
+      const limited = await to(others[2]!);
+      expect(limited.statusCode).toBe(429);
+      expect(limited.json().error).toMatch(/Stunde/);
+      t += 61 * 60_000;
+      expect((await to(others[2]!)).statusCode).toBe(201);
+    });
+
+    it('die Typ-Prüfung bleibt: ein abgelehnter Upload zählt nicht gegen die Stunde', async () => {
+      await withLimits({ hourFiles: 1 });
+      const bad = await upload([{ name: 'file', filename: 'x.jpg', type: 'image/jpeg', data: Buffer.from('<html>') }]);
+      expect(bad.statusCode).toBe(400);
+      expect((await send(pdf(10))).statusCode).toBe(201);
+    });
+  });
+
   it('lehnt zu große Dateien ab (20 MB)', async () => {
     const big = Buffer.concat([PDF, Buffer.alloc(21 * 1024 * 1024)]);
     const res = await upload([{ name: 'file', filename: 'riesig.pdf', type: 'application/pdf', data: big }]);

@@ -54,6 +54,8 @@ export interface ApiDeps {
   };
   /** Die Uhr (für Tests); Vorgabe: die Systemuhr */
   now?: () => Date;
+  /** Obergrenzen für Uploads (Tests setzen kleine Werte) */
+  uploadLimits?: Partial<import('../upload-quota.js').UploadLimits>;
   /** Haus-Kanäle (nur mit Verbindung zu Home Assistant): der Weg für Test und Ergebnis, `sync` gleicht das Abonnement auf die Heimkehr ab */
   house?: { push: HousePush; sync(): Promise<void>; entityOwners(): Promise<Map<string, string>> };
   /** Wächter (nur mit Verbindung zu Home Assistant) */

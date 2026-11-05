@@ -65,9 +65,31 @@ export interface HaClientOptions {
   fetchFn?: typeof fetch;
   /** Defaults to baseUrl with ws scheme + /websocket */
   wsUrl?: string;
+  /** Erste Wartezeit vor dem Neuverbinden; sie verdoppelt sich je Fehlschlag bis `maxReconnectDelayMs` (Vorgabe 5 s bis 60 s) */
   reconnectDelayMs?: number;
+  maxReconnectDelayMs?: number;
+  /** Wartezeit nach abgelehnter Anmeldung (auth_invalid): neu verbinden hilft erst, wenn das Token geändert wurde (Vorgabe 5 Minuten) */
+  authInvalidDelayMs?: number;
+  /** Heartbeat (ping/pong von Home Assistant): Abstand und Zeit bis zur Antwort (Vorgabe 30 s und 10 s) */
+  heartbeatMs?: number;
+  heartbeatTimeoutMs?: number;
   /** Zeitlimit je REST-Anfrage; ohne eines würde ein hängender Aufruf alle Erinnerungen blockieren. */
   requestTimeoutMs?: number;
+}
+
+/** Wartezeit vor dem n-ten Neuverbinden (n ab 0): verdoppelt sich, höchstens `max` */
+export function backoffDelay(base: number, max: number, failures: number): number {
+  return Math.min(max, base * 2 ** Math.min(failures, 20));
+}
+
+/** Eine Nachricht von Home Assistant; kein gültiges JSON ergibt null (sie wird verworfen statt zu werfen) */
+function parseMessage(raw: unknown): Record<string, any> | null {
+  try {
+    const msg = JSON.parse(String(raw)) as unknown;
+    return msg !== null && typeof msg === 'object' && !Array.isArray(msg) ? (msg as Record<string, any>) : null;
+  } catch {
+    return null;
+  }
 }
 
 export class HaClient {
@@ -83,6 +105,11 @@ export class HaClient {
   private socket: WebSocket | undefined;
   private timer: NodeJS.Timeout | undefined;
   private closed = false;
+  /** Fehlgeschlagene Verbindungen in Folge (für die wachsende Wartezeit); null-Setzen bei gelungener Anmeldung */
+  private failures = 0;
+  private authRejected = false;
+  private heartbeat: NodeJS.Timeout | undefined;
+  private heartbeatDeadline: NodeJS.Timeout | undefined;
   private state: HaStatus = {
     connected: false,
     subscribed: false,
@@ -158,7 +185,8 @@ export class HaClient {
         else resolve(value as T);
       };
       ws.on('message', (raw) => {
-        const msg = JSON.parse(raw.toString()) as Record<string, any>;
+        const msg = parseMessage(raw);
+        if (!msg) return;
         if (msg.type === 'auth_required') ws.send(JSON.stringify({ type: 'auth', access_token: this.opts.token }));
         else if (msg.type === 'auth_ok') ws.send(JSON.stringify({ id: 1, type, ...payload }));
         else if (msg.type === 'auth_invalid') finish(new Error(`Anmeldung abgelehnt: ${msg.message ?? ''}`));
@@ -243,7 +271,8 @@ export class HaClient {
         return probe;
       };
       ws.on('message', (raw) => {
-        const msg = JSON.parse(raw.toString()) as Record<string, any>;
+        const msg = parseMessage(raw);
+        if (!msg) return;
         if (msg.type === 'auth_required') ws.send(JSON.stringify({ type: 'auth', access_token: this.opts.token }));
         else if (msg.type === 'auth_ok') run().then((p) => finish(null, p), (e: Error) => finish(e));
         else if (msg.type === 'auth_invalid') finish(new Error(`Anmeldung abgelehnt: ${msg.message ?? ''}`));
@@ -390,7 +419,13 @@ export class HaClient {
     this.socket = ws;
 
     ws.on('message', (raw) => {
-      const msg = JSON.parse(raw.toString()) as Record<string, any>;
+      const msg = parseMessage(raw);
+      if (!msg) return;
+      if (msg.type === 'pong') {
+        clearTimeout(this.heartbeatDeadline); // Home Assistant lebt
+        this.heartbeatDeadline = undefined;
+        return;
+      }
       const sub = typeof msg.id === 'number' ? this.byId.get(msg.id) : undefined;
       if (sub) {
         if (msg.type === 'result') {
@@ -410,6 +445,8 @@ export class HaClient {
       if (msg.type === 'auth_required') {
         ws.send(JSON.stringify({ type: 'auth', access_token: this.opts.token }));
       } else if (msg.type === 'auth_ok') {
+        this.failures = 0;
+        this.startHeartbeat(ws);
         this.state.connected = true;
         this.state.lostSince = null;
         this.state.lastError = null;
@@ -433,6 +470,7 @@ export class HaClient {
           }
         }
       } else if (msg.type === 'auth_invalid') {
+        this.authRejected = true;
         this.state.lastError = `Anmeldung abgelehnt: ${msg.message ?? 'unbekannt'}`;
       } else if (msg.type === 'result' && msg.id === 1) {
         this.state.subscribed = msg.success === true;
@@ -455,6 +493,7 @@ export class HaClient {
       this.state.lastError = `Verbindungsfehler: ${err.message}`;
     });
     ws.on('close', () => {
+      this.stopHeartbeat();
       if (this.state.connected || this.state.lostSince === null) this.state.lostSince = new Date().toISOString();
       this.state.connected = false;
       this.state.subscribed = false;
@@ -465,12 +504,46 @@ export class HaClient {
       }
       this.byId.clear();
       if (this.closed) return;
-      this.timer = setTimeout(() => this.connect(), this.reconnectDelayMs);
+      // Abgelehnte Anmeldung: nicht im Takt neu verbinden (das Token stimmt erst nach einer Änderung wieder); sonst wachsende Wartezeit
+      const delay = this.authRejected
+        ? (this.opts.authInvalidDelayMs ?? 300_000)
+        : backoffDelay(this.reconnectDelayMs, this.opts.maxReconnectDelayMs ?? Math.max(this.reconnectDelayMs, 60_000), this.failures);
+      this.authRejected = false;
+      this.failures += 1;
+      this.timer = setTimeout(() => this.connect(), delay);
     });
+  }
+
+  /** Alle 30 Sekunden ein ping; kommt kein pong, gilt die Verbindung als tot (halb offene Verbindungen melden sonst nie ein Ende) */
+  private startHeartbeat(ws: WebSocket): void {
+    this.stopHeartbeat();
+    const every = this.opts.heartbeatMs ?? 30_000;
+    const within = this.opts.heartbeatTimeoutMs ?? 10_000;
+    this.heartbeat = setInterval(() => {
+      if (ws.readyState !== ws.OPEN || this.heartbeatDeadline !== undefined) return; // das letzte ping ist noch unbeantwortet: seine Frist läuft
+      try {
+        ws.send(JSON.stringify({ id: this.nextId++, type: 'ping' }));
+      } catch {
+        return; // das close-Ereignis folgt
+      }
+      this.heartbeatDeadline = setTimeout(() => {
+        this.state.lastError = 'Heartbeat: keine Antwort von Home Assistant, die Verbindung wird neu aufgebaut';
+        ws.terminate();
+      }, within);
+    }, every);
+    this.heartbeat.unref?.();
+  }
+
+  private stopHeartbeat(): void {
+    clearInterval(this.heartbeat);
+    clearTimeout(this.heartbeatDeadline);
+    this.heartbeat = undefined;
+    this.heartbeatDeadline = undefined;
   }
 
   close(): void {
     this.closed = true;
+    this.stopHeartbeat();
     clearTimeout(this.timer);
     this.socket?.terminate();
   }

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { WebSocketServer, type WebSocket } from 'ws';
 import type { AddressInfo } from 'node:net';
-import { HaClient } from '../src/ha.js';
+import { backoffDelay, HaClient } from '../src/ha.js';
 
 async function waitFor(cond: () => boolean, timeoutMs = 3000): Promise<void> {
   const start = Date.now();
@@ -359,6 +359,88 @@ describe('HaClient WebSocket events', () => {
     ha.connect();
     await waitFor(() => connections >= 2);
     expect(connections).toBeGreaterThanOrEqual(2);
+  });
+
+  describe('Robustheit der Verbindung', () => {
+    it('Wartezeit vor dem Neuverbinden wächst und hat eine Obergrenze', () => {
+      expect([0, 1, 2, 3, 4, 5, 9].map((n) => backoffDelay(5000, 60_000, n))).toEqual([5000, 10_000, 20_000, 40_000, 60_000, 60_000, 60_000]);
+    });
+
+    it('Nachrichten, die kein JSON sind, werfen nicht und halten die Verbindung nicht auf (auch bei Einmal-Befehlen)', async () => {
+      const port = startServer((ws, msg) => {
+        if (msg.type === 'auth') {
+          ws.send('das ist kein json {');
+          ws.send(JSON.stringify({ type: 'auth_ok' }));
+        }
+        if (msg.type === 'ping_test') ws.send(JSON.stringify({ id: msg.id, type: 'result', success: true, result: 'ok' }));
+      });
+      ha = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}` });
+      ha.connect();
+      await waitFor(() => ha!.status().connected);
+      const other = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}` });
+      await expect(other.wsCommand('ping_test')).resolves.toBe('ok');
+    });
+
+    it('verbindet neu, wenn Home Assistant auf den Heartbeat nicht antwortet', async () => {
+      let connections = 0;
+      wss = new WebSocketServer({ port: 0 });
+      wss.on('connection', (ws) => {
+        connections += 1;
+        ws.send(JSON.stringify({ type: 'auth_required' }));
+        ws.on('message', (raw) => {
+          const msg = JSON.parse(raw.toString());
+          if (msg.type === 'auth') ws.send(JSON.stringify({ type: 'auth_ok' }));
+          // auf { type: 'ping' } antwortet dieser Server nie
+        });
+      });
+      const port = (wss.address() as AddressInfo).port;
+      ha = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}`, reconnectDelayMs: 20, heartbeatMs: 30, heartbeatTimeoutMs: 40 });
+      ha.connect();
+      await waitFor(() => connections >= 2);
+    });
+
+    it('ein beantworteter Heartbeat hält die Verbindung', async () => {
+      let connections = 0;
+      let pings = 0;
+      wss = new WebSocketServer({ port: 0 });
+      wss.on('connection', (ws) => {
+        connections += 1;
+        ws.send(JSON.stringify({ type: 'auth_required' }));
+        ws.on('message', (raw) => {
+          const msg = JSON.parse(raw.toString());
+          if (msg.type === 'auth') ws.send(JSON.stringify({ type: 'auth_ok' }));
+          if (msg.type === 'ping') {
+            pings += 1;
+            ws.send(JSON.stringify({ id: msg.id, type: 'pong' }));
+          }
+        });
+      });
+      const port = (wss.address() as AddressInfo).port;
+      ha = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}`, reconnectDelayMs: 20, heartbeatMs: 30, heartbeatTimeoutMs: 100 });
+      ha.connect();
+      await waitFor(() => pings >= 3);
+      expect(connections).toBe(1);
+    });
+
+    it('bei abgelehnter Anmeldung (auth_invalid) wird nicht im Takt neu verbunden', async () => {
+      let connections = 0;
+      wss = new WebSocketServer({ port: 0 });
+      wss.on('connection', (ws) => {
+        connections += 1;
+        ws.send(JSON.stringify({ type: 'auth_required' }));
+        ws.on('message', () => {
+          ws.send(JSON.stringify({ type: 'auth_invalid', message: 'Invalid access token' }));
+          ws.close();
+        });
+      });
+      const port = (wss.address() as AddressInfo).port;
+      ha = new HaClient({ baseUrl: 'http://x', token: 'T', wsUrl: `ws://127.0.0.1:${port}`, reconnectDelayMs: 20, authInvalidDelayMs: 2000 });
+      ha.connect();
+      await waitFor(() => connections >= 1);
+      await new Promise((r) => setTimeout(r, 300)); // mit der normalen Wartezeit wären es jetzt Dutzende
+      expect(connections).toBe(1);
+      expect(ha.status().lastError).toMatch(/Anmeldung abgelehnt/);
+    });
   });
 
   describe('Abos für Wächter', () => {

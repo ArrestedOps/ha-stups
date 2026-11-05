@@ -2,11 +2,14 @@
   export interface SegmentItem {
     id: string;
     label: string;
+    /** Symbol vor dem Text (Name aus Icon.svelte) */
+    icon?: string;
   }
 </script>
 
 <script lang="ts">
   import { scrollStrip } from '../../lib/scrollStrip';
+  import Icon from '../Icon.svelte';
 
   // Umschalter: aktives Segment mit Verlauf. `tabs` für Spalten und Reiter (role="tab"), sonst eine Auswahl (role="radio").
   // `scroll` für viele Einträge: sie bleiben lesbar und die Leiste wischt seitlich (statt gleich breiter Spalten).
@@ -17,6 +20,7 @@
     kind = 'choice',
     small = false,
     scroll = false,
+    large = false,
     onchange,
   }: {
     items: SegmentItem[];
@@ -25,6 +29,8 @@
     kind?: 'choice' | 'tabs';
     small?: boolean;
     scroll?: boolean;
+    /** Schrift 15 statt 14 px (Neue Aufgabe: Priorität) */
+    large?: boolean;
     onchange: (id: string) => void;
   } = $props();
 </script>
@@ -42,10 +48,10 @@
       role={kind === 'tabs' ? 'tab' : 'radio'}
       aria-selected={kind === 'tabs' ? on : undefined}
       aria-checked={kind === 'choice' ? on : undefined}
-      class="inline-flex min-h-0 items-center justify-center gap-1.5 rounded-[12px] text-[14px] whitespace-nowrap {scroll ? 'px-3' : 'px-0.5'} {scroll ? 'shrink-0 flex-1' : ''} {on ? 'bg-accent-grad glow-seg font-bold' : 'text-text-soft2'}"
+      class="inline-flex min-h-0 items-center justify-center gap-1.5 rounded-[12px] {large ? 'text-[15px]' : 'text-[14px]'} whitespace-nowrap {scroll ? 'px-3' : 'px-0.5'} {scroll ? 'shrink-0 flex-1' : ''} {on ? 'bg-accent-grad glow-seg font-bold' : 'text-text-soft2'}"
       onclick={() => onchange(item.id)}
     >
-      {item.label}
+      {#if item.icon}<Icon name={item.icon} size={16} stroke={2} />{/if}{item.label}
     </button>
   {/each}
 </div>

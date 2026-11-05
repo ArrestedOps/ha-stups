@@ -9,6 +9,31 @@ beforeEach(() => {
   store = createStore(openDb(':memory:'), { timeZone: () => 'Europe/Berlin' });
 });
 
+describe('S5: Verknüpfung eines Home-Assistant-Kontos mit einer vorhandenen Person', () => {
+  it('verknüpft über den Benutzernamen (den nur Administratoren ändern)', () => {
+    const mia = store.addPerson({ name: 'Mia' });
+    const u = store.resolveUser({ haId: 'ha-mia', name: 'mia', displayName: 'Beliebig' });
+    expect(u.id).toBe(mia.id);
+    expect(u.haUserId).toBe('ha-mia');
+  });
+
+  it('übernimmt keine Person, wenn nur der frei änderbare Anzeigename passt: das Konto wartet auf Freigabe', () => {
+    const mia = store.addPerson({ name: 'Mia' });
+    const u = store.resolveUser({ haId: 'ha-fremd', name: 'angreifer', displayName: 'mia' });
+    expect(u.id).not.toBe(mia.id);
+    expect(u.isPerson).toBe(false);
+    expect(store.userById(mia.id)!.haUserId).toBeNull();
+    expect(store.pendingUsers().map((x) => x.id)).toContain(u.id);
+    // Wer ihn später anmeldet, findet weiter nur das eigene Konto
+    expect(store.resolveUser({ haId: 'ha-fremd', name: 'angreifer', displayName: 'Mia' }).id).toBe(u.id);
+  });
+
+  it('bestehende Verknüpfungen bleiben, auch wenn sich der Anzeigename ändert', () => {
+    const mia = store.addPerson({ haUserId: 'ha-mia', name: 'Mia' });
+    expect(store.resolveUser({ haId: 'ha-mia', name: 'mia', displayName: 'Ganz anders' }).id).toBe(mia.id);
+  });
+});
+
 describe('Personen verwalten', () => {
   it('fügt eine Person mit Home-Assistant-Benutzer hinzu und vergibt eine Farbe', () => {
     const p = store.addPerson({ haUserId: 'ha-anna', name: 'Anna' });

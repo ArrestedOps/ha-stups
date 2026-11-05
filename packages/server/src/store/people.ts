@@ -115,10 +115,12 @@ export function createPeople(c: Ctx, late: unknown) {
       const byId = one('select * from users where ha_user_id = ?', who.haId);
       if (byId) return toUser(byId);
 
-      const names = [who.name, who.displayName].map((n) => n.trim().toLowerCase()).filter(Boolean);
-      const placeholder = all('select * from users where ha_user_id is null').find((u) =>
-        names.includes(u.name.toLowerCase()),
-      );
+      // Nur der Benutzername verknüpft von selbst (ihn ändern nur Administratoren). Den Anzeigenamen ändert jeder
+      // Home-Assistant-Nutzer im Profil: passt nur er, bleibt das Konto „Wartet auf Freigabe", bis ein Administrator zustimmt.
+      const username = who.name.trim().toLowerCase();
+      const placeholder = username
+        ? all('select * from users where ha_user_id is null').find((u) => u.name.toLowerCase() === username)
+        : undefined;
       if (placeholder) {
         run('update users set ha_user_id = ? where id = ?', who.haId, placeholder.id);
         return toUser(one('select * from users where id = ?', placeholder.id)!);

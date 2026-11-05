@@ -31,11 +31,11 @@ describe('users', () => {
     expect(again.id).toBe(rene.id);
   });
 
-  it('also matches by display name', () => {
+  it('does not link by display name alone (anyone can change it in their HA profile); the user waits for approval', () => {
     const s = createStore(openDb(':memory:'), { now: () => now });
     s.syncPeople([{ name: 'René' }]);
     const u = s.resolveUser({ haId: 'x', name: 'admin', displayName: 'rené' });
-    expect(u.isPerson).toBe(true);
+    expect(u.isPerson).toBe(false);
   });
 
   it('creates unknown users as non-people that cannot be assigned', () => {

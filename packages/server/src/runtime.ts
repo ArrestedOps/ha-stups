@@ -40,6 +40,11 @@ export interface Runtime {
   ha: HaConnection | null;
   /** Push über ntfy; im Add-on immer null (dort läuft Push über die Companion App) */
   ntfy: NtfyConfig | null;
+  /**
+   * Hinter einem Reverse Proxy: welcher Weiterleitung (X-Forwarded-For) Fastify glauben darf, damit die Sperre bei der Anmeldung
+   * die echte Adresse sieht (STUPS_TRUST_PROXY: Anzahl der Proxys, Adressen/Netze oder true). Standard: false (nur die Verbindung zählt).
+   */
+  trustProxy: boolean | number | string[];
   identity: {
     /** Wie sich Benutzer anmelden: über Ingress (Add-on, Entwicklung) oder mit eigenem Konto (Sitzungs-Cookie) */
     kind: 'ingress' | 'session';
@@ -54,6 +59,17 @@ export interface Runtime {
 }
 
 type Env = Record<string, string | undefined>;
+
+/** STUPS_TRUST_PROXY: leer/false = aus, true = jedem Proxy glauben (nur wenn Stups sonst nicht erreichbar ist), Zahl = so viele Proxys, sonst Liste von Adressen oder Netzen */
+export function parseTrustProxy(raw: string | undefined): boolean | number | string[] {
+  const v = raw?.trim();
+  if (!v || /^(false|0|no|off)$/i.test(v)) return false;
+  if (/^(true|yes|on)$/i.test(v)) return true;
+  if (/^[1-9]\d?$/.test(v)) return Number(v);
+  const list = v.split(',').map((x) => x.trim()).filter(Boolean);
+  if (list.every((x) => /^[0-9a-f:.]+(\/\d{1,3})?$/i.test(x) || /^(loopback|linklocal|uniquelocal)$/i.test(x))) return list;
+  throw new Error('STUPS_TRUST_PROXY muss die Anzahl der Proxys (zum Beispiel 1), eine Liste von Adressen oder Netzen (172.18.0.0/16) oder true sein');
+}
 
 const set = (v: string | undefined): string | undefined => (v !== undefined && v.trim() !== '' ? v.trim() : undefined);
 
@@ -172,6 +188,7 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
     options,
     ha,
     ntfy: ntfyFromEnv(own),
+    trustProxy: parseTrustProxy(own('TRUST_PROXY')),
     identity: {
       kind,
       bootstrap: kind === 'session' && adminUser !== undefined && adminPassword !== undefined ? { username: adminUser, password: adminPassword } : undefined,

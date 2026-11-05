@@ -12,7 +12,7 @@ const anna = as('ha-anna', 'Anna');
 let app: FastifyInstance;
 let calls: number;
 
-async function build(exportData?: () => { dir: string; bytes: number; files: boolean }) {
+async function build(exportData?: () => { dir: string; bytes: number; files: boolean; expiresAt: string }) {
   const store = createStore(openDb(':memory:'));
   store.addPerson({ haUserId: 'ha-anna', name: 'Anna' });
   calls = 0;
@@ -72,12 +72,12 @@ describe('POST /api/admin/watcher-probe', () => {
 });
 
 describe('POST /api/admin/export', () => {
-  beforeEach(() => build(() => ({ dir: '/share/stups-umzug', bytes: 1234, files: true })));
+  beforeEach(() => build(() => ({ dir: '/share/stups-umzug', bytes: 1234, files: true, expiresAt: '2026-11-02T10:00:00.000Z' })));
 
   it('Administratoren bekommen den Ort des Exports', async () => {
     const res = await post(chef);
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ dir: '/share/stups-umzug', bytes: 1234, files: true });
+    expect(res.json()).toEqual({ dir: '/share/stups-umzug', bytes: 1234, files: true, expiresAt: '2026-11-02T10:00:00.000Z' });
     expect(calls).toBe(1);
   });
 

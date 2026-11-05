@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveRuntime } from '../src/runtime.js';
+import { parseTrustProxy, resolveRuntime } from '../src/runtime.js';
 
 const files = (content: Record<string, Record<string, unknown>> = {}) => (path: string) => content[path] ?? {};
 
@@ -181,5 +181,20 @@ describe('Kanal (normale App oder Beta)', () => {
     expect(resolveRuntime({ SUPERVISOR_TOKEN: 'abc', STUPS_CHANNEL: 'beta' }, files())).toMatchObject({ mode: 'addon', channel: 'beta' });
     expect(resolveRuntime({ STUPS_CHANNEL: 'beta' }, files()).channel).toBe('beta');
     expect(resolveRuntime({ HA_URL: 'http://ha:8123', HA_TOKEN: 'x', STUPS_CHANNEL: 'beta' }, files())).toMatchObject({ mode: 'standalone-ha', channel: 'beta' });
+  });
+});
+
+
+describe('STUPS_TRUST_PROXY', () => {
+  it('Standard aus; Zahl, Liste von Netzen oder true; Unsinn wird gemeldet; im Add-on wirkungslos', () => {
+    expect(parseTrustProxy(undefined)).toBe(false);
+    expect(parseTrustProxy('false')).toBe(false);
+    expect(parseTrustProxy('1')).toBe(1);
+    expect(parseTrustProxy('true')).toBe(true);
+    expect(parseTrustProxy('172.18.0.0/16, 10.0.0.5')).toEqual(['172.18.0.0/16', '10.0.0.5']);
+    expect(parseTrustProxy('loopback')).toEqual(['loopback']);
+    expect(() => parseTrustProxy('irgendwas')).toThrow(/STUPS_TRUST_PROXY/);
+    expect(resolveRuntime({ STUPS_TRUST_PROXY: '1' }, () => ({})).trustProxy).toBe(1);
+    expect(resolveRuntime({ SUPERVISOR_TOKEN: 'x', STUPS_TRUST_PROXY: '1' }, () => ({})).trustProxy).toBe(false);
   });
 });

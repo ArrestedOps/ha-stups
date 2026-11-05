@@ -76,15 +76,28 @@ export async function clientGuard(app: FastifyInstance): Promise<void> {
 const WINDOW_MS = 15 * 60_000;
 const FREE_TRIES = 5;
 const MAX_LOCK_MS = 30 * 60_000;
+/** Konto: nach fünf Versuchen in 15 Minuten warten weitere nacheinander; je Versuch wächst die Wartezeit bis zu dieser Obergrenze */
+const ACCOUNT_STEP_MS = 500;
+const ACCOUNT_MAX_DELAY_MS = 8_000;
+/** Wartet ein Versuch länger als das, wird er abgewiesen (Staugrenze), damit nicht beliebig viele Anfragen hängen */
+const ACCOUNT_MAX_QUEUE_MS = 15_000;
+const MAX_ENTRIES = 5_000;
 
-/** Nach fünf Fehlversuchen wartet man eine Minute, jeder weitere verdoppelt die Wartezeit (höchstens 30 Minuten) */
+/**
+ * Je Adresse (`ip:`-Schlüssel): nach fünf Fehlversuchen wartet man eine Minute, jeder weitere verdoppelt die Wartezeit (höchstens 30 Minuten).
+ * Je Konto (`reserve`): keine Sperre, nur Verzögerung. Wer ein Konto von vielen Adressen aus beschießt, kann den Besitzer
+ * nicht aussperren; er bremst nur sich selbst: ab dem sechsten Versuch in 15 Minuten kommen die Versuche nacheinander im Abstand
+ * von 0,5 bis höchstens 8 Sekunden an die Reihe (bei mehr als 15 Sekunden Stau wird abgewiesen). Ein richtiges Passwort setzt zurück.
+ */
 export function createLoginLimiter(now: () => number = Date.now) {
   const entries = new Map<string, { fails: number; firstAt: number; lockedUntil: number }>();
+  const accounts = new Map<string, { attempts: number; firstAt: number; nextFreeAt: number }>();
 
   function prune(): void {
     if (entries.size < 1000) return;
     const t = now();
     for (const [k, e] of entries) if (e.lockedUntil < t && t - e.firstAt > WINDOW_MS) entries.delete(k);
+    while (entries.size >= MAX_ENTRIES) entries.delete(entries.keys().next().value as string);
   }
 
   return {
@@ -107,7 +120,34 @@ export function createLoginLimiter(now: () => number = Date.now) {
       }
     },
     success(keys: string[]): void {
-      for (const k of keys) entries.delete(k);
+      for (const k of keys) {
+        entries.delete(k);
+        accounts.delete(k);
+      }
+    },
+    /**
+     * Reiht einen Versuch an einem Konto ein. `delayMs`: so lange vor der Prüfung warten (0 = sofort);
+     * `retryAfter`: Sekunden, nach denen es sich lohnt, es noch einmal zu versuchen (der Versuch zählt dann nicht).
+     */
+    reserve(key: string): { delayMs: number } | { retryAfter: number } {
+      const t = now();
+      let e = accounts.get(key);
+      if (!e || t - e.firstAt > WINDOW_MS) {
+        while (accounts.size >= MAX_ENTRIES) accounts.delete(accounts.keys().next().value as string);
+        e = { attempts: 0, firstAt: t, nextFreeAt: 0 };
+      }
+      if (e.attempts < FREE_TRIES) {
+        e.attempts += 1;
+        accounts.set(key, e);
+        return { delayMs: 0 };
+      }
+      const start = Math.max(t, e.nextFreeAt);
+      const delayMs = start - t;
+      if (delayMs > ACCOUNT_MAX_QUEUE_MS) return { retryAfter: Math.ceil((delayMs - ACCOUNT_MAX_QUEUE_MS) / 1000) + 1 };
+      e.attempts += 1;
+      e.nextFreeAt = start + Math.min(ACCOUNT_MAX_DELAY_MS, ACCOUNT_STEP_MS * 2 ** (e.attempts - FREE_TRIES - 1));
+      accounts.set(key, e);
+      return { delayMs };
     },
   };
 }
@@ -184,6 +224,8 @@ export interface AuthRoutesDeps {
   secureCookie: boolean;
   /** Anmeldung mit Passkey, wenn STUPS_PUBLIC_URL dafür taugt */
   passkeys?: Passkeys;
+  /** Wartet die Verzögerung je Konto ab (Tests setzen eine Attrappe) */
+  sleep?: (ms: number) => Promise<void>;
 }
 
 function body(req: FastifyRequest): Record<string, unknown> {
@@ -197,6 +239,7 @@ export const publicAccount = (a: Account) => ({ username: a.username, displayNam
 
 export async function authRoutes(app: FastifyInstance, deps: AuthRoutesDeps): Promise<void> {
   const { accounts, limiter, setup } = deps;
+  const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((done) => setTimeout(done, ms)));
 
   const cookie = (token: string, maxAgeSec: number): string =>
     `${COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSec}${deps.secureCookie ? '; Secure' : ''}`;
@@ -225,17 +268,24 @@ export async function authRoutes(app: FastifyInstance, deps: AuthRoutesDeps): Pr
   app.post('/api/auth/login', async (req, reply) => {
     const b = body(req);
     const username = typeof b.username === 'string' ? b.username.trim().toLowerCase() : '';
-    const keys = [`ip:${req.ip}`, `user:${username}`];
-    const wait = limiter.wait(keys);
+    const ipKey = [`ip:${req.ip}`];
+    const userKey = `user:${username}`;
+    const wait = limiter.wait(ipKey);
     if (wait > 0) {
       return reply.code(429).header('retry-after', String(wait)).send({ error: `Zu viele Versuche. Bitte in ${wait} Sekunden noch einmal.`, retryAfter: wait });
     }
+    // Je Konto nur Verzögerung, keine Sperre: so kann niemand den Besitzer von allen Adressen aussperren
+    const slot = limiter.reserve(userKey);
+    if ('retryAfter' in slot) {
+      return reply.code(429).header('retry-after', String(slot.retryAfter)).send({ error: `Zu viele Versuche. Bitte in ${slot.retryAfter} Sekunden noch einmal.`, retryAfter: slot.retryAfter });
+    }
+    if (slot.delayMs > 0) await sleep(slot.delayMs);
     const account = await accounts.verify(b.username, b.password);
     if (!account) {
-      limiter.fail(keys);
+      limiter.fail(ipKey);
       return reply.code(401).send({ error: 'Benutzername oder Passwort stimmt nicht' });
     }
-    limiter.success(keys);
+    limiter.success([...ipKey, userKey]);
     startSession(reply, account.userId);
     return { authenticated: true, setupRequired: false, user: publicAccount(account) };
   });

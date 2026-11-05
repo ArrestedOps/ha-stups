@@ -26,6 +26,8 @@ let accounts: Accounts;
 let setup: Setup;
 let logs: string[];
 let tick: number;
+let slept: number[];
+let sleepAdvancesClock = true;
 
 async function build(opts: { secureCookie?: boolean; bootstrap?: { username: string; password: string } } = {}) {
   const db = openDb(':memory:');
@@ -33,12 +35,13 @@ async function build(opts: { secureCookie?: boolean; bootstrap?: { username: str
   accounts = createAccounts(db, store);
   logs = [];
   tick = 1_000_000;
+  slept = [];
   setup = createSetup({ accounts, log: { info: (m) => logs.push(m), warn: (m) => logs.push(m) }, bootstrap: opts.bootstrap, publicUrl: 'https://stups.example.org' });
   await setup.init();
   app = Fastify();
   await app.register(clientGuard);
   await app.register(identityAuth, { identity: createSessionIdentity({ accounts }) });
-  await app.register(authRoutes, { accounts, limiter: createLoginLimiter(() => tick), setup, secureCookie: opts.secureCookie ?? false });
+  await app.register(authRoutes, { accounts, limiter: createLoginLimiter(() => tick), setup, secureCookie: opts.secureCookie ?? false, sleep: async (ms) => { slept.push(ms); if (sleepAdvancesClock) tick += ms; } });
   await app.register(apiRoutes, { store, accounts, access: createAccess({ store, directory: createLocalDirectory(accounts) }) });
   app.get('/index.html', async () => 'seite');
 }
@@ -251,10 +254,33 @@ describe('Anmelden und Abmelden', () => {
     expect(Number(res.headers['retry-after'])).toBe(120);
   });
 
-  it('die Sperre gilt je Benutzername auch von anderen Adressen', async () => {
-    for (let i = 0; i < 5; i += 1) await login('anna', 'falsch-falsch-falsch', { ip: `10.1.1.${i}` });
-    expect((await login('anna', PW, { ip: '10.9.9.9' })).statusCode).toBe(429);
-    expect((await login('anna', PW, { ip: '10.9.9.9' })).headers['retry-after']).toBeDefined();
+  it('S8: ein Konto wird nicht gesperrt, nur verzögert: der Besitzer kommt mit dem richtigen Passwort auch während eines Angriffs hinein', async () => {
+    for (let i = 0; i < 12; i += 1) expect((await login('anna', 'falsch-falsch-falsch', { ip: `10.1.1.${i}` })).statusCode).toBe(401);
+    // Zehn Fehlversuche von zehn Adressen sperren das Konto nicht von der eigenen Adresse aus: sie warten nur
+    const ok = await login('anna', PW, { ip: '10.9.9.9' });
+    expect(ok.statusCode).toBe(200);
+    expect(slept.length).toBeGreaterThan(0);
+    expect(slept.every((ms) => ms <= 8000)).toBe(true); // Obergrenze je Versuch
+  });
+
+  it('S8: die Verzögerung je Konto wächst, hat eine Obergrenze, und viele gleichzeitige Versuche stauen sich auf statt zu überholen', async () => {
+    for (let i = 0; i < 5; i += 1) await login('anna', 'falsch-falsch-falsch', { ip: `10.4.4.${i}` });
+    expect(slept).toEqual([]); // die ersten fünf sind frei
+    const delays: number[] = [];
+    for (let i = 0; i < 8; i += 1) {
+      slept.length = 0;
+      await login('anna', 'falsch-falsch-falsch', { ip: `10.5.5.${i}` });
+      delays.push(slept[0] ?? 0);
+    }
+    expect(delays[1]!).toBeGreaterThan(0);
+    expect(delays.every((d) => d <= 8000)).toBe(true);
+    // Wer weiter schickt, ohne zu warten, bekommt eine Wartezeit statt einer Antwort (Staugrenze), das Konto bleibt aber nutzbar
+    sleepAdvancesClock = false; // die Wartenden bleiben wirklich gleichzeitig im Stau
+    const flood = await Promise.all(Array.from({ length: 30 }, (_, i) => login('anna', 'falsch-falsch-falsch', { ip: `10.6.6.${i}` })));
+    sleepAdvancesClock = true;
+    expect(flood.filter((r) => r.statusCode === 429).length).toBeGreaterThan(0);
+    tick += 60_000; // nach einer Weile ist alles abgebaut
+    expect((await login('anna', PW, { ip: '10.7.7.7' })).statusCode).toBe(200);
   });
 
   it('die Sperre gilt je Adresse auch für andere Namen', async () => {

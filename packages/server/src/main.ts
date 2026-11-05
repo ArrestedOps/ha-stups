@@ -41,7 +41,7 @@ import { ensureWebsocket } from './ws.js';
 const runtime = resolveRuntime(process.env);
 const { dataDir, shareDir, port, options } = runtime;
 
-const app = Fastify({ logger: { level: options.logLevel } });
+const app = Fastify({ logger: { level: options.logLevel }, trustProxy: runtime.trustProxy as boolean });
 // Sprache der Meldungen: je Anfrage aus den Kopfzeilen (die App sendet X-Stups-Language), sonst Englisch
 setDefaultLanguage('en');
 registerLanguageHook(app);

@@ -48,7 +48,7 @@ describe('Form von Store und API', () => {
       files: {} as never,
       watchers: {} as never,
       watcherData: {} as never,
-      exportData: () => ({ dir: '', bytes: 0, files: false }),
+      exportData: () => ({ dir: '', bytes: 0, files: false, expiresAt: '' }),
       push: {} as never,
       ntfy: { url: 'https://ntfy.example.org', roundTrip: () => null },
       ha: { listDashboards: async () => [], probeWatchers: async () => ({}) as never, getStates: async () => [] },

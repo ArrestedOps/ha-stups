@@ -90,7 +90,7 @@ Zwei Personen, jede mit dem eigenen Handy.
 - [ ] **Ruhezeit:** Einstellungen › Personen & Zugriff › Person antippen: „Ruhezeit für Stupse". Beginn auf kurz vor jetzt stellen und stupsen: Das Fenster sagt „wird um … zugestellt", die Nachricht kommt erst dann
 - [ ] **Abzeichen und Filter:** Die gestupste Person sieht an der Karte „Anna stupst dich", die Absenderin „Du hast Ben gestupst". Der Filter „Gestupst" zeigt nur gestupste Karten. Alles ohne Neuladen
 
-## 9 · Personen und Zugriff
+## 9 · Personen & Zugriff
 
 - [ ] Einstellungen › Personen & Zugriff: Personen mit ihren Push-Geräten, Zugriff „Alle in Home Assistant" oder „Nur diese Personen"
 - [ ] **Push-Geräte:** Geräte ankreuzen und abwählen, dann die Test-Nachricht senden: Sie kommt nur auf den angekreuzten Geräten an
@@ -498,7 +498,7 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Zeile **Tageszusammenfassung** (Administrator mit Push) zeigt die Uhrzeit, die Seite ändert sie und „Zurücksetzen“ stellt die Option der App wieder her. Die Zusammenfassung kommt zur neuen Uhrzeit
 - [ ] Home Assistant: „Zurück zum Dashboard“, „HA-Kopfzeile ausblenden“ als Schalter, „Dashboard-Button“ mit Vorschau („n heute fällig • m überfällig“), YAML (Beta: `sensor.stups_beta_heute_faellig`) und „YAML kopieren“
 - [ ] Daten: Papierkorb, Archiv, Umzug („Export“ nach /share/stups-umzug)
-- [ ] **Personen und Zugriff:** Zugriff als Umschalter, Personen mit Foto, Admin-Abzeichen, Geräten, Ruhezeit; Antippen klappt Name, Geräte (Schalter), Ruhezeit, Zusammenfassung, Haus, Rolle Kind (Schalter) auf. „Wartet auf Freigabe“ (gestrichelt) mit „Freigeben“, „Person hinzufügen“
+- [ ] **Personen & Zugriff:** Zugriff als Umschalter, Personen mit Foto, Admin-Abzeichen, Geräten, Ruhezeit; Antippen klappt Name, Geräte (Schalter), Ruhezeit, Zusammenfassung, Haus, Rolle Kind (Schalter) auf. „Wartet auf Freigabe“ (gestrichelt) mit „Freigeben“, „Person hinzufügen“
 - [ ] **Warum kommt nichts an?** öffnet gleich mit dem Stand: Verbindung, pro Person „x / y“ (grün, orange „Ruhe“, rot bei 0), Banner mit der Lösung bei einer Person ohne erreichbares Gerät, „Zuletzt gesendet“ mit Zeit und Ergebnis, darunter die Einzelheiten. Kind: Seite nicht erreichbar
 - [ ] Alle früheren Auswahlfelder sind Schalter (Wächter aktiv, Beta-Wächter, Täglich nachhaken, Geräte, Ruhezeit, Zusammenfassung, Haus-Kanäle, Kind, Bestätigung, Administrator); nur die Übernahme-Liste der Wiederholung bleibt ein Kontrollkästchen
 

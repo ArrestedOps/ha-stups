@@ -95,7 +95,7 @@ test('Einrichten in den Einstellungen: Sprachdienst wählen, Ansage-Kanal anlege
   await tts.selectOption('tts.piper');
   await expect(tts).toHaveValue('tts.piper');
   await page.getByRole('button', { name: 'Zurück zu den Einstellungen' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /Personen und Zugriff/ }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Personen & Zugriff/ }).click();
   await expect(page.getByRole('radiogroup', { name: 'Zugriff' })).toBeVisible();
 
   await page.getByRole('dialog').getByRole('button', { name: /Conny.*Push-Gerät/ }).click();
@@ -184,7 +184,7 @@ test('Ein Mitglied sieht den Haus-Block nicht und darf die Schnittstelle nicht b
     await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
     const settings = page.getByRole('dialog');
     await expect(settings.getByRole('button', { name: 'Sprache und Farbe' })).toBeVisible();
-    await expect(settings.getByRole('button', { name: /Personen und Zugriff/ })).toHaveCount(0);
+    await expect(settings.getByRole('button', { name: /Personen & Zugriff/ })).toHaveCount(0);
     await expect(settings.getByRole('button', { name: 'Ansage und Lampe' })).toHaveCount(0);
     await expect(page.locator('[data-testid^=house-]')).toHaveCount(0);
   } finally {

@@ -52,7 +52,7 @@ On first start the log shows a line like
 Einrichtung: Öffne http://192.168.1.20:8099 und gib diesen Code ein: K7Q4-MX2P
 ```
 
-(setup: open the address and enter this code). Open the address in the browser, enter the code and create the first administrator (username, name, password with at least 10 characters). After that, setup is closed for good. You create more users under **Settings › Household › People and access › Create user**.
+(setup: open the address and enter this code). Open the address in the browser, enter the code and create the first administrator (username, name, password with at least 10 characters). After that, setup is closed for good. You create more users under **Settings › Household › People & access › Create user**.
 
 Instead of the code you can also put the first administrator right into the compose file (take the password out again afterwards, it is only needed at the very first start):
 
@@ -121,7 +121,7 @@ Without Home Assistant there is no Companion App. Stups sends reminders, nudges 
       # STUPS_NTFY_PASSWORD: "…"
 ```
 
-3. In Stups, under **Settings › For me › Notifications**, enter a topic under **Push via ntfy** (administrators do it for others under **Household › People and access**) (**Random topic** creates one). In the ntfy app use the same server and subscribe to this topic.
+3. In Stups, under **Settings › For me › Notifications**, enter a topic under **Push via ntfy** (administrators do it for others under **Household › People & access**) (**Random topic** creates one). In the ntfy app use the same server and subscribe to this topic.
 4. Under **Settings › For me › Notifications › Send to me** send a test message.
 
 **Important**

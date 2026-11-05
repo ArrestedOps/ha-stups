@@ -6,7 +6,7 @@
   import CtaButton from './ui/CtaButton.svelte';
 </script>
 
-<main class="mx-auto flex h-full max-w-[420px] flex-col gap-4 px-5 pt-[calc(var(--safe-top)+56px)] pb-[var(--pad-bottom)]" data-testid="no-access">
+<main class="mx-auto flex h-full max-w-[420px] flex-col gap-4 px-5 pt-[calc(var(--safe-top)+56px)] pb-[calc(var(--pad-bottom)+10px)]" data-testid="no-access">
   <div class="flex h-11 items-center px-0.5">
     <img src={logo} alt="Stups" class="block h-8 w-8 rounded-lg" width="32" height="32" />
     <span class="ml-2 text-[24px] font-extrabold tracking-tight">stups<span class="text-brand-dot">.</span></span>

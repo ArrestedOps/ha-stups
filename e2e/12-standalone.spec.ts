@@ -112,7 +112,7 @@ test('Anmelden, Karte anlegen, nach dem Neuladen noch angemeldet; Abmelden sperr
 test('Administrator legt Ben an; Ben meldet sich an und sieht keine Verwaltung', async ({ page, browser, baseURL }) => {
   await melden(page, 'anna', PW);
   const dialog = await einstellungen(page);
-  await dialog.getByRole('button', { name: 'Personen und Zugriff' }).click();
+  await dialog.getByRole('button', { name: 'Personen & Zugriff' }).click();
 
   const form = page.getByRole('form', { name: 'Benutzer anlegen' });
   await form.getByLabel('Name der neuen Person').fill('Ben');
@@ -135,7 +135,7 @@ test('Administrator legt Ben an; Ben meldet sich an und sieht keine Verwaltung',
 
     const d = await einstellungen(ben);
     // ein Mitglied sieht keine Verwaltung der Personen
-    await expect(d.getByRole('button', { name: 'Personen und Zugriff' })).toHaveCount(0);
+    await expect(d.getByRole('button', { name: 'Personen & Zugriff' })).toHaveCount(0);
     await expect(ben.getByRole('form', { name: 'Benutzer anlegen' })).toHaveCount(0);
     // die Verwaltung der Benutzer ist auch per API zu
     expect((await ctx.request.get('/api/auth/users')).status()).toBe(403);

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from '../lib/i18n/index.svelte';
+  import { numberLocale, t } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, type PasskeyInfo } from '../lib/api';
   import { createPasskey, passkeyErrorText } from '../lib/passkeys';
@@ -20,7 +20,7 @@
   });
 
   const TONES: TileColor[] = ['orange', 'blue', 'teal', 'violet'];
-  const day = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const day = (iso: string) => new Date(iso).toLocaleDateString(numberLocale(), { day: 'numeric', month: 'short' });
 
   function startAdding() {
     name = '';

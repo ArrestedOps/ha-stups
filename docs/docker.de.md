@@ -52,7 +52,7 @@ Beim ersten Start steht im Protokoll eine Zeile wie
 Einrichtung: Öffne http://192.168.1.20:8099 und gib diesen Code ein: K7Q4-MX2P
 ```
 
-Öffne die Adresse im Browser, gib den Code ein und lege den ersten Administrator an (Benutzername, Name, Passwort mit mindestens 10 Zeichen). Danach ist die Einrichtung für immer geschlossen. Weitere Benutzer legst du unter **Einstellungen › Haushalt › Personen und Zugriff › Benutzer anlegen** an.
+Öffne die Adresse im Browser, gib den Code ein und lege den ersten Administrator an (Benutzername, Name, Passwort mit mindestens 10 Zeichen). Danach ist die Einrichtung für immer geschlossen. Weitere Benutzer legst du unter **Einstellungen › Haushalt › Personen & Zugriff › Benutzer anlegen** an.
 
 Statt des Codes kannst du den ersten Administrator auch gleich in die Compose-Datei schreiben (nimm danach das Passwort wieder heraus, es wird nur beim allerersten Start gebraucht):
 
@@ -121,7 +121,7 @@ Ohne Home Assistant gibt es keine Companion App. Stups schickt Erinnerungen, Stu
       # STUPS_NTFY_PASSWORD: "…"
 ```
 
-3. In Stups unter **Einstellungen › Für mich › Benachrichtigungen** bei **Push über ntfy** ein Thema eintragen (Administratoren tragen es für andere unter **Haushalt › Personen und Zugriff** ein) (**Zufälliges Thema** erzeugt eines). In der ntfy-App denselben Server verwenden und dieses Thema abonnieren.
+3. In Stups unter **Einstellungen › Für mich › Benachrichtigungen** bei **Push über ntfy** ein Thema eintragen (Administratoren tragen es für andere unter **Haushalt › Personen & Zugriff** ein) (**Zufälliges Thema** erzeugt eines). In der ntfy-App denselben Server verwenden und dieses Thema abonnieren.
 4. Unter **Einstellungen › Für mich › Benachrichtigungen › An mich senden** eine Test-Nachricht schicken.
 
 **Wichtig**

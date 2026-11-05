@@ -168,7 +168,7 @@
   </form>
 {/snippet}
 
-<Sheet title={t('Personen und Zugriff')} onclose={closeSheet}>
+<Sheet title={t('Personen & Zugriff')} onclose={closeSheet}>
   {#snippet left()}
     <button class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" onclick={() => openSettings()} aria-label={t('Zurück zu den Einstellungen')}>{t('Zurück')}</button>
   {/snippet}

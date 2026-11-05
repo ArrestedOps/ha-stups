@@ -87,7 +87,7 @@ test('Erster Start mit Home Assistant: Einrichtung, dann Wächter-Reiter und Ver
 test('Personen aus Home Assistant werden vorgeschlagen; Ben kommt dazu und wählt sein Handy', async ({ page }) => {
   await anmelden(page);
   const dialog = await einstellungen(page);
-  await dialog.getByRole('button', { name: 'Personen und Zugriff' }).click();
+  await dialog.getByRole('button', { name: 'Personen & Zugriff' }).click();
 
   const group = page.getByRole('heading', { name: 'Aus Home Assistant' });
   await expect(group).toBeVisible();

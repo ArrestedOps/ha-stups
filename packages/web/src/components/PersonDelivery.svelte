@@ -8,7 +8,7 @@
   /**
    * Wie die Nachrichten bei einer Person ankommen: ntfy-Thema, Push-Geräte der Companion App, Ruhezeit für Stupse und die Zusammenfassung
    * am Sonntag. Dieselben Felder erscheinen bei einem selbst (Einstellungen › Benachrichtigungen) und für Administratoren bei jeder
-   * Person (Personen und Zugriff). `run` führt die Änderung aus und lädt danach neu (siehe PeopleSheet und NotificationsPage).
+   * Person (Personen & Zugriff). `run` führt die Änderung aus und lädt danach neu (siehe PeopleSheet und NotificationsPage).
    */
   let {
     p,

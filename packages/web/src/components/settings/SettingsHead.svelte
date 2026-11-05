@@ -10,7 +10,7 @@
   let busy = $state(false);
   const me = $derived(ui.me);
   const origin = $derived(me?.avatarSource === 'ha' ? t('Bild aus Home Assistant') : me?.avatarSource === 'upload' ? t('Eigenes Bild') : t('Noch kein Bild'));
-  // Ein Kind ändert sein Bild nicht selbst (der Administrator tut es unter Personen und Zugriff)
+  // Ein Kind ändert sein Bild nicht selbst (der Administrator tut es unter Personen & Zugriff)
   const canChange = $derived(!ui.isChild);
 
   async function pick(e: Event & { currentTarget: HTMLInputElement }) {

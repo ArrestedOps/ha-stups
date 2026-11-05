@@ -66,7 +66,7 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
       id: 'household',
       title: t('Haushalt'),
       pages: [
-        ...page('people', t('Personen und Zugriff'), 'user', admin),
+        ...page('people', t('Personen & Zugriff'), 'user', admin),
         ...page('watchers', t('Wächter'), 'eye', admin && ctx.watchers),
         ...page('templates', t('Vorlagen'), 'columns', admin),
         ...page('icons', t('Symbole'), 'spark', admin),

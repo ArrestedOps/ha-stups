@@ -807,7 +807,7 @@ export const en: Catalog = {
   'Hilfe und Daten': 'Help and data',
   'Sprache und Farbe': 'Language and colour',
   'Konto und Anmeldung': 'Account and sign-in',
-  'Personen und Zugriff': 'People and access',
+  'Personen & Zugriff': 'People & access',
   'Termine': 'Dates',
   'Dashboard und Kopfzeile': 'Dashboard and header',
   'Ansage und Lampe': 'Announcements and lamp',

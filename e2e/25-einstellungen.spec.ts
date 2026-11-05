@@ -25,7 +25,7 @@ test('Übersicht: Gruppen für den Administrator, jede Seite öffnet und führt 
   await expect(d.getByText(/Angemeldet als/)).toBeVisible();
   await expect(d.getByRole('link', { name: 'Diagnose-Seite' })).toBeVisible();
 
-  for (const page_ of ['Benachrichtigungen', 'Sprache und Farbe', 'Personen und Zugriff', 'Vorlagen', 'Termine', 'Dashboard und Kopfzeile', 'Dashboard-Button', 'Tageszusammenfassung', 'Warum kommt nichts an?', 'Papierkorb, Archiv, Umzug']) {
+  for (const page_ of ['Benachrichtigungen', 'Sprache und Farbe', 'Personen & Zugriff', 'Vorlagen', 'Termine', 'Dashboard und Kopfzeile', 'Dashboard-Button', 'Tageszusammenfassung', 'Warum kommt nichts an?', 'Papierkorb, Archiv, Umzug']) {
     await d.getByRole('button', { name: page_ }).click();
     await expect(d.getByRole('button', { name: 'Zurück zu den Einstellungen' })).toBeVisible();
     await back(page);

@@ -77,7 +77,7 @@ test('Einrichtung: der Administrator macht eine Person zum Kind, ein Administrat
 
   await openBoards(page);
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Personen und Zugriff' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Personen & Zugriff' }).click();
   await page.getByRole('dialog').getByRole('button', { name: new RegExp(KID) }).click();
   const setup = page.getByTestId('child-setup');
   await setup.scrollIntoViewIfNeeded();
@@ -107,7 +107,7 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
     await sheet.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     const settings = page.getByRole('dialog');
     await expect(settings.getByRole('button', { name: 'Sprache und Farbe' })).toBeVisible();
-    await expect(settings.getByRole('button', { name: 'Personen und Zugriff' })).toHaveCount(0);
+    await expect(settings.getByRole('button', { name: 'Personen & Zugriff' })).toHaveCount(0);
     await expect(settings.getByText('Benachrichtigungen')).toHaveCount(0);
     await settings.getByRole('button', { name: 'Sprache und Farbe' }).click();
     await expect(settings.getByTestId('accent-wheel')).toBeVisible();

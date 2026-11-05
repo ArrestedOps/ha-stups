@@ -39,7 +39,7 @@
       <p class="text-[14px] leading-[1.5] text-fg2">{c.text}</p>
       <div class="mt-2 grid w-full grid-cols-2 gap-2">
         <button class="border-line-chip h-[50px] rounded-[14px] border bg-surface2 text-[15px] font-bold" onclick={close}>{t('Abbrechen')}</button>
-        <button class="h-[50px] rounded-[14px] bg-danger text-[15px] font-bold text-on-danger shadow-[0_6px_20px_color-mix(in_srgb,var(--danger)_35%,transparent)]" onclick={ok}>{c.label}</button>
+        <button class="bg-danger-grad h-[50px] rounded-[14px] text-[15px] font-bold shadow-[0_6px_20px_color-mix(in_srgb,var(--danger)_35%,transparent)]" onclick={ok}>{c.label}</button>
       </div>
     </div>
   </div>

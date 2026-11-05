@@ -53,7 +53,7 @@
   }
 </script>
 
-<main class="relative mx-auto flex min-h-full max-w-[420px] flex-col gap-3.5 overflow-hidden px-5 pt-[calc(var(--safe-top)+72px)] pb-10" data-testid={setup ? 'setup' : 'login'}>
+<main class="relative mx-auto flex min-h-full max-w-[420px] flex-col gap-3.5 overflow-hidden px-5 pt-[calc(var(--safe-top)+96px)] pb-10" data-testid={setup ? 'setup' : 'login'}>
   <div class="pointer-events-none absolute -top-[120px] left-1/2 -ml-[210px] h-[320px] w-[420px] rounded-full" style="background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 28%, transparent), transparent)" aria-hidden="true"></div>
   <img src={logo} alt="Stups" class="relative z-[1] mx-auto block h-[88px] w-[88px] rounded-[22px] shadow-[0_10px_30px_rgba(0,0,0,0.5)]" width="88" height="88" />
   <h1 class="relative z-[1] mt-1 text-center text-[34px] leading-tight font-extrabold tracking-tight">stups<span class="text-brand-dot">.</span></h1>

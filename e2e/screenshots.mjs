@@ -362,7 +362,7 @@ const screens = [
     await page.getByRole('tab', { name: re(S.open) }).click();
     await page.getByText(S.tax).first().click();
     await page.getByTestId('created-note').waitFor();
-    await page.getByRole('button', { name: S.attachment1 }).click();
+    await page.getByRole('button', { name: new RegExp(`^${S.attachment1} ${x('ansehen', 'view')}`) }).click();
     await page.getByRole('dialog', { name: S.attachment1 }).waitFor();
   }],
   ['diese-woche', async (page) => {

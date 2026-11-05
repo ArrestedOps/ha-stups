@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Toggle from './ui/Toggle.svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { api, ApiError, type WatcherActivity, type WatcherItem } from '../lib/api';
   import { formatDue } from '../lib/datetime';
@@ -106,13 +107,7 @@
               </span>
             </button>
             {#if admin}
-              <input
-                type="checkbox"
-                class="mt-1 h-6 w-6 shrink-0 accent-[var(--accent)]"
-                checked={w.active}
-                aria-label={t('{name} aktiv', { name: w.name })}
-                onchange={() => toggle(w)}
-              />
+              <Toggle checked={w.active} label={t('{name} aktiv', { name: w.name })} onchange={() => toggle(w)} />
             {/if}
           </div>
 

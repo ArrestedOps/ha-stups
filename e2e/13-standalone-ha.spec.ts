@@ -89,7 +89,7 @@ test('Personen aus Home Assistant werden vorgeschlagen; Ben kommt dazu und wähl
   const dialog = await einstellungen(page);
   await dialog.getByRole('button', { name: 'Personen und Zugriff' }).click();
 
-  const group = page.getByText('Aus Home Assistant', { exact: true });
+  const group = page.getByRole('heading', { name: 'Aus Home Assistant' });
   await expect(group).toBeVisible();
   // Anna gibt es schon (gleicher Name), Ben fehlt noch
   const row = page.locator('div', { has: page.getByText('Ben', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Hinzufügen' }) }).last();

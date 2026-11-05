@@ -45,7 +45,7 @@
     <Avatar person={me} size={56} />
     <div class="min-w-0 flex-1">
       <p class="truncate text-[17px] font-bold tracking-tight">{me.displayName}</p>
-      <p class="mt-0.5 text-[13px] text-fg2" data-testid="avatar-origin">{origin}{#if ui.isAdmin && !ui.isChild} • {t('Administrator')}{/if}</p>
+      <p class="mt-0.5 text-[13px] text-fg2" data-testid="avatar-origin">{origin}{#if ui.isAdmin && !ui.isChild}&nbsp;•&nbsp;{t('Administrator')}{/if}</p>
       {#if canChange}
         <div class="mt-0.5 flex gap-4">
           <button class="min-h-9 text-[14px] font-semibold text-accent-text disabled:opacity-40" disabled={busy} onclick={() => input?.click()}>{t('Bild ändern')}</button>

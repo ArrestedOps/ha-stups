@@ -25,6 +25,7 @@
 </script>
 
 <script lang="ts">
+  import Toggle from './ui/Toggle.svelte';
   import type { CardPatch, Column, Effort } from '../lib/api';
   import { formatCost, formatDue, formatLead, fromInputValue, isOverdue, parseCost, toInputValue } from '../lib/datetime';
   import { DEFAULT_CARRY } from '../lib/carry';
@@ -293,15 +294,10 @@
           {#each REMINDERS as m (m)}<option value={m}>{t('{lead} vorher', { lead: formatLead(m) })}</option>{/each}
         </SelectField>
       </label>
-      <label class="mt-3 flex items-center justify-between gap-3">
+      <div class="mt-3 flex items-center justify-between gap-3">
         <span class="text-[16px]">{t('Täglich nachhaken, solange überfällig')}</span>
-        <input
-          type="checkbox"
-          class="h-6 w-6 accent-[var(--accent)]"
-          checked={card.overdueNag}
-          onchange={(e) => onsave({ overdueNag: e.currentTarget.checked })}
-        />
-      </label>
+        <Toggle checked={card.overdueNag} label={t('Täglich nachhaken, solange überfällig')} onchange={(on) => onsave({ overdueNag: on })} />
+      </div>
     {:else if panel === 'prio'}
       <div class="flex flex-wrap gap-2" role="group" aria-label={t('Priorität')}>
         {#each PRIORITIES as [value, label] (label)}

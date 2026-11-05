@@ -2,9 +2,14 @@
   import { api, ApiError } from '../../lib/api';
   import { t } from '../../lib/i18n/index.svelte';
   import { feat, logout, toast, ui } from '../../lib/store.svelte';
-  import Group from '../Group.svelte';
+  import Avatar from '../Avatar.svelte';
+  import Icon from '../Icon.svelte';
+  import Field from '../ui/Field.svelte';
+  import ListRow from '../ui/ListRow.svelte';
+  import Tile from '../ui/Tile.svelte';
+  import CtaButton from '../ui/CtaButton.svelte';
   import PasskeySettings from '../PasskeySettings.svelte';
-  import SettingRow from '../SettingRow.svelte';
+  import SectionHeader from '../ui/SectionHeader.svelte';
   import Page from './Page.svelte';
 
   /** Eigener Container mit eigener Anmeldung: Passwort, Passkeys, Abmelden (ein Kind meldet sich nur ab) */
@@ -34,28 +39,47 @@
 </script>
 
 <Page title={t('Konto und Anmeldung')}>
-  <Group title={t('Konto')} hint={t('Wenn du dein Passwort änderst, melden sich deine anderen Geräte ab.')}>
-    <SettingRow label={t('Angemeldet als')}><span class="text-fg2">{ui.me?.displayName ?? '—'}</span></SettingRow>
-    {#if ui.isChild}
-      <!-- ein Kind meldet sich nur ab; das Passwort ändert der Administrator -->
-    {:else if changingPassword}
-      <form onsubmit={savePassword} class="space-y-2 px-4 py-3" aria-label={t('Passwort ändern')}>
-        <input type="password" bind:value={pwCurrent} autocomplete="current-password" placeholder={t('Aktuelles Passwort')} aria-label={t('Aktuelles Passwort')} class="min-h-11 w-full rounded-xl bg-surface2 px-3" required />
-        <input type="password" bind:value={pwNext} autocomplete="new-password" placeholder={t('Neues Passwort (mindestens 10 Zeichen)')} aria-label={t('Neues Passwort')} minlength="10" class="min-h-11 w-full rounded-xl bg-surface2 px-3" required />
-        <input type="password" bind:value={pwRepeat} autocomplete="new-password" placeholder={t('Neues Passwort wiederholen')} aria-label={t('Neues Passwort wiederholen')} class="min-h-11 w-full rounded-xl bg-surface2 px-3" required />
-        <div class="flex gap-2">
-          <button class="min-h-11 flex-1 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-60" disabled={pwBusy}>{t('Speichern')}</button>
-          <button type="button" class="min-h-11 flex-1 rounded-xl bg-surface2 font-semibold" onclick={() => (changingPassword = false)}>{t('Abbrechen')}</button>
+  <div class="flex flex-col gap-3.5 pt-1">
+    {#if ui.me}
+      <div class="flex items-center gap-3.5 rounded-row border border-line bg-surface p-3.5">
+        <Avatar person={ui.me} size={56} />
+        <div class="min-w-0">
+          <p class="truncate text-[17px] font-bold tracking-tight">{ui.me.displayName}</p>
+          <p class="mt-0.5 text-[13px] text-fg2">{t('Angemeldet als')} {ui.me.name} · {ui.isChild ? t('Kind') : ui.isAdmin ? t('Administrator') : t('Mitglied')}</p>
         </div>
-      </form>
-    {:else}
-      <SettingRow label={t('Passwort')}>
-        <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold" onclick={() => (changingPassword = true)}>{t('Ändern')}</button>
-      </SettingRow>
+      </div>
     {/if}
-    <SettingRow label={t('Auf diesem Gerät')}>
-      <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold text-danger" onclick={() => void logout()}>{t('Abmelden')}</button>
-    </SettingRow>
-  </Group>
-  {#if feat.passkeys && !ui.isChild}<PasskeySettings />{/if}
+
+    {#if feat.passkeys && !ui.isChild}<PasskeySettings />{/if}
+
+    {#if !ui.isChild}
+      <div class="flex flex-col gap-2">
+        <SectionHeader title={t('Passwort ändern')} />
+        {#if changingPassword}
+          <form onsubmit={savePassword} class="flex flex-col gap-3.5" aria-label={t('Passwort ändern')}>
+            <Field id="pw-current" label={t('Aktuelles Passwort')} type="password" bind:value={pwCurrent} autocomplete="current-password" required />
+            <Field id="pw-next" label={t('Neues Passwort')} type="password" bind:value={pwNext} autocomplete="new-password" placeholder={t('mindestens 10 Zeichen')} minlength={10} required />
+            <Field id="pw-repeat" label={t('Neues Passwort wiederholen')} type="password" bind:value={pwRepeat} autocomplete="new-password" required />
+            <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Wenn du dein Passwort änderst, melden sich deine anderen Geräte ab.')}</p>
+            <div class="flex gap-2">
+              <div class="flex-1"><CtaButton type="submit" disabled={pwBusy}>{t('Speichern')}</CtaButton></div>
+              <div class="flex-1"><CtaButton ghost onclick={() => (changingPassword = false)}>{t('Abbrechen')}</CtaButton></div>
+            </div>
+          </form>
+        {:else}
+          <ListRow title={t('Passwort')}>
+            {#snippet tile()}<Tile color="gray"><Icon name="lock" size={22} stroke={1.8} /></Tile>{/snippet}
+            {#snippet meta()}{t('Danach melden sich deine anderen Geräte ab.')}{/snippet}
+            {#snippet right()}
+              <button class="bg-surface2 inline-flex h-[34px] items-center rounded-[12px] px-3 text-[13px] font-bold text-text-soft" onclick={() => (changingPassword = true)}>{t('Ändern')}</button>
+            {/snippet}
+          </ListRow>
+        {/if}
+      </div>
+    {/if}
+
+    <button class="flex h-[52px] w-full items-center justify-center gap-2 rounded-row border border-danger/35 bg-danger/10 text-[15px] font-bold text-danger" onclick={() => void logout()}>
+      <Icon name="arrow-left" size={18} />{t('Auf diesem Gerät abmelden')}
+    </button>
+  </div>
 </Page>

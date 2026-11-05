@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Toggle from './ui/Toggle.svelte';
   import { api, type HouseChannel, type HouseEntities, type HouseInfo, type HouseKind, type HouseResult, type HouseType } from '../lib/api';
   import { houseResultLabel } from '../lib/house';
   import { numberLocale, t } from '../lib/i18n/index.svelte';
@@ -84,31 +85,17 @@
 
   {#each channels as c (c.id)}
     <div class="mb-3 rounded-xl border border-line px-3 py-2" data-testid="house-channel-{c.id}">
-      <label class="flex min-h-11 items-center gap-3 text-[15px]">
-        <input
-          type="checkbox"
-          class="h-5 w-5 accent-[var(--accent)]"
-          checked={c.enabled}
-          disabled={busy}
-          aria-label={t('Kanal {name} einschalten', { name: c.name })}
-          onchange={(e) => update(c, { enabled: e.currentTarget.checked })}
-        />
+      <div class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
         <span class="min-w-0 flex-1 truncate font-semibold">{typeLabel(c.type)}: {c.name}</span>
-      </label>
+        <Toggle checked={c.enabled} disabled={busy} label={t('Kanal {name} einschalten', { name: c.name })} onchange={(on) => update(c, { enabled: on })} />
+      </div>
 
       <div class="mt-1 {c.enabled ? '' : 'opacity-60'}">
         {#each KINDS as kind (kind)}
-          <label class="flex min-h-10 items-center gap-3 text-[15px]">
-            <input
-              type="checkbox"
-              class="h-5 w-5 accent-[var(--accent)]"
-              checked={c.kinds.includes(kind)}
-              disabled={busy}
-              aria-label={t('{kind} im Kanal {name}', { kind: kindLabel(kind), name: c.name })}
-              onchange={(e) => toggleKind(c, kind, e.currentTarget.checked)}
-            />
+          <div class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
             <span>{kindLabel(kind)}</span>
-          </label>
+            <Toggle checked={c.kinds.includes(kind)} disabled={busy} label={t('{kind} im Kanal {name}', { kind: kindLabel(kind), name: c.name })} onchange={(on) => toggleKind(c, kind, on)} />
+          </div>
         {/each}
 
         <label class="mt-1 flex min-h-11 items-center justify-between gap-3 text-[15px]">

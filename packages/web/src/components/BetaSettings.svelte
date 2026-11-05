@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Toggle from './ui/Toggle.svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, ApiError, type BetaState } from '../lib/api';
@@ -62,14 +63,7 @@
       </div>
     </div>
     <SettingRow label={t('Wächter')}>
-      <input
-        type="checkbox"
-        class="h-6 w-6 accent-[var(--accent)]"
-        checked={gate.watchers}
-        disabled={!ui.isAdmin || busy}
-        aria-label={t('Wächter in der Beta einschalten')}
-        onchange={(e) => change({ watchers: e.currentTarget.checked })}
-      />
+      <Toggle checked={gate.watchers} disabled={!ui.isAdmin || busy} label={t('Wächter in der Beta einschalten')} onchange={(on) => change({ watchers: on })} />
     </SettingRow>
   {/if}
 </Group>

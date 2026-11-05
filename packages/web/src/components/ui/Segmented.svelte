@@ -21,6 +21,7 @@
     small = false,
     scroll = false,
     large = false,
+    disabled = false,
     onchange,
   }: {
     items: SegmentItem[];
@@ -31,6 +32,7 @@
     scroll?: boolean;
     /** Schrift 15 statt 14 px (Neue Aufgabe: Priorität) */
     large?: boolean;
+    disabled?: boolean;
     onchange: (id: string) => void;
   } = $props();
 </script>
@@ -48,7 +50,8 @@
       role={kind === 'tabs' ? 'tab' : 'radio'}
       aria-selected={kind === 'tabs' ? on : undefined}
       aria-checked={kind === 'choice' ? on : undefined}
-      class="inline-flex min-h-0 items-center justify-center gap-1.5 rounded-[12px] {large ? 'text-[15px]' : 'text-[14px]'} whitespace-nowrap {scroll ? 'px-3' : 'px-0.5'} {scroll ? 'shrink-0 flex-1' : ''} {on ? 'bg-accent-grad glow-seg font-bold' : 'text-text-soft2'}"
+      class="inline-flex min-h-0 items-center justify-center gap-1.5 rounded-[12px] {large ? 'text-[15px]' : 'text-[14px]'} whitespace-nowrap {scroll ? 'px-3' : 'px-0.5'} {scroll ? 'shrink-0 flex-1' : ''} {on ? 'bg-accent-grad glow-seg font-bold' : 'text-text-soft2'} {disabled ? 'opacity-60' : ''}"
+      {disabled}
       onclick={() => onchange(item.id)}
     >
       {#if item.icon}<Icon name={item.icon} size={16} stroke={2} />{/if}{item.label}

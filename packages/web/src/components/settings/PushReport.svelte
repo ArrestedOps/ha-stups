@@ -73,7 +73,7 @@
       <div class="min-w-0">
         <p class="text-[15px] font-bold">{haOk ? (feat.haPush ? t('Verbindung zu Home Assistant steht') : t('Die Zustellung ist eingerichtet')) : t('Home Assistant antwortet gerade nicht')}</p>
         <p class="mt-0.5 text-[13px] text-fg2">
-          {#if feat.haPush && haOk}{t('Knöpfe in Nachrichten kommen an')} • {/if}{lastSent ? t('zuletzt {time}', { time: hm(lastSent) }) : t('noch nichts gesendet')}
+          {#if feat.haPush && haOk}{t('Knöpfe in Nachrichten kommen an')} •&nbsp;{/if}{lastSent ? t('zuletzt {time}', { time: hm(lastSent) }) : t('noch nichts gesendet')}
         </p>
       </div>
     </div>

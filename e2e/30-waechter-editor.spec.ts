@@ -189,8 +189,8 @@ test('ohne Verlauf: ein Hinweis statt des Diagramms, der Assistent bleibt bedien
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), s.boardId);
   await page.goto('/');
   await openBoards(page);
-  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Wächter' }).click();
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
+  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
   await page.getByRole('button', { name: 'Wächter hinzufügen' }).first().click();
   const d = page.getByRole('dialog');
   await d.getByRole('button', { name: 'Entität wählen' }).click();

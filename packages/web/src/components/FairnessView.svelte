@@ -5,6 +5,8 @@
   import { answerConfirmation, openCardAnywhere, personById, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
+  import Segmented from './ui/Segmented.svelte';
+  import SectionHeader from './ui/SectionHeader.svelte';
 
   /**
    * Fairness: Wer erledigt wie viel? Bewusst keine Rangliste: Die Reihenfolge ist die der Personenliste, die Balken haben alle dieselbe
@@ -56,18 +58,13 @@
 </script>
 
 <div data-testid="fairness">
-  <div class="flex gap-2" role="group" aria-label={t('Zeitraum')}>
-    {#each [['week', t('Diese Woche')], ['month', t('Dieser Monat')]] as [value, label] (value)}
-      <button
-        type="button"
-        class="min-h-11 flex-1 rounded-xl border text-[15px] {period === value ? 'border-accent bg-surface2 font-semibold' : 'border-line text-fg2'}"
-        aria-pressed={period === value}
-        onclick={() => (period = value as 'week' | 'month')}
-      >
-        {label}
-      </button>
-    {/each}
-  </div>
+  <Segmented
+    items={[{ id: 'week', label: t('Diese Woche') }, { id: 'month', label: t('Dieser Monat') }]}
+    value={period}
+    label={t('Zeitraum')}
+    small
+    onchange={(v) => (period = v as 'week' | 'month')}
+  />
 
   {#if failed && !data}
     <p class="py-10 text-center text-fg2">{t('Die Fairness-Ansicht konnte nicht geladen werden.')}</p>
@@ -75,17 +72,17 @@
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
     {#if data.waitingForYou.length > 0}
-      <section class="mt-4" aria-label={t('Wartet auf dich')} data-testid="week-waiting">
-        <h3 class="font-display mb-2 text-[17px] font-bold">{t('Wartet auf dich')}</h3>
-        <ul class="space-y-2">
+      <section class="mt-3.5" aria-label={t('Wartet auf dich')} data-testid="week-waiting">
+        <SectionHeader title={t('Wartet auf dich')} count={data.waitingForYou.length} />
+        <ul class="mt-2 space-y-2">
           {#each data.waitingForYou as w (w.cardId)}
             {@const child = w.childId ? personById(w.childId) : undefined}
-            <li class="rounded-[20px] border border-line bg-surface p-4">
+            <li class="rounded-row border border-line bg-surface p-3.5">
               <button class="block w-full text-left text-[16px] font-semibold" onclick={() => void openCardAnywhere({ id: w.cardId, boardId: w.boardId })}>{w.title}</button>
               <p class="mt-0.5 text-[13px] text-fg2">{child ? t('{name} sagt: erledigt', { name: child.displayName }) : t('Wartet auf Bestätigung')}</p>
               <div class="mt-3 flex gap-2">
-                <button class="min-h-11 flex-1 rounded-xl bg-accent font-semibold text-on-accent" onclick={() => void confirmCard(w.cardId, w.title, 'confirm')}>{t('Passt')}</button>
-                <button class="min-h-11 flex-1 rounded-xl border border-line font-semibold" onclick={() => void confirmCard(w.cardId, w.title, 'reject')}>{t('Nochmal')}</button>
+                <button class="bg-accent-grad glow-pill h-11 flex-1 rounded-[12px] text-[14px] font-bold" onclick={() => void confirmCard(w.cardId, w.title, 'confirm')}>{t('Passt')}</button>
+                <button class="h-11 flex-1 rounded-[12px] border border-line bg-surface2 text-[14px] font-bold" onclick={() => void confirmCard(w.cardId, w.title, 'reject')}>{t('Nochmal')}</button>
               </div>
             </li>
           {/each}
@@ -93,7 +90,7 @@
       </section>
     {/if}
 
-    <p class="mt-4 text-[17px] font-semibold" data-testid="fairness-sentence">{sentence}</p>
+    <p class="mt-3.5 px-1 text-[17px] font-extrabold tracking-tight" data-testid="fairness-sentence">{sentence}</p>
     {#if data.houseCards > 0}
       <p class="mt-1 text-[15px] text-house" data-testid="week-house">
         {period === 'week'
@@ -102,18 +99,18 @@
       </p>
     {/if}
 
-    <ul class="card-shadow mt-3 divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
+    <ul class="mt-3 flex flex-col gap-2">
       {#each data.people as p (p.id)}
         {@const person = personById(p.id)}
         {@const lines = details(p)}
-        <li class="px-4 py-3" data-testid="fairness-{p.id}">
+        <li class="rounded-row border border-line bg-surface px-3.5 py-3" data-testid="fairness-{p.id}">
           <div class="flex items-center gap-3">
-            {#if person}<Avatar {person} size={28} />{/if}
-            <span class="min-w-0 flex-1 truncate text-[16px] font-semibold">{p.name}</span>
+            {#if person}<Avatar {person} size={42} />{/if}
+            <span class="min-w-0 flex-1 truncate text-[15px] font-bold tracking-tight">{p.name}</span>
             <span class="shrink-0 text-[15px]">{tn('{n} erledigt', '{n} erledigt', p.done)}</span>
           </div>
           <div class="mt-2 h-3 overflow-hidden rounded-full bg-surface2" role="img" aria-label={t('Aufwand von {name}', { name: p.name })}>
-            <div class="h-full rounded-full bg-accent" style:width="{p.effort === 0 ? 0 : Math.max(4, (p.effort / maxEffort) * 100)}%"></div>
+            <div class="bg-accent-grad h-full rounded-full !shadow-none" style:width="{p.effort === 0 ? 0 : Math.max(4, (p.effort / maxEffort) * 100)}%"></div>
           </div>
           {#if lines.length}<p class="mt-1.5 text-[13px] text-fg2">{lines.join(' · ')}</p>{/if}
           {#if p.busyUntil}<p class="mt-1 text-[13px] text-fg2" data-testid="busy-{p.id}">{t('Hat wenig Zeit bis {date}', { date: formatBusy(p.busyUntil) })}</p>{/if}

@@ -4,11 +4,14 @@
   import { api, ApiError, type AccessInfo, type AccessMode, type Account, type HouseEntities, type HouseInfo } from '../lib/api';
   import { closeSheet, feat, openSettings, refresh, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
-  import Group from './Group.svelte';
+  import Segmented from './ui/Segmented.svelte';
+  import ListRow from './ui/ListRow.svelte';
+  import SectionHeader from './ui/SectionHeader.svelte';
+  import Tile from './ui/Tile.svelte';
+  import Toggle from './ui/Toggle.svelte';
   import HouseChannels from './HouseChannels.svelte';
   import PersonDelivery from './PersonDelivery.svelte';
   import Icon from './Icon.svelte';
-  import SettingRow from './SettingRow.svelte';
   import Sheet from './Sheet.svelte';
 
   let info = $state<AccessInfo | null>(null);
@@ -135,8 +138,35 @@
   };
   const hasPush = (p: { notifyServices: string[]; ntfy: boolean }) => (feat.haPush && p.notifyServices.length > 0) || (feat.ntfy && p.ntfy);
   const canEdit = (id: string) => admin || ui.me?.id === id;
+  /** „22–7" statt „22:00" bis „07:00" */
+  const hour = (hm: string) => (hm.endsWith(':00') ? String(Number(hm.slice(0, 2))) : hm);
+  const quietLabel = (q: { start: string; end: string; off: boolean }) => (q.off ? '' : t('Ruhe {start}–{end}', { start: hour(q.start), end: hour(q.end) }));
 
 </script>
+
+{#snippet haPersonsBlock()}
+  <div class="mt-3.5 flex flex-col gap-2">
+    <SectionHeader title={t('Aus Home Assistant')} />
+    <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Personen aus Home Assistant (Einstellungen › Personen). Mit demselben Namen findet Stups sie bei den Wächtern („wer ist zu Hause“).')}</p>
+    {#each info?.haPersons ?? [] as hp (hp.userId ?? hp.name)}
+      <ListRow title={hp.name}>
+        {#snippet tile()}<Tile color="teal"><Icon name="home" size={22} stroke={1.8} /></Tile>{/snippet}
+        {#snippet meta()}{t('Aus Home Assistant')}{/snippet}
+        {#snippet right()}
+          <button class="bg-surface2 inline-flex h-[34px] items-center rounded-[12px] px-3 text-[13px] font-bold text-text-soft disabled:opacity-60" disabled={busy} onclick={() => add(hp.name, hp.userId)}>{t('Hinzufügen')}</button>
+        {/snippet}
+      </ListRow>
+    {/each}
+  </div>
+{/snippet}
+
+{#snippet manualForm(placeholder: string, label: string)}
+  <form onsubmit={addManual} class="flex items-center gap-3 rounded-row border border-line bg-surface p-3.5">
+    <Tile color="green"><Icon name="user" size={22} stroke={1.8} /></Tile>
+    <input bind:value={manualName} maxlength="60" {placeholder} enterkeyhint="done" class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3" aria-label={label} />
+    <button class="bg-accent-grad glow-pill inline-flex h-[34px] shrink-0 items-center rounded-[12px] px-3 text-[13px] font-bold disabled:opacity-40" disabled={busy || !manualName.trim()}>{t('Hinzufügen')}</button>
+  </form>
+{/snippet}
 
 <Sheet title={t('Personen und Zugriff')} onclose={closeSheet}>
   {#snippet left()}
@@ -153,65 +183,47 @@
       </p>
     {/if}
     {#if !feat.standalone}
-    <Group
-      title={t('Wer darf Stups öffnen?')}
-      hint={info.mode === 'everyone'
-        ? t('Jeder Home-Assistant-Benutzer kann die App öffnen. Zugewiesen und benachrichtigt werden nur die Personen unten.')
-        : t('Nur die Personen unten und Administratoren von Home Assistant kommen hinein. Wer sonst öffnet, erscheint unter „Wartet auf Freigabe“.')}
-    >
-      <SettingRow stack>
-        <div class="flex gap-2" role="radiogroup" aria-label={t('Zugriff')}>
-          {#each [['everyone', t('Alle in Home Assistant')], ['selected', t('Nur diese Personen')]] as [mode, label] (mode)}
-            <button
-              type="button"
-              role="radio"
-              aria-checked={info.mode === mode}
-              disabled={!admin || busy || info.managed}
-              class="min-h-11 flex-1 rounded-xl border px-3 text-[15px] disabled:opacity-60 {info.mode === mode
-                ? 'border-accent bg-surface2 font-semibold'
-                : 'border-line text-fg2'}"
-              onclick={() => info && info.mode !== mode && setMode(mode as AccessMode)}
-            >
-              {label}
-            </button>
-          {/each}
-        </div>
-        {#if !admin && !info.managed}<p class="mt-2 text-[13px] text-fg2">{t('Das ändern nur Administratoren von Home Assistant.')}</p>{/if}
-      </SettingRow>
-    </Group>
+      <div class="flex flex-col gap-2">
+        <SectionHeader title={t('Wer darf Stups öffnen?')} />
+        <Segmented
+          items={[{ id: 'everyone', label: t('Alle in Home Assistant') }, { id: 'selected', label: t('Nur diese Personen') }]}
+          value={info.mode}
+          label={t('Zugriff')}
+          disabled={!admin || busy || info.managed}
+          onchange={(m) => info && info.mode !== m && setMode(m as AccessMode)}
+        />
+        <p class="px-1 text-[12.5px] leading-[1.45] text-hint">
+          {info.mode === 'everyone'
+            ? t('Jeder Home-Assistant-Benutzer kann die App öffnen. Zugewiesen und benachrichtigt werden nur die Personen unten.')
+            : t('Nur die Personen unten und Administratoren von Home Assistant kommen hinein. Wer sonst öffnet, erscheint unter „Wartet auf Freigabe“.')}
+        </p>
+        {#if !admin && !info.managed}<p class="px-1 text-[13px] text-fg2">{t('Das ändern nur Administratoren von Home Assistant.')}</p>{/if}
+      </div>
     {/if}
 
-    <Group title={t('Personen')} hint={t('Diese Personen kann man Karten zuweisen, und sie bekommen die Push-Nachrichten.')}>
+    <div class="flex flex-col gap-2">
+      <SectionHeader title={t('Personen')} count={info.people.length} />
+      <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Diesen Personen kann man Karten zuweisen, und sie bekommen die Push-Nachrichten.')}</p>
       {#each info.people as p (p.id)}
         <div>
-          <button
-            type="button"
-            class="flex min-h-[56px] w-full items-center gap-3 px-4 text-left"
-            aria-expanded={openId === p.id}
-            onclick={() => (openId = openId === p.id ? null : p.id)}
-          >
-            <Avatar person={p} size={32} />
-            <span class="min-w-0 flex-1">
-              <span class="block truncate text-[17px] font-medium">
-                {p.displayName}{#if p.id === ui.me?.id}<span class="text-fg2"> ({t('du')})</span>{/if}
-              </span>
+          <ListRow title={p.id === ui.me?.id ? `${p.displayName} (${t('du')})` : p.displayName} expanded={openId === p.id} onclick={() => (openId = openId === p.id ? null : p.id)}>
+            {#snippet tile()}<Avatar person={p} size={42} />{/snippet}
+            {#snippet meta()}
+              {#if p.isAdmin}<span class="inline-flex h-6 shrink-0 items-center rounded-full bg-[var(--c-orange-bg)] px-[9px] text-[12px] font-bold text-(--c-orange-fg)">{feat.standalone ? t('Administrator') : 'Admin'}</span>{/if}
+              {#if p.isChild}<span class="inline-flex h-6 shrink-0 items-center rounded-full bg-count px-[9px] text-[12px] font-bold text-text-soft2">{t('Kind')}</span>{/if}
               {#if feat.standalone}
-                <span class="block text-[13px] text-fg2">
-                  {accountOf(p.id) ? t('Benutzername {name}', { name: accountOf(p.id)?.username ?? '' }) : t('Ohne Anmeldung')}{p.isAdmin ? ` · ${t('Administrator')}` : ''}
-                </span>
+                <span class="truncate">{accountOf(p.id) ? t('Benutzername {name}', { name: accountOf(p.id)?.username ?? '' }) : t('Ohne Anmeldung')}</span>
               {/if}
               {#if feat.push}
-                <span class="block text-[13px] {hasPush(p) ? 'text-fg2' : 'text-danger'}">
-                  {pushLabel(p)}{p.isAdmin && !feat.standalone ? ` · ${t('Administrator')}` : ''}
-                </span>
+                <span class="truncate {hasPush(p) ? '' : 'text-danger'}">{pushLabel(p)}{p.nudgeQuiet.off ? '' : ` • ${quietLabel(p.nudgeQuiet)}`}</span>
               {/if}
-            </span>
-            <Icon name={openId === p.id ? 'chevron-up' : 'chevron-down'} size={18} />
-          </button>
+            {/snippet}
+            {#snippet right()}<span class="flex text-text-soft2"><Icon name={openId === p.id ? 'chevron-up' : 'chevron-right'} size={18} stroke={2} /></span>{/snippet}
+          </ListRow>
 
           {#if openId === p.id}
             {@const own = p.id === ui.me?.id}
-            <div class="space-y-4 px-4 pb-4">
+            <div class="mt-2 space-y-4 rounded-row border border-line bg-surface p-3.5">
               {#if admin}
                 <label class="flex flex-col gap-1.5">
                   <span class="text-[13px] font-semibold text-fg2">{t('Anzeigename')}</span>
@@ -230,17 +242,10 @@
                 <div data-testid="account-{p.id}">
                   <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Anmeldung')}</p>
                   {#if acct}
-                    <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                    <div class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
                       <span>{t('Administrator')}</span>
-                      <input
-                        type="checkbox"
-                        class="h-5 w-5 accent-[var(--accent)]"
-                        checked={acct.isAdmin}
-                        disabled={busy || acct.userId === ui.me?.id}
-                        aria-label={t('{name} ist Administrator', { name: p.displayName })}
-                        onchange={(e) => run(() => api.updateAccount(acct.userId, { isAdmin: e.currentTarget.checked }))}
-                      />
-                    </label>
+                      <Toggle checked={acct.isAdmin} disabled={busy || acct.userId === ui.me?.id} label={t('{name} ist Administrator', { name: p.displayName })} onchange={(on) => run(() => api.updateAccount(acct.userId, { isAdmin: on }))} />
+                    </div>
                     <div class="mt-1 flex items-center gap-2">
                       <input
                         type="password"
@@ -290,20 +295,10 @@
                 {@const grown = info.people.filter((o) => o.isPerson && !o.isChild && o.id !== p.id)}
                 <div data-testid="child-setup">
                   <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Rolle Kind')}</p>
-                  <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                  <div class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
                     <span>{t('Ist ein Kind (eingeschränkte Rechte)')}</span>
-                    <input
-                      type="checkbox"
-                      class="h-5 w-5 accent-[var(--accent)]"
-                      checked={p.isChild}
-                      disabled={busy || p.isAdmin}
-                      aria-label={t('Kind: {name}', { name: p.displayName })}
-                      onchange={(e) => {
-                        const on = e.currentTarget.checked;
-                        void run(() => api.updatePerson(p.id, { isChild: on }));
-                      }}
-                    />
-                  </label>
+                    <Toggle checked={p.isChild} disabled={busy || p.isAdmin} label={t('Kind: {name}', { name: p.displayName })} onchange={(on) => void run(() => api.updatePerson(p.id, { isChild: on }))} />
+                  </div>
                   {#if p.isAdmin}
                     <p class="text-[13px] text-fg2">{t('Ein Administrator kann kein Kind sein.')}</p>
                   {:else if p.isChild}
@@ -323,37 +318,24 @@
                         <option value="all">{t('Alle Boards')}</option>
                       </select>
                     </label>
-                    <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                    <div class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
                       <span>{t('„Erledigt“ braucht eine Bestätigung')}</span>
-                      <input
-                        type="checkbox"
-                        class="h-5 w-5 accent-[var(--accent)]"
-                        checked={p.confirmDefault}
-                        disabled={busy}
-                        aria-label={t('Bestätigung als Vorgabe für {name}', { name: p.displayName })}
-                        onchange={(e) => {
-                          const on = e.currentTarget.checked;
-                          void run(() => api.updatePerson(p.id, { confirmDefault: on }));
-                        }}
-                      />
-                    </label>
+                      <Toggle checked={p.confirmDefault} disabled={busy} label={t('Bestätigung als Vorgabe für {name}', { name: p.displayName })} onchange={(on) => void run(() => api.updatePerson(p.id, { confirmDefault: on }))} />
+                    </div>
                     <p class="mt-1 text-[13px] font-semibold text-fg2">{t('Wer bestätigt')}</p>
                     {#each grown as o (o.id)}
-                      <label class="flex min-h-11 items-center gap-3 text-[15px]">
-                        <input
-                          type="checkbox"
-                          class="h-5 w-5 accent-[var(--accent)]"
+                      <div class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                        <span class="min-w-0 flex-1 truncate">{o.displayName}</span>
+                        <Toggle
                           checked={p.confirmers.includes(o.id)}
                           disabled={busy}
-                          aria-label={t('{name} bestätigt für {child}', { name: o.displayName, child: p.displayName })}
-                          onchange={(e) => {
-                            const on = e.currentTarget.checked;
+                          label={t('{name} bestätigt für {child}', { name: o.displayName, child: p.displayName })}
+                          onchange={(on) => {
                             const next = on ? [...p.confirmers, o.id] : p.confirmers.filter((x) => x !== o.id);
                             void run(() => api.updatePerson(p.id, { confirmers: next }));
                           }}
                         />
-                        <span class="min-w-0 flex-1 truncate">{o.displayName}</span>
-                      </label>
+                      </div>
                     {/each}
                     <p class="text-[13px] text-fg2">{t('Administratoren dürfen immer bestätigen. Ist niemand gewählt, dürfen alle Erwachsenen.')}</p>
                     <p class="text-[13px] text-fg2">{t('Ein Kind sieht und ändert nur seine eigenen Karten (abhaken, kommentieren, Fotos anhängen), nichts sonst. Sprache und Farbe wählt es selbst.')}</p>
@@ -380,92 +362,72 @@
           {/if}
         </div>
       {:else}
-        <p class="px-4 py-4 text-[15px] text-fg2">{t('Noch niemand.')} {admin && !info.managed ? t('Füge unten Personen hinzu.') : ''}</p>
+        <p class="px-1 py-2 text-[15px] text-fg2">{t('Noch niemand.')} {admin && !info.managed ? t('Füge unten Personen hinzu.') : ''}</p>
       {/each}
-    </Group>
+    </div>
 
     {#if admin && feat.standalone}
-      <Group title={t('Benutzer anlegen')} hint={t('Wer sich anmelden soll. Das Passwort sagst du der Person selbst, sie kann es danach unter Einstellungen ändern.')}>
-        <form onsubmit={addUser} class="flex flex-col gap-2 px-4 py-3" aria-label={t('Benutzer anlegen')}>
+      <div class="mt-3.5 flex flex-col gap-2">
+        <SectionHeader title={t('Benutzer anlegen')} />
+        <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Wer sich anmelden soll. Das Passwort sagst du der Person selbst, sie kann es danach unter Einstellungen ändern.')}</p>
+        <form onsubmit={addUser} class="flex flex-col gap-2 rounded-row border border-line bg-surface p-3.5" aria-label={t('Benutzer anlegen')}>
           <input bind:value={nuName} maxlength="60" placeholder={t('Name in Stups (zum Beispiel Anna)')} aria-label={t('Name der neuen Person')} class="min-h-11 rounded-xl bg-surface2 px-3" />
           <input bind:value={nuUser} autocomplete="off" autocapitalize="none" placeholder={t('Benutzername')} aria-label={t('Benutzername')} class="min-h-11 rounded-xl bg-surface2 px-3" />
           <input type="password" bind:value={nuPw} autocomplete="new-password" placeholder={t('Passwort (mindestens 10 Zeichen)')} aria-label={t('Passwort')} class="min-h-11 rounded-xl bg-surface2 px-3" />
-          <label class="flex min-h-11 items-center gap-3 text-[15px]">
-            <input type="checkbox" class="h-5 w-5 accent-[var(--accent)]" bind:checked={nuAdmin} />{t('Administrator')}
-          </label>
-          <button class="min-h-11 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-40" disabled={busy || !nuUser.trim() || nuPw.length < 10}>{t('Benutzer anlegen')}</button>
+          <div class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+            <span>{t('Administrator')}</span>
+            <Toggle checked={nuAdmin} label={t('Administrator')} onchange={(on) => (nuAdmin = on)} />
+          </div>
+          <button class="bg-accent-grad glow-cta h-12 rounded-btn text-[16px] font-extrabold disabled:opacity-40" disabled={busy || !nuUser.trim() || nuPw.length < 10}>{t('Benutzer anlegen')}</button>
         </form>
-      </Group>
+      </div>
       {#if feat.ha && info.haPersons.length}
-        <Group
-          title={t('Aus Home Assistant')}
-          hint={t('Personen aus Home Assistant (Einstellungen › Personen). Mit demselben Namen findet Stups sie bei den Wächtern („wer ist zu Hause“).')}
-        >
-          {#each info.haPersons as hp (hp.userId ?? hp.name)}
-            <SettingRow label={hp.name}>
-              <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-60" disabled={busy} onclick={() => add(hp.name, hp.userId)}>
-                {t('Hinzufügen')}
-              </button>
-            </SettingRow>
-          {/each}
-        </Group>
+        {@render haPersonsBlock()}
       {:else if feat.ha && info.directoryAvailable === false}
-        <p class="mb-3 rounded-2xl bg-surface2 px-4 py-3 text-[15px]">{t('Home Assistant liefert die Personenliste gerade nicht.')}</p>
+        <p class="mt-3.5 rounded-row border border-line bg-surface px-4 py-3 text-[15px]">{t('Home Assistant liefert die Personenliste gerade nicht.')}</p>
       {/if}
-      <Group title={t('Person ohne Anmeldung')} hint={t('Zum Zuweisen von Karten, zum Beispiel für Kinder, die Stups nicht selbst öffnen.')}>
-        <form onsubmit={addManual} class="flex items-center gap-2 px-4 py-2">
-          <input bind:value={manualName} maxlength="60" placeholder={t('Name')} enterkeyhint="done" class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3" aria-label={t('Name der Person ohne Anmeldung')} />
-          <button class="min-h-11 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-40" disabled={busy || !manualName.trim()}>{t('Hinzufügen')}</button>
-        </form>
-      </Group>
+      <div class="mt-3.5 flex flex-col gap-2">
+        <SectionHeader title={t('Person ohne Anmeldung')} />
+        <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Zum Zuweisen von Karten, zum Beispiel für Kinder, die Stups nicht selbst öffnen.')}</p>
+        {@render manualForm(t('Name'), t('Name der Person ohne Anmeldung'))}
+      </div>
     {:else if admin && !info.managed}
       {#if info.pending.length}
-        <Group title={t('Wartet auf Freigabe')} hint={t('Diese Benutzer haben Stups geöffnet, sind aber keine Person.')}>
+        <div class="mt-3.5 flex flex-col gap-2">
+          <SectionHeader title={t('Wartet auf Freigabe')} count={info.pending.length} />
+          <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Diese Benutzer haben Stups geöffnet, sind aber keine Person.')}</p>
           {#each info.pending as u (u.id)}
-            <SettingRow label={u.displayName}>
-              <button
-                class="min-h-10 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-60"
-                disabled={busy}
-                onclick={() => add(u.displayName, u.haUserId)}
-              >
-                {t('Freigeben')}
-              </button>
-            </SettingRow>
+            <div data-testid="pending-{u.id}">
+              <ListRow title={u.displayName} dashed>
+                {#snippet tile()}<Avatar person={u} size={42} />{/snippet}
+                {#snippet meta()}{t('hat Stups geöffnet')}{/snippet}
+                {#snippet right()}
+                  <button class="bg-accent-grad glow-pill inline-flex h-[34px] items-center rounded-[12px] px-3 text-[13px] font-bold disabled:opacity-60" disabled={busy} onclick={() => add(u.displayName, u.haUserId)}>{t('Freigeben')}</button>
+                {/snippet}
+              </ListRow>
+            </div>
           {/each}
-        </Group>
+        </div>
       {/if}
 
-      <Group
-        title={t('Person hinzufügen')}
-        hint={info.directoryAvailable === false
-          ? t('Home Assistant liefert die Personenliste gerade nicht. Der Name muss zum Benutzernamen oder Anzeigenamen in Home Assistant passen.')
-          : t('Personen aus Home Assistant (Einstellungen › Personen). Wer noch nie angemeldet war, wird beim ersten Öffnen verknüpft.')}
-      >
+      <div class="mt-3.5 flex flex-col gap-2">
+        <SectionHeader title={t('Person hinzufügen')} />
+        <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">
+          {info.directoryAvailable === false
+            ? t('Home Assistant liefert die Personenliste gerade nicht. Der Name muss zum Benutzernamen oder Anzeigenamen in Home Assistant passen.')
+            : t('Personen aus Home Assistant (Einstellungen › Personen). Wer noch nie angemeldet war, wird beim ersten Öffnen verknüpft.')}
+        </p>
         {#each info.haPersons as hp (hp.userId ?? hp.name)}
-          <SettingRow label={hp.name}>
-            <button
-              class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-60"
-              disabled={busy}
-              onclick={() => add(hp.name, hp.userId)}
-            >
-              {t('Hinzufügen')}
-            </button>
-          </SettingRow>
+          <ListRow title={hp.name}>
+            {#snippet tile()}<Tile color="teal"><Icon name="home" size={22} stroke={1.8} /></Tile>{/snippet}
+            {#snippet meta()}{t('Aus Home Assistant')}{/snippet}
+            {#snippet right()}
+              <button class="bg-surface2 inline-flex h-[34px] items-center rounded-[12px] px-3 text-[13px] font-bold text-text-soft disabled:opacity-60" disabled={busy} onclick={() => add(hp.name, hp.userId)}>{t('Hinzufügen')}</button>
+            {/snippet}
+          </ListRow>
         {/each}
-        <form onsubmit={addManual} class="flex items-center gap-2 px-4 py-2">
-          <input
-            bind:value={manualName}
-            maxlength="60"
-            placeholder={t('Anderen Namen eintragen')}
-            enterkeyhint="done"
-            class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3"
-            aria-label={t('Name der neuen Person')}
-          />
-          <button class="min-h-11 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-40" disabled={busy || !manualName.trim()}>
-            {t('Hinzufügen')}
-          </button>
-        </form>
-      </Group>
+        {@render manualForm(t('Anderen Namen eintragen'), t('Name der neuen Person'))}
+      </div>
     {/if}
   {/if}
 </Sheet>

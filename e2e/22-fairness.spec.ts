@@ -72,7 +72,7 @@ test('Diese Woche (Aufgaben › Fairness): Zahlen steigen mit dem Erledigen, kei
 
   // „Diese Woche": über die Zeile am Ende von Aufgaben
   await openWeek(page, request);
-  await page.getByRole('group', { name: 'Zeitraum' }).getByRole('button', { name: 'Dieser Monat' }).click();
+  await page.getByRole('radiogroup', { name: 'Zeitraum' }).getByRole('radio', { name: 'Dieser Monat' }).click();
 
   const view = page.getByTestId('fairness');
   await expect(view).toBeVisible();

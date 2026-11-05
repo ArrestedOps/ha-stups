@@ -2,7 +2,7 @@
 // Aufruf im Repository-Ordner (nach pnpm build): node e2e/screenshots.mjs [--lang en]
 //   ohne Angabe: deutsch nach docs/images, mit --lang en: englisch nach docs/images/en
 import { spawn } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -244,7 +244,7 @@ export async function capture(screens, baseUrl = base, extraHTTPHeaders = {}) {
       await page.goto(baseUrl + '/');
       await page.evaluate(() => localStorage.clear()); // gemerkte Ansicht und Filter wegräumen
       await page.reload();
-      await page.getByRole('navigation').first().waitFor();
+      await page.locator('nav, [data-testid=no-access]').first().waitFor();
       await run(page);
       await shot(page, name, scheme);
     }
@@ -349,7 +349,6 @@ const screens = [
     await page.getByRole('dialog').getByRole('button', { name: x(/Papierkorb/, /Trash/) }).click();
     await page.getByText(S.bin1).waitFor();
   }],
-  ['push-stand', async (page) => { await settings(page, x(/Warum kommt nichts/, /Why is nothing/)); await page.getByTestId('push-ok').waitFor(); }],
   ['dashboard-button', async (page) => { await settings(page, x('Dashboard-Button', 'Dashboard button')); await page.getByTestId('bubble-preview').waitFor(); }],
   ['dialoge', async (page) => {
     await nav(page, 'Boards').click();
@@ -450,6 +449,14 @@ async function seedWatchers() {
 }
 
 const watcherScreens = [
+  // Push-Stand: Ben hat ein Gerät eingetragen, das Home Assistant nicht kennt (Banner mit Lösung)
+  ['push-stand', async (page) => {
+    const people = await (await fetch(`${haBase}/api/people`, { headers })).json();
+    const ben = people.find((p) => p.name === 'Ben');
+    await fetch(`${haBase}/api/access/people/${ben.id}`, { method: 'PATCH', headers, body: JSON.stringify({ notifyServices: ['mobile_app_bens_iphone'] }) });
+    await settings(page, x(/Warum kommt nichts/, /Why is nothing/));
+    await page.getByTestId('push-ok').waitFor();
+  }],
   ['waechter', async (page) => {
     await nav(page, x('Wächter', 'Watchers')).click();
     await page.getByTestId('home-waiting').waitFor();
@@ -492,12 +499,101 @@ const watcherScreens = [
     await page.getByTestId('card-watcher').first().waitFor();
   }],
 ];
+// ---------- Kein Zugriff: ein Benutzer von Home Assistant, den ein Administrator noch nicht freigegeben hat ----------
+const noAccessScreens = [['kein-zugriff', async (page) => { await page.getByTestId('no-access').waitFor(); }]];
+
+// ---------- Docker: eigener Container ohne Home Assistant, Anmeldung mit Konto (Anmelden, Konto und Passkeys) ----------
+const SA_PORT = 18530;
+const saBase = `http://127.0.0.1:${SA_PORT}`;
+const CODE_FILE = join(tmpdir(), 'stups-e2e-standalone-code.txt');
+const saServer = spawn(process.execPath, [join(root, 'e2e', 'server-standalone.mjs')], { env: { ...process.env, PORT: String(SA_PORT) }, stdio: 'ignore' });
+process.on('exit', () => saServer.kill());
+
+/** Einrichtung des ersten Administrators (Code aus der Datei), danach ist der Browser angemeldet; mit `fakePasskeys` zwei erfundene Passkeys */
+async function saSetup(page) {
+  await page.goto(saBase + '/');
+  const form = page.getByRole('form', { name: x('Einrichtung', 'Setup') });
+  await form.waitFor();
+  let code = '';
+  for (let i = 0; i < 40 && !code; i++) { code = readFileSync(CODE_FILE, 'utf8').trim(); if (!code) await new Promise((r) => setTimeout(r, 250)); }
+  await form.getByLabel(x('Einrichtungscode', 'Setup code')).fill(code);
+  await form.getByLabel(x('Benutzername', 'Username')).fill('anna');
+  await form.getByLabel(x('Name in Stups', 'Name in Stups')).fill('Anna');
+  await form.getByLabel(x('Passwort', 'Password'), { exact: true }).fill('ein-langes-passwort');
+  await form.getByLabel(x('Passwort wiederholen', 'Repeat password')).fill('ein-langes-passwort');
+  await form.getByRole('button', { name: x('Einrichten', 'Set up') }).click();
+  await page.getByRole('navigation', { name: x('Ansicht', 'View') }).waitFor();
+}
+/** Passkeys gibt es nur mit https-Adresse: für die Aufnahme melden die Antworten sie als vorhanden (erfundene Geräte) */
+async function fakePasskeys(page) {
+  await page.route('**/api/capabilities', async (route) => {
+    const res = await route.fetch();
+    const body = await res.json();
+    await route.fulfill({ response: res, json: { ...body, passkeys: true } });
+  });
+  await page.route('**/api/passkeys', (route) => route.fulfill({ json: [
+    { id: 'p1', name: 'iPhone', createdAt: at(-3 * D), lastUsedAt: at(-1 * H) },
+    { id: 'p2', name: 'MacBook', createdAt: at(-3 * D), lastUsedAt: at(-1 * D) },
+  ] }));
+}
+async function captureDocker() {
+  const browser = await webkit.launch();
+  for (const scheme of schemes) {
+    const opts = { ...phone, locale: x('de-DE', 'en-GB'), timezoneId: 'Europe/Berlin', colorScheme: scheme === 'dunkel' ? 'dark' : 'light' };
+    // erst im ersten Durchgang gibt es noch kein Konto: die Einrichtung legt es an und meldet an
+    const ctx = await browser.newContext(opts);
+    const page = await ctx.newPage();
+    if (scheme === schemes[0]) await saSetup(page);
+    else {
+      await page.goto(saBase + '/');
+      await page.getByLabel(x('Benutzername', 'Username')).fill('anna');
+      await page.getByLabel(x('Passwort', 'Password'), { exact: true }).fill('ein-langes-passwort');
+      await page.getByRole('button', { name: x('Anmelden', 'Sign in') }).click();
+      await page.getByRole('navigation', { name: x('Ansicht', 'View') }).waitFor();
+    }
+    if (!only || only.includes('konto')) {
+      await fakePasskeys(page);
+      await page.reload();
+      await page.getByRole('navigation', { name: x('Ansicht', 'View') }).waitFor();
+      await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
+      await page.getByRole('dialog').getByRole('button', { name: x('Konto und Anmeldung', 'Account and sign-in') }).click();
+      await page.getByTestId('passkey-row').first().waitFor();
+      await shot(page, 'konto', scheme);
+    }
+    await ctx.close();
+    if (!only || only.includes('anmelden')) {
+      const out2 = await browser.newContext(opts);
+      const p2 = await out2.newPage();
+      await fakePasskeysLogin(p2);
+      await p2.goto(saBase + '/');
+      await p2.getByTestId('login').waitFor();
+      await shot(p2, 'anmelden', scheme);
+      await out2.close();
+    }
+  }
+  await browser.close();
+}
+/** Auf der Anmeldeseite zeigt die Aufnahme auch den Knopf „Mit Passkey anmelden“ */
+async function fakePasskeysLogin(page) {
+  await page.route('**/api/capabilities', async (route) => {
+    const res = await route.fetch();
+    const body = await res.json();
+    await route.fulfill({ response: res, json: { ...body, passkeys: true } });
+  });
+}
+
 try {
   await capture(screens);
+  await capture(noAccessScreens, base, cassandra);
   await seedWatchers();
   await capture(watcherScreens, haBase);
+  if (!only || only.includes('anmelden') || only.includes('konto')) {
+    await waitUp(saBase);
+    await captureDocker();
+  }
 } finally {
   stop();
   haServer.kill();
+  saServer.kill();
 }
 console.log('fertig', seeded.haushalt ? '' : '');

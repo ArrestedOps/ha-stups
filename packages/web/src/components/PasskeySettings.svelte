@@ -4,8 +4,11 @@
   import { api, type PasskeyInfo } from '../lib/api';
   import { createPasskey, passkeyErrorText } from '../lib/passkeys';
   import { toast, ui } from '../lib/store.svelte';
-  import Group from './Group.svelte';
-  import SettingRow from './SettingRow.svelte';
+  import Icon from './Icon.svelte';
+  import CtaButton from './ui/CtaButton.svelte';
+  import ListRow from './ui/ListRow.svelte';
+  import SectionHeader from './ui/SectionHeader.svelte';
+  import Tile, { type TileColor } from './ui/Tile.svelte';
 
   let list = $state<PasskeyInfo[] | null>(null);
   let adding = $state(false);
@@ -16,6 +19,7 @@
     list = await api.passkeys().catch(() => []);
   });
 
+  const TONES: TileColor[] = ['orange', 'blue', 'teal', 'violet'];
   const day = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   function startAdding() {
@@ -55,40 +59,39 @@
   }
 </script>
 
-<Group
-  title="Passkeys"
-  hint={t('Mit einem Passkey meldest du dich mit Fingerabdruck, Gesicht oder Bildschirmsperre an, ohne Passwort zu tippen. Das Passwort bleibt als Rückfall.')}
->
-  {#each list ?? [] as p (p.id)}
-    <div class="flex min-h-[52px] items-center gap-3 px-4 py-1.5" data-testid="passkey-row">
-      <div class="min-w-0 flex-1">
-        <div class="truncate text-[17px]">{p.name}</div>
-        <div class="text-[13px] text-fg2">
-          {t('angelegt {when}', { when: day(p.createdAt) })}, {p.lastUsedAt ? t('zuletzt benutzt {when}', { when: day(p.lastUsedAt) }) : t('noch nicht benutzt')}
-        </div>
-      </div>
-      <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold text-danger" aria-label={t('Passkey {name} entfernen', { name: p.name })} onclick={() => remove(p)}>
-        {t('Entfernen')}
-      </button>
+<section class="flex flex-col gap-2">
+  <SectionHeader title="Passkeys" count={list?.length} />
+  <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">
+    {list !== null && list.length === 0 ? `${t('Noch kein Passkey')}. ` : ''}{t('Anmelden mit Fingerabdruck, Gesicht oder Bildschirmsperre. Das Passwort bleibt als Rückfall.')}
+  </p>
+  {#each list ?? [] as p, i (p.id)}
+    <div data-testid="passkey-row">
+      <ListRow title={p.name}>
+        {#snippet tile()}<Tile color={TONES[i % TONES.length]!}><Icon name="lock" size={22} stroke={1.8} /></Tile>{/snippet}
+        {#snippet meta()}{t('angelegt {when}', { when: day(p.createdAt) })} • {p.lastUsedAt ? t('zuletzt benutzt {when}', { when: day(p.lastUsedAt) }) : t('noch nicht benutzt')}{/snippet}
+        {#snippet right()}
+          <button class="inline-flex h-[34px] w-9 items-center justify-center rounded-[12px] bg-danger/15 text-danger" aria-label={t('Passkey {name} entfernen', { name: p.name })} onclick={() => remove(p)}>
+            <Icon name="trash" size={16} />
+          </button>
+        {/snippet}
+      </ListRow>
     </div>
   {/each}
   {#if adding}
-    <form onsubmit={add} class="space-y-2 px-4 py-3" aria-label={t('Passkey anlegen')}>
-      <input
-        bind:value={name}
-        maxlength="60"
-        placeholder={t('Name, zum Beispiel iPhone von Anna')}
-        aria-label={t('Name des Passkeys')}
-        class="min-h-11 w-full rounded-xl bg-surface2 px-3"
-      />
+    <form onsubmit={add} class="flex flex-col gap-3.5" aria-label={t('Passkey anlegen')}>
+      <div class="focus-ring-in flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3">
+        <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="passkey-name">{t('Name des Passkeys')}</label>
+        <input id="passkey-name" bind:value={name} maxlength="60" placeholder={t('Name, zum Beispiel iPhone von Anna')} class="block min-h-6 w-full bg-transparent p-0 text-[16px] font-semibold outline-none placeholder:text-dim" />
+      </div>
       <div class="flex gap-2">
-        <button class="min-h-11 flex-1 rounded-xl bg-accent font-semibold text-on-accent disabled:opacity-60" disabled={busy}>{t('Anlegen')}</button>
-        <button type="button" class="min-h-11 flex-1 rounded-xl bg-surface2 font-semibold" onclick={() => (adding = false)}>{t('Abbrechen')}</button>
+        <div class="flex-1"><CtaButton type="submit" disabled={busy}>{t('Anlegen')}</CtaButton></div>
+        <div class="flex-1"><CtaButton ghost onclick={() => (adding = false)}>{t('Abbrechen')}</CtaButton></div>
       </div>
     </form>
   {:else if list !== null}
-    <SettingRow label={list.length === 0 ? t('Noch kein Passkey') : undefined}>
-      <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold" onclick={startAdding}>{t('Passkey hinzufügen')}</button>
-    </SettingRow>
+    <ListRow title={t('Passkey hinzufügen')} dashed onclick={startAdding}>
+      {#snippet tile()}<Tile color="gray"><Icon name="plus" size={22} stroke={1.8} /></Tile>{/snippet}
+      {#snippet meta()}{t('für dieses Gerät')}{/snippet}
+    </ListRow>
   {/if}
-</Group>
+</section>

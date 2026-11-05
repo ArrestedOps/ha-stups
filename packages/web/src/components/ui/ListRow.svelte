@@ -23,6 +23,8 @@
     label,
     highlight = false,
     current = false,
+    dashed = false,
+    expanded,
     inset = false,
     onclick,
     href,
@@ -42,6 +44,10 @@
     highlight?: boolean;
     /** die gerade geöffnete Zeile (Board wechseln): orange Rand, Schein */
     current?: boolean;
+    /** gestrichelter Rand: wartet auf etwas (Freigabe) */
+    dashed?: boolean;
+    /** der Antippbereich klappt etwas auf (aria-expanded) */
+    expanded?: boolean;
     /** Zeile in einer Karte (Ablauf im Wächter-Editor): dunkler Grund, 64 px hoch statt 68 */
     inset?: boolean;
     onclick?: (e: MouseEvent) => void;
@@ -50,7 +56,7 @@
 </script>
 
 <div
-  class="flex w-full items-center rounded-row border text-fg {inset ? 'h-16 bg-bg' : current ? 'h-row' : 'h-row bg-surface'} {highlight ? 'row-new' : current ? 'row-current' : 'border-line'} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
+  class="flex w-full items-center rounded-row border text-fg {inset ? 'h-16 bg-bg' : current ? 'h-row' : 'h-row bg-surface'} {highlight ? 'row-new' : current ? 'row-current' : 'border-line'} {dashed ? 'border-dashed' : ''} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
   data-variant={variant}
 >
   {#if check}
@@ -86,7 +92,7 @@
   {#if href}
     <a {href} aria-label={label} class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left">{@render body()}</a>
   {:else if onclick}
-    <button type="button" aria-label={label} class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left" {onclick}>{@render body()}</button>
+    <button type="button" aria-label={label} aria-expanded={expanded} class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left" {onclick}>{@render body()}</button>
   {:else}
     <div class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'}">{@render body()}</div>
   {/if}

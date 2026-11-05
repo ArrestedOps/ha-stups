@@ -91,8 +91,8 @@ test('Probelauf: ohne Historie ein Hinweis statt eines Diagramms; Wackeln wird g
   // Oberfläche: der Probelauf-Knopf ist bei fehlender Historie ehrlich
   await page.goto('/');
   await openBoards(page);
-  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Wächter' }).click();
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
+  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
   await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
   await page.getByRole('dialog').getByTestId('found-hit').filter({ hasText: 'Bad Fenster Batterie' }).getByRole('button', { name: 'Einrichten' }).click();
   const d = page.getByRole('dialog');
@@ -105,8 +105,8 @@ test('Gefunden: einen Treffer ausblenden, er kommt nicht wieder; unter „Ausgeb
   const open = async () => {
     await page.goto('/');
     await openBoards(page);
-    await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Wächter' }).click();
+    await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
+    await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
     await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
   };
   const dialog = page.getByRole('dialog');

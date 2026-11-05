@@ -25,7 +25,7 @@ test('Die Beta meldet ihren Kanal; Push und Wächter sind zunächst aus', async 
   await dialog.getByRole('button', { name: 'Beta', exact: true }).click();
   await expect(dialog.getByTestId('beta-banner')).toContainText('Beta-Version');
   await expect(dialog.getByRole('radio', { name: 'Aus' })).toHaveAttribute('aria-checked', 'true');
-  await expect(dialog.getByRole('checkbox', { name: 'Wächter in der Beta einschalten' })).not.toBeChecked();
+  await expect(dialog.getByRole('switch', { name: 'Wächter in der Beta einschalten' })).not.toBeChecked();
 });
 
 test('Sensoren der Beta heißen sensor.stups_beta_…, die der normalen App kommen nicht vor', async ({ request }) => {
@@ -64,7 +64,7 @@ test('Solange die Wächter aus sind, legen sie keine Karten an; nach dem Einscha
   // Einschalten: nur Administratoren, mit Stand-Abgleich
   const dialog = await einstellungen(page);
   await dialog.getByRole('button', { name: 'Beta', exact: true }).click();
-  await dialog.getByRole('checkbox', { name: 'Wächter in der Beta einschalten' }).check();
+  await dialog.getByRole('switch', { name: 'Wächter in der Beta einschalten' }).click();
   expect((await (await page.request.get('/api/beta')).json()).watchers).toBe(true);
 
   await setState(request, 'vacuum.s7', 'cleaning');

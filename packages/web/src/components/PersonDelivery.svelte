@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Toggle from './ui/Toggle.svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { api, type AccessInfo } from '../lib/api';
   import { busyRange } from '../lib/busy';
@@ -123,17 +124,11 @@
                   {#each [...new Set([...(info.services ?? []), ...p.notifyServices])].sort() as s (s)}
                     {@const on = p.notifyServices.includes(s)}
                     {@const missing = info.services !== null && !info.services.includes(s)}
-                    <label class="flex min-h-11 items-center gap-3 text-[15px]">
-                      <input
-                        type="checkbox"
-                        class="h-5 w-5 accent-[var(--accent)]"
-                        checked={on}
-                        disabled={busy}
-                        onchange={(e) => toggleService(p.id, p.notifyServices, s, e.currentTarget.checked)}
-                      />
+                    <div class="flex min-h-11 items-center gap-3 text-[15px]">
                       <span class="min-w-0 flex-1 truncate">{s.replace(/^mobile_app_/, '')}</span>
                       {#if missing}<span class="text-[13px] text-danger">{t('gibt es nicht mehr')}</span>{/if}
-                    </label>
+                      <Toggle checked={on} disabled={busy} label={s.replace(/^mobile_app_/, '')} onchange={(v) => toggleService(p.id, p.notifyServices, s, v)} />
+                    </div>
                   {:else}
                     <p class="text-[15px] text-fg2">
                       {t('Home Assistant meldet keine Geräte. Die Companion App muss auf dem Handy angemeldet sein.')}
@@ -176,17 +171,10 @@
               {#if canEdit}
                 <div>
                   <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Ruhezeit für Stupse')}</p>
-                  <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                  <div class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
                     <span>{t('Stupse in der Ruhezeit erst danach zustellen')}</span>
-                    <input
-                      type="checkbox"
-                      class="h-5 w-5 accent-[var(--accent)]"
-                      checked={!p.nudgeQuiet.off}
-                      disabled={busy}
-                      aria-label={t('Ruhezeit für Stupse von {name}', { name: p.displayName })}
-                      onchange={(e) => run(() => api.updatePerson(p.id, { quietOff: !e.currentTarget.checked }))}
-                    />
-                  </label>
+                    <Toggle checked={!p.nudgeQuiet.off} disabled={busy} label={t('Ruhezeit für Stupse von {name}', { name: p.displayName })} onchange={(on) => run(() => api.updatePerson(p.id, { quietOff: !on }))} />
+                  </div>
                   {#if !p.nudgeQuiet.off}
                     <div class="mt-1 flex items-center gap-2 text-[15px]">
                       <input
@@ -214,21 +202,10 @@
               {#if canEdit}
                 <div>
                   <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Zusammenfassung')}</p>
-                  <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
+                  <div class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
                     <span>{t('Wöchentliche Zusammenfassung am Sonntag')}</span>
-                    <input
-                      type="checkbox"
-                      class="h-5 w-5 accent-[var(--accent)]"
-                      checked={p.weeklySummary}
-                      disabled={busy}
-                      aria-label={t('Wöchentliche Zusammenfassung von {name}', { name: p.displayName })}
-                      onchange={(e) => {
-                        // sofort lesen: `run` führt die Änderung erst später aus
-                        const on = e.currentTarget.checked;
-                        void run(() => api.updatePerson(p.id, { weeklySummary: on }));
-                      }}
-                    />
-                  </label>
+                    <Toggle checked={p.weeklySummary} disabled={busy} label={t('Wöchentliche Zusammenfassung von {name}', { name: p.displayName })} onchange={(on) => void run(() => api.updatePerson(p.id, { weeklySummary: on }))} />
+                  </div>
                   <p class="text-[13px] text-fg2">{t('Am Sonntagabend eine Nachricht, wie viel ihr diese Woche zusammen erledigt habt. Aus, bis du es einschaltest.')}</p>
                 </div>
               {/if}

@@ -26,6 +26,11 @@ export type PushKind = 'nudge' | 'due' | 'watcher';
 
 export interface PushGateway {
   /**
+   * Zusatzweg (Haus: Ansage, Lampe): sein Ergebnis zählt nur, wenn die Person sonst über keinen Weg erreichbar ist.
+   * Ein bewusstes Verwerfen (Ruhezeit, abwesend) meldet dort true und darf eine gescheiterte Zustellung nicht zum Erfolg machen.
+   */
+  auxiliary?: boolean;
+  /**
    * Gibt es für diese Person überhaupt ein Gerät, an das sich senden lässt? Mit `kind` auch: nimmt dieser Weg diese Art von
    * Nachricht an? (Nur der Haus-Weg unterscheidet das: Ansage und Lampe sind je Kanal für bestimmte Arten eingeschaltet.)
    */
@@ -54,8 +59,11 @@ export function combinePush(gateways: PushGateway[]): PushGateway {
   return {
     canReach: (userId, kind) => gateways.some((g) => g.canReach(userId, kind)),
     async send(userId, message) {
-      const results = await Promise.all(gateways.filter((g) => g.canReach(userId, message.kind)).map((g) => g.send(userId, message)));
-      return results.some(Boolean);
+      const reaching = gateways.filter((g) => g.canReach(userId, message.kind));
+      const results = await Promise.all(reaching.map(async (g) => ({ aux: g.auxiliary === true, ok: await g.send(userId, message) })));
+      // Zählt der eigentliche Zustellweg (Companion App, ntfy), entscheidet er; der Haus-Weg nur, wenn es keinen anderen für die Person gibt
+      const primary = results.filter((r) => !r.aux);
+      return (primary.length > 0 ? primary : results).some((r) => r.ok);
     },
     async clear(userId, tag) {
       await Promise.allSettled(gateways.map((g) => g.clear(userId, tag)));

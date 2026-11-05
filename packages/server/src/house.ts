@@ -223,6 +223,7 @@ export function createHousePush(deps: HouseDeps) {
     test: typeof test;
     status: typeof status;
   } = {
+    auxiliary: true,
     canReach,
     send,
     clear: async () => undefined, // eine Ansage lässt sich nicht zurücknehmen

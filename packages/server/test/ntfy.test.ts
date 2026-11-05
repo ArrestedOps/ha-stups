@@ -272,6 +272,19 @@ describe('Mehrere Push-Wege', () => {
     expect(await combinePush([gateway(['a'], false), gateway(['a'], false)]).send('a', message())).toBe(false);
   });
 
+  it('ein Haus-Weg (Ansage, Lampe), der bewusst verwirft, macht eine gescheiterte Companion-Nachricht nicht zum Erfolg', async () => {
+    const companion = gateway(['a'], false); // der eigentliche Zustellweg scheitert
+    const house = { ...gateway(['a'], true), auxiliary: true }; // verworfen (Ruhezeit, abwesend) zählt dort als „erledigt"
+    const both = combinePush([companion, house]);
+    expect(await both.send('a', message())).toBe(false); // der Notifier wiederholt
+    expect(house.log).toEqual(['send:a']);
+    // gelingt die Companion-Nachricht, ist es angekommen, auch wenn das Haus nichts tat
+    expect(await combinePush([gateway(['a'], true), { ...gateway(['a'], false), auxiliary: true }]).send('a', message())).toBe(true);
+    // gibt es für die Person nur den Haus-Weg, gilt dessen Ergebnis (verworfen = erledigt, keine Wiederholung)
+    expect(await combinePush([gateway(['x'], true), { ...gateway(['a'], true), auxiliary: true }]).send('a', message())).toBe(true);
+    expect(await combinePush([gateway(['x'], true), { ...gateway(['a'], false), auxiliary: true }]).send('a', message())).toBe(false);
+  });
+
   it('Entfernen geht an alle Wege', async () => {
     const a = gateway(['x']);
     const b = gateway(['y']);

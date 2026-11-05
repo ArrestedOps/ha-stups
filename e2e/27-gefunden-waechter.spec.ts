@@ -45,7 +45,7 @@ test('Gefunden: Hinweis im Reiter Wächter, Treffer mit Begründung, Wächter au
   await expect(dialog.getByTestId('entity-graph')).toBeVisible();
   await dialog.getByRole('button', { name: 'Weiter: Dann' }).click();
   // Board wählen (Schritt 2)
-  await dialog.getByLabel('Board', { exact: true }).selectOption(board.id);
+  await dialog.getByTestId('then-editor').getByLabel('Board', { exact: true }).selectOption(board.id);
   await dialog.getByRole('button', { name: 'Weiter: Wer' }).click();
   await dialog.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
   // Schritt 4: der Satz ist schon ausgefüllt

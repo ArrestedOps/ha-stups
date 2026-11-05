@@ -113,8 +113,13 @@ test('Heute fällig: Zusammenfassung, Abhaken im Blatt, Tipp auf die Karte öffn
 });
 
 test('Überfällig: „seit …“, die Zahl stimmt mit der Leiste, „Morgen“ behält die Uhrzeit, Rückgängig stellt Termin und Spalte wieder her', async ({ browser, baseURL, request }, info) => {
-  const old = new Date(Date.now() - 2 * 86_400_000).toISOString();
-  const one = new Date(Date.now() - 26 * H).toISOString();
+  // Mittags (Berliner Zeit) vor zwei Tagen und gestern: unabhängig von der Uhrzeit, zu der der Test läuft (um Mitternacht lägen 26 Stunden sonst vor zwei Tagen)
+  const noon = (daysAgo: number) => {
+    const [y, m, d] = addDay(dayKey(Date.now()), -daysAgo).split('-').map(Number);
+    return new Date(Date.UTC(y!, m! - 1, d!, 10)).toISOString();
+  };
+  const old = noon(2);
+  const one = noon(1);
   const a = await mk(request, `Morgen ${tag}`, { assigneeIds: [meId], dueAt: old });
   await mk(request, `Gestern ${tag}`, { assigneeIds: [meId], dueAt: one });
   const p = await asPerson(browser, baseURL, meHeaders, info.project.name === 'hell' ? 'light' : 'dark');

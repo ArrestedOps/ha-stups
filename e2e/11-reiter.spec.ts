@@ -85,11 +85,16 @@ test('Kopfzeile: auf jedem Reiter der Avatar oben rechts öffnet die Einstellung
   }
 });
 
-test('In den Einstellungen steht „Wächter" unter Haushalt', async ({ page }) => {
+test('Die Einstellungen haben keine Zeile „Wächter", die Verwaltung öffnet im Reiter Wächter über „Alle Wächter verwalten"', async ({ page }) => {
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /^Wächter/ }).click();
+  await expect(page.getByRole('dialog').getByRole('button', { name: /^Wächter/ })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
   await expect(page.getByRole('dialog').getByText('Karten, die von selbst aus Home Assistant entstehen')).toBeVisible();
 });

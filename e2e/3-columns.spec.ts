@@ -40,7 +40,7 @@ test('Neues Board: Name eingeben und mit dem sichtbaren Knopf anlegen', async ({
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   const name = `Zweites Board ${Date.now().toString(36)}`;
   await page.getByLabel('Name des neuen Boards').fill(name);
-  await page.getByRole('button', { name: 'Hinzufügen' }).click();
+  await page.getByRole('button', { name: 'Board anlegen' }).click();
 
   await expect(page.getByTestId('board-name')).toHaveText(name);
   // das neue Board bekommt die Standard-Spalten

@@ -127,7 +127,7 @@ test('Sprache wechseln: Deutsch sofort, zurück auf Automatisch wieder Englisch;
   await page.getByRole('button', { name: 'Open settings' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('button', { name: 'Language and colour' }).click();
-  await dialog.getByLabel('Language').selectOption('de');
+  await dialog.getByLabel('Language', { exact: true }).selectOption('de');
 
   // sofort deutsch, ohne Neuladen
   await expect(dialog.getByText('Sprache', { exact: true }).first()).toBeVisible();
@@ -140,7 +140,7 @@ test('Sprache wechseln: Deutsch sofort, zurück auf Automatisch wieder Englisch;
 
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Sprache und Farbe' }).click();
-  await page.getByRole('dialog').getByLabel('Sprache').selectOption('auto');
+  await page.getByRole('dialog').getByLabel('Sprache', { exact: true }).selectOption('auto');
   await expect(page.getByRole('dialog').getByText('Language', { exact: true }).first()).toBeVisible();
   expect((await (await request.get('/api/me')).json()).user.languageChoice).toBe('auto');
 });

@@ -105,3 +105,52 @@ describe('openDb', () => {
     db.close();
   });
 });
+
+describe('openDb: Tabellenumbauten dürfen keine abhängigen Zeilen löschen', () => {
+  const base: Migration[] = [
+    {
+      version: 1,
+      sql: `
+        create table parent (id text primary key, name text not null);
+        create table child (id text primary key, parent_id text not null references parent(id) on delete cascade);
+      `,
+    },
+  ];
+  const seed = (path: string) => {
+    const db = openDb(path, { migrations: base });
+    db.exec(`insert into parent values ('p1', 'eins'); insert into child values ('c1', 'p1'), ('c2', 'p1');`);
+    db.close();
+  };
+  const count = (db: DatabaseSync, table: string) => (db.prepare(`select count(*) as n from ${table}`).get() as { n: number }).n;
+
+  it('ein Umbau mit drop table (wie Migration 20) lässt die Kindzeilen bestehen (on delete cascade greift nicht)', () => {
+    const path = join(tmp(), 'umbau.sqlite');
+    seed(path);
+    const rebuild: Migration = {
+      version: 2,
+      sql: `
+        create table parent_new (id text primary key, name text not null, extra text);
+        insert into parent_new (id, name) select id, name from parent;
+        drop table parent;
+        alter table parent_new rename to parent;
+      `,
+    };
+    const db = openDb(path, { migrations: [...base, rebuild] });
+    expect(count(db, 'parent')).toBe(1);
+    expect(count(db, 'child')).toBe(2);
+    expect((db.prepare('pragma foreign_keys').get() as { foreign_keys: number }).foreign_keys).toBe(1); // danach wieder an
+    db.close();
+  });
+
+  it('ein Umbau, der Fremdschlüssel verletzt, wird zurückgerollt und gemeldet', () => {
+    const path = join(tmp(), 'kaputt.sqlite');
+    seed(path);
+    const broken: Migration = { version: 2, sql: `delete from parent; alter table parent add column x text;` };
+    expect(() => openDb(path, { migrations: [...base, broken] })).toThrow(/Fremdschlüssel/);
+    const db = new DatabaseSync(path);
+    expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(1);
+    expect(count(db, 'parent')).toBe(1);
+    expect(count(db, 'child')).toBe(2);
+    db.close();
+  });
+});

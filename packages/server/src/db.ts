@@ -51,10 +51,28 @@ export function openDb(path: string, opts: OpenOptions = {}): DatabaseSync {
   if (pending.length > 0 && existed && current > 0 && opts.backupDir) {
     backup(db, path, opts.backupDir, current, now());
   }
+  // Fremdschlüssel während der Migrationen aus: ein Tabellenumbau mit `drop table` löst sonst `on delete cascade` aus und löscht
+  // abhängige Zeilen (die Kinder der alten Tabelle). Das Pragma wirkt nicht innerhalb einer Transaktion, darum vor `begin`.
+  // Nach jeder Migration prüft `foreign_key_check`, ob Verweise ins Leere zeigen; dann wird zurückgerollt.
+  const violations = (): Map<string, number> => {
+    const counts = new Map<string, number>();
+    for (const r of db.prepare('pragma foreign_key_check').all() as { table: string; parent: string }[]) {
+      const key = `${r.table} → ${r.parent}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  };
+  // Schon vorhandene Verweise ins Leere (Altlasten) verhindern das Starten nicht; nur neue zählen
+  const baseline = pending.length > 0 ? violations() : new Map<string, number>();
+  if (pending.length > 0) db.exec('pragma foreign_keys = off');
   for (const m of pending) {
     db.exec('begin');
     try {
       db.exec(m.sql);
+      const worse = [...violations()].filter(([key, n]) => n > (baseline.get(key) ?? 0));
+      if (worse.length > 0) {
+        throw new Error(`Migration ${m.version} verletzt Fremdschlüssel (${worse.map(([key, n]) => `${key}: ${n}`).join(', ')})`);
+      }
       db.exec(`pragma user_version = ${m.version}`);
       db.exec('commit');
     } catch (err) {
@@ -63,5 +81,6 @@ export function openDb(path: string, opts: OpenOptions = {}): DatabaseSync {
       throw err;
     }
   }
+  if (pending.length > 0) db.exec('pragma foreign_keys = on');
   return db;
 }

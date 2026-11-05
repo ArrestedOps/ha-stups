@@ -60,6 +60,11 @@ Für die Beispiele: Anna und Ben sind zwei Personen in Stups, jede mit dem eigen
 - [ ] **Filter Personen:** Chip „Anna" zeigt nur ihre Karten, „Niemand" nimmt die nicht zugewiesenen dazu, „Meine“ und „Alle“ funktionieren
 - [ ] **Filter Boards** (Knopf „Filter“ in der Chip-Zeile): nur die gewählten Boards. „Erledigte" blendet Erledigtes der letzten Woche ein, „Zurücksetzen" räumt auf
 - [ ] Der Kreis links erledigt eine Karte, ein Tipp öffnet sie (auch aus einem anderen Board)
+- [ ] **Zahlen antippbar** (Aufgaben, oben): „Heute fällig“, „Überfällig“ und „Erledigt heute“ sind Knöpfe (Fokusring, Vorlese-Name „Heute fällig, 3“); jede öffnet ein Blatt von unten, „Schließen“ schließt. Beschriftungen sind nicht abgeschnitten (auch auf einem schmalen Telefon)
+- [ ] **Blatt „Heute fällig“:** Zusammenfassung („3 Aufgaben für heute. 1 davon schon erledigt, 2 offen.“), „Bis heute Abend“ nach Uhrzeit, „Schon erledigt“ mit „um 07:42“. Kreis hakt ab, Tipp öffnet die Karte, „In der Liste filtern“ schließt das Blatt und zeigt in der Liste nur Heute, Meine (Filter-Knopf zählt 1)
+- [ ] **Blatt „Überfällig“:** rot, „seit gestern“ / „seit 2 Tagen“; „Morgen“ verschiebt nur diese Karte (Uhrzeit bleibt, Karte erscheint in „Geplant“) und der Hinweis „Rückgängig“ holt sie zurück; „Alle auf heute“ (nicht mehr überfällig), „Alle auf morgen“, „Wochenende“ (nächster Samstag) mit Hinweis und Rückgängig; eine wiederkehrende Karte bleibt wiederkehrend; um die Zeitumstellung stimmt die Uhrzeit; leer: „Nichts überfällig 🎉“
+- [ ] **Blatt „Heute erledigt“:** Ring „4 von 7 geschafft 👏“ (7 = heute noch fällig + heute erledigt), Liste mit Uhrzeit; „Rückgängig“ öffnet die Karte wieder (Ring und Zahl oben ändern sich); „Archiv öffnen“ und dort „Zurück“; leer: „Heute noch nichts erledigt“
+- [ ] **Kind:** die Zahlen und Blätter zeigen nur die eigenen Karten, keine Knöpfe „Morgen“, „Alle auf …“, „Wochenende“; Abhaken wie bisher (mit Bestätigung)
 - [ ] **Kalender Woche:** Karten stehen zur Uhrzeit mit Boardfarbe, die aktuelle Uhrzeit ist markiert; Pfeile blättern, „Heute" springt zurück
 - [ ] **Tag und Monat:** Tag zeigt Titel und Boardname; im Monat zeigen Punkte die Karten, ein Tipp auf einen Tag öffnet ihn
 - [ ] **Filter** (Chips und Knopf „Filter“) wirkt in Tag, Woche und Monat wie in der Liste

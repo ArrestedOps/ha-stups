@@ -2,6 +2,18 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.26.0-beta.1
+
+**Aufgaben: die drei Zahlen sind antippbar.** Jede Zahl öffnet ein Blatt von unten (nach dem freigegebenen Entwurf „Variante 3“). Alle Blätter zeigen **deine eigenen** Karten, wie die Zahlen selbst.
+
+- **Heute fällig:** „3 Aufgaben für heute. 1 davon schon erledigt, 2 offen.“ Darunter „Bis heute Abend“ (nach Uhrzeit) und „Schon erledigt“ (mit „um 07:42“). Der Kreis hakt direkt ab, ein Tipp auf die Karte öffnet sie. „In der Liste filtern“ schließt das Blatt und stellt die Liste auf **Heute** und **Meine**
+- **Überfällig:** rot hervorgehoben mit „seit gestern“ oder „seit 2 Tagen“. Je Karte ein Knopf **Morgen** (Termin auf morgen, die Uhrzeit bleibt), darunter **Alle auf heute**, **Alle auf morgen** und **Wochenende** (nächster Samstag, gleiche Uhrzeit). Ein Hinweis zeigt, was verschoben wurde, mit **Rückgängig** (stellt die alten Termine wieder her). Wiederkehrende Karten bleiben wiederkehrend, Karten mit Termin nach heute wandern wie gewohnt nach „Geplant“ und mit Rückgängig wieder zurück. Die Sommerzeit wird beachtet. „In der Liste filtern“ stellt die Liste auf **Überfällig** und **Meine**
+- **Heute erledigt** (die Zelle heißt jetzt „Erledigt heute“): ein Ring „4 von 7 geschafft 👏“ (heute noch fällige plus heute erledigte Aufgaben), darunter die heute erledigten Karten mit Uhrzeit und **Rückgängig** (die Karte ist wieder offen). „Archiv öffnen“ führt ins Archiv, „Zurück“ dort wieder hierher
+- Freundliche Leerzustände („Nichts überfällig 🎉“, „Heute noch nichts erledigt“)
+- **Kinder** sehen nur ihre eigenen Karten und haben weder „Morgen“ noch „Alle verschieben“; Abhaken und Rückgängig gelten wie bisher (mit Bestätigung, wenn eingestellt)
+- Die Blätter laden bei jeder Änderung neu (auch wenn jemand anderes etwas ändert)
+- Keine Änderung an der Datenbank, keine neue Schnittstelle des Servers
+
 ## 1.25.1-beta.1
 
 - **Lange Namen machen die Seite nicht mehr breiter:** Sehr lange Entitätsnamen wie `sensor.flur_schliesszylinder_…` ragten im Wächter-Editor (Zusammenfassung, Karten, Entitätszeile) aus dem Fenster und zerschossen das Layout. Sie brechen jetzt um, in allen Fenstern der App. Ein Browser-Test mit einem 80 Zeichen langen Namen sichert das ab

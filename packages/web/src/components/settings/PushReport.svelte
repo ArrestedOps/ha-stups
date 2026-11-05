@@ -132,7 +132,7 @@
     <div class="space-y-4 rounded-row border border-line bg-surface px-4 py-3.5 text-[15px]">
       <div>
         <p class="font-semibold">{t('Nächste Karten mit Termin')}</p>
-        {#each status.upcoming as c (c.title + c.dueAt)}
+        {#each status.upcoming as c, i (i)}
           <p class="mt-1">
             {c.title} · {clock(c.dueAt)} · {c.assignees.length ? c.assignees.join(', ') : t('niemand')}
             {#if c.note}<span class="block text-[13px] text-danger">{c.note}</span>{/if}

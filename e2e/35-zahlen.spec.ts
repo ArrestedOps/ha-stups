@@ -1,3 +1,4 @@
+import { openSettingsPage } from './helpers';
 import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
 
 // Aufgaben: die drei Zahlen sind Knöpfe und öffnen je ein Blatt (Heute fällig, Überfällig, Heute erledigt).
@@ -272,4 +273,14 @@ test('Kind: eigene Karten im Blatt, abhaken ja, aber kein „Morgen“ und kein 
   } finally {
     await p.close();
   }
+});
+
+// Regression (CI um 23 Uhr): zwei Karten mit gleichem Titel und gleichem Termin ließen „Warum kommt nichts an?“ ewig laden
+test('Warum kommt nichts an?: zwei gleiche Karten mit gleichem Termin stören die Liste nicht', async ({ page, request }) => {
+  const due = new Date(Date.now() - 11 * H).toISOString();
+  await mk(request, `Gleich ${tag}`, { dueAt: due });
+  await mk(request, `Gleich ${tag}`, { dueAt: due });
+  await page.goto('/');
+  await openSettingsPage(page, 'Warum kommt nichts an?');
+  await expect(page.getByTestId('push-ok')).toBeVisible();
 });

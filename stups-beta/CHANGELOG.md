@@ -24,6 +24,7 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 - Freundliche Leerzustände („Nichts überfällig 🎉“, „Heute noch nichts erledigt“)
 - **Kinder** sehen nur ihre eigenen Karten und haben weder „Morgen“ noch „Alle verschieben“; Abhaken und Rückgängig gelten wie bisher (mit Bestätigung, wenn eingestellt)
 - Die Blätter laden bei jeder Änderung neu (auch wenn jemand anderes etwas ändert)
+- **Fehlerbehebung:** „Warum kommt nichts an?“ (Einstellungen › Benachrichtigungen) blieb bei „Lädt …“ stehen, wenn zwei offene Karten denselben Titel und denselben Termin hatten
 - Keine Änderung an der Datenbank, keine neue Schnittstelle des Servers
 
 ## 1.25.1-beta.1

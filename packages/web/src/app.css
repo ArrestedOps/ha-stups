@@ -172,6 +172,20 @@
     --danger: #b0001a;
     --on-danger: #ffffff;
     --danger-bg: #ffe5e7;
+    --text-soft: #4a3a30;
+    --text-soft2: #5c4a3d;
+    --sep: #c9b8a8;
+    --ring: #9a8676;
+    --line-chip: #efdccb;
+    --count-bg: #f6e8dc;
+    --avatar-ring: #efdccb;
+    --dim: #7a6558;
+    --count-on: rgba(255, 255, 255, 0.22);
+    --sig-orange: #a85200;
+    --sig-red: #c0121f;
+    --sig-green: #1c7a3a;
+    --sig-blue: #0a5ea8;
+    --brand-dot: #e0480d;
     --scrim: rgba(43, 29, 21, 0.4);
     --glow: radial-gradient(ellipse at 90% -10%, rgba(255, 138, 77, 0.42), transparent 60%);
     --shadow-card: 0 6px 18px rgba(120, 60, 20, 0.08);
@@ -229,6 +243,16 @@
 .tile-green { background-image: linear-gradient(160deg, var(--tile-green-a), var(--tile-green-b)); color: var(--tile-green-fg); }
 .tile-red { background-image: linear-gradient(160deg, var(--tile-red-a), var(--tile-red-b)); color: var(--tile-red-fg); }
 .tile-gray { background-image: linear-gradient(160deg, var(--tile-gray-a), var(--tile-gray-b)); color: var(--tile-gray-fg); }
+
+/* Das Feld der aktuellen Spalte im Karten-Menü: orange Rand, heller Orange-Ton */
+.move-current { border-color: var(--brand-dot); color: var(--accent-text); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+/* Gewählte Antwort in einer Liste (Stupsen: Nachricht): orange Rand, heller Grund, weicher Ring */
+.pick-on {
+  border-color: var(--brand-dot);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
 
 /* Neu und offen (Mitteilungen): oranger Rand an der Zeile, oranger Punkt mit Leuchten */
 .row-new { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }

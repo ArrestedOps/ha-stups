@@ -63,6 +63,18 @@ describe('Kontrast der Farbpaare (aus app.css), Hell und Dunkel', () => {
         }
       });
 
+      it('Signalfarben (heute, überfällig, erledigt, später) und die helleren Textstufen auf Grund und Fläche: mindestens 4,5 : 1', () => {
+        for (const bg of ['--bg', '--surface']) {
+          for (const fg of ['--sig-orange', '--sig-red', '--sig-green', '--sig-blue', '--text-soft', '--text-soft2', '--dim', '--danger']) {
+            expect(ratio(v[fg]!, v[bg]!), `${fg} auf ${bg}`).toBeGreaterThanOrEqual(4.5);
+          }
+        }
+      });
+
+      it('Erledigt-Kreis (Ring) und Trenner: mindestens 3 : 1 gegen die Fläche (nicht nur Text)', () => {
+        expect(ratio(v['--ring']!, v['--surface']!), 'Ring').toBeGreaterThanOrEqual(3);
+      });
+
       it('Symbol auf der Kachel: an beiden Enden des Verlaufs mindestens 3 : 1', () => {
         for (const c of ['orange', 'purple', 'violet', 'blue', 'teal', 'green', 'red', 'gray']) {
           for (const end of ['a', 'b']) {

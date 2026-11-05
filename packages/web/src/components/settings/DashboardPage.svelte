@@ -9,7 +9,7 @@
   import HeaderToggle from './HeaderToggle.svelte';
   import Page from './Page.svelte';
 
-  /** Wohin „‹ Dashboard" oben links führt, die Kopfzeile von Home Assistant und der Knopf für die Bubble Card */
+  /** Wohin „Zurück zum Dashboard" führt (Einstellungen › Home Assistant), die Kopfzeile von Home Assistant und der Knopf für die Bubble Card */
   let dashboards = $state<{ title: string; path: string }[]>([]);
   let loaded = $state(false);
   let custom = $state('');
@@ -71,8 +71,8 @@ tap_action:
   <Group
     title={t('Zurück zum Dashboard')}
     hint={ui.isAdmin
-      ? t('Dieses Dashboard öffnet der Button „‹ Dashboard“ oben links. Die Wahl gilt für alle gemeinsam.')
-      : t('Dieses Dashboard öffnet der Button „‹ Dashboard“ oben links. Die Wahl gilt für alle und ist Administratoren von Home Assistant vorbehalten.')}
+      ? t('Dieses Dashboard öffnet „Zurück zum Dashboard“ in den Einstellungen. Die Wahl gilt für alle gemeinsam.')
+      : t('Dieses Dashboard öffnet „Zurück zum Dashboard“ in den Einstellungen. Die Wahl gilt für alle und ist Administratoren von Home Assistant vorbehalten.')}
   >
     <Row label="Dashboard">
       <SelectField value={selected} disabled={!loaded || !ui.isAdmin} label="Dashboard" onchange={(e) => onSelect(e.currentTarget.value)}>

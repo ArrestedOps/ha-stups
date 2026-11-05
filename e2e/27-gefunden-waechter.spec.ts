@@ -60,6 +60,7 @@ test('Gefunden: Hinweis im Reiter Wächter, Treffer mit Begründung, Wächter au
   // Der Trockner steht jetzt im Reiter Wächter (ruhig) und fehlt in „Gefunden"
   await page.keyboard.press('Escape');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  await page.getByTestId('home-quiet').getByRole('button', { name: /Wächter ohne offene Aktion/ }).click();
   await expect(page.getByTestId('home-quiet')).toContainText('Trockner fertig');
 });
 

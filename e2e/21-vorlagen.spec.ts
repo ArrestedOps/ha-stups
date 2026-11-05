@@ -35,7 +35,7 @@ test('neues Board aus der Vorlage „Haushalt": Vorschau, Spalten und Karten kom
 
   await page.getByLabel('Name des neuen Boards').fill(name);
   await page.getByLabel('Name des neuen Boards').press('Enter');
-  await expect(page.getByRole('heading', { name })).toBeVisible();
+  await expect(page.getByTestId('board-name')).toHaveText(name);
 
   const created = (await boardByName(request, name))!;
   boardIds.push(created.id);
@@ -62,7 +62,7 @@ test('ein leeres Board bleibt leer, auch wenn die Vorlagen-Auswahl vorher benutz
   await expect(page.getByTestId('template-preview')).toHaveCount(0);
   await page.getByLabel('Name des neuen Boards').fill(name);
   await page.getByLabel('Name des neuen Boards').press('Enter');
-  await expect(page.getByRole('heading', { name })).toBeVisible();
+  await expect(page.getByTestId('board-name')).toHaveText(name);
   const created = (await boardByName(request, name))!;
   boardIds.push(created.id);
   const view = (await (await request.get(`/api/boards/${created.id}`)).json()) as { cards: unknown[] };
@@ -100,7 +100,7 @@ test('eigenes Board als Vorlage speichern, daraus ein neues Board anlegen, die V
   await expect(page.getByTestId('template-preview')).toContainText('1 Karte');
   await page.getByLabel('Name des neuen Boards').fill(name);
   await page.getByLabel('Name des neuen Boards').press('Enter');
-  await expect(page.getByRole('heading', { name })).toBeVisible();
+  await expect(page.getByTestId('board-name')).toHaveText(name);
   const created = (await boardByName(request, name))!;
   boardIds.push(created.id);
   await expect(page.getByRole('button', { name: /Vorlagen-Karte/ }).first()).toBeVisible();

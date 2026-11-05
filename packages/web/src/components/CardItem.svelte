@@ -175,7 +175,7 @@
               <Icon name="hand" size={12} />{t('Du hast {names} gestupst', { names: names(nudge.fromMe.map((n) => n.toId)) })}
             </span>
           {/if}
-          <CardMeta {card} done={isDoneColumn} {overdue} people={assignees.map((p) => p.displayName)} />
+          <CardMeta {card} done={isDoneColumn} {overdue} {categories} people={assignees.map((p) => p.displayName)} />
         </span>
       {/snippet}
       {#snippet right()}

@@ -82,7 +82,7 @@ test('Person hinzufügen, Push-Geräte-Hinweis, umbenennen und mit Bestätigung 
 
   await page.getByLabel('Name der neuen Person').fill(name);
   await page.getByRole('button', { name: 'Hinzufügen' }).last().click();
-  const row = page.getByRole('button', { name: new RegExp(name) });
+  const row = page.getByRole('dialog').getByRole('button', { name: new RegExp(name) });
   await expect(row).toBeVisible();
   await expect(row).toContainText('Kein Push-Gerät');
 
@@ -90,13 +90,13 @@ test('Person hinzufügen, Push-Geräte-Hinweis, umbenennen und mit Bestätigung 
   const neu = `${name}-neu`;
   await page.getByLabel(`Anzeigename von ${name}`).fill(neu);
   await page.getByLabel(`Anzeigename von ${name}`).blur();
-  await expect(page.getByRole('button', { name: new RegExp(neu) })).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('button', { name: new RegExp(neu) })).toBeVisible();
 
   // die Zeile ist nach dem Umbenennen noch offen
   await page.getByRole('button', { name: 'Aus Stups entfernen' }).click();
   await expect(page.getByText('Zugewiesene Karten behalten die Zuweisung')).toBeVisible();
   await page.getByRole('button', { name: 'Ja, entfernen' }).click();
-  await expect(page.getByRole('button', { name: new RegExp(neu) })).toHaveCount(0);
+  await expect(page.getByRole('dialog').getByRole('button', { name: new RegExp(neu) })).toHaveCount(0);
 });
 
 test('Nur freigegebene: Fremder sieht „Kein Zugriff", der Administrator gibt ihn frei', async ({ page, browser }, info) => {

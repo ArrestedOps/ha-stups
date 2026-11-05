@@ -51,7 +51,7 @@ test('Stupsen: Rene stupst Conny, Abzeichen und Verlauf erscheinen live bei ihr'
     await page.getByRole('tab', { name: /^Offen/ }).click();
     await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
     await page.getByRole('button', { name: 'Stupsen' }).click();
-    await expect(page.getByRole('checkbox', { name: 'Conny' })).toBeChecked();
+    await expect(page.getByRole('dialog').getByRole('button', { name: 'Conny', pressed: true })).toBeVisible(); // die Personen sind Chips (aria-pressed)
     await page.getByRole('radio', { name: 'Heute noch?' }).click();
     await page.getByRole('button', { name: 'Stups senden' }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Gestupst!' })).toBeVisible();
@@ -60,11 +60,13 @@ test('Stupsen: Rene stupst Conny, Abzeichen und Verlauf erscheinen live bei ihr'
     // Rene sieht den dezenten Hinweis an der Karte
     await expect(page.locator('[role=presentation]').filter({ hasText: title }).getByTestId('nudge-from-me')).toContainText('Du hast Conny gestupst');
 
-    // Conny sieht es ohne Neuladen: deutliches Abzeichen und der Filter „Gestupst"
+    // Conny sieht es ohne Neuladen: deutliches Abzeichen und der Filter „Nur mit offenem Stups" (im Blatt hinter dem Filter-Knopf)
     const row = conny.locator('[role=presentation]').filter({ hasText: title });
     await expect(row.getByTestId('nudge-to-me')).toContainText('Rene stupst dich', { timeout: 15_000 });
-    // Der Filter zählt alle gestupsten Karten des Boards (frühere Läufe liegen noch dort), er zeigt unsere dabei mit an
-    await conny.getByRole('button', { name: /^Gestupst \d+/ }).click();
+    // Der Filter zeigt alle gestupsten Karten des Boards (frühere Läufe liegen noch dort), unsere ist dabei
+    await conny.getByRole('button', { name: 'Filter' }).click();
+    await conny.getByRole('switch', { name: 'Nur mit offenem Stups' }).click();
+    await conny.getByRole('button', { name: /Karten? anzeigen/ }).click();
     await expect(row).toBeVisible();
     await expect(conny.locator('[role=presentation]').filter({ hasNot: conny.getByTestId('nudge-to-me') })).toHaveCount(0);
 
@@ -106,7 +108,7 @@ test('Stupsen: nach einem Stups ist die Person 30 Minuten gesperrt, mit Uhrzeit'
   await page.getByRole('tab', { name: /^Offen/ }).click();
   await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
   await page.getByRole('button', { name: 'Stupsen' }).click();
-  const conny = page.getByRole('checkbox', { name: 'Conny' });
+  const conny = page.getByRole('dialog').getByRole('button', { name: 'Conny' });
   await expect(conny).toBeDisabled();
   await expect(page.getByText(/wieder ab \d\d:\d\d/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Stups senden' })).toBeDisabled();
@@ -123,7 +125,7 @@ test('Stupsen: wer kein Push-Gerät hat, steht ausgegraut mit Hinweis in der Lis
     await page.getByRole('tab', { name: /^Offen/ }).click();
     await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
     await page.getByRole('button', { name: 'Stupsen' }).click();
-    await expect(page.getByRole('checkbox', { name })).toBeDisabled();
+    await expect(page.getByRole('dialog').getByRole('button', { name })).toBeDisabled();
     await expect(page.getByText('hat kein Push-Gerät')).toBeVisible();
   } finally {
     await request.delete(`/api/access/people/${person.id}`);

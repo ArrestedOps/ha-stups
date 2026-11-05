@@ -377,6 +377,8 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 
 ## 30 · Neues Design, Phase 2: drei Reiter (seit 1.20.0)
 
+> Anordnung, Kopf, Umschalter und Menüs sind seit 1.20.1 nach den Entwürfen nachgebessert: **gilt jetzt Abschnitt 31**; hier bleibt, was unverändert gilt (Reiter, Gruppen, Kind, Fairness).
+
 **Reiter und Aufgaben**
 
 - [ ] Leiste unten: **Aufgaben, Boards, Wächter**. Ein Kind und der Container ohne Home Assistant sehen nur Aufgaben und Boards. Ein früher gemerkter Reiter (Heute, Kalender, Zuhause) öffnet ohne Fehler Aufgaben
@@ -395,6 +397,33 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Stupsen: An wen (mit Hinweisen wie „wieder ab 14:30“), Nachricht, eigener Text, **Vorschau der Push-Nachricht**, Hinweis zur Ruhezeit, großer Knopf „Stups senden“
 - [ ] Englisch: Tasks, Boards, Watchers; Umschalter List, Day, Week, Month; nichts läuft über den Rand
 - [ ] Hell und Dunkel: Kacheln, Chips, Banner und Zeilen gut lesbar
+
+## 31 · Neues Design, Phase 2 (Nachbesserung nach den Entwürfen, seit 1.20.1)
+
+**Kopf auf allen drei Reitern**
+
+- [ ] Aufgaben, Boards, Wächter: oben Logo, „stups.“, **Glocke**, **Zahnrad**, Profilbild; darunter Titel und Untertitel („Deine Aufgaben, Termine und To-dos an einem Ort.“, „Organisiere deine Aufgaben in Kanban-Boards.“, „Automatische Aufgaben aus Home Assistant.“). Kein „‹ Dashboard“ mehr
+- [ ] Zahnrad und Profilbild öffnen die Einstellungen (oben das Profil), die Glocke die Mitteilungen
+- [ ] Glocke: **ohne Offenes kein Punkt** und im Blatt ein ruhiger Satz; mit einem offenen Stups an dich (auch von einem zweiten Gerät aus, ohne Neuladen) erscheint der Punkt auf jedem Reiter, das Blatt zeigt „… stupst dich! 👋“ mit der Karte, ein Tipp öffnet sie. Weitere Einträge: Bestätigungen (nur, wenn du sie geben darfst) und Karten von Wächtern. Kind: nur Stupse an das Kind
+- [ ] Einstellungen › Home Assistant (im Add-on für jede Rolle, auch Kind): **„Zurück zum Dashboard“** führt zum Dashboard, **„HA-Kopfzeile ausblenden“** schaltet die Kopfzeile von Home Assistant aus und ein. Im Container ohne Home Assistant gibt es beides nicht
+
+**Aufgaben (von oben nach unten wie im Entwurf)**
+
+- [ ] Kopf, Zahlenleiste (Symbole und Zahlen farbig, Bezeichnungen einzeilig), „Diese Woche“ mit „Monatsansicht“ und „Jan 2025 ⌄“, Wochenleiste mit sieben Tagen und Kalender-Knopf, Stups-Banner (nur bei offenem Stups an dich; bei mehreren der neueste, ein Tipp öffnet die Mitteilungen), Chips Meine · Alle · Person · Filter, Gruppen Überfällig, Heute, Diese Woche, Später
+- [ ] Zeile: Erledigt-Kreis, Kachel, Titel einzeilig, „Datum • Person • Checkliste • Link“, Bild der Person, **Mehr-Knopf „…“** (öffnet das Karten-Menü auch für Karten aus einem anderen Board). „Vom Haus“ vor Überfällig (nur mit Karten), Fairness und „Bei den anderen“ am Ende
+- [ ] Kein Umschalter Liste/Tag/Woche/Monat. „Monatsansicht“, der Monat und der Kalender-Knopf öffnen den **Kalender** (Seite mit „‹ Aufgaben“, Tag · Woche · Monat, freie Zeit antippen legt eine Karte an); „‹ Aufgaben“ führt zurück; der Filter-Knopf steht auch dort
+- [ ] Filter-Knopf: Blatt mit Wer (Ich, Personen, Niemand), Boards, „Erledigte anzeigen“, „Zurücksetzen“, großer Knopf mit der Trefferzahl; die Wahl bleibt auf dem Gerät
+- [ ] Kind: keine Chips, keine Glocke-Einträge außer Stupsen an das Kind, nur eigene Karten
+
+**Boards, Wächter, Karte, Menü, Stupsen**
+
+- [ ] Boards: Board-Leiste, Chips Meine · Alle · Person · Filter, Kategorien-Chips (Alle mit Umriss), Spalten gleich breit, Zeilen mit „Hoch • Person • Checkliste • Link“; Filter-Knopf: Suche, „Nur mit offenem Stups“, Kosten im Board. Die ganze Seite scrollt, unter dem Plus-Knopf lässt sich die letzte Karte erreichen
+- [ ] Wächter: Karte „Deine Wächter“ mit Roboter, Banner „weitere Geräte gefunden“ (Administratoren), Wartet auf jemanden (Stupsen, „offen seit 12 Min.“), Läuft gerade, Kommt bald (Zähler mit drei Balken), Ruhig als eine Zeile, die sich aufklappt
+- [ ] Karte: Erledigt links, „Gespeichert“ in der Mitte, Fertig rechts; Kachel 52 px und Titel 24 px; Chips (Status, Person mit Bild, Termin, Priorität, Kategorie, Kosten, gestrichelt Wiederholen und Erinnerung); Beschreibung als Feld; Checkliste mit eigenen Kästchen und „Punkt hinzufügen“; Links und Anhänge (Kacheln 96 px, „Hinzufügen“); Kommentare mit rundem Senden-Knopf; Verlauf mit Punkten
+- [ ] Karten-Menü: Aktionsblatt von unten, Karte oben, „Verschieben nach“ in 2 × 2 Feldern (aktuelle Spalte mit Haken und orangem Rand, „Erledigt“ erledigt die Karte), Öffnen, Stupsen, Duplizieren, Löschen
+- [ ] Stupsen: Karte, An wen? (Chips mit Bild, nicht wählbare ausgegraut mit Hinweis darunter), Nachricht als Liste mit Auswahlkreis, eigener Text, So kommt es an (App-Symbol), Ruhezeit-Hinweis, großer Knopf unten fest
+- [ ] Sheets: Radius 26, Griff, Kopf links · Mitte · rechts, so hoch wie der Bildschirm minus 54 px (Karten-Menü nur so hoch wie der Inhalt)
+- [ ] Hell, Dunkel und Englisch: nichts läuft über den Rand, die Texte stehen übersetzt da
 
 ## Bekannte Lücken
 

@@ -30,6 +30,8 @@
   import { DEFAULT_CARRY } from '../lib/carry';
   import { describeRecurrence } from '../lib/recurrence';
   import { toast, ui } from '../lib/store.svelte';
+  import { catKey } from '../lib/colors';
+  import Avatar from './Avatar.svelte';
   import CategoryPicker from './CategoryPicker.svelte';
   import Icon from './Icon.svelte';
   import PeoplePicker from './PeoplePicker.svelte';
@@ -61,7 +63,8 @@
   let panel = $state<string | null>(null);
   const toggle = (name: string) => (panel = panel === name ? null : name);
   const people = $derived(ui.people.filter((p) => card.assigneeIds.includes(p.id)));
-  const catNames = $derived((ui.view?.categories ?? []).filter((c) => card.categoryIds.includes(c.id)).map((c) => c.name));
+  const cats = $derived((ui.view?.categories ?? []).filter((c) => card.categoryIds.includes(c.id)));
+  const catNames = $derived(cats.map((c) => c.name));
 
   const PRIORITIES: [Priority | null, string][] = $derived([
     [null, t('Keine')],
@@ -142,48 +145,55 @@
   }
 </script>
 
-{#snippet chip(name: string, icon: string, text: string, filled: boolean, tone = '')}
+{#snippet chip(name: string, icon: string, text: string, filled: boolean, tone = '', lead?: 'photo' | 'dot', iconTone = '')}
   <button
     type="button"
-    class="flex h-[34px] max-w-full items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold {panel === name
-      ? 'bg-accent-grad border-transparent'
+    class="flex h-[34px] max-w-full items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold {lead === 'photo' ? 'pl-1' : ''} {panel === name
+      ? 'bg-accent-grad glow-chip border-transparent'
       : filled
-        ? `border-line bg-surface text-fg ${tone}`
-        : 'border-dashed border-line text-fg2'}"
+        ? `border-line-chip bg-surface ${tone || 'text-text-soft'}`
+        : 'border-dashed border-line-chip text-fg2'}"
     aria-expanded={panel === name}
     onclick={() => toggle(name)}
   >
-    <Icon name={icon} size={16} /><span class="truncate">{text}</span>
+    {#if lead === 'photo' && people[0]}
+      <Avatar person={people[0]} size={28} ring={1.5} />
+    {:else if lead === 'dot' && cats[0]}
+      <i class="h-[9px] w-[9px] shrink-0 rounded-full" style:background="var(--c-{catKey(cats[0].color)}-fg)"></i>
+    {:else}
+      <span class="inline-flex shrink-0 {iconTone}"><Icon name={icon} size={16} stroke={2} /></span>
+    {/if}
+    <span class="truncate">{text}</span>
   </button>
 {/snippet}
 
 {#if readonly}
   <!-- Rolle „Kind": die Werte nur zum Ansehen (Aufwand und Kosten gehören nicht dazu) -->
-  <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('Eigenschaften')} data-testid="card-props-readonly">
-    <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold"><Icon name="columns" size={16} />{column?.name ?? 'Status'}</span>
+  <div class="flex flex-wrap gap-2" role="group" aria-label={t('Eigenschaften')} data-testid="card-props-readonly">
+    <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line-chip bg-surface px-3 text-[13px] font-semibold text-text-soft"><Icon name="kanban" size={16} stroke={2} />{column?.name ?? 'Status'}</span>
     {#if people.length}
-      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold"><Icon name="user" size={16} />{people.map((p) => p.displayName).join(' & ')}</span>
+      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line-chip bg-surface px-3 text-[13px] font-semibold text-text-soft"><Icon name="user" size={16} />{people.map((p) => p.displayName).join(' & ')}</span>
     {/if}
     {#if card.dueAt}
-      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold {late ? 'text-danger' : ''}">
+      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line-chip bg-surface px-3 text-[13px] font-semibold {late ? 'text-danger' : 'text-text-soft'}">
         <Icon name="clock" size={16} />{formatDue(card.dueAt)}{late ? ` · ${t('überfällig')}` : ''}
       </span>
     {/if}
     {#if card.recurrence}
-      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold"><Icon name="repeat" size={16} />{describeRecurrence(card.recurrence)}</span>
+      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line-chip bg-surface px-3 text-[13px] font-semibold text-text-soft"><Icon name="repeat" size={16} />{describeRecurrence(card.recurrence)}</span>
     {/if}
     {#if card.priority}
-      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold"><Icon name="flag" size={16} />{PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? ''}</span>
+      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line-chip bg-surface px-3 text-[13px] font-semibold text-text-soft"><Icon name="flag" size={16} />{PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? ''}</span>
     {/if}
     {#if catNames.length}
-      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold"><Icon name="tag" size={16} />{catNames.join(', ')}</span>
+      <span class="flex h-[34px] items-center gap-1.5 rounded-full border border-line-chip bg-surface px-3 text-[13px] font-semibold text-text-soft"><Icon name="tag" size={16} />{catNames.join(', ')}</span>
     {/if}
   </div>
 {:else}
 <!-- Eigenschaften als kleine Chips: leer gestrichelt, gefüllt mit Wert. Antippen öffnet darunter ein Feld. -->
-<div class="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('Eigenschaften')}>
-  <label class="relative flex h-[34px] items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-[13px] font-semibold">
-    <Icon name="columns" size={16} />{column?.name ?? 'Status'}<Icon name="chevron-down" size={14} />
+<div class="flex flex-wrap gap-2" role="group" aria-label={t('Eigenschaften')}>
+  <label class="relative flex h-[34px] items-center gap-1.5 rounded-full border border-line-chip bg-surface px-3 text-[13px] font-semibold text-text-soft">
+    <Icon name="kanban" size={16} stroke={2} />{column?.name ?? 'Status'}
     <select
       class="absolute inset-0 h-full w-full opacity-0"
       value={card.columnId}
@@ -194,14 +204,18 @@
     </select>
   </label>
 
-  {@render chip('who', 'user', people.length ? people.map((p) => p.displayName).join(' & ') : t('Zuständig'), people.length > 0)}
+  {@render chip('who', 'user', people.length ? people.map((p) => p.displayName).join(' & ') : t('Zuständig'), people.length > 0, '', people.length ? 'photo' : undefined)}
   {@render chip(
     'due',
-    'clock',
+    'calendar',
     card.dueAt ? formatDue(card.dueAt) + (late ? ` · ${t('überfällig')}` : '') : t('Fälligkeit'),
     !!card.dueAt,
     late ? 'text-danger' : '',
   )}
+  {@render chip('prio', 'flag', card.priority ? (PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? '') : t('Priorität'), !!card.priority, '', undefined, card.priority ? 'text-accent-text' : '')}
+  {@render chip('cat', 'tag', catNames.length ? catNames.join(', ') : t('Kategorie'), catNames.length > 0, '', catNames.length ? 'dot' : undefined)}
+  {@render chip('cost', 'euro', card.costCents !== null ? formatCost(card.costCents) : t('Kosten'), card.costCents !== null)}
+  {@render chip('effort', 'task-check', effortLabel, !!card.effort)}
   {#if card.dueAt}
     {@render chip('rec', 'repeat', card.recurrence ? describeRecurrence(card.recurrence) : t('Wiederholen'), !!card.recurrence)}
     {@render chip(
@@ -211,12 +225,8 @@
       !!card.remindBeforeMin || card.overdueNag,
     )}
   {/if}
-  {@render chip('prio', 'flag', card.priority ? (PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? '') : t('Priorität'), !!card.priority)}
-  {@render chip('effort', 'checklist', effortLabel, !!card.effort)}
-  {@render chip('cat', 'tag', catNames.length ? catNames.join(', ') : t('Kategorie'), catNames.length > 0)}
-  {@render chip('cost', 'euro', card.costCents !== null ? formatCost(card.costCents) : t('Kosten'), card.costCents !== null)}
   {#if card.confirm !== undefined && hasChild}
-    {@render chip('confirm', 'check', confirmLabel, card.confirm !== null)}
+    {@render chip('confirm', 'task-check', confirmLabel, card.confirm !== null)}
   {/if}
 </div>
 

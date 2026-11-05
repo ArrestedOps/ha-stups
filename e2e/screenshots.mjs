@@ -231,7 +231,7 @@ const screens = [
     await nav(page, 'Boards').click();
     await page.getByRole('tab', { name: re(S.planned) }).click();
     await page.getByText(S.windows).first().click();
-    await page.getByRole('button', { name: x(/stupsen/, /nudge/i) }).click();
+    await page.getByRole('dialog').getByRole('button', { name: x(/stupsen/, /^Nudge/) }).click();
     await page.getByRole('radio', { name: x(/Heute noch/, /Today still/) }).click();
   }],
   ['aufgaben', async (page) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await page.getByTestId('tasks-sub').waitFor(); await page.getByTestId('week-strip').waitFor(); }],

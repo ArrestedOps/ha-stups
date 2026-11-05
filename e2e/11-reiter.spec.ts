@@ -28,12 +28,14 @@ test.describe('Start', () => {
     await expect(nav(page).getByRole('button', { name: 'Boards' })).toHaveAttribute('aria-current', 'page');
   });
 
-  test('Die frühere Kalenderansicht bleibt lesbar: gemerkte Woche öffnet Aufgaben in der Wochenansicht', async ({ page }) => {
+  test('Die frühere Kalenderansicht bleibt lesbar: gemerkte Monatsansicht öffnet der Kalender-Knopf, Aufgaben starten mit der Liste', async ({ page }) => {
     await page.goto('/');
-    await page.evaluate(() => localStorage.setItem('stups.calmode', 'week'));
+    await page.evaluate(() => localStorage.setItem('stups.calmode', 'month'));
     await page.reload();
-    await expect(page.getByRole('radio', { name: 'Woche' })).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByTestId('calendar-grid')).toBeVisible();
+    await expect(page.getByTestId('tasks')).toBeVisible(); // Start ist die Liste
+    await page.getByRole('button', { name: 'Kalender öffnen' }).click();
+    await expect(page.getByRole('radio', { name: 'Monat' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('calendar-month')).toBeVisible();
   });
 });
 

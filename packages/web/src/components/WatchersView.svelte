@@ -146,9 +146,11 @@
                     >
                       {#snippet tile()}<Tile color={PHASE_TILE.waiting!}><Icon name="eye" size={24} /></Tile>{/snippet}
                       {#snippet meta()}
-                        <span class="inline-flex min-w-0 items-center gap-1"><Icon name="user" size={14} stroke={1.9} /><span class="truncate">{card.assigneeIds.length ? names(card.assigneeIds) : t('Noch niemand zuständig')}</span></span>
+                        <span class="inline-flex shrink-0 items-center gap-1"><Icon name="user" size={14} stroke={1.9} /><span class="max-w-[7rem] truncate">{card.assigneeIds.length ? names(card.assigneeIds) : t('Noch niemand zuständig')}</span></span>
                         <span class="shrink-0 text-sep" aria-hidden="true">•</span>
                         <span class="inline-flex shrink-0 items-center gap-1"><Icon name="clock" size={14} stroke={1.9} />{openSinceText(card.createdAt, nowMs)}</span>
+                        <span class="shrink-0 text-sep" aria-hidden="true">•</span>
+                        <span class="min-w-0 truncate text-house">{i.name}</span>
                       {/snippet}
                       {#snippet right()}
                         {#if canStupse}
@@ -270,7 +272,7 @@
             <ul class="mt-2 flex flex-col gap-2">
               {#each activity as r (r.id)}
                 <li>
-                  <ListRow title="{r.watcherName} · {RUN_TEXT[r.result] ?? r.result}">
+                  <ListRow title="{r.watcherName} · {RUN_TEXT[r.result] ?? r.result}" label={t('Wächter {name} öffnen', { name: r.watcherName })} onclick={() => openWatcher(r.watcherId)}>
                     {#snippet meta()}<span class="truncate">{formatDue(r.at, nowMs)}{r.assignedTo.length ? ` · ${names(r.assignedTo)}` : ''}{r.note ? ` · ${noteText(r.note)}` : ''}</span>{/snippet}
                   </ListRow>
                 </li>

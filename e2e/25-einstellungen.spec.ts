@@ -46,9 +46,9 @@ test('Nichts geht verloren: Sprache und Farbe, Termine, Dashboard und Kopfzeile,
 
   // Dashboard und Kopfzeile: Ziel-Dashboard, HA-Kopfzeile ausblenden, Bubble-Card-YAML
   await d.getByRole('button', { name: 'Dashboard und Kopfzeile' }).click();
-  await expect(d.getByText('Zurück zum Dashboard', { exact: true })).toBeVisible();
+  await expect(d.getByRole('heading', { name: 'Zurück zum Dashboard' })).toBeVisible();
   await expect(d.getByLabel('Dashboard', { exact: true })).toBeVisible();
-  await expect(d.getByLabel('Kopfzeile von Home Assistant ausblenden')).toBeVisible();
+  await expect(d.getByLabel('Kopfzeile von Home Assistant ausblenden').last()).toBeVisible();
   await expect(d.getByText(/type: custom:bubble-card/)).toBeVisible();
   await expect(d.getByRole('button', { name: 'Kopieren' })).toBeVisible();
   await back(page);
@@ -94,8 +94,8 @@ test('Personenbild: hochladen zeigt das Bild im Avatar, entfernen kehrt zur Init
   await expect(d.getByTestId('avatar-origin')).toContainText('Noch kein Bild');
   await d.getByLabel('Bild wählen').setInputFiles({ name: 'ich.png', mimeType: 'image/png', buffer: PNG.sync.write(png) });
   await expect(d.getByTestId('avatar-origin')).toContainText('Eigenes Bild');
-  await expect(page.getByRole('button', { name: 'Einstellungen öffnen' }).locator('img')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Profil öffnen' }).locator('img')).toBeVisible();
   await d.getByRole('button', { name: 'Bild entfernen' }).click();
   await expect(d.getByTestId('avatar-origin')).toContainText('Noch kein Bild');
-  await expect(page.getByRole('button', { name: 'Einstellungen öffnen' }).locator('img')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Profil öffnen' }).locator('img')).toHaveCount(0);
 });

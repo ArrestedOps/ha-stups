@@ -37,12 +37,12 @@ test('Neues Board: Name eingeben und mit dem sichtbaren Knopf anlegen', async ({
   await page.getByLabel('Name des neuen Boards').fill(name);
   await page.getByRole('button', { name: 'Hinzufügen' }).click();
 
-  await expect(page.getByRole('heading', { name })).toBeVisible();
+  await expect(page.getByTestId('board-name')).toHaveText(name);
   // das neue Board bekommt die Standard-Spalten
   await expect(page.getByRole('tab')).toHaveCount(4);
 
   // zurück zum ersten Board, damit die weiteren Tests ihre Karten dort finden
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: /Haushalt/ }).click();
-  await expect(page.getByRole('heading', { name: 'Haushalt' })).toBeVisible();
+  await expect(page.getByTestId('board-name')).toHaveText('Haushalt');
 });

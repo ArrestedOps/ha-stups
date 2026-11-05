@@ -38,25 +38,27 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
   await expect(agenda.getByText(s.t.elektriker)).toBeHidden();
   await expect(agenda.getByText(s.t.papier)).toBeHidden();
 
-  // „Niemand" dazu: die Karten ohne Zuständige kommen mit
-  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Niemand/ }).click();
+  // „Niemand" dazu: die Karten ohne Zuständige kommen mit („Niemand" und die Boards stehen im Blatt hinter dem Knopf „Filter")
+  await page.getByRole('button', { name: 'Filter' }).click();
+  const sheet = page.getByTestId('filter-sheet');
+  await sheet.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Niemand/ }).click();
   await expect(agenda.getByText(s.t.elektriker)).toBeVisible();
 
-  // Board: nur „Umbau" (die Boards stehen hinter dem Knopf „Filter")
-  await page.getByRole('button', { name: 'Filter' }).click();
-  await page.getByRole('group', { name: 'Boards' }).getByRole('button', { name: new RegExp(s.boardBName) }).click();
+  // Board: nur „Umbau"
+  await sheet.getByRole('group', { name: 'Boards' }).getByRole('button', { name: new RegExp(s.boardBName) }).click();
   await expect(agenda.getByText(s.t.elektriker)).toBeVisible();
   await expect(agenda.getByText(s.t.fenster)).toBeHidden();
 
   // Zurücksetzen
-  await page.getByRole('button', { name: 'Zurücksetzen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Zurücksetzen' }).click();
   await expect(agenda.getByText(s.t.fenster)).toBeVisible();
+  await page.getByRole('dialog').getByRole('button', { name: /Aufgaben? anzeigen/ }).click();
 
   // Der Filter bleibt auf dem Gerät erhalten
-  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
+  await page.getByTestId('tasks').getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
   await page.reload();
   await expect(page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByRole('radio', { name: 'Liste' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('tasks')).toBeVisible();
   await expect(agenda.getByText(s.t.fenster)).toBeVisible();
   await expect(agenda.getByText(s.t.papier)).toBeHidden();
 });
@@ -76,7 +78,7 @@ test('Agenda: Karte aus einem anderen Board öffnen und von dort erledigen', asy
   await expect(agenda.getByText(s.t.papier)).toBeHidden();
   // auf Wunsch weiter sichtbar
   await page.getByRole('button', { name: 'Filter' }).click();
-  await page.getByRole('button', { name: 'Erledigte' }).click();
+  await page.getByRole('switch', { name: 'Erledigte anzeigen' }).click();
   await expect(agenda.getByText(s.t.papier)).toBeVisible();
 });
 

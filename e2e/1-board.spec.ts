@@ -223,9 +223,10 @@ test('Neue Karte: alle Felder gleich beim Anlegen (Priorität, Beschreibung, Che
   await page.getByRole('button', { name: 'Anlegen' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
 
-  // Budget in der Kopfzeile des Boards
-  // (der Test läuft in Hell und Dunkel auf demselben Board, die Summe wächst also mit)
-  await expect(page.getByLabel('Kosten im Board')).toContainText(/\d[\d.]*,\d\d\s€ offen/);
+  // Budget: steht im Blatt „Filter" des Boards (der Test läuft in Hell und Dunkel auf demselben Board, die Summe wächst also mit)
+  await page.getByRole('button', { name: 'Filter' }).click();
+  await expect(page.getByTestId('filter-sheet').getByText('Kosten im Board').locator('..')).toContainText(/\d[\d.]*,\d\d\s€ offen/);
+  await page.getByRole('dialog').getByRole('button', { name: 'Schließen' }).first().click();
 
   const boards = await (await request.get('/api/boards')).json();
   const cards = (await (await request.get(`/api/boards/${boards[0].id}`)).json()).cards as { id: string; title: string }[];
@@ -236,16 +237,26 @@ test('Neue Karte: alle Felder gleich beim Anlegen (Priorität, Beschreibung, Che
   expect(detail.links.map((l: { url: string }) => l.url)).toEqual(['https://maps.apple.com/?q=Restaurant']);
 });
 
-test('Überfälliges ist rot (Kreis und Termin, kein Balken mehr); „Angelegt …“ steht nur im Karten-Fenster', async ({ page }) => {
+test('Überfälliges: der Termin ist rot (kein Balken mehr, der Kreis bleibt grau wie im Mockup); „Angelegt …“ steht nur im Karten-Fenster', async ({ page }) => {
   const title = uniqueTitle('Balken');
   await addCard(page, title, '2020-01-15T09:00'); // längst überfällig
   const row = card(page, title);
   await expect(row.getByText(/^Angelegt/)).toHaveCount(0); // nicht mehr in der Liste
-  // Seit dem neuen Design trägt der rote Ring des Erledigt-Kreises und die rote Uhrzeit die Dringlichkeit
+  // Im Board trägt die rote Uhrzeit die Dringlichkeit; der Erledigt-Kreis ist wie im Mockup immer grau
   const ring = await row.getByRole('checkbox').locator('span').first().evaluate((el) => getComputedStyle(el).borderTopColor);
   const due = await row.getByTestId('card-due').evaluate((el) => getComputedStyle(el).color);
   expect(ring).toMatch(/^rgb\(/);
-  expect(ring).toBe(due); // beide in der Gefahr-Farbe (rot, überfällig)
+  // Der Termin trägt die Gefahr-Farbe des jeweiligen Themas (Token --danger)
+  const danger = await page.evaluate(() => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--danger)';
+    document.body.appendChild(probe);
+    const c = getComputedStyle(probe).color;
+    probe.remove();
+    return c;
+  });
+  expect(due).toBe(danger);
+  expect(ring).not.toBe(due);
 
   await row.getByText(title).click();
   await expect(page.getByTestId('created-note')).toContainText('Angelegt heute');

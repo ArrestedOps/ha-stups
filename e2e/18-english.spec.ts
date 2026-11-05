@@ -84,7 +84,8 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   await noGerman(page, 'Liste', 'header, nav');
   await noSideScroll(page);
 
-  // Tag, Woche, Monat (der frühere Kalender)
+  // Tag, Woche, Monat (der frühere Kalender): eine Seite unter Aufgaben, der Kalender-Knopf der Wochenleiste öffnet sie
+  await page.getByRole('button', { name: 'Open calendar' }).click();
   const views = page.getByRole('radiogroup', { name: 'View' });
   await expect(views.getByRole('radio', { name: 'Week', exact: true })).toBeVisible();
   await views.getByRole('radio', { name: 'Week', exact: true }).click();
@@ -92,7 +93,7 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   await noSideScroll(page);
   await views.getByRole('radio', { name: 'Month', exact: true }).click();
   await noSideScroll(page);
-  await views.getByRole('radio', { name: 'List', exact: true }).click();
+  await page.getByRole('button', { name: 'Tasks', exact: true }).first().click(); // „‹ Tasks" oben links
 
   await nav.getByRole('button', { name: 'Watchers' }).click();
   await noGerman(page, 'Zuhause');

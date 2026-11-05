@@ -24,14 +24,16 @@
   import { cardTargets } from '../lib/swipe';
   import { isFuture } from '../lib/datetime';
   import { canNudge } from '../lib/nudge';
-  import Group from './Group.svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
   import SubmitPill from './SubmitPill.svelte';
   import CardProps from './CardProps.svelte';
   import { cardIcon, tileColorOf } from '../lib/cardTile';
   import { boardColorKey } from '../lib/schedule';
+  import Avatar from './Avatar.svelte';
   import Banner from './ui/Banner.svelte';
+  import ListRow from './ui/ListRow.svelte';
+  import SectionHeader from './ui/SectionHeader.svelte';
   import Tile from './ui/Tile.svelte';
 
   let { id }: { id: string } = $props();
@@ -181,6 +183,8 @@
     }
   }
 
+  const personByName = (name: string | null) => ui.people.find((p) => p.displayName === name);
+
   const host = (url: string) => {
     try {
       return new URL(url).hostname.replace(/^www\./, '');
@@ -190,11 +194,11 @@
   };
 </script>
 
-<!-- Oben wie in iOS: links „Erledigt", mittig kurz „Gespeichert", rechts „Fertig" (schließt). Alles speichert sofort, „Fertig" schließt nur. Nichts liegt unten im Weg. -->
+<!-- Oben wie im Mockup: links „Erledigt", mittig klein „Gespeichert", rechts „Fertig" (schließt). Alles speichert sofort, „Fertig" schließt nur. Nichts liegt unten im Weg. -->
 {#snippet doneButton()}
   {#if card && (!child || (mine && !waiting && !done))}
     <button
-      class="flex min-h-10 items-center gap-1.5 rounded-full border border-line px-3.5 text-[15px] font-semibold"
+      class="ml-1 inline-flex h-9 items-center gap-1.5 rounded-full border border-track bg-surface px-3.5 text-[14px] font-bold"
       onclick={async () => {
         if (done) {
           if (firstOpen) await moveCard(card!, firstOpen.id, null);
@@ -210,212 +214,203 @@
 {/snippet}
 
 {#snippet saveButton()}
-  <button class="min-h-11 px-3 text-[17px] font-semibold text-accent-text" onclick={finish}>{t('Fertig')}</button>
+  <button class="inline-flex h-11 items-center px-2 text-[16px] font-bold text-accent-text" onclick={finish}>{t('Fertig')}</button>
 {/snippet}
 
-<Sheet title={saved ? `✓ ${t('Gespeichert')}` : ''} onclose={closeSheet} left={doneButton} right={saveButton} hideClose>
+<Sheet title={saved ? t('Gespeichert') : ''} titleClass="text-[13px] font-semibold text-sig-green" onclose={closeSheet} left={doneButton} right={saveButton} hideClose>
   {#if failed}
     <p class="py-10 text-center text-fg2">{t('Diese Karte gibt es nicht mehr.')}</p>
   {:else if !card}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
-    <div class="mt-1 flex items-start gap-3">
-      <Tile color={tileColor} size="lg"><Icon name={cardIcon(card)} size={26} /></Tile>
-      <textarea
-        rows="1"
-        use:autogrow={titleDraft}
-        class="block min-w-0 flex-1 resize-none overflow-hidden bg-transparent pt-1 text-[22px] leading-tight font-extrabold tracking-tight"
-        aria-label={t('Titel')}
-        bind:value={titleDraft}
-        readonly={child}
-        onfocus={() => (editing = 'title')}
-        onblur={() => {
-          editing = null;
-          const t = titleDraft.trim();
-          if (!child && t && t !== card!.title) void save({ title: t });
-          else titleDraft = card!.title;
-        }}
-      ></textarea>
-    </div>
-
-    <CardProps
-      card={card}
-      {targets}
-      onsave={save}
-      onmove={(columnId) => moveCard(card!, columnId)}
-      readonly={child}
-    />
-
-    <p class="mt-2.5 px-1 text-[13px] text-fg2" data-testid="created-note">
-      {t('Angelegt {when}', { when: formatDue(card.createdAt) })}{#if personById(card.createdBy ?? '')} · {personById(card.createdBy ?? '')?.displayName}{/if}
-    </p>
-
-    {#if waiting}
-      <div class="mt-3 rounded-xl bg-surface2 px-3.5 py-3" data-testid="confirm-note">
-        <p class="flex items-center gap-2 text-[15px] font-semibold">
-          <Icon name="clock" size={16} />{requester ? t('{name} wartet auf Bestätigung', { name: requester.displayName }) : t('Wartet auf Bestätigung')}
-        </p>
-        {#if mayAnswer}
-          <div class="mt-2.5 flex gap-2">
-            <button
-              class="min-h-11 flex-1 rounded-xl bg-accent text-[16px] font-semibold text-on-accent"
-              onclick={async () => {
-                await answerConfirmation(card!, 'confirm');
-                closeSheet();
-              }}
-            >
-              {t('Bestätigen')}
-            </button>
-            <button
-              class="min-h-11 flex-1 rounded-xl border border-line text-[16px] font-semibold"
-              onclick={async () => {
-                await answerConfirmation(card!, 'reject');
-                closeSheet();
-              }}
-            >
-              {t('Nochmal')}
-            </button>
-          </div>
-        {/if}
+    <div class="flex flex-col gap-3.5 pt-1">
+      <div class="flex items-center gap-3">
+        <Tile color={tileColor} size="lg"><Icon name={cardIcon(card)} size={28} /></Tile>
+        <textarea
+          rows="1"
+          use:autogrow={titleDraft}
+          class="block min-w-0 flex-1 resize-none overflow-hidden bg-transparent text-[24px] leading-[1.2] font-extrabold tracking-[-0.02em]"
+          aria-label={t('Titel')}
+          bind:value={titleDraft}
+          readonly={child}
+          onfocus={() => (editing = 'title')}
+          onblur={() => {
+            editing = null;
+            const t = titleDraft.trim();
+            if (!child && t && t !== card!.title) void save({ title: t });
+            else titleDraft = card!.title;
+          }}
+        ></textarea>
       </div>
-    {/if}
 
-    {#if !child && !card.completedAt && ui.me?.isPerson && canNudge(card, ui.me.id)}
-      <div class="mt-3">
+      <div>
+        <CardProps card={card} {targets} onsave={save} onmove={(columnId) => moveCard(card!, columnId)} readonly={child} />
+      </div>
+
+      {#if waiting}
+        <div class="rounded-xl bg-surface2 px-3.5 py-3" data-testid="confirm-note">
+          <p class="flex items-center gap-2 text-[15px] font-semibold">
+            <Icon name="clock" size={16} />{requester ? t('{name} wartet auf Bestätigung', { name: requester.displayName }) : t('Wartet auf Bestätigung')}
+          </p>
+          {#if mayAnswer}
+            <div class="mt-2.5 flex gap-2">
+              <button
+                class="min-h-11 flex-1 rounded-xl bg-accent text-[16px] font-semibold text-on-accent"
+                onclick={async () => {
+                  await answerConfirmation(card!, 'confirm');
+                  closeSheet();
+                }}
+              >
+                {t('Bestätigen')}
+              </button>
+              <button
+                class="min-h-11 flex-1 rounded-xl border border-line text-[16px] font-semibold"
+                onclick={async () => {
+                  await answerConfirmation(card!, 'reject');
+                  closeSheet();
+                }}
+              >
+                {t('Nochmal')}
+              </button>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
+      {#if !child && !card.completedAt && ui.me?.isPerson && canNudge(card, ui.me.id)}
         <Banner title={t('{names} stupsen', { names: nudgeNames })} sub={t('Freundlich erinnern, mit Antwort-Knöpfen')} onclick={() => openSheet({ type: 'nudge', id: card!.id })}>
-          {#snippet leading()}<Icon name="hand" size={24} />{/snippet}
-          {#snippet trailing()}<Icon name="chevron-right" size={18} />{/snippet}
+          {#snippet leading()}<span class="text-banner-icon"><Icon name="hand" size={30} /></span>{/snippet}
+          {#snippet trailing()}<Icon name="chevron-right" size={20} stroke={2} />{/snippet}
         </Banner>
+      {/if}
+
+      {#if card.completedAt}
+        <p class="flex items-center gap-2 rounded-xl bg-surface2 px-3.5 py-2.5 text-[15px]" data-testid="done-note">
+          <Icon name="check" size={16} stroke={2.6} />
+          <span>
+            {t('Erledigt {when}', { when: formatDue(card.completedAt) })}{card.history[0]?.completedByName ? ` · ${card.history[0].completedByName}` : ''}
+          </span>
+        </p>
+      {/if}
+
+      <!-- Beschreibung: das Feld trägt seine Beschriftung in sich -->
+      <div class="flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3 focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent/20">
+        <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="card-desc">{t('Beschreibung')}</label>
+        <textarea
+          id="card-desc"
+          rows="3"
+          placeholder={t('Notizen …')}
+          use:autogrow={descDraft}
+          class="block min-h-6 w-full resize-none overflow-hidden bg-transparent text-[15px] leading-[1.45] font-medium outline-none placeholder:text-dim"
+          bind:value={descDraft}
+          readonly={child}
+          onfocus={() => (editing = 'desc')}
+          onblur={() => {
+            editing = null;
+            if (!child && descDraft !== (card!.description ?? '')) void save({ description: descDraft.trim() || null });
+          }}
+        ></textarea>
       </div>
-    {/if}
 
-    {#if card.completedAt}
-      <p class="mt-3 flex items-center gap-2 rounded-xl bg-surface2 px-3.5 py-2.5 text-[15px]" data-testid="done-note">
-        <Icon name="check" size={16} stroke={2.6} />
-        <span>
-          {t('Erledigt {when}', { when: formatDue(card.completedAt) })}{card.history[0]?.completedByName ? ` · ${card.history[0].completedByName}` : ''}
-        </span>
-      </p>
-    {/if}
-
-    <Group title={t('Beschreibung')}>
-      <textarea
-        rows="3"
-        placeholder={t('Notizen …')}
-        use:autogrow={descDraft}
-        class="block min-h-[84px] w-full resize-none overflow-hidden bg-transparent px-4 py-3 text-[17px] leading-snug"
-        aria-label={t('Beschreibung')}
-        bind:value={descDraft}
-        readonly={child}
-        onfocus={() => (editing = 'desc')}
-        onblur={() => {
-          editing = null;
-          if (!child && descDraft !== (card!.description ?? '')) void save({ description: descDraft.trim() || null });
-        }}
-      ></textarea>
-    </Group>
-
-    <Group title={`${t('Checkliste')} ${card.checklist.total ? `· ${t('{n} von {total}', { n: card.checklist.done, total: card.checklist.total })}` : ''}`}>
-      {#each card.checklistItems as item (item.id)}
-        <div class="flex min-h-[46px] items-center gap-3 px-4">
-          <input
-            type="checkbox"
-            class="h-6 w-6 shrink-0 accent-[var(--accent)]"
-            checked={item.done}
-            disabled={!canAct}
-            aria-label={t('Erledigt')}
-            onchange={(e) => act(() => api.updateChecklist(item.id, { done: e.currentTarget.checked }))}
-          />
-          <input
-            class="min-w-0 flex-1 bg-transparent py-2 {item.done ? 'text-fg2 line-through' : ''}"
-            value={item.text}
-            readonly={child}
-            aria-label={t('Eintrag')}
-            onchange={(e) => {
-              const t = e.currentTarget.value.trim();
-              if (t) void act(() => api.updateChecklist(item.id, { text: t }));
-            }}
-          />
-          {#if !child}
-            <button class="flex h-10 w-10 items-center justify-center text-fg2" aria-label={t('Eintrag löschen')} onclick={() => act(() => api.deleteChecklist(item.id))}>
-              <Icon name="x" size={16} />
-            </button>
+      <section aria-label={t('Checkliste')}>
+        <SectionHeader title={t('Checkliste')} count={card.checklist.total ? `${card.checklist.done}/${card.checklist.total}` : undefined} />
+        <div class="mt-2 flex flex-col divide-y divide-line overflow-hidden rounded-row border border-line bg-surface">
+          {#each card.checklistItems as item (item.id)}
+            <div class="flex min-h-[52px] items-center gap-3 px-3 text-[15px]">
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={item.done}
+                aria-label={t('Erledigt')}
+                disabled={!canAct}
+                class="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] {item.done ? 'bg-accent-grad !shadow-none' : 'border-2 border-ring'}"
+                onclick={() => act(() => api.updateChecklist(item.id, { done: !item.done }))}
+              >
+                {#if item.done}<Icon name="check" size={14} stroke={3} />{/if}
+              </button>
+              <input
+                class="min-w-0 flex-1 bg-transparent py-2 {item.done ? 'text-hint line-through' : ''}"
+                value={item.text}
+                readonly={child}
+                aria-label={t('Eintrag')}
+                onchange={(e) => {
+                  const t = e.currentTarget.value.trim();
+                  if (t) void act(() => api.updateChecklist(item.id, { text: t }));
+                }}
+              />
+              {#if !child}
+                <button class="flex h-10 w-10 items-center justify-center text-fg2" aria-label={t('Eintrag löschen')} onclick={() => act(() => api.deleteChecklist(item.id))}>
+                  <Icon name="x" size={16} />
+                </button>
+              {/if}
+            </div>
+          {/each}
+          {#if canAct}
+            <form onsubmit={addItem} class="flex min-h-[52px] items-center gap-3 px-3 text-accent-text">
+              <Icon name="plus" size={20} stroke={2} />
+              <input
+                bind:value={newItem}
+                placeholder={t('Punkt hinzufügen')}
+                enterkeyhint="done"
+                class="min-w-0 flex-1 bg-transparent py-2 text-[15px] font-semibold text-fg placeholder:text-accent-text"
+                aria-label={t('Neuer Eintrag')}
+              />
+              <SubmitPill show={!!newItem.trim()} />
+            </form>
           {/if}
         </div>
-      {/each}
-      {#if canAct}
-        <form onsubmit={addItem} class="flex min-h-[46px] items-center gap-3 px-4">
-          <Icon name="plus" size={18} />
-          <input bind:value={newItem} placeholder={t('Eintrag hinzufügen')} enterkeyhint="done" class="min-w-0 flex-1 bg-transparent py-2" aria-label={t('Neuer Eintrag')} />
-          <SubmitPill show={!!newItem.trim()} />
-        </form>
-      {/if}
-    </Group>
+      </section>
 
-    <Group title="Links">
-      {#each card.links as link (link.id)}
-        <div class="flex min-h-14 items-center gap-3 px-3 py-2">
-          <a
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex min-w-0 flex-1 items-center gap-3"
-          >
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {link.kind === 'maps' ? 'cat-green' : 'cat-blue'}">
-              <Icon name={link.kind === 'maps' ? 'map-pin' : 'globe'} size={20} />
-            </span>
-            <span class="min-w-0 flex-1">
-              <span class="block truncate text-[16px] font-semibold">{link.title ?? host(link.url)}</span>
-              <span class="block truncate text-[13px] text-fg2">{link.kind === 'maps' ? `${t('In Karten öffnen')} · ` : ''}{host(link.url)}</span>
-            </span>
-            <Icon name="external" size={16} />
-          </a>
-          {#if !child}
-            <button class="flex h-10 w-10 shrink-0 items-center justify-center text-fg2" aria-label={t('Link entfernen')} onclick={() => act(() => api.deleteLink(link.id))}>
-              <Icon name="x" size={16} />
-            </button>
-          {/if}
-        </div>
-      {/each}
-      {#if canAct}
-        <form onsubmit={addLink} class="flex min-h-[46px] items-center gap-3 px-4">
-          <Icon name="link" size={18} />
-          <input
-            bind:value={newLink}
-            type="url"
-            placeholder={t('Website oder Maps-Link einfügen')}
-            enterkeyhint="done"
-            class="min-w-0 flex-1 bg-transparent py-2"
-            aria-label={t('Neuer Link')}
-            disabled={linkBusy}
-          />
-          <SubmitPill show={!!newLink.trim()} busy={linkBusy} />
-        </form>
-      {/if}
-    </Group>
+      <section aria-label={t('Links und Anhänge')} class="flex flex-col gap-2">
+        <SectionHeader title={t('Links und Anhänge')} />
+        {#each card.links as link (link.id)}
+          <ListRow title={link.title ?? host(link.url)} href={link.url}>
+            {#snippet tile()}<Tile color={link.kind === 'maps' ? 'green' : 'blue'}><Icon name={link.kind === 'maps' ? 'map-pin' : 'link'} size={22} /></Tile>{/snippet}
+            {#snippet meta()}<span class="truncate">{link.kind === 'maps' ? `${t('In Karten öffnen')} · ` : ''}{host(link.url)}</span>{/snippet}
+            {#snippet right()}
+              <span class="flex text-text-soft2"><Icon name="external" size={18} stroke={2} /></span>
+              {#if !child}
+                <button class="flex h-10 w-8 shrink-0 items-center justify-center text-fg2" aria-label={t('Link entfernen')} onclick={() => act(() => api.deleteLink(link.id))}>
+                  <Icon name="x" size={16} />
+                </button>
+              {/if}
+            {/snippet}
+          </ListRow>
+        {/each}
+        {#if canAct}
+          <form onsubmit={addLink} class="flex items-center gap-3 rounded-row border border-line bg-surface py-1.5 pr-1.5 pl-3.5 focus-within:border-accent">
+            <Icon name="link" size={18} />
+            <input
+              bind:value={newLink}
+              type="url"
+              placeholder={t('Website oder Maps-Link einfügen')}
+              enterkeyhint="done"
+              class="min-h-10 min-w-0 flex-1 bg-transparent"
+              aria-label={t('Neuer Link')}
+              disabled={linkBusy}
+            />
+            <SubmitPill show={!!newLink.trim()} busy={linkBusy} />
+          </form>
+        {/if}
 
-    <Group title={t('Anhänge')}>
-      {#if card.attachments.length}
-        <div class="grid grid-cols-3 gap-2 p-3">
+        <div class="flex flex-wrap gap-2">
           {#each card.attachments as a (a.id)}
             <div class="relative">
               <button
-                class="block aspect-square w-full overflow-hidden rounded-xl bg-surface2"
+                class="flex h-24 w-24 flex-col items-center justify-center gap-1 overflow-hidden rounded-[14px] border border-line bg-surface2 text-[11px] font-semibold text-fg2"
                 aria-label={t('{name} ansehen ({size})', { name: a.filename, size: formatBytes(a.size) })}
                 onclick={() => openViewer(card!.attachments, card!.attachments.indexOf(a))}
               >
                 {#if a.hasThumb}
                   <img src="api/attachments/{a.id}/thumb" alt={a.filename} loading="lazy" class="h-full w-full object-cover" />
                 {:else}
-                  <span class="flex h-full flex-col items-center justify-center gap-1 p-2 text-center text-[12px]">
-                    <span class="text-[15px] font-bold text-danger">{a.mime === 'application/pdf' ? 'PDF' : t('Datei')}</span>
-                    <span class="line-clamp-2 break-all text-fg2">{a.filename}</span>
-                  </span>
+                  <Icon name={a.mime === 'application/pdf' ? 'file' : 'image'} size={26} stroke={1.6} />
+                  <span class="line-clamp-2 max-w-full px-1 text-center break-all">{a.filename}</span>
                 {/if}
               </button>
               {#if !child}
                 <button
-                  class="absolute top-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-media/60 text-on-media"
+                  class="absolute top-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-media/60 text-on-media"
                   aria-label={t('{name} entfernen', { name: a.filename })}
                   onclick={() => act(() => api.deleteAttachment(a.id))}
                 >
@@ -424,60 +419,78 @@
               {/if}
             </div>
           {/each}
-        </div>
-      {/if}
-      {#if canAct}
-        <div class="px-4 py-1.5">
-          <input bind:this={fileInput} type="file" accept="image/*,application/pdf" multiple class="hidden" onchange={onFiles} />
-          <button class="flex min-h-11 w-full items-center gap-3 text-left text-[17px] text-accent-text disabled:opacity-50" disabled={uploading > 0} onclick={() => fileInput?.click()}>
-            <Icon name="camera" size={18} />{uploading > 0 ? t('Lädt hoch …') : t('Foto oder PDF hinzufügen')}
-          </button>
-        </div>
-      {/if}
-    </Group>
-
-    <Group title={t('Kommentare')}>
-      {#each comments as c (c.id)}
-        <div class="flex gap-3 px-4 py-3">
-          <div class="min-w-0 flex-1">
-            <div class="text-[13px] text-fg2">{c.authorName ?? 'Unbekannt'} · {formatDue(c.createdAt)}</div>
-            <div class="text-[16px] leading-snug whitespace-pre-wrap">{c.text}</div>
-          </div>
-          {#if !child}
-            <button class="flex h-9 w-9 shrink-0 items-center justify-center text-fg2" aria-label={t('Kommentar löschen')} onclick={() => act(() => api.deleteComment(c.id))}>
-              <Icon name="x" size={14} />
+          {#if canAct}
+            <input bind:this={fileInput} type="file" accept="image/*,application/pdf" multiple class="hidden" onchange={onFiles} />
+            <button
+              class="flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-[14px] border border-dashed border-line bg-surface text-[11px] font-semibold text-accent-text disabled:opacity-50"
+              aria-label={t('Foto oder PDF hinzufügen')}
+              disabled={uploading > 0}
+              onclick={() => fileInput?.click()}
+            >
+              <Icon name="plus" size={26} stroke={2} />{uploading > 0 ? t('Lädt hoch …') : t('Hinzufügen')}
             </button>
           {/if}
         </div>
-      {/each}
-      {#if canAct}
-        <form onsubmit={addComment} class="flex min-h-[46px] items-center gap-3 px-4">
-          <Icon name="message" size={18} />
-          <input bind:value={newComment} placeholder={t('Kommentar schreiben')} enterkeyhint="send" class="min-w-0 flex-1 bg-transparent py-2" aria-label={t('Neuer Kommentar')} />
-          <SubmitPill show={!!newComment.trim()} label={t('Senden')} />
-        </form>
-      {/if}
-    </Group>
+      </section>
 
-    {#if card.activity.length}
-      <Group title={t('Verlauf')}>
-        {#each card.activity as a (a.id)}
-          {@const d = describeActivity(a)}
-          <div class="px-4 py-2.5">
-            <div class="text-[15px] font-medium">{d.title}</div>
-            <div class="text-[13px] text-fg2">{d.detail}</div>
+      <section aria-label={t('Kommentare')} class="flex flex-col gap-2">
+        <SectionHeader title={t('Kommentare')} count={comments.length || undefined} />
+        {#each comments as c (c.id)}
+          {@const author = personByName(c.authorName)}
+          <div class="flex gap-2.5 rounded-row border border-line bg-surface p-3">
+            {#if author}
+              <Avatar person={author} size={28} />
+            {:else}
+              <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-track text-[12px] font-extrabold">{(c.authorName ?? '?').charAt(0).toUpperCase()}</span>
+            {/if}
+            <div class="min-w-0 flex-1">
+              <div class="flex items-baseline gap-1.5 text-[13px]"><b class="font-bold">{c.authorName ?? t('Unbekannt')}</b><span class="text-hint">{formatDue(c.createdAt)}</span></div>
+              <p class="mt-1 text-[14px] leading-[1.45] whitespace-pre-wrap text-text-soft">{c.text}</p>
+            </div>
+            {#if !child}
+              <button class="flex h-9 w-9 shrink-0 items-center justify-center text-fg2" aria-label={t('Kommentar löschen')} onclick={() => act(() => api.deleteComment(c.id))}>
+                <Icon name="x" size={14} />
+              </button>
+            {/if}
           </div>
         {/each}
-      </Group>
-    {/if}
+        {#if canAct}
+          <form onsubmit={addComment} class="flex items-center gap-2 rounded-row border border-line bg-surface py-1.5 pr-1.5 pl-3.5 focus-within:border-accent">
+            <input bind:value={newComment} placeholder={t('Kommentar schreiben …')} enterkeyhint="send" class="min-h-10 min-w-0 flex-1 bg-transparent text-[16px] font-semibold placeholder:text-dim" aria-label={t('Neuer Kommentar')} />
+            <button class="bg-accent-grad glow-pill flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] disabled:opacity-40" aria-label={t('Senden')} disabled={!newComment.trim()}>
+              <Icon name="send" size={16} stroke={2} />
+            </button>
+          </form>
+        {/if}
+      </section>
 
-    {#if ui.view && card.costCents !== null && !child}
-      <p class="mt-3 px-3 text-[13px] text-fg2">{t('Kosten dieser Karte: {amount}', { amount: formatCost(card.costCents) })}</p>
-    {/if}
-    {#if !child}
-      <button class="mt-8 mb-2 min-h-11 w-full text-[15px] text-fg2" onclick={() => removeCard(card!)}>
-        <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Karte löschen')}</span>
-      </button>
-    {/if}
+      {#if card.activity.length}
+        <section aria-label={t('Verlauf')}>
+          <SectionHeader title={t('Verlauf')} />
+          <div class="flex flex-col gap-2.5 px-1.5 py-1">
+            {#each card.activity as a (a.id)}
+              {@const d = describeActivity(a)}
+              <div class="flex gap-2.5 text-[13px] leading-[1.4] text-fg2">
+                <span class="mt-[5px] h-2 w-2 shrink-0 rounded-full {a.kind === 'nudged' || a.kind === 'nudge_reply' ? 'bg-brand-dot' : 'bg-sep'}"></span>
+                <span><b class="font-bold text-fg">{d.title}</b> · {d.detail}</span>
+              </div>
+            {/each}
+          </div>
+        </section>
+      {/if}
+
+      <p class="px-1 text-[13px] text-fg2" data-testid="created-note">
+        {t('Angelegt {when}', { when: formatDue(card.createdAt) })}{#if personById(card.createdBy ?? '')} · {personById(card.createdBy ?? '')?.displayName}{/if}
+      </p>
+
+      {#if ui.view && card.costCents !== null && !child}
+        <p class="px-1 text-[13px] text-fg2">{t('Kosten dieser Karte: {amount}', { amount: formatCost(card.costCents) })}</p>
+      {/if}
+      {#if !child}
+        <button class="mb-2 min-h-11 w-full text-[15px] text-fg2" onclick={() => removeCard(card!)}>
+          <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Karte löschen')}</span>
+        </button>
+      {/if}
+    </div>
   {/if}
 </Sheet>

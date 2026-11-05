@@ -3,6 +3,7 @@
   import type { Snippet } from 'svelte';
   import { fade, fly } from 'svelte/transition';
   import { sheetInsets, type SheetInsets } from '../lib/viewport';
+  import SheetFooter from './ui/SheetFooter.svelte';
 
   let {
     title = '',
@@ -12,6 +13,8 @@
     hideClose = false,
     fit = false,
     bare = false,
+    titleClass = 'text-[17px] font-extrabold',
+    footer,
     children,
   }: {
     title?: string;
@@ -22,6 +25,10 @@
     hideClose?: boolean;
     /** so hoch wie der Inhalt (Aktionsblatt wie das Karten-Menü); sonst von der Kopfzeile des Geräts bis unten, wie in den Mockups */
     fit?: boolean;
+    /** Schrift des Titels (Standard: 17 px, fett); das Karten-Fenster zeigt dort klein „Gespeichert" */
+    titleClass?: string;
+    /** großer Knopf am Fuß, fest über dem Inhalt (der Inhalt lässt unten Platz dafür) */
+    footer?: Snippet;
     /** ohne Kopfzeile (Griff, dann gleich der Inhalt) */
     bare?: boolean;
     children: Snippet;
@@ -102,23 +109,24 @@
     </div>
     {#if !bare}
       <!-- Kopf: links, Titel in der Mitte, rechts (drei gleich breite Spalten außen, Höhe 52) -->
-      <div class="relative z-[1] grid h-[52px] shrink-0 grid-cols-[1fr_auto_1fr] items-center px-2">
-        <div class="flex min-w-0 justify-self-start">
+      <div class="relative z-[1] grid h-[52px] shrink-0 grid-cols-[1fr_minmax(0,auto)_1fr] items-center px-2">
+        <div class="flex justify-self-start">
           {#if left}
             {@render left()}
           {:else if !hideClose}
             <button class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" onclick={onclose}>{t('Schließen')}</button>
           {/if}
         </div>
-        <span class="max-w-[60vw] truncate text-center text-[17px] font-extrabold">{title}</span>
-        <div class="flex min-w-0 justify-self-end">{@render right?.()}</div>
+        <span class="min-w-0 truncate text-center {titleClass}">{title}</span>
+        <div class="flex justify-self-end">{@render right?.()}</div>
       </div>
     {/if}
     <div
-      class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 {bare ? 'pb-[max(34px,var(--safe-bottom))]' : 'pb-[max(40px,var(--safe-bottom))]'}"
+      class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 {footer ? 'pb-[150px]' : bare ? 'pb-[max(34px,var(--safe-bottom))]' : 'pb-[max(40px,var(--safe-bottom))]'}"
       onfocusin={keepFieldVisible}
     >
       {@render children()}
     </div>
+    {#if footer}<SheetFooter>{@render footer()}</SheetFooter>{/if}
   </div>
 </div>

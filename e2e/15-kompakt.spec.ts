@@ -56,8 +56,9 @@ test('Ein langer Titel braucht genau eine Zeile (hinten abgeschnitten), die Zeil
   const card = page.locator('[role=presentation]').filter({ hasText: 'Ein sehr langer Titel' });
   await expect(card).toBeVisible();
   const title = card.locator('span.truncate').first();
-  const lineHeight = await title.evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
-  expect(await title.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThanOrEqual(lineHeight + 1);
+  // Zeilenhöhe „normal" wie im Mockup: eine Zeile ist 15 px Schrift mal etwa 1,25 hoch, zwei Zeilen wären gut doppelt so hoch
+  const fontSize = await title.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(await title.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(fontSize * 1.6);
   expect(Math.round(await card.evaluate((el) => el.getBoundingClientRect().height))).toBeLessThanOrEqual(70);
 });
 
@@ -84,7 +85,7 @@ test('Der „+"-Knopf verdeckt nichts: die letzte Karte lässt sich über ihn hi
   const { boardId, openId } = await typicalBoard(request, page, 'Knopf', 1);
   for (let i = 0; i < 9; i++) await request.post(`/api/boards/${boardId}/cards`, { data: { columnId: openId, title: `Eintrag ${i + 1}` } });
   await page.goto('/');
-  const list = page.getByTestId('column-list');
+  const list = page.getByTestId('boards-scroll'); // die ganze Seite Boards scrollt (wie im Mockup)
   await expect(page.locator('[role=presentation]').nth(5)).toBeVisible();
   await list.evaluate((el) => (el.scrollTop = el.scrollHeight));
   await page.waitForTimeout(150);

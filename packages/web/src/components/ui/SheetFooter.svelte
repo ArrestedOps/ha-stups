@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
 
-  // Fuß eines Sheets: der große Knopf auf einem Verlauf, der den Inhalt dahinter ausblendet
+  // Fuß eines Sheets (wie `.foot` im Mockup): der große Knopf liegt unten fest über dem Inhalt, auf einem Verlauf, der ihn ausblendet.
+  // Das Sheet setzt ihn über seinen Bereich `footer` ein (das Sheet ist der Bezugspunkt der Positionierung).
   let { children }: { children: Snippet } = $props();
 </script>
 
-<div class="pointer-events-none sticky bottom-0 -mx-3 px-3 pt-[22px] pb-[max(30px,var(--safe-bottom))]" style="background-image: linear-gradient(to bottom, transparent, var(--bg) 34%)">
+<div class="pointer-events-none absolute inset-x-0 bottom-0 px-3 pt-[22px] pb-[max(30px,var(--safe-bottom))]" style="background-image: linear-gradient(to bottom, transparent, var(--bg) 34%)">
   <div class="pointer-events-auto">{@render children()}</div>
 </div>

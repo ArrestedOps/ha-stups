@@ -171,7 +171,7 @@
             ]}
           />
 
-          <WeekStrip days={strip} title={monthTitle} onday={openDay} onweek={() => openCalendar('week')} onmonth={() => openCalendar('month')} />
+          <WeekStrip days={strip} title={monthTitle} onday={openDay} onweek={() => openCalendar(calMode)} onmonth={() => openCalendar('month')} />
 
           {#if nudges.length > 0}
             {@const n = nudges[0]!}

@@ -20,7 +20,6 @@
   import CtaButton from './ui/CtaButton.svelte';
   import ListRow from './ui/ListRow.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
-  import SheetFooter from './ui/SheetFooter.svelte';
   import Tile from './ui/Tile.svelte';
   import Toggle from './ui/Toggle.svelte';
 
@@ -59,14 +58,18 @@
   const filtered = $derived(boardMode ? boardFiltered : isFiltered(sf));
 </script>
 
-<Sheet title={t('Filter')} onclose={closeSheet}>
+{#snippet footerCta()}
+  <CtaButton onclick={closeSheet}>{boardMode ? tn('{n} Karte anzeigen', '{n} Karten anzeigen', boardHits) : tn('{n} Aufgabe anzeigen', '{n} Aufgaben anzeigen', hits)}</CtaButton>
+{/snippet}
+
+<Sheet footer={footerCta} title={t('Filter')} onclose={closeSheet}>
   {#snippet right()}
     <button class="inline-flex h-11 items-center px-2 text-[16px] font-bold text-accent-text disabled:opacity-40" disabled={!filtered} onclick={reset}>{t('Zurücksetzen')}</button>
   {/snippet}
 
-  <div class="flex flex-col gap-3.5 pb-28" data-testid="filter-sheet">
+  <div class="flex flex-col gap-3.5" data-testid="filter-sheet">
     {#if boardMode}
-      <section aria-label={t('Suchen')} class="flex flex-col gap-2.5">
+      <section aria-label={t('Suchen')} class="flex flex-col gap-3.5">
         <SectionHeader title={t('Suchen')} />
         <label class="flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3 focus-within:border-accent">
           <span class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Karten durchsuchen')}</span>
@@ -88,7 +91,7 @@
         {/if}
       </section>
     {:else if !ui.isChild}
-      <section aria-label={t('Wer')} class="flex flex-col gap-2.5">
+      <section aria-label={t('Wer')} class="flex flex-col gap-3.5">
         <SectionHeader title={t('Wer')} />
         <div class="flex flex-wrap gap-2" role="group" aria-label={t('Personen')}>
           {#each people as p (p.id)}
@@ -102,7 +105,7 @@
       </section>
 
       {#if ui.boards.length > 1}
-        <section aria-label="Boards" class="flex flex-col gap-2.5">
+        <section aria-label="Boards" class="flex flex-col gap-3.5">
           <SectionHeader title="Boards" />
           <div class="flex flex-wrap gap-2" role="group" aria-label="Boards">
             {#each ui.boards as b, i (b.id)}
@@ -127,8 +130,4 @@
     </section>
     {/if}
   </div>
-
-  <SheetFooter>
-    <CtaButton onclick={closeSheet}>{boardMode ? tn('{n} Karte anzeigen', '{n} Karten anzeigen', boardHits) : tn('{n} Aufgabe anzeigen', '{n} Aufgaben anzeigen', hits)}</CtaButton>
-  </SheetFooter>
 </Sheet>

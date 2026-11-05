@@ -270,7 +270,7 @@
     <QuickChips result={parsed} {tz} ondrop={dropToken} />
     {#if quickProblem}<p class="mt-2 rounded-xl bg-danger-bg px-3 py-2 text-[14px] text-danger" role="alert">{quickProblem}</p>{/if}
 
-    <CardProps card={fields} targets={choices} {onsave} onmove={pickColumn} />
+    <div class="mt-3"><CardProps card={fields} targets={choices} {onsave} onmove={pickColumn} /></div>
 
     <Group title={t('Beschreibung')}>
       <textarea

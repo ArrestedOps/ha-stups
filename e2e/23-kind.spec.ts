@@ -74,7 +74,7 @@ test('Einrichtung: der Administrator macht eine Person zum Kind, ein Administrat
   await page.goto('/');
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Personen und Kinder' }).click();
-  await page.getByRole('button', { name: new RegExp(KID) }).click();
+  await page.getByRole('dialog').getByRole('button', { name: new RegExp(KID) }).click();
   const setup = page.getByTestId('child-setup');
   await setup.scrollIntoViewIfNeeded();
   await expect(setup.getByLabel(`Kind: ${KID}`)).toBeChecked();
@@ -114,7 +114,7 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
     await expect(nav.getByRole('button')).toHaveText(['Aufgaben', 'Boards']);
     await expect(nav.getByRole('button', { name: 'Wächter' })).toHaveCount(0);
     await nav.getByRole('button', { name: 'Aufgaben' }).click();
-    await expect(page.getByTestId('today-sentence')).toBeVisible();
+    await expect(page.getByTestId('tasks-sub')).toBeVisible();
     await expect(page.getByRole('group', { name: 'Personen' })).toHaveCount(0);
     await expect(page.getByTestId('today-house')).toHaveCount(0);
     await expect(page.getByText('Bei den anderen')).toHaveCount(0);

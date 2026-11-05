@@ -34,7 +34,10 @@ test('Kalender: Tagesansicht zeigt die Karte zur Uhrzeit, Filter nach Person', a
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
   await expect(block(page, s.t.offen, s.boardName)).toBeVisible();
 
-  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
+  // der Filter-Knopf steht auch auf der Kalenderseite (die Chips Meine/Alle/Personen nicht)
+  await page.getByRole('button', { name: 'Filter' }).click();
+  await page.getByTestId('filter-sheet').getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Aufgaben? anzeigen/ }).click();
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
   await expect(block(page, s.t.offen, s.boardName)).toBeHidden();
 

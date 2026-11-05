@@ -2,6 +2,21 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.20.1-beta.1
+
+**Korrektur zu 1.20.0: Aufgaben, Boards, Wächter, Karte, Menü und Stupsen sind jetzt nach den Entwürfen gebaut.** 1.20.0 hatte die Reiter, aber Anordnung und Maße wichen von den Entwürfen ab. Das ist jetzt gemessen und angeglichen (Abstände, Höhen, Schriftgrößen, Symbole, Reihenfolge).
+
+- **Oben auf jedem Reiter:** Logo, „stups.“, **Glocke** (mit orangem Punkt, wenn etwas für dich offen ist), **Zahnrad** (Einstellungen) und dein Bild, darunter Titel und Untertitel des Reiters. Das „‹ Dashboard“ links oben ist weg: **„Zurück zum Dashboard“ und „HA-Kopfzeile ausblenden“ stehen jetzt unter Einstellungen › Home Assistant** (für alle im Add-on, nicht nur für Administratoren)
+- **Mitteilungen (Glocke):** zeigt, was gerade auf dich wartet: Stupse an dich, Bestätigungen, die du geben darfst, und Karten von Wächtern. Ist nichts offen, steht dort ein ruhiger Satz und die Glocke hat keinen Punkt. Der Verlauf mit „Alle gelesen“ kommt später
+- **Aufgaben:** Titel „Aufgaben“ mit Untertitel, Zahlenleiste, „Diese Woche“ mit **Monatsansicht** und Monat, Wochenleiste, Stups-Banner, Chips **Meine · Alle · Person** mit Filter-Knopf rechts, dann Überfällig, Heute, Diese Woche, Später. Jede Zeile hat jetzt Kachel, „Datum • Person • Checkliste • Link“, das Bild der Person und den **Mehr-Knopf „…“** (öffnet das Karten-Menü). „Vom Haus“ steht (nur mit Karten) vor Überfällig, Fairness und „Bei den anderen“ am Ende
+- **Kein Umschalter Liste/Tag/Woche/Monat mehr:** Der Kalender (Tag, Woche, Monat, freie Zeit antippen) ist eine eigene Seite unter Aufgaben. Du kommst mit „Monatsansicht“, dem Monat oder dem Kalender-Knopf der Wochenleiste hin, mit „‹ Aufgaben“ zurück
+- **Filter:** Der Filter-Knopf öffnet ein Blatt im neuen Stil (Wer, Boards, Erledigte anzeigen; in Boards: Suche, nur mit offenem Stups, Kosten des Boards). „Niemand“ und die Boards stehen jetzt dort, nicht mehr als Chips
+- **Boards:** Kopf mit Titel, Board-Leiste, Chips Meine · Alle · Person (neu: auch eine bestimmte Person), Kategorien, Spalten gleich breit, Zeilen wie in Aufgaben. Die Lupe und die Zeile mit Zahlen und Kosten sind ins Filter-Blatt gewandert
+- **Wächter:** Karte „Deine Wächter“ mit Roboter, Abschnitte mit farbigen Symbolen, „Stupsen“ als orange Knopf, „Ruhig“ als eine Zeile („5 Wächter ohne offene Aktion“), die sich aufklappen lässt
+- **Karte, Karten-Menü, Stupsen:** wie in den Entwürfen (Chips, Beschreibung als Feld, Checkliste mit eigenen Kästchen, Links und Anhänge, Kommentare mit Senden-Knopf, Verlauf; das Menü als Aktionsblatt mit 2 × 2 „Verschieben nach“; Stupsen mit Personen als Chips und Nachrichten als Liste). Sheets sind jetzt wie im Entwurf hoch, mit Titel in der Mitte
+- **Leiste unten und „+“:** 88 px hoch, ohne Trennlinie, der Knopf „+“ 58 px; der dunkle Grund ist ruhig (ohne orangen Schimmer)
+- **Bewusste Abweichungen:** Das Orange der Knöpfe bleibt etwas dunkler als im Entwurf, damit weiße Schrift gut lesbar bleibt (3,5 : 1); deine Akzentfarbe gilt weiter. Die Symbole der Karten (Kachel) sind noch das Standardsymbol, die Auswahl folgt mit „Neue Aufgabe“. Keine Änderung an der Datenbank
+
 ## 1.20.0-beta.1
 
 **Neues Design, Phase 2: drei Reiter.** Unten gibt es jetzt **Aufgaben, Boards und Wächter**. Wer ein Kind ist oder Stups ohne Home Assistant nutzt, sieht nur Aufgaben und Boards.

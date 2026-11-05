@@ -4,17 +4,29 @@
   import { api, ApiError, type NudgeInfo, type NudgeResult, type NudgeTemplate } from '../lib/api';
   import { preselected, sentMessage, targetHint } from '../lib/nudge';
   import { closeSheet, hopCard, refresh, toast, ui } from '../lib/store.svelte';
+  import logo from '../assets/stups-icon.png';
+  import { cardIcon, tileColorOf } from '../lib/cardTile';
+  import { formatDue } from '../lib/datetime';
+  import { boardColorKey } from '../lib/schedule';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
+  import Chip from './ui/Chip.svelte';
   import CtaButton from './ui/CtaButton.svelte';
   import ListRow from './ui/ListRow.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
-  import SheetFooter from './ui/SheetFooter.svelte';
+  import Tile from './ui/Tile.svelte';
 
   let { id }: { id: string } = $props();
 
   const card = $derived(ui.view?.cards.find((c) => c.id === id));
+  const board = $derived(ui.boards.find((b) => b.id === card?.boardId));
+  const tileColor = $derived(
+    tileColorOf(
+      (ui.view?.categories ?? []).find((c) => card?.categoryIds.includes(c.id))?.color ??
+        boardColorKey(board?.color ?? null, ui.boards.findIndex((b) => b.id === card?.boardId)),
+    ),
+  );
 
   let info = $state<NudgeInfo | null>(null);
   let loadError = $state('');
@@ -70,7 +82,15 @@
   }
 </script>
 
-<Sheet title={t('Stupsen')} onclose={closeSheet}>
+{#snippet cancelButton()}
+  <button class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" onclick={closeSheet}>{t('Abbrechen')}</button>
+{/snippet}
+
+{#snippet footerCta()}
+  <CtaButton disabled={!ready || busy} onclick={send}><Icon name="hand" size={22} stroke={2} />{t('Stups senden')}</CtaButton>
+{/snippet}
+
+<Sheet footer={info?.canNudge ? footerCta : undefined} title={t('Stupsen')} onclose={closeSheet} left={cancelButton} hideClose>
   {#if loadError}
     <p class="py-10 text-center text-danger">{loadError}</p>
   {:else if !info}
@@ -78,68 +98,85 @@
   {:else if !info.canNudge}
     <p class="py-10 text-center text-fg2">{t('Stupsen können nur Personen, die unter Einstellungen › Personen & Zugriff stehen.')}</p>
   {:else}
-    <p class="mt-1 px-1 text-[17px] font-bold">{card?.title ?? ''}</p>
+    <div class="flex flex-col gap-3.5 pt-1">
+      {#if card}
+        <ListRow title={card.title}>
+          {#snippet tile()}<Tile color={tileColor}><Icon name={cardIcon(card)} size={22} /></Tile>{/snippet}
+          {#snippet meta()}
+            {#if card.dueAt}<span class="shrink-0">{formatDue(card.dueAt)}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span>{/if}
+            <span class="truncate">{board?.name ?? ''}</span>
+          {/snippet}
+        </ListRow>
+      {/if}
 
-    <SectionHeader title={t('An wen')} />
-    <div class="flex flex-col gap-2">
-      {#each info.people as p (p.id)}
-        {@const hint = targetHint(p)}
-        <div class={p.selectable ? '' : 'opacity-50'}>
-          <ListRow title={p.name} check={{ done: selected.includes(p.id), label: p.name, onchange: () => toggle(p.id, !selected.includes(p.id)), disabled: !p.selectable }}>
-            {#snippet tile()}<Avatar person={{ displayName: p.name, color: p.color }} size={32} />{/snippet}
-            {#snippet meta()}{hint ?? ''}{/snippet}
-          </ListRow>
+      <section aria-label={t('An wen?')} class="flex flex-col gap-3.5">
+        <SectionHeader title={t('An wen?')} />
+        <div class="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3" role="group" aria-label={t('An wen?')}>
+          {#each info.people as p (p.id)}
+            {@const on = selected.includes(p.id)}
+            <Chip photo active={on} pressed={on} disabled={!p.selectable} onclick={() => toggle(p.id, !on)}>
+              <Avatar person={{ displayName: p.name, color: p.color }} size={32} ring={on ? 0 : 1.5} />{p.name}
+            </Chip>
+          {:else}
+            <p class="px-1 py-2 text-[15px] text-fg2">{t('Es gibt keine andere Person, die du stupsen könntest.')}</p>
+          {/each}
         </div>
-      {:else}
-        <p class="px-1 py-2 text-[15px] text-fg2">{t('Es gibt keine andere Person, die du stupsen könntest.')}</p>
-      {/each}
-    </div>
-    <p class="mt-2 px-1 text-[13px] text-fg2">{t('Es bekommt jeder einen eigenen Stups. Pro Karte und Person geht höchstens einer alle 30 Minuten.')}</p>
+        {#each info.people as p (p.id)}
+          {@const hint = targetHint(p)}
+          {#if hint}<p class="px-1 text-[13px] text-fg2"><b class="font-semibold text-fg">{p.name}:</b> {hint}</p>{/if}
+        {/each}
+        <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Es bekommt jeder einen eigenen Stups. Pro Karte und Person geht höchstens einer alle 30 Minuten.')}</p>
+      </section>
 
-    <SectionHeader title={t('Nachricht')} />
-    <div class="flex flex-wrap gap-2" role="radiogroup" aria-label={t('Nachricht')}>
-      {#each TEMPLATES as k (k)}
-        <button
-          type="button"
-          role="radio"
-          aria-checked={template === k && !custom.trim()}
-          class="min-h-10 rounded-full border px-4 text-[15px] font-semibold {template === k && !custom.trim() ? 'bg-accent-grad border-transparent' : 'border-line bg-surface'}"
-          onclick={() => {
-            template = k;
-            custom = '';
-          }}
-        >
-          {templateText(k)}
-        </button>
-      {/each}
-    </div>
-    <label class="mt-3 flex items-center gap-3 rounded-row border border-line bg-surface px-4">
-      <input
-        bind:value={custom}
-        maxlength={info.maxText}
-        placeholder={t('Oder ein eigener Text')}
-        enterkeyhint="send"
-        class="min-w-0 flex-1 bg-transparent py-3.5"
-        aria-label={t('Eigener Text')}
-      />
-      {#if custom}<span class="text-[13px] text-fg2">{custom.length}/{info.maxText}</span>{/if}
-    </label>
+      <section aria-label={t('Nachricht')} class="flex flex-col gap-3.5">
+        <SectionHeader title={t('Nachricht')} />
+        <div class="flex flex-col gap-2" role="radiogroup" aria-label={t('Nachricht')}>
+          {#each TEMPLATES as k (k)}
+            {@const on = template === k && !custom.trim()}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={on}
+              class="flex h-14 w-full items-center gap-3 rounded-row border px-3.5 text-left text-[15px] font-semibold {on ? 'pick-on' : 'border-line bg-surface'}"
+              onclick={() => {
+                template = k;
+                custom = '';
+              }}
+            >
+              <span class="h-5 w-5 shrink-0 rounded-full {on ? 'border-[6px] border-brand-dot' : 'border-2 border-ring'}"></span>{templateText(k)}
+            </button>
+          {/each}
+        </div>
+        <label class="flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3 focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent/20">
+          <span class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Eigener Text (optional)')}</span>
+          <span class="flex items-center gap-3">
+            <input
+              bind:value={custom}
+              maxlength={info.maxText}
+              placeholder={t('z. B. Brauchst du noch was vom Baumarkt?')}
+              enterkeyhint="send"
+              class="min-h-6 min-w-0 flex-1 bg-transparent text-[16px] font-semibold placeholder:text-dim"
+              aria-label={t('Eigener Text')}
+            />
+            {#if custom}<span class="text-[13px] text-fg2">{custom.length}/{info.maxText}</span>{/if}
+          </span>
+        </label>
+      </section>
 
-    <SectionHeader title={t('So kommt es an')} />
-    <div class="flex gap-3 rounded-row border border-line bg-surface p-3" aria-label={t('Vorschau der Push-Nachricht')} data-testid="nudge-preview">
-      <span class="bg-accent-grad flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-[18px] font-extrabold">s</span>
-      <div class="min-w-0 flex-1">
-        <p class="truncate text-[15px] font-bold">{t('{names} stupst dich', { names: ui.me?.displayName ?? '' })}</p>
-        <p class="truncate text-[14px] text-fg2">{card?.title ?? ''} · {previewText}</p>
-        <p class="mt-2 flex gap-2 text-[13px] font-semibold">
-          {#each [t('Erledigt'), t('Mach ich'), t('Später')] as label (label)}<span class="rounded-full bg-surface2 px-3 py-1">{label}</span>{/each}
-        </p>
-      </div>
+      <section aria-label={t('So kommt es an')} class="flex flex-col gap-3.5">
+        <SectionHeader title={t('So kommt es an')} />
+        <div class="flex gap-2.5 rounded-[18px] border border-track bg-surface2 p-3" aria-label={t('Vorschau der Push-Nachricht')} data-testid="nudge-preview">
+          <img src={logo} alt="" width="34" height="34" class="h-[34px] w-[34px] shrink-0 rounded-lg" />
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-[14px] font-bold">{t('{names} stupst dich', { names: ui.me?.displayName ?? '' })}</p>
+            <p class="mt-0.5 text-[13px] leading-[1.35] text-text-soft2">{card?.title ?? ''} · {previewText}</p>
+            <p class="mt-2 flex gap-1.5 text-[12px] font-semibold">
+              {#each [t('Erledigt'), t('Mach ich'), t('Später')] as label (label)}<span class="inline-flex h-7 items-center rounded-lg bg-track px-2.5">{label}</span>{/each}
+            </p>
+          </div>
+        </div>
+        <p class="flex items-center gap-1.5 px-1 text-[12.5px] text-hint"><Icon name="moon" size={14} stroke={2} />{t('Während der Ruhezeit kommen Stupse erst am Morgen an.')}</p>
+      </section>
     </div>
-    <p class="mt-2 flex items-center gap-2 px-1 text-[13px] text-fg2"><Icon name="clock" size={14} />{t('Während der Ruhezeit kommen Stupse erst am Morgen an.')}</p>
-
-    <SheetFooter>
-      <CtaButton disabled={!ready || busy} onclick={send}><Icon name="hand" size={20} />{t('Stups senden')}</CtaButton>
-    </SheetFooter>
   {/if}
 </Sheet>

@@ -15,7 +15,7 @@
     children,
   }: {
     title: string;
-    count?: number;
+    count?: number | string;
     icon?: string;
     /** Farbe des Symbols (heute orange, überfällig rot, diese Woche blau, später hell); ohne Angabe wie die Überschrift */
     iconTone?: 'orange' | 'red' | 'blue' | 'green' | 'soft';

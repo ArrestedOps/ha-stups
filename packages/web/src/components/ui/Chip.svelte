@@ -8,6 +8,7 @@
     small = false,
     photo = false,
     square = false,
+    disabled = false,
     count,
     pressed,
     label,
@@ -21,6 +22,7 @@
     photo?: boolean;
     /** nur ein Symbol: quadratisch (40 × 40, klein 34 × 34) */
     square?: boolean;
+    disabled?: boolean;
     /** Zähler hinter dem Text (zum Beispiel Karten dieser Person) */
     count?: number;
     /** für Chips, die sich ein- und ausschalten lassen (aria-pressed); ohne Angabe ein einfacher Knopf */
@@ -34,9 +36,10 @@
 
 <button
   type="button"
-  class="inline-flex shrink-0 items-center gap-[7px] rounded-full border font-semibold whitespace-nowrap {small ? 'h-[34px] px-3 text-[13px]' : 'h-10 px-4 text-[15px]'} {photo ? 'pl-1' : ''} {square ? (small ? 'w-[34px] !px-0 justify-center' : 'w-10 !px-0 justify-center') : ''}
+  class="inline-flex shrink-0 items-center gap-[7px] rounded-full border font-semibold whitespace-nowrap {disabled ? 'opacity-50' : ''} {small ? 'h-[34px] px-3 text-[13px]' : 'h-10 px-4 text-[15px]'} {photo ? 'pl-1' : ''} {square ? (small ? 'w-[34px] !px-0 justify-center' : 'w-10 !px-0 justify-center') : ''}
     {active ? 'bg-accent-grad glow-chip border-transparent' : outline ? 'border-accent bg-surface text-fg' : 'border-line-chip bg-surface text-text-soft'}"
   aria-label={label}
+  {disabled}
   aria-pressed={pressed}
   {onclick}
 >

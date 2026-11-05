@@ -37,8 +37,8 @@ test('Aufgaben: meine Karten in Gruppen (Überfällig, Heute, Diese Woche, Spät
 
   await page.goto('/');
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
-  // Die Liste ist die Standardansicht und zeigt zuerst „Meine"
-  await expect(page.getByRole('radio', { name: 'Liste' })).toHaveAttribute('aria-checked', 'true');
+  // Die Liste ist die Startseite und zeigt zuerst „Meine"
+  await expect(page.getByRole('heading', { name: 'Aufgaben' })).toBeVisible();
   const tasks = page.getByTestId('tasks');
   await expect(tasks.getByText(overdue)).toBeVisible();
   await expect(page.getByTestId('group-overdue').getByText(overdue)).toBeVisible();
@@ -46,7 +46,7 @@ test('Aufgaben: meine Karten in Gruppen (Überfällig, Heute, Diese Woche, Spät
   await expect(page.getByTestId('group-overdue').getByText(tomorrow)).toHaveCount(0);
   await expect(page.getByTestId('group-later').getByText(later)).toBeVisible(); // in 30 Tagen: an jedem Wochentag „Später"
   await expect(tasks.getByText(foreign)).toHaveCount(0);
-  await expect(page.getByTestId('today-sentence')).toContainText('für dich');
+  await expect(page.getByTestId('tasks-sub')).toHaveText('Deine Aufgaben, Termine und To-dos an einem Ort.');
   await expect(page.getByRole('group', { name: 'Deine Zahlen' })).toBeVisible();
 
   // „Alle" zeigt auch die der anderen
@@ -61,24 +61,58 @@ test('Aufgaben: meine Karten in Gruppen (Überfällig, Heute, Diese Woche, Spät
   expect(done.cards.find((c) => c.title === overdue)?.completedAt).not.toBeNull();
 });
 
-test('Aufgaben: der Umschalter führt zu Tag, Woche und Monat (der frühere Kalender) und zurück zur Liste', async ({ page }) => {
+test('Aufgaben: Kalender-Knopf und „Monatsansicht" öffnen den Kalender (Tag, Woche, Monat), „‹ Aufgaben" führt zurück zur Liste', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
+  // Es gibt keinen Umschalter Liste/Tag/Woche/Monat mehr in der Liste
+  await expect(page.getByRole('radiogroup', { name: 'Ansicht' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Kalender öffnen' }).click();
   const views = page.getByRole('radiogroup', { name: 'Ansicht' });
-  await views.getByRole('radio', { name: 'Woche' }).click();
+  await expect(page.getByRole('heading', { name: 'Kalender' })).toBeVisible();
+  await expect(views.getByRole('radio', { name: 'Woche' })).toHaveAttribute('aria-checked', 'true');
   await expect(page.getByTestId('calendar-grid')).toBeVisible();
   await views.getByRole('radio', { name: 'Monat' }).click();
   await expect(page.getByTestId('calendar-month')).toBeVisible();
   await views.getByRole('radio', { name: 'Tag' }).click();
   await expect(page.getByTestId('calendar-grid')).toBeVisible();
-  await views.getByRole('radio', { name: 'Liste' }).click();
+  await page.getByRole('button', { name: 'Aufgaben', exact: true }).first().click(); // „‹ Aufgaben" oben links
   await expect(page.getByTestId('tasks')).toBeVisible();
-  // die Wochenleiste: ein Tipp auf den Tag öffnet die Tagesansicht, das Kalender-Symbol die Woche
+  // die Wochenleiste: ein Tipp auf den Tag öffnet die Tagesansicht, „Monatsansicht" die Monatsansicht
   await page.getByTestId('week-strip').getByRole('button', { name: /Heute/ }).click();
   await expect(views.getByRole('radio', { name: 'Tag' })).toHaveAttribute('aria-checked', 'true');
-  await views.getByRole('radio', { name: 'Liste' }).click();
-  await page.getByRole('button', { name: 'Kalender öffnen' }).click();
-  await expect(views.getByRole('radio', { name: 'Woche' })).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('button', { name: 'Aufgaben', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Monatsansicht' }).click();
+  await expect(views.getByRole('radio', { name: 'Monat' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('calendar-month')).toBeVisible();
+});
+
+test('Aufgaben: von oben nach unten Kopf, Zahlenleiste, Woche, Chips, dann die Gruppen (wie im Mockup)', async ({ page, request }) => {
+  const s = await seed(request);
+  await s.mk(`Reihenfolge ${s.tag}`, { assigneeIds: [s.me], dueAt: new Date(Date.now() - 3_600_000).toISOString() });
+  await page.goto('/');
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
+  await expect(page.getByTestId('group-overdue')).toBeVisible();
+  const y = async (loc: ReturnType<typeof page.locator>) => (await loc.first().boundingBox())!.y;
+  const order = [
+    await y(page.getByRole('button', { name: 'Einstellungen öffnen' })),
+    await y(page.getByRole('heading', { name: 'Aufgaben' })),
+    await y(page.getByTestId('tasks-sub')),
+    await y(page.getByRole('group', { name: 'Deine Zahlen' })),
+    await y(page.getByTestId('week-strip')),
+    await y(page.getByRole('group', { name: 'Personen' })),
+    await y(page.getByTestId('group-overdue')),
+  ];
+  expect(order, 'Reihenfolge der Bereiche von oben nach unten').toEqual([...order].sort((a, b) => a - b));
+  // Die Zahlenleiste hat drei Zellen, die Wochenleiste sieben Tage und den Kalender-Knopf
+  await expect(page.getByRole('group', { name: 'Deine Zahlen' }).getByText(/Heute fällig|Überfällig|Erledigt/)).toHaveCount(3);
+  // zwei Knöpfe oben (Monatsansicht und der Monat), sieben Tage und der Kalender-Knopf
+  await expect(page.getByTestId('week-strip').getByRole('button')).toHaveCount(10);
+  // rechts neben den Chips der Filter-Knopf
+  await expect(page.getByRole('button', { name: 'Filter' })).toBeVisible();
+  // Zeile: Erledigt-Kreis, Titel, Mehr-Knopf
+  const row = page.getByTestId('group-overdue').locator('li').first();
+  await expect(row.getByRole('checkbox')).toBeVisible();
+  await expect(row.getByRole('button', { name: /^Menü für/ })).toBeVisible();
 });
 
 test('Aufgaben: „Fairness diese Woche" und „Bei den anderen" führen zu „Diese Woche", ohne Rangliste', async ({ page, request }) => {
@@ -96,12 +130,43 @@ test('Aufgaben: „Fairness diese Woche" und „Bei den anderen" führen zu „D
   await expect(page.getByRole('dialog').getByTestId('fairness')).toBeVisible();
 });
 
-test('Kopfzeile: „‹ Dashboard" steht auf allen drei Reitern, der Avatar rechts', async ({ page }) => {
+test('Kopfzeile auf allen drei Reitern: Logo, Glocke, Zahnrad und Profilbild, kein „‹ Dashboard" mehr', async ({ page }) => {
   await page.goto('/');
   const nav = page.getByRole('navigation', { name: 'Ansicht' });
-  for (const tab of ['Aufgaben', 'Boards', 'Wächter']) {
+  for (const [tab, title] of [['Aufgaben', 'Aufgaben'], ['Boards', 'Boards'], ['Wächter', 'Wächter']] as const) {
     await nav.getByRole('button', { name: tab }).click();
-    await expect(page.getByRole('button', { name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Mitteilungen/ })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Einstellungen öffnen' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Profil öffnen' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Dashboard', exact: true })).toHaveCount(0);
   }
+});
+
+test('Glocke: Zahnrad und Profilbild öffnen die Einstellungen, die Glocke die Mitteilungen (ohne Offenes ein ruhiger Satz, kein Punkt)', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('bell-dot')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Mitteilungen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Mitteilungen' });
+  await expect(dialog.getByTestId('notifications-empty')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+  await expect(page.getByRole('dialog', { name: 'Einstellungen' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Profil öffnen' }).click();
+  await expect(page.getByRole('dialog', { name: 'Einstellungen' }).getByTestId('settings-head')).toBeVisible();
+});
+
+test('Einstellungen › Home Assistant: „Zurück zum Dashboard" und „HA-Kopfzeile ausblenden" sind da (im Add-on für jeden)', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Einstellungen' });
+  await expect(dialog.getByText('Home Assistant', { exact: true })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Zurück zum Dashboard' })).toBeVisible();
+  const toggle = dialog.getByRole('switch', { name: 'Kopfzeile von Home Assistant ausblenden' });
+  await expect(toggle).toBeVisible();
+  const before = await toggle.getAttribute('aria-checked');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-checked', before === 'true' ? 'false' : 'true');
+  await toggle.click(); // zurück, der Merkzettel gehört dem Gerät
 });

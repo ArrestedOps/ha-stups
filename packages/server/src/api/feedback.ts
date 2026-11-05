@@ -87,6 +87,12 @@ export function registerFeedbackRoutes(app: FastifyInstance, k: ApiKit): void {
     return { items: store.listFeedback(), newCount: store.feedbackNewCount() };
   });
 
+  // Nur die Zahl der neuen, für den Hinweis in den Einstellungen (ohne die ganze Liste zu laden)
+  app.get('/api/feedback/summary', async (req) => {
+    requireAdmin(req);
+    return { newCount: store.feedbackNewCount() };
+  });
+
   app.patch<{ Params: Params }>('/api/feedback/:id', async (req) => {
     requireAdmin(req);
     return store.setFeedbackStatus(req.params.id, parseFeedbackStatus(body(req).status));

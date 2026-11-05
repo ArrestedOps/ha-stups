@@ -15,6 +15,7 @@
   import { activeScheduleFilter, claimCard, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import CalendarView from './CalendarView.svelte';
+  import FeedbackLink from './FeedbackLink.svelte';
   import Icon from './Icon.svelte';
   import TaskRow from './TaskRow.svelte';
   import WeekStrip from './WeekStrip.svelte';
@@ -325,6 +326,7 @@
                 </ListRow>
               {/if}
             </div>
+            <FeedbackLink />
           {/if}
         {/if}
       </div>

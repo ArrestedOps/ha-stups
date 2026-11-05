@@ -11,6 +11,8 @@
   const item = $derived(viewer ? viewer.items[viewer.index] : null);
   const isPdf = $derived(item?.mime === 'application/pdf');
   const many = $derived((viewer?.items.length ?? 0) > 1);
+  /** Karten-Anhänge liegen unter api/attachments/, andere Bilder (Rückmeldungen) bringen ihre Adresse mit und lassen sich hier nicht entfernen */
+  const src = $derived(item ? (item.url ?? `api/attachments/${item.id}`) : '');
 
   let zoomed = $state(false);
 
@@ -19,7 +21,7 @@
     if (!item) return '';
     const who = item.createdBy ? personById(item.createdBy)?.displayName : undefined;
     const when = new Date(item.createdAt).toLocaleString(numberLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-    return [who, when, formatBytes(item.size)].filter(Boolean).join(' • ');
+    return [who, when, item.size > 0 ? formatBytes(item.size) : ''].filter(Boolean).join(' • ');
   });
 
   /** Entfernen: mit Rückfrage; ein Kind darf es nicht (wie am Karten-Fenster) */
@@ -92,7 +94,7 @@
 
     <div class="relative my-3 min-h-0 flex-1 {zoomed ? 'overflow-auto' : 'overflow-hidden'}" onpointerdown={down} onpointerup={up} role="presentation">
       {#if isPdf}
-        <iframe title={item.filename} src="api/attachments/{item.id}" class="h-full w-full bg-on-media"></iframe>
+        <iframe title={item.filename} src={src} class="h-full w-full bg-on-media"></iframe>
       {:else}
         {#key item.id}
           <button
@@ -101,7 +103,7 @@
             onclick={() => (zoomed = !zoomed)}
           >
             <img
-              src="api/attachments/{item.id}"
+              {src}
               alt={item.filename}
               draggable="false"
               class="select-none {zoomed ? 'h-auto w-full' : 'h-full w-full object-contain'}"
@@ -134,13 +136,13 @@
     {/if}
 
     <div class="grid grid-cols-3 gap-2 px-3 pb-[max(34px,var(--pad-bottom))]">
-      <a class="flex h-14 flex-col items-center justify-center gap-1 rounded-row border border-line bg-surface text-[12px] font-semibold text-fg" href="api/attachments/{item.id}" download={item.filename}>
+      <a class="flex h-14 flex-col items-center justify-center gap-1 rounded-row border border-line bg-surface text-[12px] font-semibold text-fg" href={src} download={item.filename}>
         <Icon name="download" size={20} stroke={1.8} />{t('Sichern')}
       </a>
-      <a class="flex h-14 flex-col items-center justify-center gap-1 rounded-row border border-line bg-surface text-[12px] font-semibold text-fg" href="api/attachments/{item.id}" target="_blank" rel="noopener noreferrer" aria-label={t('Original im Browser öffnen')}>
+      <a class="flex h-14 flex-col items-center justify-center gap-1 rounded-row border border-line bg-surface text-[12px] font-semibold text-fg" href={src} target="_blank" rel="noopener noreferrer" aria-label={t('Original im Browser öffnen')}>
         <Icon name="external" size={20} stroke={1.8} />{t('Original')}
       </a>
-      {#if !ui.isChild}
+      {#if !ui.isChild && !item.url}
         <button class="flex h-14 flex-col items-center justify-center gap-1 rounded-row border border-line bg-surface text-[12px] font-semibold text-danger" onclick={removeItem}>
           <Icon name="trash" size={20} stroke={1.8} />{t('Entfernen')}
         </button>

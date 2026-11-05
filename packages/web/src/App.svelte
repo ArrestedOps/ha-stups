@@ -27,11 +27,13 @@
   import FoundSheet from './components/FoundSheet.svelte';
   import WatchersView from './components/WatchersView.svelte';
   import NotificationsSheet from './components/NotificationsSheet.svelte';
+  import FeedbackSheet from './components/FeedbackSheet.svelte';
   import FilterSheet from './components/FilterSheet.svelte';
   import { loadAgenda } from './lib/agenda.svelte';
   import { loadInbox } from './lib/inbox.svelte';
   import { agendaDelay } from './lib/agendaGate';
   import { columnForNew } from './lib/calendar';
+  import { feedbackSheet } from './lib/feedbackSheet.svelte';
   import { init, openSheet, ui } from './lib/store.svelte';
 
   onMount(init);
@@ -144,6 +146,9 @@
   {:else if ui.sheet?.type === 'filter'}
     <FilterSheet />
   {/if}
+
+  <!-- Feedback liegt über allem, was offen ist (Einstellungen, Aufgaben …), und schließt zurück dorthin -->
+  {#if feedbackSheet.open && !ui.isChild}<FeedbackSheet />{/if}
 
   <Lightbox />
   <ConfirmDialog />

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { api } from '../lib/api';
+  import { openFeedback } from '../lib/feedbackSheet.svelte';
   import { settingsOverview } from '../lib/settingsPages';
   import { applyHeaderHiding, isHeaderHidingWanted, setHeaderHidingWanted, showHaHeader } from '../lib/hideHaHeader';
   import { t, tn } from '../lib/i18n/index.svelte';
@@ -8,6 +11,7 @@
   import DashboardPage from './settings/DashboardPage.svelte';
   import DataPage from './settings/DataPage.svelte';
   import DatesPage from './settings/DatesPage.svelte';
+  import FeedbackPage from './settings/FeedbackPage.svelte';
   import IconsPage from './settings/IconsPage.svelte';
   import LookPage from './settings/LookPage.svelte';
   import NotificationsPage from './settings/NotificationsPage.svelte';
@@ -34,6 +38,12 @@
   const page = $derived(ui.sheet?.type === 'settings' ? ui.sheet.page : undefined);
 
   let headerHidden = $state(isHeaderHidingWanted());
+
+  // Administratoren sehen an „Feedback der Nutzer", wie viele Rückmeldungen neu sind
+  let newFeedback = $state(0);
+  onMount(() => {
+    if (ui.isAdmin && !ui.isChild) void api.feedbackSummary().then((r) => (newFeedback = r.newCount)).catch(() => {});
+  });
   const groups = $derived(
     settingsOverview({
       isAdmin: ui.isAdmin,
@@ -62,6 +72,7 @@
     bubble: { color: 'purple', meta: () => t('YAML für die Bubble Card') },
     voice: { color: 'blue', meta: () => t('Ansage und Lampe im Haus') },
     report: { color: 'gray', meta: () => t('Stand jeder Person und jedes Geräts') },
+    feedback: { color: 'orange', meta: () => (newFeedback > 0 ? t('{n} neu', { n: newFeedback }) : t('Fehler, Wünsche und Lob der Nutzer')) },
     data: { color: 'green', meta: () => (ui.isAdmin && feat.migration ? t('Papierkorb, Archiv, Umzug') : t('Papierkorb und Archiv')) },
     beta: { color: 'gray', meta: () => t('Beta-Einstellungen') },
   };
@@ -96,12 +107,22 @@
   <VoicePage />
 {:else if page === 'data'}
   <DataPage />
+{:else if page === 'feedback'}
+  <FeedbackPage />
 {:else if page === 'beta'}
   <BetaPage />
 {:else}
   <Sheet title={t('Einstellungen')} onclose={closeSheet}>
     <div class="flex flex-col gap-3.5 pt-1">
       <SettingsHead />
+      {#if !ui.isChild}
+        <!-- Für jede Person ganz oben: Feedback senden (die Liste der Rückmeldungen steht für Administratoren unter „Hilfe und Daten") -->
+        <ListRow title={t('Feedback & Ideen')} label={t('Feedback & Ideen')} onclick={() => openFeedback()}>
+          {#snippet tile()}<Tile color="orange"><Icon name="message" size={22} stroke={1.8} /></Tile>{/snippet}
+          {#snippet meta()}{t('Fehler melden, Wünsche, Lob und Kritik')}{/snippet}
+          {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
+        </ListRow>
+      {/if}
       {#each groups as g (g.id)}
         <div class="flex flex-col gap-2">
           <SectionHeader title={g.title} />

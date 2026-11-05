@@ -16,6 +16,7 @@ export type SettingsPageId =
   | 'voice'
   | 'report'
   | 'data'
+  | 'feedback'
   | 'beta';
 
 /** Was über die Sichtbarkeit entscheidet: Rolle und Betriebsart (aus dem Store, hier als Werte, damit es sich testen lässt) */
@@ -90,6 +91,8 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
       pages: [
         ...page('report', t('Warum kommt nichts an?'), 'message', ctx.push && !ctx.isChild),
         ...page('data', admin && ctx.migration ? t('Papierkorb, Archiv, Umzug') : t('Papierkorb und Archiv'), 'archive', !ctx.isChild),
+        // Die Liste der Rückmeldungen (die Zeile „Feedback & Ideen" zum Senden steht oben in der Übersicht, für jede Person)
+        ...page('feedback', t('Feedback der Nutzer'), 'message', admin),
         ...page('beta', t('Beta'), 'flag', ctx.beta && !ctx.isChild),
       ],
     },

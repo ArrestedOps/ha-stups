@@ -11,7 +11,7 @@ beforeEach(() => setLanguage('de'));
 describe('Einstellungen nach Rolle und Betriebsart', () => {
   it('Administrator im Add-on: alle vier Gruppen, keine Konto-Seite', () => {
     expect(groupIds(addon)).toEqual(['me', 'household', 'ha', 'help']);
-    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'summary', 'dashboard', 'bubble', 'voice', 'report', 'data']);
+    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'summary', 'dashboard', 'bubble', 'voice', 'report', 'data', 'feedback']);
   });
 
   it('Mitglied: „Für mich", „Home Assistant" (nur die eigene Dashboard-Wahl) und „Hilfe und Daten"', () => {
@@ -39,7 +39,7 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
   it('Docker ohne Home Assistant: Konto statt Home-Assistant-Gruppe, keine Wächter und kein Dashboard', () => {
     const docker = { ...addon, standalone: true, haUi: false, watchers: false, house: false, push: false };
     expect(groupIds(docker)).toEqual(['me', 'household', 'help']);
-    expect(ids(docker)).toEqual(['look', 'account', 'people', 'templates', 'icons', 'dates', 'data']);
+    expect(ids(docker)).toEqual(['look', 'account', 'people', 'templates', 'icons', 'dates', 'data', 'feedback']);
   });
 
   it('Docker mit Home Assistant: Wächter und Ansage sind da, das Dashboard nicht', () => {
@@ -82,6 +82,14 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
     expect(ids({ ...addon, isAdmin: false })).not.toContain('icons');
     expect(ids({ ...addon, isAdmin: true, isChild: true })).not.toContain('icons');
     expect(ids({ ...addon, isAdmin: false, isChild: true })).not.toContain('icons');
+  });
+
+  it('Feedback-Verwaltung (Liste der Rückmeldungen): nur Administratoren, nie ein Kind, in jeder Betriebsart', () => {
+    expect(ids(addon)).toContain('feedback');
+    expect(ids({ ...addon, standalone: true, haUi: false })).toContain('feedback');
+    expect(ids({ ...addon, isAdmin: false })).not.toContain('feedback');
+    expect(ids({ ...addon, isChild: true })).not.toContain('feedback');
+    expect(settingsOverview(addon).find((g) => g.id === 'help')!.pages.map((p) => p.id)).toContain('feedback');
   });
 
   it('die Titel folgen der Sprache', () => {

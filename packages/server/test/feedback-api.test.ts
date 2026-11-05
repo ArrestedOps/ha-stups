@@ -282,6 +282,15 @@ describe('Verwalten (Administrator)', () => {
     expect(l.items.map((i) => i.personName)).toEqual(['Ben', 'Anna']);
   });
 
+  it('Kurzfassung für die Einstellungen: nur die Zahl der neuen, nur Administratoren', async () => {
+    const id = (await send(anna, { kind: 'bug', message: 'eins' })).json().id;
+    await send(ben, { kind: 'idea', message: 'zwei' });
+    expect((await app.inject({ url: '/api/feedback/summary', headers: admin })).json()).toEqual({ newCount: 2 });
+    await app.inject({ method: 'PATCH', url: `/api/feedback/${id}`, headers: admin, payload: { status: 'gelesen' } });
+    expect((await app.inject({ url: '/api/feedback/summary', headers: admin })).json()).toEqual({ newCount: 1 });
+    expect((await app.inject({ url: '/api/feedback/summary', headers: anna })).statusCode).toBe(403);
+  });
+
   it('Status umschalten: neu, gelesen, erledigt; anderes ist ungültig', async () => {
     const id = (await send(anna, { kind: 'bug', message: 'x' })).json().id;
     for (const status of ['gelesen', 'erledigt', 'neu']) {

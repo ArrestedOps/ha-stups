@@ -1,4 +1,5 @@
 import { i18n, type LanguageChoice, t } from './i18n/index.svelte';
+import type { FeedbackContext, FeedbackItem, FeedbackKind, FeedbackStatus } from './feedback';
 import type { Recurrence } from './recurrence';
 import type { EntityHistory } from './history';
 import type { DryRunResult, HaEntity, OrderView, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from './watcher-types';
@@ -200,6 +201,8 @@ export interface Attachment {
   hasThumb: boolean;
   createdBy: string | null;
   createdAt: string;
+  /** Ein Bild, das nicht zu einer Karte gehört (Rückmeldung): Adresse des Bildes; die Ansicht zeigt dann kein „Entfernen" */
+  url?: string;
 }
 export interface CardDetail extends Card {
   checklistItems: ChecklistItem[];
@@ -680,6 +683,23 @@ export const api = {
     return send<Attachment>(`cards/${cardId}/attachments`, { method: 'POST', headers: clientHeaders(), body: form });
   },
   deleteAttachment: (id: string) => del(`attachments/${id}`),
+
+  /** Rückmeldung senden: ohne Bild als JSON, mit Bild als Formular (die Bilder sind schon verkleinert, siehe prepareUpload) */
+  sendFeedback: (f: { kind: FeedbackKind; message: string; context: FeedbackContext; image?: { file: Blob; filename: string; thumb: Blob | null } | null }): Promise<{ id: string }> => {
+    if (!f.image) return post<{ id: string }>('feedback', { kind: f.kind, message: f.message, context: f.context });
+    const form = new FormData();
+    form.append('kind', f.kind);
+    form.append('message', f.message);
+    form.append('context', JSON.stringify(f.context));
+    form.append('image', f.image.file, f.image.filename);
+    if (f.image.thumb) form.append('thumb', f.image.thumb, 'vorschau.jpg');
+    return send<{ id: string }>('feedback', { method: 'POST', headers: clientHeaders(), body: form });
+  },
+  /** Verwaltung (nur Administratoren) */
+  feedback: () => get<{ items: FeedbackItem[]; newCount: number }>('feedback'),
+  feedbackSummary: () => get<{ newCount: number }>('feedback/summary'),
+  setFeedbackStatus: (id: string, status: FeedbackStatus) => patch<FeedbackItem>(`feedback/${id}`, { status }),
+  deleteFeedback: (id: string) => del(`feedback/${id}`),
 
   comments: (cardId: string) => get<Comment[]>(`cards/${cardId}/comments`),
   addComment: (cardId: string, text: string) => post<Comment>(`cards/${cardId}/comments`, { text }),

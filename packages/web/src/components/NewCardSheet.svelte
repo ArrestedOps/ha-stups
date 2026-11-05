@@ -23,6 +23,7 @@
   import Icon from './Icon.svelte';
   import RecurrenceSheet from './RecurrenceSheet.svelte';
   import Sheet from './Sheet.svelte';
+  import SymbolIcon from './SymbolIcon.svelte';
   import SymbolSheet from './SymbolSheet.svelte';
   import Chip from './ui/Chip.svelte';
   import CtaButton from './ui/CtaButton.svelte';
@@ -459,7 +460,7 @@
           {#if symbol.icon}
             <span class="tok" data-testid="symbol-chip">
               <button type="button" class="inline-flex items-center gap-1.5" onclick={() => (symbolOpen = true)}>
-                <Icon name="spark" size={14} stroke={2} />{t('Symbol: {name}', { name: symbolName(symbol.icon) })}
+                <SymbolIcon id={symbol.icon} size={14} />{t('Symbol: {name}', { name: symbolName(symbol.icon) })}
               </button>
               <button
                 type="button"

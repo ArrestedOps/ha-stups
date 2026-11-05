@@ -1,11 +1,19 @@
 import type { FastifyInstance } from 'fastify';
-import { ConflictError, ValidationError } from '../errors.js';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../errors.js';
 import { type HaState } from '../ha.js';
 import { DRY_RUN_DAYS, dryRun } from '../dry-run.js';
+import { clampHours, historyOf, unavailableHistory } from '../entity-history.js';
 import { detectSuggestions, suggestionKey, watcherTemplates } from '../watcher-templates.js';
-import { parseTrigger, parseWatcher, type WatcherConfig } from '../watcher-types.js';
+import { MODES, parseTrigger, parseWatcher, type AssignRule, type WatchTrigger, type WatcherConfig } from '../watcher-types.js';
 import { type ApiKit, type Params } from './kit.js';
 import { t } from '../i18n/index.js';
+
+/** Wie lange der Verlauf auf Home Assistant wartet, bevor die Oberfläche „kein Verlauf“ zeigt */
+const HISTORY_TIMEOUT_MS = 8_000;
+
+/** Query-Werte, die mehrfach vorkommen (Listen), gelten als nicht angegeben: so bleibt jede Eingabe ein Text */
+const single = (query: object): Record<string, string | undefined> =>
+  Object.fromEntries(Object.entries(query).map(([k, v]) => [k, typeof v === 'string' ? v : undefined]));
 
 /** Wächter und Diagnose */
 export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
@@ -111,6 +119,63 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       throw new ConflictError(err instanceof Error ? err.message : t('Home Assistant antwortet nicht'));
     }
     return dryRun({ trigger, cooldownMin }, history, nowMs);
+  });
+  /**
+   * Verlauf einer Entität (Standard: letzte 3 Stunden) für den Wächter-Editor, verdichtet auf Zahlen und Zeitpunkte, mit den Stellen, an
+   * denen die Regel (Query: kind, value, to, forMin, count, cooldownMin) ausgelöst hätte. Administratoren fragen jede Entität ab, Mitglieder
+   * nur die, die ein Wächter beobachtet. **Kind: verboten** (Erlaubnisliste in child-guard.ts). Ohne Verbindung oder ohne Recorder gibt es
+   * einen Verlauf mit Status `unavailable` oder `no_data`, nie einen Fehler.
+   */
+  app.get<{ Querystring: Record<string, string | undefined> }>('/api/watchers/history', async (req) => {
+    const q = single(req.query);
+    const entityId = q.entityId ?? '';
+    if (!/^[a-z0-9_]+\.[a-z0-9_]+$/.test(entityId)) throw new ValidationError(t('Die Entität muss die Form domain.name haben'));
+    if (!req.access?.isAdmin) {
+      const watched = (deps.watcherData?.list() ?? []).some((w) => w.trigger.entityId === entityId || w.done?.entityId === entityId);
+      if (!watched) throw new ForbiddenError(t('Das dürfen nur Administratoren'));
+    }
+    const hours = clampHours(q.hours);
+    const nowMs = (deps.now?.() ?? new Date()).getTime();
+    if (!deps.ha?.getHistory) return unavailableHistory(nowMs, hours);
+    let trigger: WatchTrigger | null = null;
+    try {
+      if (q.kind) trigger = parseTrigger({ entityId, kind: q.kind, to: q.to ?? null, value: q.value === undefined || q.value === '' ? null : Number(q.value), forMin: q.forMin === undefined ? undefined : Number(q.forMin), count: q.count === undefined ? undefined : Number(q.count) });
+    } catch {
+      trigger = null; // eine unfertige Regel zeichnet den Verlauf trotzdem, nur ohne Auslösepunkte
+    }
+    const cooldownMin = q.cooldownMin !== undefined && Number.isFinite(Number(q.cooldownMin)) ? Math.min(1440, Math.max(0, Math.round(Number(q.cooldownMin)))) : 10;
+    try {
+      const from = new Date(nowMs - hours * 3_600_000).toISOString();
+      const history = await Promise.race([
+        deps.ha.getHistory(entityId, from, new Date(nowMs).toISOString()),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Zeitlimit')), HISTORY_TIMEOUT_MS).unref()),
+      ]);
+      return historyOf({ history, nowMs, hours, trigger, cooldownMin });
+    } catch {
+      return unavailableHistory(nowMs, hours);
+    }
+  });
+  /**
+   * Die Reihenfolge für „An wen": Kreis, wer als Nächstes dran ist, wer zu Hause ist. Für einen gespeicherten Wächter (`watcherId`) oder
+   * einen Entwurf (`mode`, `personIds`, `fallback`, `fallbackPersonId`). Schaltet nichts weiter. **Kind: verboten.**
+   */
+  app.get<{ Querystring: Record<string, string | undefined> }>('/api/watchers/order', async (req) => {
+    if (!deps.watchers) throw new ConflictError(t('Wächter brauchen die Verbindung zu Home Assistant'));
+    const q = single(req.query);
+    const saved = q.watcherId ? deps.watcherData?.list().find((w) => w.id === q.watcherId) : undefined;
+    if (q.watcherId && !saved) throw new NotFoundError(t('Wächter nicht gefunden'));
+    const mode = (q.mode ?? saved?.assign.mode) as AssignRule['mode'] | undefined;
+    if (!mode || !MODES.includes(mode)) throw new ValidationError(t('Die Art der Zuweisung ist unbekannt'));
+    const personIds = q.personIds !== undefined ? q.personIds.split(',').filter(Boolean).slice(0, 50) : (saved?.assign.personIds ?? []);
+    const fallback = (q.fallback ?? saved?.assign.fallback ?? 'next') as AssignRule['fallback'];
+    const rule: AssignRule = {
+      mode,
+      personIds,
+      fallback: ['next', 'all', 'none', 'fixed'].includes(fallback) ? fallback : 'next',
+      waitFallback: saved?.assign.waitFallback ?? 'none',
+      fallbackPersonId: q.fallbackPersonId || saved?.assign.fallbackPersonId || null,
+    };
+    return deps.watchers.order(rule, saved?.id ?? null);
   });
   app.get<{ Params: Params }>('/api/watchers/:id/runs', async (req) => {
     const { data } = watcherEngine();

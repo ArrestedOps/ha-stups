@@ -4,6 +4,7 @@ import type { HaState } from './ha.js';
 import { t } from './i18n/index.js';
 import { isBusy } from './busy.js';
 import { isRunning, phaseOf, type HomeItem, type HomeState, type PhaseMemory } from './home.js';
+import { orderView, type OrderView } from './assignment-order.js';
 import { personOfEntity, presenceOf, type PresenceMap } from './presence.js';
 import { fromLocal, toLocal } from './recurrence.js';
 import type { Card, Store, User } from './store.js';
@@ -799,6 +800,29 @@ export function createWatchers(deps: WatcherDeps) {
     deps.onChange?.();
   }
 
+  /**
+   * Die Reihenfolge für „An wen" im Editor: der Kreis, wer als Nächstes dran ist, wer zu Hause ist. Rechnet mit `decide` wie die echte
+   * Zuweisung, speichert und schaltet aber nichts weiter. `watcherId` liefert die zuletzt gewählte Person (Rotation); für einen Entwurf
+   * ohne Wächter beginnt der Kreis vorn.
+   */
+  async function order(rule: AssignRule, watcherId: string | null): Promise<OrderView> {
+    const people = store.people();
+    const present = new Map<string, boolean | null>();
+    let home = new Set<string>();
+    try {
+      const map = await presence();
+      home = map.home;
+      for (const p of people) present.set(p.id, map.entityOf.has(p.id) ? map.home.has(p.id) : null);
+    } catch {
+      // Home Assistant antwortet nicht: Anwesenheit unbekannt, die Reihenfolge gibt es trotzdem
+    }
+    const nowMs = now().getTime();
+    const busy = new Set(people.filter((p) => isBusy(p.busyUntil, nowMs, timeZone())).map((p) => p.id));
+    const last = watcherId && data.list().some((w) => w.id === watcherId) ? data.getState(watcherId).lastPerson : null;
+    const d = decide(rule, people, home, last, busy);
+    return orderView({ rule, people, present, nextId: d.last ?? null });
+  }
+
   /** Für die Oberfläche: Wächter mit Zustand, Zählerstand, Abo und letztem Lauf */
   function view() {
     const active = new Set(ha.activeSubscriptions?.() ?? []);
@@ -972,7 +996,7 @@ export function createWatchers(deps: WatcherDeps) {
     return data.recentRuns(limit);
   }
 
-  return { start, presentPersonIds, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, homeState, pass, claim, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
+  return { start, presentPersonIds, order, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, homeState, pass, claim, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
 }
 
 export type Watchers = ReturnType<typeof createWatchers>;

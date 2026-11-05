@@ -33,24 +33,12 @@ export interface DryRunResult {
 const numeric = (state: string): number | null => (state !== '' && state !== 'unknown' && state !== 'unavailable' && Number.isFinite(Number(state)) ? Number(state) : null);
 
 /**
- * Probelauf: wendet die Regel eines Wächters auf die Historie einer Entität an, ohne etwas zu speichern. Gleiche Auslegung wie im laufenden
- * Betrieb (`conditionMet`, Mindestdauer, Sperrzeit, erst wieder scharf, wenn die Bedingung einmal nicht galt, Zähler).
+ * Die Zeitpunkte, zu denen ein Wächter in einem Verlauf ausgelöst hätte (nach Zeit sortierte Zustände, `toMs` = Ende des Fensters).
+ * Gleiche Auslegung wie im laufenden Betrieb (`conditionMet`, Mindestdauer, Sperrzeit, erst wieder scharf, wenn die Bedingung einmal
+ * nicht galt, Zähler). Der Probelauf (7 Tage) und der Verlauf im Editor (3 Stunden) benutzen dieselbe Rechnung.
  */
-export function dryRun(rule: { trigger: WatchTrigger; cooldownMin: number }, history: HistoryPoint[], nowMs: number): DryRunResult {
-  const toMs = nowMs;
-  const fromMs = nowMs - DRY_RUN_DAYS * 86_400_000;
-  const base = { from: new Date(fromMs).toISOString(), to: new Date(toMs).toISOString() };
-  const truncated = history.length > DRY_RUN_MAX_STATES;
-  const sorted = history
-    .slice(0, DRY_RUN_MAX_STATES)
-    .map((p) => ({ state: p.state, ms: Date.parse(p.at) }))
-    .filter((p) => Number.isFinite(p.ms) && p.ms <= toMs)
-    .sort((a, b) => a.ms - b.ms);
-  const usable = sorted.filter((p) => p.state !== 'unknown' && p.state !== 'unavailable');
-  if (usable.length < 2) {
-    return { ...base, fired: [], quick: 0, points: [], noHistory: true, truncated, sentence: t('Für diese Entität gibt es keine Historie (Recorder aus oder neue Entität). Ein Probelauf ist nicht möglich.') };
-  }
-
+export function firePoints(rule: { trigger: WatchTrigger; cooldownMin: number }, sorted: { state: string; ms: number }[], toMs: number): number[] {
+  if (sorted.length === 0) return [];
   const tr = rule.trigger;
   const forMs = tr.forMin * 60_000;
   const cooldownMs = rule.cooldownMin * 60_000;
@@ -78,6 +66,30 @@ export function dryRun(rule: { trigger: WatchTrigger; cooldownMin: number }, his
     triggers += 1;
     if (tr.count <= 1 || triggers % tr.count === 0) fired.push(fireAt);
   }
+  return fired;
+}
+
+/**
+ * Probelauf: wendet die Regel eines Wächters auf die Historie einer Entität an, ohne etwas zu speichern. Gleiche Auslegung wie im laufenden
+ * Betrieb (`conditionMet`, Mindestdauer, Sperrzeit, erst wieder scharf, wenn die Bedingung einmal nicht galt, Zähler).
+ */
+export function dryRun(rule: { trigger: WatchTrigger; cooldownMin: number }, history: HistoryPoint[], nowMs: number): DryRunResult {
+  const toMs = nowMs;
+  const fromMs = nowMs - DRY_RUN_DAYS * 86_400_000;
+  const base = { from: new Date(fromMs).toISOString(), to: new Date(toMs).toISOString() };
+  const truncated = history.length > DRY_RUN_MAX_STATES;
+  const sorted = history
+    .slice(0, DRY_RUN_MAX_STATES)
+    .map((p) => ({ state: p.state, ms: Date.parse(p.at) }))
+    .filter((p) => Number.isFinite(p.ms) && p.ms <= toMs)
+    .sort((a, b) => a.ms - b.ms);
+  const usable = sorted.filter((p) => p.state !== 'unknown' && p.state !== 'unavailable');
+  if (usable.length < 2) {
+    return { ...base, fired: [], quick: 0, points: [], noHistory: true, truncated, sentence: t('Für diese Entität gibt es keine Historie (Recorder aus oder neue Entität). Ein Probelauf ist nicht möglich.') };
+  }
+
+  const tr = rule.trigger;
+  const fired = firePoints(rule, sorted, toMs);
 
   const quick = fired.filter((ms, i) => i > 0 && ms - fired[i - 1]! < QUICK_MIN * 60_000).length;
   const stride = Math.max(1, Math.ceil(sorted.length / MAX_POINTS));

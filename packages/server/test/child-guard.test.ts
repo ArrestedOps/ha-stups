@@ -113,7 +113,7 @@ describe('Ein Kind darf nur, was ausdrücklich erlaubt ist', () => {
 
   it('alle anderen lesenden Routen: 403', async () => {
     const denied = READS.filter((r) => !ALLOWED_READS.includes(r));
-    expect(denied).toEqual(expect.arrayContaining(['GET /api/fairness', 'GET /api/access', 'GET /api/house/channels', 'GET /api/watchers', 'GET /api/templates', 'GET /api/trash']));
+    expect(denied).toEqual(expect.arrayContaining(['GET /api/fairness', 'GET /api/access', 'GET /api/house/channels', 'GET /api/watchers', 'GET /api/watchers/history', 'GET /api/watchers/order', 'GET /api/templates', 'GET /api/trash']));
     for (const route of denied) {
       const res = await call(mia, route);
       if (isMissing(res)) {

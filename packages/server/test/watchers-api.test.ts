@@ -242,3 +242,92 @@ describe('Vorlagen, Gefunden und Probelauf', () => {
     expect((await call(chef, 'POST', '/api/watchers/dry-run', { trigger: { entityId: ENTITY, kind: 'below', value: 5 } })).status).toBe(409);
   });
 });
+
+describe('Verlauf der Entität (letzte Stunden)', () => {
+  const at = (min: number) => new Date(Date.parse('2026-11-04T12:00:00Z') - min * 60_000).toISOString();
+  const url = (extra = '') => `/api/watchers/history?entityId=${ENTITY}${extra}`;
+
+  it('Administratoren: Punkte, Fenster und Auslösepunkt der Regel aus der Query', async () => {
+    ha.history.set(ENTITY, [{ state: '300', at: at(170) }, { state: '2', at: at(100) }, { state: '300', at: at(50) }]);
+    const res = await call(chef, 'GET', url('&hours=3&kind=below&value=5&forMin=3&cooldownMin=10'));
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ status: 'ok', kind: 'numeric', hours: 3, from: at(180), to: at(0), current: '300' });
+    expect(res.body.points.map((p: any) => p.v)).toEqual([300, 2, 300, 300]);
+    expect(res.body.fired).toEqual([{ at: at(97) }]);
+  });
+
+  it('ohne Regel nur der Verlauf; eine unfertige Regel zeichnet ihn trotzdem; Stunden werden auf 1 bis 24 begrenzt', async () => {
+    ha.history.set(ENTITY, [{ state: '10', at: at(60) }]);
+    expect((await call(chef, 'GET', url())).body).toMatchObject({ status: 'ok', fired: [], hours: 3 });
+    expect((await call(chef, 'GET', url('&kind=below&value=abc'))).body).toMatchObject({ status: 'ok', fired: [] });
+    expect((await call(chef, 'GET', url('&kind=quatsch'))).body).toMatchObject({ status: 'ok', fired: [] });
+    expect((await call(chef, 'GET', url('&hours=500'))).body.hours).toBe(24);
+    expect((await call(chef, 'GET', url('&hours=0'))).body.hours).toBe(1);
+  });
+
+  it('ohne Recorder oder ohne Verbindung: ein Zustand, nie ein Fehler', async () => {
+    expect((await call(chef, 'GET', `/api/watchers/history?entityId=sensor.neu`)).body).toMatchObject({ status: 'no_data', points: [] });
+    ha.failHistory = true;
+    const res = await call(chef, 'GET', url());
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ status: 'unavailable', points: [], fired: [] });
+  });
+
+  it('die Entität muss die Form domain.name haben', async () => {
+    expect((await call(chef, 'GET', '/api/watchers/history?entityId=kaputt')).status).toBe(400);
+    expect((await call(chef, 'GET', '/api/watchers/history')).status).toBe(400);
+    expect((await call(chef, 'GET', '/api/watchers/history?entityId=a.b&entityId=c.d')).status).toBe(400);
+  });
+
+  it('Mitglieder: nur Entitäten, die ein Wächter beobachtet (Auslöser oder Erledigen-Bedingung)', async () => {
+    expect((await call(anna, 'GET', url())).status).toBe(403);
+    const created = await call(chef, 'POST', '/api/watchers', input({ done: { entityId: 'binary_sensor.tuer', kind: 'state', to: 'on' } }));
+    expect(created.status).toBe(201);
+    expect((await call(anna, 'GET', url())).status).toBe(200);
+    expect((await call(anna, 'GET', '/api/watchers/history?entityId=binary_sensor.tuer')).status).toBe(200);
+    expect((await call(anna, 'GET', '/api/watchers/history?entityId=sensor.geheim')).status).toBe(403);
+  });
+
+  it('ohne Verbindung zu Home Assistant (Docker): Status unavailable', async () => {
+    const bare = Fastify();
+    await bare.register(ingressAuth, { enforceIp: false });
+    await bare.register(apiRoutes, { store, directory: { isAdmin: async () => true, persons: async () => [] } });
+    const res = await bare.inject({ method: 'GET', url: url(), headers: chef as Record<string, string> });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().status).toBe('unavailable');
+  });
+});
+
+describe('Reihenfolge für „An wen"', () => {
+  it('Entwurf: der Kreis mit Anwesenheit, ohne dass sich etwas ändert', async () => {
+    ha.set('person.anna', 'home', '2026-11-04T09:00:00Z', { friendly_name: 'Anna' });
+    const res = await call(chef, 'GET', `/api/watchers/order?mode=rotation_present&personIds=${annaId}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ mode: 'rotation_present', ordered: true, home: 1, circle: [{ id: annaId, present: true, next: true }] });
+  });
+
+  it('gespeicherter Wächter: übernimmt Modus und Kreis; die Rotation rückt nicht vor', async () => {
+    const created = await call(chef, 'POST', '/api/watchers', input({ assign: { mode: 'rotation', personIds: [] } }));
+    const first = await call(anna, 'GET', `/api/watchers/order?watcherId=${created.body.id}`);
+    const again = await call(anna, 'GET', `/api/watchers/order?watcherId=${created.body.id}`);
+    expect(first.status).toBe(200);
+    expect(first.body.mode).toBe('rotation');
+    expect(first.body.circle.map((e: any) => e.id)).toEqual(again.body.circle.map((e: any) => e.id));
+    expect(first.body.circle.filter((e: any) => e.next)).toHaveLength(1);
+  });
+
+  it('ohne Home Assistant: Anwesenheit unbekannt, die Reihenfolge gibt es trotzdem', async () => {
+    ha.failStates = true;
+    const res = await call(chef, 'GET', `/api/watchers/order?mode=rotation&personIds=${annaId}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ home: null, circle: [{ id: annaId, present: null }] });
+  });
+
+  it('unbekannter Modus 400, unbekannter Wächter 404, ohne Wächter-Dienst 409', async () => {
+    expect((await call(chef, 'GET', '/api/watchers/order?mode=quatsch')).status).toBe(400);
+    expect((await call(chef, 'GET', '/api/watchers/order')).status).toBe(400);
+    expect((await call(chef, 'GET', '/api/watchers/order?watcherId=gibt-es-nicht')).status).toBe(404);
+    await build(false);
+    expect((await call(chef, 'GET', '/api/watchers/order?mode=none')).status).toBe(409);
+  });
+});

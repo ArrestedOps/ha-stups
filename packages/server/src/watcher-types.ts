@@ -91,7 +91,7 @@ export type WatcherStatus = 'ok' | 'entity_missing' | 'target_missing';
 
 const ENTITY_RE = /^[a-z0-9_]+\.[a-z0-9_]+$/;
 const HM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
-const MODES: AssignMode[] = ['fixed', 'rotation', 'rotation_present', 'all_present', 'first_home', 'suggest', 'none'];
+export const MODES: AssignMode[] = ['fixed', 'rotation', 'rotation_present', 'all_present', 'first_home', 'suggest', 'none'];
 /** So lange wartet eine vorgeschlagene Karte auf ein „Übernehmen", dann greift der Rückfall des Wächters */
 export const SUGGEST_WAIT_MIN = 30;
 

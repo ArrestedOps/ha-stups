@@ -3,6 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '.
 import { type HaState } from '../ha.js';
 import { DRY_RUN_DAYS, dryRun } from '../dry-run.js';
 import { clampHours, historyOf, unavailableHistory } from '../entity-history.js';
+import { hasPermission, requirePermission } from '../permissions.js';
 import { detectSuggestions, suggestionKey, watcherTemplates } from '../watcher-templates.js';
 import { MODES, parseTrigger, parseWatcher, type AssignRule, type WatchTrigger, type WatcherConfig } from '../watcher-types.js';
 import { type ApiKit, type Params } from './kit.js';
@@ -33,7 +34,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       throw new ValidationError(err instanceof Error ? err.message : t('Test fehlgeschlagen'));
     }
   });
-  // ----- Wächter: alle sehen sie, nur Administratoren ändern sie -----
+  // ----- Wächter: alle sehen sie, ändern dürfen Administratoren und wer das Recht „watchers“ hat -----
   const watcherEngine = () => {
     if (!deps.watchers || !deps.watcherData) throw new ConflictError(t('Wächter brauchen die Verbindung zu Home Assistant'));
     return { engine: deps.watchers, data: deps.watcherData };
@@ -57,14 +58,14 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   app.get('/api/watchers', async () => ({ available: !!deps.watchers, items: deps.watchers?.view() ?? [] }));
   /** Letzte Aktivität über alle Wächter (Reiter „Wächter") */
   app.get('/api/watchers/activity', async () => (deps.watchers ? deps.watchers.activity(20) : []));
-  // ----- Vorlagen, Gefunden (Erkennung) und Probelauf: nur Administratoren, nichts davon speichert -----
+  // ----- Vorlagen, Gefunden (Erkennung) und Probelauf: Administratoren und Recht „watchers“, nichts davon speichert -----
   app.get('/api/watchers/templates', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     return watcherTemplates();
   });
   /** Was in Home Assistant zu einer Vorlage passt, ohne Entitäten, die schon ein Wächter beobachtet */
   app.get('/api/watchers/suggestions', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     if (!deps.ha?.getStates) throw new ConflictError(t('Keine Verbindung zu Home Assistant'));
     let states: HaState[];
     try {
@@ -88,14 +89,14 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     return { templateId: b.templateId, entityId: b.entityId };
   };
   app.post('/api/watchers/suggestions/hide', async (req, reply) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     const { data } = watcherEngine();
     const hit = hitOf(req);
     data.hide(hit.templateId, hit.entityId);
     return noContent(reply);
   });
   app.post('/api/watchers/suggestions/unhide', async (req, reply) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     const { data } = watcherEngine();
     const hit = hitOf(req);
     data.unhide(hit.templateId, hit.entityId);
@@ -103,7 +104,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   });
   /** Probelauf: die Regel auf die Historie der letzten 7 Tage anwenden (höchstens 20 000 Zustände), ohne zu speichern */
   app.post('/api/watchers/dry-run', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     if (!deps.ha?.getHistory) throw new ConflictError(t('Keine Verbindung zu Home Assistant'));
     const b = body(req);
     const trigger = parseTrigger(b.trigger);
@@ -122,7 +123,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   });
   /**
    * Verlauf einer Entität (Standard: letzte 3 Stunden) für den Wächter-Editor, verdichtet auf Zahlen und Zeitpunkte, mit den Stellen, an
-   * denen die Regel (Query: kind, value, to, forMin, count, cooldownMin) ausgelöst hätte. Administratoren fragen jede Entität ab, Mitglieder
+   * denen die Regel (Query: kind, value, to, forMin, count, cooldownMin) ausgelöst hätte. Administratoren und Mitglieder mit dem Recht „watchers“ fragen jede Entität ab, andere Mitglieder
    * nur die, die ein Wächter beobachtet. **Kind: verboten** (Erlaubnisliste in child-guard.ts). Ohne Verbindung oder ohne Recorder gibt es
    * einen Verlauf mit Status `unavailable` oder `no_data`, nie einen Fehler.
    */
@@ -130,7 +131,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     const q = single(req.query);
     const entityId = q.entityId ?? '';
     if (!/^[a-z0-9_]+\.[a-z0-9_]+$/.test(entityId)) throw new ValidationError(t('Die Entität muss die Form domain.name haben'));
-    if (!req.access?.isAdmin) {
+    if (!hasPermission(req.access, 'watchers')) {
       const watched = (deps.watcherData?.list() ?? []).some((w) => w.trigger.entityId === entityId || w.done?.entityId === entityId);
       if (!watched) throw new ForbiddenError(t('Das dürfen nur Administratoren'));
     }
@@ -183,7 +184,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     return data.runs(req.params.id);
   });
   app.post('/api/watchers', async (req, reply) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     const { engine, data } = watcherEngine();
     const config = parseWatcher(body(req));
     checkWatcherTargets(config);
@@ -192,7 +193,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     return reply.code(201).send(watcherView(created.id));
   });
   app.patch<{ Params: Params }>('/api/watchers/:id', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     const { engine, data } = watcherEngine();
     const current = data.get(req.params.id);
     const b = body(req);
@@ -211,14 +212,14 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     return watcherView(current.id);
   });
   app.delete<{ Params: Params }>('/api/watchers/:id', async (req, reply) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     const { engine, data } = watcherEngine();
     data.remove(req.params.id);
     engine.syncSubscriptions();
     return noContent(reply);
   });
   app.post<{ Params: Params }>('/api/watchers/:id/test', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     const { engine, data } = watcherEngine();
     data.get(req.params.id);
     try {
@@ -229,7 +230,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     return watcherView(req.params.id);
   });
   app.post<{ Params: Params }>('/api/watchers/:id/reset-counter', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     const { engine } = watcherEngine();
     engine.resetCounter(req.params.id);
     return watcherView(req.params.id);
@@ -240,7 +241,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   });
   /** Suche in den Entitäten von Home Assistant, für das Anlegen eines Wächters */
   app.get<{ Querystring: { q?: string; domain?: string } }>('/api/ha/entities', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'watchers');
     if (!deps.ha?.getStates) throw new ConflictError(t('Keine Verbindung zu Home Assistant'));
     const q = (req.query.q ?? '').trim().toLowerCase();
     const domains = (req.query.domain ?? '').split(',').filter(Boolean);

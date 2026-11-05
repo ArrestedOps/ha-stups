@@ -72,8 +72,8 @@ export function createConfirmation(c: Ctx, late: unknown) {
   }
 
   /** Darf diese Person für das Kind bestätigen? Administratoren immer, das Kind nie selbst. */
-  const mayConfirm = (userId: string, childId: string | null, isAdmin: boolean): boolean =>
-    userId !== childId && (isAdmin || (childId !== null && confirmerIds(childId).includes(userId)));
+  const mayConfirm = (userId: string, childId: string | null, forAll: boolean): boolean =>
+    userId !== childId && (forAll || (childId !== null && confirmerIds(childId).includes(userId)));
 
   /** Alle offenen Anfragen, älteste zuerst (für die Erinnerung an die Bestätiger) */
   function openConfirmations(): ConfirmationRequest[] {

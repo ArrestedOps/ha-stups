@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
 import { settingsGroups, settingsOverview, type SettingsCtx } from '../src/lib/settingsPages';
 
-const addon: SettingsCtx = { isAdmin: true, isChild: false, standalone: false, beta: false, push: true, watchers: true, haUi: true, house: true, migration: true };
+const addon: SettingsCtx = { isAdmin: true, isChild: false, permissions: [], standalone: false, beta: false, push: true, watchers: true, haUi: true, house: true, migration: true };
 const ids = (ctx: SettingsCtx) => settingsGroups(ctx).flatMap((g) => g.pages.map((p) => p.id));
 const groupIds = (ctx: SettingsCtx) => settingsGroups(ctx).map((g) => g.id);
 
@@ -95,6 +95,59 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
   it('die Titel folgen der Sprache', () => {
     setLanguage('en');
     expect(settingsGroups(addon).map((g) => g.title)).toEqual(['For me', 'Household', 'Home Assistant', 'Help and data']);
+  });
+});
+
+describe('Einstellungen mit Berechtigungen (Mitglied, dem ein Administrator Rechte gegeben hat)', () => {
+  const member = (permissions: string[], over: Partial<SettingsCtx> = {}): SettingsCtx => ({ ...addon, isAdmin: false, permissions: permissions as never, ...over });
+
+  it('ohne Berechtigung bleibt alles wie bisher verborgen', () => {
+    expect(ids(member([]))).toEqual(['notifications', 'look', 'dashboard', 'report', 'data']);
+  });
+
+  it('„Wächter": die Wächter-Seite, nur wo es Wächter gibt', () => {
+    expect(ids(member(['watchers']))).toContain('watchers');
+    expect(ids(member(['watchers'], { watchers: false }))).not.toContain('watchers');
+    expect(ids(member(['watchers']))).not.toContain('people');
+  });
+
+  it('„Haus": Ansage und Lampe, dazu Personen & Zugriff (dort stehen die Kanäle je Person); nur wo es Haus-Kanäle gibt', () => {
+    expect(ids(member(['house']))).toContain('voice');
+    expect(ids(member(['house']))).toContain('people');
+    expect(ids(member(['house'], { house: false }))).not.toContain('voice');
+    expect(ids(member(['house'], { house: false }))).not.toContain('people');
+    expect(ids(member(['house']))).not.toContain('watchers');
+  });
+
+  it('„App-Einstellungen": Vorlagen, Symbole, Termine und (mit Push) die Tageszusammenfassung; nie der Dashboard-Button (Panel-Pfad)', () => {
+    const got = ids(member(['settings']));
+    for (const id of ['templates', 'icons', 'dates', 'summary']) expect(got).toContain(id);
+    expect(got).not.toContain('bubble');
+    expect(ids(member(['settings'], { push: false }))).not.toContain('summary');
+  });
+
+  it('„Personen": die Seite Personen & Zugriff', () => {
+    expect(ids(member(['people']))).toContain('people');
+    expect(ids(member(['people']))).not.toContain('templates');
+  });
+
+  it('„Bestätigen" schaltet keine Seite frei', () => {
+    expect(ids(member(['confirm']))).toEqual(ids(member([])));
+  });
+
+  it('alle Rechte zusammen: so viel wie ein Administrator, außer Dashboard-Button und Umzug (der Titel der Daten-Seite bleibt)', () => {
+    const all = settingsGroups(member(['watchers', 'house', 'settings', 'people', 'confirm'])).flatMap((g) => g.pages);
+    expect(all.map((p) => p.id)).not.toContain('bubble');
+    expect(all.find((p) => p.id === 'data')!.title).toBe('Papierkorb und Archiv');
+    expect(ids(addon).filter((id) => !all.some((p) => p.id === id))).toEqual(['bubble']);
+  });
+
+  it('Kind: nie, auch wenn die Liste etwas enthielte', () => {
+    expect(ids(member(['watchers', 'house', 'settings', 'people'], { isChild: true }))).toEqual(['look']);
+  });
+
+  it('Administrator braucht keine Einträge', () => {
+    expect(ids({ ...addon, permissions: [] })).toContain('people');
   });
 });
 

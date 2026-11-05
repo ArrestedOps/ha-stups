@@ -67,7 +67,7 @@ export function createInbox(c: Ctx, late: unknown) {
     };
   }
 
-  function inbox(userId: string, opts: { isAdmin?: boolean; before?: string | null } = {}): InboxResult {
+  function inbox(userId: string, opts: { confirmAll?: boolean; before?: string | null } = {}): InboxResult {
     const user = one('select is_child, inbox_seen_at from users where id = ?', userId);
     if (!user) return { items: [], seenAt: null, hasMore: false };
     const child = user.is_child === 1;
@@ -184,7 +184,7 @@ export function createInbox(c: Ctx, late: unknown) {
         since, before,
       )) {
         const childId = (r.by as string | null) ?? null;
-        if (childId === userId || !(opts.isAdmin || (childId !== null && confirmerIds(childId).includes(userId)))) continue;
+        if (childId === userId || !(opts.confirmAll || (childId !== null && confirmerIds(childId).includes(userId)))) continue;
         out.push(entry({ id: `confirm:${r.card_id}`, kind: 'confirm', at: r.at, ...base(r), actorId: childId }));
       }
     }

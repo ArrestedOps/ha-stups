@@ -1,6 +1,7 @@
 import { i18n, type LanguageChoice, t } from './i18n/index.svelte';
 import type { FeedbackContext, FeedbackItem, FeedbackKind, FeedbackStatus } from './feedback';
 import type { Recurrence } from './recurrence';
+import type { Permission } from './permissions';
 import type { EntityHistory } from './history';
 import type { DryRunResult, HaEntity, OrderView, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from './watcher-types';
 
@@ -56,6 +57,8 @@ export interface Me {
   isAdmin: boolean;
   /** Hat die eingeschränkten Rechte eines Kindes */
   isChild: boolean;
+  /** Was diese Person zusätzlich darf (Administrator: alles, Kind: nichts, Mitglied: was ein Administrator ihm gegeben hat) */
+  permissions: Permission[];
   /** false: Home Assistant kennt den Benutzer, Stups lässt ihn aber (noch) nicht hinein */
   allowed: boolean;
   accessMode: AccessMode;
@@ -66,7 +69,8 @@ export interface AccessInfo {
   /** Personen, Geräte und Zugriff kommen aus der Add-on-Konfiguration und sind in der App gesperrt */
   managed: boolean;
   isAdmin: boolean;
-  people: (User & { isAdmin: boolean; ntfyTopic?: string | null })[];
+  /** je Person ihre Berechtigungen (nur für Administratoren, sonst fehlt das Feld) */
+  people: (User & { isAdmin: boolean; ntfyTopic?: string | null; permissions?: Permission[] })[];
   /** Push über ntfy: Adresse des Servers (für die Anleitung) und ob Knöpfe in den Nachrichten möglich sind; null ohne ntfy */
   ntfy: { url: string; buttons: boolean } | null;
   /** Benutzer, die die App geöffnet haben, aber keine Person sind (nur für Administratoren) */
@@ -614,6 +618,8 @@ export const api = {
       childScope: 'all' | 'assigned';
       confirmDefault: boolean;
       confirmers: string[];
+      /** Berechtigungen ersetzen (nur Administratoren) */
+      permissions: Permission[];
       /** "Wenig Zeit" bis zu diesem Tag (YYYY-MM-DD); null nimmt es zurück */
       busyUntil: string | null;
     }>,

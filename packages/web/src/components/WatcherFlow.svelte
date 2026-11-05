@@ -112,7 +112,7 @@
   {:else}
     <div class="flex flex-col gap-3.5 pt-1">
       {#if readOnly}
-        <p class="rounded-row border border-line bg-surface px-4 py-3 text-[15px]" data-testid="watcher-readonly">{t('Nur Administratoren ändern Wächter. Du kannst hier alles ansehen, auch den Verlauf.')}</p>
+        <p class="rounded-row border border-line bg-surface px-4 py-3 text-[15px]" data-testid="watcher-readonly">{t('Wächter ändern Administratoren und wer die Berechtigung „Wächter“ hat. Du kannst hier alles ansehen, auch den Verlauf.')}</p>
       {/if}
       <WatcherSummary form={f} personName={ed.personName} />
 

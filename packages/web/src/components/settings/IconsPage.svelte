@@ -1,14 +1,14 @@
 <script lang="ts">
   import { api } from '../../lib/api';
   import { i18n, t, tn } from '../../lib/i18n/index.svelte';
-  import { act, toast, ui } from '../../lib/store.svelte';
+  import { act, can, toast, ui } from '../../lib/store.svelte';
   import { chunk, detectForCards } from '../../lib/symbols/bulk';
   import Group from '../Group.svelte';
   import Icon from '../Icon.svelte';
   import Page from './Page.svelte';
 
   /**
-   * „Symbole aus Titeln erkennen“: nur Administratoren, nur auf Wunsch (nie automatisch). Setzt für alle Karten ohne Symbol das zum
+   * „Symbole aus Titeln erkennen“: Administratoren und Recht „settings“, nur auf Wunsch (nie automatisch). Setzt für alle Karten ohne Symbol das zum
    * Titel passende; Karten, die schon eins haben, bleiben. Erst kommt eine Rückfrage, am Ende steht das Ergebnis als Zahl.
    */
   let busy = $state(false);
@@ -60,9 +60,9 @@
 <Page title={t('Symbole')}>
   <Group
     title={t('Symbole aus Titeln erkennen')}
-    hint={t('Neue Karten bekommen ihr Symbol beim Anlegen aus dem Titel. Für Karten, die es schon gibt, löst du die Erkennung hier selbst aus, einmal und nur für Karten ohne Symbol. Nur Administratoren.')}
+    hint={t('Neue Karten bekommen ihr Symbol beim Anlegen aus dem Titel. Für Karten, die es schon gibt, löst du die Erkennung hier selbst aus, einmal und nur für Karten ohne Symbol. Das dürfen Administratoren und wer die Berechtigung „App-Einstellungen“ hat.')}
   >
-    <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px] disabled:opacity-50" disabled={busy || !ui.isAdmin} onclick={start}>
+    <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px] disabled:opacity-50" disabled={busy || !can('settings')} onclick={start}>
       <Icon name="spark" size={20} /><span class="flex-1">{busy ? t('Erkenne …') : t('Symbole aus Titeln erkennen')}</span>
     </button>
   </Group>

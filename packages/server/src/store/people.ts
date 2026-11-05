@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { NotFoundError, ValidationError } from '../errors.js';
+import { ConflictError, NotFoundError, ValidationError } from '../errors.js';
+import { cleanPermissions, PERMISSIONS, type Permission } from '../permissions.js';
 import { lastBusyDay, localDateKey, validDateKey } from '../busy.js';
 import { DEFAULT_QUIET, type QuietWindow } from '../quiet.js';
 import { type User, type AccessMode, type Settings, DEFAULT_DUE_TIME, type Row } from './types.js';
@@ -195,6 +196,7 @@ export function createPeople(c: Ctx, late: unknown) {
   function removePerson(id: string): void {
     userRow(id);
     run('update users set is_person = 0 where id = ?', id);
+    run('delete from user_permissions where user_id = ?', id); // bei der Rückkehr fängt die Person ohne Rechte an
     closeNudgesOfUser(id);
   }
 
@@ -295,6 +297,7 @@ export function createPeople(c: Ctx, late: unknown) {
     }
     tx(() => {
       if (isChild !== undefined) run('update users set is_child = ? where id = ?', isChild ? 1 : 0, id);
+      if (isChild === true) run('delete from user_permissions where user_id = ?', id); // ein Kind hat keine Berechtigungen
       if (scope !== undefined) run('update users set child_scope = ? where id = ?', scope, id);
       if (confirmDefault !== undefined) run('update users set confirm_default = ? where id = ?', confirmDefault ? 1 : 0, id);
       if (confirmers !== undefined) {
@@ -303,6 +306,39 @@ export function createPeople(c: Ctx, late: unknown) {
       }
     });
     return toUser(userRow(id));
+  }
+
+  /** Berechtigungen einer Person (nur die gespeicherten, in der Reihenfolge von PERMISSIONS; ob sie gelten, entscheidet access.ts) */
+  function permissionsOf(id: string): Permission[] {
+    const have = new Set(all('select permission from user_permissions where user_id = ?', id).map((r) => r.permission));
+    return PERMISSIONS.filter((p) => have.has(p));
+  }
+
+  /** Die Berechtigungen aller Personen, die welche haben (für die Liste der Administratoren) */
+  function allPermissions(): Record<string, Permission[]> {
+    const by = new Map<string, Set<unknown>>();
+    for (const r of all('select user_id, permission from user_permissions')) {
+      const set = by.get(r.user_id as string) ?? new Set();
+      set.add(r.permission);
+      by.set(r.user_id as string, set);
+    }
+    return Object.fromEntries([...by].map(([id, set]) => [id, PERMISSIONS.filter((p) => set.has(p))]).filter(([, list]) => (list as Permission[]).length > 0));
+  }
+
+  /**
+   * Berechtigungen einer Person ersetzen (nur Administratoren, das prüft die Schnittstelle). Nur eingetragene Personen; ein Kind
+   * bekommt keine (die Liste leeren geht immer). Erst alles prüfen, dann schreiben.
+   */
+  function setPermissions(id: string, raw: unknown): Permission[] {
+    const list = cleanPermissions(raw);
+    const row = userRow(id);
+    if (row.is_person !== 1) throw new NotFoundError(t('Person nicht gefunden'));
+    if (row.is_child === 1 && list.length > 0) throw new ConflictError(t('Ein Kind bekommt keine Berechtigungen'));
+    tx(() => {
+      run('delete from user_permissions where user_id = ?', id);
+      for (const p of list) run('insert into user_permissions (user_id, permission) values (?, ?)', id, p);
+    });
+    return list;
   }
 
   function setAccentHue(id: string, hue: number | null): void {
@@ -477,6 +513,9 @@ export function createPeople(c: Ctx, late: unknown) {
     setWeeklySummary,
     setBusyUntil,
     setChild,
+    permissionsOf,
+    allPermissions,
+    setPermissions,
     avatarSource,
     setAvatar,
     clearAvatar,

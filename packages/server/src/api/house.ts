@@ -3,11 +3,12 @@ import { ConflictError, NotFoundError, ValidationError } from '../errors.js';
 import type { HaState } from '../ha.js';
 import type { HouseResult } from '../house.js';
 import { t } from '../i18n/index.js';
+import { requirePermission } from '../permissions.js';
 import { type ApiKit, type Params } from './kit.js';
 
-/** Haus-Kanäle: Ansage und Lampe je Person (nur Administratoren, nur mit Verbindung zu Home Assistant) */
+/** Haus-Kanäle: Ansage und Lampe je Person (Administratoren und Mitglieder mit dem Recht „house“, nur mit Verbindung zu Home Assistant) */
 export function registerHouseRoutes(app: FastifyInstance, k: ApiKit): void {
-  const { deps, store, body, requireAdmin, noContent } = k;
+  const { deps, store, body, noContent } = k;
 
   const house = () => {
     if (!deps.house) throw new NotFoundError(t('Haus-Kanäle gibt es nur mit Home Assistant'));
@@ -40,7 +41,7 @@ export function registerHouseRoutes(app: FastifyInstance, k: ApiKit): void {
   }
 
   app.get('/api/house/channels', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'house');
     const h = house();
     const channels = store.houseChannels();
     // Personen mit Kanal, denen sich keine Person in Home Assistant zuordnen lässt: dort gilt „zu Hause" immer (Hinweis in der Oberfläche)
@@ -51,7 +52,7 @@ export function registerHouseRoutes(app: FastifyInstance, k: ApiKit): void {
   });
 
   app.post('/api/house/channels', async (req, reply) => {
-    requireAdmin(req);
+    requirePermission(req, 'house');
     const h = house();
     const b = body(req);
     await requireEntity(b.entityId);
@@ -61,7 +62,7 @@ export function registerHouseRoutes(app: FastifyInstance, k: ApiKit): void {
   });
 
   app.patch<{ Params: Params }>('/api/house/channels/:id', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'house');
     const h = house();
     const b = body(req);
     if (b.entityId !== undefined) await requireEntity(b.entityId);
@@ -71,7 +72,7 @@ export function registerHouseRoutes(app: FastifyInstance, k: ApiKit): void {
   });
 
   app.delete<{ Params: Params }>('/api/house/channels/:id', async (req, reply) => {
-    requireAdmin(req);
+    requirePermission(req, 'house');
     const h = house();
     store.removeHouseChannel(req.params.id);
     await h.sync();
@@ -79,14 +80,14 @@ export function registerHouseRoutes(app: FastifyInstance, k: ApiKit): void {
   });
 
   app.post<{ Params: Params }>('/api/house/channels/:id/test', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'house');
     const result = await house().push.test(req.params.id);
     if (!result) throw new NotFoundError(t('Kanal nicht gefunden'));
     return describe(result);
   });
 
   app.get('/api/house/entities', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'house');
     house();
     const list = await states();
     const pick = (domain: string) =>
@@ -98,7 +99,7 @@ export function registerHouseRoutes(app: FastifyInstance, k: ApiKit): void {
   });
 
   app.put('/api/house/settings', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'house');
     house();
     const b = body(req);
     if (b.tts !== null) await requireEntity(b.tts);

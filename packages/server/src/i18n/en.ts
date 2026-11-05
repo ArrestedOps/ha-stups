@@ -10,6 +10,11 @@ export const en: Catalog = {
   'Nicht gefunden': 'Not found',
   'Interner Fehler': 'Internal error',
   'Das dürfen nur Administratoren': 'Only administrators may do this',
+  'Dafür fehlt dir die Berechtigung': 'You do not have the permission for this',
+  'Die Berechtigungen müssen eine Liste sein': 'The permissions must be a list',
+  'Unbekannte Berechtigung: {key}': 'Unknown permission: {key}',
+  'Ein Kind bekommt keine Berechtigungen': 'A child cannot be given permissions',
+  'Administratoren dürfen ohnehin alles': 'Administrators may do everything anyway',
   'Kein Zugriff: Bitte einen Administrator, dich freizugeben': 'No access: please ask an administrator to approve you',
   // Fehlermeldungen des Servers
   'Der Name': 'The name',

@@ -48,6 +48,7 @@
     settingsOverview({
       isAdmin: ui.isAdmin,
       isChild: ui.isChild,
+      permissions: ui.permissions,
       standalone: feat.standalone,
       beta: feat.beta,
       push: feat.push,

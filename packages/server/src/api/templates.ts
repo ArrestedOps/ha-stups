@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { currentLanguage } from '../i18n/index.js';
+import { hasPermission } from '../permissions.js';
 import { type ApiKit, type Params } from './kit.js';
 
 /** Board-Vorlagen: auflisten, ein Board als Vorlage speichern, eigene Vorlagen löschen (das Anlegen aus einer Vorlage steht in boards.ts) */
@@ -14,9 +15,9 @@ export function registerTemplateRoutes(app: FastifyInstance, k: ApiKit): void {
     return reply.code(201).send(store.saveBoardAsTemplate(req.params.id, b.name, req.user?.id ?? null));
   });
 
-  // Löschen darf der Ersteller und ein Administrator (der Datenteil prüft das)
+  // Löschen darf der Ersteller, ein Administrator und wer das Recht „settings“ hat (der Datenteil prüft das)
   app.delete<{ Params: Params }>('/api/templates/:id', async (req, reply) => {
-    store.deleteTemplate(req.params.id, req.user?.id ?? null, req.access?.isAdmin ?? false);
+    store.deleteTemplate(req.params.id, req.user?.id ?? null, hasPermission(req.access, 'settings'));
     return noContent(reply);
   });
 }

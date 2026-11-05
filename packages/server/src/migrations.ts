@@ -532,4 +532,18 @@ export const migrations: Migration[] = [
       create index ix_feedback_person on feedback(person_id, created_at);
     `,
   },
+  {
+    version: 25,
+    // Berechtigungen je Person: Ein Administrator gibt einzelnen Mitgliedern gezielt Rechte, die sonst nur Administratoren haben
+    // (Wächter, Haus-Kanäle, App-Einstellungen, Personen, Bestätigungen für Kinder). Nur eine neue Tabelle, nichts Vorhandenes wird
+    // angefasst; niemand hat danach eine Berechtigung. permission ist einer der Schlüssel aus permissions.ts (der Server prüft das beim
+    // Speichern), mit der Person verschwinden auch ihre Rechte.
+    sql: `
+      create table user_permissions (
+        user_id text not null references users(id) on delete cascade,
+        permission text not null,
+        primary key (user_id, permission)
+      );
+    `,
+  },
 ];

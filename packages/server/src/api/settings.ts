@@ -5,6 +5,7 @@ import { TEST_ACTION } from '../push.js';
 import { type Capabilities } from '../runtime.js';
 import { type ApiKit } from './kit.js';
 import { t } from '../i18n/index.js';
+import { requirePermission } from '../permissions.js';
 
 /** Einstellungen, Beta, Push-Übersicht, Fähigkeiten, Dashboards und Umzug */
 export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
@@ -26,8 +27,10 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
   app.get('/api/settings', async () => effectiveSettings());
   app.put('/api/settings', async (req) => {
     const b = body(req);
-    // Dashboard und Panel-Pfad gelten für alle (der Panel-Pfad steckt in jeder Push-Adresse): nur Administratoren
-    if (b.dashboardPath !== undefined || b.panelPath !== undefined || b.defaultDueTime !== undefined || b.dailySummaryTime !== undefined) requireAdmin(req);
+    // Dashboard und Panel-Pfad gelten für alle (der Panel-Pfad steckt in jeder Push-Adresse): nur Administratoren, nie delegierbar.
+    // Die Zeiten (Fälligkeit, Tageszusammenfassung) ändert auch, wer das Recht „settings“ hat. Ein verbotenes Feld macht die ganze Anfrage unzulässig.
+    if (b.dashboardPath !== undefined || b.panelPath !== undefined) requireAdmin(req);
+    if (b.defaultDueTime !== undefined || b.dailySummaryTime !== undefined) requirePermission(req, 'settings');
     store.setSettings({ dashboardPath: b.dashboardPath, panelPath: b.panelPath, defaultDueTime: b.defaultDueTime, dailySummaryTime: b.dailySummaryTime });
     return effectiveSettings();
   });

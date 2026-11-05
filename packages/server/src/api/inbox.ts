@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { ForbiddenError, ValidationError } from '../errors.js';
 import { t } from '../i18n/index.js';
+import { hasPermission } from '../permissions.js';
 import { type ApiKit } from './kit.js';
 
 /**
@@ -21,7 +22,7 @@ export function registerInboxRoutes(app: FastifyInstance, k: ApiKit): void {
       }
       before = raw;
     }
-    return store.inbox(req.user.id, { isAdmin: req.access?.isAdmin ?? false, before });
+    return store.inbox(req.user.id, { confirmAll: hasPermission(req.access, 'confirm'), before });
   });
 
   // „Alle gelesen": der Marker der Person springt auf jetzt

@@ -1,7 +1,7 @@
 import { api, ApiError, type BoardView, type HaEntity, type WatcherItem, type WatcherRun } from './api';
 import { t } from './i18n/index.svelte';
 import type { EntityHistory } from './history';
-import { closeSheet, openSettings, toast, ui } from './store.svelte';
+import { can, closeSheet, openSettings, toast, ui } from './store.svelte';
 import type { OrderView, TemplateDraft, WatcherTemplate } from './watcher-types';
 import { applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, type WatcherForm } from './watchers';
 
@@ -36,8 +36,8 @@ export class WatcherEditor {
   picking = $state<'trigger' | 'done' | null>(null);
   query = $state('');
   searchDomain = $state('');
-  /** Nur Administratoren ändern Wächter; alle anderen sehen Einstellungen und Verlauf lesend */
-  readonly readOnly = $derived(!ui.isAdmin);
+  /** Nur Administratoren und Personen mit dem Recht „watchers“ ändern Wächter; alle anderen sehen Einstellungen und Verlauf lesend */
+  readonly readOnly = $derived(!can('watchers'));
   private historySeq = 0;
   private orderSeq = 0;
   private viewSeq = 0;
@@ -66,7 +66,7 @@ export class WatcherEditor {
           // Der Name der beobachteten Entität steht schon im Wächter (auch für Mitglieder ohne Suche)
           if (found.entityName) names.set(found.trigger.entityId, { entityId: found.trigger.entityId, name: found.entityName, state: found.entityState ?? '', unit: found.entityUnit, domain: '' });
           // Namen der Entitäten nachschlagen (Home Assistant liefert sie in der Suche; nur Administratoren)
-          for (const eid of ui.isAdmin ? [found.trigger.entityId, found.done?.entityId].filter((x): x is string => !!x) : []) {
+          for (const eid of can('watchers') ? [found.trigger.entityId, found.done?.entityId].filter((x): x is string => !!x) : []) {
             const match = (await api.haEntities(eid).catch(() => [])).find((e) => e.entityId === eid);
             if (match) names.set(eid, match);
           }

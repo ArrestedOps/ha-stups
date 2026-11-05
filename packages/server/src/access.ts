@@ -1,4 +1,5 @@
 import type { Directory } from './directory.js';
+import { PERMISSIONS, type Permission } from './permissions.js';
 import type { Store, User } from './store.js';
 
 export interface AccessResult {
@@ -9,6 +10,11 @@ export interface AccessResult {
   allowed: boolean;
   /** Hat die eingeschränkten Rechte eines Kindes (ein Administrator ist nie Kind, auch wenn es eingetragen ist) */
   isChild: boolean;
+  /**
+   * Was die Person zusätzlich darf (siehe permissions.ts): ein Administrator alles, ein Kind nichts, ein Mitglied nach Eintrag in der
+   * Datenbank. Wer nicht in der Liste der Personen steht, hat nichts, egal was in der Datenbank steht.
+   */
+  permissions: Permission[];
 }
 
 export interface Access {
@@ -34,7 +40,8 @@ export function createAccess(deps: { store: Store; directory?: Directory }): Acc
       else isAdmin = (await directory.isAdmin(who.id)) ?? noPeople; // unbekannte Rollen: keine Beförderung
       const allowed = store.getAccessMode() === 'everyone' || isAdmin || user.isPerson;
       const isChild = user.isChild && user.isPerson && !isAdmin;
-      return { user, isAdmin, allowed, isChild };
+      const permissions = isAdmin ? [...PERMISSIONS] : user.isPerson && !isChild ? store.permissionsOf(user.id) : [];
+      return { user, isAdmin, allowed, isChild, permissions };
     },
   };
 }

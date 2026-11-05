@@ -14,6 +14,7 @@
     closeDetail,
     closeSheet,
     completeCard,
+    can,
     moveCard,
     openSheet,
     openViewer,
@@ -116,7 +117,7 @@
   // Bestätigung: das Kind hat abgehakt, ein Erwachsener antwortet
   const waiting = $derived(!!card && waitingForConfirmation(card));
   const requester = $derived(card ? ui.people.find((p) => p.id === card!.confirmRequestedBy) : undefined);
-  const mayAnswer = $derived(waiting && mayConfirm(ui.me, ui.isAdmin, requester));
+  const mayAnswer = $derived(waiting && mayConfirm(ui.me, can('confirm'), requester));
   // Wohin die Karte verschoben werden darf; ihre aktuelle Spalte bleibt immer auswählbar
   const targets = $derived(
     card

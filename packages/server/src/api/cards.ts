@@ -1,13 +1,14 @@
 import { t } from '../i18n/index.js';
 import type { FastifyInstance } from 'fastify';
 import { ConflictError, ForbiddenError, ValidationError } from '../errors.js';
+import { hasPermission, requirePermission } from '../permissions.js';
 import { type ApiKit, type Params } from './kit.js';
 
 const MAX_IDS = 50;
 
 /** Karten, Termine über alle Boards, Erledigen und Archiv */
 export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
-  const { deps, store, body, noContent, requireAdmin } = k;
+  const { deps, store, body, noContent } = k;
 
   // ----- cards -----
   app.post<{ Params: Params }>('/api/boards/:id/cards', async (req, reply) => {
@@ -123,7 +124,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     app.post<{ Params: Params }>(`/api/cards/:id/${answer}`, async (req) => {
       const card = store.getCard(req.params.id);
       if (card.confirmRequestedAt === null) throw new ConflictError(t('Es wartet nichts auf Bestätigung'));
-      if (!req.user || !store.mayConfirm(req.user.id, card.confirmRequestedBy, req.access?.isAdmin ?? false)) {
+      if (!req.user || !store.mayConfirm(req.user.id, card.confirmRequestedBy, hasPermission(req.access, 'confirm'))) {
         throw new ForbiddenError(t('Das dürfen nur die Bestätiger dieses Kindes'));
       }
       const res = store.answerConfirmation(card.id, answer, 'app');
@@ -136,14 +137,14 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
   app.post<{ Params: Params }>('/api/cards/:id/restore-archived', async (req) =>
     store.restoreArchived(req.params.id, body(req).columnId, req.user?.id ?? null),
   );
-  // Symbole aus Titeln erkennen (Einstellungen, nur Administratoren, von der Person selbst ausgelöst). Erkannt wird in der
+  // Symbole aus Titeln erkennen (Einstellungen, Administratoren und Recht „settings“, von der Person selbst ausgelöst). Erkannt wird in der
   // Oberfläche (die Bibliothek und die Suchwörter liegen dort): Der Server liefert die Karten ohne Symbol und nimmt das Ergebnis an.
   app.get('/api/icons/candidates', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'settings');
     return store.cardsWithoutIcon();
   });
   app.post('/api/icons/apply', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'settings');
     const result = store.applyDetectedIcons(body(req).items);
     if (result.updated > 50) store.markAllChanged(); // viele Karten auf einmal: die Geräte laden alles neu
     return result;

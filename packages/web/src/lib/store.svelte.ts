@@ -17,6 +17,7 @@ import { applyHeaderHiding } from './hideHaHeader';
 import { applyAccent, hueFromStorage, type Scheme } from './accent';
 import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLanguage, t, tn } from './i18n/index.svelte';
 import { passkeysSupported } from './passkeys';
+import { mayDo, type Permission } from './permissions';
 import { DEFAULT_FILTER, effectiveFilter, parseScheduleFilter, type FilterContext, type ScheduleFilter } from './schedule';
 import { shiftDue, type ShiftTarget, type StatsKind } from './statsSheets';
 import { swipeTarget } from './swipe';
@@ -67,6 +68,8 @@ export const ui = $state({
   me: null as User | null,
   /** Administrator in Home Assistant */
   isAdmin: false,
+  /** Was ein Administrator dieser Person zusätzlich erlaubt hat (Antwort des Servers: Administrator alles, Kind nichts); siehe `can` */
+  permissions: [] as Permission[],
   /** Rolle „Kind": die Oberfläche zeigt nur, was ein Kind darf (der Server prüft es ohnehin) */
   isChild: false,
   /** false: der Benutzer ist (noch) nicht freigegeben, statt der App steht eine Erklärung */
@@ -110,6 +113,17 @@ export const ui = $state({
  * Was angezeigt wird. Im Add-on (Anmeldung über Home Assistant) bleibt alles wie bisher, auch wenn Home Assistant
  * gerade nicht antwortet. Nur beim eigenständigen Betrieb mit eigener Anmeldung entfällt, was es dort nicht gibt.
  */
+/** Darf diese Person das? Die Oberfläche blendet danach ein und aus; der Server prüft jede Anfrage selbst. */
+export const can = (key: Permission): boolean => mayDo(ui, key);
+
+/** Rolle und Berechtigungen aus der Antwort des Servers (ändern sich, wenn ein Administrator sie ändert: auch beim Nachladen) */
+function applyRole(me: { isAdmin: boolean; isChild: boolean; permissions?: Permission[] }): void {
+  ui.isAdmin = me.isAdmin;
+  ui.isChild = me.isChild;
+  const next = me.permissions ?? [];
+  if (next.join() !== ui.permissions.join()) ui.permissions = next;
+}
+
 export const feat = {
   /** eigene Konten statt Home Assistant */
   get standalone(): boolean {
@@ -318,9 +332,11 @@ function ensureColumn(): void {
 async function load(): Promise<void> {
   try {
     // Die Personenliste gehört zur Ansicht: Änderungen von anderen Geräten (neue Person, Umbenennen) kommen so mit
-    const [boards, people] = await Promise.all([api.boards(), api.people()]);
+    // Auch die eigene Rolle: ein Administrator kann Berechtigungen geben oder nehmen, dann ändern sich die Seiten und Knöpfe sofort
+    const [boards, people, me] = await Promise.all([api.boards(), api.people(), api.me()]);
     ui.boards = boards;
     ui.people = people;
+    applyRole(me);
     // die eigene Person folgt der Liste (Bild, „wenig Zeit" … ändern sich auch auf anderen Geräten)
     const mine = people.find((p) => p.id === ui.me?.id);
     if (mine && ui.me) ui.me = { ...ui.me, ...mine };
@@ -397,8 +413,7 @@ export async function init(): Promise<void> {
     applyLanguage(me.user.languageChoice);
     applyAccentHue(me.user.accentHue ?? null);
     if (me.allowed && me.user.language !== i18n.lang) void api.setLanguage(me.user.languageChoice, i18n.lang).catch(() => undefined);
-    ui.isAdmin = me.isAdmin;
-    ui.isChild = me.isChild;
+    applyRole(me);
     if (!me.allowed) {
       // Home Assistant kennt den Benutzer, Stups lässt ihn nicht hinein: nur die Erklärung zeigen
       ui.allowed = false;

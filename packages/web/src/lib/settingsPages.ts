@@ -1,4 +1,5 @@
 import { t } from './i18n/index.svelte';
+import { mayDo, type Permission } from './permissions';
 
 /** Die Unterseiten der Einstellungen */
 export type SettingsPageId =
@@ -23,6 +24,8 @@ export type SettingsPageId =
 export interface SettingsCtx {
   isAdmin: boolean;
   isChild: boolean;
+  /** Was ein Administrator dieser Person zusätzlich erlaubt hat (die Antwort des Servers; Administrator: alles, Kind: nichts) */
+  permissions: readonly Permission[];
   /** eigener Container mit eigener Anmeldung */
   standalone: boolean;
   beta: boolean;
@@ -47,11 +50,13 @@ export interface SettingsGroup {
 }
 
 /**
- * Die Gruppen der Einstellungen für diese Person: „Für mich" (alle), „Haushalt" und „Home Assistant" (nur Administratoren),
- * „Hilfe und Daten". Ein Kind sieht nur Sprache und Farbe (und im eigenen Container die Abmeldung); eine Gruppe ohne Seiten fehlt.
+ * Die Gruppen der Einstellungen für diese Person: „Für mich" (alle), „Haushalt" und „Home Assistant" (Administratoren; ein Mitglied
+ * mit Berechtigungen sieht die Seiten, für die es eine hat), „Hilfe und Daten". Ein Kind sieht nur Sprache und Farbe (und im eigenen
+ * Container die Abmeldung); eine Gruppe ohne Seiten fehlt. Der Dashboard-Button (Panel-Pfad) und der Umzug bleiben Administratoren vorbehalten.
  */
 export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
   const admin = ctx.isAdmin && !ctx.isChild;
+  const may = (key: Permission) => mayDo(ctx, key);
   const page = (id: SettingsPageId, title: string, icon: string, show: boolean) => (show ? [{ id, title, icon }] : []);
   const groups: SettingsGroup[] = [
     {
@@ -67,12 +72,13 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
       id: 'household',
       title: t('Haushalt'),
       pages: [
-        ...page('people', t('Personen & Zugriff'), 'user', admin),
-        ...page('watchers', t('Wächter'), 'eye', admin && ctx.watchers),
-        ...page('templates', t('Vorlagen'), 'columns', admin),
-        ...page('icons', t('Symbole'), 'spark', admin),
-        ...page('dates', t('Termine'), 'clock', admin),
-        ...page('summary', t('Tageszusammenfassung'), 'bell', admin && ctx.push),
+        // Dort stehen auch die Haus-Kanäle je Person: wer „house“ hat, braucht die Seite ebenfalls
+        ...page('people', t('Personen & Zugriff'), 'user', may('people') || (may('house') && ctx.house)),
+        ...page('watchers', t('Wächter'), 'eye', may('watchers') && ctx.watchers),
+        ...page('templates', t('Vorlagen'), 'columns', may('settings')),
+        ...page('icons', t('Symbole'), 'spark', may('settings')),
+        ...page('dates', t('Termine'), 'clock', may('settings')),
+        ...page('summary', t('Tageszusammenfassung'), 'bell', may('settings') && ctx.push),
       ],
     },
     {
@@ -82,7 +88,7 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
         // Das Dashboard des Home-Knopfs wählt jede Person selbst (kein Kind: es bekommt immer den Standard)
         ...page('dashboard', t('Dashboard'), 'home', ctx.haUi && !ctx.isChild),
         ...page('bubble', t('Dashboard-Button'), 'layers', admin && ctx.haUi),
-        ...page('voice', t('Ansage und Lampe'), 'bell', admin && ctx.house),
+        ...page('voice', t('Ansage und Lampe'), 'bell', may('house') && ctx.house),
       ],
     },
     {

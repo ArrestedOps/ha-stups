@@ -8,7 +8,7 @@
   import { canNudge } from '../lib/nudge';
   import { matchesQuery } from '../lib/search';
   import { noteText, RUN_TEXT } from '../lib/watchers';
-  import { completeCard, openCardAnywhere, openSettings, openSheet, personById, ui } from '../lib/store.svelte';
+  import { can, completeCard, openCardAnywhere, openSettings, openSheet, personById, ui } from '../lib/store.svelte';
   import robot from '../assets/waechter-robot.webp';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
@@ -27,7 +27,7 @@
 
   async function load() {
     const mine = ++request;
-    if (ui.isAdmin) api.watcherSuggestions().then((r) => (found = r.items.length)).catch(() => (found = 0));
+    if (can('watchers')) api.watcherSuggestions().then((r) => (found = r.items.length)).catch(() => (found = 0));
     api.watcherActivity().then((a) => (activity = a)).catch(() => undefined);
     try {
       const d = await api.home();
@@ -88,14 +88,14 @@
           <p class="text-[12px] leading-[1.3] text-(--banner-warm-sub)">{t('Behalten dein Zuhause im Blick und erstellen automatisch Aufgaben – direkt aus Home Assistant.')}</p>
         </div>
       </div>
-      {#if ui.desktop && ui.isAdmin && data?.available}
+      {#if ui.desktop && can('watchers') && data?.available}
         <button class="fab-grad flex w-[200px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-[18px] text-[15px] font-extrabold hover:brightness-110" data-testid="new-watcher" onclick={() => openSheet({ type: 'watcher', id: null })}>
           <Icon name="plus" size={26} stroke={2.4} />{t('Neuer Wächter')}
         </button>
       {/if}
       </div>
 
-      {#if ui.isAdmin && found > 0 && data?.available}
+      {#if can('watchers') && found > 0 && data?.available}
         <div data-testid="home-found">
           <Banner
             wrap
@@ -127,7 +127,7 @@
           <p class="mt-1 text-[15px] text-fg2">
             {t('Ein Wächter beobachtet zum Beispiel die Waschmaschine und legt von selbst die Karte „ausräumen" an, für jemanden, der gerade zu Hause ist.')}
           </p>
-          {#if ui.isAdmin}
+          {#if can('watchers')}
             <button class="bg-accent-grad glow-cta mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-btn text-[17px] font-extrabold" onclick={() => openSettings('watchers')}>
               <Icon name="eye" size={18} />{t('Wächter einrichten')}
             </button>
@@ -297,7 +297,7 @@
         {/if}
       {/if}
 
-      {#if ui.isAdmin}
+      {#if can('watchers')}
         <!-- Verwalten, Gefunden und Vorlagen bleiben in den Einstellungen erreichbar -->
         <ListRow title={t('Alle Wächter verwalten')} onclick={() => openSettings('watchers')}>
           {#snippet tile()}<Tile color="gray"><Icon name="settings" size={24} /></Tile>{/snippet}
@@ -307,7 +307,7 @@
     </div>
   </div>
 
-  {#if !ui.desktop && ui.isAdmin && data?.available}
+  {#if !ui.desktop && can('watchers') && data?.available}
     <button
       class="fab-grad fixed right-[max(1rem,calc((100vw-720px)/2+1rem))] bottom-[calc(var(--nav-h)+16px)] z-30 flex h-[58px] w-[58px] items-center justify-center rounded-btn"
       aria-label={t('Neuer Wächter')}

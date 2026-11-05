@@ -2,7 +2,7 @@
   import { t, tn } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, ApiError, type AccessInfo, type AccessMode, type Account, type HouseEntities, type HouseInfo } from '../lib/api';
-  import { closeSheet, feat, openSettings, refresh, toast, ui } from '../lib/store.svelte';
+  import { can, closeSheet, feat, openSettings, refresh, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Segmented from './ui/Segmented.svelte';
   import ListRow from './ui/ListRow.svelte';
@@ -10,6 +10,7 @@
   import Tile from './ui/Tile.svelte';
   import Toggle from './ui/Toggle.svelte';
   import HouseChannels from './HouseChannels.svelte';
+  import PermissionToggles from './PermissionToggles.svelte';
   import PersonDelivery from './PersonDelivery.svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
@@ -20,7 +21,10 @@
   let manualName = $state('');
   let busy = $state(false);
 
+  /** Administrator: alles hier. Mitglied mit Berechtigung „Personen“: Personen freigeben und Namen ändern; mit „Haus“: Haus-Kanäle. */
   const admin = $derived(info?.isAdmin ?? false);
+  const mayPeople = $derived(can('people'));
+  const mayHouse = $derived(can('house'));
 
   // Eigene Anmeldung (ohne Home Assistant): Konten der Personen
   let accounts = $state<Account[]>([]);
@@ -32,7 +36,7 @@
   let nuPw = $state('');
   let nuAdmin = $state(false);
 
-  // Haus-Kanäle (nur Administratoren, nur mit Home Assistant): Kanäle und die Auswahl an Lautsprechern, Lampen und Sprachdiensten
+  // Haus-Kanäle (Administratoren und Recht „house“, nur mit Home Assistant): Kanäle und die Auswahl an Lautsprechern, Lampen und Sprachdiensten
   let house = $state<HouseInfo | null>(null);
   let entities = $state<HouseEntities | null>(null);
 
@@ -40,7 +44,7 @@
     try {
       info = await api.access();
       if (feat.standalone && info.isAdmin) accounts = await api.accounts().catch(() => accounts);
-      if (feat.house && info.isAdmin) {
+      if (feat.house && can('house')) {
         house = await api.houseChannels().catch(() => house);
         if (!entities) entities = await api.houseEntities().catch(() => null);
       }
@@ -224,7 +228,7 @@
           {#if openId === p.id}
             {@const own = p.id === ui.me?.id}
             <div class="mt-2 space-y-4 rounded-row border border-line bg-surface p-3.5">
-              {#if admin}
+              {#if mayPeople}
                 <label class="flex flex-col gap-1.5">
                   <span class="text-[13px] font-semibold text-fg2">{t('Anzeigename')}</span>
                   <input
@@ -282,13 +286,17 @@
               {/if}
 
 
-              {#if feat.house && admin && house}
+              {#if feat.house && mayHouse && house}
                 <HouseChannels person={p} {house} {entities} {run} {busy} />
               {/if}
 
 
               {#if !own}
                 <PersonDelivery {p} {info} {run} {busy} canEdit={canEdit(p.id)} show={{ quiet: true, summary: true, busy: true }} />
+              {/if}
+
+              {#if admin && p.isPerson && !p.isChild}
+                <PermissionToggles person={p} busy={busy} onchange={(next) => void run(() => api.updatePerson(p.id, { permissions: next }))} />
               {/if}
 
               {#if admin && p.isPerson}
@@ -362,11 +370,12 @@
           {/if}
         </div>
       {:else}
-        <p class="px-1 py-2 text-[15px] text-fg2">{t('Noch niemand.')} {admin && !info.managed ? t('Füge unten Personen hinzu.') : ''}</p>
+        <p class="px-1 py-2 text-[15px] text-fg2">{t('Noch niemand.')} {mayPeople && !info.managed ? t('Füge unten Personen hinzu.') : ''}</p>
       {/each}
     </div>
 
-    {#if admin && feat.standalone}
+    {#if mayPeople && feat.standalone}
+      {#if admin}
       <div class="mt-3.5 flex flex-col gap-2">
         <SectionHeader title={t('Benutzer anlegen')} />
         <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Wer sich anmelden soll. Das Passwort sagst du der Person selbst, sie kann es danach unter Einstellungen ändern.')}</p>
@@ -381,6 +390,7 @@
           <button class="bg-accent-grad glow-cta h-12 rounded-btn text-[16px] font-extrabold disabled:opacity-40" disabled={busy || !nuUser.trim() || nuPw.length < 10}>{t('Benutzer anlegen')}</button>
         </form>
       </div>
+      {/if}
       {#if feat.ha && info.haPersons.length}
         {@render haPersonsBlock()}
       {:else if feat.ha && info.directoryAvailable === false}
@@ -391,7 +401,7 @@
         <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Zum Zuweisen von Karten, zum Beispiel für Kinder, die Stups nicht selbst öffnen.')}</p>
         {@render manualForm(t('Name'), t('Name der Person ohne Anmeldung'))}
       </div>
-    {:else if admin && !info.managed}
+    {:else if mayPeople && !info.managed}
       {#if info.pending.length}
         <div class="mt-3.5 flex flex-col gap-2">
           <SectionHeader title={t('Wartet auf Freigabe')} count={info.pending.length} />

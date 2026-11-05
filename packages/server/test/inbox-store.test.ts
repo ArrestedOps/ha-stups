@@ -40,7 +40,7 @@ beforeEach(() => {
 });
 
 const card = (extra: object = {}, by = anna) => store.createCard(boardId, { columnId: col, title: 'Bad putzen', ...extra }, by);
-const items = (u: string, o: { isAdmin?: boolean; before?: string | null } = {}) => store.inbox(u, o).items;
+const items = (u: string, o: { confirmAll?: boolean; before?: string | null } = {}) => store.inbox(u, o).items;
 
 function watcher(cardId: string | null, assigned: string[], result = 'created', atIso = T('09:00')): string {
   db.prepare("insert or ignore into watchers (id, name, trigger_json, card_json, assign_json, created_at, updated_at) values ('w1', 'Waschmaschine', '{}', '{}', '{}', ?, ?)").run(T('00:00'), T('00:00'));
@@ -178,7 +178,7 @@ describe('Posteingang: was wer sieht', () => {
     expect(items(anna)).toEqual([expect.objectContaining({ kind: 'confirm', actorId: kim, cardId: c.id, at: T('10:50') })]);
     expect(items(ben)).toEqual([]); // Kim hat Anna gewählt
     expect(items(ben).length).toBe(0);
-    expect(store.inbox(ben, { isAdmin: true }).items.map((i) => i.kind)).toEqual(['confirm']);
+    expect(store.inbox(ben, { confirmAll: true }).items.map((i) => i.kind)).toEqual(['confirm']);
     expect(items(kim).map((i) => i.kind)).not.toContain('confirm');
   });
 });

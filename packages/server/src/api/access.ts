@@ -5,6 +5,7 @@ import { sessionToken } from '../session-auth.js';
 import { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { type ApiKit, type Params } from './kit.js';
 import { t } from '../i18n/index.js';
+import { hasPermission, PERMISSIONS, requirePermission, type Permission } from '../permissions.js';
 
 /** Anmeldung, Personen, Zugriff und Konten */
 export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
@@ -18,6 +19,8 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
       people: allowed ? store.people() : [],
       isAdmin: req.access?.isAdmin ?? false,
       isChild: req.access?.isChild ?? false,
+      /** Was diese Person zusätzlich darf (Administrator: alles, Kind: nichts); die Oberfläche blendet danach ein und aus, der Server prüft selbst */
+      permissions: req.access?.permissions ?? [],
       allowed,
       accessMode: store.getAccessMode(),
     };
@@ -49,21 +52,25 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
   // ----- Personen & Zugriff -----
   app.get('/api/access', async (req) => {
     const isAdmin = req.access?.isAdmin ?? false;
+    // Wer Personen freigeben darf (Administrator oder Recht „people"), sieht auch die Wartenden und die Personen aus Home Assistant
+    const mayApprove = hasPermission(req.access, 'people');
     const [haPersons, notifyServices] = await Promise.all([
-      isAdmin ? deps.directory?.persons().catch(() => null) : null,
+      mayApprove ? deps.directory?.persons().catch(() => null) : null,
       deps.ha?.listNotifyServices?.().catch(() => null),
     ]);
     const people = store.people();
-    // Das ntfy-Thema schützt die Nachrichten: nur die Person selbst und Administratoren sehen es
+    const granted = isAdmin ? store.allPermissions() : {};
+    // Das ntfy-Thema schützt die Nachrichten: nur die Person selbst und Administratoren sehen es; Berechtigungen nur Administratoren
     const withRole = await Promise.all(
       people.map(async (p) => ({
         ...p,
         isAdmin: p.haUserId ? ((await deps.directory?.isAdmin(p.haUserId)) ?? false) : false,
+        ...(isAdmin ? { permissions: granted[p.id] ?? [] } : {}),
         ...(deps.ntfy && (isAdmin || req.user?.id === p.id) ? { ntfyTopic: store.ntfyTopic(p.id) } : {}),
       })),
     );
     // Wer als Administrator ohnehin hinein darf, wartet auf nichts
-    const pending = isAdmin
+    const pending = mayApprove
       ? (
           await Promise.all(
             store.pendingUsers().map(async (u) => ((u.haUserId ? await deps.directory?.isAdmin(u.haUserId) : false) ? null : u)),
@@ -82,7 +89,8 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
       haPersons: (haPersons ?? []).filter((p) => !(p.userId && added.has(p.userId)) && !addedNames.has(p.name.toLowerCase())),
       services: notifyServices ? notifyServices.filter((s) => s.startsWith('mobile_app_')) : null,
       ntfy: deps.ntfy ? { url: deps.ntfy.url, buttons: deps.capabilities?.publicUrl != null } : null,
-      directoryAvailable: isAdmin ? haPersons !== null && haPersons !== undefined : null,
+      ...(isAdmin ? { permissionKeys: [...PERMISSIONS] } : {}),
+      directoryAvailable: mayApprove ? haPersons !== null && haPersons !== undefined : null,
     };
   });
   // Steht eine Personenliste in der Add-on-Konfiguration, gilt sie: Personen, Geräte und Zugriff sind in der App gesperrt
@@ -97,19 +105,29 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
     return { mode: store.setAccessMode(body(req).mode) };
   });
   app.post('/api/access/people', async (req, reply) => {
-    requireAdmin(req);
+    requirePermission(req, 'people'); // Person freigeben: Administrator oder Recht „people"; das neue Mitglied hat noch keine Berechtigungen
     notManaged();
     const b = body(req);
     return reply.code(201).send(store.addPerson({ haUserId: typeof b.haUserId === 'string' ? b.haUserId : null, name: b.name }));
   });
   app.patch<{ Params: Params }>('/api/access/people/:id', async (req) => {
     const b = body(req);
-    // Die eigenen Push-Geräte wählt jeder selbst, alles andere nur ein Administrator
+    // Die eigenen Push-Geräte wählt jeder selbst. Den Namen ändern Administratoren und wer das Recht „people" hat; nur den Namen,
+    // alles andere an anderen Personen (Geräte, Ruhezeit, Rollen, Berechtigungen) nur Administratoren.
     const own = req.user?.id === req.params.id;
-    if (b.displayName !== undefined || !own) requireAdmin(req);
+    if (b.permissions !== undefined) requireAdmin(req);
+    if (b.displayName !== undefined) requirePermission(req, 'people');
+    const onlyName = Object.keys(b).length > 0 && Object.keys(b).every((k) => k === 'displayName');
+    if (!own && !onlyName) requireAdmin(req);
     let person = store.userById(req.params.id);
     if (!person) throw new NotFoundError(t('Person nicht gefunden'));
     if (b.notifyServices !== undefined) notManaged();
+    // Berechtigungen zuerst (und vor allem anderen): ein Fehler ändert dann nichts. Administratoren brauchen keine, Kinder bekommen keine.
+    let permissions: Permission[] = [];
+    if (b.permissions !== undefined) {
+      if (person.haUserId && (await deps.directory?.isAdmin(person.haUserId))) throw new ConflictError(t('Administratoren dürfen ohnehin alles'));
+      permissions = store.setPermissions(person.id, b.permissions);
+    }
     if (b.displayName !== undefined) person = store.renamePerson(person.id, b.displayName);
     if (b.notifyServices !== undefined) person = store.setNotifyServices(person.id, b.notifyServices);
     if (b.ntfyTopic !== undefined) {
@@ -129,7 +147,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
       }
       person = store.setChild(person.id, { isChild: b.isChild, childScope: b.childScope, confirmDefault: b.confirmDefault, confirmers: b.confirmers });
     }
-    return person;
+    return b.permissions !== undefined ? { ...person, permissions } : person;
   });
   // ----- Konten (nur ohne Home Assistant: eigene Anmeldung) -----
   const accounts = deps.accounts;

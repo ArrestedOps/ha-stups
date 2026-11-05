@@ -7,18 +7,18 @@
   import { onMount } from 'svelte';
   import type { WatcherTemplate } from '../lib/watcher-types';
   import { conditionText, noteText, RUN_TEXT, watcherLine } from '../lib/watchers';
-  import { openCardAnywhere, openSheet, personById, toast, ui } from '../lib/store.svelte';
+  import { can, openCardAnywhere, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
   const data = $derived(ui.watchers);
   const items = $derived(data?.items ?? []);
-  const admin = $derived(ui.isAdmin);
+  const admin = $derived(can('watchers'));
   const personName = (id: string) => personById(id)?.displayName ?? '?';
 
-  // Vorlagen des Servers für den Anfang (nur Administratoren, nur solange es noch keinen Wächter gibt)
+  // Vorlagen des Servers für den Anfang (Administratoren und Recht „watchers“, nur solange es noch keinen Wächter gibt)
   let templates = $state<WatcherTemplate[]>([]);
   onMount(async () => {
-    if (ui.isAdmin) templates = (await api.watcherTemplates().catch(() => [])).filter((x) => x.kind === 'watcher');
+    if (can('watchers')) templates = (await api.watcherTemplates().catch(() => [])).filter((x) => x.kind === 'watcher');
   });
 
   let activity = $state<WatcherActivity[]>([]);

@@ -2,6 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import { AppError, ForbiddenError, NotFoundError } from '../errors.js';
 import { MAX_AVATAR_BYTES } from '../avatars.js';
 import { t } from '../i18n/index.js';
+import { hasPermission } from '../permissions.js';
+import type { AccessResult } from '../access.js';
 import { type ApiKit, type Params } from './kit.js';
 import { createUploadQuota } from '../upload-quota.js';
 
@@ -22,8 +24,8 @@ export function registerAvatarRoutes(app: FastifyInstance, k: ApiKit): void {
     if (!p || !p.isPerson) throw new NotFoundError(t('Person nicht gefunden'));
     return p;
   };
-  const mayChange = (req: { user: { id: string } | null; access: { isAdmin: boolean } | null }, id: string) => {
-    if (req.user?.id !== id && !req.access?.isAdmin) throw new ForbiddenError(t('Das dürfen nur Administratoren'));
+  const mayChange = (req: { user: { id: string } | null; access: Pick<AccessResult, 'permissions'> | null }, id: string) => {
+    if (req.user?.id !== id && !hasPermission(req.access, 'people')) throw new ForbiddenError(t('Das dürfen nur Administratoren'));
   };
 
   app.get<{ Params: Params; Querystring: { rev?: string } }>('/api/people/:id/avatar', async (req, reply) => {

@@ -1,5 +1,37 @@
 # Änderungen
 
+## 1.25.1
+
+*English first, German version below.*
+
+This version is the beta app's 1.25.1-beta.1 and contains everything since 1.18.2.
+
+- **New design.** Three tabs: **Tasks, Boards, Watchers**. The app always opens on Tasks. Tasks has stats, a week strip, the stups banner, person chips with their pictures, a filter sheet and groups (Overdue, Today, This week, Later). The header has **Home** (back to Home Assistant), **Notifications**, **Settings** and your picture. Every list uses one row: round tick, **icon tile**, title, date • category • priority, and the people on the right
+- **Icon per card.** About 300 icons with German and English search words; Stups picks one from the title (sparkle badge). Choose it in a sheet with search, suggestions, recently used and colour. A new date and time sheet. In Settings › Icons you can let Stups detect icons for existing cards
+- **Filter.** One filter for Tasks and Calendar: who, when (several at once), boards, priority, only with an open nudge, only from watchers, show done, sorting. It is remembered per device
+- **Notifications (bell).** A real inbox per person with read marks, "Mark all read" and filters. The **Home** button takes you back to your dashboard, which every person chooses in Settings › Home Assistant (preselected: your Home Assistant default dashboard)
+- **Watchers.** The editor is a flow (When → Then card → To whom → Done by itself) with the **history of the entity** (last 3 hours, threshold, trigger points). A four-step assistant creates new ones; "rotation" is preselected. Long entity names wrap
+- **Everything else in the new style:** calendar, boards (switch, settings, archive, trash), settings, people and access with push status ("x of y devices reachable"), dashboard button, login and account, dialogs. The daily summary time can be set in the app. Almost all tick boxes are switches now
+- **Swipe** right = next status, left = back. **Priority** high glows red, medium is orange
+- **Home Assistant 2026.8 and later:** Stups takes over the safe-area padding itself: no black strip above or below, the bar reaches the bottom edge
+- **Fixes:** a security hole in the standalone container login (encoded paths) and the diagnostics routes for children; "Undo" on a recurring card no longer deletes the next card after you worked on it; open confirmation requests, the "Done" column, wrong field types and recurrence limits; live sync after the phone wakes; delete and access messages
+- Database: **migrations 22 and 23** (with a backup beforehand as always)
+
+**Deutsch**
+
+Diese Version ist die 1.25.1-beta.1 der Beta-App und enthält alles seit 1.18.2.
+
+- **Neues Design.** Drei Reiter: **Aufgaben, Boards, Wächter**. Die App öffnet immer auf Aufgaben. Aufgaben hat Zahlenleiste, Wochenleiste, das Stups-Banner, Personen-Chips mit ihren Bildern, ein Filter-Blatt und Gruppen (Überfällig, Heute, Diese Woche, Später). Der Kopf hat **Home** (zurück zu Home Assistant), **Mitteilungen**, **Einstellungen** und dein Bild. Alle Listen nutzen eine Zeile: runder Haken, **Symbol-Kachel**, Titel, Datum • Kategorie • Priorität, rechts die Personen
+- **Symbol pro Karte.** Rund 300 Symbole mit deutschen und englischen Suchwörtern; Stups wählt eines aus dem Titel (Funken-Abzeichen). Die Wahl im Blatt mit Suche, Vorschlägen, zuletzt benutzt und Farbe. Neues Blatt für Datum und Uhrzeit. In Einstellungen › Symbole lässt du Stups Symbole für vorhandene Karten erkennen
+- **Filter.** Ein Filter für Aufgaben und Kalender: Wer, Wann (auch mehrere zugleich), Boards, Priorität, nur mit offenem Stups, nur von Wächtern, Erledigte anzeigen, Sortierung. Er bleibt pro Gerät erhalten
+- **Mitteilungen (Glocke).** Ein echter Posteingang pro Person mit Gelesen-Markierung, „Alle gelesen“ und Filtern. Der **Home**-Knopf bringt dich zu deinem Dashboard, das jede Person unter Einstellungen › Home Assistant selbst wählt (vorausgewählt: dein Standard-Dashboard aus Home Assistant)
+- **Wächter.** Der Editor ist ein Ablauf (Wenn → Dann Karte → An wen → Erledigt sich selbst) mit dem **Verlauf der Entität** (letzte 3 Stunden, Schwelle, Auslösepunkte). Ein Assistent in vier Schritten legt neue an; „reihum“ ist vorausgewählt. Lange Entitätsnamen brechen um
+- **Alles Übrige im neuen Stil:** Kalender, Boards (Wechseln, Einstellungen, Archiv, Papierkorb), Einstellungen, Personen und Zugriff mit Push-Stand („x von y Geräten erreichbar“), Dashboard-Button, Anmelden und Konto, Dialoge. Die Uhrzeit der Tageszusammenfassung stellst du in der App ein. Fast alle Kontrollkästchen sind jetzt Schalter
+- **Wischen** nach rechts = nächster Status, nach links = zurück. **Priorität** hoch leuchtet rot, mittel ist orange
+- **Home Assistant 2026.8 und neuer:** Stups übernimmt die Sicherheitsabstände selbst: kein schwarzer Streifen oben oder unten, die Leiste reicht bis zum unteren Rand
+- **Fehlerbehebungen:** eine Sicherheitslücke bei der Anmeldung im eigenen Container (codierte Pfade) und die Diagnose-Routen für Kinder; „Rückgängig“ bei einer wiederkehrenden Karte löscht die nächste Karte nicht mehr, wenn schon mit ihr gearbeitet wurde; offene Bestätigungs-Anfragen, die Spalte „Erledigt“, falsche Feldtypen und Grenzen bei Wiederholungen; Live-Sync nach dem Aufwecken des Handys; Meldungen beim Löschen und beim Zugriff
+- Datenbank: **Migrationen 22 und 23** (vorher wie immer eine Sicherung)
+
 ## 1.18.2
 
 *English first, German version below.*

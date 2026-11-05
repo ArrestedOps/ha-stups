@@ -149,10 +149,16 @@ test('Wächter: „wer ist zu Hause" findet die Personen über ihren Namen, die 
 
   // Tippt Ben in der Companion App auf „Erledigt", kommt das Ereignis über die Verbindung zu Home Assistant zurück
   const action = (push!.data.actions as { action: string }[])[0]!.action;
+  const completedAt = async () => ((await (await page.request.get(`/api/cards/${card.id}`)).json()) as { completedAt: string | null }).completedAt;
+  // Ein Tipp ohne bekannten Home-Assistant-Benutzer (oder von einem, den Stups keiner Person zuordnen kann) erledigt nichts
   await request.post(`${MOCK}/mock/event`, { data: { type: 'mobile_app_notification_action', data: { action } } });
-  await expect
-    .poll(async () => ((await (await page.request.get(`/api/cards/${card.id}`)).json()) as { completedAt: string | null }).completedAt, { timeout: 10_000 })
-    .not.toBeNull();
+  await request.post(`${MOCK}/mock/event`, { data: { type: 'mobile_app_notification_action', data: { action }, userId: 'ha-unbekannt' } });
+  await page.waitForTimeout(1500);
+  expect(await completedAt()).toBeNull();
+  // Ist Ben mit seinem Home-Assistant-Benutzer verknüpft, gilt sein Tipp
+  expect((await page.request.post('/api/access/people', { headers: API, data: { haUserId: 'ha-ben-e2e', name: 'Ben' } })).status()).toBe(201);
+  await request.post(`${MOCK}/mock/event`, { data: { type: 'mobile_app_notification_action', data: { action }, userId: 'ha-ben-e2e' } });
+  await expect.poll(completedAt, { timeout: 10_000 }).not.toBeNull();
 });
 
 test('Wächter zeigt beide Wächter, die Verwaltung öffnet über „Alle Wächter verwalten“', async ({ page }) => {

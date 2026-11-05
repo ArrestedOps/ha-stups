@@ -144,7 +144,7 @@ export async function startMockHa({ port, first, second, token }) {
     if (req.method === 'POST' && url.pathname === '/mock/event') {
       const b = await body(req);
       for (const s of eventSubs) {
-        if (s.eventType === b.type) s.ws.send(JSON.stringify({ id: s.id, type: 'event', event: { event_type: b.type, data: b.data ?? {} } }));
+        if (s.eventType === b.type) s.ws.send(JSON.stringify({ id: s.id, type: 'event', event: { event_type: b.type, data: b.data ?? {}, ...(b.userId ? { context: { user_id: b.userId } } : {}) } }));
       }
       return send({ ok: true });
     }

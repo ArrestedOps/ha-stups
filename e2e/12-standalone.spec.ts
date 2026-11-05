@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Betriebsart 3: eigener Container ohne Home Assistant (e2e/server-standalone.mjs), Anmeldung mit eigenem Konto.
 // Die Tests bauen aufeinander auf: erst die Einrichtung, dann Anmeldung, Benutzer, Mitglied.
@@ -86,6 +87,7 @@ test('Anmelden, Karte anlegen, nach dem Neuladen noch angemeldet; Abmelden sperr
   await page.getByLabel('Passwort', { exact: true }).fill(PW);
   await page.getByRole('button', { name: 'Anmelden' }).click();
   await expect(nav(page)).toBeVisible();
+  await openBoards(page);
 
   await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
   await page.getByLabel('Titel').fill('Fenster putzen');
@@ -94,6 +96,7 @@ test('Anmelden, Karte anlegen, nach dem Neuladen noch angemeldet; Abmelden sperr
   await expect(page.getByRole('list').getByText('Fenster putzen')).toBeVisible();
 
   await page.reload();
+  await openBoards(page);
   await expect(page.getByRole('list').getByText('Fenster putzen')).toBeVisible();
 
   const dialog = await einstellungen(page);
@@ -126,6 +129,7 @@ test('Administrator legt Ben an; Ben meldet sich an und sieht keine Verwaltung',
   try {
     await melden(ben, 'ben', 'bens-passwort-1');
     await expect(nav(ben)).toBeVisible();
+    await openBoards(ben);
     await expect(ben.getByText('Fenster putzen').first()).toBeVisible(); // gemeinsame Boards
 
     const d = await einstellungen(ben);

@@ -1,4 +1,4 @@
-import { openTasksView } from './helpers';
+import { openTasksView, openBoards } from './helpers';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
 test.describe.configure({ timeout: 90_000 });
@@ -29,6 +29,7 @@ const block = (page: Page, title: string, board: string) => page.getByRole('butt
 test('Kalender: Tagesansicht zeigt die Karte zur Uhrzeit, Filter nach Person', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
+  await openBoards(page);
   await openTasksView(page, 'Tag');
 
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
@@ -49,6 +50,7 @@ test('Kalender: Tagesansicht zeigt die Karte zur Uhrzeit, Filter nach Person', a
 test('Kalender: Monatsansicht, Tipp auf einen Tag öffnet die Tagesansicht', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
+  await openBoards(page);
   await openTasksView(page, 'Monat');
 
   const today = page.locator('[data-testid="calendar-month"] [data-today]');
@@ -65,6 +67,7 @@ test('Kalender: auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Ter
   const s = await seed(request);
   const title = `Elektriker ${Date.now().toString(36)}`;
   await page.goto('/');
+  await openBoards(page);
   await openTasksView(page, 'Tag');
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
 

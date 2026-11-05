@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Der Test-Server meldet jeden als „rene" an (DEV_USER). Rene ist eine Person und gilt ohne Home Assistant
 // als Administrator. Ein zweiter Benutzer kommt über die Header, die sonst der Ingress-Proxy setzt.
@@ -42,6 +43,7 @@ test.beforeEach(async ({ page, request }) => {
   boardId = await emptyBoardId(request);
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), boardId);
   await page.goto('/');
+  await openBoards(page);
   await expect(page.getByRole('tablist', { name: 'Spalten' })).toBeVisible();
 });
 
@@ -116,6 +118,7 @@ test('Nur freigegebene: Fremder sieht „Kein Zugriff", der Administrator gibt i
 
     // Der Administrator sieht den Wartenden und gibt ihn frei
     await page.reload();
+    await openBoards(page);
     await openPeople(page);
     await expect(page.getByRole('heading', { name: 'Wartet auf Freigabe' })).toBeVisible();
     // Andere Tests lassen entfernte Personen zurück, die als wartend erscheinen: gezielt „Fremd" freigeben, nicht den ersten

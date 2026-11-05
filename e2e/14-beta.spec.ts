@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Beta-App (e2e/server-beta.mjs, STUPS_CHANNEL=beta, nachgebautes Home Assistant auf PORT+1). Push und Wächter sind zunächst aus.
 test.describe.configure({ mode: 'serial', timeout: 60_000 });
@@ -10,6 +11,7 @@ const setState = (request: APIRequestContext, entityId: string, state: string) =
 
 async function einstellungen(page: Page) {
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
   return page.getByRole('dialog');

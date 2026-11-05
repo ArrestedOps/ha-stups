@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Der Test-Server meldet jeden als „rene" an. Conny kommt über die Header, die sonst der Ingress-Proxy setzt;
 // ihr Name verknüpft sie mit der vorhandenen Person „Conny".
@@ -48,6 +49,7 @@ test('Stupsen: Rene stupst Conny, Abzeichen und Verlauf erscheinen live bei ihr'
 
     // Rene öffnet die Karte und stupst Conny (als Zuständige vorausgewählt)
     await page.goto('/');
+    await openBoards(page);
     await page.getByRole('tab', { name: /^Offen/ }).click();
     await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
     await page.getByRole('button', { name: 'Stupsen' }).click();
@@ -87,6 +89,7 @@ test('Stupsen in der Ruhezeit: Hinweis nennt die Zustellzeit, kein Fehler', asyn
   try {
     await page.addInitScript((id) => localStorage.setItem('stups.board', id), boardId);
     await page.goto('/');
+    await openBoards(page);
     await page.getByRole('tab', { name: /^Offen/ }).click();
     await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
     await page.getByRole('button', { name: 'Stupsen' }).click();
@@ -105,6 +108,8 @@ test('Stupsen: nach einem Stups ist die Person 30 Minuten gesperrt, mit Uhrzeit'
   expect(first.status()).toBe(201);
 
   await page.goto('/');
+
+  await openBoards(page);
   await page.getByRole('tab', { name: /^Offen/ }).click();
   await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
   await page.getByRole('button', { name: 'Stupsen' }).click();
@@ -122,6 +127,7 @@ test('Stupsen: wer kein Push-Gerät hat, steht ausgegraut mit Hinweis in der Lis
   try {
     await page.addInitScript((id) => localStorage.setItem('stups.board', id), boardId);
     await page.goto('/');
+    await openBoards(page);
     await page.getByRole('tab', { name: /^Offen/ }).click();
     await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
     await page.getByRole('button', { name: 'Stupsen' }).click();

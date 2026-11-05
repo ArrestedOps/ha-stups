@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Eigene Akzentfarbe: Farbkreis in den Einstellungen, gilt sofort, bleibt nach dem Neuladen und wird je Person gespeichert.
 // Der Server ist derselbe wie bei den anderen Tests, darum stellt jeder Test die Farbe am Ende zurück.
@@ -13,6 +14,7 @@ const savedHue = async (page: Page) => ((await (await page.request.get('/api/me'
 
 async function openWheel(page: Page) {
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Sprache und Farbe' }).click();
@@ -36,6 +38,8 @@ test('Farbkreis: Antippen ändert die Farbe sofort, speichert sie und sie bleibt
   await expect(page.getByRole('button', { name: 'Orange (Standard)' })).toBeEnabled();
 
   await page.reload();
+
+  await openBoards(page);
   expect(await accentVar(page)).toMatch(/^#[0-9a-f]{6}$/);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();

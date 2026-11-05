@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Das Gerät meldet Englisch (Projekt „english“, locale en-GB): Stups zeigt sich auf Englisch, ohne dass jemand etwas einstellt.
 // Läuft auf dem Server der anderen Projekte; die Person bleibt am Ende auf „Automatisch“, sonst würde die Wahl die anderen Projekte stören.
@@ -33,6 +34,7 @@ test('Englisches Gerät: Board, Schnell-Eingabe, Erledigen, alles auf Englisch',
   const board = await (await request.post('/api/boards', { data: { name: 'English test' } })).json();
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
   await page.goto('/');
+  await openBoards(page);
 
   await expect(page.getByRole('button', { name: 'Switch board' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'View' })).toBeVisible();
@@ -71,6 +73,7 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   });
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
   await page.goto('/');
+  await openBoards(page);
   const nav = page.getByRole('navigation', { name: 'View' });
 
   await nav.getByRole('button', { name: 'Tasks' }).click();
@@ -120,6 +123,7 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
 
 test('Sprache wechseln: Deutsch sofort, zurück auf Automatisch wieder Englisch; die Wahl gilt für die Person', async ({ page, request }) => {
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: 'Open settings' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('button', { name: 'Language and colour' }).click();
@@ -131,6 +135,7 @@ test('Sprache wechseln: Deutsch sofort, zurück auf Automatisch wieder Englisch;
 
   // die Wahl bleibt nach dem Neuladen (auch wenn das Gerät Englisch meldet)
   await page.reload();
+  await openBoards(page);
   await expect(page.getByRole('button', { name: 'Einstellungen öffnen' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
@@ -142,6 +147,7 @@ test('Sprache wechseln: Deutsch sofort, zurück auf Automatisch wieder Englisch;
 
 test('Die Sprache des Geräts wird dem Server gemeldet (für Push)', async ({ page, request }) => {
   await page.goto('/');
+  await openBoards(page);
   await expect(page.getByRole('button', { name: 'Switch board' })).toBeVisible();
   await expect.poll(async () => (await (await request.get('/api/me')).json()).user.language).toBe('en');
 });

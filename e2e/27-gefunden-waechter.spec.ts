@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Gefunden: Stups erkennt Geräte und füllt den Satz vor;
 // der Probelauf rechnet die Regel auf die Historie der letzten 7 Tage.
@@ -21,6 +22,7 @@ test('Gefunden: Hinweis im Reiter Wächter, Treffer mit Begründung, Wächter au
 
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
   await page.goto('/');
+  await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   const hint = page.getByTestId('home-found');
   await expect(hint).toContainText(/Stups hat \d+ weitere Geräte gefunden|Stups hat 1 weiteres Gerät gefunden/);
@@ -83,6 +85,7 @@ test('Probelauf: ohne Historie ein Hinweis statt eines Diagramms; Wackeln wird g
 
   // Oberfläche: der Probelauf-Knopf ist bei fehlender Historie ehrlich
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Wächter' }).click();
   await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
@@ -94,6 +97,7 @@ test('Probelauf: ohne Historie ein Hinweis statt eines Diagramms; Wackeln wird g
 test('Gefunden: einen Treffer ausblenden, er kommt nicht wieder; unter „Ausgeblendet" lässt er sich zurückholen', async ({ page }) => {
   const open = async () => {
     await page.goto('/');
+    await openBoards(page);
     await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Wächter' }).click();
     await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();

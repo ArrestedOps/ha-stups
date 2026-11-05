@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import pngjs from 'pngjs';
-import { openSettingsPage } from './helpers';
+import { openSettingsPage, openBoards } from './helpers';
 
 // Einstellungen als Übersicht mit Unterseiten. Der Test-Server meldet jeden als „rene" an (Person, ohne Home Assistant Administrator).
 // Er prüft auch, dass nichts von dem verloren ging, was früher in einer langen Liste stand.
@@ -17,6 +17,7 @@ test.afterEach(async ({ request }) => {
 
 test('Übersicht: Gruppen für den Administrator, jede Seite öffnet und führt zurück', async ({ page }) => {
   await page.goto('/');
+  await openBoards(page);
   await openSettingsPage(page);
   const d = dialog(page);
   for (const group of ['Für mich', 'Haushalt', 'Home Assistant', 'Hilfe und Daten']) await expect(d.getByText(group, { exact: true })).toBeVisible();
@@ -34,6 +35,7 @@ test('Übersicht: Gruppen für den Administrator, jede Seite öffnet und führt 
 
 test('Nichts geht verloren: Sprache und Farbe, Termine, Dashboard und Kopfzeile, Benachrichtigungen, Daten', async ({ page }) => {
   await page.goto('/');
+  await openBoards(page);
   await openSettingsPage(page, 'Sprache und Farbe');
   const d = dialog(page);
   await expect(d.getByLabel('Sprache', { exact: true })).toBeVisible();
@@ -76,6 +78,7 @@ test('Wenig Zeit: Datum eintragen, gespeichert, „Wieder normal" nimmt es zurü
   const inTwoDays = new Date(Date.now() + 2 * 86_400_000);
   const key = `${inTwoDays.getFullYear()}-${String(inTwoDays.getMonth() + 1).padStart(2, '0')}-${String(inTwoDays.getDate()).padStart(2, '0')}`;
   await page.goto('/');
+  await openBoards(page);
   await openSettingsPage(page, 'Benachrichtigungen');
   const field = dialog(page).getByLabel(`Wenig Zeit bis (Datum) für ${me.displayName}`);
   await field.fill(key);
@@ -89,6 +92,7 @@ test('Personenbild: hochladen zeigt das Bild im Avatar, entfernen kehrt zur Init
   const png = new PNG({ width: 8, height: 8 });
   for (let i = 0; i < png.data.length; i += 4) png.data.set([200, 60, 20, 255], i);
   await page.goto('/');
+  await openBoards(page);
   await openSettingsPage(page);
   const d = dialog(page);
   await expect(d.getByTestId('avatar-origin')).toContainText('Noch kein Bild');

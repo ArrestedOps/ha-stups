@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Kompakte Karten: Ziel sind mindestens vier Karten auf einem iPhone 15 im Hochformat (393 × 852).
 test.use({ viewport: { width: 393, height: 852 } });
@@ -25,6 +26,7 @@ async function typicalBoard(request: APIRequestContext, page: Page, name: string
 test('Mindestens vier typische Karten stehen vollständig über der Leiste, jede mit höchstens einer Meta-Zeile', async ({ page, request }) => {
   await typicalBoard(request, page, 'Kompakt');
   await page.goto('/');
+  await openBoards(page);
   // Karten mit Termin in der Zukunft liegen von selbst in „Geplant"
   await page.getByRole('tab', { name: /^Geplant/ }).click();
   await expect(page.locator('[role=presentation]').first()).toBeVisible();
@@ -53,6 +55,7 @@ test('Ein langer Titel braucht genau eine Zeile (hinten abgeschnitten), die Zeil
   const long = 'Ein sehr langer Titel, der in der Liste nicht mehr als eine Zeile brauchen darf, auch wenn er viel länger ist als jeder Bildschirm breit sein kann';
   await request.post(`/api/boards/${boardId}/cards`, { data: { columnId: openId, title: long } });
   await page.goto('/');
+  await openBoards(page);
   const card = page.locator('[role=presentation]').filter({ hasText: 'Ein sehr langer Titel' });
   await expect(card).toBeVisible();
   const title = card.locator('span.truncate').first();
@@ -67,6 +70,7 @@ test('Termin: überfällig ist rot und erledigt nie, Wiederholung, Priorität un
   const late = (await (await request.post(`/api/boards/${boardId}/cards`, { data: { columnId: openId, title: 'Zu spät', dueAt: new Date(Date.now() - 2 * DAY).toISOString(), priority: 'high', recurrence: { type: 'fixed', freq: 'weekly', every: 1, weekdays: [1] } } })).json()) as { id: string };
   await request.post(`/api/cards/${late.id}/checklist`, { data: { text: 'Eins' } });
   await page.goto('/');
+  await openBoards(page);
   const row = page.locator('[role=presentation]').filter({ hasText: 'Zu spät' });
   await expect(row.getByTestId('card-due')).toHaveAttribute('data-overdue', 'true');
   await expect(row.getByTestId('card-due')).toHaveAccessibleName(/^Überfällig/);
@@ -85,6 +89,7 @@ test('Der „+"-Knopf verdeckt nichts: die letzte Karte lässt sich über ihn hi
   const { boardId, openId } = await typicalBoard(request, page, 'Knopf', 1);
   for (let i = 0; i < 9; i++) await request.post(`/api/boards/${boardId}/cards`, { data: { columnId: openId, title: `Eintrag ${i + 1}` } });
   await page.goto('/');
+  await openBoards(page);
   const list = page.getByTestId('boards-scroll'); // die ganze Seite Boards scrollt (wie im Mockup)
   await expect(page.locator('[role=presentation]').nth(5)).toBeVisible();
   await list.evaluate((el) => (el.scrollTop = el.scrollHeight));
@@ -100,6 +105,7 @@ test('Spalten-Tabs: Verlauf am Rand zeigt, dass man wischen kann, und die aktive
     await request.post(`/api/boards/${boardId}/columns`, { data: { name } });
   }
   await page.goto('/');
+  await openBoards(page);
   const tabs = page.getByRole('tablist', { name: 'Spalten' });
   await expect(tabs).toHaveAttribute('data-fade-end', 'true');
   await expect(tabs).toHaveAttribute('data-fade-start', 'false');

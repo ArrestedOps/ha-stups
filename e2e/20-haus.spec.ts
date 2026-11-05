@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Haus-Kanäle (Ansage, Lampe) mit dem nachgebauten Home Assistant (Projekt „waechter", Server mit e2e/mock-ha.mjs).
 // Keine Abhängigkeit von der Tageszeit: Die Ruhezeit der Testpersonen ist aus, sonst hielte der Server Stupse nachts zurück.
@@ -87,6 +88,7 @@ test.afterEach(async ({ request }) => {
 test('Einrichten in den Einstellungen: Sprachdienst wählen, Ansage-Kanal anlegen, testen', async ({ page, request }) => {
   // Sprachdienst: Home Assistant › Ansage und Lampe
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Ansage und Lampe' }).click();
   const tts = page.getByLabel('Sprachdienst für Ansagen');
@@ -178,6 +180,7 @@ test('Ein Mitglied sieht den Haus-Block nicht und darf die Schnittstelle nicht b
     expect((await ctx.request.post('/api/house/channels', { data: { userId: conny.id, type: 'speak', entityId: 'media_player.kinderzimmer' } })).status()).toBe(403);
     const page = await ctx.newPage();
     await page.goto('/');
+    await openBoards(page);
     await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
     const settings = page.getByRole('dialog');
     await expect(settings.getByRole('button', { name: 'Sprache und Farbe' })).toBeVisible();

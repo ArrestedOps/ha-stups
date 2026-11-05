@@ -3,11 +3,9 @@ import { expect, test, type Page } from '@playwright/test';
 // Läuft in den normalen Projekten (Server ohne Home Assistant-Verbindung): die drei Reiter und die gemeinsame Kopfzeile
 const nav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
 
-// Dieser Test prüft den Start auf „Aufgaben", nicht die Boards
+// Die App startet immer auf „Aufgaben“, auch nach dem Neuladen und wenn ein Reiter gemerkt war
 test.describe('Start', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
-
-  test('Drei Reiter, die App startet auf „Aufgaben"; Wächter und alte Namen werden abgebildet, nur Boards wird gemerkt', async ({ page }) => {
+  test('Drei Reiter, die App startet immer auf „Aufgaben": gemerkte alte Namen, Wächter und Boards ändern daran nichts', async ({ page }) => {
     await page.goto('/');
     await expect(nav(page).getByRole('button')).toHaveText(['Aufgaben', 'Boards', 'Wächter']);
     await expect(nav(page).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
@@ -22,10 +20,15 @@ test.describe('Start', () => {
     await nav(page).getByRole('button', { name: 'Wächter' }).click();
     await page.reload();
     await expect(nav(page).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
-    // Boards wird gemerkt
+    // Boards auch nicht: nach dem Neuladen ist wieder Aufgaben dran, auch wenn der Reiter früher unter „stups.tab“ gemerkt wurde
     await nav(page).getByRole('button', { name: 'Boards' }).click();
-    await page.reload();
     await expect(nav(page).getByRole('button', { name: 'Boards' })).toHaveAttribute('aria-current', 'page');
+    await page.reload();
+    await expect(nav(page).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
+    await page.evaluate(() => localStorage.setItem('stups.tab', 'boards'));
+    await page.reload();
+    await expect(nav(page).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('heading', { name: 'Aufgaben' })).toBeVisible();
   });
 
   test('Die frühere Kalenderansicht bleibt lesbar: gemerkte Monatsansicht öffnet der Kalender-Knopf, Aufgaben starten mit der Liste', async ({ page }) => {

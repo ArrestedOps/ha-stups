@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { migrateTab, startTab, visibleTabs } from '../src/lib/tabs';
 
@@ -14,22 +15,18 @@ describe('migrateTab', () => {
   });
 });
 
-describe('startTab: die App startet auf Aufgaben, nie auf Wächter', () => {
-  const all = ['tasks', 'boards', 'watchers'] as const;
-  it('gemerkt wird nur Boards', () => {
-    expect(startTab('boards', [...all])).toBe('boards');
-    expect(startTab('tasks', [...all])).toBe('tasks');
+describe('startTab: die App startet immer auf Aufgaben', () => {
+  it('Aufgaben, nie Boards oder Wächter', () => {
+    expect(startTab()).toBe('tasks');
   });
-  it('alte Namen für Heute und Kalender führen zu Aufgaben', () => {
-    for (const old of ['today', 'agenda', 'calendar']) expect(startTab(old, [...all]), old).toBe('tasks');
+  it('ein früher gemerkter Reiter (auch einer der alten Namen) ändert daran nichts: der Speicher wird nicht mehr gelesen', () => {
+    const store = readFileSync(new URL('../src/lib/store.svelte.ts', import.meta.url), 'utf8');
+    expect(store).not.toMatch(/stups\.tab/);
+    expect(store).toMatch(/ui\.tab = startTab\(\)/);
   });
-  it('Wächter, auch als alte Namen „home" und „watchers", führt zu Aufgaben', () => {
-    for (const old of ['watchers', 'home']) expect(startTab(old, [...all]), old).toBe('tasks');
-  });
-  it('Unbekanntes, Leeres und nicht vorhandene Reiter führen zu Aufgaben', () => {
-    expect(startTab(null, [...all])).toBe('tasks');
-    expect(startTab('unsinn', [...all])).toBe('tasks');
-    expect(startTab('boards', ['tasks'])).toBe('tasks');
+  it('die alten Namen werden weiter zu den neuen Reitern abgebildet (für Verweise und alte Einträge)', () => {
+    for (const old of ['today', 'agenda', 'calendar']) expect(migrateTab(old), old).toBe('tasks');
+    for (const old of ['watchers', 'home']) expect(migrateTab(old), old).toBe('watchers');
   });
 });
 

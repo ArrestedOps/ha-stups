@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Board-Vorlagen: ein neues Board aus einer eingebauten Vorlage anlegen und ein eigenes Board als Vorlage speichern.
 // Läuft auf dem gemeinsamen Server (dunkel und hell nacheinander): Namen sind eindeutig, alles Angelegte wird am Ende entfernt.
@@ -20,6 +21,7 @@ const boardByName = async (request: APIRequestContext, name: string) => {
 
 async function openSwitcher(page: Page) {
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
 }
 
@@ -95,6 +97,7 @@ test('eigenes Board als Vorlage speichern, daraus ein neues Board anlegen, die V
   const name = `Aus Vorlage ${unique()}`;
   await page.keyboard.press('Escape');
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByLabel('Vorlage für das neue Board').selectOption({ label: tplName });
   await expect(page.getByTestId('template-preview')).toContainText('1 Karte');

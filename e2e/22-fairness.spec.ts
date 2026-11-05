@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Fairness: Aufwand an der Karte setzen und die Seite „Diese Woche". Die Zahlen werden gegen den Stand VOR dem Test
 // verglichen (der Server ist mit anderen Tests geteilt) und hängen nicht von der Tageszeit ab.
@@ -36,6 +37,7 @@ async function openWeek(page: import('@playwright/test').Page, request: APIReque
     await request.post(`/api/boards/${b.id}/cards`, { data: { title: `Für andere ${unique()}`, columnId: b.columnId, assigneeIds: [other.id] } });
   }
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
   await page.getByRole('button', { name: /Fairness diese Woche/ }).click();
   await expect(page.getByTestId('fairness')).toBeVisible();
@@ -47,6 +49,7 @@ test('Aufwand an der Karte wählen: gespeichert und als Chip zu sehen', async ({
   const card = (await (await request.post(`/api/boards/${b.id}/cards`, { data: { title, columnId: b.columnId } })).json()) as { id: string };
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), b.id);
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: new RegExp(`^${title}`) }).first().click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('button', { name: 'Aufwand' }).click();

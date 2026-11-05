@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Rolle „Kind": reduzierte Oberfläche und die Bestätigung bis zum Ende (Kind hakt ab, Elternteil bestätigt oder sagt „Nochmal").
 // Der Test-Server meldet jeden als „rene" (Administrator) an; das Kind kommt über die Kopfzeilen von Home Assistant.
@@ -57,6 +58,7 @@ async function kidPage(browser: Browser, baseURL: string | undefined): Promise<{
   const ctx = await browser.newContext({ baseURL, locale: 'de-DE', timezoneId: 'Europe/Berlin', viewport: { width: 390, height: 780 }, extraHTTPHeaders: kidHeaders });
   const page = await ctx.newPage();
   await page.goto('/');
+  await openBoards(page);
   return { page, close: () => ctx.close() };
 }
 
@@ -72,6 +74,8 @@ test('Einrichtung: der Administrator macht eine Person zum Kind, ein Administrat
   expect(res.status()).toBe(409);
 
   await page.goto('/');
+
+  await openBoards(page);
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Personen und Kinder' }).click();
   await page.getByRole('dialog').getByRole('button', { name: new RegExp(KID) }).click();
@@ -160,6 +164,7 @@ test('Kind hakt ab: die Karte wartet auf Bestätigung, ein Elternteil bestätigt
     // Der Erwachsene bestätigt
     await page.addInitScript((id) => localStorage.setItem('stups.board', id), boardIds[0]!);
     await page.goto('/');
+    await openBoards(page);
     const pd = await openCard(page, mineName);
     await expect(pd.getByTestId('confirm-note')).toContainText(`${KID} wartet auf Bestätigung`);
     await pd.getByRole('button', { name: 'Bestätigen' }).click();
@@ -182,6 +187,7 @@ test('„Nochmal": die Anfrage entfällt, die Karte bleibt offen und das Kind ka
 
     await page.addInitScript((boardId) => localStorage.setItem('stups.board', boardId), boardIds[0]!);
     await page.goto('/');
+    await openBoards(page);
     const pd = await openCard(page, title);
     await pd.getByRole('button', { name: 'Nochmal' }).click();
     await expect.poll(async () => (await state(request, id)).confirmRequestedAt).toBeNull();

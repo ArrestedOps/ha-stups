@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Aufgaben: was ist für mich dran, was haben die anderen. Der Test-Server meldet jeden als „rene" an (eine Person, ohne Home Assistant Administrator).
 // Der Server wird mit anderen Tests geteilt: eindeutige Titel, Termine mit festem Abstand zu „jetzt" (nicht abhängig von der Tageszeit:
@@ -36,6 +37,8 @@ test('Aufgaben: meine Karten in Gruppen (Überfällig, Heute, Diese Woche, Spät
   await s.mk(foreign, { assigneeIds: [s.other.id], dueAt: new Date(Date.now() - 3_600_000).toISOString() });
 
   await page.goto('/');
+
+  await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
   // Die Liste ist die Startseite und zeigt zuerst „Meine"
   await expect(page.getByRole('heading', { name: 'Aufgaben' })).toBeVisible();
@@ -63,6 +66,7 @@ test('Aufgaben: meine Karten in Gruppen (Überfällig, Heute, Diese Woche, Spät
 
 test('Aufgaben: Kalender-Knopf und „Monatsansicht" öffnen den Kalender (Tag, Woche, Monat), „‹ Aufgaben" führt zurück zur Liste', async ({ page }) => {
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
   // Es gibt keinen Umschalter Liste/Tag/Woche/Monat mehr in der Liste
   await expect(page.getByRole('radiogroup', { name: 'Ansicht' })).toHaveCount(0);
@@ -90,6 +94,7 @@ test('Aufgaben: von oben nach unten Kopf, Zahlenleiste, Woche, Chips, dann die G
   const s = await seed(request);
   await s.mk(`Reihenfolge ${s.tag}`, { assigneeIds: [s.me], dueAt: new Date(Date.now() - 3_600_000).toISOString() });
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
   await expect(page.getByTestId('group-overdue')).toBeVisible();
   const y = async (loc: ReturnType<typeof page.locator>) => (await loc.first().boundingBox())!.y;
@@ -119,6 +124,7 @@ test('Aufgaben: „Fairness diese Woche" und „Bei den anderen" führen zu „D
   const s = await seed(request);
   await s.mk(`Für andere ${s.tag}`, { assigneeIds: [s.other.id] });
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
   await page.getByRole('button', { name: /Karten? offen/ }).click();
   const dialog = page.getByRole('dialog');
@@ -132,6 +138,7 @@ test('Aufgaben: „Fairness diese Woche" und „Bei den anderen" führen zu „D
 
 test('Kopfzeile auf allen drei Reitern: Logo, Glocke, Zahnrad und Profilbild, kein „‹ Dashboard" mehr', async ({ page }) => {
   await page.goto('/');
+  await openBoards(page);
   const nav = page.getByRole('navigation', { name: 'Ansicht' });
   for (const [tab, title] of [['Aufgaben', 'Aufgaben'], ['Boards', 'Boards'], ['Wächter', 'Wächter']] as const) {
     await nav.getByRole('button', { name: tab }).click();
@@ -145,6 +152,7 @@ test('Kopfzeile auf allen drei Reitern: Logo, Glocke, Zahnrad und Profilbild, ke
 
 test('Glocke: Zahnrad und Profilbild öffnen die Einstellungen, die Glocke die Mitteilungen (ohne Offenes ein ruhiger Satz, kein Punkt)', async ({ page }) => {
   await page.goto('/');
+  await openBoards(page);
   await expect(page.getByTestId('bell-dot')).toHaveCount(0);
   await page.getByRole('button', { name: 'Mitteilungen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mitteilungen' });
@@ -159,6 +167,7 @@ test('Glocke: Zahnrad und Profilbild öffnen die Einstellungen, die Glocke die M
 
 test('Einstellungen › Home Assistant: „Zurück zum Dashboard" und „HA-Kopfzeile ausblenden" sind da (im Add-on für jeden)', async ({ page }) => {
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Einstellungen' });
   await expect(dialog.getByText('Home Assistant', { exact: true })).toBeVisible();

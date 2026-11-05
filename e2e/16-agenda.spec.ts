@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openList } from './helpers';
+import { openList, openBoards } from './helpers';
 
 // Fehler aus der Praxis: Karten, die mehr als 60 Tage entfernt sind, standen nicht in der Agenda. Die Liste in Aufgaben schaut jetzt über Jahre voraus.
 const DAY = 86_400_000;
@@ -14,6 +14,8 @@ test('Liste: Karten in über 60 Tagen stehen unter „Später", auch wenn sonst 
   expect(far.status()).toBe(201);
 
   await page.goto('/');
+
+  await openBoards(page);
   await openList(page);
 
   await page.getByRole('button', { name: 'Filter' }).click();

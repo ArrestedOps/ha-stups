@@ -1,4 +1,4 @@
-import { openList } from './helpers';
+import { openList, openBoards } from './helpers';
 import { expect, test, type APIRequestContext } from '@playwright/test';
 
 test.describe.configure({ timeout: 90_000 });
@@ -27,6 +27,7 @@ async function seed(request: APIRequestContext) {
 test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
+  await openBoards(page);
   await openList(page);
 
   const agenda = page.getByTestId('tasks');
@@ -57,6 +58,7 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
   // Der Filter bleibt auf dem Gerät erhalten
   await page.getByTestId('tasks').getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
   await page.reload();
+  await openBoards(page);
   await expect(page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByTestId('tasks')).toBeVisible();
   await expect(agenda.getByText(s.t.fenster)).toBeVisible();
@@ -66,6 +68,7 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
 test('Agenda: Karte aus einem anderen Board öffnen und von dort erledigen', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
+  await openBoards(page);
   await openList(page);
   const agenda = page.getByTestId('tasks');
 
@@ -85,6 +88,7 @@ test('Agenda: Karte aus einem anderen Board öffnen und von dort erledigen', asy
 test('Karte löschen fragt vorher nach', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
+  await openBoards(page);
   await openList(page);
   const agenda = page.getByTestId('tasks');
 

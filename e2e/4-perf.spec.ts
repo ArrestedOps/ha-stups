@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Spec: Ein Board mit 300 Karten bleibt flüssig, die erste Anzeige steht schnell.
 test('Board mit 300 Karten: lädt zügig und scrollt flüssig', async ({ page, request }, info) => {
@@ -25,6 +26,7 @@ test('Board mit 300 Karten: lädt zügig und scrollt flüssig', async ({ page, r
   for (let i = 0; i < 3; i++) {
     const t0 = Date.now();
     await page.goto('/');
+    await openBoards(page);
     await page.locator('[role=presentation]').first().waitFor();
     times.push(Date.now() - t0);
   }
@@ -76,6 +78,7 @@ test('Änderung auf einem zweiten Gerät: nur die geänderte Karte wird nachgela
   await page.waitForTimeout(2000);
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
   await page.goto('/');
+  await openBoards(page);
   await expect(page.getByText('Sync 000', { exact: true })).toBeVisible();
 
   // Vorher (was jede Meldung bisher geladen hat): Boards, Personen, Board mit allen Karten, Wächter

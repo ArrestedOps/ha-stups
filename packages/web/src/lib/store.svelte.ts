@@ -20,7 +20,7 @@ import { DEFAULT_FILTER, type ScheduleFilter } from './schedule';
 import { swipeTarget } from './swipe';
 import type { SettingsPageId } from './settingsPages';
 import type { TemplateDraft } from './watcher-types';
-import { startTab, visibleTabs, type Tab } from './tabs';
+import { startTab, type Tab } from './tabs';
 import { applyCards, deltaIds } from './delta';
 import { startSync, type SyncInfo } from './sync';
 
@@ -488,8 +488,8 @@ export function selectColumn(id: string): void {
 
 /** Gemerkte Ansicht und gemerkter Filter von diesem Gerät (nur bekannte Boards und Personen bleiben im Filter) */
 function restoreView(): void {
-  // Start auf Aufgaben; gemerkt wird nur Boards (siehe startTab)
-  ui.tab = startTab(memo.get('stups.tab'), visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }));
+  // Start immer auf Aufgaben (siehe startTab)
+  ui.tab = startTab();
   try {
     const raw = JSON.parse(memo.get('stups.schedule') ?? 'null') as Partial<ScheduleFilter> | null;
     if (!raw) {
@@ -513,7 +513,6 @@ function restoreView(): void {
 export function selectTab(tab: Tab): void {
   ui.tab = tab;
   ui.sheet = null;
-  memo.set('stups.tab', tab);
 }
 
 /** Ändert den Filter von Agenda und Kalender und merkt ihn sich auf diesem Gerät */

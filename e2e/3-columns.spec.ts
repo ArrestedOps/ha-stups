@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openBoards } from './helpers';
 
 test('Viele Spalten: Tabs überlappen nicht und lassen sich scrollen', async ({ page, request }, info) => {
   test.skip(info.project.name !== 'dunkel', 'die Spalten bleiben im Board, einmal reicht');
@@ -9,6 +10,8 @@ test('Viele Spalten: Tabs überlappen nicht und lassen sich scrollen', async ({ 
   }
 
   await page.goto('/');
+
+  await openBoards(page);
   const tabs = page.getByRole('tab');
   await expect(tabs).toHaveCount(6);
 
@@ -32,6 +35,8 @@ test('Neues Board: Name eingeben und mit dem sichtbaren Knopf anlegen', async ({
   test.skip(info.project.name !== 'dunkel', 'ein Board reicht');
 
   await page.goto('/');
+
+  await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   const name = `Zweites Board ${Date.now().toString(36)}`;
   await page.getByLabel('Name des neuen Boards').fill(name);

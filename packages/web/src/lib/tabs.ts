@@ -4,8 +4,9 @@ export type Tab = 'tasks' | 'boards' | 'watchers';
 export const TABS: readonly Tab[] = ['tasks', 'boards', 'watchers'];
 
 /**
- * Der gemerkte Reiter von diesem Gerät. Die alten Namen führen zu den neuen: Heute, Agenda und Kalender sind jetzt Aufgaben,
- * Zuhause (und der noch ältere Name „watchers") ist der Reiter Wächter; alles Unbekannte ist Aufgaben.
+ * Ein gespeicherter Reitername (aus einer älteren Fassung) als heutiger Reiter. Die alten Namen führen zu den neuen: Heute, Agenda
+ * und Kalender sind jetzt Aufgaben, Zuhause (und der noch ältere Name „watchers") ist der Reiter Wächter; alles Unbekannte ist Aufgaben.
+ * Der Start richtet sich nicht danach (siehe `startTab`).
  */
 export function migrateTab(raw: string | null | undefined): Tab {
   if (raw === 'today' || raw === 'agenda' || raw === 'calendar') return 'tasks';
@@ -14,13 +15,11 @@ export function migrateTab(raw: string | null | undefined): Tab {
 }
 
 /**
- * Auf welchem Reiter die App startet: auf **Aufgaben**. Nur Boards wird von diesem Gerät gemerkt; Wächter führt zu Aufgaben, denn
- * wer dort zuletzt war, will beim Öffnen sehen, was für ihn dran ist.
+ * Auf welchem Reiter die App startet: immer auf **Aufgaben**, auch nach dem Neuladen und wenn dieses Gerät früher auf Boards oder
+ * Wächter war. Wer die App öffnet, will sehen, was für ihn dran ist; der Reiter wird deshalb nirgends gemerkt (ein alter Eintrag
+ * `stups.tab` wird nicht mehr gelesen). Ein Link auf eine Karte öffnet sie wie bisher über dem Reiter Aufgaben.
  */
-export function startTab(raw: string | null | undefined, visible: Tab[]): Tab {
-  const tab = migrateTab(raw);
-  return tab === 'boards' && visible.includes(tab) ? tab : 'tasks';
-}
+export const startTab = (): Tab => 'tasks';
 
 /**
  * Welche Reiter es gibt. „Wächter" gibt es nur mit Home Assistant (im Add-on immer, im eigenen Container, wenn er Wächter kann)

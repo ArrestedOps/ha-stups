@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Schnell-Eingabe im Fenster „Neue Karte": eine Zeile Text wird zur fertigen Karte.
 const unique = (base: string) => `${base} ${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
@@ -12,6 +13,7 @@ async function ownBoard(request: APIRequestContext, page: Page, name: string) {
 
 async function openNew(page: Page) {
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
   return page.getByLabel('Titel');
 }

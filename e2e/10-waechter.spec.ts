@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Läuft nur im Projekt „waechter": eigener Server mit nachgebautem Home Assistant (e2e/server-ha.mjs).
 const MOCK = 'http://127.0.0.1:18411';
@@ -55,6 +56,7 @@ test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Karte erscheint live 
 
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), s.boardId);
   await page.goto('/');
+  await openBoards(page);
   await openWatcherForm(page);
 
   // Vorlage, Entität suchen, Board wählen, Wartezeit 0 (sonst müsste der Test 3 Minuten warten)
@@ -202,6 +204,7 @@ test('„Testen" legt eine Karte an (Einstellungen › Wächter)', async ({ page
 
   await page.addInitScript((bid) => localStorage.setItem('stups.board', bid), s.boardId);
   await page.goto('/');
+  await openBoards(page);
   await openWatchersPage(page);
   await page.getByRole('button', { name: new RegExp(`Wächter Test ${s.tag} bearbeiten`) }).click();
   await page.getByRole('button', { name: /Testen: Karte jetzt anlegen/ }).click();

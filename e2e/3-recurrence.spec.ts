@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
+import { openBoards } from './helpers';
 
 async function boardIds(request: APIRequestContext) {
   const boards = await (await request.get('/api/boards')).json();
@@ -26,6 +27,8 @@ test('Wiederkehrende Karte: erledigt landet sie in „Erledigt", die nächste wa
   expect(res.status()).toBe(201);
 
   await page.goto('/');
+
+  await openBoards(page);
   await page.getByRole('tab', { name: /^Offen/ }).click();
   await page.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
   await expect(page.getByRole('status').filter({ hasText: /Erledigt · nächste Karte/ })).toBeVisible();
@@ -62,6 +65,7 @@ test('„Rückgängig" nimmt die nächste Karte wieder weg', async ({ page, requ
     },
   });
   await page.goto('/');
+  await openBoards(page);
   await page.getByRole('tab', { name: /^Offen/ }).click();
   await page.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
   await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).click();
@@ -80,6 +84,8 @@ test('Wiederholen: zwei schnelle Klicks bei langsamem Server überschreiben sich
   ).json();
 
   await page.goto('/');
+
+  await openBoards(page);
   await page.getByRole('tab', { name: /^Offen/ }).click();
   await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
   await page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /jede Woche/ }).click();
@@ -118,6 +124,8 @@ test('Wiederholen: Auswahl, was die nächste Karte übernimmt, wird gespeichert'
   expect(card.carryOver).toEqual(['description', 'checklist', 'links', 'cost']);
 
   await page.goto('/');
+
+  await openBoards(page);
   await page.getByRole('tab', { name: /^Offen/ }).click();
   await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
   await page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /jede Woche/ }).click();

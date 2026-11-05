@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 let counter = 0;
 const uniqueTitle = (base: string) => `${base} ${Date.now().toString(36)}${counter++}`;
@@ -41,6 +42,7 @@ async function swipe(page: Page, title: string, direction: 'left' | 'right') {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
+  await openBoards(page);
   await expect(page.getByRole('tablist', { name: 'Spalten' })).toBeVisible();
   await tab(page, 'Offen').click();
 });
@@ -152,6 +154,8 @@ test('Termin setzen ohne Zuständige: Hinweis, dass keine Erinnerung kommt, mit 
   await request.post(`/api/boards/${boards[0].id}/cards`, { data: { title, columnId: view.columns[0].id } });
 
   await page.reload();
+
+  await openBoards(page);
   await tab(page, 'Offen').click();
   await card(page, title).getByText(title).click();
   await page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /Fälligkeit/ }).click();

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Betriebsart 2: eigener Container mit Verbindung zu Home Assistant (e2e/server-standalone-ha.mjs, nachgebautes Home Assistant
 // auf PORT+1 mit Long-Lived-Token), Anmeldung mit eigenem Konto. Die Tests bauen aufeinander auf.
@@ -28,6 +29,7 @@ async function anmelden(page: Page) {
   await page.getByLabel('Passwort', { exact: true }).fill(PW);
   await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
   await expect(nav(page)).toBeVisible();
+  await openBoards(page);
 }
 
 interface Person {

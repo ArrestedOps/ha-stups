@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openBoards } from './helpers';
 
 // Läuft nur im Projekt „waechter": nachgebautes Home Assistant (e2e/server-ha.mjs). Der Reiter Wächter zeigt den Zustand der Wächter;
 // Aufgaben zeigt, was vom Haus kam, mit Erledigen und Weitergeben.
@@ -48,6 +49,8 @@ test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Karte 
   expect(created.status()).toBe(201);
 
   await page.goto('/');
+
+  await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   // „Ruhig" ist eine Zeile („1 Wächter ohne offene Aktion"), die sich auf die einzelnen Wächter aufklappt
   await page.getByTestId('home-quiet').getByRole('button', { name: /Wächter ohne offene Aktion/ }).click();
@@ -94,6 +97,8 @@ test('Aufgaben: Weitergeben schiebt die Karte an die nächste Person, ohne sie z
   expect((await cardsOf(request, s.boardId))[0]!.assigneeIds).toEqual([s.rene.id]);
 
   await page.goto('/');
+
+  await openBoards(page);
   await nav(page).getByRole('button', { name: 'Aufgaben' }).click();
   const house = page.getByTestId('today-house');
   await expect(house.getByText(title)).toBeVisible();
@@ -133,6 +138,8 @@ test('Erst vorschlagen: die Karte entsteht ohne Zuständige, „Übernehmen" auf
   expect((await cardsOf(request, s.boardId))[0]!.assigneeIds).toEqual([]);
 
   await page.goto('/');
+
+  await openBoards(page);
   await nav(page).getByRole('button', { name: 'Aufgaben' }).click();
   const house = page.getByTestId('today-house');
   await expect(house.getByText(title)).toBeVisible();
@@ -161,6 +168,7 @@ test('Wächter: Administratoren bearbeiten einen Wächter direkt, Mitglieder seh
 
   // Administrator: Tipp auf den Wächter öffnet das Bearbeiten (Satz, Speichern), der Verlauf steht unten
   await page.goto('/');
+  await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('home-activity')).toContainText(name);
   await page.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();

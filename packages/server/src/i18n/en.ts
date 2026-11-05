@@ -196,7 +196,6 @@ export const en: Catalog = {
   'Der Name ist zu lang (höchstens 60 Zeichen)': 'The name is too long (at most 60 characters)',
   'Das Thema darf 1 bis 64 Zeichen haben: Buchstaben, Ziffern, Minus und Unterstrich': 'The topic may have 1 to 64 characters: letters, digits, minus and underscore',
   'Unbekannter Zugriffsmodus': 'Unknown access mode',
-  'Der Pfad muss mit / beginnen': 'The path must start with /',
   'Der Pfad muss mit / beginnen, darf höchstens {max} Zeichen haben und keine Adresse oder Leerzeichen enthalten': 'The path must start with /, be at most {max} characters long and contain no address or spaces',
   'Standard von Home Assistant': 'Home Assistant default',
   'Option der App: {path}': 'App option: {path}',

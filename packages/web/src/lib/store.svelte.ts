@@ -449,7 +449,8 @@ function reportPanelPath(): void {
   try {
     if (window.parent === window) return;
     const path = window.parent.location.pathname;
-    if (ui.settings && ui.settings.panelPath !== path) void api.saveSettings({ panelPath: path });
+    // Nur Administratoren dürfen den Pfad ändern (er steckt in jeder Push-Adresse); andere melden nichts
+    if (ui.isAdmin && ui.settings && ui.settings.panelPath !== path) void api.saveSettings({ panelPath: path }).catch(() => undefined);
   } catch {
     /* kein Zugriff auf das übergeordnete Fenster */
   }

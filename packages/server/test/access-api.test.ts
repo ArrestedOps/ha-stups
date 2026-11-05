@@ -181,12 +181,23 @@ describe('Verwaltet in der Add-on-Konfiguration', () => {
 });
 
 describe('Einstellungen mit Wirkung auf alle', () => {
-  it('das Dashboard ändert nur ein Administrator, der Panel-Pfad kommt von jedem Gerät', async () => {
+  it('S8: Dashboard und Panel-Pfad ändert nur ein Administrator (der Panel-Pfad steckt in jeder Push-Adresse)', async () => {
     expect((await call(anna, 'PUT', '/api/settings', { dashboardPath: '/dashboard-handy' })).status).toBe(403);
-    expect((await call(anna, 'PUT', '/api/settings', { panelPath: '/abc_stups' })).status).toBe(200);
+    expect((await call(anna, 'PUT', '/api/settings', { panelPath: '/abc_stups' })).status).toBe(403);
+    expect(store.getSettings().panelPath).toBeNull();
+    expect((await call(chef, 'PUT', '/api/settings', { panelPath: '/abc_stups' })).status).toBe(200);
     expect((await call(chef, 'PUT', '/api/settings', { dashboardPath: '/dashboard-handy' })).status).toBe(200);
     expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy', panelPath: '/abc_stups', defaultDueTime: '09:00', dailySummaryTime: null });
   });
+
+  it.each(['/\\evil.example', '//evil.example', 'https://evil.example', 'javascript:alert(1)', 'evil', '/a\\b', '/mit leerzeichen', '/x'.padEnd(201, 'a'), '/a://b'])(
+    'S8: der Panel-Pfad %j wird abgelehnt (landet sonst in der Push-Adresse)',
+    async (bad) => {
+      expect((await call(chef, 'PUT', '/api/settings', { panelPath: bad })).status).toBe(400);
+      expect((await call(chef, 'PUT', '/api/settings', { dashboardPath: bad })).status).toBe(400);
+      expect(store.getSettings().panelPath).toBeNull();
+    },
+  );
 
   it('die Uhrzeit der Tageszusammenfassung ändert nur ein Administrator', async () => {
     expect((await call(anna, 'PUT', '/api/settings', { dailySummaryTime: '07:15' })).status).toBe(403);

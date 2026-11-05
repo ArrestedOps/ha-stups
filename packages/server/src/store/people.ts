@@ -7,6 +7,7 @@ import { PERSON_COLORS, NTFY_TOPIC_RE } from './constants.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
+import { checkDashboardPath } from '../dashboard-path.js';
 
 /** Personen, Zugriff und Einstellungen */
 export function createPeople(c: Ctx, late: unknown) {
@@ -406,9 +407,7 @@ export function createPeople(c: Ctx, late: unknown) {
         run('delete from settings where key = ?', key);
         continue;
       }
-      if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || value.length > 200) {
-        throw new ValidationError(t('Der Pfad muss mit / beginnen'));
-      }
+      checkDashboardPath(value); // beginnt mit „/", kein „//", kein „\", kein Schema, keine Leerzeichen, höchstens 200 Zeichen
       run('insert into settings (key, value) values (?, ?) on conflict(key) do update set value = excluded.value', key, value);
     }
     if (patch.defaultDueTime !== undefined) {

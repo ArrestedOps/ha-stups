@@ -346,4 +346,11 @@ export const en: Catalog = {
   'Die Vorhersage': 'The forecast',
   'Die Vorhersage kennt nur Regen': 'The forecast only knows rain',
   'Die Stunden': 'The hours',
+  'Du hast in der letzten Stunde schon viele Rückmeldungen gesendet. Bitte versuche es später noch einmal': 'You have already sent a lot of feedback in the last hour. Please try again later',
+  'Das Bild ist ungültig. Erlaubt sind JPEG, PNG, WebP und GIF': 'The image is not valid. JPEG, PNG, WebP and GIF are allowed',
+  'Kein Vorschaubild vorhanden': 'No preview image available',
+  'Bitte wähle eine Art der Rückmeldung': 'Please choose a type of feedback',
+  'Der Stand muss neu, gelesen oder erledigt sein': 'The status must be new, read or done',
+  'Bitte schreibe etwas': 'Please write something',
+  'Rückmeldung nicht gefunden': 'Feedback not found',
 };

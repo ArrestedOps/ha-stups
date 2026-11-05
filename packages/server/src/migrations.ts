@@ -509,4 +509,27 @@ export const migrations: Migration[] = [
       create index ix_sent_user_at on sent_notifications(user_id, sent_at);
     `,
   },
+  {
+    version: 24,
+    // Rückmeldungen (Fehler, Wünsche, Lob, Kritik) aus der App. Nur neue Tabelle, nichts Vorhandenes wird angefasst.
+    // kind: bug | idea | praise | criticism | other; status: neu | gelesen | erledigt. person_name ist der Name zum Zeitpunkt des Sendens
+    // (die Person darf später gelöscht werden, die Rückmeldung bleibt). image und thumb sind Dateinamen im Dateispeicher (wie bei Anhängen).
+    // meta: JSON mit Version, Kanal, Ansicht, Sprache, Hell/Dunkel, Fenstergröße, eingebettet, User-Agent (gekürzt).
+    sql: `
+      create table feedback (
+        id text primary key,
+        person_id text references users(id) on delete set null,
+        person_name text,
+        kind text not null check (kind in ('bug', 'idea', 'praise', 'criticism', 'other')),
+        message text not null,
+        image text,
+        thumb text,
+        meta text not null default '{}',
+        status text not null default 'neu' check (status in ('neu', 'gelesen', 'erledigt')),
+        created_at text not null
+      );
+      create index ix_feedback_at on feedback(created_at);
+      create index ix_feedback_person on feedback(person_id, created_at);
+    `,
+  },
 ];

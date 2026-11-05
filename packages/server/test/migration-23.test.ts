@@ -42,9 +42,8 @@ function buildV22(file: string): void {
 const TABLES = ['cards', 'watchers', 'watcher_runs', 'nudges', 'comments', 'completions', 'card_events', 'sent_notifications', 'card_assignees'];
 
 describe('Migration 23 (Posteingang und Dashboard je Person)', () => {
-  it('ist die letzte Migration und hängt nur Spalten und Indexe an', () => {
-    const last = migrations[migrations.length - 1]!;
-    expect(last.version).toBe(23);
+  it('hängt nur Spalten und Indexe an', () => {
+    const last = migrations.find((m) => m.version === 23)!;
     expect(last.sql).toMatch(/alter table users add column inbox_seen_at/);
     expect(last.sql).toMatch(/alter table users add column dashboard_path/);
     expect(last.sql).not.toMatch(/drop table|rename|delete from/i);
@@ -65,7 +64,7 @@ describe('Migration 23 (Posteingang und Dashboard je Person)', () => {
     const t0 = Date.now();
     const db = openDb(file, { migrations, backupDir, now: () => new Date('2026-11-05T10:00:00Z') });
     const t1 = Date.now();
-    expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(23);
+    expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(migrations[migrations.length - 1]!.version);
 
     for (const t of TABLES) expect(db.prepare(`select * from ${t} order by 1, 2`).all(), t).toEqual(snap[t]);
 

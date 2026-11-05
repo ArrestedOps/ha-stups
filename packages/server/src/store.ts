@@ -6,6 +6,7 @@ import { createFairness } from './store/fairness.js';
 import { createConfirmation } from './store/confirmation.js';
 import { createToday } from './store/today.js';
 import { createInbox } from './store/inbox.js';
+import { createFeedback } from './store/feedback.js';
 import { createCards } from './store/cards.js';
 import { createBoards } from './store/boards.js';
 import { createCompletion } from './store/completion.js';
@@ -48,7 +49,10 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     createInbox(c, s),
   );
 
+  const feedback = createFeedback(c);
+
   return {
+    ...feedback,
     inbox: s.inbox,
     markInboxSeen: s.markInboxSeen,
     createNudges: s.createNudges,
@@ -114,7 +118,8 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     addAttachment: s.addAttachment,
     getAttachment: s.getAttachment,
     deleteAttachment: s.deleteAttachment,
-    referencedFiles: s.referencedFiles,
+    /** Dateien, auf die Anhänge und Rückmeldungen verweisen */
+    referencedFiles: () => new Set([...s.referencedFiles(), ...feedback.feedbackFiles()]),
     addComment: s.addComment,
     listComments: s.listComments,
     updateComment: s.updateComment,

@@ -3,9 +3,8 @@
   import { valueText } from '../lib/history';
   import { clock } from '../lib/nudge';
   import { ui } from '../lib/store.svelte';
-  import { detectSymbol } from '../lib/symbols/detect';
-  import type { WatcherEditor } from '../lib/watcher-editor.svelte';
-  import { dueText, fineChips, modeSummary, whenParts, type FineKey, type Part } from '../lib/watcher-flow';
+    import type { WatcherEditor } from '../lib/watcher-editor.svelte';
+  import { dueText, fineChips, modeSummary, nameSymbol, whenParts, type FineKey, type Part } from '../lib/watcher-flow';
   import { noteText, RUN_TEXT } from '../lib/watchers';
   import AssignOrder from './AssignOrder.svelte';
   import CardTile from './CardTile.svelte';
@@ -42,7 +41,7 @@
   let fine = $state<FineKey | null>(null);
   let allRuns = $state(false);
 
-  const entityIcon = $derived(detectSymbol(f.entityName));
+  const entityIcon = $derived(nameSymbol(f.entityName));
   const unit = $derived(f.entityUnit || null);
   const num = (s: string): number | null => {
     const n = Number(s.trim().replace(',', '.'));
@@ -51,7 +50,7 @@
   const threshold = $derived(f.kind === 'below' || f.kind === 'above' ? num(f.value) : null);
   const current = $derived(valueText(ed.history?.current ?? ed.item?.entityState ?? null, ed.history?.kind === 'state' ? null : unit));
   const board = $derived(ui.boards.find((b) => b.id === f.boardId));
-  const look = $derived({ icon: f.icon || detectSymbol(f.title) || detectSymbol(f.entityName), iconColor: f.iconColor || null });
+  const look = $derived({ icon: f.icon || nameSymbol(f.title) || nameSymbol(f.entityName), iconColor: f.iconColor || null });
   const doneParts = $derived<Part[]>(
     f.doneOn && f.doneEntityId
       ? [{ text: `${t('wenn')} `, bold: false }, ...whenParts({ entityName: f.doneEntityName, entityId: f.doneEntityId, entityUnit: '', kind: f.doneKind, to: f.doneTo, value: f.doneValue, forMin: '0', leadHours: '12', forecastHours: '3' })]

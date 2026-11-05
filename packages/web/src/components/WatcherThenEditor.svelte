@@ -1,9 +1,8 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
   import { ui } from '../lib/store.svelte';
-  import { detectSymbol } from '../lib/symbols/detect';
-  import type { WatcherEditor } from '../lib/watcher-editor.svelte';
-  import { dueChipOf, dueFields, dueText, type DueChip } from '../lib/watcher-flow';
+    import type { WatcherEditor } from '../lib/watcher-editor.svelte';
+  import { dueChipOf, dueFields, dueText, nameSymbol, type DueChip } from '../lib/watcher-flow';
   import CardTile from './CardTile.svelte';
   import Icon from './Icon.svelte';
   import NumberField from './NumberField.svelte';
@@ -25,7 +24,7 @@
   const f = $derived(ed.form);
   const board = $derived(ui.boards.find((b) => b.id === f.boardId));
   const column = $derived(ed.view?.columns.find((c) => c.id === f.columnId));
-  const auto = $derived(f.icon ? null : (detectSymbol(f.title) ?? detectSymbol(f.entityName)));
+  const auto = $derived(f.icon ? null : (nameSymbol(f.title) ?? nameSymbol(f.entityName)));
   const look = $derived({ icon: f.icon || auto, iconColor: f.iconColor || null });
   let symbolOpen = $state(false);
   let dueOpen = $state(false);

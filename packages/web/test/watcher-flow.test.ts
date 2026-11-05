@@ -231,3 +231,15 @@ describe('Symbol der Karte bleibt beim Bearbeiten erhalten', () => {
     expect(toInput(fromWatcher(item())).card).not.toHaveProperty('icon');
   });
 });
+
+import { nameSymbol } from '../src/lib/watcher-flow';
+
+describe('Symbol zum Namen der Entität', () => {
+  it('deutsche Namen aus Home Assistant werden auch in der englischen Oberfläche erkannt', () => {
+    expect(nameSymbol('Waschmaschine Leistung')).toBe('washing-machine');
+    setLanguage('en');
+    expect(nameSymbol('Waschmaschine Leistung')).toBe('washing-machine');
+    expect(nameSymbol('Washing machine power')).toBe('washing-machine');
+    expect(nameSymbol('xyzzy')).toBeNull();
+  });
+});

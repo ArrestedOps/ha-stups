@@ -1,9 +1,8 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
   import { valueText } from '../lib/history';
-  import { detectSymbol } from '../lib/symbols/detect';
-  import type { WatcherEditor } from '../lib/watcher-editor.svelte';
-  import { durationChips, durationHint, durationLabel, sliderRange } from '../lib/watcher-flow';
+    import type { WatcherEditor } from '../lib/watcher-editor.svelte';
+  import { durationChips, durationHint, durationLabel, nameSymbol, sliderRange } from '../lib/watcher-flow';
   import type { TriggerKind } from '../lib/watcher-types';
   import Chip from './ui/Chip.svelte';
   import Icon from './Icon.svelte';
@@ -23,7 +22,7 @@
 
   const f = $derived(ed.form);
   const numeric = $derived(f.kind === 'below' || f.kind === 'above');
-  const icon = $derived(detectSymbol(f.entityName));
+  const icon = $derived(nameSymbol(f.entityName));
   const unit = $derived(f.entityUnit || null);
   const num = (s: string): number | null => {
     const n = Number(s.trim().replace(',', '.'));

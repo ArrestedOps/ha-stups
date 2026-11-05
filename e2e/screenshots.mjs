@@ -385,7 +385,8 @@ const watcherScreens = [
     await page.getByRole('button', { name: x('Neuer Wächter', 'New watcher'), exact: true }).click();
     const d = page.getByRole('dialog');
     await d.getByRole('button', { name: W.washer }).click();
-    await d.getByRole('button', { name: /Waschmaschine Leistung/ }).click();
+    await d.getByLabel(x('Entität suchen', 'Search for an entity')).fill('waschmaschine leistung');
+    await d.getByRole('button', { name: /Waschmaschine Leistung/ }).first().click();
     await d.getByTestId('graph-fired').waitFor();
     const next = [x('Weiter: Dann', 'Next: Then'), x('Weiter: Wer', 'Next: Who'), x('Weiter: Feinschliff', 'Next: Fine-tuning')];
     for (let i = 0; i < step - 1; i++) await d.getByRole('button', { name: next[i] }).click();

@@ -1,4 +1,5 @@
-import { t, tn } from './i18n/index.svelte';
+import { i18n, t, tn } from './i18n/index.svelte';
+import { detectSymbol } from './symbols/detect';
 import type { AssignMode } from './watcher-types';
 import { conditionText, sentenceParts, type WatcherForm } from './watchers';
 
@@ -223,4 +224,9 @@ export function durationHint(minutes: number, hours: number, fired: number): str
   if (fired === 0) return t('{lead} hätte Stups in den letzten {window} nicht ausgelöst.', { lead, window });
   if (fired === 1) return t('{lead} hätte Stups in den letzten {window} genau einmal ausgelöst – kurze Pausen zählen nicht.', { lead, window });
   return t('{lead} hätte Stups in den letzten {window} {n} Mal ausgelöst – kurze Pausen zählen nicht.', { lead, window, n: fired });
+}
+
+/** Symbol zu einem Namen der Entität: Namen aus Home Assistant sind oft deutsch, auch wenn die Oberfläche Englisch spricht, darum zählt die zweite Sprache mit */
+export function nameSymbol(name: string): string | null {
+  return detectSymbol(name) ?? detectSymbol(name, i18n.lang === 'de' ? 'en' : 'de');
 }

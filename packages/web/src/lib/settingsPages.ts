@@ -11,6 +11,8 @@ export type SettingsPageId =
   | 'icons'
   | 'dates'
   | 'dashboard'
+  | 'bubble'
+  | 'summary'
   | 'voice'
   | 'report'
   | 'data'
@@ -64,11 +66,12 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
       id: 'household',
       title: t('Haushalt'),
       pages: [
-        ...page('people', t('Personen und Kinder'), 'user', admin),
+        ...page('people', t('Personen und Zugriff'), 'user', admin),
         ...page('watchers', t('Wächter'), 'eye', admin && ctx.watchers),
         ...page('templates', t('Vorlagen'), 'columns', admin),
         ...page('icons', t('Symbole'), 'spark', admin),
         ...page('dates', t('Termine'), 'clock', admin),
+        ...page('summary', t('Tageszusammenfassung'), 'bell', admin && ctx.push),
       ],
     },
     {
@@ -76,6 +79,7 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
       title: t('Home Assistant'),
       pages: [
         ...page('dashboard', t('Dashboard und Kopfzeile'), 'home', admin && ctx.haUi),
+        ...page('bubble', t('Dashboard-Button'), 'layers', admin && ctx.haUi),
         ...page('voice', t('Ansage und Lampe'), 'bell', admin && ctx.house),
       ],
     },
@@ -97,7 +101,10 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
  * und „HA-Kopfzeile ausblenden". Beides stand früher oben links in der Kopfzeile (für alle) und gehört nach dem neuen Design hierher.
  */
 export function settingsOverview(ctx: SettingsCtx): SettingsGroup[] {
-  const groups = settingsGroups(ctx);
+  // Die Zeile „Wächter" entfällt hier (Reiter Wächter, dort „Alle Wächter verwalten"); die Seite selbst bleibt
+  const groups = settingsGroups(ctx)
+    .map((g) => ({ ...g, pages: g.pages.filter((p) => p.id !== 'watchers') }))
+    .filter((g) => g.pages.length > 0);
   if (!ctx.haUi) return groups;
   const actions: ('back' | 'header')[] = ['back', 'header'];
   const have = groups.find((g) => g.id === 'ha');

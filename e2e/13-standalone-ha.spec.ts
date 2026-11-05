@@ -74,7 +74,7 @@ test('Erster Start mit Home Assistant: Einrichtung, dann Wächter-Reiter und Ver
 
   const dialog = await einstellungen(page);
   await expect(dialog.getByRole('button', { name: 'Benachrichtigungen' })).toBeVisible();
-  await expect(dialog.getByRole('button', { name: 'Wächter' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Wächter' })).toHaveCount(0); // die Verwaltung steht im Reiter Wächter
   // Stups sitzt hier nicht in Home Assistant: kein Dashboard-Button, keine Kopfzeile, kein Umzug zwischen Apps
   for (const weg of ['Zurück zum Dashboard', 'Darstellung', 'Bubble Card', 'Umzug', 'Diagnose-Seite']) {
     await expect(dialog.getByText(weg, { exact: false })).toHaveCount(0);
@@ -87,7 +87,7 @@ test('Erster Start mit Home Assistant: Einrichtung, dann Wächter-Reiter und Ver
 test('Personen aus Home Assistant werden vorgeschlagen; Ben kommt dazu und wählt sein Handy', async ({ page }) => {
   await anmelden(page);
   const dialog = await einstellungen(page);
-  await dialog.getByRole('button', { name: 'Personen und Kinder' }).click();
+  await dialog.getByRole('button', { name: 'Personen und Zugriff' }).click();
 
   const group = page.getByText('Aus Home Assistant', { exact: true });
   await expect(group).toBeVisible();
@@ -155,14 +155,12 @@ test('Wächter: „wer ist zu Hause" findet die Personen über ihren Namen, die 
     .not.toBeNull();
 });
 
-test('Wächter zeigt beide Wächter, die Verwaltung steht in den Einstellungen', async ({ page }) => {
+test('Wächter zeigt beide Wächter, die Verwaltung öffnet über „Alle Wächter verwalten“', async ({ page }) => {
   await anmelden(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('home')).toContainText('Saugroboter');
   await expect(page.getByTestId('home')).toContainText('Zweiter Roboter');
-  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
-  const dialog = page.getByRole('dialog');
-  await dialog.getByRole('button', { name: 'Wächter', exact: true }).click();
+  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
   await expect(page.getByTestId('watcher-card').filter({ hasText: 'Saugroboter' })).toBeVisible();
   await expect(page.getByTestId('watcher-card').filter({ hasText: 'Zweiter Roboter' })).toBeVisible();
   await expect(page.getByTestId('watcher-activity')).toContainText('Karte angelegt');

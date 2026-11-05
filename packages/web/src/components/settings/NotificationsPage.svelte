@@ -6,7 +6,7 @@
   import Group from '../Group.svelte';
   import Icon from '../Icon.svelte';
   import PersonDelivery from '../PersonDelivery.svelte';
-  import Row from '../Row.svelte';
+  import SettingRow from '../SettingRow.svelte';
   import Page from './Page.svelte';
 
   /** Meine Benachrichtigungen: Test an mich, meine Geräte oder mein ntfy-Thema, Ruhezeit, Rückblick am Sonntag */
@@ -70,11 +70,11 @@
       ? t('Auf dem iPhone erscheint „Erledigt“ erst, wenn man die Nachricht aufklappt (nach links wischen und „Ansicht“, herunterziehen oder lange drücken).')
       : t('Die Nachrichten kommen über ntfy. Dein Thema trägst du unten ein.')}
   >
-    <Row label={t('Test-Nachricht')}>
+    <SettingRow label={t('Test-Nachricht')}>
       <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-40" disabled={sending} onclick={testPush}>
         {t('An mich senden')}
       </button>
-    </Row>
+    </SettingRow>
     <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => openSettings('report')}>
       <Icon name="message" size={20} /><span class="flex-1">{t('Etwas kommt nicht an? Prüfen')}</span><Icon name="chevron-right" size={18} />
     </button>

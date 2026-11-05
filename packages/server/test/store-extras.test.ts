@@ -85,9 +85,9 @@ describe('Kommentare', () => {
 
 describe('Einstellungen', () => {
   it('speichert und liest Werte, mit Vorgaben', () => {
-    expect(store.getSettings()).toEqual({ dashboardPath: null, panelPath: null, defaultDueTime: '09:00' });
+    expect(store.getSettings()).toEqual({ dashboardPath: null, panelPath: null, defaultDueTime: '09:00', dailySummaryTime: null });
     store.setSettings({ dashboardPath: '/dashboard-handy/start', panelPath: '/c552c524_stups' });
-    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy/start', panelPath: '/c552c524_stups', defaultDueTime: '09:00' });
+    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy/start', panelPath: '/c552c524_stups', defaultDueTime: '09:00', dailySummaryTime: null });
     store.setSettings({ dashboardPath: null });
     expect(store.getSettings().dashboardPath).toBeNull();
     expect(store.getSettings().panelPath).toBe('/c552c524_stups');

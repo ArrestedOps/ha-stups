@@ -48,7 +48,7 @@ A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your h
 - **This week (fairness):** who completes how much this week or month, as a bar for the effort (small, medium, large). No ranking, no medals. Optional: a Sunday-evening summary.
 - **Child role:** children see and tick off only their own cards. With confirmation: the card waits until a parent says "Confirm" or "Again", then it counts for the child.
 - **Board templates:** start a board from Household, Moving house, Renovation and more, or save your own board as a template.
-- **Several people:** you control access under Settings › Household › People and children. Everyone gets a picture (from Home Assistant or uploaded). Home Assistant administrators set things up; all approved people may create boards, cards and categories.
+- **Several people:** you control access under Settings › Household › People and access. Everyone gets a picture (from Home Assistant or uploaded). Home Assistant administrators set things up; all approved people may create boards, cards and categories.
 - **English and German:** the app follows your device language; Settings › Language switches it for you on all your devices, push messages included.
 - **Sensors** for Home Assistant: overdue and due-today cards, in total and per person, open nudges.
 - Everything stays with you: SQLite in the add-on storage, part of the normal HA backup.

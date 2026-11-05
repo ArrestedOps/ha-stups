@@ -5,12 +5,12 @@
   import { refresh, toast, ui } from '../../lib/store.svelte';
   import Avatar from '../Avatar.svelte';
 
-  /** Kopf der Einstellungen: Bild, Name, Herkunft des Bilds, „Bild ändern" / „Bild entfernen" (für sich selbst) */
+  /** Kopf der Einstellungen (wie „Konto" im Mockup): Bild, Name, Herkunft des Bilds, „Bild ändern" / „Bild entfernen" (für sich selbst) */
   let input: HTMLInputElement | undefined = $state();
   let busy = $state(false);
   const me = $derived(ui.me);
   const origin = $derived(me?.avatarSource === 'ha' ? t('Bild aus Home Assistant') : me?.avatarSource === 'upload' ? t('Eigenes Bild') : t('Noch kein Bild'));
-  // Ein Kind ändert sein Bild nicht selbst (der Administrator tut es unter Personen und Kinder)
+  // Ein Kind ändert sein Bild nicht selbst (der Administrator tut es unter Personen und Zugriff)
   const canChange = $derived(!ui.isChild);
 
   async function pick(e: Event & { currentTarget: HTMLInputElement }) {
@@ -41,16 +41,16 @@
 </script>
 
 {#if me}
-  <div class="flex items-center gap-4 py-4" data-testid="settings-head">
-    <Avatar person={me} size={64} />
+  <div class="flex items-center gap-3.5 rounded-row border border-line bg-surface p-3.5" data-testid="settings-head">
+    <Avatar person={me} size={56} />
     <div class="min-w-0 flex-1">
-      <p class="font-display truncate text-[22px] leading-tight font-bold">{me.displayName}</p>
-      <p class="text-[13px] text-fg2" data-testid="avatar-origin">{origin}</p>
+      <p class="truncate text-[17px] font-bold tracking-tight">{me.displayName}</p>
+      <p class="mt-0.5 text-[13px] text-fg2" data-testid="avatar-origin">{origin}{#if ui.isAdmin && !ui.isChild} • {t('Administrator')}{/if}</p>
       {#if canChange}
-        <div class="mt-1 flex gap-4">
-          <button class="min-h-9 text-[15px] font-semibold text-accent-text disabled:opacity-40" disabled={busy} onclick={() => input?.click()}>{t('Bild ändern')}</button>
+        <div class="mt-0.5 flex gap-4">
+          <button class="min-h-9 text-[14px] font-semibold text-accent-text disabled:opacity-40" disabled={busy} onclick={() => input?.click()}>{t('Bild ändern')}</button>
           {#if me.avatarSource === 'upload'}
-            <button class="min-h-9 text-[15px] font-semibold text-fg2 disabled:opacity-40" disabled={busy} onclick={remove}>{t('Bild entfernen')}</button>
+            <button class="min-h-9 text-[14px] font-semibold text-fg2 disabled:opacity-40" disabled={busy} onclick={remove}>{t('Bild entfernen')}</button>
           {/if}
         </div>
       {/if}

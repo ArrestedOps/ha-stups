@@ -11,7 +11,7 @@ beforeEach(() => setLanguage('de'));
 describe('Einstellungen nach Rolle und Betriebsart', () => {
   it('Administrator im Add-on: alle vier Gruppen, keine Konto-Seite', () => {
     expect(groupIds(addon)).toEqual(['me', 'household', 'ha', 'help']);
-    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'dashboard', 'voice', 'report', 'data']);
+    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'summary', 'dashboard', 'bubble', 'voice', 'report', 'data']);
   });
 
   it('Mitglied: nur „Für mich" und „Hilfe und Daten"', () => {
@@ -39,6 +39,22 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
     expect(ids(dockerHa)).toContain('watchers');
     expect(ids(dockerHa)).toContain('voice');
     expect(ids(dockerHa)).not.toContain('dashboard');
+  });
+
+  it('Tageszusammenfassung nur für Administratoren und nur mit Push, Dashboard-Button nur im Add-on', () => {
+    expect(ids(addon)).toContain('summary');
+    expect(ids({ ...addon, isAdmin: false })).not.toContain('summary');
+    expect(ids({ ...addon, push: false })).not.toContain('summary');
+    expect(ids(addon)).toContain('bubble');
+    expect(ids({ ...addon, standalone: true, haUi: false })).not.toContain('bubble');
+    expect(ids({ ...addon, isAdmin: false })).not.toContain('bubble');
+  });
+
+  it('Die Übersicht zeigt keine Zeile „Wächter" (dafür gibt es den Reiter), die Seite bleibt über „Alle Wächter verwalten" erreichbar', () => {
+    const overview = settingsOverview(addon).flatMap((g) => g.pages.map((p) => p.id));
+    expect(overview).not.toContain('watchers');
+    expect(overview).toContain('templates');
+    expect(ids(addon)).toContain('watchers');
   });
 
   it('Beta nur im Beta-Kanal', () => {
@@ -79,7 +95,7 @@ describe('Einstellungen › Home Assistant: „Zurück zum Dashboard" und „HA-
   it('der Administrator behält dort Dashboard-Auswahl und Ansage, dazu die beiden Aktionen', () => {
     const g = settingsOverview(addon).find((x) => x.id === 'ha')!;
     expect(g.actions).toEqual(['back', 'header']);
-    expect(g.pages.map((p) => p.id)).toEqual(['dashboard', 'voice']);
+    expect(g.pages.map((p) => p.id)).toEqual(['dashboard', 'bubble', 'voice']);
   });
 
   it('im eigenen Container (kein Home-Assistant-Panel) gibt es die Aktionen nicht', () => {

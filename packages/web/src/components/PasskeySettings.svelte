@@ -5,7 +5,7 @@
   import { createPasskey, passkeyErrorText } from '../lib/passkeys';
   import { toast, ui } from '../lib/store.svelte';
   import Group from './Group.svelte';
-  import Row from './Row.svelte';
+  import SettingRow from './SettingRow.svelte';
 
   let list = $state<PasskeyInfo[] | null>(null);
   let adding = $state(false);
@@ -87,8 +87,8 @@
       </div>
     </form>
   {:else if list !== null}
-    <Row label={list.length === 0 ? t('Noch kein Passkey') : undefined}>
+    <SettingRow label={list.length === 0 ? t('Noch kein Passkey') : undefined}>
       <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold" onclick={startAdding}>{t('Passkey hinzufügen')}</button>
-    </Row>
+    </SettingRow>
   {/if}
 </Group>

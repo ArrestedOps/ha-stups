@@ -15,7 +15,7 @@ test.describe.configure({ timeout: 90_000 });
 async function openPeople(page: Page) {
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /Personen und Kinder/ }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Personen und Zugriff/ }).click();
   await expect(page.getByRole('radiogroup', { name: 'Zugriff' })).toBeVisible();
 }
 
@@ -132,7 +132,7 @@ test('Nur freigegebene: Fremder sieht „Kein Zugriff", der Administrator gibt i
     await fremd.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     const dialog = fremd.getByRole('dialog');
     await expect(dialog.getByRole('button', { name: 'Sprache und Farbe' })).toBeVisible();
-    await expect(dialog.getByRole('button', { name: /Personen und Kinder/ })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: /Personen und Zugriff/ })).toHaveCount(0);
     await expect(dialog.getByRole('button', { name: 'Dashboard und Kopfzeile' })).toHaveCount(0);
     await expect(dialog.getByText('Haushalt', { exact: true })).toHaveCount(0);
   } finally {

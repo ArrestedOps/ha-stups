@@ -229,6 +229,10 @@ export interface Settings {
   effectiveDashboardPath: string;
   /** Uhrzeit (HH:MM), die die Schnell-Eingabe nimmt, wenn nur ein Datum dasteht */
   defaultDueTime: string;
+  /** Uhrzeit der Tageszusammenfassung, in der App eingestellt; null: die Add-on-Option gilt */
+  dailySummaryTime: string | null;
+  defaultDailySummaryTime: string;
+  effectiveDailySummaryTime: string;
 }
 export interface TrashItem {
   type: 'board' | 'column' | 'category' | 'card';
@@ -632,7 +636,7 @@ export const api = {
   restore: (type: TrashItem['type'], id: string) => post<void>(`trash/${type}/${id}/restore`),
 
   settings: () => get<Settings>('settings'),
-  saveSettings: (b: Partial<{ dashboardPath: string | null; panelPath: string | null; defaultDueTime: string | null }>) => put<Settings>('settings', b),
+  saveSettings: (b: Partial<{ dashboardPath: string | null; panelPath: string | null; defaultDueTime: string | null; dailySummaryTime: string | null }>) => put<Settings>('settings', b),
   dashboards: () => get<{ title: string; path: string }[]>('dashboards'),
   testPush: (person: string) => post<{ sent: string[] }>('spike/test-push', { person }),
   /** Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (Container) */

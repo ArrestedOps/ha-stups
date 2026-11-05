@@ -79,7 +79,7 @@
           {#each templates as tpl (tpl.id)}
             <button
               class="flex min-h-12 items-center gap-3 rounded-2xl border border-line bg-surface2 px-4 text-left text-[16px] font-semibold"
-              onclick={() => openSheet({ type: 'watcher', id: null, template: tpl.id })}
+              onclick={() => openSheet({ type: 'watcher', id: null, template: tpl.id, from: 'settings' })}
             >
               <Icon name="eye" size={20} />{tpl.title}
             </button>
@@ -97,7 +97,7 @@
               class="flex min-w-0 flex-1 items-start gap-3 text-left disabled:opacity-100"
               disabled={!admin}
               aria-label={t('Wächter {name} bearbeiten', { name: w.name })}
-              onclick={() => openSheet({ type: 'watcher', id: w.id })}
+              onclick={() => openSheet({ type: 'watcher', id: w.id, from: 'settings' })}
             >
               <span class="mt-0.5 shrink-0 {w.active ? 'text-accent-text' : 'text-fg2'}"><Icon name="eye" size={22} /></span>
               <span class="min-w-0 flex-1">
@@ -151,7 +151,7 @@
     </ul>
 
     {#if admin}
-      <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-[16px] font-semibold text-accent-text" onclick={() => openSheet({ type: 'watcher', id: null })}>
+      <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-[16px] font-semibold text-accent-text" onclick={() => openSheet({ type: 'watcher', id: null, from: 'settings' })}>
         <Icon name="plus" size={18} stroke={2.6} />{t('Wächter hinzufügen')}
       </button>
     {/if}

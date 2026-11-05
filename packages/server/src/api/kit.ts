@@ -67,6 +67,8 @@ export interface ApiDeps {
   access?: Access;
   /** Vorgabe aus den Add-on-Optionen */
   defaultDashboardPath?: string;
+  /** Uhrzeit der Tageszusammenfassung aus den Add-on-Optionen (gilt, solange die App keine eigene hat) */
+  defaultDailySummaryTime?: string;
   /** Eigene Konten mit Passwort (Betrieb ohne Home Assistant); ohne sie gibt es keine Routen für die Benutzerverwaltung */
   accounts?: Accounts;
   passkeys?: Passkeys;

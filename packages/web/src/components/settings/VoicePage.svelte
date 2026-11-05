@@ -4,7 +4,7 @@
   import { t } from '../../lib/i18n/index.svelte';
   import { toast } from '../../lib/store.svelte';
   import Group from '../Group.svelte';
-  import Row from '../Row.svelte';
+  import SettingRow from '../SettingRow.svelte';
   import Page from './Page.svelte';
 
   /** Der Sprachdienst für alle Ansagen im Haus; die Kanäle (Lautsprecher, Lampe) richtet der Administrator bei jeder Person ein */
@@ -40,7 +40,7 @@
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
     <Group title={t('Haus')} hint={t('Der Sprachdienst, mit dem alle Ansagen gesprochen werden. Die Kanäle (Lautsprecher, Lampe) richtest du bei jeder Person ein.')}>
-      <Row label={t('Sprachdienst')}>
+      <SettingRow label={t('Sprachdienst')}>
         <select
           class="min-h-11 max-w-full rounded-xl bg-surface2 px-3"
           value={house.tts ?? ''}
@@ -51,7 +51,7 @@
           <option value="">{t('Nicht gewählt')}</option>
           {#each entities?.tts ?? [] as o (o.entityId)}<option value={o.entityId}>{o.name}</option>{/each}
         </select>
-      </Row>
+      </SettingRow>
     </Group>
   {/if}
 </Page>

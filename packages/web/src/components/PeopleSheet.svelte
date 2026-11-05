@@ -8,7 +8,7 @@
   import HouseChannels from './HouseChannels.svelte';
   import PersonDelivery from './PersonDelivery.svelte';
   import Icon from './Icon.svelte';
-  import Row from './Row.svelte';
+  import SettingRow from './SettingRow.svelte';
   import Sheet from './Sheet.svelte';
 
   let info = $state<AccessInfo | null>(null);
@@ -138,11 +138,9 @@
 
 </script>
 
-<Sheet title={t('Personen und Kinder')} onclose={closeSheet}>
+<Sheet title={t('Personen und Zugriff')} onclose={closeSheet}>
   {#snippet left()}
-    <button class="flex min-h-11 items-center pr-3 pl-1 text-[17px] text-accent-text" onclick={() => openSettings()} aria-label={t('Zurück zu den Einstellungen')}>
-      <Icon name="chevron-left" size={24} stroke={2.6} />{t('Einstellungen')}
-    </button>
+    <button class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" onclick={() => openSettings()} aria-label={t('Zurück zu den Einstellungen')}>{t('Zurück')}</button>
   {/snippet}
   {#if loadError}
     <p class="py-10 text-center text-danger">{loadError}</p>
@@ -161,7 +159,7 @@
         ? t('Jeder Home-Assistant-Benutzer kann die App öffnen. Zugewiesen und benachrichtigt werden nur die Personen unten.')
         : t('Nur die Personen unten und Administratoren von Home Assistant kommen hinein. Wer sonst öffnet, erscheint unter „Wartet auf Freigabe“.')}
     >
-      <Row stack>
+      <SettingRow stack>
         <div class="flex gap-2" role="radiogroup" aria-label={t('Zugriff')}>
           {#each [['everyone', t('Alle in Home Assistant')], ['selected', t('Nur diese Personen')]] as [mode, label] (mode)}
             <button
@@ -179,7 +177,7 @@
           {/each}
         </div>
         {#if !admin && !info.managed}<p class="mt-2 text-[13px] text-fg2">{t('Das ändern nur Administratoren von Home Assistant.')}</p>{/if}
-      </Row>
+      </SettingRow>
     </Group>
     {/if}
 
@@ -404,11 +402,11 @@
           hint={t('Personen aus Home Assistant (Einstellungen › Personen). Mit demselben Namen findet Stups sie bei den Wächtern („wer ist zu Hause“).')}
         >
           {#each info.haPersons as hp (hp.userId ?? hp.name)}
-            <Row label={hp.name}>
+            <SettingRow label={hp.name}>
               <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-60" disabled={busy} onclick={() => add(hp.name, hp.userId)}>
                 {t('Hinzufügen')}
               </button>
-            </Row>
+            </SettingRow>
           {/each}
         </Group>
       {:else if feat.ha && info.directoryAvailable === false}
@@ -424,7 +422,7 @@
       {#if info.pending.length}
         <Group title={t('Wartet auf Freigabe')} hint={t('Diese Benutzer haben Stups geöffnet, sind aber keine Person.')}>
           {#each info.pending as u (u.id)}
-            <Row label={u.displayName}>
+            <SettingRow label={u.displayName}>
               <button
                 class="min-h-10 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-60"
                 disabled={busy}
@@ -432,7 +430,7 @@
               >
                 {t('Freigeben')}
               </button>
-            </Row>
+            </SettingRow>
           {/each}
         </Group>
       {/if}
@@ -444,7 +442,7 @@
           : t('Personen aus Home Assistant (Einstellungen › Personen). Wer noch nie angemeldet war, wird beim ersten Öffnen verknüpft.')}
       >
         {#each info.haPersons as hp (hp.userId ?? hp.name)}
-          <Row label={hp.name}>
+          <SettingRow label={hp.name}>
             <button
               class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold disabled:opacity-60"
               disabled={busy}
@@ -452,7 +450,7 @@
             >
               {t('Hinzufügen')}
             </button>
-          </Row>
+          </SettingRow>
         {/each}
         <form onsubmit={addManual} class="flex items-center gap-2 px-4 py-2">
           <input

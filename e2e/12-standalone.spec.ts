@@ -242,7 +242,6 @@ test('ntfy: Thema eintragen, Test-Nachricht kommt an, der Knopf meldet sich zur�
   expect(await ok.json()).toEqual({ result: 'test' });
 
   await settings.getByRole('button', { name: 'Etwas kommt nicht an? Prüfen' }).click();
-  await settings.getByRole('button', { name: 'Stand anzeigen' }).click();
   await expect(settings.getByTestId('ntfy-status')).toContainText('Rückweg der Knöpfe zuletzt geprüft');
   await expect(settings.getByTestId('ntfy-status')).toContainText('Anna: Thema eingetragen');
 });

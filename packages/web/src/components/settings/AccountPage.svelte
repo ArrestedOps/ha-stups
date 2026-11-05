@@ -4,7 +4,7 @@
   import { feat, logout, toast, ui } from '../../lib/store.svelte';
   import Group from '../Group.svelte';
   import PasskeySettings from '../PasskeySettings.svelte';
-  import Row from '../Row.svelte';
+  import SettingRow from '../SettingRow.svelte';
   import Page from './Page.svelte';
 
   /** Eigener Container mit eigener Anmeldung: Passwort, Passkeys, Abmelden (ein Kind meldet sich nur ab) */
@@ -35,7 +35,7 @@
 
 <Page title={t('Konto und Anmeldung')}>
   <Group title={t('Konto')} hint={t('Wenn du dein Passwort änderst, melden sich deine anderen Geräte ab.')}>
-    <Row label={t('Angemeldet als')}><span class="text-fg2">{ui.me?.displayName ?? '—'}</span></Row>
+    <SettingRow label={t('Angemeldet als')}><span class="text-fg2">{ui.me?.displayName ?? '—'}</span></SettingRow>
     {#if ui.isChild}
       <!-- ein Kind meldet sich nur ab; das Passwort ändert der Administrator -->
     {:else if changingPassword}
@@ -49,13 +49,13 @@
         </div>
       </form>
     {:else}
-      <Row label={t('Passwort')}>
+      <SettingRow label={t('Passwort')}>
         <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold" onclick={() => (changingPassword = true)}>{t('Ändern')}</button>
-      </Row>
+      </SettingRow>
     {/if}
-    <Row label={t('Auf diesem Gerät')}>
+    <SettingRow label={t('Auf diesem Gerät')}>
       <button class="min-h-10 rounded-xl bg-surface2 px-4 font-semibold text-danger" onclick={() => void logout()}>{t('Abmelden')}</button>
-    </Row>
+    </SettingRow>
   </Group>
   {#if feat.passkeys && !ui.isChild}<PasskeySettings />{/if}
 </Page>

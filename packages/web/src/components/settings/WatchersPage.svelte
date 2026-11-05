@@ -10,7 +10,7 @@
 <Page title={t('Wächter')}>
   <p class="mt-3 px-1 text-[15px] text-fg2">{t('Karten, die von selbst aus Home Assistant entstehen')}</p>
   {#if ui.isAdmin && ui.watchers?.available}
-    <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-[16px] font-semibold text-accent-text" onclick={() => openSheet({ type: 'watcher', id: null })}>
+    <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-[16px] font-semibold text-accent-text" onclick={() => openSheet({ type: 'watcher', id: null, from: 'settings' })}>
       <Icon name="plus" size={18} stroke={2.6} />{t('Wächter hinzufügen')}
     </button>
   {/if}

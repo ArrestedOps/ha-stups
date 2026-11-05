@@ -285,6 +285,7 @@ await app.register(apiRoutes, {
   directory,
   access,
   defaultDashboardPath: options.dashboardPath,
+  defaultDailySummaryTime: options.dailySummaryTime,
   accounts,
   passkeys,
   betaGate,

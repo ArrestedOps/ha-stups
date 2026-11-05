@@ -4,7 +4,7 @@
   import { t } from '../../lib/i18n/index.svelte';
   import { act, toast, ui } from '../../lib/store.svelte';
   import Group from '../Group.svelte';
-  import Row from '../Row.svelte';
+  import SettingRow from '../SettingRow.svelte';
   import SelectField from '../SelectField.svelte';
   import HeaderToggle from './HeaderToggle.svelte';
   import Page from './Page.svelte';
@@ -48,23 +48,6 @@
     await save(p);
   }
 
-  const yaml = $derived(`type: custom:bubble-card
-card_type: button
-button_type: name
-name: Stups
-icon: mdi:view-column
-tap_action:
-  action: navigate
-  navigation_path: ${ui.settings?.panelPath ?? '/<panel-pfad>'}`);
-
-  async function copyYaml() {
-    try {
-      await navigator.clipboard.writeText(yaml);
-      toast(t('YAML kopiert'));
-    } catch {
-      toast(t('Kopieren nicht möglich, bitte den Text markieren'), { tone: 'error' });
-    }
-  }
 </script>
 
 <Page title={t('Dashboard und Kopfzeile')}>
@@ -74,12 +57,12 @@ tap_action:
       ? t('Dieses Dashboard öffnet „Zurück zum Dashboard“ in den Einstellungen. Die Wahl gilt für alle gemeinsam.')
       : t('Dieses Dashboard öffnet „Zurück zum Dashboard“ in den Einstellungen. Die Wahl gilt für alle und ist Administratoren von Home Assistant vorbehalten.')}
   >
-    <Row label="Dashboard">
+    <SettingRow label="Dashboard">
       <SelectField value={selected} disabled={!loaded || !ui.isAdmin} label="Dashboard" onchange={(e) => onSelect(e.currentTarget.value)}>
         {#each dashboards as d (d.path)}<option value={d.path}>{d.title}</option>{/each}
         <option value={CUSTOM}>{t('Eigener Pfad …')}</option>
       </SelectField>
-    </Row>
+    </SettingRow>
     {#if selected === CUSTOM && ui.isAdmin}
       <form onsubmit={saveCustom} class="flex items-center gap-2 px-4 py-2">
         <input bind:value={custom} placeholder="/dashboard-handy/start" class="min-h-11 min-w-0 flex-1 rounded-xl bg-surface2 px-3" aria-label={t('Eigener Pfad')} />
@@ -90,10 +73,4 @@ tap_action:
 
   <HeaderToggle />
 
-  <Group title={t('Dashboard-Button (Bubble Card)')}>
-    <Row stack>
-      <pre class="overflow-x-auto rounded-xl bg-surface2 p-3 text-[13px] leading-relaxed">{yaml}</pre>
-      <button class="mt-2 min-h-10 rounded-xl bg-surface2 px-4 font-semibold" onclick={copyYaml}>{t('Kopieren')}</button>
-    </Row>
-  </Group>
 </Page>

@@ -46,8 +46,12 @@ export class WatcherEditor {
     this.id = id;
   }
 
-  /** Aus dem Reiter „Wächter" geht es dorthin zurück, sonst in die Einstellungen */
-  back = (): void => (ui.tab === 'watchers' ? closeSheet() : openSettings('watchers'));
+  /** Aus Einstellungen › Wächter geht es dorthin zurück; aus dem Reiter Wächter schließt es das Fenster, von anderswo geht es in die Einstellungen */
+  back = (): void => {
+    const fromSettings = ui.sheet?.type === 'watcher' && ui.sheet.from === 'settings';
+    if (!fromSettings && ui.tab === 'watchers') closeSheet();
+    else openSettings('watchers');
+  };
 
   personName = (pid: string): string => ui.people.find((p) => p.id === pid)?.displayName ?? '?';
 

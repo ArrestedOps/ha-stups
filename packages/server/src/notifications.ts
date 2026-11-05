@@ -210,7 +210,7 @@ export function createNotifier(deps: NotifierDeps) {
 
   async function summaries(cards: OpenDueCard[], nowMs: number, tz: string): Promise<number> {
     const minutes = minutesOfDay(nowMs, tz);
-    const start = parseHm(options.dailySummaryTime);
+    const start = parseHm(store.getSettings().dailySummaryTime ?? options.dailySummaryTime);
     if (minutes < start) return 0;
     const date = localDateKey(nowMs, tz);
     let sent = 0;

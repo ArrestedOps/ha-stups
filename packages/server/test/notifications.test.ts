@@ -439,6 +439,30 @@ describe('Tageszusammenfassung', () => {
     expect(calls.filter((c) => c.data.data.tag === 'stups-summary')).toHaveLength(0);
   });
 
+  it('die in der App eingestellte Uhrzeit hat Vorrang vor der Add-on-Option (feste Uhr, Berlin)', async () => {
+    card({ title: 'Müll', dueAt: '2026-11-01T15:00:00Z', assigneeIds: [conny.id] });
+    const n = makeNotifier({ summaryTime: '08:00' }); // Option: 08:00
+    store.setSettings({ dailySummaryTime: '10:30' }); // App: 10:30
+
+    now = new Date('2026-11-01T07:30:00Z'); // 08:30, die Option wäre schon dran
+    await n.tick();
+    expect(calls.filter((c) => c.data.data.tag === 'stups-summary')).toHaveLength(0);
+
+    now = new Date('2026-11-01T09:30:00Z'); // 10:30
+    await n.tick();
+    expect(calls.filter((c) => c.data.data.tag === 'stups-summary')).toHaveLength(1);
+  });
+
+  it('ohne Eintrag in der App gilt wieder die Option', async () => {
+    card({ title: 'Müll', dueAt: '2026-11-01T15:00:00Z', assigneeIds: [conny.id] });
+    const n = makeNotifier({ summaryTime: '08:00' });
+    store.setSettings({ dailySummaryTime: '10:30' });
+    store.setSettings({ dailySummaryTime: null });
+    now = new Date('2026-11-01T07:00:00Z'); // 08:00
+    await n.tick();
+    expect(calls.filter((c) => c.data.data.tag === 'stups-summary')).toHaveLength(1);
+  });
+
   it('kommt am nächsten Tag wieder', async () => {
     card({ title: 'Müll', dueAt: '2026-11-03T15:00:00Z', assigneeIds: [conny.id] });
     const n = makeNotifier({ summaryTime: '08:00' });

@@ -185,7 +185,14 @@ describe('Einstellungen mit Wirkung auf alle', () => {
     expect((await call(anna, 'PUT', '/api/settings', { dashboardPath: '/dashboard-handy' })).status).toBe(403);
     expect((await call(anna, 'PUT', '/api/settings', { panelPath: '/abc_stups' })).status).toBe(200);
     expect((await call(chef, 'PUT', '/api/settings', { dashboardPath: '/dashboard-handy' })).status).toBe(200);
-    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy', panelPath: '/abc_stups', defaultDueTime: '09:00' });
+    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy', panelPath: '/abc_stups', defaultDueTime: '09:00', dailySummaryTime: null });
+  });
+
+  it('die Uhrzeit der Tageszusammenfassung ändert nur ein Administrator', async () => {
+    expect((await call(anna, 'PUT', '/api/settings', { dailySummaryTime: '07:15' })).status).toBe(403);
+    expect(store.getSettings().dailySummaryTime).toBeNull();
+    expect((await call(chef, 'PUT', '/api/settings', { dailySummaryTime: '07:15' })).status).toBe(200);
+    expect(store.getSettings().dailySummaryTime).toBe('07:15');
   });
 
   it('die Standard-Uhrzeit für Termine ändert nur ein Administrator', async () => {

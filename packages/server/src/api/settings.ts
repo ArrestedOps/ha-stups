@@ -13,14 +13,21 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
   const effectiveSettings = () => {
     const s = store.getSettings();
     const fallback = deps.defaultDashboardPath ?? '/';
-    return { ...s, defaultDashboardPath: fallback, effectiveDashboardPath: s.dashboardPath ?? fallback };
+    const summary = deps.defaultDailySummaryTime ?? '08:00';
+    return {
+      ...s,
+      defaultDashboardPath: fallback,
+      effectiveDashboardPath: s.dashboardPath ?? fallback,
+      defaultDailySummaryTime: summary,
+      effectiveDailySummaryTime: s.dailySummaryTime ?? summary,
+    };
   };
   app.get('/api/settings', async () => effectiveSettings());
   app.put('/api/settings', async (req) => {
     const b = body(req);
     // Der Panel-Pfad kommt von jedem Gerät, das Dashboard gilt für alle
-    if (b.dashboardPath !== undefined || b.defaultDueTime !== undefined) requireAdmin(req);
-    store.setSettings({ dashboardPath: b.dashboardPath, panelPath: b.panelPath, defaultDueTime: b.defaultDueTime });
+    if (b.dashboardPath !== undefined || b.defaultDueTime !== undefined || b.dailySummaryTime !== undefined) requireAdmin(req);
+    store.setSettings({ dashboardPath: b.dashboardPath, panelPath: b.panelPath, defaultDueTime: b.defaultDueTime, dailySummaryTime: b.dailySummaryTime });
     return effectiveSettings();
   });
   // Beta: Push und Wächter sind zunächst aus (siehe beta-gate.ts). Jeder sieht den Stand, Administratoren ändern ihn.

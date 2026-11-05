@@ -4,7 +4,7 @@
   import { api, ApiError, type BetaState } from '../lib/api';
   import { toast, ui } from '../lib/store.svelte';
   import Group from './Group.svelte';
-  import Row from './Row.svelte';
+  import SettingRow from './SettingRow.svelte';
 
   let gate = $state<BetaState | null>(null);
   let busy = $state(false);
@@ -61,7 +61,7 @@
         {/each}
       </div>
     </div>
-    <Row label={t('Wächter')}>
+    <SettingRow label={t('Wächter')}>
       <input
         type="checkbox"
         class="h-6 w-6 accent-[var(--accent)]"
@@ -70,6 +70,6 @@
         aria-label={t('Wächter in der Beta einschalten')}
         onchange={(e) => change({ watchers: e.currentTarget.checked })}
       />
-    </Row>
+    </SettingRow>
   {/if}
 </Group>

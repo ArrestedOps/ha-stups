@@ -37,6 +37,7 @@ beforeEach(async () => {
       listNotifyServices: async () => ['mobile_app_rene'],
     },
     defaultDashboardPath: '/lovelace/0',
+    defaultDailySummaryTime: '08:00',
     fetchTitle: async () => null,
     resolveMapsLink: async (url: string) =>
       url.includes('maps.app.goo.gl')
@@ -130,6 +131,20 @@ describe('Einstellungen und Dashboards', () => {
     expect((await call('PUT', '/api/settings', { defaultDueTime: '07:30' })).body.defaultDueTime).toBe('07:30');
     expect((await call('GET', '/api/settings')).body.defaultDueTime).toBe('07:30');
     expect((await call('PUT', '/api/settings', { defaultDueTime: null })).body.defaultDueTime).toBe('09:00');
+  });
+
+  it('Tageszusammenfassung: Vorgabe aus den Optionen, in der App einstellbar, zurücksetzen, ungültig abgelehnt', async () => {
+    const first = (await call('GET', '/api/settings')).body;
+    expect(first.dailySummaryTime).toBeNull();
+    expect(first.defaultDailySummaryTime).toBe('08:00');
+    expect(first.effectiveDailySummaryTime).toBe(first.defaultDailySummaryTime);
+    const put = (await call('PUT', '/api/settings', { dailySummaryTime: '06:45' })).body;
+    expect(put).toMatchObject({ dailySummaryTime: '06:45', effectiveDailySummaryTime: '06:45' });
+    expect((await call('PUT', '/api/settings', { dailySummaryTime: '6:45' })).status).toBe(400);
+    expect((await call('GET', '/api/settings')).body.dailySummaryTime).toBe('06:45');
+    const reset = (await call('PUT', '/api/settings', { dailySummaryTime: null })).body;
+    expect(reset.dailySummaryTime).toBeNull();
+    expect(reset.effectiveDailySummaryTime).toBe(first.defaultDailySummaryTime);
   });
 
   it('lehnt eine Standard-Uhrzeit ab, die keine Uhrzeit ist', async () => {

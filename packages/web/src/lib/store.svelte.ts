@@ -34,7 +34,7 @@ export type Sheet =
   | { type: 'boardSettings' }
   | { type: 'settings'; page?: SettingsPageId }
   | { type: 'people' }
-  | { type: 'watcher'; id: string | null; template?: string; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
+  | { type: 'watcher'; id: string | null; template?: string; /** geöffnet aus Einstellungen › Wächter: dorthin geht Zurück */ from?: 'settings'; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
   | { type: 'found' }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }

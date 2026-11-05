@@ -35,10 +35,10 @@ async function setup(request: APIRequestContext) {
 const cardsOf = async (request: APIRequestContext, boardId: string) =>
   ((await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { id: string; title: string; columnId: string; assigneeIds: string[]; completedAt: string | null; dueAt: string | null; watcherId: string | null }[] }).cards;
 
-/** Einstellungen › Haushalt › Wächter (die Verwaltung; den Zustand zeigt der Reiter Wächter) */
+/** Reiter Wächter › „Alle Wächter verwalten" (die Verwaltung; die Übersicht der Einstellungen hat keine Zeile Wächter mehr) */
 async function openWatchersPage(page: Page) {
-  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Wächter' }).click();
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
+  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
 }
 
 async function openWatcherForm(page: Page) {

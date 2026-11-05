@@ -318,6 +318,8 @@ export interface Settings {
   panelPath: string | null;
   /** Uhrzeit (HH:MM), die die Schnell-Eingabe nimmt, wenn nur ein Datum dasteht */
   defaultDueTime: string;
+  /** Uhrzeit (HH:MM) der Tageszusammenfassung, in der App eingestellt; null = die Add-on-Option gilt */
+  dailySummaryTime: string | null;
 }
 
 export const DEFAULT_DUE_TIME = '09:00';

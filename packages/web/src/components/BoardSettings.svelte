@@ -20,7 +20,7 @@
   const columns = $derived(view?.columns ?? []);
   const categories = $derived(view?.categories ?? []);
 
-  let boardName = $state('');
+  let boardName = $derived(view?.board.name ?? '');
   let newColumn = $state('');
   let newCategory = $state('');
   let newColor = $state<string>('blue');
@@ -35,9 +35,6 @@
   let archivedCount = $state<number | null>(null);
   let trashCount = $state<number | null>(null);
 
-  $effect(() => {
-    boardName = view?.board.name ?? '';
-  });
   onMount(() => {
     if (ui.boardId) void api.archived(ui.boardId).then((l) => (archivedCount = l.length)).catch(() => undefined);
     void api.trash().then((l) => (trashCount = l.length)).catch(() => undefined);

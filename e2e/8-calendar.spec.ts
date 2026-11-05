@@ -3,7 +3,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 
 test.describe.configure({ timeout: 90_000 });
 
-const HOUR_PX = 56;
+const HOUR_PX = 44;
 
 async function seed(request: APIRequestContext) {
   const tag = Date.now().toString(36);
@@ -47,7 +47,7 @@ test('Kalender: Tagesansicht zeigt die Karte zur Uhrzeit, Filter nach Person', a
   await expect(page.getByRole('dialog').locator('input, textarea').first()).toHaveValue(s.t.conny);
 });
 
-test('Kalender: Monatsansicht, Tipp auf einen Tag öffnet die Tagesansicht', async ({ page, request }) => {
+test('Kalender: Monatsansicht, Tipp auf einen Tag zeigt seine Karten, „Tagesansicht öffnen" die Tagesansicht', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
   await openBoards(page);
@@ -57,6 +57,10 @@ test('Kalender: Monatsansicht, Tipp auf einen Tag öffnet die Tagesansicht', asy
   await expect(today).toBeVisible();
   await expect(today).toHaveAttribute('aria-label', /[2-9]\d* Karten|[1-9]\d+ Karten/);
   await today.click();
+  await expect(today).toHaveAttribute('aria-pressed', 'true');
+  // die Karten des Tages stehen unter dem Monat
+  await expect(page.getByTestId('calendar-daylist').getByText(s.t.conny)).toBeVisible();
+  await page.getByRole('button', { name: 'Tagesansicht öffnen' }).click();
   await expect(page.getByRole('radiogroup', { name: 'Ansicht' }).getByRole('radio', { name: 'Tag' })).toHaveAttribute('aria-checked', 'true');
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
 });
@@ -77,7 +81,7 @@ test('Kalender: auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Ter
   await grid.evaluate((el, [px, h]) => (el.scrollTop = h * px), [HOUR_PX, hour - 1]);
   const column = page.getByRole('button', { name: /^Neue Karte am/ });
   const box = (await column.boundingBox())!;
-  await page.mouse.click(box.x + box.width / 2, box.y + hour * HOUR_PX + 20);
+  await page.mouse.click(box.x + box.width / 2, box.y + hour * HOUR_PX + 14);
 
   await expect(page.getByTestId('slot-time')).toContainText(`${String(hour).padStart(2, '0')}:00`);
   await page.getByRole('textbox', { name: 'Titel' }).fill(title);

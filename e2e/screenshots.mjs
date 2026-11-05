@@ -326,9 +326,9 @@ const screens = [
     await calendar(page, x('Tag', 'Day'));
     await page.getByRole('button', { name: re(S.parcel) }).waitFor();
     const grid = page.getByTestId('calendar-grid');
-    await grid.evaluate((el) => (el.scrollTop = 11 * 56));
+    await grid.evaluate((el) => (el.scrollTop = 11 * 44));
     const box = await page.getByRole('button', { name: x(/^Neue Karte am/, /^New card on/) }).boundingBox();
-    await page.mouse.click(box.x + box.width / 2, box.y + 12 * 56 + 20);
+    await page.mouse.click(box.x + box.width / 2, box.y + 12 * 44 + 14);
     await page.getByLabel(x('Titel', 'Title')).fill(S.dentist);
   }],
   ['board-wechseln', async (page) => { await switcher(page); await page.getByRole('dialog').getByText(S.boardShop).waitFor(); }],

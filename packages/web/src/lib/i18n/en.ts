@@ -1230,4 +1230,6 @@ export const en: Catalog = {
   'noch {n} Tage': '{n} days left',
   '{title} wiederherstellen': 'Restore {title}',
   '{n} Eintrag': ['{n} entry', '{n} entries'],
+  'Nichts fällig an diesem Tag.': 'Nothing due on this day.',
+  'Tagesansicht öffnen': 'Open day view',
 };

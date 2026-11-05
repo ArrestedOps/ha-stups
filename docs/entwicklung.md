@@ -296,7 +296,7 @@ Die CI bricht ab, wenn die Version nicht zum Branch passt (eine Beta-Version ohn
 - Das Wischen ist nur mit Touch aktiv, die Maus zieht (Drag & Drop, ab 1024 px Breite).
 - Der Server nimmt Anfragen nur vom Ingress-Proxy (`172.30.32.2`) an.
 
-### Sicherheitsregeln (seit 1.25.2)
+### Sicherheitsregeln (seit 1.26.1)
 
 Diese Regeln gelten für jede Änderung; zu jeder gibt es Tests.
 
@@ -310,7 +310,7 @@ Diese Regeln gelten für jede Änderung; zu jeder gibt es Tests.
 - **Anmeldesperre** (`session-auth.ts`): je Adresse gesperrt (5 Versuche, dann 1, 2, … höchstens 30 Minuten), je Konto nur **verzögert** (ab dem 6. Versuch in 15 Minuten nacheinander mit 0,5 bis 8 Sekunden Abstand, Staugrenze 15 Sekunden, richtiges Passwort setzt zurück), damit niemand einen Besitzer aussperren kann. Hinter einem Reverse Proxy `STUPS_TRUST_PROXY` setzen (siehe docs/docker.md).
 - **Migrationen** (`db.ts`): Fremdschlüssel sind während der Migrationen aus (sonst löst ein `drop table` im Stil von Migration 20 `on delete cascade` aus und löscht abhängige Zeilen); nach jeder Migration prüft `foreign_key_check`, neue Verstöße rollen zurück. Die Tabelle nach dem 12-Schritte-Verfahren von SQLite umbauen (neue Tabelle, kopieren, alte löschen, umbenennen). Test: `migration-filled.test.ts` hebt befüllte Datenbanken (Stand 9, 19, 21) über die echten Migrationen, bei jeder neuen Migration den Stand davor dort ergänzen.
 
-### Oberfläche: Anfragen, Uhr, Fenster (seit 1.25.2)
+### Oberfläche: Anfragen, Uhr, Fenster (seit 1.26.1)
 
 - `req()` in `lib/api.ts` bricht nach 30 Sekunden ab (Uploads 120 Sekunden) mit `ApiError` Status 0 und dem Text „Zeitüberschreitung“; ein übergebenes `AbortSignal` wirkt ebenfalls. Nie eine Anfrage ohne Zeitlimit bauen.
 - `lib/latest.ts` (`createLatest().run(fn)`): gegen veraltete Antworten. Wer in einem `$effect` lädt (`void ui.rev`), nutzt es, statt eigene Zähler zu bauen; `run` bricht die alte Anfrage ab (Signal an `api.x(…, signal)` weitergeben) und liefert `{ current: false }`, wenn eine neuere begann. Angewendet in CardSheet, WatchersList, EntityPicker, DryRunPanel.

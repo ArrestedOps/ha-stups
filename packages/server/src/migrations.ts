@@ -479,4 +479,15 @@ export const migrations: Migration[] = [
       );
     `,
   },
+  {
+    version: 22,
+    // Neues Design, Phase 3: Symbol und Farbe je Karte. icon = Name aus der Symbol-Bibliothek der Oberfläche (leer = Standard
+    // „Aufgabe"), icon_color = eine der acht Kachelfarben (leer = Auto, nach Bereich des Symbols), icon_source = auto (aus dem Titel
+    // erkannt) oder manual (von Hand gewählt). Keine Massenänderung: vorhandene Karten bleiben leer.
+    sql: `
+      alter table cards add column icon text;
+      alter table cards add column icon_color text;
+      alter table cards add column icon_source text check (icon_source in ('auto', 'manual'));
+    `,
+  },
 ];

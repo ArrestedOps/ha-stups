@@ -14,10 +14,18 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
     expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'summary', 'dashboard', 'bubble', 'voice', 'report', 'data']);
   });
 
-  it('Mitglied: nur „Für mich" und „Hilfe und Daten"', () => {
+  it('Mitglied: „Für mich", „Home Assistant" (nur die eigene Dashboard-Wahl) und „Hilfe und Daten"', () => {
     const member = { ...addon, isAdmin: false };
-    expect(groupIds(member)).toEqual(['me', 'help']);
-    expect(ids(member)).toEqual(['notifications', 'look', 'report', 'data']);
+    expect(groupIds(member)).toEqual(['me', 'ha', 'help']);
+    expect(ids(member)).toEqual(['notifications', 'look', 'dashboard', 'report', 'data']);
+  });
+
+  it('Dashboard-Wahl: jede Person im Add-on, nie ein Kind, nie im eigenen Container', () => {
+    expect(ids(addon)).toContain('dashboard');
+    expect(ids({ ...addon, isAdmin: false })).toContain('dashboard');
+    expect(ids({ ...addon, isAdmin: false, isChild: true })).not.toContain('dashboard');
+    expect(ids({ ...addon, isChild: true })).not.toContain('dashboard'); // auch ein Administrator, der als Kind eingetragen ist
+    expect(ids({ ...addon, standalone: true, haUi: false })).not.toContain('dashboard');
   });
 
   it('Kind im Add-on: nur Sprache und Farbe', () => {
@@ -82,19 +90,20 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
   });
 });
 
-describe('Einstellungen › Home Assistant: „Zurück zum Dashboard" und „HA-Kopfzeile ausblenden" für alle im Add-on', () => {
+describe('Einstellungen › Home Assistant: „HA-Kopfzeile ausblenden" für alle im Add-on ("Zurück zum Dashboard" ist der Home-Knopf oben)', () => {
   const overview = (ctx: SettingsCtx) => settingsOverview(ctx).map((g) => [g.id, g.actions ?? []]);
 
-  it('im Add-on steht die Gruppe für jede Rolle da, auch für Mitglied und Kind (die Kopfzeile oben hat keinen Dashboard-Knopf mehr)', () => {
+  it('im Add-on steht die Gruppe für jede Rolle da, auch für Mitglied und Kind (der Home-Knopf oben ersetzt die Zeile „Zurück zum Dashboard")', () => {
     const member = { ...addon, isAdmin: false };
-    expect(overview(member)).toEqual([['me', []], ['ha', ['back', 'header']], ['help', []]]);
-    expect(overview({ ...member, isChild: true })).toEqual([['me', []], ['ha', ['back', 'header']]]);
+    expect(overview(member)).toEqual([['me', []], ['ha', ['header']], ['help', []]]);
+    expect(overview({ ...member, isChild: true })).toEqual([['me', []], ['ha', ['header']]]);
     expect(settingsOverview({ ...member, isChild: true }).find((g) => g.id === 'ha')!.pages).toEqual([]);
   });
 
-  it('der Administrator behält dort Dashboard-Auswahl und Ansage, dazu die beiden Aktionen', () => {
+  it('der Administrator behält dort Dashboard-Auswahl und Ansage, dazu die Aktion', () => {
     const g = settingsOverview(addon).find((x) => x.id === 'ha')!;
-    expect(g.actions).toEqual(['back', 'header']);
+    expect(g.actions).toEqual(['header']);
+    expect(settingsOverview(addon).flatMap((x) => x.actions ?? [])).not.toContain('back');
     expect(g.pages.map((p) => p.id)).toEqual(['dashboard', 'bubble', 'voice']);
   });
 

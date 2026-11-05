@@ -1,19 +1,19 @@
 <script lang="ts">
   import logo from '../assets/stups-icon.png';
-  import { currentInbox } from '../lib/agenda.svelte';
+  import { unread } from '../lib/inbox.svelte';
   import { t } from '../lib/i18n/index.svelte';
-  import { openSheet, ui } from '../lib/store.svelte';
+  import { feat, goToDashboard, openSheet, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
 
   /**
-   * Kopf aller drei Reiter wie im Mockup: Zeile mit Logo und Wortmarke, rechts Glocke (mit Punkt, wenn etwas für mich offen ist),
-   * Zahnrad (Einstellungen) und Profilbild (ebenfalls Einstellungen, dort steht oben das Profil), darunter Titel und Untertitel des Reiters.
-   * „Zurück zum Dashboard" und „HA-Kopfzeile ausblenden" stehen in den Einstellungen unter „Home Assistant".
+   * Kopf aller drei Reiter wie im Mockup: Zeile mit Logo und Wortmarke, rechts Home (nur in Home Assistant: zurück zum Dashboard der Person),
+   * Glocke (mit Punkt, wenn es Ungelesenes gibt), Zahnrad (Einstellungen) und Profilbild (ebenfalls Einstellungen, dort steht oben das Profil),
+   * darunter Titel und Untertitel des Reiters. Welches Dashboard der Home-Knopf öffnet, wählt jede Person unter Einstellungen › Home Assistant.
    */
   let { title, sub, subTestid }: { title: string; sub: string; subTestid?: string } = $props();
 
-  const open = $derived(currentInbox().length > 0);
+  const fresh = $derived(unread() > 0);
 </script>
 
 <div>
@@ -26,14 +26,19 @@
         <Icon name="wifi-off" size={14} />Offline
       </span>
     {/if}
+    {#if feat.haUi}
+      <button class="flex h-11 w-11 items-center justify-center rounded-full text-text-soft" aria-label={t('Zurück zu Home Assistant')} data-testid="home-button" onclick={goToDashboard}>
+        <Icon name="home" size={24} />
+      </button>
+    {/if}
     <button
       class="relative flex h-11 w-11 items-center justify-center rounded-full text-text-soft"
-      aria-label={open ? t('Mitteilungen, etwas ist offen') : t('Mitteilungen')}
+      aria-label={fresh ? t('Mitteilungen, es gibt Ungelesenes') : t('Mitteilungen')}
       data-testid="bell"
       onclick={() => openSheet({ type: 'notifications' })}
     >
       <Icon name="bell" size={24} />
-      {#if open}<span class="absolute top-[9px] right-[11px] h-[9px] w-[9px] rounded-full bg-brand-dot" data-testid="bell-dot"></span>{/if}
+      {#if fresh}<span class="absolute top-[9px] right-[11px] h-[9px] w-[9px] rounded-full bg-brand-dot" data-testid="bell-dot"></span>{/if}
     </button>
     <button class="flex h-11 w-11 items-center justify-center rounded-full text-text-soft" aria-label={t('Einstellungen öffnen')} onclick={() => openSheet({ type: 'settings' })}>
       <Icon name="gear" size={24} />

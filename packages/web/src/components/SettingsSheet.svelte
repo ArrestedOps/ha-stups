@@ -2,7 +2,7 @@
   import { settingsOverview } from '../lib/settingsPages';
   import { applyHeaderHiding, isHeaderHidingWanted, setHeaderHidingWanted, showHaHeader } from '../lib/hideHaHeader';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { closeSheet, feat, goToDashboard, openSettings, ui } from '../lib/store.svelte';
+  import { closeSheet, feat, openSettings, ui } from '../lib/store.svelte';
   import AccountPage from './settings/AccountPage.svelte';
   import BetaPage from './settings/BetaPage.svelte';
   import DashboardPage from './settings/DashboardPage.svelte';
@@ -58,7 +58,7 @@
     icons: { color: 'orange', meta: () => t('Symbole aus Titeln erkennen') },
     dates: { color: 'teal', meta: () => t('Standard-Uhrzeit für Termine') },
     summary: { color: 'gray', meta: () => t('morgens, wenn etwas ansteht') },
-    dashboard: { color: 'teal', meta: () => t('Ziel des Zurück-Knopfs') },
+    dashboard: { color: 'teal', meta: () => t('Ziel des Home-Knopfs') },
     bubble: { color: 'purple', meta: () => t('YAML für die Bubble Card') },
     voice: { color: 'blue', meta: () => t('Ansage und Lampe im Haus') },
     report: { color: 'gray', meta: () => t('Stand jeder Person und jedes Geräts') },
@@ -105,13 +105,6 @@
       {#each groups as g (g.id)}
         <div class="flex flex-col gap-2">
           <SectionHeader title={g.title} />
-          {#if g.actions?.includes('back')}
-            <ListRow title={t('Zurück zum Dashboard')} onclick={goToDashboard}>
-              {#snippet tile()}<Tile color="teal"><Icon name="home" size={22} stroke={1.8} /></Tile>{/snippet}
-              {#snippet meta()}{t('wohin der Zurück-Knopf führt')}{/snippet}
-              {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
-            </ListRow>
-          {/if}
           {#if g.actions?.includes('header')}
             <ListRow title={t('HA-Kopfzeile ausblenden')}>
               {#snippet tile()}<Tile color="gray"><Icon name="columns" size={22} stroke={1.8} /></Tile>{/snippet}

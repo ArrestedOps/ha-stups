@@ -26,6 +26,7 @@
     dashed = false,
     wrap = false,
     expanded,
+    pressed,
     inset = false,
     onclick,
     href,
@@ -51,6 +52,8 @@
     wrap?: boolean;
     /** der Antippbereich klappt etwas auf (aria-expanded) */
     expanded?: boolean;
+    /** der Antippbereich ist eine Auswahl (aria-pressed): die gewählte Zeile */
+    pressed?: boolean;
     /** Zeile in einer Karte (Ablauf im Wächter-Editor): dunkler Grund, 64 px hoch statt 68 */
     inset?: boolean;
     onclick?: (e: MouseEvent) => void;
@@ -95,7 +98,7 @@
   {#if href}
     <a {href} aria-label={label} class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left">{@render body()}</a>
   {:else if onclick}
-    <button type="button" aria-label={label} aria-expanded={expanded} class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left" {onclick}>{@render body()}</button>
+    <button type="button" aria-label={label} aria-expanded={expanded} aria-pressed={pressed} class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left" {onclick}>{@render body()}</button>
   {:else}
     <div class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'}">{@render body()}</div>
   {/if}

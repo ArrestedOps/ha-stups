@@ -28,13 +28,14 @@
   import NotificationsSheet from './components/NotificationsSheet.svelte';
   import FilterSheet from './components/FilterSheet.svelte';
   import { loadAgenda } from './lib/agenda.svelte';
+  import { loadInbox } from './lib/inbox.svelte';
   import { agendaDelay } from './lib/agendaGate';
   import { columnForNew } from './lib/calendar';
   import { init, openSheet, ui } from './lib/store.svelte';
 
   onMount(init);
 
-  // Aufgaben und die Glocke oben (Punkt für „etwas ist offen") teilen sich dieselben Daten. Auf „Aufgaben" laden sie bei jeder Änderung neu,
+  // Aufgaben und die Glocke oben (Punkt für Ungelesenes aus dem Posteingang) laden im selben Takt: Auf „Aufgaben" laden sie bei jeder Änderung neu,
   // auf den anderen Reitern höchstens alle 30 Sekunden (sonst holte jede Änderung einer Karte zusätzlich alle Termine aller Boards)
   let lastAgenda = 0;
   let agendaTimer: ReturnType<typeof setTimeout> | null = null;
@@ -47,6 +48,7 @@
       agendaTimer = null;
       lastAgenda = Date.now();
       void loadAgenda();
+      void loadInbox();
     };
     if (wait === 0) {
       if (agendaTimer) clearTimeout(agendaTimer);

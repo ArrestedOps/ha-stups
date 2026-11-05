@@ -12,6 +12,7 @@ import {
   type WatcherItem,
 } from './api';
 import { deviceTz, formatDue } from './datetime';
+import { readHaDefaultPanel, resolveDashboardPath, type DashboardSource } from './dashboard';
 import { applyHeaderHiding } from './hideHaHeader';
 import { applyAccent, hueFromStorage, type Scheme } from './accent';
 import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLanguage, t } from './i18n/index.svelte';
@@ -452,8 +453,17 @@ function reportPanelPath(): void {
   }
 }
 
+/** Das Ziel des Home-Knopfs für diese Person (ein Kind immer der Standard) */
+export function dashboardTarget(): { path: string; source: DashboardSource } {
+  return resolveDashboardPath({
+    person: ui.isChild ? null : (ui.me?.dashboardPath ?? null),
+    haDefaultPanel: readHaDefaultPanel(),
+    addon: ui.settings?.effectiveDashboardPath ?? null,
+  });
+}
+
 export function goToDashboard(): void {
-  const path = ui.settings?.effectiveDashboardPath ?? '/';
+  const { path } = dashboardTarget();
   try {
     if (window.parent === window) {
       toast(t('Zurück zum Dashboard geht nur innerhalb von Home Assistant'));

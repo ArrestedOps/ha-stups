@@ -26,6 +26,8 @@ export interface User {
   language: 'de' | 'en' | null;
   /** Eigener Farbton der Oberfläche (0–359); null: das Orange der App */
   accentHue: number | null;
+  /** Das Dashboard, zu dem der Home-Knopf diese Person führt (Pfad in Home Assistant); null: Standard */
+  dashboardPath: string | null;
   /** Sonntags-Zusammenfassung als Push (aus, bis die Person sie einschaltet) */
   weeklySummary: boolean;
   /** Rolle „Kind": eingeschränkte Rechte, der Administrator legt sie fest */
@@ -298,6 +300,33 @@ export interface TemplateInfo {
 
 // ---------- Heute ----------
 
+/** Ein Eintrag im Posteingang (Glocke); der Server liefert Art und Daten, den Satz bildet lib/inbox.ts in der Sprache der Person */
+export type InboxKind = 'nudge' | 'reply' | 'watcher' | 'done' | 'comment' | 'reminder' | 'change' | 'confirm';
+export interface InboxEntry {
+  id: string;
+  kind: InboxKind;
+  at: string;
+  cardId: string;
+  cardTitle: string;
+  boardId: string;
+  actorId: string | null;
+  text: string | null;
+  detail: string | null;
+  watcherName: string | null;
+  assigned: boolean;
+  dueAt: string | null;
+}
+export interface InboxPage {
+  items: InboxEntry[];
+  seenAt: string | null;
+  hasMore: boolean;
+}
+export interface HaDashboards {
+  items: { path: string; title: string }[];
+  addonPath: string;
+  connected: boolean;
+}
+
 export interface TodayCard {
   id: string;
   title: string;
@@ -529,6 +558,8 @@ export const api = {
   access: () => get<AccessInfo>('access'),
   fairness: (period: 'week' | 'month') => get<Fairness>(`fairness?period=${period}`),
   today: () => get<Today>('today'),
+  inbox: (before?: string) => get<InboxPage>(`inbox${before ? `?before=${encodeURIComponent(before)}` : ''}`),
+  markInboxSeen: () => put<{ seenAt: string }>('me/inbox-seen', {}),
   /** Weitergeben: `to` ist die neue Person, null wenn gerade niemand sonst dran ist */
   passCard: (id: string) => post<{ to: string | null }>(`cards/${id}/pass`),
   /** Übernehmen ("Erst vorschlagen") */
@@ -637,7 +668,8 @@ export const api = {
 
   settings: () => get<Settings>('settings'),
   saveSettings: (b: Partial<{ dashboardPath: string | null; panelPath: string | null; defaultDueTime: string | null; dailySummaryTime: string | null }>) => put<Settings>('settings', b),
-  dashboards: () => get<{ title: string; path: string }[]>('dashboards'),
+  haDashboards: () => get<HaDashboards>('ha/dashboards'),
+  saveDashboard: (path: string | null) => put<void>('me/dashboard', { path }),
   testPush: (person: string) => post<{ sent: string[] }>('spike/test-push', { person }),
   /** Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (Container) */
   testPushOwn: () => post<{ sent: boolean }>('push/test'),

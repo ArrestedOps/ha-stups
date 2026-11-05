@@ -26,6 +26,8 @@ export interface InboxEntry {
   watcherName: string | null;
   /** Wächter: die Karte ist mir zugewiesen (sonst sucht sie noch jemanden) */
   assigned: boolean;
+  /** Termin der Karte (nur bei Erinnerungen: „überfällig seit …") */
+  dueAt: string | null;
 }
 
 export interface InboxResult {
@@ -82,6 +84,7 @@ export function createInbox(c: Ctx, late: unknown) {
       detail: null,
       watcherName: null,
       assigned: false,
+      dueAt: null,
       ...e,
     });
     const LIM = INBOX_LIMIT + 1;
@@ -152,13 +155,13 @@ export function createInbox(c: Ctx, late: unknown) {
 
     // Was ich als Erinnerung bekommen habe: fällig, vorab, überfällig (Zusammenfassungen haben keine Karte)
     for (const r of all(
-      `select x.id, x.kind, x.sent_at, c.id as card_id, c.title, c.board_id from sent_notifications x
+      `select x.id, x.kind, x.sent_at, c.due_at, c.id as card_id, c.title, c.board_id from sent_notifications x
        join cards c on c.id = x.card_id where x.user_id = ? and x.status = 'sent' and x.kind in ('due', 'reminder', 'nag')
          and x.sent_at >= ? and x.sent_at < ? and ${direct.sql}
        order by x.sent_at desc limit ${LIM}`,
       userId, since, before, ...direct.args,
     )) {
-      out.push(entry({ id: `reminder:${r.id}`, kind: 'reminder', at: r.sent_at, ...base(r), detail: r.kind }));
+      out.push(entry({ id: `reminder:${r.id}`, kind: 'reminder', at: r.sent_at, ...base(r), detail: r.kind, dueAt: r.due_at }));
     }
 
     // Änderungen anderer an meinen Karten: verschoben, wieder geöffnet, anderer Termin (vom System Wieder-Geöffnetes inklusive)

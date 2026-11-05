@@ -1,97 +1,134 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type { InboxEntry } from '../src/lib/api';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
-import { inboxFilters, inboxItems, type InboxInput } from '../src/lib/inbox';
-import type { ScheduleCard } from '../src/lib/schedule';
-import type { TodayCard } from '../src/lib/api';
+import { chipOf, entryView, filterEntries, groupByDay, INBOX_CHIPS, isUnread, timeLabel, unreadCount } from '../src/lib/inbox';
 
-const ME = 'me';
-const names: Record<string, string> = { me: 'Anna', ben: 'Ben', conny: 'Conny', kid: 'Mia' };
-const sched = (id: string, extra: Partial<ScheduleCard> = {}): ScheduleCard =>
-  ({ id, title: `Karte ${id}`, boardId: 'b', boardName: 'Haushalt', completedAt: null, assigneeIds: [], openNudges: [], confirmRequestedAt: null, confirmRequestedBy: null, updatedAt: '2026-11-04T08:00:00Z', ...extra }) as unknown as ScheduleCard;
-const house = (id: string, extra: Partial<TodayCard> = {}): TodayCard =>
-  ({ id, title: `Haus ${id}`, boardId: 'b', boardName: 'Haushalt', dueAt: null, assigneeIds: [], watcherId: 'w', watcherName: 'Waschmaschine fertig', createdAt: '2026-11-04T09:00:00Z', why: null, ...extra }) as TodayCard;
-const input = (extra: Partial<InboxInput> = {}): InboxInput => ({
-  open: [],
-  house: [],
-  meId: ME,
-  isChild: false,
-  mayConfirm: () => true,
-  nameOf: (id) => names[id] ?? '?',
+// Feste Uhr: 4.11.2026 11:30 in Berlin (10:30 UTC). Der Rechner läuft in UTC, die App in Europe/Berlin.
+const NOW = Date.parse('2026-11-04T10:30:00Z');
+const TZ = 'Europe/Berlin';
+const names: Record<string, string> = { ben: 'Ben', conny: 'Conny' };
+const ctx = { nameOf: (id: string | null) => (id ? (names[id] ?? '?') : 'Jemand'), tz: TZ };
+
+const e = (extra: Partial<InboxEntry> & Pick<InboxEntry, 'kind'>): InboxEntry => ({
+  id: `${extra.kind}:1`,
+  at: '2026-11-04T09:00:00.000Z',
+  cardId: 'k1',
+  cardTitle: 'Bad putzen',
+  boardId: 'b1',
+  actorId: 'conny',
+  text: null,
+  detail: null,
+  watcherName: null,
+  assigned: false,
+  dueAt: null,
   ...extra,
 });
 
-describe('inboxItems: was ohne neue Server-Teile für mich offen ist', () => {
-  it('ohne alles: leer, kein Punkt', () => {
-    expect(inboxItems(input())).toEqual([]);
+beforeEach(() => setLanguage('de'));
+
+describe('Gruppen nach Tag (Zeitzone der Person)', () => {
+  const at = (iso: string, id = iso) => e({ kind: 'comment', id, at: iso });
+  it.each([
+    ['gerade eben', '2026-11-04T10:29:00Z', 'today'],
+    ['kurz nach Mitternacht Berlin (23:30 UTC am Vortag) ist schon heute', '2026-11-03T23:30:00Z', 'today'],
+    ['kurz vor Mitternacht Berlin (22:59 UTC am Vortag) ist noch gestern', '2026-11-03T22:59:00Z', 'yesterday'],
+    ['gestern Nachmittag', '2026-11-03T15:00:00Z', 'yesterday'],
+    ['vorgestern', '2026-11-02T12:00:00Z', 'older'],
+    ['vor 10 Tagen', '2026-10-25T12:00:00Z', 'older'],
+    ['in der Zukunft (Uhr geht falsch): heute', '2026-11-05T09:00:00Z', 'today'],
+  ])('%s → %s', (_n, iso, key) => {
+    expect(groupByDay([at(iso)], NOW, TZ).map((g) => g.key)).toEqual([key]);
   });
 
-  it('offene Stupse an mich, mit den Absendern, ohne Doppelte', () => {
-    const open = [
-      sched('a', { openNudges: [{ id: '1', fromId: 'ben', toId: ME, delivered: true }, { id: '2', fromId: 'ben', toId: ME, delivered: true }, { id: '3', fromId: 'conny', toId: ME, delivered: true }] }),
-      sched('b', { openNudges: [{ id: '4', fromId: 'ben', toId: 'conny', delivered: true }] }), // an eine andere Person
-    ];
-    const items = inboxItems(input({ open }));
-    expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ kind: 'nudge', cardId: 'a', title: 'Ben, Conny stupst dich! 👋', sub: 'Karte a' });
+  it('Reihenfolge Heute, Gestern, Älter; leere fehlen; innerhalb bleibt die Reihenfolge des Servers', () => {
+    const items = [at('2026-11-02T10:00:00Z', 'c'), at('2026-11-04T09:00:00Z', 'a'), at('2026-11-03T12:00:00Z', 'b'), at('2026-11-04T08:00:00Z', 'd')];
+    const g = groupByDay(items, NOW, TZ);
+    expect(g.map((x) => [x.key, x.items.map((i) => i.id)])).toEqual([['today', ['a', 'd']], ['yesterday', ['b']], ['older', ['c']]]);
+    expect(groupByDay([], NOW, TZ)).toEqual([]);
   });
 
-  it('erledigte Karten zählen nicht', () => {
-    const open = [sched('a', { completedAt: '2026-11-04T08:00:00Z', openNudges: [{ id: '1', fromId: 'ben', toId: ME, delivered: true }] })];
-    expect(inboxItems(input({ open }))).toEqual([]);
-  });
-
-  it('Karten vom Haus, die auf mich warten: schon meine oder noch ohne Zuständige', () => {
-    const items = inboxItems(input({ house: [house('h1', { assigneeIds: [ME] }), house('h2'), house('h3', { assigneeIds: ['ben'] })] }));
-    expect(items.map((i) => [i.kind, i.cardId])).toEqual([['house', 'h1'], ['house', 'h2']]); // h3 gehört Ben
-    expect(items[0]!.title).toBe('Wächter: Waschmaschine fertig');
-    expect(items[0]!.sub).toBe('Karte „Haus h1“ ist jetzt deine');
-    expect(items[1]!.sub).toBe('„Haus h2“ sucht jemanden, der sie übernimmt');
-    expect(items[0]!.since).toBe('2026-11-04T09:00:00Z');
-  });
-
-  it('Bestätigungen: nur wenn ich sie geben darf', () => {
-    const open = [sched('c', { assigneeIds: ['kid'], confirmRequestedAt: '2026-11-04T07:00:00Z', confirmRequestedBy: 'kid' })];
-    const yes = inboxItems(input({ open }));
-    expect(yes[0]).toMatchObject({ kind: 'confirm', cardId: 'c', title: 'Mia wartet auf deine Bestätigung', sub: 'Karte c', since: '2026-11-04T07:00:00Z' });
-    expect(inboxItems(input({ open, mayConfirm: () => false }))).toEqual([]);
-  });
-
-  it('ein Kind sieht nur Stupse an sich: kein Haus, keine Bestätigungen', () => {
-    const open = [
-      sched('a', { openNudges: [{ id: '1', fromId: 'ben', toId: ME, delivered: true }] }),
-      sched('c', { confirmRequestedAt: '2026-11-04T07:00:00Z', confirmRequestedBy: 'kid' }),
-    ];
-    const items = inboxItems(input({ open, house: [house('h1', { assigneeIds: [ME] })], isChild: true }));
-    expect(items.map((i) => i.kind)).toEqual(['nudge']);
-  });
-
-  it('Reihenfolge: Stupse, Bestätigungen, Haus', () => {
-    const open = [
-      sched('c', { confirmRequestedAt: '2026-11-04T07:00:00Z', confirmRequestedBy: 'kid' }),
-      sched('a', { openNudges: [{ id: '1', fromId: 'ben', toId: ME, delivered: true }] }),
-    ];
-    expect(inboxItems(input({ open, house: [house('h1')] })).map((i) => i.kind)).toEqual(['nudge', 'confirm', 'house']);
-  });
-
-  it('ohne eigene Person: nichts', () => {
-    expect(inboxItems(input({ meId: null, open: [sched('a', { openNudges: [{ id: '1', fromId: 'ben', toId: ME, delivered: true }] })] }))).toEqual([]);
-  });
-
-  it('auf Englisch', () => {
-    setLanguage('en');
-    const items = inboxItems(input({ house: [house('h2')] }));
-    expect(items[0]!.title).toBe('Watcher: Waschmaschine fertig');
+  it('Sommerzeitwechsel: am 26.10.2026 (Ende der Sommerzeit) bleiben die Tage Kalendertage', () => {
+    const now = Date.parse('2026-10-26T12:00:00Z'); // 13:00 Berlin
+    expect(groupByDay([at('2026-10-25T23:30:00Z')], now, TZ)[0]!.key).toBe('today'); // 00:30 Berlin (MESZ)... am 26.
+    expect(groupByDay([at('2026-10-25T21:30:00Z')], now, TZ)[0]!.key).toBe('yesterday'); // 23:30 Berlin am 25.
   });
 });
 
-describe('inboxFilters: Chips nur für das, was da ist', () => {
-  it('Alle immer, dazu je Art mit Zähler', () => {
-    const items = inboxItems(input({ house: [house('h1'), house('h2')], open: [sched('a', { openNudges: [{ id: '1', fromId: 'ben', toId: ME, delivered: true }] })] }));
-    expect(inboxFilters(items)).toEqual([
-      { id: 'all', count: 3 },
-      { id: 'nudge', count: 1 },
-      { id: 'house', count: 2 },
-    ]);
-    expect(inboxFilters([])).toEqual([{ id: 'all', count: 0 }]);
+describe('Uhrzeit', () => {
+  it('heute und gestern als Ortszeit, Älter mit Tag', () => {
+    expect(timeLabel('2026-11-04T10:40:00Z', 'today', TZ)).toBe('11:40');
+    expect(timeLabel('2026-11-03T19:14:00Z', 'yesterday', TZ)).toBe('20:14');
+    expect(timeLabel('2026-10-29T10:00:00Z', 'older', TZ)).toBe('29. Okt');
+    setLanguage('en');
+    expect(timeLabel('2026-10-29T10:00:00Z', 'older', TZ)).toBe('29 Oct');
+  });
+});
+
+describe('Ungelesen', () => {
+  const items = [e({ kind: 'nudge', at: '2026-11-04T09:00:00.000Z' }), e({ kind: 'done', at: '2026-11-04T08:00:00.000Z' }), e({ kind: 'comment', at: '2026-11-03T08:00:00.000Z' })];
+  it.each([
+    [null, 3],
+    ['2026-11-01T00:00:00.000Z', 3],
+    ['2026-11-04T08:30:00.000Z', 1],
+    ['2026-11-04T08:00:00.000Z', 1], // genau gleich: schon gelesen
+    ['2026-11-04T09:00:00.000Z', 0],
+    ['2026-11-05T00:00:00.000Z', 0],
+  ])('Marker %s → %i ungelesen', (seen, n) => {
+    expect(unreadCount(items, seen)).toBe(n);
+    expect(items.filter((i) => isUnread(i, seen)).length).toBe(n);
+  });
+  it('ohne Einträge: 0', () => expect(unreadCount([], null)).toBe(0));
+});
+
+describe('Chips', () => {
+  it('fünf Chips wie im Mockup', () => expect(INBOX_CHIPS).toEqual(['all', 'nudge', 'watcher', 'done', 'comment']));
+  it('jede Art gehört zu einem Chip oder nur zu „Alle"', () => {
+    expect(['nudge', 'reply', 'watcher', 'done', 'confirm', 'comment', 'reminder', 'change'].map((k) => chipOf(k as never))).toEqual(['nudge', 'nudge', 'watcher', 'done', 'done', 'comment', null, null]);
+  });
+  it('filtert', () => {
+    const items = [e({ kind: 'nudge', id: 'n' }), e({ kind: 'reply', id: 'r' }), e({ kind: 'reminder', id: 'x' }), e({ kind: 'comment', id: 'c' })];
+    expect(filterEntries(items, 'all')).toHaveLength(4);
+    expect(filterEntries(items, 'nudge').map((i) => i.id)).toEqual(['n', 'r']);
+    expect(filterEntries(items, 'comment').map((i) => i.id)).toEqual(['c']);
+    expect(filterEntries(items, 'watcher')).toEqual([]);
+  });
+});
+
+describe('Zusammenfassung eines Eintrags', () => {
+  const v = (x: Partial<InboxEntry> & Pick<InboxEntry, 'kind'>) => entryView(e(x), ctx);
+  it('Stups mit Vorlage (in der Sprache) und mit eigenem Text', () => {
+    expect(v({ kind: 'nudge', detail: 'today', text: 'Heute noch?' })).toEqual({ title: 'Conny stupst dich 👋', meta: 'Bad putzen · „Heute noch?“', icon: 'hand', color: 'purple' });
+    expect(v({ kind: 'nudge', detail: null, text: 'Bitte vor 18 Uhr' }).meta).toBe('Bad putzen · „Bitte vor 18 Uhr“');
+    setLanguage('en');
+    expect(v({ kind: 'nudge', detail: 'think', text: 'Denkst du dran?' }).meta).toBe('Bad putzen · “Are you on it?”');
+    expect(v({ kind: 'nudge' }).title).toBe('Conny nudges you 👋');
+  });
+  it('Antwort, Erledigung, Kommentar', () => {
+    expect(v({ kind: 'reply', actorId: 'ben', detail: 'ack' })).toEqual({ title: 'Ben: Mach ich 👍', meta: 'Antwort auf deinen Stups · Bad putzen', icon: 'user', color: 'teal' });
+    expect(v({ kind: 'done', actorId: 'ben' })).toEqual({ title: 'Ben hat erledigt', meta: 'Bad putzen', icon: 'done', color: 'green' });
+    expect(v({ kind: 'comment', text: 'Elektriker kommt erst am 3. Feb …' })).toEqual({ title: 'Conny hat kommentiert', meta: 'Bad putzen: „Elektriker kommt erst am 3. Feb …“', icon: 'message', color: 'blue' });
+    expect(v({ kind: 'done', actorId: null }).title).toBe('Jemand hat erledigt');
+  });
+  it('Wächter: zugewiesen, sucht jemanden, weitergegeben, erinnert', () => {
+    const w = { kind: 'watcher' as const, watcherName: 'Waschmaschine fertig', actorId: null, cardTitle: 'ausräumen' };
+    expect(v({ ...w, assigned: true, detail: 'created' })).toEqual({ title: 'Wächter: Waschmaschine fertig', meta: 'Karte „ausräumen“ ist jetzt deine', icon: 'shield', color: 'orange' });
+    expect(v({ ...w, assigned: false, detail: 'suggested' }).meta).toBe('„ausräumen“ sucht jemanden, der sie übernimmt');
+    expect(v({ ...w, assigned: true, detail: 'passed' }).meta).toBe('Karte „ausräumen“ wurde dir weitergegeben');
+    expect(v({ ...w, assigned: true, detail: 'nudged' }).meta).toBe('Karte „ausräumen“ wartet noch auf dich');
+  });
+  it('Erinnerungen: überfällig mit Wochentag seit dem Termin (Berlin), fällig, vorab', () => {
+    // Montag 2.11.2026, 23:30 UTC = Dienstag 0:30 Berlin: Der Termin lag am Dienstag
+    expect(v({ kind: 'reminder', detail: 'nag', dueAt: '2026-11-02T23:30:00Z', cardTitle: 'Netzwerkkabel' })).toEqual({ title: 'Überfällig', meta: 'Netzwerkkabel · seit Di', icon: 'alert', color: 'red' });
+    expect(v({ kind: 'reminder', detail: 'nag', dueAt: null }).meta).toBe('Bad putzen');
+    expect(v({ kind: 'reminder', detail: 'due' }).title).toBe('Jetzt fällig');
+    expect(v({ kind: 'reminder', detail: 'reminder' }).title).toBe('Erinnerung');
+    setLanguage('en');
+    expect(v({ kind: 'reminder', detail: 'nag', dueAt: '2026-11-02T10:00:00Z', cardTitle: 'Cable' }).meta).toBe('Cable · since Mon');
+  });
+  it('Änderungen und Bitte um Bestätigung', () => {
+    expect(v({ kind: 'change', detail: 'moved' }).title).toBe('Conny hat verschoben');
+    expect(v({ kind: 'change', detail: 'reopened' }).title).toBe('Conny hat wieder geöffnet');
+    expect(v({ kind: 'change', detail: 'due' }).title).toBe('Conny hat den Termin geändert');
+    expect(v({ kind: 'confirm', actorId: 'ben' }).title).toBe('Ben wartet auf deine Bestätigung');
   });
 });

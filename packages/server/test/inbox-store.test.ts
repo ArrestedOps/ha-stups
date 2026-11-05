@@ -136,7 +136,7 @@ describe('Posteingang: was wer sieht', () => {
     store.claimNotification({ cardId: c.id, userId: anna, kind: 'due', key: 'k2' }, 'skipped');
     store.claimNotification({ cardId: c.id, userId: ben, kind: 'nag', key: 'k3' });
     store.claimNotification({ cardId: 'ohne-karte', userId: anna, kind: 'summary', key: 'k4' });
-    expect(items(anna).map((i) => [i.kind, i.detail])).toEqual([['reminder', 'nag']]);
+    expect(items(anna).map((i) => [i.kind, i.detail, i.dueAt])).toEqual([['reminder', 'nag', null]]);
   });
 
   it('Änderungen anderer an meiner Karte: verschoben, wieder geöffnet; eigene nicht', () => {

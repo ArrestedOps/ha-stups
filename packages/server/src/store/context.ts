@@ -58,6 +58,8 @@ export function createContext(db: DatabaseSync, opts: StoreOptions = {}) {
     if (depth > 0) return fn();
     db.exec('begin');
     depth++;
+    // Was bis hierher gemeldet werden soll, bleibt; was die Transaktion schreibt, nur wenn sie durchgeht
+    const before = { full, partWrites, cards: new Set(cards) };
     try {
       const result = fn();
       db.exec('commit');
@@ -71,6 +73,11 @@ export function createContext(db: DatabaseSync, opts: StoreOptions = {}) {
     } catch (err) {
       db.exec('rollback');
       pendingClosed.length = 0;
+      // Zurückgerollte Schreibzugriffe haben nichts geändert: sie dürfen nicht an der nächsten Meldung hängen bleiben
+      full = before.full;
+      partWrites = before.partWrites;
+      cards.clear();
+      for (const id of before.cards) cards.add(id);
       throw err;
     } finally {
       depth--;

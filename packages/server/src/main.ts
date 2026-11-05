@@ -186,7 +186,10 @@ betaGate.onWatchers((on) => {
 
 function housekeeping() {
   const purged = store.purgeTrash();
-  if (purged > 0) app.log.info(`${purged} Einträge aus dem Papierkorb endgültig gelöscht`);
+  if (purged > 0) {
+    app.log.info(`${purged} Einträge aus dem Papierkorb endgültig gelöscht`);
+    bus.emit({ by: null }); // eigene Meldung, sonst hängt die Änderung an der nächsten eines Nutzers
+  }
   const archived = store.archiveDone();
   if (archived > 0) {
     app.log.info(`${archived} erledigte Karten archiviert`);
@@ -211,7 +214,11 @@ syncPlanned();
 setInterval(syncPlanned, 5 * 60 * 1000).unref();
 
 // Alte Google-Kurzlinks im Hintergrund durch die Maps-URL ersetzen (braucht Netz, darum nicht blockierend)
-void repairShortMapsLinks(store, undefined, log).catch((err) => app.log.warn(err, 'Maps-Links: Reparatur fehlgeschlagen'));
+void repairShortMapsLinks(store, undefined, log)
+  .then((fixed) => {
+    if (fixed > 0) bus.emit({ by: null });
+  })
+  .catch((err) => app.log.warn(err, 'Maps-Links: Reparatur fehlgeschlagen'));
 
 await ensureWebsocket(app); // einmal für den ganzen Server, nicht je Routen-Gruppe
 // Anmeldung: im Add-on über Ingress, sonst mit eigenem Konto (Sitzungs-Cookie)

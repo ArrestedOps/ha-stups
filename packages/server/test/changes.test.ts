@@ -34,6 +34,26 @@ describe('Der Store merkt sich, was sich geändert hat', () => {
     expect(store.takeChanges()).toEqual({ full: false, cards: [] });
   });
 
+  it('ein zurückgerollter Schreibzugriff bleibt nicht als Änderung stehen, schon vorher Gemeldetes aber bleibt', () => {
+    const before = card('Davor');
+    expect(() =>
+      store.transaction(() => {
+        card('Wird zurückgerollt');
+        store.createBoard({ name: 'Auch weg' }); // „alles neu laden"
+        throw new Error('abgebrochen');
+      }),
+    ).toThrow('abgebrochen');
+    expect(store.takeChanges()).toEqual({ full: false, cards: [before.id] });
+  });
+
+  it('eine eigene Transaktion, die gelingt, meldet ihre Änderungen', () => {
+    let id = '';
+    store.transaction(() => {
+      id = card('Geht durch').id;
+    });
+    expect(store.takeChanges()).toEqual({ full: false, cards: [id] });
+  });
+
   it('eine neue Karte, Ändern, Verschieben und Löschen melden genau diese Karte', () => {
     const c = card();
     expect(store.takeChanges()).toEqual({ full: false, cards: [c.id] });

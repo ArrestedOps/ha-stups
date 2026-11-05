@@ -26,7 +26,11 @@
   );
   const titleOf = (path: string) => items.find((d) => d.path === path)?.title ?? path;
   const defaultLabel = $derived(
-    fallback.source === 'ha' ? t('Standard (Home Assistant: {title})', { title: titleOf(fallback.path) }) : t('Standard ({title})', { title: titleOf(fallback.path) }),
+    fallback.source === 'ha'
+      ? t('Standard (Home Assistant: {title})', { title: titleOf(fallback.path) })
+      : fallback.path === '/'
+        ? t('Standard (Home Assistant)')
+        : t('Standard ({title})', { title: titleOf(fallback.path) }),
   );
   /** eine eigene Wahl, die nicht in der Liste steht */
   const isCustom = $derived(chosen !== null && !items.some((d) => d.path === chosen));

@@ -2,6 +2,18 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.25.0-beta.1
+
+**Neues Design, Phase 6b: Mitteilungen, dazu der Home-Knopf und dein Dashboard.** *Datenbank: Migration 23, vorher wie immer eine Sicherung.*
+
+- **Mitteilungen mit Verlauf:** Die Glocke zeigt jetzt, was für **dich** passiert ist, der Tag nach Tag gruppiert (Heute, Gestern, Älter; die letzten 14 Tage): Stupse an dich und Antworten auf deine Stupse, Karten von Wächtern, Erledigtes und Kommentare anderer auf deinen Karten, Erinnerungen („Überfällig“), Änderungen anderer (verschoben, wieder geöffnet, anderer Termin) und Bitten um Bestätigung. Ein Tipp öffnet die Karte. Oben stehen die Chips Alle, Stupse, Wächter, Erledigt, Kommentare
+- **Ungelesen und „Alle gelesen“:** Der **Punkt an der Glocke zeigt nur noch Ungelesenes** (vorher: „irgendetwas ist offen“). Ungelesene Zeilen haben einen orangen Rand und einen Punkt. „Alle gelesen“ gilt für dich auf **allen deinen Geräten**. Beim Update beginnt die Glocke ohne Altlasten, alles bis dahin gilt als gelesen. Offene Stupse, Bestätigungen und Karten von Wächtern stehen weiter in der Liste
+- **Kinder** sehen nur Eigenes: Stupse an sie und Einträge zu Karten, die ihnen zugewiesen sind; nie fremde Karten oder Boards, keine Bitten um Bestätigung
+- **Home-Knopf neben der Glocke** (nur in Home Assistant): Haus-Symbol in der Kopfzeile aller Reiter, links von der Glocke. Ein Tipp bringt dich zurück zu deinem Dashboard in Home Assistant. Die Zeile „Zurück zum Dashboard“ in den Einstellungen ist darin aufgegangen
+- **Dashboard pro Person:** Einstellungen › Home Assistant › **Dashboard**. Jede Person wählt selbst (gilt auf allen Geräten), die Liste kommt aus Home Assistant (Standard, Übersicht, deine Dashboards), „Eigener Pfad …“ geht auch. Hast du nichts gewählt, gilt dein **Standard-Dashboard aus Home Assistant** (Profil › Standard-Dashboard), sonst die Option der App, sonst die Startseite; vorausgewählt steht „Standard (Home Assistant: …)“. Kinder bekommen immer den Standard und haben keine Auswahl. Die frühere gemeinsame Wahl für alle (nur Administratoren) gibt es nicht mehr; ein früher gesetzter Wert gilt weiter als Standard der App, solange niemand etwas anderes wählt
+- Umzug und Export nehmen Marker und Dashboard mit, ältere Exporte bleiben lesbar
+- Datenbank: **Migration 23**, vorher wie immer eine Sicherung (Spalten `users.inbox_seen_at` und `users.dashboard_path`, dazu Indexe; vorhandene Daten bleiben unverändert)
+
 ## 1.24.2-beta.1
 
 - **Kategorie in der Zeile:** Auf der Karte steht jetzt die **Kategorie** (mit Farbpunkt, bei mehreren die erste und „+n“) statt des Personennamens. Wer zuständig ist, zeigen die Bilder rechts. Das gilt in Aufgaben und in den Boards

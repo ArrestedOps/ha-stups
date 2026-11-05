@@ -121,6 +121,24 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   await noGerman(page, 'Sprache und Farbe');
 });
 
+test('Englisches Gerät: Home-Knopf, Mitteilungen und Dashboard-Wahl auf Englisch', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Back to Home Assistant' })).toBeVisible();
+  await page.getByRole('button', { name: /^Notifications/ }).click();
+  const sheet = page.getByRole('dialog', { name: 'Notifications' });
+  for (const chip of ['All', 'Nudges', 'Watchers', 'Done', 'Comments']) await expect(sheet.getByRole('group', { name: 'Kind of notification' }).getByRole('button', { name: chip, exact: true })).toBeVisible();
+  await expect(sheet.getByRole('button', { name: 'Mark all read' })).toBeVisible();
+  await noGerman(page, 'Mitteilungen', '[role=dialog]');
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Open settings' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Dashboard', exact: true }).click();
+  const choose = page.getByRole('dialog', { name: 'Dashboard' });
+  await expect(choose.getByRole('button', { name: /^Default \(/ })).toBeVisible();
+  await expect(choose.getByRole('button', { name: /^Home Assistant default/ })).toBeVisible();
+  await expect(choose.getByRole('button', { name: /^Custom path/ })).toBeVisible();
+  await noGerman(page, 'Dashboard-Wahl', '[role=dialog]');
+});
+
 test('Sprache wechseln: Deutsch sofort, zurück auf Automatisch wieder Englisch; die Wahl gilt für die Person', async ({ page, request }) => {
   await page.goto('/');
   await openBoards(page);

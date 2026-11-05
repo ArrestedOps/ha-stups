@@ -87,6 +87,8 @@ const dayAt = (days, hour, min = 0) => {
 
 // Alle Texte der Beispieldaten, deutsch und englisch
 const S = {
+  washer: x('Waschmaschine fertig', 'Washing machine done'),
+  comment: x('Elektriker kommt erst am 3. Feb …', 'Electrician only comes on 3 Feb …'),
   trash: x('Müll rausbringen', 'Take out the trash'),
   tax: x('Steuererklärung abgeben', 'File tax return'),
   windows: x('Fenster putzen', 'Clean the windows'),
@@ -211,6 +213,18 @@ async function seed() {
   db.prepare('insert into nudges (id, card_id, from_user, to_user, template, text, created_at, deliver_at, delivered_at, delivered_round) values (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)').run(
     'shots-nudge-1', windows.id, ben.id, anna.id, 'today', x('Heute noch?', 'Today still?'), at(-2 * H), at(-2 * H), at(-2 * H),
   );
+  // Mitteilungen für Anna (Posteingang): Stups (oben), Wächter-Karte, Überfälliges, Erledigung von Ben; gestern ein Kommentar und Bens Antwort auf Annas Stups.
+  // Annas Gelesen-Marker liegt vor den beiden neuesten Einträgen: sie sind ungelesen (Punkt), der Rest ist gelesen
+  const cardId = (title) => db.prepare('select id from cards where title = ?').get(title).id;
+  db.prepare("insert into watchers (id, name, trigger_json, card_json, assign_json, created_at, updated_at) values ('w-shots', ?, '{}', '{}', '{}', ?, ?)").run(S.washer, at(-9 * D), at(-9 * D));
+  db.prepare("insert into watcher_runs (id, watcher_id, at, result, card_id, assigned_to) values ('r-shots', 'w-shots', ?, 'created', ?, ?)").run(at(-3 * H), cardId(S.smoke), JSON.stringify([anna.id]));
+  db.prepare("insert into sent_notifications (card_id, user_id, kind, occurrence_key, status, sent_at) values (?, ?, 'nag', 'shots', 'sent', ?)").run(cardId(S.trash), anna.id, at(-5 * H));
+  db.prepare('update completions set completed_by = ?, completed_at = ? where card_id = ?').run(ben.id, at(-6 * H), cardId(S.archived2));
+  db.prepare('insert into comments (id, card_id, author_id, text, created_at) values (?, ?, ?, ?, ?)').run('shots-comment', cardId(S.kitchen), ben.id, S.comment, dayAt(-1, 20, 14));
+  db.prepare('insert into nudges (id, card_id, from_user, to_user, template, text, created_at, deliver_at, delivered_at, delivered_round, reply, reply_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)').run(
+    'shots-nudge-2', cardId(S.gift), anna.id, ben.id, null, x('Schon bestellt?', 'Already ordered?'), dayAt(-1, 17, 40), dayAt(-1, 17, 40), dayAt(-1, 17, 40), 'ack', dayAt(-1, 18, 2),
+  );
+  db.prepare('update users set inbox_seen_at = ? where id = ?').run(at(-4 * H), anna.id);
   db.close();
 
   // Zugriff „nur diese Personen“, dazu ein Wartender (Cassandra), der Stups geöffnet hat (für Personen und „Kein Zugriff“)
@@ -307,6 +321,22 @@ const screens = [
     await page.getByTestId('bell').click();
     await page.getByTestId('notifications').waitFor();
   }],
+  ['mitteilungen-leer', async (page) => {
+    // Leerzustand: eine Person ohne Ereignisse; hier die Antwort des Servers ersetzt, damit Anna ihre Beispieldaten behält
+    await page.route('**/api/inbox*', (route) => route.fulfill({ json: { items: [], seenAt: null, hasMore: false } }));
+    await nav(page, x('Aufgaben', 'Tasks')).click();
+    await page.getByTestId('bell').click();
+    await page.getByTestId('notifications-empty').waitFor();
+  }],
+  ['dashboard-waehlen', async (page) => {
+    // Die Aufnahmen laufen ohne Home Assistant: die Liste der Dashboards kommt hier als erfundene Antwort
+    await page.route('**/api/ha/dashboards', (route) => route.fulfill({ json: { connected: true, addonPath: '/', items: [
+      { path: '/', title: x('Standard von Home Assistant', 'Home Assistant default') },
+      { path: '/lovelace', title: x('Übersicht', 'Overview') },
+      { path: '/dashboard-wohnung', title: x('Wohnung', 'Home') },
+      { path: '/dashboard-handy', title: x('Handy', 'Phone') },
+    ] } }));
+    await settings(page, /^Dashboard$/); await page.getByTestId('dashboard-choices').waitFor(); }],
   ['filter', async (page) => {
     await tasks(page);
     await page.getByRole('button', { name: 'Filter' }).click();

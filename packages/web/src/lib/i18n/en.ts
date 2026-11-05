@@ -1310,4 +1310,5 @@ export const en: Catalog = {
   'Die Liste der Dashboards ließ sich von Home Assistant nicht holen. „Eigener Pfad“ geht trotzdem.': 'The list of dashboards could not be fetched from Home Assistant. “Custom path” still works.',
   '{card} · „{text}“': '{card} · “{text}”',
   '{card}: „{text}“': '{card}: “{text}”',
+  'Standard (Home Assistant)': 'Default (Home Assistant)',
 };

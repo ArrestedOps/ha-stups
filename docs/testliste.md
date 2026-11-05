@@ -13,7 +13,7 @@ Für die Beispiele: Anna und Ben sind zwei Personen in Stups, jede mit dem eigen
 ## 1 · Aufbau und Bedienung
 
 - [ ] **Kopfzeile von HA** (Titel und Menü) ist über der App weg. Falls nicht: Einstellungen → „HA-Kopfzeile ausblenden" prüfen
-- [ ] **„‹ Dashboard"** oben links führt zum gewählten Dashboard (Einstellungen → Dashboard wählen)
+- [ ] **Home-Knopf** (Haus-Symbol links neben der Glocke) führt zu deinem Dashboard (Einstellungen → Home Assistant → Dashboard)
 - [ ] Dunkel und hell folgen dem iPhone: Dunkel mit warmem Schwarz und orangem Schimmer, hell mit Creme und weichen Schatten. Alle Texte gut lesbar
 - [ ] Die Seite lässt sich nicht seitlich verschieben (nur die Filter-Chips wischen), die Tastatur verdeckt keine Felder
 - [ ] **Leiste unten** mit Aufgaben, Boards, Wächter (Kind und Container ohne Home Assistant: zwei Reiter); die letzte Karte einer Liste ist nicht abgeschnitten, das „+" verdeckt nichts
@@ -94,7 +94,7 @@ Zwei Personen, jede mit dem eigenen Handy.
 
 - [ ] Einstellungen › Personen & Zugriff: Personen mit ihren Push-Geräten, Zugriff „Alle in Home Assistant" oder „Nur diese Personen"
 - [ ] **Push-Geräte:** Geräte ankreuzen und abwählen, dann die Test-Nachricht senden: Sie kommt nur auf den angekreuzten Geräten an
-- [ ] **Rolle:** Normale Home-Assistant-Benutzer sind Mitglieder: Dashboard-Auswahl, Zugriffsmodus und Personenverwaltung sind gesperrt, die eigenen Push-Geräte lassen sich wählen. Boards, Spalten, Kategorien und Karten kann jeder anlegen und ändern. Administratoren von Home Assistant können alles
+- [ ] **Rolle:** Normale Home-Assistant-Benutzer sind Mitglieder: Zugriffsmodus und Personenverwaltung sind gesperrt, die Dashboard-Wahl gilt nur für die eigene Person, die eigenen Push-Geräte lassen sich wählen. Boards, Spalten, Kategorien und Karten kann jeder anlegen und ändern. Administratoren von Home Assistant können alles
 - [ ] **Sperre (optional):** Zugriff auf „Nur diese Personen" stellen und mit einem Benutzer öffnen, der keine Person ist: „Kein Zugriff". Als Administrator unter „Wartet auf Freigabe" freigeben
 
 - [ ] **Konfiguration in Home Assistant:** Unter Apps › Stups › Konfiguration bei `users` zwei Personen mit ihren `mobile_app_…`-Diensten und `access_mode` eintragen, App neu starten. In Stups steht unter Personen & Zugriff der Hinweis „… in der Konfiguration verwaltet", Personen und Geräte stimmen, Zugriff ist gesperrt (nicht änderbar), Anzeigename und Ruhezeit lassen sich ändern. `users` wieder leeren und neu starten: Alles ist in der App wieder änderbar
@@ -140,7 +140,7 @@ Zuerst Einstellungen › Diagnose-Seite › „Wächter-Test": Alle Zustände le
 Nach `docs/docker.md` aufgebaut, zum Beispiel auf der NAS.
 
 - [ ] Erster Start: `docker logs stups` zeigt „Einrichtung: … Code". Im Browser erscheint die Einrichtung, ein falscher Code wird abgelehnt, mit dem richtigen entsteht der Administrator und man ist gleich drin. Danach lässt sich die Einrichtung nicht mehr öffnen
-- [ ] Zwei Reiter (Aufgaben, Boards), kein „‹ Dashboard"-Button, in den Einstellungen nichts von Home Assistant oder Wächtern (Benachrichtigungen nur, wenn ntfy eingerichtet ist, siehe 14)
+- [ ] Zwei Reiter (Aufgaben, Boards), kein Home-Knopf in der Kopfzeile, in den Einstellungen nichts von Home Assistant oder Wächtern (Benachrichtigungen nur, wenn ntfy eingerichtet ist, siehe 14)
 - [ ] Personen & Zugriff › Benutzer anlegen: Ben bekommt ein Konto, meldet sich auf seinem Handy an und sieht die gemeinsamen Boards. Er sieht keine Benutzerverwaltung
 - [ ] Neu laden bzw. App schließen und wieder öffnen: man bleibt angemeldet. Einstellungen › Abmelden führt zur Anmeldung
 - [ ] Passwort ändern: danach melden sich die anderen Geräte der Person ab
@@ -242,7 +242,7 @@ Zwei Geräte (zum Beispiel iPhone und Mac), beide in der Beta.
 ## 21 · Einstellungen oben rechts (seit 1.13.1, Avatar seit 1.18.0)
 
 - [ ] Oben rechts in der Kopfzeile jedes Reiters (Aufgaben, Boards, Wächter) steht dein Avatar. Ein Tipp öffnet die Einstellungen
-- [ ] Der Avatar verdeckt nichts: links „‹ Dashboard" mit der Wortmarke „stups.". Auch mit „Offline"-Hinweis und langem Board-Namen passt alles in die Zeile
+- [ ] Der Avatar verdeckt nichts: links die Wortmarke „stups.", rechts Home, Glocke, Zahnrad und Avatar. Auch mit „Offline"-Hinweis und langem Board-Namen passt alles in die Zeile
 - [ ] Der Weg über den Board-Namen › „Einstellungen" geht weiter
 
 ## 22 · Englisch (seit 1.14.0)
@@ -336,7 +336,7 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 
 **Kopfzeile und Leiste**
 
-- [ ] Auf allen Reitern steht links „‹ Dashboard" (nur im Add-on) und führt zum gewählten Dashboard; rechts Offline-Hinweis (Flugmodus) und dein Avatar mit Bild oder Initiale. Nichts ragt seitlich heraus, auch nicht mit langem Board-Namen
+- [ ] Auf allen Reitern steht rechts der Home-Knopf (nur im Add-on, links von der Glocke) und führt zu deinem Dashboard; rechts Offline-Hinweis (Flugmodus) und dein Avatar mit Bild oder Initiale. Nichts ragt seitlich heraus, auch nicht mit langem Board-Namen
 - [ ] Die App startet auf **Aufgaben**. Ein Kind und der Container ohne Home Assistant haben nur zwei Reiter
 - [ ] Türkis erscheint nur bei dem, was vom Haus kommt (Wächter-Karten, Zuhause); der Farbkreis hat kein Grün und Türkis. Überschriften der Reiter in der eigenen Schrift
 
@@ -371,7 +371,7 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 **Einstellungen**
 
 - [ ] Gruppen und Seiten: Administrator sieht „Für mich", „Haushalt", „Home Assistant", „Hilfe und Daten"; ein Mitglied nur „Für mich" und „Hilfe und Daten"; ein Kind nur „Sprache und Farbe". Die Wahl „HA-Kopfzeile ausblenden" gibt es für Mitglieder unter „Sprache und Farbe", für Administratoren unter „Dashboard und Kopfzeile"
-- [ ] Nichts fehlt gegenüber früher: Sprache, Farbe, Standard-Uhrzeit, Zurück-Dashboard samt eigenem Pfad, Bubble-Card-YAML kopieren, Test-Nachricht, Ruhezeit, Sonntagsrückblick, Stand der Zustellung, Papierkorb, Archiv, Umzug, Board-Vorlagen, Beta, Diagnose-Seite, im Container Passwort, Passkeys und Abmelden
+- [ ] Nichts fehlt gegenüber früher: Sprache, Farbe, Standard-Uhrzeit, Dashboard samt eigenem Pfad, Bubble-Card-YAML kopieren, Test-Nachricht, Ruhezeit, Sonntagsrückblick, Stand der Zustellung, Papierkorb, Archiv, Umzug, Board-Vorlagen, Beta, Diagnose-Seite, im Container Passwort, Passkeys und Abmelden
 - [ ] **Bild:** „Bild ändern" lädt ein eigenes Bild hoch, es erscheint im Avatar und bei den Karten; „Bild entfernen" geht zurück zum Bild aus Home Assistant (oder zur Initiale). Ein Administrator ändert Bilder auch für andere und für Kinder
 - [ ] **Wenig Zeit:** Datum eintragen; die Rotationen der Wächter überspringen die Person, auf „Diese Woche" steht der Hinweis. „Wieder normal" nimmt es zurück
 
@@ -404,8 +404,8 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 
 - [ ] Aufgaben, Boards, Wächter: oben Logo, „stups.“, **Glocke**, **Zahnrad**, Profilbild; darunter Titel und Untertitel („Deine Aufgaben, Termine und To-dos an einem Ort.“, „Organisiere deine Aufgaben in Kanban-Boards.“, „Automatische Aufgaben aus Home Assistant.“). Kein „‹ Dashboard“ mehr
 - [ ] Zahnrad und Profilbild öffnen die Einstellungen (oben das Profil), die Glocke die Mitteilungen
-- [ ] Glocke: **ohne Offenes kein Punkt** und im Blatt ein ruhiger Satz; mit einem offenen Stups an dich (auch von einem zweiten Gerät aus, ohne Neuladen) erscheint der Punkt auf jedem Reiter, das Blatt zeigt „… stupst dich! 👋“ mit der Karte, ein Tipp öffnet sie. Weitere Einträge: Bestätigungen (nur, wenn du sie geben darfst) und Karten von Wächtern. Kind: nur Stupse an das Kind
-- [ ] Einstellungen › Home Assistant (im Add-on für jede Rolle, auch Kind): **„Zurück zum Dashboard“** führt zum Dashboard, **„HA-Kopfzeile ausblenden“** schaltet die Kopfzeile von Home Assistant aus und ein. Im Container ohne Home Assistant gibt es beides nicht
+- [ ] Glocke: **ohne Ungelesenes kein Punkt** und im Blatt ein ruhiger Satz; mit einem neuen Stups an dich (auch von einem zweiten Gerät aus, ohne Neuladen) erscheint der Punkt auf jedem Reiter, das Blatt zeigt „… stupst dich! 👋“ mit der Karte, ein Tipp öffnet sie. Weitere Einträge: Bestätigungen (nur, wenn du sie geben darfst) und Karten von Wächtern. Kind: nur Stupse an das Kind
+- [ ] Einstellungen › Home Assistant (im Add-on für jede Rolle, auch Kind): **„Dashboard“** (Ziel des Home-Knopfs, jede Person für sich), **„HA-Kopfzeile ausblenden“** schaltet die Kopfzeile von Home Assistant aus und ein. Im Container ohne Home Assistant gibt es beides nicht
 
 **Aufgaben (von oben nach unten wie im Entwurf)**
 
@@ -501,7 +501,7 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 
 - [ ] Zeilen mit Kachel, Titel, Erklärung und Pfeil in Gruppen; **keine Zeile „Wächter“** (die Verwaltung steht im Reiter Wächter unter „Alle Wächter verwalten“, „Zurück“ führt dorthin zurück)
 - [ ] Zeile **Tageszusammenfassung** (Administrator mit Push) zeigt die Uhrzeit, die Seite ändert sie und „Zurücksetzen“ stellt die Option der App wieder her. Die Zusammenfassung kommt zur neuen Uhrzeit
-- [ ] Home Assistant: „Zurück zum Dashboard“, „HA-Kopfzeile ausblenden“ als Schalter, „Dashboard-Button“ mit Vorschau („n heute fällig • m überfällig“), YAML (Beta: `sensor.stups_beta_heute_faellig`) und „YAML kopieren“
+- [ ] Home Assistant: „Dashboard“, „HA-Kopfzeile ausblenden“ als Schalter, „Dashboard-Button“ mit Vorschau („n heute fällig • m überfällig“), YAML (Beta: `sensor.stups_beta_heute_faellig`) und „YAML kopieren“
 - [ ] Daten: Papierkorb, Archiv, Umzug („Export“ nach /share/stups-umzug)
 - [ ] **Personen & Zugriff:** Zugriff als Umschalter, Personen mit Foto, Admin-Abzeichen, Geräten, Ruhezeit; Antippen klappt Name, Geräte (Schalter), Ruhezeit, Zusammenfassung, Haus, Rolle Kind (Schalter) auf. „Wartet auf Freigabe“ (gestrichelt) mit „Freigeben“, „Person hinzufügen“
 - [ ] **Warum kommt nichts an?** öffnet gleich mit dem Stand: Verbindung, pro Person „x / y“ (grün, orange „Ruhe“, rot bei 0), Banner mit der Lösung bei einer Person ohne erreichbares Gerät, „Zuletzt gesendet“ mit Zeit und Ergebnis, darunter die Einzelheiten. Kind: Seite nicht erreichbar
@@ -527,6 +527,17 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Kind: der Filter hat kein „Wer“, kein „Nur von Wächtern“, keinen Stups-Schalter; „Ohne Termin“ zeigt nur die eigenen Karten
 - [ ] Boards: Chips Meine, Alle, Personen, Kategorien und die Suche im Filterblatt des Boards funktionieren wie bisher
 - [ ] Hell, Dunkel, Englisch: nichts läuft über den Rand; Datenbank: keine Änderung
+
+## 36 · Neues Design, Phase 6b (Mitteilungen, Home-Knopf, Dashboard, seit 1.25.0)
+
+- [ ] **Home-Knopf** (Haus) steht links neben der Glocke auf Aufgaben, Boards und Wächter und führt dich zu **deinem** Dashboard in Home Assistant; im Docker-Betrieb ohne Home Assistant fehlt er
+- [ ] Einstellungen › Home Assistant › **Dashboard**: ohne eigene Wahl ist dein Standard-Dashboard aus Home Assistant vorausgewählt („Standard (Home Assistant: …)“); die Liste zeigt Standard, Übersicht und deine Dashboards; „Eigener Pfad …“ nimmt nur Pfade mit „/“ am Anfang. Die Wahl bleibt nach dem Neuladen und gilt auf deinem anderen Gerät; eine andere Person hat ihre eigene Wahl. Kind: keine Auswahl, der Knopf führt zum Standard
+- [ ] **Mitteilungen:** Stups von Anna an Ben: bei Ben Punkt an der Glocke und „Anna stupst dich 👋“ unter Heute mit orangem Rand; Ben antwortet „Mach ich“: bei Anna „Ben: Mach ich 👍“
+- [ ] Wächter-Karte für dich, Erledigung und Kommentar einer anderen Person auf deiner Karte, Überfälliges (Push „überfällig“ bekommen) erscheinen; Tipp öffnet die Karte
+- [ ] Chips Stupse, Wächter, Erledigt, Kommentare filtern; „**Alle gelesen**“ löscht den Punkt (auch auf dem anderen Gerät, nach dem Neuladen noch gelesen)
+- [ ] Gestern und Älter sind eigene Gruppen mit Uhrzeit bzw. Datum; Einträge älter als 14 Tage fehlen
+- [ ] Kind: sieht nur Stupse an sich und Einträge zu seinen Karten, nichts von fremden Boards
+- [ ] Update: nach dem Aktualisieren ist die Glocke ohne Punkt (alles Frühere gilt als gelesen); Datenbank wurde gesichert (Migration 23)
 
 ## Bekannte Lücken
 

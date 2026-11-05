@@ -7,6 +7,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { devices, webkit } from '@playwright/test';
+import pngjs from 'pngjs';
+const { PNG } = pngjs;
 
 const lang = process.argv.includes('--lang') ? process.argv[process.argv.indexOf('--lang') + 1] : 'de';
 if (lang !== 'de' && lang !== 'en') throw new Error('--lang muss de oder en sein');
@@ -64,6 +66,8 @@ async function waitUp(url = base) {
 }
 
 const headers = { 'content-type': 'application/json', 'x-stups-language': lang };
+// Ein zweiter Benutzer von Home Assistant, der noch nicht freigegeben ist
+const cassandra = { 'x-remote-user-id': 'ha-cassandra', 'x-remote-user-name': 'cassandra', 'x-remote-user-display-name': 'Cassandra' };
 const api = async (method, path, body) => {
   const res = await fetch(`${base}/api/${path}`, { method, headers, body: body ? JSON.stringify(body) : method === 'POST' ? '{}' : undefined });
   if (!res.ok) throw new Error(`${method} ${path}: ${res.status} ${await res.text()}`);
@@ -110,6 +114,12 @@ const S = {
   open: x('Offen', 'Open'),
   planned: x('Geplant', 'Planned'),
   doing: x('In Arbeit', 'In progress'),
+  archived1: x('Steckdosen Küche tauschen', 'Replace kitchen sockets'),
+  archived2: x('Bad Fugen erneuern', 'Redo bathroom grout'),
+  bin1: x('Alte Gardinen entsorgen', 'Dispose of old curtains'),
+  bin2: x('Baumarkt Liste', 'Hardware store list'),
+  attachment1: x('Unterverteiler_Keller.png', 'Fuse_box_basement.png'),
+  attachment2: x('Zaehlerstand.png', 'Meter_reading.png'),
 };
 
 async function seed() {
@@ -160,8 +170,38 @@ async function seed() {
   await mk(einkauf.id, ev.columns[0].id, { title: S.parcel, dueAt: dayAt(0, 16, 30), assigneeIds: [anna.id] });
   await mk(einkauf.id, ev.columns[0].id, { title: S.wrapping, dueAt: dayAt(1, 18, 0) });
 
+  // Archiv und Papierkorb des Boards „Haushalt" füllen: zwei erledigte, ins Archiv gelegte Karten, zwei gelöschte
+  const old1 = await mk(haushalt.id, open, { title: S.archived1, assigneeIds: [ben.id] });
+  const old2 = await mk(haushalt.id, open, { title: S.archived2, assigneeIds: [anna.id] });
+  for (const c of [old1, old2]) await api('POST', `cards/${c.id}/complete`);
+  const bin1 = await mk(haushalt.id, open, { title: S.bin1 });
+  const bin2 = await mk(haushalt.id, open, { title: S.bin2 });
+  for (const c of [bin1, bin2]) await api('DELETE', `cards/${c.id}`);
+
+  // Ein erfundenes Bild als Anhang der Steuer-Karte (für die Foto-Ansicht): ein neutraler Verlauf, kein Foto
+  const png = new PNG({ width: 640, height: 420 });
+  for (let yy = 0; yy < 420; yy++) for (let xx = 0; xx < 640; xx++) {
+    const i = (640 * yy + xx) << 2;
+    png.data[i] = 70 + Math.round((xx / 640) * 90);
+    png.data[i + 1] = 60 + Math.round((yy / 420) * 70);
+    png.data[i + 2] = 90 + Math.round(((xx + yy) / 1060) * 80);
+    png.data[i + 3] = 255;
+  }
+  const buf = PNG.sync.write(png);
+  for (const name of [S.attachment1, S.attachment2]) {
+    const form = new FormData();
+    form.append('file', new Blob([buf], { type: 'image/png' }), name);
+    const res = await fetch(`${base}/api/cards/${c2.id}/attachments`, { method: 'POST', headers: { 'x-stups-language': lang }, body: form });
+    if (!res.ok) throw new Error(`Anhang: ${res.status} ${await res.text()}`);
+  }
+
   // Anlegedaten streuen, damit „Angelegt …" nicht überall „heute" heißt
   const db = new DatabaseSync(join(dir, 'stups.sqlite'));
+  for (const title of [S.archived1, S.archived2]) {
+    db.prepare('update cards set completed_at = ?, archived_at = ? where title = ?').run(at(-12 * D), at(-5 * D), title);
+  }
+  db.prepare('update cards set deleted_at = ? where title = ?').run(at(-3 * D), S.bin1);
+  db.prepare('update cards set deleted_at = ? where title = ?').run(at(-26 * D), S.bin2);
   const back = { [S.trash]: 3, [S.tax]: 9, [S.windows]: 1, [S.gift]: 5, [S.heating]: 21 };
   for (const [title, days] of Object.entries(back)) {
     db.prepare('update cards set created_at = ? where title = ?').run(at(-days * D), title);
@@ -172,6 +212,10 @@ async function seed() {
     'shots-nudge-1', windows.id, ben.id, anna.id, 'today', x('Heute noch?', 'Today still?'), at(-2 * H), at(-2 * H), at(-2 * H),
   );
   db.close();
+
+  // Zugriff „nur diese Personen“, dazu ein Wartender (Cassandra), der Stups geöffnet hat (für Personen und „Kein Zugriff“)
+  await api('PUT', 'access/mode', { mode: 'selected' });
+  await fetch(`${base}/api/me`, { headers: { ...cassandra, 'x-stups-language': lang } });
 
   return { anna, ben, haushalt: haushalt.id, c1: c1.id, c2: c2.id };
 }
@@ -190,17 +234,17 @@ const shot = async (page, name, scheme) => {
   console.log('geschrieben:', `${name}-${scheme}.png`);
 };
 
-export async function capture(screens, baseUrl = base) {
+export async function capture(screens, baseUrl = base, extraHTTPHeaders = {}) {
   const browser = await webkit.launch();
   for (const scheme of schemes) {
-    const context = await browser.newContext({ ...phone, locale: x('de-DE', 'en-GB'), timezoneId: 'Europe/Berlin', colorScheme: scheme === 'dunkel' ? 'dark' : 'light' });
+    const context = await browser.newContext({ ...phone, locale: x('de-DE', 'en-GB'), timezoneId: 'Europe/Berlin', colorScheme: scheme === 'dunkel' ? 'dark' : 'light', extraHTTPHeaders });
     const page = await context.newPage();
     for (const [name, run] of screens) {
       if (only && !only.includes(name)) continue;
       await page.goto(baseUrl + '/');
       await page.evaluate(() => localStorage.clear()); // gemerkte Ansicht und Filter wegräumen
       await page.reload();
-      await nav(page, 'Boards').waitFor();
+      await page.getByRole('navigation').first().waitFor();
       await run(page);
       await shot(page, name, scheme);
     }
@@ -223,6 +267,16 @@ const calendar = async (page, view) => {
 };
 const chip = (page, group, name) => page.getByRole('group', { name: group }).getByRole('button', { name, exact: typeof name === 'string' }).click();
 const re = (s) => new RegExp(`^${s}`);
+
+/** Das Fenster „Boards“ (Board wechseln) über den Namen des Boards im Kopf von Boards öffnen */
+const switcher = async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Board wechseln', 'Switch board') }).click(); };
+/** Die Einstellungen über den Avatar öffnen; mit Namen gleich eine Unterseite */
+const settings = async (page, name) => {
+  await nav(page, 'Boards').click();
+  await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
+  await page.getByTestId('settings-head').waitFor();
+  if (name) await page.getByRole('dialog').getByRole('button', { name }).click();
+};
 
 const screens = [
   ['board', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: re(S.open) }).click(); }],
@@ -277,6 +331,44 @@ const screens = [
     await page.mouse.click(box.x + box.width / 2, box.y + 12 * 56 + 20);
     await page.getByLabel(x('Titel', 'Title')).fill(S.dentist);
   }],
+  ['board-wechseln', async (page) => { await switcher(page); await page.getByRole('dialog').getByText(S.boardShop).waitFor(); }],
+  ['board-einstellungen', async (page) => {
+    await switcher(page);
+    await page.getByRole('dialog').getByRole('button', { name: x(/Board-Einstellungen|Bearbeiten/, /Board settings|Edit/) }).first().click();
+    await page.getByRole('dialog', { name: x('Board-Einstellungen', 'Board settings') }).waitFor();
+  }],
+  ['archiv', async (page) => {
+    await switcher(page);
+    await page.getByRole('dialog').getByRole('button', { name: x(/Archiv/, /Archive/) }).first().click();
+    await page.getByText(S.archived1).waitFor();
+  }],
+  ['papierkorb', async (page) => {
+    await switcher(page);
+    await page.getByRole('dialog').getByRole('button', { name: x(/Papierkorb/, /Trash/) }).first().click();
+    await page.getByText(S.bin1).waitFor();
+  }],
+  ['push-stand', async (page) => { await settings(page, x(/Warum kommt nichts/, /Why is nothing/)); await page.getByTestId('push-ok').waitFor(); }],
+  ['dashboard-button', async (page) => { await settings(page, x('Dashboard-Button', 'Dashboard button')); await page.getByTestId('bubble-preview').waitFor(); }],
+  ['dialoge', async (page) => {
+    await nav(page, 'Boards').click();
+    await page.getByRole('tab', { name: re(S.planned) }).click();
+    await page.getByRole('button', { name: x(/^Menü für/, /^Menu for/) }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: x(/Löschen/, /Delete/) }).click();
+    await page.getByRole('alertdialog').waitFor();
+  }],
+  ['foto', async (page) => {
+    await nav(page, 'Boards').click();
+    await page.getByRole('tab', { name: re(S.open) }).click();
+    await page.getByText(S.tax).first().click();
+    await page.getByTestId('created-note').waitFor();
+    await page.getByRole('button', { name: S.attachment1 }).click();
+    await page.getByRole('dialog', { name: S.attachment1 }).waitFor();
+  }],
+  ['diese-woche', async (page) => {
+    await nav(page, x('Aufgaben', 'Tasks')).click();
+    await page.getByRole('button', { name: x(/Fairness diese Woche/, /Fairness this week/) }).click();
+    await page.getByTestId('fairness').waitFor();
+  }],
   ['einstellungen', async (page) => {
     await nav(page, 'Boards').click();
     await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
@@ -285,7 +377,7 @@ const screens = [
   ['personen', async (page) => {
     await nav(page, 'Boards').click();
     await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
-    await page.getByRole('dialog').getByRole('button', { name: x(/Personen und Kinder/, /People and children/) }).click();
+    await page.getByRole('dialog').getByRole('button', { name: x(/Personen/, /People/) }).click();
     await page.getByRole('dialog').getByText(x('Wer darf Stups öffnen?', 'Who may open Stups?')).waitFor();
   }],
 ];

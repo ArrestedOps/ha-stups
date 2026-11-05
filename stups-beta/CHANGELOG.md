@@ -2,6 +2,11 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.21.1-beta.1
+
+- **Home Assistant 2026.8: kein Leerstreifen mehr unter der Leiste.** Seit dieser Version polstert Home Assistant das Fenster der App selbst mit Statusleiste und Home-Balken; darunter blieb ein Streifen, den die Leiste (Aufgaben, Boards, Wächter) nicht füllen konnte. Stups meldet sich jetzt bei Home Assistant an, übernimmt die Abstände selbst und füllt das Fenster ganz aus: Die Leiste reicht bis zum unteren Rand, die Knöpfe stehen über dem Home-Balken, nichts wird doppelt gezählt. Ältere Home-Assistant-Versionen und der Browser verhalten sich wie bisher
+- Keine Änderung an der Datenbank
+
 ## 1.21.0-beta.1
 
 **Neues Design, Phase 3: Symbol und Farbe für jede Karte, „Neue Aufgabe“ nach dem Entwurf, Termin-Fenster.** *Datenbank: Migration 22, vorher wie immer eine Sicherung.*

@@ -328,6 +328,8 @@
    * Abstand zu Statusleiste und Home-Balken. Läuft Stups als eingebettete Seite in Home Assistant, hält die
    * Companion App diesen Platz schon frei; das iPhone meldet ihn der Seite im iframe trotzdem noch einmal.
    * Dann würde er doppelt gezählt (leere Streifen oben und unten), darum gilt er nur außerhalb eines iframes.
+   * Seit Home Assistant 2026.8 polstert das App-Panel den iframe selbst; Stups meldet sich dann mit handleSafeArea an und setzt
+   * --safe-top/--safe-bottom aus der Antwort (Klasse safe-managed, lib/haSafeArea.ts), die Seite füllt den iframe ganz aus.
    */
   :root {
     --safe-top: env(safe-area-inset-top, 0px);
@@ -347,6 +349,10 @@
   }
   :root.embedded {
     --pad-bottom: 8px;
+  }
+  /* Home Assistant hat die Abstände übergeben (lib/haSafeArea.ts): Die Leiste reicht bis zum Rand und hält den Home-Balken frei */
+  :root.embedded.safe-managed {
+    --pad-bottom: max(12px, var(--safe-bottom));
   }
   /* Zeilenhöhe „normal" wie in den Mockups (Tailwind setzt sonst 1,5 und macht jede Zeile höher als im Entwurf) */
   html,

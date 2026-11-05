@@ -3,10 +3,14 @@
   import { t, tn } from '../lib/i18n/index.svelte';
   import { api, type TemplateInfo } from '../lib/api';
   import { act, closeSheet, openSheet, selectBoard, ui } from '../lib/store.svelte';
-  import Group from './Group.svelte';
+  import BoardTile from './BoardTile.svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
-  import SubmitPill from './SubmitPill.svelte';
+  import CtaButton from './ui/CtaButton.svelte';
+  import Field from './ui/Field.svelte';
+  import ListRow from './ui/ListRow.svelte';
+  import SectionHeader from './ui/SectionHeader.svelte';
+  import Tile, { type TileColor } from './ui/Tile.svelte';
 
   let name = $state('');
   let busy = $state(false);
@@ -14,12 +18,21 @@
   let templates = $state<TemplateInfo[]>([]);
   let template = $state('');
   const chosen = $derived(templates.find((x) => x.id === template) ?? null);
-  const builtin = $derived(templates.filter((x) => x.builtin));
-  const own = $derived(templates.filter((x) => !x.builtin));
   onMount(() => void api.templates().then((list) => (templates = list)).catch(() => undefined));
 
-  async function create(e: Event) {
-    e.preventDefault();
+  /** Farbe und Symbol der Vorlagen-Kachel (eingebaute Vorlagen fest, eigene grau) */
+  const TPL: Record<string, { color: TileColor; icon: string }> = {
+    household: { color: 'teal', icon: 'home' },
+    move: { color: 'red', icon: 'archive' },
+    renovation: { color: 'purple', icon: 'settings' },
+    packing: { color: 'blue', icon: 'checklist' },
+    baby: { color: 'orange', icon: 'user' },
+    ideas: { color: 'violet', icon: 'spark' },
+  };
+  const tpl = (id: string) => TPL[id] ?? { color: 'gray' as TileColor, icon: 'columns' };
+
+  async function create(e?: Event) {
+    e?.preventDefault();
     const n = name.trim();
     if (!n || busy) return;
     busy = true;
@@ -31,75 +44,73 @@
       await selectBoard(board.id);
     }
   }
-
-  const links = $derived(
-    (ui.isChild
-      ? [['gear', t('Einstellungen'), 'settings']]
-      : [
-          ['settings', t('Board-Einstellungen'), 'boardSettings'],
-          ['archive', t('Archiv'), 'archive'],
-          ['trash', t('Papierkorb'), 'trash'],
-          ['gear', t('Einstellungen'), 'settings'],
-        ]) as readonly (readonly [string, string, 'boardSettings' | 'archive' | 'trash' | 'settings'])[],
-  );
 </script>
 
 <Sheet title="Boards" onclose={closeSheet}>
-  <Group>
-    {#each ui.boards as b (b.id)}
-      <button class="flex min-h-[52px] w-full items-center justify-between px-4 text-left" onclick={() => selectBoard(b.id)}>
-        <span class="flex items-center gap-3 text-[17px] {b.id === ui.boardId ? 'font-semibold' : ''}">
-          {#if b.id === ui.boardId}<Icon name="check" size={18} stroke={3} />{:else}<span class="w-[18px]"></span>{/if}
-          {b.name}
-        </span>
-        <span class="text-[15px] text-fg2">{t('{n} offen', { n: b.openCards })}</span>
-      </button>
-    {/each}
+  {#snippet right()}
     {#if !ui.isChild}
-    <form onsubmit={create} class="flex min-h-[52px] items-center gap-3 px-4">
-      <Icon name="plus" size={18} />
-      <input
-        bind:value={name}
-        placeholder={t('Neues Board')}
-        maxlength="80"
-        enterkeyhint="done"
-        class="min-w-0 flex-1 bg-transparent py-3"
-        aria-label={t('Name des neuen Boards')}
-      />
-      <SubmitPill show={!!name.trim()} {busy} />
-    </form>
-    {#if templates.length > 0}
-      <div class="px-4 py-2">
-        <label class="flex min-h-11 items-center justify-between gap-3 text-[15px]">
-          <span>{t('Vorlage')}</span>
-          <select class="min-h-11 max-w-[65%] rounded-xl bg-surface2 px-3" bind:value={template} aria-label={t('Vorlage für das neue Board')}>
-            <option value="">{t('Leeres Board')}</option>
-            <optgroup label={t('Eingebaute Vorlagen')}>
-              {#each builtin as tpl (tpl.id)}<option value={tpl.id}>{tpl.name}</option>{/each}
-            </optgroup>
-            {#if own.length > 0}
-              <optgroup label={t('Eigene Vorlagen')}>
-                {#each own as tpl (tpl.id)}<option value={tpl.id}>{tpl.name}</option>{/each}
-              </optgroup>
-            {/if}
-          </select>
-        </label>
+      <button class="inline-flex h-11 items-center px-2 text-[16px] font-bold text-accent-text" onclick={() => openSheet({ type: 'boardSettings' })}>{t('Bearbeiten')}</button>
+    {/if}
+  {/snippet}
+  {#snippet footer()}
+    {#if !ui.isChild}
+      <CtaButton disabled={!name.trim() || busy} onclick={() => create()}><Icon name="plus" size={22} stroke={2.2} />{t('Board anlegen')}</CtaButton>
+    {/if}
+  {/snippet}
+
+  <div class="flex flex-col gap-3.5 pt-1">
+    <div class="flex flex-col gap-2">
+      {#each ui.boards as b (b.id)}
+        {@const current = b.id === ui.boardId}
+        <ListRow title={b.name} {current} onclick={() => selectBoard(b.id)} label={b.name}>
+          {#snippet tile()}<BoardTile board={b} />{/snippet}
+          {#snippet meta()}{t('{n} offen', { n: b.openCards })}{/snippet}
+          {#snippet right()}{#if current}<span class="flex text-accent-text" aria-label={t('Geöffnet')}><Icon name="check" size={20} stroke={2.6} /></span>{/if}{/snippet}
+        </ListRow>
+      {/each}
+      <ListRow title={t('Einstellungen')} onclick={() => openSheet({ type: 'settings' })}>
+        {#snippet tile()}<Tile color="gray"><Icon name="gear" size={22} stroke={1.8} /></Tile>{/snippet}
+        {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
+      </ListRow>
+    </div>
+
+    {#if !ui.isChild}
+      <div>
+        <SectionHeader title={t('Neues Board')} />
+        <p class="px-1 pt-1 pb-2 text-[12.5px] leading-[1.45] text-hint">{t('Starte leer oder mit einer Vorlage. Spalten und Kategorien sind danach frei änderbar.')}</p>
+        <div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t('Vorlage für das neue Board')}>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={template === ''}
+            class="flex h-[84px] flex-col items-center justify-center gap-2 rounded-row border border-dashed text-[13px] font-semibold text-accent-text {template === '' ? 'border-accent bg-surface' : 'border-line bg-surface'}"
+            onclick={() => (template = '')}
+          >
+            <Icon name="plus" size={24} stroke={1.8} />{t('Leer')}
+          </button>
+          {#each templates as x (x.id)}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={template === x.id}
+              class="flex h-[84px] flex-col items-center justify-center gap-2 rounded-row border bg-surface px-1 text-[13px] font-semibold {template === x.id ? 'border-accent' : 'border-line'}"
+              onclick={() => (template = x.id)}
+            >
+              <Tile color={tpl(x.id).color} size="sm"><Icon name={tpl(x.id).icon} size={18} stroke={1.8} /></Tile>
+              <span class="max-w-full truncate">{x.name}</span>
+            </button>
+          {/each}
+        </div>
         {#if chosen}
-          <p class="mt-1 text-[13px] text-fg2" data-testid="template-preview">
+          <p class="mt-2 px-1 text-[13px] text-fg2" data-testid="template-preview">
             {#if chosen.description}{chosen.description}<br />{/if}
             {tn('{n} Spalte', '{n} Spalten', chosen.columns)} · {tn('{n} Kategorie', '{n} Kategorien', chosen.categories)} · {tn('{n} Karte', '{n} Karten', chosen.cards)}
           </p>
         {/if}
       </div>
+      <form onsubmit={create}>
+        <Field id="board-name" label={t('Name des neuen Boards')} bind:value={name} maxlength={80} enterkeyhint="done" placeholder={t('Neues Board')} />
+      </form>
     {/if}
-    {/if}
-  </Group>
-
-  <Group>
-    {#each links as [icon, label, type] (type)}
-      <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px]" onclick={() => openSheet({ type })}>
-        <Icon name={type === 'trash' ? 'trash' : icon} size={18} />{label}
-      </button>
-    {/each}
-  </Group>
+  </div>
 </Sheet>

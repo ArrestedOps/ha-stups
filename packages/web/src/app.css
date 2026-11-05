@@ -324,6 +324,7 @@
 }
 
 /* Neu und offen (Mitteilungen): oranger Rand an der Zeile, oranger Punkt mit Leuchten */
+.row-current { border-color: var(--brand-dot); background-color: color-mix(in srgb, var(--accent) 10%, var(--surface)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
 .row-new { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
 .dot-new { background: var(--brand-dot); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 70%, transparent); }
 

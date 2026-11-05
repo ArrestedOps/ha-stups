@@ -28,8 +28,8 @@ async function openSwitcher(page: Page) {
 test('neues Board aus der Vorlage „Haushalt": Vorschau, Spalten und Karten kommen mit', async ({ page, request }) => {
   const name = `Haus ${unique()}`;
   await openSwitcher(page);
-  const select = page.getByLabel('Vorlage für das neue Board');
-  await select.selectOption({ label: 'Haushalt' });
+  const templates = page.getByRole('radiogroup', { name: 'Vorlage für das neue Board' });
+  await templates.getByRole('radio', { name: 'Haushalt' }).click();
   const preview = page.getByTestId('template-preview');
   await expect(preview).toContainText('4 Spalten');
   await expect(preview).toContainText('5 Kategorien');
@@ -59,8 +59,9 @@ test('neues Board aus der Vorlage „Haushalt": Vorschau, Spalten und Karten kom
 test('ein leeres Board bleibt leer, auch wenn die Vorlagen-Auswahl vorher benutzt wurde', async ({ page, request }) => {
   const name = `Leer ${unique()}`;
   await openSwitcher(page);
-  await page.getByLabel('Vorlage für das neue Board').selectOption({ label: 'Haushalt' });
-  await page.getByLabel('Vorlage für das neue Board').selectOption({ label: 'Leeres Board' });
+  const templates = page.getByRole('radiogroup', { name: 'Vorlage für das neue Board' });
+  await templates.getByRole('radio', { name: 'Haushalt' }).click();
+  await templates.getByRole('radio', { name: 'Leer', exact: true }).click();
   await expect(page.getByTestId('template-preview')).toHaveCount(0);
   await page.getByLabel('Name des neuen Boards').fill(name);
   await page.getByLabel('Name des neuen Boards').press('Enter');
@@ -81,7 +82,7 @@ test('eigenes Board als Vorlage speichern, daraus ein neues Board anlegen, die V
 
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
   await openSwitcher(page);
-  await page.getByRole('button', { name: 'Board-Einstellungen' }).click();
+  await page.getByRole('button', { name: 'Bearbeiten' }).click();
   const field = page.getByLabel('Name der Vorlage');
   await field.scrollIntoViewIfNeeded();
   await field.fill(tplName);
@@ -99,7 +100,7 @@ test('eigenes Board als Vorlage speichern, daraus ein neues Board anlegen, die V
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
-  await page.getByLabel('Vorlage für das neue Board').selectOption({ label: tplName });
+  await page.getByRole('radiogroup', { name: 'Vorlage für das neue Board' }).getByRole('radio', { name: tplName }).click();
   await expect(page.getByTestId('template-preview')).toContainText('1 Karte');
   await page.getByLabel('Name des neuen Boards').fill(name);
   await page.getByLabel('Name des neuen Boards').press('Enter');

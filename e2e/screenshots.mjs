@@ -176,7 +176,7 @@ async function seed() {
   for (const c of [old1, old2]) await api('POST', `cards/${c.id}/complete`);
   const bin1 = await mk(haushalt.id, open, { title: S.bin1 });
   const bin2 = await mk(haushalt.id, open, { title: S.bin2 });
-  for (const c of [bin1, bin2]) await api('DELETE', `cards/${c.id}`);
+  for (const c of [bin1, bin2]) await fetch(`${base}/api/cards/${c.id}`, { method: 'DELETE', headers: { 'x-stups-language': lang } });
 
   // Ein erfundenes Bild als Anhang der Steuer-Karte (für die Foto-Ansicht): ein neutraler Verlauf, kein Foto
   const png = new PNG({ width: 640, height: 420 });
@@ -334,17 +334,19 @@ const screens = [
   ['board-wechseln', async (page) => { await switcher(page); await page.getByRole('dialog').getByText(S.boardShop).waitFor(); }],
   ['board-einstellungen', async (page) => {
     await switcher(page);
-    await page.getByRole('dialog').getByRole('button', { name: x(/Board-Einstellungen|Bearbeiten/, /Board settings|Edit/) }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: x('Bearbeiten', 'Edit') }).click();
     await page.getByRole('dialog', { name: x('Board-Einstellungen', 'Board settings') }).waitFor();
   }],
   ['archiv', async (page) => {
     await switcher(page);
-    await page.getByRole('dialog').getByRole('button', { name: x(/Archiv/, /Archive/) }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: x('Bearbeiten', 'Edit') }).click();
+    await page.getByRole('dialog').getByRole('button', { name: x(/Archiv/, /Archive/) }).click();
     await page.getByText(S.archived1).waitFor();
   }],
   ['papierkorb', async (page) => {
     await switcher(page);
-    await page.getByRole('dialog').getByRole('button', { name: x(/Papierkorb/, /Trash/) }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: x('Bearbeiten', 'Edit') }).click();
+    await page.getByRole('dialog').getByRole('button', { name: x(/Papierkorb/, /Trash/) }).click();
     await page.getByText(S.bin1).waitFor();
   }],
   ['push-stand', async (page) => { await settings(page, x(/Warum kommt nichts/, /Why is nothing/)); await page.getByTestId('push-ok').waitFor(); }],

@@ -100,7 +100,7 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
     await expect(sheet.getByText(`Kinderboard ${tag}`)).toBeVisible();
     await expect(sheet.getByText(`Erwachsenenboard ${tag}`)).toHaveCount(0);
     await expect(sheet.getByLabel('Name des neuen Boards')).toHaveCount(0);
-    await expect(sheet.getByRole('button', { name: 'Board-Einstellungen' })).toHaveCount(0);
+    await expect(sheet.getByRole('button', { name: 'Bearbeiten' })).toHaveCount(0);
     await expect(sheet.getByRole('button', { name: 'Papierkorb' })).toHaveCount(0);
 
     // Einstellungen: nur Sprache und Farbe

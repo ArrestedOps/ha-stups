@@ -71,9 +71,9 @@ export function createWatcherCards(c: Ctx, late: unknown) {
     );
   }
 
-  /** Gibt es zu diesem Schlüssel schon eine Karte, auch eine erledigte? (ein Termin im Kalender bekommt nur eine Karte) */
+  /** Gibt es zu diesem Schlüssel schon eine Karte, auch eine erledigte oder gelöschte (Papierkorb)? Ein Termin im Kalender bekommt nur eine Karte. */
   function hasCardWithDedupeKey(key: string): boolean {
-    return !!one('select 1 as ok from cards where dedupe_key = ? and deleted_at is null', key);
+    return !!one('select 1 as ok from cards where dedupe_key = ?', key);
   }
 
   /** Offene Karte mit diesem Schlüssel (für Automationen über das Ereignis stups_create_card) */

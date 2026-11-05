@@ -307,14 +307,22 @@ export class HaClient {
   }
 
   /** Termine eines Kalenders von Home Assistant (REST); start und end so, wie sie kommen: ISO-Text mit Zeit oder nur ein Datum (ganztägig) */
-  async getCalendarEvents(entityId: string, fromIso: string, toIso: string): Promise<{ title: string; start: string; end: string }[]> {
+  async getCalendarEvents(entityId: string, fromIso: string, toIso: string): Promise<{ title: string; start: string; end: string; uid?: string; recurrenceId?: string }[]> {
     const path = `/api/calendars/${encodeURIComponent(entityId)}?start=${encodeURIComponent(fromIso)}&end=${encodeURIComponent(toIso)}`;
-    const list = (await this.request('GET', path)) as { summary?: string; start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string } }[];
-    const out: { title: string; start: string; end: string }[] = [];
+    const list = (await this.request('GET', path)) as { summary?: string; uid?: string; recurrence_id?: string; start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string } }[];
+    const out: { title: string; start: string; end: string; uid?: string; recurrenceId?: string }[] = [];
     for (const e of Array.isArray(list) ? list : []) {
       const start = e.start?.dateTime ?? e.start?.date;
       const end = e.end?.dateTime ?? e.end?.date;
-      if (start && end) out.push({ title: e.summary ?? '', start, end });
+      if (start && end) {
+        out.push({
+          title: e.summary ?? '',
+          start,
+          end,
+          ...(typeof e.uid === 'string' && e.uid ? { uid: e.uid } : {}),
+          ...(typeof e.recurrence_id === 'string' && e.recurrence_id ? { recurrenceId: e.recurrence_id } : {}),
+        });
+      }
     }
     return out;
   }

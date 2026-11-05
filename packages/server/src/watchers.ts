@@ -28,7 +28,7 @@ export interface WatcherHa {
   onConnected(cb: () => void): void;
   activeSubscriptions?(): string[];
   /** Termine eines Kalenders (start/end als ISO-Text oder nur Datum) */
-  getCalendarEvents?(entityId: string, fromIso: string, toIso: string): Promise<{ title: string; start: string; end: string }[]>;
+  getCalendarEvents?(entityId: string, fromIso: string, toIso: string): Promise<{ title: string; start: string; end: string; uid?: string; recurrenceId?: string }[]>;
   /** Stündliche Vorhersage einer Wetter-Entität */
   getForecast?(entityId: string): Promise<{ datetime: string; condition?: string; precipitation?: number; precipitation_probability?: number }[]>;
   /** Steht die Verbindung, und seit wann fehlt sie? (ohne Angabe gilt sie als stehend) */
@@ -520,8 +520,11 @@ export function createWatchers(deps: WatcherDeps) {
       .sort((a, b) => a.startMs - b.startMs);
     let next: { title: string; at: string } | null = null;
     for (const e of upcoming) {
-      const key = `cal:${w.id}:${new Date(e.startMs).toISOString()}:${e.title}`;
-      if (store.hasCardWithDedupeKey(key)) continue; // dieser Termin hat seine Karte schon
+      // Der Schlüssel ist die Kennung des Termins (nicht Titel oder Beginn: wer sie ändert, bekäme sonst eine zweite Karte).
+      // Ohne Kennung (und für Karten aus früheren Versionen) gilt der alte Schlüssel aus Beginn und Titel.
+      const legacyKey = `cal:${w.id}:${new Date(e.startMs).toISOString()}:${e.title}`;
+      const key = e.uid ? `cal:${w.id}:uid:${e.uid}${e.recurrenceId ? `:${e.recurrenceId}` : ''}` : legacyKey;
+      if (store.hasCardWithDedupeKey(key) || store.hasCardWithDedupeKey(legacyKey)) continue; // dieser Termin hat seine Karte schon (auch erledigt oder im Papierkorb)
       if (e.startMs - lead <= nowMs) {
         data.patchState(w.id, { lastFireAt: new Date(nowMs).toISOString() });
         await createCard(w, nowMs, false, key);

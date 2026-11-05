@@ -126,6 +126,38 @@ describe('Kalender: Termin mit Vorlauf', () => {
     expect(cards()).toHaveLength(1);
   });
 
+  it('eine gelöschte Karte (Papierkorb) kommt für denselben Termin nicht wieder', async () => {
+    ha.calendars.set(CAL, [{ title: 'Bio', start: inHours(2), end: inHours(3), uid: 'abc' }]);
+    await calendarWatcher();
+    await engine.tick();
+    store.deleteCard(cards()[0]!.id);
+    expect(cards()).toHaveLength(0);
+    advance(31);
+    await engine.tick();
+    expect(cards()).toHaveLength(0);
+  });
+
+  it('ein geänderter Titel oder Beginn desselben Termins (gleiche Kennung) erzeugt keine zweite Karte', async () => {
+    ha.calendars.set(CAL, [{ title: 'Bio', start: inHours(2), end: inHours(3), uid: 'abc' }]);
+    await calendarWatcher();
+    await engine.tick();
+    expect(cards()).toHaveLength(1);
+    ha.calendars.set(CAL, [{ title: 'Biotonne (neu)', start: inHours(3), end: inHours(4), uid: 'abc' }]);
+    advance(31);
+    await engine.tick();
+    expect(cards()).toHaveLength(1);
+  });
+
+  it('Einzeltermine einer Serie (gleiche Kennung, andere Wiederholung) bekommen je eine Karte', async () => {
+    ha.calendars.set(CAL, [
+      { title: 'Bio', start: inHours(2), end: inHours(3), uid: 'serie', recurrenceId: 'r1' },
+      { title: 'Bio', start: inHours(5), end: inHours(6), uid: 'serie', recurrenceId: 'r2' },
+    ]);
+    await calendarWatcher();
+    await engine.tick();
+    expect(cards()).toHaveLength(2);
+  });
+
   it('der Kalender wird höchstens alle 30 Minuten abgefragt', async () => {
     ha.calendars.set(CAL, []);
     await calendarWatcher();

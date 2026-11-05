@@ -11,7 +11,7 @@ export class FakeHa implements WatcherHa {
   history = new Map<string, { state: string; at: string }[]>();
   failHistory = false;
   /** Termine je Kalender (start/end wie von Home Assistant: ISO-Text oder nur ein Datum) */
-  calendars = new Map<string, { title: string; start: string; end: string }[]>();
+  calendars = new Map<string, { title: string; start: string; end: string; uid?: string; recurrenceId?: string }[]>();
   calendarCalls = 0;
   failCalendar = false;
   async getCalendarEvents(entityId: string, _from: string, _to: string) {

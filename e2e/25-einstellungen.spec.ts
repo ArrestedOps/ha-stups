@@ -25,15 +25,15 @@ test('Übersicht: Gruppen für den Administrator, jede Seite öffnet und führt 
   await expect(d.getByText(/Angemeldet als/)).toBeVisible();
   await expect(d.getByRole('link', { name: 'Diagnose-Seite' })).toBeVisible();
 
-  for (const page_ of ['Benachrichtigungen', 'Sprache und Farbe', 'Personen & Zugriff', 'Vorlagen', 'Termine', 'Dashboard und Kopfzeile', 'Dashboard-Button', 'Tageszusammenfassung', 'Warum kommt nichts an?', 'Papierkorb, Archiv, Umzug']) {
-    await d.getByRole('button', { name: page_ }).click();
+  for (const page_ of ['Benachrichtigungen', 'Sprache und Farbe', 'Personen & Zugriff', 'Vorlagen', 'Termine', 'Dashboard', 'Dashboard-Button', 'Tageszusammenfassung', 'Warum kommt nichts an?', 'Papierkorb, Archiv, Umzug']) {
+    await d.getByRole('button', { name: page_, exact: true }).click();
     await expect(d.getByRole('button', { name: 'Zurück zu den Einstellungen' })).toBeVisible();
     await back(page);
     await expect(d.getByText('Hilfe und Daten', { exact: true })).toBeVisible();
   }
 });
 
-test('Nichts geht verloren: Sprache und Farbe, Termine, Dashboard und Kopfzeile, Benachrichtigungen, Daten', async ({ page }) => {
+test('Nichts geht verloren: Sprache und Farbe, Termine, Dashboard, Benachrichtigungen, Daten', async ({ page }) => {
   await page.goto('/');
   await openBoards(page);
   await openSettingsPage(page, 'Sprache und Farbe');
@@ -46,12 +46,12 @@ test('Nichts geht verloren: Sprache und Farbe, Termine, Dashboard und Kopfzeile,
   await expect(d.getByLabel('Standard-Uhrzeit für Termine')).toBeVisible();
   await back(page);
 
-  // Dashboard und Kopfzeile: Ziel-Dashboard, HA-Kopfzeile ausblenden
-  await d.getByRole('button', { name: 'Dashboard und Kopfzeile' }).click();
-  await expect(d.getByRole('heading', { name: 'Zurück zum Dashboard' })).toBeVisible();
-  await expect(d.getByLabel('Dashboard', { exact: true })).toBeVisible();
-  await expect(d.getByLabel('Kopfzeile von Home Assistant ausblenden').last()).toBeVisible();
+  // Dashboard: Ziel des Home-Knopfs (die Kopfzeile von Home Assistant ausblenden steht in der Übersicht)
+  await d.getByRole('button', { name: 'Dashboard', exact: true }).click();
+  await expect(d.getByTestId('dashboard-choices')).toBeVisible();
+  await expect(d.getByTestId('dashboard-default')).toBeVisible();
   await back(page);
+  await expect(d.getByRole('switch', { name: 'Kopfzeile von Home Assistant ausblenden' })).toBeVisible();
 
   // Dashboard-Button: Vorschau und Bubble-Card-YAML mit dem Sensor „heute fällig"
   await d.getByRole('button', { name: 'Dashboard-Button' }).click();

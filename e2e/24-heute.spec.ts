@@ -150,13 +150,17 @@ test('Kopfzeile auf allen drei Reitern: Logo, Glocke, Zahnrad und Profilbild, ke
   }
 });
 
-test('Glocke: Zahnrad und Profilbild öffnen die Einstellungen, die Glocke die Mitteilungen (ohne Offenes ein ruhiger Satz, kein Punkt)', async ({ page }) => {
+test('Glocke: Zahnrad und Profilbild öffnen die Einstellungen, die Glocke die Mitteilungen (nach „Alle gelesen“ kein Punkt, Chips wie im Entwurf)', async ({ page, request }) => {
+  // Andere Tests lassen Ereignisse für diese Person zurück: erst alles lesen, dann zählt nur, was jetzt dazukommt
+  expect((await request.put('/api/me/inbox-seen', { data: {} })).status()).toBe(200);
   await page.goto('/');
   await openBoards(page);
   await expect(page.getByTestId('bell-dot')).toHaveCount(0);
   await page.getByRole('button', { name: 'Mitteilungen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mitteilungen' });
-  await expect(dialog.getByTestId('notifications-empty')).toBeVisible();
+  const chips = dialog.getByRole('group', { name: 'Art der Mitteilung' });
+  for (const name of ['Alle', 'Stupse', 'Wächter', 'Erledigt', 'Kommentare']) await expect(chips.getByRole('button', { name })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Alle gelesen' })).toBeDisabled();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await expect(page.getByRole('dialog', { name: 'Einstellungen' })).toBeVisible();
@@ -165,13 +169,14 @@ test('Glocke: Zahnrad und Profilbild öffnen die Einstellungen, die Glocke die M
   await expect(page.getByRole('dialog', { name: 'Einstellungen' }).getByTestId('settings-head')).toBeVisible();
 });
 
-test('Einstellungen › Home Assistant: „Zurück zum Dashboard" und „HA-Kopfzeile ausblenden" sind da (im Add-on für jeden)', async ({ page }) => {
+test('Einstellungen › Home Assistant: „Dashboard" (Ziel des Home-Knopfs) und „HA-Kopfzeile ausblenden" sind da (im Add-on für jeden), „Zurück zum Dashboard" steht nicht mehr doppelt', async ({ page }) => {
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Einstellungen' });
   await expect(dialog.getByText('Home Assistant', { exact: true })).toBeVisible();
-  await expect(dialog.getByRole('button', { name: 'Zurück zum Dashboard' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Dashboard', exact: true })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Zurück zum Dashboard' })).toHaveCount(0);
   const toggle = dialog.getByRole('switch', { name: 'Kopfzeile von Home Assistant ausblenden' });
   await expect(toggle).toBeVisible();
   const before = await toggle.getAttribute('aria-checked');

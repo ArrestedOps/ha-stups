@@ -127,13 +127,14 @@ test('Nur freigegebene: Fremder sieht „Kein Zugriff", der Administrator gibt i
     await fremd.reload();
     await openBoards(fremd);
     await expect(fremd.getByRole('tablist', { name: 'Spalten' })).toBeVisible();
-    // Als Mitglied sieht er weder „Haushalt" noch „Home Assistant": Personen, Zugriff und Dashboard ändern nur Administratoren
+    // Als Mitglied sieht er nicht „Haushalt": Personen und Zugriff ändern nur Administratoren (das eigene Dashboard wählt jeder selbst)
     await fremd.getByRole('button', { name: 'Board wechseln' }).click();
     await fremd.getByRole('button', { name: 'Einstellungen', exact: true }).click();
     const dialog = fremd.getByRole('dialog');
     await expect(dialog.getByRole('button', { name: 'Sprache und Farbe' })).toBeVisible();
     await expect(dialog.getByRole('button', { name: /Personen & Zugriff/ })).toHaveCount(0);
-    await expect(dialog.getByRole('button', { name: 'Dashboard und Kopfzeile' })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Dashboard', exact: true })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Dashboard-Button' })).toHaveCount(0);
     await expect(dialog.getByText('Haushalt', { exact: true })).toHaveCount(0);
   } finally {
     fremdRef = fremd;

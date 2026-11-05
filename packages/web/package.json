@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "test": "vitest run",
-    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json",
+    "symbols": "node scripts/build-symbols.mjs"
   },
   "devDependencies": {
+    "@mdi/js": "^7.4.47",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tailwindcss/vite": "^4.3.3",
     "@tsconfig/svelte": "^5.0.8",

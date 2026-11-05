@@ -5,6 +5,7 @@ import { createTemplates } from './store/templates.js';
 import { createFairness } from './store/fairness.js';
 import { createConfirmation } from './store/confirmation.js';
 import { createToday } from './store/today.js';
+import { createInbox } from './store/inbox.js';
 import { createCards } from './store/cards.js';
 import { createBoards } from './store/boards.js';
 import { createCompletion } from './store/completion.js';
@@ -44,9 +45,12 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     createFairness(c, s),
     createConfirmation(c, s),
     createToday(c, s),
+    createInbox(c, s),
   );
 
   return {
+    inbox: s.inbox,
+    markInboxSeen: s.markInboxSeen,
     createNudges: s.createNudges,
     nudgeTargets: s.nudgeTargets,
     dueNudges: s.dueNudges,

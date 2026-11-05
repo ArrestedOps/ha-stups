@@ -13,6 +13,7 @@ import type { createTemplates } from './templates.js';
 import type { createFairness } from './fairness.js';
 import type { createConfirmation } from './confirmation.js';
 import type { createToday } from './today.js';
+import type { createInbox } from './inbox.js';
 
 export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createBoards> &
@@ -27,4 +28,5 @@ export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createTemplates> &
   ReturnType<typeof createFairness> &
   ReturnType<typeof createConfirmation> &
-  ReturnType<typeof createToday>;
+  ReturnType<typeof createToday> &
+  ReturnType<typeof createInbox>;

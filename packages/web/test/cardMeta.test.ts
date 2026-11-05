@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardMeta, type MetaFormat, priorityTone } from '../src/lib/cardMeta';
+import { cardMeta, type MetaFormat, priorityTone, categoryFg } from '../src/lib/cardMeta';
 
 const fmt: MetaFormat = {
   due: (iso) => `fällig ${iso.slice(5, 10)}`,
@@ -84,20 +84,36 @@ describe('Meta-Zeile einer Karte', () => {
   });
 });
 
-describe('Meta-Zeile: Zuständige mit Namen (wie im Mockup)', () => {
-  const texts = (card: object, people?: string[]) =>
-    cardMeta({ ...base, ...card } as never, { overdue: false, isDone: false }, fmt, { people }).filter((m) => m.kind === 'person').map((m) => (m as { text: string }).text);
+describe('Meta-Zeile: Kategorie statt Personenname (die Person steht als Bild rechts)', () => {
+  const cat = (card: object, categories?: { name: string; color: string }[]) =>
+    cardMeta({ ...base, ...card } as never, { overdue: false, isDone: false }, fmt, { categories }).filter((m) => m.kind === 'category');
 
-  it('ein Name, bei mehreren der erste mit „+n", ohne Zuständige nichts', () => {
-    expect(texts({}, ['Ben'])).toEqual(['Ben']);
-    expect(texts({}, ['Ben', 'Conny', 'Anna'])).toEqual(['Ben +2']);
-    expect(texts({}, [])).toEqual([]);
-    expect(texts({})).toEqual([]);
+  it('eine Kategorie: Name und Farbe; bei mehreren die erste mit Zahl der übrigen; ohne Kategorie nichts', () => {
+    expect(cat({}, [{ name: 'Putzen', color: 'blue' }])).toEqual([{ kind: 'category', name: 'Putzen', color: 'blue', more: 0 }]);
+    expect(cat({}, [{ name: 'Putzen', color: 'blue' }, { name: 'Familie', color: 'pink' }, { name: 'Technik', color: 'yellow' }])).toEqual([
+      { kind: 'category', name: 'Putzen', color: 'blue', more: 2 },
+    ]);
+    expect(cat({}, [])).toEqual([]);
+    expect(cat({})).toEqual([]);
   });
 
-  it('steht nach der Priorität und vor der Checkliste', () => {
-    const k = cardMeta({ ...base, dueAt: '2026-11-04T10:00:00Z', priority: 'high', checklist: { done: 0, total: 3 }, linkCount: 1 } as never, { overdue: false, isDone: false }, fmt, { people: ['Ben'] }).map((m) => m.kind);
-    expect(k).toEqual(['due', 'priority', 'person', 'checklist', 'links']);
+  it('der Name einer Person steht nicht mehr in der Zeile', () => {
+    const k = cardMeta({ ...base } as never, { overdue: false, isDone: false }, fmt, { categories: [{ name: 'Putzen', color: 'blue' }] }).map((m) => m.kind);
+    expect(k).not.toContain('person');
+  });
+
+  it('steht nach Termin, Wächter und Wiederholung, vor Priorität und Checkliste', () => {
+    const k = cardMeta({ ...base, dueAt: '2026-11-04T10:00:00Z', priority: 'high', checklist: { done: 0, total: 3 }, linkCount: 1 } as never, { overdue: false, isDone: false }, fmt, { categories: [{ name: 'Putzen', color: 'blue' }] }).map((m) => m.kind);
+    expect(k).toEqual(['due', 'category', 'priority', 'checklist', 'links']);
+  });
+});
+
+describe('categoryFg', () => {
+  it('bekannte Farben ergeben die Variable der Kategorie, alles andere die ruhige Schriftfarbe', () => {
+    expect(categoryFg('blue')).toBe('var(--c-blue-fg)');
+    expect(categoryFg('mint')).toBe('var(--c-mint-fg)');
+    expect(categoryFg('hotpink')).toBe('var(--text2)');
+    expect(categoryFg('')).toBe('var(--text2)');
   });
 });
 

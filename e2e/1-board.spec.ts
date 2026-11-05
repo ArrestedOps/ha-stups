@@ -295,3 +295,21 @@ test('Handy-Layout: nichts ragt seitlich heraus', async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
+
+test('Karte: die Kategorie steht in der Zeile, die Zuständigen als Bild rechts (kein Personenname in der Zeile)', async ({ page, request }) => {
+  const headers = { 'x-stups-client': 'e2e' };
+  const boards = (await (await request.get('/api/boards')).json()) as { id: string }[];
+  const board = boards[0]!;
+  const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string }[] };
+  const cat = (await (await request.post(`/api/boards/${board.id}/categories`, { data: { name: 'Putzen', color: 'blue' }, headers })).json()) as { id: string };
+  const me = ((await (await request.get('/api/me')).json()) as { user: { id: string } }).user;
+  const title = uniqueTitle('Kategorietest');
+  const created = await request.post(`/api/boards/${board.id}/cards`, { data: { columnId: view.columns[0]!.id, title, categoryIds: [cat.id], assigneeIds: [me.id] }, headers });
+  expect(created.status()).toBe(201);
+
+  await openBoards(page);
+  const row = card(page, title).first();
+  await expect(row.getByTestId('card-category')).toContainText('Putzen');
+  await expect(row.getByTestId('card-assignees')).toHaveAttribute('aria-label', /Zuständig: /);
+  await expect(row.getByTestId('card-person')).toHaveCount(0);
+});

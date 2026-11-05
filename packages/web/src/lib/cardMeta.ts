@@ -7,7 +7,7 @@ export type MetaItem =
   | { kind: 'watcher' }
   | { kind: 'recurrence'; label: string }
   | { kind: 'priority'; level: 'medium' | 'high' }
-  | { kind: 'person'; text: string }
+  | { kind: 'category'; name: string; color: string; more: number }
   | { kind: 'checklist'; done: number; total: number }
   | { kind: 'comments'; count: number }
   | { kind: 'links'; count: number }
@@ -27,18 +27,24 @@ export function priorityTone(level: 'medium' | 'high'): { text: string; glow: bo
 
 type MetaCard = Pick<Card, 'dueAt' | 'completedAt' | 'recurrence' | 'priority' | 'checklist' | 'linkCount' | 'attachmentCount' | 'commentCount' | 'costCents' | 'watcherId'>;
 
+/** Textfarbe einer Kategorie (Variable aus app.css); unbekannte Farben bleiben ruhig grau */
+const CATEGORY_COLORS = new Set(['blue', 'teal', 'green', 'yellow', 'orange', 'red', 'pink', 'purple', 'indigo', 'brown', 'gray', 'mint']);
+export function categoryFg(color: string): string {
+  return CATEGORY_COLORS.has(color) ? `var(--c-${color}-fg)` : 'var(--text2)';
+}
+
 /**
- * `opts.people`: die Namen der Zuständigen. Sie stehen (wie im Mockup „Mo, 27. Jan • Ben") nach der Priorität und vor der Checkliste;
- * bei mehreren der erste Name mit „+n".
+ * `opts.categories`: die Kategorien der Karte. Die erste steht (mit Farbpunkt) nach Termin, Wächter und Wiederholung, bei mehreren mit der
+ * Zahl der übrigen. Wer zuständig ist, zeigen die Bilder rechts in der Zeile, nicht diese Zeile.
  */
-export function cardMeta(card: MetaCard, state: { overdue: boolean; isDone: boolean }, fmt: MetaFormat, opts: { people?: string[] } = {}): MetaItem[] {
+export function cardMeta(card: MetaCard, state: { overdue: boolean; isDone: boolean }, fmt: MetaFormat, opts: { categories?: { name: string; color: string }[] } = {}): MetaItem[] {
   const out: MetaItem[] = [];
   if (card.completedAt) out.push({ kind: 'done', text: fmt.due(card.completedAt) });
   if (card.dueAt) out.push({ kind: 'due', text: fmt.due(card.dueAt), overdue: state.overdue && !state.isDone });
   if (card.watcherId) out.push({ kind: 'watcher' });
   if (card.recurrence) out.push({ kind: 'recurrence', label: fmt.recurrence(card.recurrence) });
+  if (opts.categories?.length) out.push({ kind: 'category', name: opts.categories[0]!.name, color: opts.categories[0]!.color, more: opts.categories.length - 1 });
   if (card.priority === 'medium' || card.priority === 'high') out.push({ kind: 'priority', level: card.priority });
-  if (opts.people?.length) out.push({ kind: 'person', text: opts.people.length > 1 ? `${opts.people[0]} +${opts.people.length - 1}` : opts.people[0]! });
   if (card.checklist.total > 0) out.push({ kind: 'checklist', done: card.checklist.done, total: card.checklist.total });
   if (card.commentCount) out.push({ kind: 'comments', count: card.commentCount });
   if (card.linkCount) out.push({ kind: 'links', count: card.linkCount });

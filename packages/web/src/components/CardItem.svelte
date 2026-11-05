@@ -6,7 +6,7 @@
   import { nudgeBadge } from '../lib/nudge';
   import { swipeDirection, swipeTarget } from '../lib/swipe';
   import { completeCard, openSheet, personById, swipeCard, ui } from '../lib/store.svelte';
-  import Avatar from './Avatar.svelte';
+  import AvatarStack from './AvatarStack.svelte';
   import CardMeta from './CardMeta.svelte';
   import Icon from './Icon.svelte';
   import ListRow from './ui/ListRow.svelte';
@@ -169,11 +169,11 @@
               <Icon name="hand" size={12} />{t('Du hast {names} gestupst', { names: names(nudge.fromMe.map((n) => n.toId)) })}
             </span>
           {/if}
-          <CardMeta {card} done={isDoneColumn} {overdue} {categories} people={assignees.map((p) => p.displayName)} />
+          <CardMeta {card} done={isDoneColumn} {overdue} {categories} />
         </span>
       {/snippet}
       {#snippet right()}
-        {#if assignees.length}<Avatar person={assignees[0]!} size={28} ring={1.5} />{/if}
+        <AvatarStack people={assignees} />
         {#if !ui.isChild}
           <button
             class="flex h-11 w-7 shrink-0 items-center justify-center text-text-soft2"

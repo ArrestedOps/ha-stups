@@ -630,8 +630,14 @@ export function createCards(c: Ctx, late: unknown) {
       params.push(...opts.boardIds);
     }
     const boards = new Map(all('select id, name, color from boards where deleted_at is null').map((b) => [b.id as string, b]));
+    const cats = new Map(all('select id, name, color from categories where deleted_at is null').map((c) => [c.id as string, { id: c.id as string, name: c.name as string, color: c.color as string }]));
     return loadCards(where.join(' and '), ...params)
-      .map((c) => ({ ...c, boardName: boards.get(c.boardId)?.name ?? '', boardColor: (boards.get(c.boardId)?.color as string | null) ?? null }))
+      .map((c) => ({
+        ...c,
+        boardName: boards.get(c.boardId)?.name ?? '',
+        boardColor: (boards.get(c.boardId)?.color as string | null) ?? null,
+        categories: c.categoryIds.map((id) => cats.get(id)).filter((x): x is { id: string; name: string; color: string } => x !== undefined),
+      }))
       .sort((a, b) =>
         a.dueAt === b.dueAt ? (a.createdAt === b.createdAt ? (a.id < b.id ? -1 : 1) : a.createdAt < b.createdAt ? -1 : 1) : a.dueAt! < b.dueAt! ? -1 : 1,
       );

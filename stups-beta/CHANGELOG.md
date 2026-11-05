@@ -2,6 +2,12 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.24.2-beta.1
+
+- **Kategorie in der Zeile:** Auf der Karte steht jetzt die **Kategorie** (mit Farbpunkt, bei mehreren die erste und „+n“) statt des Personennamens. Wer zuständig ist, zeigen die Bilder rechts. Das gilt in Aufgaben und in den Boards
+- **Mehrere Zuständige als Stapel (Variante D):** Bis zu drei Personen stehen überlappend nebeneinander, ab vier zeigt die Karte zwei Bilder und einen Kreis „+n“ mit der Zahl der übrigen. Für Screenreader steht jeder Name im Text
+- Keine Änderung an der Datenbank
+
 ## 1.24.1-beta.1
 
 - **Wischen andersherum:** Finger nach **rechts** schiebt die Karte in den **nächsten** Status (zum Beispiel von Offen in In Arbeit), Finger nach **links** zurück. Vorher war es umgekehrt. Die Karte fliegt in die Richtung, in die du wischst

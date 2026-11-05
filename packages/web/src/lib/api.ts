@@ -710,6 +710,8 @@ export interface PushStatus {
 export interface ScheduleCard extends Card {
   boardName: string;
   boardColor: string | null;
+  /** die Kategorien der Karte (Name und Farbe); Aufgaben zeigt die erste in der Zeile */
+  categories: { id: string; name: string; color: string }[];
 }
 
 export type NudgeTemplate = 'think' | 'today' | 'help' | 'thanks';

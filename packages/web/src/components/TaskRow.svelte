@@ -2,7 +2,7 @@
   import { t } from '../lib/i18n/index.svelte';
   import type { ScheduleCard } from '../lib/schedule';
   import { completeCard, openCardAnywhere, openCardMenuAnywhere, personById, ui } from '../lib/store.svelte';
-  import Avatar from './Avatar.svelte';
+  import AvatarStack from './AvatarStack.svelte';
   import CardMeta from './CardMeta.svelte';
   import Icon from './Icon.svelte';
   import ListRow from './ui/ListRow.svelte';
@@ -17,6 +17,8 @@
   const done = $derived(!!card.completedAt);
   const overdue = $derived(!done && !!card.dueAt && Date.parse(card.dueAt) < nowMs);
   const assignees = $derived(card.assigneeIds.map(personById).filter((p) => p !== undefined));
+  // Kategorien der Karte (vom Server mitgeliefert): die erste steht mit Farbpunkt in der Zeile
+  const categories = $derived(card.categories ?? []);
 </script>
 
 <ListRow
@@ -36,10 +38,10 @@
     <CardTile {card} />
   {/snippet}
   {#snippet meta()}
-    <CardMeta {card} {done} {overdue} {nowMs} people={assignees.map((p) => p.displayName)} quietDue />
+    <CardMeta {card} {done} {overdue} {nowMs} {categories} quietDue />
   {/snippet}
   {#snippet right()}
-    {#if assignees.length}<Avatar person={assignees[0]!} size={28} ring={1.5} />{/if}
+    <AvatarStack people={assignees} />
     {#if !ui.isChild}
       <button
         class="flex h-11 w-7 shrink-0 items-center justify-center text-text-soft2"

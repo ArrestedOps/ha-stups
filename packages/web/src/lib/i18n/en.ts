@@ -353,6 +353,7 @@ export const en: Catalog = {
   'Titel, Zuständige, Kategorien, Priorität und Erinnerungen kommen immer mit. Beim Erledigen bleibt die jetzige Karte mit allem in „Erledigt“, die nächste wird neu angelegt.': 'Title, assignees, categories, priority and reminders are always carried over. When completed, the current card stays with everything in “Done” and the next one is created anew.',
   'Konnte die Auswahl nicht laden': 'Could not load the selection',
   'Jemand': 'Someone',
+  'Zuständig: {names}': 'Assigned to: {names}',
   'Notizen …': 'Notes …',
   'Verlauf': 'History',
   'Vorheriges': 'Previous',

@@ -282,6 +282,8 @@ export interface Card {
 export interface ScheduleCard extends Card {
   boardName: string;
   boardColor: string | null;
+  /** die Kategorien der Karte (Name und Farbe), in der Reihenfolge der Karte; Aufgaben zeigt die erste in der Zeile */
+  categories: { id: string; name: string; color: string }[];
 }
 
 export interface Attachment {

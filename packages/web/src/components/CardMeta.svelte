@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t, tn } from '../lib/i18n/index.svelte';
   import type { Card } from '../lib/api';
-  import { cardMeta, priorityTone } from '../lib/cardMeta';
+  import { cardMeta, categoryFg, priorityTone } from '../lib/cardMeta';
   import { formatCost, formatDue } from '../lib/datetime';
   import { describeRecurrence } from '../lib/recurrence';
   import Icon from './Icon.svelte';
@@ -15,7 +15,6 @@
     card,
     done = false,
     overdue = false,
-    people = [],
     categories = [],
     quietDue = false,
     nowMs = Date.now(),
@@ -23,14 +22,13 @@
     card: Card;
     done?: boolean;
     overdue?: boolean;
-    people?: string[];
-    /** die Kategorien der Karte: im Entwurf stehen sie nur als Farbe der Kachel, für Vorlese-Programme hier als Text */
-    categories?: { id: string; name: string }[];
+    /** die Kategorien der Karte: die erste steht mit Farbpunkt in der Zeile, alle als Text für Vorlese-Programme */
+    categories?: { id: string; name: string; color: string }[];
     quietDue?: boolean;
     nowMs?: number;
   } = $props();
 
-  const meta = $derived(cardMeta(card, { overdue, isDone: done }, { due: (iso) => formatDue(iso, nowMs), cost: formatCost, recurrence: describeRecurrence }, { people }));
+  const meta = $derived(cardMeta(card, { overdue, isDone: done }, { due: (iso) => formatDue(iso, nowMs), cost: formatCost, recurrence: describeRecurrence }, { categories }));
   const ICON = 14;
 </script>
 
@@ -63,8 +61,10 @@
         >
           <span class={priorityTone(m.level).glow ? 'prio-glow flex' : 'flex'}><Icon name="flag" size={ICON} stroke={1.9} /></span>{m.level === 'high' ? t('Hoch') : t('Mittel')}
         </span>
-      {:else if m.kind === 'person'}
-        <span class="inline-flex shrink-0 items-center gap-1" data-testid="card-person"><Icon name="user" size={ICON} stroke={1.9} /><span class="max-w-[7rem] truncate">{m.text}</span></span>
+      {:else if m.kind === 'category'}
+        <span class="inline-flex min-w-0 items-center gap-[5px] font-semibold" style:color={categoryFg(m.color)} data-testid="card-category">
+          <i class="block h-2 w-2 shrink-0 rounded-full bg-current" aria-hidden="true"></i><span class="truncate">{m.name}</span>{#if m.more > 0}<span class="shrink-0">+{m.more}</span>{/if}
+        </span>
       {:else if m.kind === 'checklist'}
         <span class="inline-flex shrink-0 items-center gap-1" aria-label={t('Checkliste {done} von {total}', { done: m.done, total: m.total })}><Icon name="task-check" size={ICON} stroke={1.9} />{m.done}/{m.total}</span>
       {:else if m.kind === 'comments'}

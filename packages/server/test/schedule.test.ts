@@ -144,3 +144,28 @@ describe('GET /api/schedule', () => {
     expect((await get('/api/schedule?to=2026-13-45')).status).toBe(400);
   });
 });
+
+describe('Kategorien der Karten in der Terminliste (Aufgaben zeigt sie in der Zeile)', () => {
+  it('jede Karte bringt ihre Kategorien mit Name und Farbe mit, in der Reihenfolge der Karte; ohne Kategorie eine leere Liste', () => {
+    const putzen = store.addCategory(haushalt, { name: 'Putzen', color: 'blue' });
+    const familie = store.addCategory(haushalt, { name: 'Familie', color: 'pink' });
+    add(haushalt, colH, 'mit zwei', '2026-11-05T10:00:00Z', { categoryIds: [familie.id, putzen.id] });
+    add(haushalt, colH, 'ohne', '2026-11-06T10:00:00Z');
+    const list = store.listSchedule({});
+    const two = list.find((c) => c.title === 'mit zwei')!;
+    expect(two.categories.map((c) => c.id)).toEqual(two.categoryIds); // gleiche Reihenfolge wie an der Karte
+    expect(two.categories).toHaveLength(2);
+    expect(two.categories).toEqual(expect.arrayContaining([
+      { id: familie.id, name: 'Familie', color: 'pink' },
+      { id: putzen.id, name: 'Putzen', color: 'blue' },
+    ]));
+    expect(list.find((c) => c.title === 'ohne')!.categories).toEqual([]);
+  });
+
+  it('eine gelöschte Kategorie erscheint nicht mehr', () => {
+    const putzen = store.addCategory(haushalt, { name: 'Putzen', color: 'blue' });
+    add(haushalt, colH, 'K', '2026-11-05T10:00:00Z', { categoryIds: [putzen.id] });
+    store.deleteCategory(putzen.id);
+    expect(store.listSchedule({}).find((c) => c.title === 'K')!.categories).toEqual([]);
+  });
+});

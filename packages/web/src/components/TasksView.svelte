@@ -7,6 +7,7 @@
   import { t, tn } from '../lib/i18n/index.svelte';
   import { activeFilterCount, DEFAULT_FILTER, dayKeyOf, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId } from '../lib/schedule';
   import { scrollStrip } from '../lib/scrollStrip';
+  import type { StatsKind } from '../lib/statsSheets';
   import { groupTasks, nudgesToMe, parseTasksView, taskStats, type TaskGroupKey, type TasksView } from '../lib/tasks';
   import { ageText, sourceLine } from '../lib/today';
   import { shortMonthTitle, weekStrip } from '../lib/week';
@@ -191,10 +192,11 @@
         {:else}
           <StatsBar
             label={t('Deine Zahlen')}
+            onselect={(id) => openSheet({ type: 'stats', kind: id as StatsKind })}
             items={[
               { id: 'today', label: t('Heute fällig'), value: stats.today, icon: 'calendar', tone: 'accent' },
               { id: 'overdue', label: t('Überfällig'), value: stats.overdue, icon: 'alert-circle', tone: 'danger' },
-              { id: 'done', label: t('Erledigt'), value: stats.done, icon: 'done', tone: 'ok' },
+              { id: 'done', label: t('Erledigt heute'), value: stats.done, icon: 'done', tone: 'ok' },
             ]}
           />
 

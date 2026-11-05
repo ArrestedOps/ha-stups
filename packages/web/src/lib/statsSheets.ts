@@ -10,6 +10,9 @@ import type { TaskStats } from './tasks';
  * (`taskStats` in tasks.ts); die Zahl der Leiste und die Zahl im Blatt kommen aus derselben Regel.
  */
 
+/** Die drei Blätter hinter der Zahlenleiste */
+export type StatsKind = 'today' | 'overdue' | 'done';
+
 const mine = (c: ScheduleCard, meId: string | null): boolean => !!meId && c.assigneeIds.includes(meId);
 const byDue = (a: ScheduleCard, b: ScheduleCard) => Date.parse(a.dueAt!) - Date.parse(b.dueAt!) || (a.id < b.id ? -1 : 1);
 const byDone = (a: ScheduleCard, b: ScheduleCard) => Date.parse(a.completedAt!) - Date.parse(b.completedAt!) || (a.id < b.id ? -1 : 1);

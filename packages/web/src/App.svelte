@@ -2,6 +2,7 @@
   import { t } from './lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import ArchiveSheet from './components/ArchiveSheet.svelte';
+  import StatsSheet from './components/StatsSheet.svelte';
   import AuthView from './components/AuthView.svelte';
   import SlotSheet from './components/SlotSheet.svelte';
   import TabBar from './components/TabBar.svelte';
@@ -134,6 +135,8 @@
     <TrashSheet />
   {:else if ui.sheet?.type === 'archive'}
     <ArchiveSheet />
+  {:else if ui.sheet?.type === 'stats'}
+    <StatsSheet kind={ui.sheet.kind} />
   {:else if ui.sheet?.type === 'week'}
     <WeekSheet />
   {:else if ui.sheet?.type === 'notifications'}

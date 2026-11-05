@@ -38,7 +38,7 @@
 
 <Sheet title={t('Archiv')} onclose={closeSheet}>
   {#snippet left()}
-    <button class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" onclick={() => openSheet({ type: 'boardSettings' })}>{t('Zurück')}</button>
+    <button class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" onclick={() => openSheet(ui.sheet?.type === 'archive' && ui.sheet.from === 'stats' ? { type: 'stats', kind: 'done' } : { type: 'boardSettings' })}>{t('Zurück')}</button>
   {/snippet}
   <div class="flex flex-col gap-3.5 pt-1">
     {#if items === null}

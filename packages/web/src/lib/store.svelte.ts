@@ -15,9 +15,10 @@ import { deviceTz, formatDue } from './datetime';
 import { readHaDefaultPanel, resolveDashboardPath, type DashboardSource } from './dashboard';
 import { applyHeaderHiding } from './hideHaHeader';
 import { applyAccent, hueFromStorage, type Scheme } from './accent';
-import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLanguage, t } from './i18n/index.svelte';
+import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLanguage, t, tn } from './i18n/index.svelte';
 import { passkeysSupported } from './passkeys';
 import { DEFAULT_FILTER, effectiveFilter, parseScheduleFilter, type FilterContext, type ScheduleFilter } from './schedule';
+import { shiftDue, type ShiftTarget, type StatsKind } from './statsSheets';
 import { swipeTarget } from './swipe';
 import type { SettingsPageId } from './settingsPages';
 import type { TemplateDraft } from './watcher-types';
@@ -39,7 +40,8 @@ export type Sheet =
   | { type: 'found' }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
-  | { type: 'archive' }
+  | { type: 'archive'; /** geöffnet aus „Heute erledigt“: dorthin geht Zurück */ from?: 'stats' }
+  | { type: 'stats'; kind: StatsKind }
   | { type: 'week' }
   | { type: 'notifications' }
   | { type: 'filter' };
@@ -574,6 +576,69 @@ export async function completeCard(card: Pick<Card, 'id'>): Promise<void> {
   const id = res.completionId;
   const text = res.nextDueAt ? t('Erledigt · nächste Karte {when}', { when: formatDue(res.nextDueAt) }) : t('Erledigt');
   toast(text, { action: { label: t('Rückgängig'), run: () => void act(() => api.undo(id)) } });
+}
+
+/**
+ * „In der Liste filtern" in den Blättern „Heute fällig" und „Überfällig": schließt das Blatt und stellt den Filter der Liste auf
+ * Wann = Heute (oder Überfällig) und Wer = Meine (ein Kind kennt „Wer" nicht, es sieht ohnehin nur die eigenen). Sonst gilt der Grundfilter.
+ */
+export function filterListFor(kind: 'today' | 'overdue'): void {
+  const me = ui.me;
+  setScheduleFilter({ ...DEFAULT_FILTER, when: [kind], personIds: me?.isPerson && !ui.isChild ? [me.id] : [] });
+  closeSheet();
+}
+
+/**
+ * Überfällige Karten verschieben (Blatt „Überfällig"): Termin auf heute, morgen oder Samstag, Uhrzeit bleibt (shiftDue). Über die
+ * gewöhnliche Karten-Änderung; „Geplant" und zurück regelt der Server. Gemeldet wird nur, was wirklich verschoben wurde, mit „Rückgängig"
+ * (stellt die alten Termine wieder her); schlägt es für alle fehl, gibt es nur die Fehlermeldung. Kinder ändern keine Karten.
+ */
+export async function shiftCards(cards: { id: string; title: string; dueAt: string | null }[], target: ShiftTarget): Promise<void> {
+  if (ui.isChild) return;
+  const items = cards.filter((c): c is { id: string; title: string; dueAt: string } => !!c.dueAt);
+  if (items.length === 0) return;
+  const nowMs = Date.now();
+  const moved: { id: string; title: string; from: string }[] = [];
+  let failed = 0;
+  const r = await actResult(async () => {
+    let first: unknown = null;
+    for (const c of items) {
+      try {
+        await api.updateCard(c.id, { dueAt: shiftDue(c.dueAt, target, nowMs) });
+        moved.push({ id: c.id, title: c.title, from: c.dueAt });
+      } catch (e) {
+        failed += 1;
+        first ??= e;
+      }
+    }
+    if (moved.length === 0) throw first; // alles fehlgeschlagen: die Fehlermeldung kommt von actResult
+  });
+  if (!r.ok) return;
+  const when = target === 'today' ? t('heute') : target === 'tomorrow' ? t('morgen') : t('Samstag');
+  const text =
+    moved.length === 1
+      ? t('„{title}“ auf {when} verschoben', { title: moved[0]!.title, when })
+      : tn('{n} Aufgabe auf {when} verschoben', '{n} Aufgaben auf {when} verschoben', moved.length).replace('{when}', when);
+  toast(text, {
+    action: {
+      label: t('Rückgängig'),
+      run: () =>
+        void actResult(async () => {
+          for (const m of moved) await api.updateCard(m.id, { dueAt: m.from });
+        }),
+    },
+  });
+  if (failed > 0) toast(tn('{n} Aufgabe ließ sich nicht verschieben', '{n} Aufgaben ließen sich nicht verschieben', failed), { tone: 'error' });
+}
+
+/** Eine heute erledigte Karte wieder öffnen (Blatt „Heute erledigt"): macht die letzte Erledigung rückgängig, wie „Rückgängig" nach dem Abhaken */
+export async function reopenCard(card: Pick<Card, 'id' | 'title'>): Promise<void> {
+  const r = await actResult(async () => {
+    const last = (await api.card(card.id)).history[0];
+    if (!last) throw new Error('no completion');
+    return api.undo(last.id);
+  });
+  if (r.ok) toast(t('„{title}“ ist wieder offen', { title: card.title }));
 }
 
 /** Eine Karte vom Haus weitergeben: an die nächste Person der Rotation, oder sie bleibt bei mir, wenn gerade niemand sonst dran ist */

@@ -2,17 +2,15 @@
   import { t } from '../lib/i18n/index.svelte';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
   import type { ConditionKind } from '../lib/watcher-types';
+  import { conditionItems } from '../lib/watcher-flow';
   import EntityPicker from './EntityPicker.svelte';
+  import EntityRow from './EntityRow.svelte';
   import Segmented from './ui/Segmented.svelte';
 
   /** „Erledigt sich selbst, wenn …": die Entität und die Bedingung, bei der die offene Karte dieses Wächters von selbst erledigt wird */
   let { ed }: { ed: WatcherEditor } = $props();
   const f = $derived(ed.form);
-  const KINDS = $derived([
-    { id: 'state', label: t('Zustand') },
-    { id: 'below', label: t('unter') },
-    { id: 'above', label: t('über') },
-  ]);
+  const KINDS = $derived(conditionItems());
 </script>
 
 <div class="flex flex-col gap-3.5 rounded-row border border-line bg-surface px-3.5 py-3.5" data-testid="done-editor">
@@ -21,15 +19,7 @@
   {#if ed.picking === 'done'}
     <EntityPicker {ed} />
   {:else}
-    <div class="flex items-center gap-3">
-      <span class="min-w-0 flex-1">
-        <span class="block truncate text-[15px] font-bold">{f.doneEntityName || t('Noch keine Entität gewählt')}</span>
-        {#if f.doneEntityId}<span class="block truncate text-[12px] text-fg2">{f.doneEntityId}</span>{/if}
-      </span>
-      <button type="button" class="inline-flex h-[34px] shrink-0 items-center rounded-xl bg-surface2 px-3 text-[13px] font-bold text-text-soft" onclick={() => ed.startPicking('done')}>
-        {f.doneEntityId ? t('Ändern') : t('Wählen')}
-      </button>
-    </div>
+    <EntityRow name={f.doneEntityName} id={f.doneEntityId} empty={t('Noch keine Entität gewählt')} testid="done-entity" onchange={() => ed.startPicking('done')} />
   {/if}
   <Segmented small items={KINDS} value={f.doneKind} label={t('Bedingung zum Erledigen')} onchange={(id) => (f.doneKind = id as ConditionKind)} />
   <div class="flex items-center justify-between gap-3">

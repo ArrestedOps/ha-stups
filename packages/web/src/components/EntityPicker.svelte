@@ -41,8 +41,8 @@
       <li>
         <button type="button" class="flex min-h-12 w-full items-center gap-2 rounded-row border border-line bg-surface px-3.5 py-1.5 text-left" onclick={() => ed.pick(e)}>
           <span class="min-w-0 flex-1">
-            <span class="block truncate text-[15px] font-bold">{e.name}</span>
-            <span class="block truncate text-[12px] text-fg2">{e.entityId}</span>
+            <span class="block break-words text-[15px] font-bold">{e.name}</span>
+            <span class="block break-words text-[12px] text-fg2">{e.entityId}</span>
           </span>
           <span class="shrink-0 text-[13px] text-fg2">{e.state}{e.unit ? ` ${e.unit}` : ''}</span>
         </button>

@@ -230,3 +230,15 @@ export function durationHint(minutes: number, hours: number, fired: number): str
 export function nameSymbol(name: string): string | null {
   return detectSymbol(name) ?? detectSymbol(name, i18n.lang === 'de' ? 'en' : 'de');
 }
+
+/**
+ * Die Bedingungsarten in genau einer Reihenfolge: unter, über, Zustand (so im Entwurf WaechterB; WaechterB4 und WaechterC zeigen sie nicht).
+ * „Wenn" (Auslöser) und „Erledigt sich selbst" (Feinschliff und Ablauf) nehmen beide diese Liste.
+ */
+export const CONDITION_ORDER = ['below', 'above', 'state'] as const;
+export type ConditionId = (typeof CONDITION_ORDER)[number];
+
+export function conditionItems(): { id: ConditionId; label: string }[] {
+  const label: Record<ConditionId, string> = { below: t('unter'), above: t('über'), state: t('Zustand') };
+  return CONDITION_ORDER.map((id) => ({ id, label: label[id] }));
+}

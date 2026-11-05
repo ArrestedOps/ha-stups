@@ -24,6 +24,7 @@
     highlight = false,
     current = false,
     dashed = false,
+    wrap = false,
     expanded,
     inset = false,
     onclick,
@@ -46,6 +47,8 @@
     current?: boolean;
     /** gestrichelter Rand: wartet auf etwas (Freigabe) */
     dashed?: boolean;
+    /** Titel und Meta dürfen umbrechen, die Zeile wächst mit (Wächter-Editor); sonst einzeilig mit „…“ wie in den Listen */
+    wrap?: boolean;
     /** der Antippbereich klappt etwas auf (aria-expanded) */
     expanded?: boolean;
     /** Zeile in einer Karte (Ablauf im Wächter-Editor): dunkler Grund, 64 px hoch statt 68 */
@@ -56,7 +59,7 @@
 </script>
 
 <div
-  class="flex w-full items-center rounded-row border text-fg {inset ? 'h-16 bg-bg' : current ? 'h-row' : 'h-row bg-surface'} {highlight ? 'row-new' : current ? 'row-current' : 'border-line'} {dashed ? 'border-dashed' : ''} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
+  class="flex w-full items-center rounded-row border text-fg {inset ? (wrap ? 'min-h-16 bg-bg py-2' : 'h-16 bg-bg') : wrap ? `min-h-row py-2.5 ${current ? '' : 'bg-surface'}` : current ? 'h-row' : 'h-row bg-surface'} {highlight ? 'row-new' : current ? 'row-current' : 'border-line'} {dashed ? 'border-dashed' : ''} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
   data-variant={variant}
 >
   {#if check}
@@ -84,8 +87,8 @@
   {#snippet body()}
     {#if tile}{@render tile()}{/if}
     <span class="flex min-w-0 flex-1 flex-col gap-1">
-      <span class="truncate text-[15px] font-bold tracking-tight {variant === 'danger' ? 'text-danger' : ''} {strike ? 'text-hint line-through' : ''}">{title}</span>
-      {#if meta}<span class="flex items-center gap-1.5 truncate text-[13px] text-fg2">{@render meta()}</span>{/if}
+      <span class="{wrap ? 'break-words' : 'truncate'} text-[15px] font-bold tracking-tight {variant === 'danger' ? 'text-danger' : ''} {strike ? 'text-hint line-through' : ''}">{title}</span>
+      {#if meta}<span class="flex items-center gap-1.5 text-[13px] text-fg2 {wrap ? 'flex-wrap' : 'truncate'}">{@render meta()}</span>{/if}
     </span>
   {/snippet}
 

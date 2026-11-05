@@ -26,6 +26,10 @@ async function setup(request: APIRequestContext) {
   return { tag, boardId: board.id, columnId };
 }
 
+/** Elemente, die ihren Text mit „…“ abschneiden (Überlauf unter text-overflow: ellipsis) */
+const clipped = (root: import('@playwright/test').Locator) =>
+  root.evaluate((el) => [...el.querySelectorAll('*')].filter((e) => getComputedStyle(e).textOverflow === 'ellipsis' && e.scrollWidth > e.clientWidth).map((e) => (e.textContent ?? '').trim().slice(0, 40)));
+
 test('Assistent in vier Schritten: Verlauf mit Auslösepunkt, „Reihum“ ist vorausgewählt und wird so gespeichert', async ({ page, request }) => {
   const s = await setup(request);
   await washerHistory(request);
@@ -44,6 +48,21 @@ test('Assistent in vier Schritten: Verlauf mit Auslösepunkt, „Reihum“ ist v
   await d.getByRole('button', { name: /Waschmaschine Leistung/ }).first().click();
   await expect(d.getByTestId('graph-card')).toContainText('Waschmaschine Leistung');
   await expect(d.getByTestId('graph-card')).toContainText('412 W');
+  // die gewählte Entität steht als Zeile mit „Ändern“ rechts, der Text „Andere Entität wählen“ ist weg
+  const entity = d.getByTestId('when-entity');
+  await expect(entity).toContainText('Waschmaschine Leistung');
+  await expect(d.getByText('Andere Entität wählen')).toHaveCount(0);
+  const change = entity.getByRole('button', { name: /^Entität ändern: Waschmaschine Leistung/ });
+  await expect(change).toHaveText('Ändern');
+  expect((await change.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  // eine Reihenfolge der Bedingungen: unter, über, Zustand
+  await expect(d.getByRole('radiogroup', { name: 'Bedingung' }).getByRole('radio')).toHaveText(['unter', 'über', 'Zustand']);
+  // „Ändern“ öffnet die Entitätswahl wieder; dieselbe Entität noch einmal wählen
+  await change.click();
+  await d.getByLabel('Entität suchen').fill('waschmaschine leistung');
+  await d.getByRole('button', { name: /Waschmaschine Leistung/ }).first().click();
+  await expect(d.getByTestId('graph-card')).toContainText('Waschmaschine Leistung');
+  expect(await clipped(d)).toEqual([]);
   await d.getByLabel('Schwellwert').fill('5');
   await expect(d.getByTestId('graph-threshold')).toBeAttached();
   await expect(d.getByTestId('graph-mark')).toHaveCount(1); // 3 Minuten unter 5 W: nur zwischen den Gängen (am Anfang war es schon so)
@@ -74,6 +93,11 @@ test('Assistent in vier Schritten: Verlauf mit Auslösepunkt, „Reihum“ ist v
   await expect(d.getByTestId('assign-order').locator('[data-next=true]')).toHaveCount(1);
   await d.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
 
+  // Schritt 4: nichts wird mit „…“ abgeschnitten (auch „Erledigt sich selbst“); die Bedingungen stehen in derselben Reihenfolge
+  await d.getByRole('switch', { name: 'Automatisch erledigen' }).click();
+  await expect(d.getByRole('radiogroup', { name: 'Bedingung zum Erledigen' }).getByRole('radio')).toHaveText(['unter', 'über', 'Zustand']);
+  await d.getByRole('switch', { name: 'Automatisch erledigen' }).click();
+  expect(await clipped(d)).toEqual([]);
   // Schritt 4: Zusammenfassung, anlegen
   await expect(d.getByTestId('watcher-sentence')).toContainText(`bekommt reihum jemand die Karte „${title}“ (fällig in 60 Min.)`);
   await d.getByRole('button', { name: 'Wächter anlegen' }).click();
@@ -114,9 +138,19 @@ test('Bearbeiten als Ablauf: vier Karten, Verlauf, „Ändern“ klappt die Eins
   await expect(d.getByTestId('assign-order')).toBeVisible();
   await expect(d.getByTestId('done-sum')).toContainText('Die Karte erledigst du selbst.');
 
-  // WENN ändern: Schwelle und Wartezeit
-  await flow.getByRole('button', { name: 'Ändern' }).first().click();
+  // die Entität steht oben in der Karte WENN, direkt unter der Überschrift, mit „Ändern“ rechts
+  const entity = flow.getByTestId('when-entity');
+  await expect(entity).toContainText('Waschmaschine Leistung');
+  await expect(entity.getByRole('button', { name: /^Entität ändern: Waschmaschine Leistung/ })).toHaveText('Ändern');
+  expect(await clipped(d)).toEqual([]);
+
+  // WENN ändern: Schwelle und Wartezeit (die Entität bleibt oben, danach erst Art, Schwelle und Dauer)
+  await flow.getByRole('button', { name: 'Ändern', exact: true }).first().click();
   await expect(d.getByTestId('when-editor')).toBeVisible();
+  await expect(d.getByRole('radiogroup', { name: 'Bedingung' }).getByRole('radio')).toHaveText(['unter', 'über', 'Zustand']);
+  const entityY = (await entity.boundingBox())!.y;
+  expect((await d.getByRole('radiogroup', { name: 'Bedingung' }).boundingBox())!.y).toBeGreaterThan(entityY);
+  await expect(d.getByTestId('when-editor').getByTestId('when-entity')).toHaveCount(0);
   await d.getByLabel('Schwellwert').fill('10');
   await d.getByRole('group', { name: 'Wartezeit in Minuten' }).getByRole('button', { name: '5 Min.' }).click();
   await expect(d.getByTestId('when-sum')).toHaveText('Waschmaschine Leistung liegt 5 Min. unter 10 W');
@@ -132,7 +166,8 @@ test('Bearbeiten als Ablauf: vier Karten, Verlauf, „Ändern“ klappt die Eins
 
   // Erledigt sich selbst: einschalten, Entität wählen
   await d.getByRole('switch', { name: 'Automatisch erledigen' }).click();
-  await d.getByRole('button', { name: 'Wählen' }).click();
+  await expect(d.getByRole('radiogroup', { name: 'Bedingung zum Erledigen' }).getByRole('radio')).toHaveText(['unter', 'über', 'Zustand']);
+  await d.getByRole('button', { name: 'Entität wählen' }).click();
   await d.getByLabel('Entität suchen').fill('waschmaschine tür');
   await d.getByRole('button', { name: /Waschmaschine Tür/ }).first().click();
   await d.getByLabel('Zustand zum Erledigen').fill('on');

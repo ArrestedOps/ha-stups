@@ -77,22 +77,22 @@
 
   <!-- Board und Spalte: die Zeile zeigt die Wahl, darüber liegt das Auswahlfeld des Handys -->
   <div class="flex flex-col gap-2">
-    <div class="relative flex h-row items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
+    <div class="relative flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
       <Tile color="orange"><Icon name="layers" size={22} stroke={1.8} /></Tile>
       <span class="flex min-w-0 flex-1 flex-col gap-1">
-        <span class="truncate text-[15px] font-bold tracking-tight">{board?.name ?? t('Board wählen')}</span>
-        <span class="truncate text-[13px] text-fg2">{t('Board')}</span>
+        <span class="break-words text-[15px] font-bold tracking-tight">{board?.name ?? t('Board wählen')}</span>
+        <span class="break-words text-[13px] text-fg2">{t('Board')}</span>
       </span>
       <span class="flex shrink-0 text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
       <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" bind:value={f.boardId} aria-label="Board">
         {#each ui.boards as b (b.id)}<option value={b.id}>{b.name}</option>{/each}
       </select>
     </div>
-    <div class="relative flex h-row items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
+    <div class="relative flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
       <Tile color="gray"><Icon name="columns" size={22} stroke={1.8} /></Tile>
       <span class="flex min-w-0 flex-1 flex-col gap-1">
-        <span class="truncate text-[15px] font-bold tracking-tight">{column?.name ?? t('Spalte wählen')}</span>
-        <span class="truncate text-[13px] text-fg2">{t('Spalte')}</span>
+        <span class="break-words text-[15px] font-bold tracking-tight">{column?.name ?? t('Spalte wählen')}</span>
+        <span class="break-words text-[13px] text-fg2">{t('Spalte')}</span>
       </span>
       <span class="flex shrink-0 text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
       <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" bind:value={f.columnId} aria-label={t('Spalte')}>
@@ -158,9 +158,9 @@
   {#if preview}
     <SectionHeader title={t('So erscheint sie')} />
     <div class="rounded-[18px] border border-dashed border-track bg-surface-inset p-2.5" data-testid="card-preview">
-      <ListRow variant="task" title={f.title.trim() || '…'} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
+      <ListRow wrap variant="task" title={f.title.trim() || '…'} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
         {#snippet tile()}<CardTile card={look} />{/snippet}
-        {#snippet meta()}<span class="shrink-0">{dueText(f)}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span><span class="truncate">{board?.name ?? ''}</span>{/snippet}
+        {#snippet meta()}<span class="shrink-0">{dueText(f)}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span><span class="break-words">{board?.name ?? ''}</span>{/snippet}
         {#snippet right()}<span class="flex text-fg2"><Icon name="shield" size={18} stroke={1.8} /></span>{/snippet}
       </ListRow>
     </div>

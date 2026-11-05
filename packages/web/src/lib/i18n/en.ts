@@ -1144,7 +1144,6 @@ export const en: Catalog = {
   'So erscheint sie': 'How it appears',
   'Was soll Stups beobachten?': 'What should Stups watch?',
   'letzte 3 Stunden': 'last 3 hours',
-  'Andere Entität wählen': 'Choose another entity',
   'Entität ändern: {name}': 'Change entity: {name}',
   'So früh vor dem Termin entsteht die Karte': 'How long before the event the card is created',
   'Std.': 'h',

@@ -20,33 +20,33 @@
 </script>
 
 <div class="flex flex-col gap-2" data-testid="fine-editor">
-  <ListRow title={t('Erledigt sich selbst')}>
+  <ListRow wrap title={t('Erledigt sich selbst')}>
     {#snippet tile()}<Tile color="blue"><Icon name="door" size={22} stroke={1.8} /></Tile>{/snippet}
-    {#snippet meta()}<span class="truncate">{doneMeta}</span>{/snippet}
+    {#snippet meta()}<span class="break-words">{doneMeta}</span>{/snippet}
     {#snippet right()}<Toggle label={t('Automatisch erledigen')} checked={f.doneOn} disabled={ed.selfNote !== ''} onchange={(v) => (f.doneOn = v)} />{/snippet}
   </ListRow>
   {#if f.doneOn}<DoneEditor {ed} />{:else if ed.selfNote}<p class="px-1 text-[13px] text-fg2" data-testid="self-note">{ed.selfNote}</p>{/if}
 
-  <ListRow title={t('Stupsen, wenn noch offen')}>
+  <ListRow wrap title={t('Stupsen, wenn noch offen')}>
     {#snippet tile()}<Tile color="orange"><Icon name="hand" size={22} stroke={1.8} /></Tile>{/snippet}
-    {#snippet meta()}<span class="truncate">{t('freundlich erinnern')}</span>{/snippet}
+    {#snippet meta()}<span class="break-words">{t('freundlich erinnern')}</span>{/snippet}
     {#snippet right()}<NumberField bind:value={f.nudgeAfterMin} label={t('Stupsen nach Minuten')} unit={t('Min.')} placeholder={t('nie')} />{/snippet}
   </ListRow>
   {#if showCount}
-    <ListRow title={t('Erst beim N-ten Mal')}>
+    <ListRow wrap title={t('Erst beim N-ten Mal')}>
       {#snippet tile()}<Tile color="teal"><Icon name="repeat" size={22} stroke={1.8} /></Tile>{/snippet}
-      {#snippet meta()}<span class="truncate">{t('z. B. Saugroboter nach 3 Läufen')}</span>{/snippet}
+      {#snippet meta()}<span class="break-words">{t('z. B. Saugroboter nach 3 Läufen')}</span>{/snippet}
       {#snippet right()}<NumberField bind:value={f.count} label={t('Anzahl')} unit="×" placeholder="1" />{/snippet}
     </ListRow>
   {/if}
-  <ListRow title={t('Sperrzeit')}>
+  <ListRow wrap title={t('Sperrzeit')}>
     {#snippet tile()}<Tile color="gray"><Icon name="lock" size={22} stroke={1.8} /></Tile>{/snippet}
-    {#snippet meta()}<span class="truncate">{t('gegen flatternde Sensoren')}</span>{/snippet}
+    {#snippet meta()}<span class="break-words">{t('gegen flatternde Sensoren')}</span>{/snippet}
     {#snippet right()}<NumberField bind:value={f.cooldownMin} label={t('Sperrzeit in Minuten')} unit={t('Min.')} placeholder="10" />{/snippet}
   </ListRow>
-  <ListRow title={t('Keine zweite Karte')}>
+  <ListRow wrap title={t('Keine zweite Karte')}>
     {#snippet tile()}<Tile color="green"><Icon name="copy" size={22} stroke={1.8} /></Tile>{/snippet}
-    {#snippet meta()}<span class="truncate">{t('solange eine offen ist')}</span>{/snippet}
+    {#snippet meta()}<span class="break-words">{t('solange eine offen ist')}</span>{/snippet}
     {#snippet right()}<Toggle label={t('Keine Doppelkarten')} checked={f.dedupe} onchange={(v) => (f.dedupe = v)} />{/snippet}
   </ListRow>
   <div class="focus-ring-in flex items-center gap-3 rounded-row border border-line bg-surface px-3.5 py-3">

@@ -2,13 +2,14 @@
   import { t } from '../lib/i18n/index.svelte';
   import { valueText } from '../lib/history';
     import type { WatcherEditor } from '../lib/watcher-editor.svelte';
-  import { durationChips, durationHint, durationLabel, nameSymbol, sliderRange } from '../lib/watcher-flow';
+  import { conditionItems, durationChips, durationHint, durationLabel, nameSymbol, sliderRange } from '../lib/watcher-flow';
   import type { TriggerKind } from '../lib/watcher-types';
   import Chip from './ui/Chip.svelte';
   import Icon from './Icon.svelte';
   import NumberField from './NumberField.svelte';
   import EntityGraph from './EntityGraph.svelte';
   import EntityPicker from './EntityPicker.svelte';
+  import EntityRow from './EntityRow.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
   import Segmented from './ui/Segmented.svelte';
   import SymbolIcon from './SymbolIcon.svelte';
@@ -18,7 +19,7 @@
    * „Wenn": woran Stups merkt, dass die Karte entstehen soll. Im Assistenten (Schritt 1) mit großem Verlauf der Entität; im Ablauf klappt
    * es in der Karte WENN auf (`graph` aus, der Verlauf steht schon in der Karte) und bietet dort „Entität ändern" an.
    */
-  let { ed, graph = true }: { ed: WatcherEditor; graph?: boolean } = $props();
+  let { ed, graph = true, entityRow = true }: { ed: WatcherEditor; graph?: boolean; entityRow?: boolean } = $props();
 
   const f = $derived(ed.form);
   const numeric = $derived(f.kind === 'below' || f.kind === 'above');
@@ -43,11 +44,7 @@
   const fit = () => (range = sliderRange(threshold));
   const setValue = (v: number) => (f.value = String(Math.round(v * 100) / 100).replace('.', ','));
 
-  const KINDS = $derived<{ id: string; label: string }[]>([
-    { id: 'below', label: t('unter') },
-    { id: 'above', label: t('über') },
-    { id: 'state', label: t('Zustand') },
-  ]);
+  const KINDS = $derived(conditionItems());
   const minutes = $derived(Number(f.forMin.trim() === '' ? (f.kind === 'state' ? 0 : 3) : f.forMin.replace(',', '.')) || 0);
   const chips = $derived(durationChips(f.forMin, f.kind));
   const seenStates = $derived((ed.history?.states ?? []).filter((s) => s !== f.to.trim()));
@@ -59,25 +56,28 @@
 </script>
 
 <div class="flex flex-col gap-3.5" data-testid="when-editor">
-  {#if ed.picking === 'trigger' && !ed.readOnly}
+  {#if entityRow && ed.picking === 'trigger' && !ed.readOnly}
     <EntityPicker {ed} />
-  {:else if !f.entityId}
-    <button type="button" class="flex h-row w-full items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 text-left" onclick={() => ed.startPicking('trigger')}>
+  {:else if !f.entityId && entityRow}
+    <button type="button" class="flex min-h-row py-2 w-full items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 text-left" onclick={() => ed.startPicking('trigger')}>
       <Tile color="purple"><Icon name="search" size={22} stroke={1.8} /></Tile>
       <span class="flex min-w-0 flex-1 flex-col gap-1">
-        <span class="truncate text-[15px] font-bold tracking-tight">{t('Entität wählen')}</span>
-        <span class="truncate text-[13px] text-fg2">{t('Was soll Stups beobachten?')}</span>
+        <span class="break-words text-[15px] font-bold tracking-tight">{t('Entität wählen')}</span>
+        <span class="break-words text-[13px] text-fg2">{t('Was soll Stups beobachten?')}</span>
       </span>
       <span class="flex shrink-0 text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
     </button>
   {:else}
+    {#if entityRow}
+      <EntityRow name={f.entityName || f.entityId} id={f.entityName ? f.entityId : ''} testid="when-entity" onchange={ed.readOnly ? undefined : () => ed.startPicking('trigger')} />
+    {/if}
     {#if graph && f.kind !== 'calendar_event' && f.kind !== 'forecast'}
       <div class="rounded-[20px] border border-line bg-surface px-3.5 pt-3.5 pb-2.5" data-testid="graph-card">
         <div class="flex items-center gap-3">
           <Tile color="purple">{#if icon}<SymbolIcon id={icon} size={24} />{:else}<Icon name="eye" size={24} />{/if}</Tile>
           <span class="flex min-w-0 flex-1 flex-col gap-1">
-            <span class="truncate text-[15px] font-bold tracking-tight">{f.entityName || f.entityId}</span>
-            <span class="truncate text-[13px] text-fg2">{t('letzte 3 Stunden')}</span>
+            <span class="break-words text-[15px] font-bold tracking-tight">{f.entityName || f.entityId}</span>
+            <span class="break-words text-[13px] text-fg2">{t('letzte 3 Stunden')}</span>
           </span>
           <span class="ml-auto shrink-0 text-right">
             <span class="block text-[24px] leading-none font-extrabold">{current}</span>
@@ -88,18 +88,18 @@
       </div>
     {/if}
     {#if f.kind === 'calendar_event'}
-      <div class="flex h-row items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
+      <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
         <span class="flex min-w-0 flex-1 flex-col gap-1">
-          <span class="truncate text-[15px] font-bold">{t('Wie viele Stunden vorher?')}</span>
-          <span class="truncate text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Karte')}</span>
+          <span class="break-words text-[15px] font-bold">{t('Wie viele Stunden vorher?')}</span>
+          <span class="break-words text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Karte')}</span>
         </span>
         <NumberField bind:value={f.leadHours} label={t('Vorlauf in Stunden')} unit={t('Std.')} />
       </div>
     {:else if f.kind === 'forecast'}
-      <div class="flex h-row items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
+      <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
         <span class="flex min-w-0 flex-1 flex-col gap-1">
-          <span class="truncate text-[15px] font-bold">{t('Regen in den nächsten …')}</span>
-          <span class="truncate text-[13px] text-fg2">{t('Stups schaut in die Vorhersage')}</span>
+          <span class="break-words text-[15px] font-bold">{t('Regen in den nächsten …')}</span>
+          <span class="break-words text-[13px] text-fg2">{t('Stups schaut in die Vorhersage')}</span>
         </span>
         <NumberField bind:value={f.forecastHours} label={t('Stunden im Voraus')} unit={t('Std.')} />
       </div>
@@ -107,10 +107,10 @@
       <SectionHeader title={f.kind === 'state' ? t('Auslösen, wenn der Zustand …') : t('Auslösen, wenn der Wert …')} />
       <Segmented small items={KINDS} value={f.kind} label={t('Bedingung')} onchange={setKind} />
       {#if f.kind === 'state'}
-        <div class="flex h-row items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
+        <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
           <span class="flex min-w-0 flex-1 flex-col gap-1">
-            <span class="truncate text-[15px] font-bold">{t('Zustand')}</span>
-            <span class="truncate text-[13px] text-fg2">{t('grüne Linie im Verlauf')}</span>
+            <span class="break-words text-[15px] font-bold">{t('Zustand')}</span>
+            <span class="break-words text-[13px] text-fg2">{t('grüne Linie im Verlauf')}</span>
           </span>
           <input class="h-10 w-32 rounded-xl border border-track bg-bg px-2 text-center text-[15px] font-bold placeholder:text-dim" bind:value={f.to} placeholder={t('z. B. off')} aria-label={t('Zielzustand')} />
         </div>
@@ -120,10 +120,10 @@
           </div>
         {/if}
       {:else}
-        <div class="flex h-row items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3.5">
+        <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3.5">
           <span class="flex min-w-0 flex-1 basis-0 flex-col gap-1">
-            <span class="truncate text-[15px] font-bold">{t('Schwelle')}</span>
-            <span class="truncate text-[13px] text-fg2">{t('grüne Linie im Verlauf')}</span>
+            <span class="break-words text-[15px] font-bold">{t('Schwelle')}</span>
+            <span class="break-words text-[13px] text-fg2">{t('grüne Linie im Verlauf')}</span>
           </span>
           <span class="flex min-w-0 flex-[1.4] basis-0 items-center gap-2.5">
             <input
@@ -160,11 +160,6 @@
       {#if ed.history?.status === 'ok' && ed.history.points.length >= 2}
         <p class="px-1 text-[12.5px] leading-[1.45] text-hint" data-testid="duration-hint">{durationHint(minutes, ed.history.hours, ed.history.fired.length)}</p>
       {/if}
-    {/if}
-    {#if !ed.readOnly}
-      <button type="button" class="min-h-11 self-start px-1 text-[15px] font-semibold text-accent-text" onclick={() => ed.startPicking('trigger')}>
-        {graph ? t('Andere Entität wählen') : t('Entität ändern: {name}', { name: f.entityName || f.entityId })}
-      </button>
     {/if}
   {/if}
 </div>

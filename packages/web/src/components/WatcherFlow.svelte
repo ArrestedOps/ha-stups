@@ -11,6 +11,8 @@
   import DoneEditor from './DoneEditor.svelte';
   import DryRunPanel from './DryRunPanel.svelte';
   import EntityGraph from './EntityGraph.svelte';
+  import EntityPicker from './EntityPicker.svelte';
+  import EntityRow from './EntityRow.svelte';
   import Icon from './Icon.svelte';
   import NumberField from './NumberField.svelte';
   import Sheet from './Sheet.svelte';
@@ -122,6 +124,11 @@
             {#if current}<span class="inline-flex h-[22px] items-center gap-1 rounded-full bg-ok-bg px-2 text-[12px] font-bold text-ok" data-testid="now-badge">● {t('jetzt {value}', { value: current })}</span>{/if}
             {@render change('when')}
           </div>
+          {#if ed.picking === 'trigger' && !readOnly}
+            <EntityPicker {ed} />
+          {:else}
+            <EntityRow name={f.entityName || f.entityId} id={f.entityName ? f.entityId : ''} testid="when-entity" onchange={readOnly ? undefined : () => ed.startPicking('trigger')} />
+          {/if}
           <div class="flex items-center gap-2">
             <Tile color="purple">{#if entityIcon}<SymbolIcon id={entityIcon} size={24} />{:else}<Icon name="eye" size={24} />{/if}</Tile>
             <p class="text-[15px] leading-[1.45] text-text-soft" data-testid="when-sum">{#each whenParts(f) as p, i (i)}{#if p.bold}<b class="text-fg">{p.text}</b>{:else}{p.text}{/if}{/each}</p>
@@ -129,16 +136,16 @@
           {#if f.kind !== 'calendar_event' && f.kind !== 'forecast'}
             <EntityGraph compact history={ed.history} busy={ed.historyBusy} name={f.entityName || f.entityId} {unit} {threshold} thresholdState={f.kind === 'state' ? f.to.trim() : null} />
           {/if}
-          {#if open === 'when'}<div class="border-t border-line pt-3"><WatcherWhenEditor {ed} graph={false} /></div>{/if}
+          {#if open === 'when'}<div class="border-t border-line pt-3"><WatcherWhenEditor {ed} graph={false} entityRow={false} /></div>{/if}
         </section>
         <div class="flow-link" aria-hidden="true"></div>
 
         <!-- DANN KARTE -->
         <section class="flow-card" aria-label={t('Dann Karte')}>
           <div class="flex items-center gap-2">{@render tag('then', t('DANN KARTE'))}{@render change('then')}</div>
-          <ListRow inset variant="task" title={f.title.trim() || '…'} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
+          <ListRow wrap inset variant="task" title={f.title.trim() || '…'} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
             {#snippet tile()}<CardTile card={look} />{/snippet}
-            {#snippet meta()}<span class="shrink-0">{dueText(f)}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span><span class="truncate">{board?.name ?? ''}</span>{/snippet}
+            {#snippet meta()}<span class="shrink-0">{dueText(f)}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span><span class="break-words">{board?.name ?? ''}</span>{/snippet}
             {#snippet right()}<span class="flex text-fg2"><Icon name="shield" size={18} stroke={1.8} /></span>{/snippet}
           </ListRow>
           <p class="text-[12px] text-fg2">{t('So erscheint sie in den Aufgaben.')}</p>
@@ -150,7 +157,7 @@
         <section class="flow-card" aria-label={t('An wen')}>
           <div class="flex items-center gap-2">
             {@render tag('who', t('AN WEN'))}
-            <span class="min-w-0 truncate text-[13px] text-fg2">{modeSummary(f.assignMode)}</span>
+            <span class="min-w-0 break-words text-[13px] text-fg2">{modeSummary(f.assignMode)}</span>
             {@render change('who')}
           </div>
           <AssignOrder order={ed.order} />
@@ -217,7 +224,7 @@
       {#if ed.item}
         <SectionHeader title={t('Status')} />
         <div class="flex flex-col gap-2">
-          <ListRow title={t('Zähler')}>
+          <ListRow wrap title={t('Zähler')}>
             {#snippet right()}
               <span class="flex items-center gap-3 text-[14px] text-fg2">
                 {ed.item!.trigger.count > 1 ? t('{n} von {total}', { n: ed.item!.counter, total: ed.item!.trigger.count }) : t('nicht aktiv')}
@@ -227,12 +234,12 @@
               </span>
             {/snippet}
           </ListRow>
-          <ListRow title={t('Verbindung')}>
+          <ListRow wrap title={t('Verbindung')}>
             {#snippet right()}<span class="text-[14px] {statusBad ? 'text-danger' : 'text-fg2'}">{status}</span>{/snippet}
           </ListRow>
           {#each runs as r (r.id)}
-            <ListRow title={`${RUN_TEXT[r.result] ?? r.result}${r.note ? ` · ${noteText(r.note)}` : ''}`}>
-              {#snippet meta()}<span class="truncate">{t('{time} Uhr', { time: clock(r.at) })}{r.assignedTo.length ? ` · ${r.assignedTo.map(ed.personName).join(', ')}` : ''}</span>{/snippet}
+            <ListRow wrap title={`${RUN_TEXT[r.result] ?? r.result}${r.note ? ` · ${noteText(r.note)}` : ''}`}>
+              {#snippet meta()}<span class="break-words">{t('{time} Uhr', { time: clock(r.at) })}{r.assignedTo.length ? ` · ${r.assignedTo.map(ed.personName).join(', ')}` : ''}</span>{/snippet}
             </ListRow>
           {:else}
             <p class="px-1 text-[15px] text-fg2">{t('Noch keine Läufe.')}</p>
@@ -246,10 +253,10 @@
 
         {#if !readOnly}
           <div class="flex flex-col gap-2">
-            <ListRow title={f.active ? t('Pausieren') : t('Wieder aktivieren')} onclick={() => ed.togglePause()}>
+            <ListRow wrap title={f.active ? t('Pausieren') : t('Wieder aktivieren')} onclick={() => ed.togglePause()}>
               {#snippet tile()}<Tile color="gray"><Icon name="bell-off" size={22} stroke={1.8} /></Tile>{/snippet}
             </ListRow>
-            <ListRow variant="danger" title={t('Wächter löschen')} onclick={() => ed.askRemove()}>
+            <ListRow wrap variant="danger" title={t('Wächter löschen')} onclick={() => ed.askRemove()}>
               {#snippet tile()}<Tile color="red"><Icon name="trash" size={22} stroke={1.8} /></Tile>{/snippet}
             </ListRow>
           </div>

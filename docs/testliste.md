@@ -470,6 +470,11 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] **Schritt 3:** sieben Arten, **vorausgewählt „Abwechselnd, egal wer da ist“ (reihum)** (bei einer Vorlage deren Art), Hinweis „Fair heißt hier reihum, nicht nach Aufwand gewichtet“. „Reihenfolge“ zeigt Fotos oder Initialen, wer als **Nächstes dran** ist (oranger Ring), wer **unterwegs** ist (blass, „… unterwegs“) und „gerade zu Hause: N“; die Rotation rückt dabei nicht weiter. Rückfall („Ist niemand zu Hause …“) je nach Art
 - [ ] **Schritt 4:** Extras (erledigt sich selbst, stupsen, erst beim N-ten Mal, Sperrzeit, keine zweite Karte, Name), Zusammenfassung als Satz; „Testen“ rechnet den Probelauf über 7 Tage, „Wächter anlegen“ speichert. Ein Wächter, in dem nichts geändert wurde, steht danach mit „reihum“ in der Liste
 
+**Nachtrag 1.23.0 (Wächter-Editor)**
+
+- [ ] Schritt „Wenn“ nach der Entitätswahl: die Entität steht als Zeile mit „Ändern“ rechts (kein Text „Andere Entität wählen“); „Ändern“ öffnet die Suche wieder. Im Ablauf steht dieselbe Zeile oben in der Karte WENN
+- [ ] Bedingungen überall „unter, über, Zustand“ (Wenn und Erledigt sich selbst); lange Texte brechen um, nichts endet mit „…“
+
 **Bearbeiten als Ablauf** (Tipp auf einen Wächter)
 
 - [ ] Oben der Satz als Zusammenfassung, darunter die Karten **WENN → DANN KARTE → AN WEN → ERLEDIGT SICH SELBST**, verbunden mit Pfeilen; WENN mit „jetzt 412 W“ und kleinem Verlauf samt Schwelle und Auslösepunkt, AN WEN mit der Reihenfolge

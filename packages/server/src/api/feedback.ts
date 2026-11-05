@@ -13,6 +13,7 @@ import {
   type FeedbackMeta,
 } from '../feedback.js';
 import { t } from '../i18n/index.js';
+import { createUploadQuota } from '../upload-quota.js';
 import { type ApiKit, type Params } from './kit.js';
 
 const HOUR_MS = 3_600_000;
@@ -24,6 +25,8 @@ const HOUR_MS = 3_600_000;
 export function registerFeedbackRoutes(app: FastifyInstance, k: ApiKit): void {
   const { deps, store, body, requireAdmin, noContent } = k;
   const now = () => (deps.now ?? (() => new Date()))();
+  // Bilder zählen wie Anhänge gegen die Obergrenzen je Person und Stunde und gegen gleichzeitige Uploads (upload-quota.ts)
+  const quota = createUploadQuota(deps.now, deps.uploadLimits);
 
   // Entweder JSON (nur Text) oder ein Formular mit Bild: image (Pflicht für ein Bild), thumb (Vorschau, optional)
   app.post('/api/feedback', async (req, reply) => {
@@ -37,49 +40,57 @@ export function registerFeedbackRoutes(app: FastifyInstance, k: ApiKit): void {
     let fields: Record<string, unknown>;
     let image: Buffer | null = null;
     let thumb: Buffer | null = null;
-    if (req.isMultipart()) {
-      fields = {};
-      for await (const part of req.parts({ limits: { fileSize: FEEDBACK_MAX_IMAGE_BYTES, files: 2, fields: 6, fieldSize: 8 * 1024 } })) {
-        if (part.type === 'field') {
-          fields[part.fieldname] = part.value;
-          continue;
-        }
-        const data = await part.toBuffer(); // wirft 413, wenn die Datei zu groß ist
-        if (part.fieldname === 'image') image = data;
-        else if (part.fieldname === 'thumb') thumb = data;
-      }
-    } else {
-      fields = body(req);
-    }
-
-    const kind = parseFeedbackKind(fields.kind);
-    const message = parseFeedbackMessage(fields.message);
-    const imageMime = image ? sniffMime(image) : null;
-    if (image && (!imageMime || !imageMime.startsWith('image/'))) throw new ValidationError(t('Das Bild ist ungültig. Erlaubt sind JPEG, PNG, WebP und GIF'));
-    const thumbMime = thumb ? sniffMime(thumb) : null;
-    if (thumb && (!thumbMime || !thumbMime.startsWith('image/') || thumb.length > MAX_THUMB_BYTES)) throw new ValidationError(t('Das Vorschaubild ist ungültig'));
-    if (image && !deps.files) throw new AppError(t('Die Dateiablage ist nicht verfügbar'), 501);
-
-    const meta: FeedbackMeta = {
-      ...parseFeedbackContext(fields.context),
-      ...(deps.capabilities?.version ? { version: deps.capabilities.version } : {}),
-      ...(deps.capabilities?.channel ? { channel: deps.capabilities.channel } : {}),
-      ...(shortUserAgent(req.headers['user-agent']) ? { userAgent: shortUserAgent(req.headers['user-agent']) } : {}),
-    };
-
-    const id = randomUUID();
-    const imageName = image && imageMime ? `feedback-${id}.${extensionFor(imageMime)}` : null;
-    const thumbName = imageName && thumb && thumbMime ? `feedback-${id}.thumb.${extensionFor(thumbMime)}` : null;
-    if (image && imageName) deps.files!.write(imageName, image);
-    if (thumb && thumbName) deps.files!.write(thumbName, thumb);
+    // Mit Formular (Bild): vor dem Lesen prüfen, ob die Person noch hochladen darf; die Freigabe gibt der Aufrufer zurück
+    let release = () => {};
     try {
-      store.addFeedback({ id, personId: user.id, personName: user.displayName, kind, message, meta, image: imageName, thumb: thumbName });
-    } catch (err) {
-      if (imageName) deps.files?.remove(imageName);
-      if (thumbName) deps.files?.remove(thumbName);
-      throw err;
+      if (req.isMultipart()) {
+        release = quota.begin(user.id, { files: 0, bytes: 0 });
+        fields = {};
+        for await (const part of req.parts({ limits: { fileSize: FEEDBACK_MAX_IMAGE_BYTES, files: 2, fields: 6, fieldSize: 8 * 1024 } })) {
+          if (part.type === 'field') {
+            fields[part.fieldname] = part.value;
+            continue;
+          }
+          const data = await part.toBuffer(); // wirft 413, wenn die Datei zu groß ist
+          if (part.fieldname === 'image') image = data;
+          else if (part.fieldname === 'thumb') thumb = data;
+        }
+      } else {
+        fields = body(req);
+      }
+
+      const kind = parseFeedbackKind(fields.kind);
+      const message = parseFeedbackMessage(fields.message);
+      const imageMime = image ? sniffMime(image) : null;
+      if (image && (!imageMime || !imageMime.startsWith('image/'))) throw new ValidationError(t('Das Bild ist ungültig. Erlaubt sind JPEG, PNG, WebP und GIF'));
+      const thumbMime = thumb ? sniffMime(thumb) : null;
+      if (thumb && (!thumbMime || !thumbMime.startsWith('image/') || thumb.length > MAX_THUMB_BYTES)) throw new ValidationError(t('Das Vorschaubild ist ungültig'));
+      if (image && !deps.files) throw new AppError(t('Die Dateiablage ist nicht verfügbar'), 501);
+
+      const meta: FeedbackMeta = {
+        ...parseFeedbackContext(fields.context),
+        ...(deps.capabilities?.version ? { version: deps.capabilities.version } : {}),
+        ...(deps.capabilities?.channel ? { channel: deps.capabilities.channel } : {}),
+        ...(shortUserAgent(req.headers['user-agent']) ? { userAgent: shortUserAgent(req.headers['user-agent']) } : {}),
+      };
+
+      const id = randomUUID();
+      const imageName = image && imageMime ? `feedback-${id}.${extensionFor(imageMime)}` : null;
+      const thumbName = imageName && thumb && thumbMime ? `feedback-${id}.thumb.${extensionFor(thumbMime)}` : null;
+      if (image && imageName) deps.files!.write(imageName, image);
+      if (thumb && thumbName) deps.files!.write(thumbName, thumb);
+      try {
+        store.addFeedback({ id, personId: user.id, personName: user.displayName, kind, message, meta, image: imageName, thumb: thumbName });
+      } catch (err) {
+        if (imageName) deps.files?.remove(imageName);
+        if (thumbName) deps.files?.remove(thumbName);
+        throw err;
+      }
+      if (image) quota.record(user.id, image.length + (thumb?.length ?? 0));
+      return reply.code(201).send({ id });
+    } finally {
+      release();
     }
-    return reply.code(201).send({ id });
   });
 
   app.get('/api/feedback', async (req) => {

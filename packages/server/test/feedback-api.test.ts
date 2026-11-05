@@ -216,6 +216,27 @@ describe('Bild', () => {
     expect((await bare.inject({ method: 'POST', url: '/api/feedback', headers: anna, payload: { kind: 'bug', message: 'ohne Bild' } })).statusCode).toBe(201);
   });
 
+  it('Bilder zählen gegen die Upload-Obergrenze je Person und Stunde (wie Anhänge), Text ohne Bild nicht', async () => {
+    const limited = Fastify();
+    await limited.register(ingressAuth, { enforceIp: false });
+    await limited.register(apiRoutes, { store, files: createFileStore(dir), now: () => clock, uploadLimits: { hourFiles: 2 } });
+    const post = async () => {
+      const form = new FormData();
+      form.append('kind', 'bug');
+      form.append('message', 'x');
+      form.append('image', new Blob([new Uint8Array(JPEG)], { type: 'image/jpeg' }), 'a.jpg');
+      const r = new Response(form);
+      return limited.inject({ method: 'POST', url: '/api/feedback', headers: { ...(anna as Record<string, string>), 'content-type': r.headers.get('content-type')! }, payload: Buffer.from(await r.arrayBuffer()) });
+    };
+    expect((await post()).statusCode).toBe(201);
+    expect((await post()).statusCode).toBe(201);
+    const third = await post();
+    expect(third.statusCode).toBe(429);
+    expect(third.json().error).toMatch(/Uploads/);
+    // Text ohne Bild (als JSON, wie die App ihn sendet) geht weiter; für ihn gilt nur das Zeitlimit der Rückmeldungen
+    expect((await limited.inject({ method: 'POST', url: '/api/feedback', headers: anna as Record<string, string>, payload: { kind: 'bug', message: 'ohne Bild' } })).statusCode).toBe(201);
+  });
+
   it('die Dateien zählen beim Aufräumen als verwendet', async () => {
     await multipart(anna, { kind: 'bug', message: 'x' }, [
       { name: 'image', filename: 'a.jpg', type: 'image/jpeg', data: JPEG },

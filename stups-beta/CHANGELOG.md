@@ -2,6 +2,17 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.28.0-beta.1
+
+**Neu: Feedback.** Fehler melden, Verbesserungen vorschlagen, loben oder kritisieren, direkt in Stups.
+
+- **Einstieg:** Einstellungen ganz oben „Feedback & Ideen“ und ein leiser Textknopf am Ende von Aufgaben („Fehler oder Idee? Sag es uns“). Kinder sehen ihn nicht
+- **Ablauf:** erst die Art wählen (Fehler melden, Verbesserung oder Wunsch, Lob, Kritik, Sonstiges), dann ein Text mit Zähler („123 / 1000“, höchstens 1000 Zeichen) und auf Wunsch ein Bild (Foto aufnehmen oder auswählen, wird vor dem Senden verkleinert), dann „Senden“ und „Danke!“. Der Text bleibt erhalten, wenn du das Fenster zwischendurch schließt
+- **Mitgesendet** werden Version, Ansicht, Sprache, Hell oder Dunkel, Fenstergröße, ob Stups in Home Assistant läuft, und der gekürzte Browsername; nie Anmeldedaten. Alles bleibt auf deiner Stups-Installation, es geht nichts an Dritte
+- **Für Administratoren:** Einstellungen › Hilfe und Daten › „Feedback der Nutzer“ (mit Zahl der neuen): Liste mit Art, Absender, Zeit, Text und Bild, Stand umschalten (neu, gelesen, erledigt), löschen und „Als Text kopieren“ zum Weitergeben, zum Beispiel als Issue
+- Höchstens 10 Rückmeldungen je Person und Stunde; Bilder zählen wie Anhänge gegen die Upload-Obergrenzen
+- Datenbank: neue Tabelle für Rückmeldungen (Migration 24, vorher wird gesichert)
+
 ## 1.26.2-beta.1
 
 - **Fehlerbehebung:** „Warum kommt nichts an?“ (Einstellungen › Benachrichtigungen) blieb bei „Lädt …“ stehen, wenn zwei offene Karten denselben Titel und denselben Termin hatten

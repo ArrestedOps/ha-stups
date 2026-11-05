@@ -317,6 +317,14 @@ Diese Regeln gelten für jede Änderung; zu jeder gibt es Tests.
 - `lib/clock.svelte.ts`: Minutentakt. Zeitabhängige `$derived` lesen `void clock.tick`, statt `Date.now()` allein zu verlassen (es rechnet sonst nur bei anderen Änderungen neu).
 - `lib/focusScope.ts` (Aktion `use:focusScope` am Dialog in `Sheet.svelte`): Fokus beim Öffnen ins Fenster (ein `autofocus`-Feld behält ihn), Tab bleibt im obersten Fenster, beim Schließen zurück an den Auslöser. Der Titel des Fensters ist kein `role="status"`. Test: `focusScope.test.ts` (Logik) und der Browser-Test „Fenster: der Fokus kommt hinein …“ in `e2e/1-board.spec.ts`.
 
+### Feedback (seit 1.28.0)
+
+- **Senden:** `components/FeedbackSheet.svelte` (zwei Schritte: Art wählen, dann Text mit Zähler und optional ein Bild). Geöffnet wird es **nur** über `openFeedback(kind?)` aus `lib/feedbackSheet.svelte.ts`; das Fenster liegt in `App.svelte` über allem, was offen ist, und schließt zurück dorthin. Jeder neue Einstieg (zum Beispiel ein Eintrag „Feedback“ in der Seitenleiste ab 1024 px) ruft nur das auf. Einstiege heute: Einstellungen (oberste Zeile) und `FeedbackLink.svelte` am Ende von Aufgaben.
+- **Reine Funktionen** (`lib/feedback.ts`, Test `feedback.test.ts`): Arten, Zeichenzähler, „Senden erlaubt“, mitgesendeter Kontext, Text zum Kopieren. Das Bild geht durch `prepareUpload` (verkleinert, JPEG, ohne Metadaten).
+- **Server:** `POST /api/feedback` (JSON oder Formular mit `image`/`thumb`; jede angemeldete Person außer Kindern), `GET /api/feedback`, `GET /api/feedback/summary`, `PATCH`/`DELETE /api/feedback/:id`, `GET /api/feedback/:id/image|thumb` nur für Administratoren. Validierung in `feedback.ts` (Art aus Liste, Text getrimmt 1 bis 1000 Zeichen, Steuerzeichen raus, Kontext nur bekannte Felder mit gültigen Werten, User-Agent auf 160 Zeichen). Bild: Typ am Inhalt (nur Bilder), höchstens 6 MB, zählt wie ein Anhang gegen die Obergrenzen aus `upload-quota.ts`; dazu höchstens 10 Rückmeldungen je Person und Stunde (gezählt in der Tabelle). Tabelle `feedback` (Migration 24), Dateien im Dateispeicher (`feedback-<id>.jpg`), `store.referencedFiles()` zählt sie mit (sonst räumt das Aufräumen sie weg).
+- **Datenschutz:** Gespeichert wird nur auf dieser Installation; mitgesendet werden Version, Kanal, Ansicht, Sprache, Hell/Dunkel, Fenstergröße, eingebettet ja/nein und der gekürzte User-Agent, nie Anmeldedaten, Adressen oder Geheimnisse. Nichts geht an Dritte; „Als Text kopieren“ gibt der Administrator selbst weiter.
+- **Browser-Test:** `e2e/35-feedback.spec.ts`; allein auf eigenen Ports (19700): `pnpm exec playwright test -c e2e/playwright.feedback.config.ts`.
+
 ## 4. Bekannte Grenzen
 
 - Das Wischen und die Tastatur-Anpassung sind in den Browser-Tests nur mit Zeiger-Ereignissen bzw. per Rechenfunktion abgedeckt. Echtes Touch und die echte Bildschirmtastatur lassen sich nur am iPhone prüfen.

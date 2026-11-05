@@ -544,6 +544,16 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Kind: sieht nur Stupse an sich und Einträge zu seinen Karten, nichts von fremden Boards
 - [ ] Update: nach dem Aktualisieren ist die Glocke ohne Punkt (alles Frühere gilt als gelesen); Datenbank wurde gesichert (Migration 23)
 
+## 37 · Feedback (seit 1.28.0)
+
+- [ ] **Einstieg:** Einstellungen ganz oben „Feedback & Ideen“ und am Ende von Aufgaben der leise Textknopf „Fehler oder Idee? Sag es uns“; ein Kind sieht beides nicht
+- [ ] Fenster „Feedback“: erst die Art wählen (Fehler melden, Verbesserung oder Wunsch, Lob, Kritik, Sonstiges), dann Text mit Zähler „123 / 1000“ (gelb ab 900, rot bei 1000, mehr lässt sich nicht tippen) und ein Platzhalter passend zur Art; Senden bleibt grau, bis Text da ist
+- [ ] **Bild** anhängen (Foto aufnehmen oder auswählen), Vorschau, mit dem Kreuz wieder entfernen; nach „Senden“ erscheint „Danke!“, das Fenster schließt und du bist wieder in den Einstellungen bzw. in der Liste
+- [ ] Text bleibt erhalten, wenn du das Fenster schließt, bis er gesendet ist; „Zurück“ führt zur Auswahl der Art, „Schließen“ schließt
+- [ ] **Administrator:** Einstellungen › Hilfe und Daten › „Feedback der Nutzer“ (mit „n neu“): Liste mit Art, Absender, Zeit, Text, Bild (Tipp öffnet die Bildansicht), Filter Alle/Neu/Gelesen/Erledigt, Stand umschalten, „Als Text kopieren“ (zum Weitergeben, zum Beispiel als Issue), Löschen mit Rückfrage; ein Mitglied sieht die Liste nicht
+- [ ] Mehr als 10 Rückmeldungen in einer Stunde je Person werden mit freundlichem Text abgelehnt; sehr lange Texte und Wörter ohne Leerzeichen laufen nicht über den Rand
+- [ ] Hell, Dunkel, Englisch; Update: Datenbank gesichert (Migration 24)
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

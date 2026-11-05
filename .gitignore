@@ -9,3 +9,4 @@ packages/server/web/
 
 e2e/test-results/
 playwright-report/
+e2e/test-results-feedback/

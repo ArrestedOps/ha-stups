@@ -111,6 +111,8 @@ describe('Echte Migrationen mit befüllter alter Datenbank', () => {
     [9, (db: DatabaseSync) => seed9(db)],
     [19, (db: DatabaseSync) => (seed9(db), seed19Prepared(db))],
     [21, (db: DatabaseSync) => (seed9(db), seed19Prepared(db), seed21Prepared(db))],
+    // Stand 23 (vor den Rückmeldungen, Migration 24): alles bis hierher gehoben und befüllt
+    [23, (db: DatabaseSync) => (seed9(db), seed19Prepared(db), seed21Prepared(db), upgrade(db, 23))],
   ] as [number, (db: DatabaseSync) => void][])('Stand %i: alle Daten bleiben unverändert, Sicherung vorhanden, Stand ist der neueste', (version, seed) => {
     const { db, before, dir, rowsInOldStand } = migrate(version, seed);
     expect(rowsInOldStand).toBeGreaterThan(10);

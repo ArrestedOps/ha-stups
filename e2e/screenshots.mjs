@@ -362,7 +362,7 @@ const screens = [
     await page.getByRole('tab', { name: re(S.open) }).click();
     await page.getByText(S.tax).first().click();
     await page.getByTestId('created-note').waitFor();
-    await page.getByRole('button', { name: new RegExp(`^${S.attachment1} ${x('ansehen', 'view')}`) }).click();
+    await page.getByRole('button', { name: new RegExp(x(`^${S.attachment1} ansehen`, `^View ${S.attachment1}`)) }).click();
     await page.getByRole('dialog', { name: S.attachment1 }).waitFor();
   }],
   ['diese-woche', async (page) => {
@@ -454,7 +454,7 @@ const watcherScreens = [
     const people = await (await fetch(`${haBase}/api/people`, { headers })).json();
     const ben = people.find((p) => p.name === 'Ben');
     await fetch(`${haBase}/api/access/people/${ben.id}`, { method: 'PATCH', headers, body: JSON.stringify({ notifyServices: ['mobile_app_bens_iphone'] }) });
-    await settings(page, x(/Warum kommt nichts/, /Why is nothing/));
+    await settings(page, x(/Warum kommt nichts/, /Why does nothing/));
     await page.getByTestId('push-ok').waitFor();
   }],
   ['waechter', async (page) => {
@@ -467,16 +467,14 @@ const watcherScreens = [
     await page.getByTestId('found-hit').first().waitFor();
   }],
   ['waechter-liste', async (page) => {
-    await nav(page, 'Boards').click();
-    await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
-    await page.getByRole('dialog').getByRole('button', { name: x('Wächter', 'Watchers'), exact: true }).click();
+    await nav(page, x('Wächter', 'Watchers')).click();
+    await page.getByRole('button', { name: x('Alle Wächter verwalten', 'Manage all watchers') }).click();
     await page.getByTestId('watcher-card').first().waitFor();
     await page.getByTestId('watcher-activity').waitFor();
   }],
   ['waechter-bearbeiten', async (page) => {
-    await nav(page, 'Boards').click();
-    await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
-    await page.getByRole('dialog').getByRole('button', { name: x('Wächter', 'Watchers'), exact: true }).click();
+    await nav(page, x('Wächter', 'Watchers')).click();
+    await page.getByRole('button', { name: x('Alle Wächter verwalten', 'Manage all watchers') }).click();
     await page.getByRole('button', { name: x(/Wächter Waschmaschine fertig bearbeiten/, /Edit watcher Washing machine done/) }).click();
     await page.getByTestId('graph-fired').waitFor();
   }],

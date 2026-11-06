@@ -53,6 +53,13 @@ export async function startMockHa({ port, first, second, token }) {
   // Englischer Name mit Endung "Battery Level": der Gerätename im Wächter heißt "iPhone Rene"
   setState('sensor.iphone_rene_battery_level', '14', { friendly_name: 'iPhone Rene Battery Level', unit_of_measurement: '%', device_class: 'battery' });
   setState('sensor.bad_batterie', '12', { friendly_name: 'Bad Fenster Batterie', unit_of_measurement: '%', device_class: 'battery' });
+  // Eine neue Umgebung hat viele Batteriesensoren: „Gefunden" zeigt sie alle, nach Vorlage gruppiert (die ersten fünf, „Alle N anzeigen", Suche).
+  // Alle stärker als 14 %, damit „Bad Fenster Batterie" (12) und „iPhone Rene" (14) unter den ersten fünf der Gruppe bleiben.
+  const ROOMS = ['Küche', 'Wohnzimmer', 'Schlafzimmer', 'Kinderzimmer', 'Flur', 'Keller', 'Garage', 'Gästezimmer', 'Büro', 'Dachboden', 'Terrasse', 'Waschküche', 'Speisekammer', 'Gartenhaus'];
+  ROOMS.forEach((room, i) => {
+    const id = room.toLowerCase().replaceAll('ü', 'ue').replaceAll('ä', 'ae').replaceAll('ö', 'oe');
+    setState(`sensor.${id}_fenstersensor_batterie`, String(31 + i * 4), { friendly_name: `${room} Fenstersensor Batterie`, unit_of_measurement: '%', device_class: 'battery' });
+  });
   /** Historie je Entität für den Probelauf (POST /mock/history), Kalendertermine (POST /mock/calendar), Vorhersagen (POST /mock/forecast) */
   const histories = new Map();
   const calendars = new Map();

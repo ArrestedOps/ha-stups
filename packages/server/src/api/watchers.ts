@@ -79,7 +79,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     return {
       items: detectSuggestions(states, watched, hidden),
       /** Ausgeblendet, aber noch in Home Assistant da: zum Zurückholen */
-      hidden: detectSuggestions(states, watched).filter((s) => hidden.has(suggestionKey(s.templateId, s.entityId))),
+      hidden: detectSuggestions(states, watched, new Set(), Infinity).filter((s) => hidden.has(suggestionKey(s.templateId, s.entityId))),
     };
   });
   /** Einen Treffer ausblenden (er wird nie wieder vorgeschlagen) oder wieder einblenden */

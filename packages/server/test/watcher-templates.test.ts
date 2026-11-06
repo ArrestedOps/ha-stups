@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { HaState } from '../src/ha.js';
-import { detectSuggestions, suggestionKey, watcherTemplates } from '../src/watcher-templates.js';
+import { detectSuggestions, MAX_SUGGESTIONS, suggestionKey, watcherTemplates } from '../src/watcher-templates.js';
 
 const state = (entityId: string, st: string, attributes: Record<string, unknown> = {}): HaState => ({ entity_id: entityId, state: st, attributes });
 const ids = (list: { templateId: string; entityId: string }[]) => list.map((s) => `${s.templateId}:${s.entityId}`);
@@ -95,11 +95,48 @@ describe('Erkennung', () => {
     expect(list.some((x) => x.includes('kuehlschrank') || x.includes('calendar.familie') || x.includes('kaputt'))).toBe(false);
   });
 
-  it('Treffer je Vorlage sind begrenzt, die schwächsten Batterien zuerst', () => {
+  it('mehr als fünf Batterien: alle kommen, die schwächsten zuerst', () => {
     const many = Array.from({ length: 12 }, (_, i) => state(`sensor.b${i}`, String(90 - i), { device_class: 'battery', friendly_name: `B${i}` }));
     const list = detectSuggestions(many, new Set());
-    expect(list).toHaveLength(5);
-    expect(list[0]!.entityId).toBe('sensor.b11');
+    expect(list).toHaveLength(12);
+    expect(list.map((s) => s.entityId)).toEqual(Array.from({ length: 12 }, (_, i) => `sensor.b${11 - i}`));
+  });
+
+  it('auch Kalender, Saugroboter, Wetter und Geräte werden nicht mehr auf wenige Treffer gekürzt', () => {
+    const many = [
+      ...Array.from({ length: 8 }, (_, i) => state(`calendar.muell_${i}`, 'off', { friendly_name: `Müll ${i}` })),
+      ...Array.from({ length: 7 }, (_, i) => state(`vacuum.robi_${i}`, 'docked')),
+      ...Array.from({ length: 4 }, (_, i) => state(`weather.ort_${i}`, 'sunny')),
+      ...Array.from({ length: 9 }, (_, i) => state(`sensor.trockner_${i}_power`, '1', { device_class: 'power', friendly_name: `Trockner ${i}` })),
+    ];
+    const byTemplate = (id: string) => detectSuggestions(many, new Set()).filter((s) => s.templateId === id).length;
+    expect(byTemplate('bins')).toBe(8);
+    expect(byTemplate('vacuum')).toBe(7);
+    expect(byTemplate('rain')).toBe(4);
+    expect(byTemplate('dryer')).toBe(9);
+  });
+
+  it('Schutzgrenze: höchstens 500 Treffer insgesamt, die Vorlagen kommen der Reihe nach', () => {
+    const huge = [
+      ...Array.from({ length: 300 }, (_, i) => state(`calendar.muell_${i}`, 'off', { friendly_name: `Müll ${i}` })),
+      ...Array.from({ length: 400 }, (_, i) => state(`sensor.b${i}`, String(i % 100), { device_class: 'battery', friendly_name: `B${i}` })),
+    ];
+    expect(MAX_SUGGESTIONS).toBe(500);
+    const list = detectSuggestions(huge, new Set());
+    expect(list).toHaveLength(500);
+    expect(list.filter((s) => s.templateId === 'bins')).toHaveLength(300);
+    expect(list.filter((s) => s.templateId === 'battery')).toHaveLength(200);
+  });
+
+  it('die Grenze lässt sich aufheben (für die Liste der ausgeblendeten Treffer, die auch jenseits davon zurückkommen sollen)', () => {
+    const huge = Array.from({ length: 520 }, (_, i) => state(`sensor.b${i}`, String(i % 100), { device_class: 'battery' }));
+    expect(detectSuggestions(huge, new Set(), new Set(), Infinity)).toHaveLength(520);
+  });
+
+  it('die Schutzgrenze zählt Treffer ohne die ausgeblendeten', () => {
+    const huge = Array.from({ length: 510 }, (_, i) => state(`sensor.b${i}`, String(i % 100), { device_class: 'battery' }));
+    const hidden = new Set(Array.from({ length: 10 }, (_, i) => suggestionKey('battery', `sensor.b${i}`)));
+    expect(detectSuggestions(huge, new Set(), hidden)).toHaveLength(500);
   });
 
   it('kaputte Zustände (fehlende Attribute, fremde Typen) lassen die Erkennung nicht abstürzen', () => {
@@ -127,9 +164,9 @@ describe('Ausgeblendetes', () => {
     expect(ids(detectSuggestions(states, new Set()))).toEqual(['battery:sensor.batt_a', 'battery:sensor.batt_b', 'vacuum:vacuum.robi']);
   });
 
-  it('beim Ausblenden rückt der nächste Treffer nach (die Grenze je Vorlage zählt erst danach)', () => {
+  it('beim Ausblenden bleiben alle übrigen Treffer, in derselben Reihenfolge', () => {
     const many = Array.from({ length: 7 }, (_, i) => state(`sensor.b${i}`, String(10 + i), { device_class: 'battery' }));
     const hidden = new Set([suggestionKey('battery', 'sensor.b0')]);
-    expect(detectSuggestions(many, new Set(), hidden).map((s) => s.entityId)).toEqual(['sensor.b1', 'sensor.b2', 'sensor.b3', 'sensor.b4', 'sensor.b5']);
+    expect(detectSuggestions(many, new Set(), hidden).map((s) => s.entityId)).toEqual(['sensor.b1', 'sensor.b2', 'sensor.b3', 'sensor.b4', 'sensor.b5', 'sensor.b6']);
   });
 });

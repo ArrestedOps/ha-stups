@@ -132,3 +132,127 @@ test('Gefunden: einen Treffer ausblenden, er kommt nicht wieder; unter „Ausgeb
   await expect(bins()).toBeVisible();
   await expect(dialog.getByTestId('found-hidden-toggle')).toHaveCount(0);
 });
+
+// ---------- Viele Treffer: nach Vorlage gruppiert, die ersten fünf, „Alle N anzeigen", Suche ----------
+
+type Hit = { templateId: string; entityId: string; reason: string };
+const suggestions = async (request: APIRequestContext) => ((await (await request.get('/api/watchers/suggestions')).json()) as { items: Hit[] }).items;
+
+async function openFound(page: Page) {
+  await page.goto('/');
+  await openBoards(page);
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
+  await page.getByTestId('home-found').click();
+  await expect(page.getByRole('dialog', { name: 'Gefunden' })).toBeVisible();
+}
+
+test('Gefunden: alle Treffer kommen vom Server; der Banner nennt die Gesamtzahl', async ({ page, request }) => {
+  const items = await suggestions(request);
+  const batteries = items.filter((s) => s.templateId === 'battery');
+  expect(batteries.length).toBeGreaterThanOrEqual(14); // nicht mehr nur fünf
+  // schwächste zuerst: „Bad Fenster Batterie" (12 %) und „iPhone Rene" (14 %) vor den 14 Fenstersensoren
+  expect(batteries[0]!.reason).toBe('Bad Fenster Batterie: Batterie bei 12 %');
+  await page.goto('/');
+  await openBoards(page);
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
+  await expect(page.getByTestId('home-found')).toContainText(`Stups hat ${items.length} weitere Geräte gefunden`);
+});
+
+test('Gefunden: Gruppen mit Zähler, große Gruppe zeigt fünf und klappt auf, kleine steht offen', async ({ page, request }) => {
+  const items = await suggestions(request);
+  const batteries = items.filter((s) => s.templateId === 'battery');
+  await openFound(page);
+  const dialog = page.getByRole('dialog');
+
+  // ein Kopf je Vorlage; die Summe der Zähler ist die Gesamtzahl
+  const groups = dialog.getByTestId('found-group');
+  const counts = await groups.evaluateAll((els) => els.map((e) => Number(e.querySelector('h2 + span')?.textContent)));
+  expect(counts.reduce((a, b) => a + b, 0)).toBe(items.length);
+  const battery = dialog.locator('[data-testid="found-group"][data-group="battery"]');
+  await expect(battery.getByRole('heading', { name: 'Batterie schwach' })).toBeVisible();
+  await expect(battery.locator('h2 + span')).toHaveText(String(batteries.length));
+
+  // große Gruppe: die ersten fünf (die schwächsten), darunter „Alle N anzeigen"
+  await expect(battery.getByTestId('found-hit')).toHaveCount(5);
+  await expect(battery.getByTestId('found-hit').first()).toContainText('Bad Fenster Batterie: Batterie bei 12 %');
+  const more = battery.getByTestId('found-more');
+  await expect(more).toHaveText(`Alle ${batteries.length} anzeigen`);
+  await expect(more).toHaveAttribute('aria-expanded', 'false');
+  await more.click();
+  await expect(battery.getByTestId('found-hit')).toHaveCount(batteries.length);
+  await expect(more).toHaveText('Weniger anzeigen');
+  await expect(more).toHaveAttribute('aria-expanded', 'true');
+  await more.click();
+  await expect(battery.getByTestId('found-hit')).toHaveCount(5);
+
+  // kleine Gruppen stehen offen, ohne „Alle anzeigen"
+  const trockner = dialog.locator('[data-testid="found-group"][data-group="dryer"]');
+  if (await trockner.count()) {
+    await expect(trockner.getByTestId('found-hit')).toHaveCount(1);
+    await expect(trockner.getByTestId('found-more')).toHaveCount(0);
+  }
+  await expect(dialog.locator('[data-testid="found-group"][data-group="bins"]').getByTestId('found-more')).toHaveCount(0);
+});
+
+test('Gefunden: die Suche filtert nach Name, Entität und Grund, zeigt dann alle Treffer und lässt sich leeren', async ({ page }) => {
+  await openFound(page);
+  const dialog = page.getByRole('dialog');
+  const search = dialog.getByRole('searchbox', { name: 'Gefundene Geräte durchsuchen' });
+  await expect(search).toBeVisible();
+
+  // Name: nur der eine Fenstersensor, auch wenn er nicht unter den ersten fünf stand
+  await search.fill('gartenhaus');
+  await expect(dialog.getByTestId('found-hit')).toHaveCount(1);
+  await expect(dialog.getByTestId('found-hit')).toContainText('Gartenhaus Fenstersensor Batterie: Batterie bei 83 %');
+  await expect(dialog.getByTestId('found-group')).toHaveCount(1);
+
+  // Entität
+  await search.fill('sensor.keller_fenstersensor');
+  await expect(dialog.getByTestId('found-hit')).toHaveCount(1);
+  await expect(dialog.getByTestId('found-hit')).toContainText('sensor.keller_fenstersensor_batterie');
+
+  // Grund: alle Fenstersensoren (mehr als fünf), mit Filter ohne Abschneiden und ohne „Alle anzeigen"
+  await search.fill('fenstersensor batterie bei');
+  await expect(dialog.getByTestId('found-hit')).toHaveCount(14);
+  await expect(dialog.getByTestId('found-more')).toHaveCount(0);
+
+  // nichts gefunden: Hinweis statt leerer Seite
+  await search.fill('xyzqwv');
+  await expect(dialog.getByTestId('found-hit')).toHaveCount(0);
+  await expect(dialog.getByTestId('found-none')).toContainText('Nichts gefunden für „xyzqwv“');
+
+  // Leeren: wieder die Gruppen mit den ersten fünf
+  await dialog.getByRole('button', { name: 'Suche leeren' }).click();
+  await expect(search).toHaveValue('');
+  await expect(dialog.locator('[data-testid="found-group"][data-group="battery"]').getByTestId('found-hit')).toHaveCount(5);
+});
+
+test('Gefunden: ein Treffer aus der Suche lässt sich einrichten (Tastatur: Suchfeld, Tab, Enter), ein weiterer Treffer ausblenden', async ({ page, request }) => {
+  await openFound(page);
+  const dialog = page.getByRole('dialog');
+  const search = dialog.getByRole('searchbox', { name: 'Gefundene Geräte durchsuchen' });
+  await search.fill('garage fenstersensor');
+  const hit = dialog.getByTestId('found-hit');
+  await expect(hit).toHaveCount(1);
+
+  // Ausblenden nimmt genau diesen Treffer heraus; die Suche bleibt stehen
+  await hit.getByRole('button', { name: /Garage Fenstersensor Batterie ausblenden/ }).click();
+  await expect(page.getByText(/„Garage Fenstersensor Batterie“ ausgeblendet/)).toBeVisible();
+  await expect(dialog.getByTestId('found-hit')).toHaveCount(0);
+  await expect(search).toHaveValue('garage fenstersensor');
+  expect((await suggestions(request)).some((s) => s.entityId === 'sensor.garage_fenstersensor_batterie')).toBe(false);
+
+  // wieder einblenden, damit andere Tests den Treffer wieder sehen
+  await search.fill('');
+  await dialog.getByTestId('found-hidden-toggle').click();
+  await dialog.getByTestId('found-hidden').filter({ hasText: 'Garage Fenstersensor' }).getByRole('button', { name: /wieder anzeigen/ }).click();
+  await search.fill('keller fenstersensor');
+  await expect(hit).toHaveCount(1);
+
+  // Tastatur: aus dem Suchfeld mit Tab auf „Einrichten", Enter öffnet den Assistenten mit diesem Gerät
+  await search.press('Tab'); // zuerst „Suche leeren"
+  await page.keyboard.press('Tab');
+  await expect(hit.getByRole('button', { name: 'Einrichten' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(dialog.getByTestId('graph-card')).toContainText('Keller Fenstersensor Batterie');
+});

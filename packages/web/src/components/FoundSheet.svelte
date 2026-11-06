@@ -6,6 +6,7 @@
   import type { Recurrence } from '../lib/recurrence';
   import type { WatcherSuggestion, WatcherTemplate } from '../lib/watcher-types';
   import { closeSheet, openSheet, refresh, toast, ui } from '../lib/store.svelte';
+  import FoundHits from './FoundHits.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
   import SelectField from './SelectField.svelte';
@@ -96,23 +97,12 @@
     {#if error}
       <p class="mt-4 rounded-2xl bg-danger-bg px-4 py-3 text-[15px] text-danger" data-testid="found-error">{error}</p>
     {:else}
-      <Group title={t('Gefunden')} hint={t('Stups hat in Home Assistant Geräte gefunden, zu denen ein Wächter passt. Tippe auf „Einrichten“: der Satz ist schon ausgefüllt.')}>
-        {#each suggestions as s (s.templateId + s.entityId)}
-          <div class="flex items-center gap-3 px-4 py-3" data-testid="found-hit">
-            <span class="shrink-0 text-house"><Icon name="eye" size={20} /></span>
-            <span class="min-w-0 flex-1">
-              <span class="block truncate text-[16px] font-semibold">{titleOf(s.templateId)}</span>
-              <span class="block text-[13px] text-fg2">{s.reason}</span>
-            </span>
-            <span class="flex shrink-0 flex-col items-stretch gap-1">
-              <button class="min-h-10 rounded-xl bg-house px-4 font-semibold text-bg" onclick={() => setup(s)}>{t('Einrichten')}</button>
-              <button class="min-h-9 rounded-xl px-4 text-[14px] font-semibold text-fg2" aria-label={t('{name} ausblenden', { name: s.name })} data-testid="found-hide" onclick={() => hide(s)}>{t('Ausblenden')}</button>
-            </span>
-          </div>
-        {:else}
-          <p class="px-4 py-4 text-[15px] text-fg2">{t('Stups hat nichts gefunden, das zu einer Vorlage passt. Unten gibt es alle Vorlagen zum Einrichten von Hand.')}</p>
-        {/each}
-      </Group>
+      <p class="mt-3 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Stups hat in Home Assistant Geräte gefunden, zu denen ein Wächter passt. Tippe auf „Einrichten“: der Satz ist schon ausgefüllt.')}</p>
+      {#if suggestions.length > 0}
+        <FoundHits {suggestions} templates={device} onsetup={setup} onhide={hide} />
+      {:else}
+        <p class="mt-3 rounded-row border border-line bg-surface px-4 py-4 text-[15px] text-fg2">{t('Stups hat nichts gefunden, das zu einer Vorlage passt. Unten gibt es alle Vorlagen zum Einrichten von Hand.')}</p>
+      {/if}
     {/if}
 
     {#if hidden.length > 0}

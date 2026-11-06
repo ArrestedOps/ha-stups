@@ -3,7 +3,7 @@ import { t } from './i18n/index.svelte';
 import type { HomeItem } from './api';
 import type { AssignMode, WatcherSuggestion } from './watcher-types';
 import { watcherLayout } from './watcherList';
-import type { WatcherForm } from './watchers';
+import { formProblems, type WatcherForm } from './watchers';
 
 /**
  * Reine Logik für das Formular „Neuer Wächter“ am Desktop (ein Bereich über der Liste statt vier Schritte): die vier Arten „Wer bekommt die
@@ -52,6 +52,12 @@ export const formDirty = (current: WatcherForm, initial: WatcherForm | null): bo
 
 /** Der Name, wenn das Feld leer bleibt: der der Vorlage mit Gerät, sonst der Name der Entität (dieselben Regeln wie beim Wählen der Entität) */
 export const autoName = (f: Pick<WatcherForm, 'baseName' | 'label' | 'entityName'>): string => (f.baseName ? withDevice(f.baseName, f.label) : f.entityName);
+
+/** Das erste, was fehlt, in der Reihenfolge des Formulars: der Name (er füllt sich selbst) kommt zuletzt, sonst fehlte angeblich er, obwohl die Entität fehlt */
+export function deskProblem(f: WatcherForm): string | null {
+  const all = formProblems(f);
+  return (all.find((p) => p.step !== 4) ?? all[0])?.text ?? null;
+}
 
 /** Die Kategorie stammt von Vorlage oder Entität (nicht vom Menschen): dann steht „vorgeschlagen“ dabei */
 export const categorySuggested = (f: Pick<WatcherForm, 'category' | 'categorySource'>): boolean =>

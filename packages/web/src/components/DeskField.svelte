@@ -24,6 +24,6 @@
 </script>
 
 <label class="focus-ring-in flex h-11 shrink-0 items-center gap-1.5 rounded-xl border border-track bg-bg px-3 {width} max-w-full">
-  <input class="min-w-0 flex-1 bg-transparent text-[15px] font-bold placeholder:text-dim" {inputmode} bind:value {placeholder} aria-label={label} {onchange} />
+  <input class="min-w-0 flex-1 bg-transparent text-[15px] font-bold outline-none placeholder:text-dim" {inputmode} bind:value {placeholder} aria-label={label} {onchange} />
   {#if unit}<span class="shrink-0 text-[13px] text-fg2">{unit}</span>{/if}
 </label>

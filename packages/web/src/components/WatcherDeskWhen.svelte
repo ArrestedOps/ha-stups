@@ -107,7 +107,7 @@
       <span class="flex shrink-0 text-text-soft2"><Icon name="search" size={18} stroke={2} /></span>
       <input
         bind:this={input}
-        class="min-w-0 flex-1 bg-transparent text-[16px] font-semibold placeholder:text-dim"
+        class="min-w-0 flex-1 bg-transparent text-[16px] font-semibold outline-none placeholder:text-dim"
         role="combobox"
         aria-expanded={open}
         aria-controls="{uid}-list"
@@ -201,11 +201,11 @@
       <span class="text-[13px] text-fg2">{t('Stups schaut in die Vorhersage')}</span>
     {:else}
       <span class="text-[14px] text-fg2">{f.kind === 'state' ? t('Zustand') : t('Wert')}</span>
-      <div class="w-[21rem] max-w-full"><Segmented small items={KINDS} value={f.kind} label={t('Bedingung')} onchange={setKind} /></div>
+      <div class="w-[17rem] max-w-full"><Segmented small items={KINDS} value={f.kind} label={t('Bedingung')} onchange={setKind} /></div>
       {#if f.kind === 'state'}
         <DeskField bind:value={f.to} label={t('Zielzustand')} placeholder={t('z. B. off')} inputmode="text" width="w-36" />
       {:else}
-        <DeskField bind:value={f.value} label={t('Schwellwert')} unit={unit ?? undefined} placeholder={t('z. B. 5')} />
+        <DeskField bind:value={f.value} label={t('Schwellwert')} unit={unit ?? undefined} placeholder={t('z. B. 5')} width="w-24" />
       {/if}
       <span class="text-[14px] text-fg2">{t('länger als')}</span>
       <DeskField bind:value={f.forMin} label={t('Wartezeit in Minuten')} unit={t('Min.')} placeholder={f.kind === 'state' ? '0' : '3'} width="w-24" inputmode="numeric" />

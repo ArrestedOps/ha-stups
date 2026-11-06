@@ -3,7 +3,7 @@ import type { HomeItem } from '../src/lib/api';
 import { api } from '../src/lib/api';
 import { closeSheet, openNewWatcher, selectTab, ui } from '../src/lib/store.svelte';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
-import { autoName, categorySuggested, deskConditionItems, deskModeOf, formDirty, listSummary, presentOnly, suggestionChips, withDeskMode, withPresentOnly } from '../src/lib/watcher-desk';
+import { autoName, categorySuggested, deskProblem, deskConditionItems, deskModeOf, formDirty, listSummary, presentOnly, suggestionChips, withDeskMode, withPresentOnly } from '../src/lib/watcher-desk';
 import { WatcherEditor } from '../src/lib/watcher-editor.svelte';
 import type { SavedWatcher, WatcherSuggestion, WatcherTemplate } from '../src/lib/watcher-types';
 import { applyTemplate, emptyForm } from '../src/lib/watchers';
@@ -89,6 +89,17 @@ describe('Name, wenn der Mensch keinen eingibt', () => {
     expect(autoName(f)).toBe('Batterie schwach: iPhone Rene');
     expect(autoName({ ...emptyForm(), entityName: 'Tür Waschküche' })).toBe('Tür Waschküche');
     expect(autoName(emptyForm())).toBe('');
+  });
+});
+
+describe('Was fehlt zuerst (Reihenfolge auf dem Bildschirm)', () => {
+  it('der Name steht zuletzt, weil er sich selbst füllt: zuerst fehlt die Entität', () => {
+    expect(deskProblem(emptyForm('b', 'c'))).toMatch(/Entität/);
+  });
+  it('fehlt nur der Name, meldet es den Namen', () => {
+    const f = { ...emptyForm('b', 'c'), entityId: 'sensor.x', entityName: 'X', value: '5', title: 'T', assignMode: 'none' as const };
+    expect(deskProblem(f)).toBe('Gib dem Wächter einen Namen.');
+    expect(deskProblem({ ...f, name: 'N' })).toBeNull();
   });
 });
 

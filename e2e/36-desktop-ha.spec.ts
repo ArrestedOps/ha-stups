@@ -11,7 +11,7 @@ test.afterEach(async ({ request }) => {
 
 const sideNav = (page: import('@playwright/test').Page) => page.getByRole('navigation', { name: 'Ansicht' });
 
-test('Wächter: Raster in zwei oder drei Spalten, alle Karten einer Reihe gleich hoch, kein „+“ des Handys, Neuer Wächter als Knopf', async ({ page, request }) => {
+test('Wächter: Raster in zwei oder drei Spalten, alle Karten einer Reihe gleich hoch, kein „+“ des Handys, Neuer Wächter als Knopf in der Leiste', async ({ page, request }) => {
   const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
   const rene = people.find((p) => p.name === 'Rene')!;
   const tag = Date.now().toString(36);
@@ -69,11 +69,16 @@ test('Wächter: Raster in zwei oder drei Spalten, alle Karten einer Reihe gleich
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('home-no-match')).toHaveCount(0);
 
-  await page.getByTestId('new-watcher').click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await expect.poll(async () => Math.round((await page.getByRole('dialog').boundingBox())!.width)).toBe(600);
-  await page.keyboard.press('Escape');
+  // „Neuer Wächter“ klappt über der Liste auf (kein Fenster): derselbe Knopf klappt wieder zu
+  const bar = page.getByTestId('new-watcher');
+  await expect(bar).toHaveAttribute('aria-expanded', 'false');
+  await bar.click();
+  await expect(bar).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByTestId('watcher-desk')).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await bar.click();
+  await expect(page.getByTestId('watcher-desk')).toHaveCount(0);
+  await expect(bar).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, Zeile öffnet, Kategorien klappen, bei 1024 px weniger Spalten', async ({ page, request }) => {

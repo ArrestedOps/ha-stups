@@ -2,6 +2,20 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.36.0-beta.1
+
+**Wächter am Desktop: „Neuer Wächter“ klappt als ein Formular über der Liste auf, statt als Fenster mit vier Schritten.** Das Handy (unter 1024 px) bleibt beim Assistenten mit „Zurück“, unverändert.
+
+- Oben über der Liste steht eine Leiste: links „8 Wächter · 2 aktuell · 1 aus“, rechts „Gefunden“ (mit Zähler) und „+ Neuer Wächter“. Ein Klick klappt das Formular direkt darüber auf, die Liste rutscht nach unten. Derselbe Knopf (dann mit „−“ und Umriss), das X, „Abbrechen“ und Escape klappen es wieder zu. Der Knopf trägt `aria-expanded`; der Fokus springt beim Aufklappen in das Feld für die Entität. Die Karte „Deine Wächter“ mit dem Roboter gibt es nur noch am Handy.
+- **Wenn:** Suchfeld für die Entität (Name, rechts klein die Kennung), darunter die ersten drei Vorschläge aus „Gefunden“ als Chips und „+N“, das die vollständige Liste nach Vorlage im Formular aufklappt (mit Suche, „Einrichten“, „Ausblenden“). Darunter eine Zeile: „steigt über / fällt unter / ist“, Wert mit Einheit, „länger als“ und die Wartezeit. Bei Kalender und Vorhersage passt sich die Zeile an.
+- **Dann:** Titel der Karte mit Symbol-Kachel, darunter Auswahlfelder als Pillen: Board, Spalte, Fällig, Priorität und Kategorie. Die Kategorie ist aus Vorlage oder Entität vorbelegt und als „vorgeschlagen“ gekennzeichnet; „Neue Kategorie …“ legt eine eigene an (bis 40 Zeichen, gleiche Namen ohne Beachtung der Groß-/Kleinschreibung werden zusammengelegt).
+- **Wer bekommt die Karte?** Eine feste Person, wer zuerst heimkommt, fair im Wechsel (mit Schalter „nur wer zu Hause ist“) oder alle Anwesenden; „Erst vorschlagen“ und „Niemand“ stehen in der Auswahl „Weitere“. Dazu wie bisher Personen, Reihenfolge und Rückfall.
+- **Mehr Einstellungen** (eingeklappt): Sperrzeit, „Erledigt sich selbst“, Stupsen, Zähler, Doppelkarten-Regel, Beschreibung und die Kategorien der Karte. Der Name steht unten neben den Knöpfen; bleibt er leer, gilt der automatische (Vorlage mit Gerät, sonst der Name der Entität).
+- **Vorschau** rechts (bei 1024 bis etwa 1340 px unter den Blöcken, einspaltig): der Satz, der Verlauf der Entität mit Schwellenlinie, „So erscheint die Karte“. Unten: „Probelauf“ (das Ergebnis klappt im Formular auf), „Abbrechen“, „Wächter anlegen“.
+- Speichern läuft über dieselbe Funktion wie am Handy: Ist die Bedingung schon erfüllt, fragt die App danach „Soll jetzt eine Karte erstellt werden?“; eine Batterie unter der Grenze legt gleich die Karte an. Name und Kartentitel nennen das Gerät wie bisher, ein von Hand geänderter Text bleibt. Nach dem Anlegen klappt das Formular zu, die neue Zeile steht in ihrer Kategorie (die Gruppe klappt auf) und ist kurz hervorgehoben.
+- Wer schon etwas eingegeben hat, wird beim Zuklappen gefragt („Entwurf verwerfen?“); sonst klappt es ohne Rückfrage zu. Den Knopf gibt es nur mit dem Recht „Wächter“.
+- „Einrichten“ in „Gefunden“ und die Vorlagen in den Einstellungen öffnen am Desktop dieses Formular, mit denselben Werten vorbelegt wie früher der Assistent. Das Bearbeiten eines vorhandenen Wächters bleibt ein Fenster (der Editor).
+
 ## 1.35.0-beta.1
 
 **Wächter: Alle Wächter stehen immer da, nach Kategorie sortiert, mit Schalter „aktiv/aus“.** Auf dem Desktop wird daraus eine Tabelle mit deutlich mehr Angaben.

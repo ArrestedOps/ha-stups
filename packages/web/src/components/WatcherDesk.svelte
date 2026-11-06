@@ -3,7 +3,7 @@
   import { api, ApiError } from '../lib/api';
   import { t } from '../lib/i18n/index.svelte';
   import { toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
-  import { autoName, formDirty } from '../lib/watcher-desk';
+  import { autoName, deskProblem, formDirty } from '../lib/watcher-desk';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
   import type { WatcherSuggestion } from '../lib/watcher-types';
   import type { WatcherForm } from '../lib/watchers';
@@ -115,6 +115,11 @@
   async function submit() {
     // Ein leerer Name heißt „automatisch“: der Name der Vorlage mit Gerät, sonst der der Entität
     if (!ed.form.name.trim()) ed.form.name = autoName(ed.form);
+    const problem = deskProblem(ed.form);
+    if (problem) {
+      toast(problem, { tone: 'error' });
+      return;
+    }
     await ed.save();
   }
 
@@ -169,7 +174,7 @@
             <div id="{uid}-more" class="flex flex-col gap-3 px-4 pt-1 pb-4" data-testid="desk-more-body">
               <WatcherFineEditor {ed} name={false} category={false} columns />
               <label class="focus-ring-in flex rounded-row border border-line bg-surface px-3.5 py-3">
-                <textarea class="min-h-[44px] w-full resize-none bg-transparent text-[15px] leading-[1.45] font-medium placeholder:text-dim" rows="2" bind:value={f.description} placeholder={t('Beschreibung (optional)')} aria-label={t('Beschreibung')}></textarea>
+                <textarea class="min-h-[44px] w-full resize-none bg-transparent text-[15px] leading-[1.45] font-medium outline-none placeholder:text-dim" rows="2" bind:value={f.description} placeholder={t('Beschreibung (optional)')} aria-label={t('Beschreibung')}></textarea>
               </label>
               {#if ed.view?.categories.length}
                 <div class="flex flex-col gap-2">
@@ -195,7 +200,7 @@
     <footer class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line pt-4" data-testid="desk-footer">
       <label class="focus-ring-in flex h-12 max-w-xl min-w-[14rem] flex-1 items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5">
         <span class="shrink-0 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Name')}</span>
-        <input class="min-w-0 flex-1 truncate bg-transparent text-[15px] font-semibold placeholder:text-dim" bind:value={f.name} maxlength="80" placeholder={autoName(f) || t('automatisch')} aria-label={t('Name des Wächters')} data-testid="desk-name" />
+        <input class="min-w-0 flex-1 truncate bg-transparent text-[15px] font-semibold outline-none placeholder:text-dim" bind:value={f.name} maxlength="80" placeholder={autoName(f) || t('automatisch')} aria-label={t('Name des Wächters')} data-testid="desk-name" />
       </label>
       <span class="flex flex-1 flex-wrap items-center justify-end gap-2">
         <button type="button" class="h-12 rounded-[14px] border border-line bg-surface px-5 text-[15px] font-bold hover:bg-surface2" onclick={probe} data-testid="desk-probe">{t('Probelauf')}</button>

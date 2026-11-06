@@ -81,7 +81,7 @@
       {/if}
     </button>
     <label class="sr-only" for="{uid}-title">{t('Titel der Karte')}</label>
-    <input id="{uid}-title" class="min-h-10 min-w-0 flex-1 bg-transparent text-[17px] font-bold placeholder:text-dim" bind:value={f.title} maxlength="200" placeholder={t('Titel der Karte, z. B. Waschmaschine ausräumen')} autocapitalize="sentences" data-testid="desk-title" />
+    <input id="{uid}-title" class="min-h-10 min-w-0 flex-1 bg-transparent text-[17px] font-bold outline-none placeholder:text-dim" bind:value={f.title} maxlength="200" placeholder={t('Titel der Karte, z. B. Waschmaschine ausräumen')} autocapitalize="sentences" data-testid="desk-title" />
   </div>
 
   <div class="flex flex-wrap items-center gap-2" data-testid="desk-pills">

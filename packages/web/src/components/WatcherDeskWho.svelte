@@ -60,23 +60,22 @@
 </script>
 
 <DeskBlock n={3} title={t('Wer bekommt die Karte?')} testid="desk-who">
-  <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-    <div class="min-w-[20rem] flex-1">
-      <Segmented small items={ITEMS} value={mode} label={t('Zuweisung')} onchange={(id) => (ed.form = withDeskMode(f, id as DeskMode, me))} />
-    </div>
+  <Segmented small scroll items={ITEMS} value={mode} label={t('Zuweisung')} onchange={(id) => (ed.form = withDeskMode(f, id as DeskMode, me))} />
+
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+    {#if mode === 'rotation'}
+      <label class="flex items-center gap-3 text-[14px]">
+        <Toggle label={t('Nur, wer zu Hause ist')} checked={presentOnly(f)} onchange={(on) => (ed.form = withPresentOnly(f, on))} />
+        {t('Nur, wer zu Hause ist')}
+      </label>
+    {/if}
+    <span class="flex-1"></span>
     <SelectField variant="pill" caption={t('Weitere')} label={t('Weitere Arten der Zuweisung')} value={other} onchange={setOther}>
       <option value="">{t('keine')}</option>
       <option value="suggest">{t('Erst vorschlagen')}</option>
       <option value="none">{t('Niemand')}</option>
     </SelectField>
   </div>
-
-  {#if mode === 'rotation'}
-    <div class="flex items-center gap-3 text-[14px]">
-      <Toggle label={t('Nur, wer zu Hause ist')} checked={presentOnly(f)} onchange={(on) => (ed.form = withPresentOnly(f, on))} />
-      <span>{t('Nur, wer zu Hause ist')}</span>
-    </div>
-  {/if}
 
   {#if usesCircle(f.assignMode)}
     <div class="flex flex-col gap-2">

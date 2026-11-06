@@ -166,6 +166,63 @@ describe('Auslösen', () => {
   });
 });
 
+describe('Pegel beim Anlegen schon über der Grenze', () => {
+  const BATT = 'sensor.smart_button_batterie';
+  const battery = (extra: Record<string, unknown> = {}) =>
+    create({ name: 'Batterie schwach', trigger: { entityId: BATT, kind: 'below', value: 10, forMin: 10 }, card: { boardId, columnId, title: 'Batterie wechseln' }, ...extra });
+
+  it('eine Batterie unter der Grenze löst beim Anlegen sofort aus, wenn der Wert schon länger so steht', async () => {
+    ha.set(BATT, '1', '2026-11-04T09:00:00Z', { device_class: 'battery', unit_of_measurement: '%' });
+    const w = await battery();
+    expect(cards()).toHaveLength(1);
+    expect(cards()[0]!.title).toBe('Batterie wechseln');
+    expect(data.runs(w.id)[0]).toMatchObject({ result: 'created' });
+  });
+
+  it('steht der Wert erst kurz so, kommt die Karte nach der Wartezeit (Takt), nicht früher', async () => {
+    ha.set(BATT, '1', '2026-11-04T09:58:00Z', { device_class: 'battery', unit_of_measurement: '%' });
+    const w = await battery();
+    expect(cards()).toHaveLength(0);
+    expect(data.getState(w.id).armed).toBe(true);
+    advance(5);
+    await engine.tick();
+    expect(cards()).toHaveLength(0);
+    advance(6);
+    await engine.tick();
+    expect(cards()).toHaveLength(1);
+  });
+
+  it('auch ohne Geräteklasse: Prozent und „Batterie" in der ID genügen', async () => {
+    ha.set('sensor.flur_akku', '4', '2026-11-04T09:00:00Z', { unit_of_measurement: '%' });
+    await battery({ trigger: { entityId: 'sensor.flur_akku', kind: 'below', value: 10, forMin: 10 } });
+    expect(cards()).toHaveLength(1);
+  });
+
+  it('Vorgänge (Leistung) und Unbekanntes bleiben vorsichtig: kein Auslösen beim Anlegen', async () => {
+    ha.set(ENTITY, '2', '2026-11-04T09:00:00Z', { device_class: 'power', unit_of_measurement: 'W' });
+    await create();
+    expect(cards()).toHaveLength(0);
+    ha.set('sensor.irgendwas', '2', '2026-11-04T09:00:00Z');
+    await create({ trigger: { entityId: 'sensor.irgendwas', kind: 'below', value: 5, forMin: 0 } });
+    expect(cards()).toHaveLength(0);
+  });
+
+  it('ist die Batterie über der Grenze, passiert beim Anlegen nichts', async () => {
+    ha.set(BATT, '80', '2026-11-04T09:00:00Z', { device_class: 'battery', unit_of_measurement: '%' });
+    await battery();
+    expect(cards()).toHaveLength(0);
+  });
+
+  it('Ändern eines Wächters, der schon ausgelöst hat, legt keine zweite Karte an', async () => {
+    ha.set(BATT, '1', '2026-11-04T09:00:00Z', { device_class: 'battery', unit_of_measurement: '%' });
+    const w = await battery();
+    expect(cards()).toHaveLength(1);
+    advance(60);
+    await engine.onSaved(w.id);
+    expect(cards()).toHaveLength(1);
+  });
+});
+
 describe('Neustart-fest', () => {
   it('löst beim Anlegen nicht aus, wenn die Bedingung schon erfüllt ist; erst nach einem Wechsel wieder', async () => {
     ha.set(ENTITY, '2');

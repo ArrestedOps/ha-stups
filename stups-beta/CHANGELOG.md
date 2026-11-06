@@ -2,6 +2,14 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.32.3-beta.1
+
+**Wächter: Liegt eine Batterie beim Anlegen schon unter der Grenze, kommt die Karte sofort.**
+
+- Bisher blieb ein Wächter „ruhig", wenn die Bedingung beim Anlegen schon erfüllt war, und löste erst nach einem Wechsel aus. Für Batterie, Temperatur und Luftfeuchte ist das falsch: Eine Batterie bei 1 % ist ein Befund, keine Ausgangslage.
+- Jetzt legt der Wächter die Karte an, wenn der Wert schon so steht (nach der eingestellten Wartezeit, gerechnet ab der letzten Änderung des Werts, also meist gleich). Das gilt nur beim ersten Anlegen: Ändert man den Wächter später, entsteht keine zweite Karte.
+- Vorgänge wie die Leistung einer Waschmaschine und alles Unbekannte bleiben vorsichtig und warten auf den nächsten Wechsel, sonst käme beim Anlegen sofort „Wäsche aufhängen".
+
 ## 1.32.2-beta.1
 
 **Wächter, Liste „Ruhig": der Name der Entität steht klein und grau unter dem Titel, der aktuelle Stand oben rechts.**

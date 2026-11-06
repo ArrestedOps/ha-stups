@@ -52,6 +52,20 @@ export function measuresProcess(seen: Pick<SeenState, 'unit' | 'deviceClass'> | 
   return !!seen.unit && PROCESS_UNITS.has(seen.unit.trim().toLowerCase());
 }
 
+const LEVEL_CLASSES = new Set(['battery', 'temperature', 'humidity', 'moisture']);
+const BATTERY_ID = /batter|akku/;
+
+/**
+ * Ist es ein Pegel, bei dem „schon unter der Schwelle" ein Befund ist (Batterie, Temperatur, Feuchte)? Dann löst der Wächter
+ * auch aus, wenn die Bedingung beim Anlegen schon erfüllt ist. Im Zweifel nein: Ein Vorgang (Waschmaschine) oder etwas
+ * Unbekanntes bleibt vorsichtig und wartet auf den nächsten Wechsel.
+ */
+export function measuresLevel(seen: Pick<SeenState, 'unit' | 'deviceClass'> | null, entityId: string): boolean {
+  if (!seen) return false;
+  if (seen.deviceClass) return LEVEL_CLASSES.has(seen.deviceClass);
+  return seen.unit?.trim() === '%' && BATTERY_ID.test(entityId.toLowerCase());
+}
+
 const numeric = (state: string): boolean => state !== '' && state !== 'unknown' && state !== 'unavailable' && Number.isFinite(Number(state));
 
 /**

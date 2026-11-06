@@ -4,7 +4,7 @@ import { ConflictError, ForbiddenError } from './errors.js';
 import type { HaState } from './ha.js';
 import { t } from './i18n/index.js';
 import { isBusy } from './busy.js';
-import { isRunning, phaseOf, type HomeItem, type HomeState, type PhaseMemory } from './home.js';
+import { isRunning, measuresLevel, phaseOf, type HomeItem, type HomeState, type PhaseMemory } from './home.js';
 import { orderView, type OrderView } from './assignment-order.js';
 import { personOfEntity, presenceOf, type PresenceMap } from './presence.js';
 import { fromLocal, toLocal } from './recurrence.js';
@@ -751,8 +751,14 @@ export function createWatchers(deps: WatcherDeps) {
       } else {
         remember(w, s, data.getState(id).lastFireAt); // der Stand beim Anlegen: lief schon etwas, ist der Beginn unbekannt
         const met = conditionMet(w.trigger, s.state);
-        data.patchState(id, { armed: !met, metSince: met ? metSinceOf(w.trigger.kind, s, now().getTime()) : null });
+        const nowMs = now().getTime();
+        // Ein Pegel (Batterie, Temperatur), der beim ersten Anlegen schon über der Grenze liegt, ist ein Befund: die Karte kommt sofort
+        // (nach der Wartezeit, gerechnet ab der letzten Änderung des Werts). Vorgänge und Unbekanntes warten auf den nächsten Wechsel.
+        const levelNow = met && (w.trigger.kind === 'below' || w.trigger.kind === 'above') && measuresLevel(s, w.trigger.entityId) && !data.getState(id).lastFireAt;
+        const since = met ? metSinceOf(levelNow ? 'state' : w.trigger.kind, s, nowMs) : null;
+        data.patchState(id, { armed: levelNow || !met, metSince: since });
         if (w.status === 'entity_missing') data.setStatus(id, 'ok');
+        if (levelNow && since && nowMs - Date.parse(since) >= minutes(w.trigger.forMin)) await fire(w);
       }
       syncSubscriptions();
       deps.onChange?.();

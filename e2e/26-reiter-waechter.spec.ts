@@ -52,9 +52,8 @@ test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Karte 
 
   await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  // „Ruhig" ist eine Zeile („1 Wächter ohne offene Aktion"), die sich auf die einzelnen Wächter aufklappt
-  await page.getByTestId('home-quiet').getByRole('button', { name: /Wächter ohne offene Aktion/ }).click();
-  await expect(page.getByTestId('home-quiet')).toContainText(name);
+  // Alle Wächter sind immer sichtbar: ohne Kategorie steht er unter „Ohne Kategorie"
+  await expect(page.getByTestId('watcher-categories')).toContainText(name);
 
   // Die Maschine läuft: Leistung über der Schwelle
   await setState(request, 'sensor.waschmaschine_leistung', '120');

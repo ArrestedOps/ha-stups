@@ -316,7 +316,7 @@ export const en: Catalog = {
   '{n} Kategorie gesetzt': ['{n} category set', '{n} categories set'],
   'Kategorien vorschlagen fehlgeschlagen': 'Could not suggest categories',
   'Aktuell': 'Current',
-  'Letzte Auslösung': 'Last triggered',
+  'Zuletzt': 'Last',
   'Nächste Karte': 'Next card',
   'Aktiv': 'Active',
   'Wartet': 'Waiting',

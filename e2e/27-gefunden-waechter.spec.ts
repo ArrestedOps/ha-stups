@@ -61,14 +61,15 @@ test('Gefunden: Hinweis im Reiter Wächter, Treffer mit Begründung, Wächter au
   // Anlegen
   await dialog.getByRole('button', { name: 'Wächter anlegen' }).click();
   await expect(page.getByText('Wächter gespeichert')).toBeVisible();
-  const list = (await (await request.get('/api/watchers')).json()) as { items: { name: string; trigger: { entityId: string; kind: string; value: number } }[] };
+  const list = (await (await request.get('/api/watchers')).json()) as { items: { name: string; category: string | null; trigger: { entityId: string; kind: string; value: number } }[] };
   expect(list.items.find((w) => w.name === 'Trockner fertig: Steckdose')?.trigger).toMatchObject({ entityId: 'sensor.trockner_leistung', kind: 'below', value: 5 });
+  // die Kategorie der Vorlage ist vorbelegt
+  expect(list.items.find((w) => w.name === 'Trockner fertig: Steckdose')?.category).toBe('Haushaltsgeräte');
 
   // Der Trockner steht jetzt im Reiter Wächter (ruhig) und fehlt in „Gefunden"
   await page.keyboard.press('Escape');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByTestId('home-quiet').getByRole('button', { name: /Wächter ohne offene Aktion/ }).click();
-  await expect(page.getByTestId('home-quiet')).toContainText('Trockner fertig');
+  await expect(page.getByTestId('watcher-categories')).toContainText('Trockner fertig');
 });
 
 test('Probelauf: ohne Historie ein Hinweis statt eines Diagramms; Wackeln wird genannt', async ({ page, request }) => {

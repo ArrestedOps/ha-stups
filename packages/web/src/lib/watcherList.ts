@@ -173,11 +173,12 @@ export function whoText(assign: HomeItem['assign'], personName: (id: string) => 
 
 /**
  * Die Spalten der Tabelle, für Kopf und Zeilen gleich (bündig). Sie richten sich nach der Breite der Liste (Container-Abfrage), nicht nach
- * dem Fenster: Seitenleiste und Detailspalte nehmen Platz weg. Schmal: Wächter, Stand, Status, Schalter; ab 780 px dazu Bedingung und letzte
- * Auslösung; ab 1100 px dazu die nächste Karte und die Zuständigen. Lieber Spalten ausblenden als quetschen.
+ * dem Fenster: Seitenleiste und Detailspalte nehmen Platz weg. Schmal: Wächter, Aktuell, Status, Schalter; ab 700 px dazu die Bedingung;
+ * ab 900 px die letzte Auslösung; ab 1100 px die nächste Karte und die Zuständigen. Lieber Spalten ausblenden als quetschen.
  */
 export const TABLE_COLS =
-  'grid-cols-[minmax(0,1fr)_5rem_6.5rem_3.25rem] @min-[780px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_5rem_6.5rem_6.5rem_3.25rem] @min-[1100px]:grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_5rem_6.5rem_6.5rem_minmax(0,1fr)_8rem_3.25rem]';
-/** Spalten, die erst ab 780 px und ab 1100 px erscheinen */
-export const COL_MID = 'hidden @min-[780px]:block';
+  'grid-cols-[minmax(0,1fr)_4.5rem_7rem_3.25rem] @min-[700px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_4.5rem_7rem_3.25rem] @min-[900px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_4.5rem_7rem_5.5rem_3.25rem] @min-[1100px]:grid-cols-[minmax(0,1.6fr)_minmax(0,1.3fr)_4.5rem_7rem_5.5rem_minmax(0,1fr)_8rem_3.25rem]';
+/** Spalten, die erst ab 700 px (Bedingung), 900 px (letzte Auslösung) und 1100 px (nächste Karte, Zuständige) erscheinen */
+export const COL_MID = 'hidden @min-[700px]:block';
+export const COL_LAST = 'hidden @min-[900px]:block';
 export const COL_WIDE = 'hidden @min-[1100px]:flex';

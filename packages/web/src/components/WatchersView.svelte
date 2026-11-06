@@ -7,7 +7,7 @@
   import { t, tn } from '../lib/i18n/index.svelte';
   import { canNudge } from '../lib/nudge';
   import { matchesQuery } from '../lib/search';
-  import { COL_MID, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
+  import { COL_LAST, COL_MID, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
   import { noteText, renameCandidates, RUN_TEXT } from '../lib/watchers';
   import { askRenameWatchers, askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openSettings, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import robot from '../assets/waechter-robot.webp';
@@ -121,7 +121,7 @@
   {:else}
     <ul class="mt-2 flex flex-col gap-2">
       {#each list as i (i.watcherId)}
-        <li><WatcherRow item={i} {nowMs} {current} {canToggle} busy={busy.includes(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} /></li>
+        <li data-testid="watcher-row"><WatcherRow item={i} {nowMs} {current} {canToggle} busy={busy.includes(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} /></li>
       {/each}
     </ul>
   {/if}
@@ -269,15 +269,15 @@
         <div class="@container flex flex-col gap-3.5" data-testid="watcher-list">
           {#if ui.desktop && hasRows}
             <div class="sticky top-0 z-10 -mx-1 bg-bg px-1 pt-1" data-testid="watcher-table-head">
-              <div class="grid items-center gap-x-4 rounded-row border border-transparent px-3.5 py-1.5 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase {TABLE_COLS}">
+              <div class="grid items-center gap-x-3 rounded-row border border-transparent px-3.5 py-1.5 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase {TABLE_COLS}">
                 <span>{t('Wächter')}</span>
                 <span class={COL_MID}>{t('Bedingung')}</span>
                 <span>{t('Aktuell')}</span>
                 <span>{t('Status')}</span>
-                <span class={COL_MID}>{t('Letzte Auslösung')}</span>
+                <span class={COL_LAST}>{t('Zuletzt')}</span>
                 <span class={COL_WIDE}>{t('Nächste Karte')}</span>
                 <span class={COL_WIDE}>{t('Zuständig')}</span>
-                <span class="sr-only">{t('Aktiv')}</span>
+                <span class="flex justify-end"><span class="sr-only">{t('Aktiv')}</span></span>
               </div>
             </div>
           {/if}

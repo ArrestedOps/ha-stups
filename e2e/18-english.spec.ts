@@ -103,6 +103,7 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   await noSideScroll(page);
 
   await nav.getByRole('button', { name: 'Boards' }).click();
+  await page.getByRole('group', { name: 'People' }).getByRole('button', { name: 'All', exact: true }).click(); // Boards starts at „Mine“
   await page.getByRole('button', { name: /^Dentist/ }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText('Description')).toBeVisible();

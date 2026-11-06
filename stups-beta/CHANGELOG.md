@@ -2,6 +2,10 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.32.0-beta.2
+
+Nur ein Test angepasst (englisches Gerät), sonst wie 1.32.0-beta.1.
+
 ## 1.32.0-beta.1
 
 **Aufgaben und Boards: erst „Alle", dann „Meine", dann die anderen Personen. Beim Start ist immer „Meine" gewählt.**

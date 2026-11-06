@@ -2,6 +2,14 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.32.0-beta.1
+
+**Aufgaben und Boards: erst „Alle", dann „Meine", dann die anderen Personen. Beim Start ist immer „Meine" gewählt.**
+
+- **Reihenfolge der Chips** in Aufgaben und Boards: Alle, Meine, dann die Personen.
+- **Start immer bei „Meine"**, auch in Boards (bisher dort „Alle") und auch dann, wenn du das Gerät zuletzt auf eine andere Person gestellt hattest. Andere gemerkte Filter (Wann, Board, Priorität) bleiben.
+- **Neue Karten verschwinden nicht:** Versteckt der Personenfilter die Karte, die du gerade angelegt hast (zum Beispiel ohne Zuständige unter „Meine"), wechselt die Ansicht auf „Alle".
+
 ## 1.31.0-beta.1
 
 **Wächter: das Gerät steht im Namen, und der Assistent hat überall ein „Zurück“.**

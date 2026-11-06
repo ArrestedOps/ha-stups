@@ -2,6 +2,10 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.32.4-beta.1
+
+**Desktop: Auswahllisten (zum Beispiel das Board im Wächter-Assistenten) sind nicht mehr weiß.** Die aufklappende Liste folgt jetzt dem Theme (dunkel und hell).
+
 ## 1.32.3-beta.1
 
 **Wächter: Liegt eine Batterie beim Anlegen schon unter der Grenze, kommt die Karte sofort.**

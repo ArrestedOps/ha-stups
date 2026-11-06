@@ -55,7 +55,7 @@
     </span>
   {/if}
 
-  <label class="focus-ring-in flex h-12 w-[300px] shrink-0 items-center gap-2.5 rounded-[14px] border border-line-chip bg-surface px-3.5 text-text-soft hover:border-sep xl:w-[340px]">
+  <label class="focus-ring-in flex h-12 w-[230px] shrink-0 items-center gap-2.5 rounded-[14px] border border-line-chip bg-surface px-3.5 text-text-soft hover:border-sep xl:w-[340px]">
     <Icon name="search" size={20} stroke={1.9} />
     <input
       id="desktop-search"
@@ -73,13 +73,13 @@
         <Icon name="x" size={16} stroke={2} />
       </button>
     {:else}
-      <kbd class="shrink-0 rounded-md border border-line-chip bg-bg px-1.5 py-0.5 font-sans text-[12px] font-semibold text-fg2" aria-hidden="true">{mac ? '⌘ K' : `${t('Strg')} K`}</kbd>
+      <kbd class="hidden shrink-0 xl:inline rounded-md border border-line-chip bg-bg px-1.5 py-0.5 font-sans text-[12px] font-semibold text-fg2" aria-hidden="true">{mac ? '⌘ K' : `${t('Strg')} K`}</kbd>
     {/if}
   </label>
 
   {#if canCreate}
-    <button class="fab-grad flex h-12 shrink-0 items-center gap-2 rounded-[14px] px-5 text-[15px] font-extrabold hover:brightness-110" data-testid="new-task" onclick={() => openSheet({ type: 'new', columnId: newColumn! })}>
-      <Icon name="plus" size={20} stroke={2.4} />{t('Neue Aufgabe')}
+    <button class="fab-grad flex h-12 shrink-0 items-center justify-center gap-2 rounded-[14px] text-[15px] font-extrabold hover:brightness-110 max-xl:w-12 xl:px-5" data-testid="new-task" onclick={() => openSheet({ type: 'new', columnId: newColumn! })}>
+      <Icon name="plus" size={20} stroke={2.4} /><span class="max-xl:sr-only">{t('Neue Aufgabe')}</span>
     </button>
   {/if}
   {#if feat.haUi}

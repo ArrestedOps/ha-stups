@@ -160,7 +160,7 @@
   {:else if ui.sheet?.type === 'cardMenu'}
     {#key ui.sheet.id}<CardMenu id={ui.sheet.id} />{/key}
   {:else if ui.sheet?.type === 'new'}
-    <NewCardSheet columnId={ui.sheet.columnId} dueAt={ui.sheet.dueAt ?? null} />
+    <NewCardSheet columnId={ui.sheet.columnId} dueAt={ui.sheet.dueAt ?? null} picked={ui.sheet.picked ?? false} />
   {:else if ui.sheet?.type === 'slot'}
     <SlotSheet at={ui.sheet.at} />
   {:else if ui.sheet?.type === 'boards'}

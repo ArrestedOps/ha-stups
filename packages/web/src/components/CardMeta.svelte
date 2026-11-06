@@ -65,8 +65,8 @@
           <span class={priorityTone(m.level).glow ? 'prio-glow flex' : 'flex'}><Icon name="flag" size={ICON} stroke={1.9} /></span>{m.level === 'high' ? t('Hoch') : t('Mittel')}
         </span>
       {:else if m.kind === 'category'}
-        <span class="inline-flex min-w-0 items-center gap-[5px] font-semibold" style:color={categoryFg(m.color)} data-testid="card-category">
-          <i class="block h-2 w-2 shrink-0 rounded-full bg-current" aria-hidden="true"></i><span class="truncate">{m.name}</span>{#if m.more > 0}<span class="shrink-0">+{m.more}</span>{/if}
+        <span class="inline-flex min-w-0 gap-[5px] font-semibold {wrap ? 'items-start' : 'items-center'}" style:color={categoryFg(m.color)} data-testid="card-category">
+          <i class="block h-2 w-2 shrink-0 rounded-full bg-current {wrap ? 'mt-[5px]' : ''}" aria-hidden="true"></i><span class={wrap ? 'break-words' : 'truncate'}>{m.name}</span>{#if m.more > 0}<span class="shrink-0">+{m.more}</span>{/if}
         </span>
       {:else if m.kind === 'checklist'}
         <span class="inline-flex shrink-0 items-center gap-1" aria-label={t('Checkliste {done} von {total}', { done: m.done, total: m.total })}><Icon name="task-check" size={ICON} stroke={1.9} />{m.done}/{m.total}</span>

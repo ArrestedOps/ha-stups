@@ -112,7 +112,7 @@
                   <button
                     class="flex h-9 w-9 items-center justify-center rounded-[10px] bg-surface2 text-text-soft hover:text-fg"
                     aria-label={t('Neue Karte in „{name}“', { name: col.name })}
-                    onclick={() => openSheet({ type: 'new', columnId: col.id })}
+                    onclick={() => openSheet({ type: 'new', columnId: col.id, picked: true })}
                   >
                     <Icon name="plus" size={20} stroke={2} />
                   </button>

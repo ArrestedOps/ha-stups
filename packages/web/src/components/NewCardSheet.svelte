@@ -34,14 +34,14 @@
   import Toggle from './ui/Toggle.svelte';
 
   /** dueAt: vorbelegter Termin, z. B. aus dem Kalender */
-  let { columnId, dueAt = null }: { columnId: string; dueAt?: string | null } = $props();
+  let { columnId, dueAt = null, picked = false }: { columnId: string; dueAt?: string | null; picked?: boolean } = $props();
 
   const columns = $derived(ui.view?.columns ?? []);
   const board = $derived(ui.boards.find((b) => b.id === ui.boardId));
   // „Geplant" sortiert sich nach dem Termin von selbst, darum steht es nur zur Wahl, wenn man dort anlegt
   const choices = $derived(columns.filter((c) => !c.isPlanned || c.id === fields.columnId));
   // Ohne eigene Wahl richtet sich die Spalte nach dem Termin: nach heute → „Geplant", sonst „Offen"
-  let columnPicked = false;
+  let columnPicked = untrack(() => picked);
   const followDue = () => {
     if (columnPicked) return;
     const target = columnForNew(columns, isFuture(fields.dueAt));

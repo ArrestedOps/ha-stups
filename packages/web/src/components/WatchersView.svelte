@@ -121,7 +121,7 @@
           </p>
           <p class="mt-1 text-[15px] text-fg2">{t('Boards und Karten funktionieren weiter. Sobald die Verbindung steht, erscheint hier wieder, was das Haus tut.')}</p>
         </div>
-      {:else if items.length === 0}
+      {:else if allItems.length === 0}
         <div class="rounded-row border border-line bg-surface p-5" data-testid="home-empty">
           <p class="text-[17px] font-semibold">{t('Noch kein Wächter')}</p>
           <p class="mt-1 text-[15px] text-fg2">

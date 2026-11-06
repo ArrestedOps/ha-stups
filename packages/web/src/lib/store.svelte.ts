@@ -31,7 +31,7 @@ export type Sheet =
   | null
   | { type: 'card'; id: string }
   | { type: 'cardMenu'; id: string }
-  | { type: 'new'; columnId: string; dueAt?: string }
+  | { type: 'new'; columnId: string; dueAt?: string; /** die Spalte ist gewählt (das „+“ über einer Spalte im Kanban): der Termin ändert sie nicht von selbst */ picked?: boolean }
   | { type: 'slot'; at: string }
   | { type: 'boards' }
   | { type: 'boardSettings' }

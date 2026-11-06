@@ -11,6 +11,10 @@ const BETA_PORT = 18450;
  * (`openBoards` in helpers.ts).
  */
 
+/** Die Desktop-Specs (35-desktop, 36-desktop-ha) laufen nur in den Desktop-Projekten (am Dateinamen erkannt, nicht am Ordner) */
+const DESKTOP_SPECS = /\/3[56]-desktop[^/]*\.spec\.ts$/;
+const DESKTOP = { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 } };
+
 // Läuft gegen den gebauten Server (pnpm build zuerst), in WebKit mit iPhone-Ansicht wie die Companion App.
 export default defineConfig({
   testDir: '.',
@@ -32,8 +36,13 @@ export default defineConfig({
   },
   // Die Companion App folgt dem Hell/Dunkel des iPhones, beide Themes werden geprüft
   projects: [
-    { name: 'dunkel', testIgnore: /waechter|haus|standalone|beta|english/, use: { colorScheme: 'dark' } },
-    { name: 'hell', testIgnore: /waechter|haus|standalone|beta|english/, use: { colorScheme: 'light' } },
+    { name: 'dunkel', testIgnore: [/waechter|haus|standalone|beta|english/, DESKTOP_SPECS], use: { colorScheme: 'dark' } },
+    { name: 'hell', testIgnore: [/waechter|haus|standalone|beta|english/, DESKTOP_SPECS], use: { colorScheme: 'light' } },
+    // Desktop (ab 1024 px, hier 1440 × 900): Seitenleiste, Detailspalte, Dialoge; dasselbe in Dunkel und Hell. Das Handy bleibt in den Projekten oben.
+    { name: 'desktop-dunkel', testMatch: /\/35-desktop\.spec\.ts$/, use: { ...DESKTOP, colorScheme: 'dark' } },
+    { name: 'desktop-hell', testMatch: /\/35-desktop\.spec\.ts$/, use: { ...DESKTOP, colorScheme: 'light' } },
+    // Wächter am Desktop brauchen Home Assistant: derselbe nachgebaute Server wie „waechter“
+    { name: 'desktop-ha', testMatch: /\/36-desktop-ha\.spec\.ts$/, use: { ...DESKTOP, colorScheme: 'dark', baseURL: `http://127.0.0.1:${HA_PORT}` } },
     // Ein Gerät, das Englisch meldet: Oberfläche, Schnell-Eingabe und Sprachwahl (gleicher Server wie dunkel und hell)
     { name: 'english', testMatch: /18-english\.spec\.ts$/, use: { colorScheme: 'dark', locale: 'en-GB', extraHTTPHeaders: { 'x-stups-language': 'en' } } },
     // Wächter brauchen Home Assistant: eigener Server mit nachgebautem Home Assistant (e2e/server-ha.mjs)

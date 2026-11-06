@@ -5,7 +5,7 @@
   import { ui } from '../lib/store.svelte';
     import type { WatcherEditor } from '../lib/watcher-editor.svelte';
   import { dueText, fineChips, modeSummary, nameSymbol, whenParts, type FineKey, type Part } from '../lib/watcher-flow';
-  import { noteText, RUN_TEXT } from '../lib/watchers';
+  import { noteText, RUN_TEXT, withSuggestedNames } from '../lib/watchers';
   import AssignOrder from './AssignOrder.svelte';
   import CardTile from './CardTile.svelte';
   import DoneEditor from './DoneEditor.svelte';
@@ -115,6 +115,17 @@
         <p class="rounded-row border border-line bg-surface px-4 py-3 text-[15px]" data-testid="watcher-readonly">{t('Wächter ändern Administratoren und wer die Berechtigung „Wächter“ hat. Du kannst hier alles ansehen, auch den Verlauf.')}</p>
       {/if}
       <WatcherSummary form={f} personName={ed.personName} />
+
+      {#if !readOnly && ed.item?.suggestedName && f.name !== ed.item.suggestedName}
+        <!-- Vorschlag, keine stille Umbenennung: erst „Speichern" macht es gültig -->
+        <button type="button" class="flex min-h-14 w-full items-center gap-3 rounded-row border border-line bg-surface py-2 pr-2.5 pl-3 text-left" data-testid="name-suggest" onclick={() => (ed.form = withSuggestedNames(ed.form, ed.item!))}>
+          <Tile color="orange"><Icon name="spark" size={22} stroke={1.8} /></Tile>
+          <span class="flex min-w-0 flex-1 flex-col gap-1">
+            <span class="wrap-anywhere text-[15px] font-bold tracking-tight">{t('Namen mit Gerät ergänzen')}</span>
+            <span class="wrap-anywhere text-[13px] text-tok">{ed.item.suggestedName}</span>
+          </span>
+        </button>
+      {/if}
 
       <div class="flex flex-col" data-testid="watcher-flow">
         <!-- WENN -->

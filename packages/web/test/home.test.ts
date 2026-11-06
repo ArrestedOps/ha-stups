@@ -6,6 +6,8 @@ import { setLanguage } from '../src/lib/i18n/index.svelte';
 const item = (over: Partial<HomeItem>): HomeItem => ({
   watcherId: 'w',
   name: 'Wächter',
+  subject: null,
+  value: null,
   phase: 'quiet',
   since: null,
   progress: null,
@@ -33,6 +35,28 @@ describe('homeSections', () => {
     expect(s.soon.map((i) => i.watcherId)).toEqual(['d']);
     expect(s.quiet.map((i) => i.watcherId)).toEqual(['e']);
   });
+  it('gleiche Namen stehen nach Gerätename alphabetisch, stabil, auch ohne Gerät und bei gleichem Gerät', () => {
+    const items = [
+      item({ watcherId: '1', name: 'Batterie schwach', subject: 'iPhone Rene Battery Level' }),
+      item({ watcherId: '2', name: 'Batterie schwach', subject: 'Bad Fenster Batterie' }),
+      item({ watcherId: '3', name: 'Batterie schwach', subject: 'bad Tür Batterie' }),
+      item({ watcherId: '4', name: 'Batterie schwach: Zimmer', subject: null }),
+      item({ watcherId: '5', name: 'Batterie schwach', subject: 'Bad Fenster Batterie' }),
+      item({ watcherId: '6', name: 'Abfall', subject: 'Z' }),
+    ];
+    expect(homeSections(items).quiet.map((i) => i.watcherId)).toEqual(['6', '2', '5', '3', '1', '4']);
+    // dieselbe Eingabe in anderer Reihenfolge ergibt dieselbe Reihenfolge
+    expect(homeSections([...items].reverse()).quiet.map((i) => i.watcherId)).toEqual(['6', '2', '5', '3', '1', '4']);
+  });
+
+  it('Wartende mit gleichem Beginn stehen nach Name und Gerät', () => {
+    const items = [
+      item({ watcherId: 'b', phase: 'waiting', since: '2026-11-04T09:00:00Z', name: 'Batterie schwach', subject: 'B' }),
+      item({ watcherId: 'a', phase: 'waiting', since: '2026-11-04T09:00:00Z', name: 'Batterie schwach', subject: 'A' }),
+    ];
+    expect(homeSections(items).waiting.map((i) => i.watcherId)).toEqual(['a', 'b']);
+  });
+
   it('ohne Wächter sind alle Abschnitte leer', () => {
     expect(homeSections([])).toEqual({ waiting: [], running: [], soon: [], quiet: [] });
   });

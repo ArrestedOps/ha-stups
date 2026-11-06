@@ -83,16 +83,31 @@ export interface WatcherItem extends WatcherInput {
   entityState: string | null;
   entityName: string | null;
   entityUnit: string | null;
+  /** Friendly Name der Entität, ohne ihn die Entitäts-ID (immer gesetzt) */
+  subject: string;
+  /** Kurzer Gerätename */
+  deviceLabel: string;
+  /** Der Name nennt das Gerät schon */
+  nameHasDevice: boolean;
+  /** Der Name ist noch der einer Vorlage */
+  defaultName: boolean;
+  /** So hieße der Wächter mit Gerät (null: nichts zu ergänzen oder Entität unbekannt) */
+  suggestedName: string | null;
+  suggestedTitle: string | null;
   openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; waiting: boolean } | null;
 }
 
 export interface WatcherActivity extends WatcherRun {
   watcherName: string;
+  /** Das Gerät unter dem Namen, solange der Name es nicht nennt */
+  subject?: string | null;
 }
 
 export interface HaEntity {
   entityId: string;
   name: string;
+  /** Kurzer Gerätename für Name und Kartentitel eines Wächters ("iPhone Rene" statt "iPhone Rene Battery Level") */
+  label?: string;
   state: string;
   unit: string | null;
   domain: string;
@@ -134,6 +149,8 @@ export interface WatcherSuggestion {
   variant: 'power' | 'status' | 'default';
   unit?: string;
   draft?: TemplateDraft;
+  /** Kurzer Gerätename für Name und Kartentitel des neuen Wächters */
+  label?: string;
 }
 
 export interface DryRunResult {

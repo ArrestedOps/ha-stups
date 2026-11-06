@@ -6,13 +6,14 @@
   import { formatDue } from '../lib/datetime';
   import { onMount } from 'svelte';
   import type { WatcherTemplate } from '../lib/watcher-types';
-  import { conditionText, noteText, RUN_TEXT, watcherLine } from '../lib/watchers';
-  import { can, openCardAnywhere, openSheet, personById, toast, ui } from '../lib/store.svelte';
+  import { conditionText, noteText, renameCandidates, RUN_TEXT, sortWatchers, watcherLine } from '../lib/watchers';
+  import { askRenameWatchers, can, openCardAnywhere, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
   const data = $derived(ui.watchers);
-  const items = $derived(data?.items ?? []);
+  const items = $derived(sortWatchers(data?.items ?? []));
   const admin = $derived(can('watchers'));
+  const renamable = $derived(admin ? renameCandidates(items).length : 0);
   const personName = (id: string) => personById(id)?.displayName ?? '?';
 
   // Vorlagen des Servers für den Anfang (Administratoren und Recht „watchers“, nur solange es noch keinen Wächter gibt)
@@ -110,6 +111,7 @@
               <span class="mt-0.5 shrink-0 {w.active ? 'text-accent-text' : 'text-fg2'}"><Icon name="eye" size={22} /></span>
               <span class="min-w-0 flex-1">
                 <span class="block truncate text-[18px] font-bold">{w.name}</span>
+                {#if !w.nameHasDevice}<span class="block truncate text-[14px] text-tok" data-testid="watcher-subject">{w.subject}</span>{/if}
                 <span class="mt-0.5 block text-[14px] text-fg2">{t('Wenn {condition}', { condition: condition(w) })}</span>
               </span>
             </button>
@@ -152,6 +154,11 @@
       {/each}
     </ul>
 
+    {#if renamable > 0}
+      <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-[16px] font-semibold text-accent-text" data-testid="rename-with-device" onclick={() => askRenameWatchers(renamable)}>
+        <Icon name="eye" size={18} />{t('Namen mit Gerät ergänzen')}
+      </button>
+    {/if}
     {#if admin}
       <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-[16px] font-semibold text-accent-text" onclick={() => openSheet({ type: 'watcher', id: null, from: 'settings' })}>
         <Icon name="plus" size={18} stroke={2.6} />{t('Wächter hinzufügen')}
@@ -163,7 +170,7 @@
       <ul class="divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface" data-testid="watcher-activity">
         {#each activity as r (r.id)}
           <li class="px-4 py-2.5">
-            <p class="text-[15px] font-medium">{r.watcherName} · {RUN_TEXT[r.result] ?? r.result}</p>
+            <p class="text-[15px] font-medium">{r.watcherName}{r.subject ? ` (${r.subject})` : ''} · {RUN_TEXT[r.result] ?? r.result}</p>
             <p class="text-[13px] text-fg2">
               {formatDue(r.at)}{r.assignedTo.length ? ` · ${r.assignedTo.map(personName).join(', ')}` : ''}{r.note ? ` · ${noteText(r.note)}` : ''}
             </p>

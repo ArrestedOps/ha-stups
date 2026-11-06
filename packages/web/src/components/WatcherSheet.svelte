@@ -14,7 +14,7 @@
     id,
     template = undefined,
     hit = undefined,
-  }: { id: string | null; template?: string; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } } = $props();
+  }: { id: string | null; template?: string; hit?: { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft } } = $props();
 
   // svelte-ignore state_referenced_locally
   const ed = new WatcherEditor(id);

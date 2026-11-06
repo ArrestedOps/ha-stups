@@ -2,6 +2,19 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.31.0-beta.1
+
+**Wächter: das Gerät steht im Namen, und der Assistent hat überall ein „Zurück“.**
+
+- **Zurück im Assistenten für neue Wächter:** oben links in jedem Schritt (auch im letzten, wo es fehlte) steht „‹ Zurück“. Es geht einen Schritt zurück, alle Eingaben bleiben. Ist die Entitätssuche offen, schließt es zuerst sie. Am ersten Schritt führt es zurück zu „Gefunden“ (bzw. schließt, wenn der Assistent von anderswo kam). „Schließen“ und Escape schließen weiterhin alles. Der untere Knopf ist jetzt nur noch „Weiter“
+- **Neue Wächter aus Vorlagen nennen das Gerät:** „Batterie schwach“ wird zu „Batterie schwach: iPhone Rene“, die Karte zu „Batterie wechseln: iPhone Rene“. Der Gerätename kommt aus dem Friendly Name der Entität, ohne Endungen wie „Battery Level“, „Batterie“ oder „Leistung“, höchstens 28 Zeichen (gekürzt an einer Wortgrenze), ohne Friendly Name aus der Kennung. Steht das Gerät schon im Namen, bleibt er („Waschmaschine fertig“), steht nur ein Teil darin, kommt der Rest dazu („Waschmaschine fertig: Keller“). Das gilt für alle Vorlagen, auch wenn die Entität von Hand gewählt wird (ein von Hand geänderter Name bleibt unangetastet)
+- **Bestehende Wächter:** In der Wächter-Übersicht (und in Einstellungen › Wächter) steht unter bzw. neben dem Namen der Friendly Name der überwachten Entität, eine Zeile, abgeschnitten, solange der Name das Gerät nicht nennt. Gleiche Namen stehen nach Gerätename sortiert. Auch in „Letzte Aktivität“ und bei wartenden Karten
+- **Namen mit Gerät ergänzen, nur mit deiner Zustimmung:** Im Editor eines Wächters schlägt ein Knopf den neuen Namen vor (gespeichert wird erst mit „Speichern“). Dazu ein einmaliger Sammelknopf in der Übersicht und in Einstellungen › Wächter: fragt vorher nach, ändert nur Wächter, deren Name genau dem einer Vorlage entspricht (Name und, solange er der der Vorlage ist, der Kartentitel), nennt das Ergebnis als Zahl. Eigene Namen werden nie überschrieben, ebenso wenig Wächter, deren Entität Home Assistant gerade nicht kennt
+- **Fehlerbehebung:** Batterie-Wächter erschienen fälschlich unter „Läuft gerade“, obwohl die Batterie über der Schwelle lag und nichts ausgelöst hatte. „Läuft gerade“ gibt es nur noch für Wächter, die einen Vorgang beobachten (Leistung, Strom, Energie, Einheiten W, kW, A …); Batterie, Temperatur, Füllstand und alles Unbekannte sind „Ruhig“ und zeigen den aktuellen Wert („jetzt 26 %“)
+- **„seit …“ nur noch, wenn es stimmt:** Die Dauer bei „Läuft gerade“ erscheint nur, wenn Stups den Beginn selbst beobachtet hat (nicht mehr die Zeit des Neustarts)
+- Mitteilungen und Herkunft von Karten (alte Karten heißen weiter „Batterie wechseln“): nicht geändert, die neuen Kartentitel nennen das Gerät selbst
+- Keine Änderung an der Datenbank
+
 ## 1.30.0-beta.1
 
 **Berechtigungen: Ein Administrator kann einzelnen Personen gezielt Rechte geben**, ohne sie zu Administratoren zu machen. Einstellungen › Personen & Zugriff › Person aufklappen › **Berechtigungen** (nur für Administratoren sichtbar; für Administratoren steht dort „Administratoren dürfen alles“, Kinder bekommen keine).

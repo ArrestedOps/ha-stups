@@ -359,6 +359,10 @@ export interface Today {
 export interface HomeItem {
   watcherId: string;
   name: string;
+  /** Friendly Name der beobachteten Entität, solange der Name das Gerät nicht nennt (sonst null) */
+  subject: string | null;
+  /** Aktueller Wert mit Einheit ("26 %"), null ohne Wert */
+  value: string | null;
   phase: 'waiting' | 'running' | 'soon' | 'quiet';
   since: string | null;
   progress: { n: number; of: number } | null;
@@ -740,6 +744,8 @@ export const api = {
   updateWatcher: (id: string, b: Partial<WatcherInput>) => patch<WatcherItem>(`watchers/${id}`, b),
   deleteWatcher: (id: string) => del(`watchers/${id}`),
   testWatcher: (id: string) => post<WatcherItem>(`watchers/${id}/test`),
+  /** Sammelknopf: Wächter mit Vorlagennamen bekommen das Gerät im Namen (nur Administratoren) */
+  renameWatchersWithDevice: () => post<{ renamed: number }>('watchers/rename-with-device'),
   resetWatcherCounter: (id: string) => post<WatcherItem>(`watchers/${id}/reset-counter`),
   watcherRuns: (id: string) => get<WatcherRun[]>(`watchers/${id}/runs`),
   watcherTemplates: () => get<WatcherTemplate[]>('watchers/templates'),

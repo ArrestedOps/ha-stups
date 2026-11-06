@@ -7,8 +7,8 @@
   import { t, tn } from '../lib/i18n/index.svelte';
   import { canNudge } from '../lib/nudge';
   import { matchesQuery } from '../lib/search';
-  import { noteText, RUN_TEXT } from '../lib/watchers';
-  import { can, completeCard, openCardAnywhere, openSettings, openSheet, personById, ui } from '../lib/store.svelte';
+  import { noteText, renameCandidates, RUN_TEXT } from '../lib/watchers';
+  import { askRenameWatchers, can, completeCard, openCardAnywhere, openSettings, openSheet, personById, ui } from '../lib/store.svelte';
   import robot from '../assets/waechter-robot.webp';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
@@ -51,9 +51,9 @@
 
   const nowMs = $derived((void data, void clock.tick, Date.now()));
   const allItems = $derived(data?.items ?? []);
-  /** Desktop: das Suchfeld oben filtert nach Name, offener Karte und der Karte, die danach kommt */
+  /** Desktop: das Suchfeld oben filtert nach Name, Gerät, offener Karte und der Karte, die danach kommt */
   const query = $derived(ui.desktop ? ui.query : '');
-  const items = $derived(query ? allItems.filter((i) => matchesQuery(query, i.name, i.openCard?.title, i.nextCard)) : allItems);
+  const items = $derived(query ? allItems.filter((i) => matchesQuery(query, i.name, i.subject, i.openCard?.title, i.nextCard)) : allItems);
   const sections = $derived(homeSections(items));
   const names = (ids: string[]) => ids.map((id) => personById(id)?.displayName ?? '?').join(', ');
   /** Ein Wächter öffnet sich: Administratoren bearbeiten ihn dort, alle anderen sehen Einstellungen und Verlauf lesend */
@@ -64,8 +64,17 @@
   // Ruhig: eine Zusammenfassung („5 Wächter ohne offene Aktion"), die sich auf die einzelnen Wächter aufklappen lässt; fehlt eine Entität, steht dieser Wächter immer einzeln da
   let quietOpen = $state(false);
   const quietFine = $derived(sections.quiet.filter((i) => !i.entityMissing));
+  /** Wie viele Wächter noch genau wie ihre Vorlage heißen und das Gerät nicht nennen (Sammelknopf, nur Administratoren) */
+  const renamable = $derived(can('watchers') ? renameCandidates(ui.watchers?.items ?? []).length : 0);
   const quietMissing = $derived(sections.quiet.filter((i) => i.entityMissing));
 </script>
+
+<!-- Das Gerät unter dem Namen (Friendly Name der Entität), eine Zeile, solange der Name es nicht nennt -->
+{#snippet subj(subject: string | null)}
+  {#if subject}
+    <span class="min-w-0 truncate text-tok" data-testid="watcher-subject">{subject}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span>
+  {/if}
+{/snippet}
 
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col lg:max-w-none">
   <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab lg:-mx-1 lg:px-1 lg:pt-0" data-testid="home">
@@ -104,6 +113,15 @@
             onclick={() => openSheet({ type: 'found' })}
           >
             {#snippet leading()}<span class="text-banner-radio"><Icon name="radio" size={34} stroke={1.9} /></span>{/snippet}
+            {#snippet trailing()}<Icon name="chevron-right" size={20} stroke={2} />{/snippet}
+          </Banner>
+        </div>
+      {/if}
+
+      {#if renamable > 0 && data?.available}
+        <div data-testid="home-rename">
+          <Banner wrap title={t('Namen mit Gerät ergänzen')} sub={tn('{n} Wächter ohne Gerät im Namen', '{n} Wächter ohne Gerät im Namen', renamable)} onclick={() => askRenameWatchers(renamable)}>
+            {#snippet leading()}<span class="text-banner-radio"><Icon name="eye" size={30} stroke={1.9} /></span>{/snippet}
             {#snippet trailing()}<Icon name="chevron-right" size={20} stroke={2} />{/snippet}
           </Banner>
         </div>
@@ -165,7 +183,7 @@
                         <span class="shrink-0 text-sep" aria-hidden="true">•</span>
                         <span class="inline-flex shrink-0 items-center gap-1"><Icon name="clock" size={14} stroke={1.9} />{openSinceText(card.createdAt, nowMs)}</span>
                         <span class="shrink-0 text-sep" aria-hidden="true">•</span>
-                        <span class="min-w-0 truncate text-house">{i.name}</span>
+                        <span class="min-w-0 truncate text-house">{i.name}{i.subject ? ` · ${i.subject}` : ''}</span>
                       {/snippet}
                       {#snippet right()}
                         {#if canStupse}
@@ -196,8 +214,11 @@
                     <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
                       {#snippet tile()}<Tile color={PHASE_TILE.running!}><Icon name="eye" size={24} /></Tile>{/snippet}
                       {#snippet meta()}
-                        <span class="inline-flex shrink-0 items-center gap-1"><Icon name="play" size={14} stroke={1.9} />{i.since ? durationText(i.since, nowMs) : ''}</span>
-                        <span class="shrink-0 text-sep" aria-hidden="true">•</span>
+                        {@render subj(i.subject)}
+                        {#if i.since}
+                          <span class="inline-flex shrink-0 items-center gap-1"><Icon name="play" size={14} stroke={1.9} />{durationText(i.since, nowMs)}</span>
+                          <span class="shrink-0 text-sep" aria-hidden="true">•</span>
+                        {/if}
                         <span class="inline-flex min-w-0 items-center gap-1"><Icon name="robot" size={14} stroke={1.9} /><span class="truncate">{t('danach: {title}', { title: i.nextCard })}</span></span>
                       {/snippet}
                       {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
@@ -219,6 +240,7 @@
                     <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
                       {#snippet tile()}<Tile color={PHASE_TILE.soon!}><Icon name="eye" size={24} /></Tile>{/snippet}
                       {#snippet meta()}
+                        {@render subj(i.subject)}
                         {#if i.progress}<span class="inline-flex shrink-0 items-center gap-1"><Icon name="robot" size={14} stroke={1.9} />{t('{n} von {total}', { n: i.progress.n, total: i.progress.of })}</span>{/if}
                         {#if i.progress && i.nextEvent}<span class="shrink-0 text-sep" aria-hidden="true">•</span>{/if}
                         {#if i.nextEvent}<span class="inline-flex min-w-0 items-center gap-1"><Icon name="calendar" size={14} stroke={1.9} /><span class="truncate">{i.nextEvent.title} · {formatDue(i.nextEvent.at, nowMs)}</span></span>{/if}
@@ -251,7 +273,7 @@
                   <li>
                     <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
                       {#snippet tile()}<Tile color={PHASE_TILE.quiet!}><Icon name="eye" size={24} /></Tile>{/snippet}
-                      {#snippet meta()}<span class="text-danger">{t('Entität fehlt')}</span>{/snippet}
+                      {#snippet meta()}{@render subj(i.subject)}<span class="shrink-0 text-danger">{t('Entität fehlt')}</span>{/snippet}
                       {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
                     </ListRow>
                   </li>
@@ -269,7 +291,7 @@
                       <li>
                         <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
                           {#snippet tile()}<Tile color={PHASE_TILE.quiet!}><Icon name="eye" size={24} /></Tile>{/snippet}
-                          {#snippet meta()}{t('Alles im grünen Bereich')}{/snippet}
+                          {#snippet meta()}{@render subj(i.subject)}<span class="min-w-0 truncate" data-testid="watcher-value">{i.value ? t('jetzt {value}', { value: i.value }) : t('Alles im grünen Bereich')}</span>{/snippet}
                           {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
                         </ListRow>
                       </li>
@@ -288,7 +310,7 @@
               {#each activity as r (r.id)}
                 <li>
                   <ListRow title="{r.watcherName} · {RUN_TEXT[r.result] ?? r.result}" label={t('Wächter {name} öffnen', { name: r.watcherName })} onclick={() => openWatcher(r.watcherId)}>
-                    {#snippet meta()}<span class="truncate">{formatDue(r.at, nowMs)}{r.assignedTo.length ? ` · ${names(r.assignedTo)}` : ''}{r.note ? ` · ${noteText(r.note)}` : ''}</span>{/snippet}
+                    {#snippet meta()}{@render subj(r.subject ?? null)}<span class="min-w-0 truncate">{formatDue(r.at, nowMs)}{r.assignedTo.length ? ` · ${names(r.assignedTo)}` : ''}{r.note ? ` · ${noteText(r.note)}` : ''}</span>{/snippet}
                   </ListRow>
                 </li>
               {/each}

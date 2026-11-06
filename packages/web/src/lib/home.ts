@@ -4,9 +4,12 @@ import { t } from './i18n/index.svelte';
 /** Die Wächter nach Phase sortiert, in der Reihenfolge der Seite (leere Abschnitte fehlen dort) */
 export function homeSections(items: HomeItem[]): { waiting: HomeItem[]; running: HomeItem[]; soon: HomeItem[]; quiet: HomeItem[] } {
   const by = (phase: HomeItem['phase']) => items.filter((i) => i.phase === phase);
+  // gleiche Namen (zehn Mal „Batterie schwach") stehen nach Gerätename, zuletzt nach Kennung: stabil, egal wie der Server sie liefert
+  const byName = (a: HomeItem, b: HomeItem) =>
+    a.name.localeCompare(b.name) || (a.subject ?? '').localeCompare(b.subject ?? '', undefined, { sensitivity: 'base' }) || a.watcherId.localeCompare(b.watcherId);
   // am längsten Wartende zuerst; was am längsten läuft, zuerst
-  const bySince = (list: HomeItem[]) => [...list].sort((a, b) => (a.since ?? '').localeCompare(b.since ?? ''));
-  return { waiting: bySince(by('waiting')), running: bySince(by('running')), soon: by('soon'), quiet: by('quiet') };
+  const bySince = (list: HomeItem[]) => [...list].sort((a, b) => (a.since ?? '').localeCompare(b.since ?? '') || byName(a, b));
+  return { waiting: bySince(by('waiting')), running: bySince(by('running')), soon: by('soon').sort(byName), quiet: by('quiet').sort(byName) };
 }
 
 /** „seit 25 Min.", „seit 2 Std." (wie lange etwas schon läuft) */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WatcherItem } from '../src/lib/watcher-types';
-import { conditionText, emptyForm, formProblem, fromWatcher, previewSentence, toInput, watcherLine, type WatcherForm } from '../src/lib/watchers';
+import { conditionText, emptyForm, formProblem, fromWatcher, previewSentence, renameCandidates, sortWatchers, toInput, watcherLine, withSuggestedNames, type WatcherForm } from '../src/lib/watchers';
 
 const names: Record<string, string> = { a: 'Anna', b: 'Ben' };
 const nameOf = (id: string) => names[id] ?? '?';
@@ -87,7 +87,7 @@ describe('Formular prüfen und umwandeln', () => {
 
   it('Hin und zurück: Wächter → Formular → Eingabe bleibt gleich', () => {
     const input = toInput(filled({ forMin: '3', count: '3', cooldownMin: '15', nudgeAfterMin: '90', categoryIds: ['k1'] }));
-    const w: WatcherItem = { ...input, id: 'w1', status: 'ok', lastFiredAt: null, lastAssignees: [], armed: true, counter: 0, subscribed: true, lastRun: null, entityState: null, entityName: null, entityUnit: null, openCard: null };
+    const w: WatcherItem = { ...input, id: 'w1', status: 'ok', lastFiredAt: null, lastAssignees: [], armed: true, counter: 0, subscribed: true, lastRun: null, entityState: null, entityName: null, subject: '', deviceLabel: '', nameHasDevice: false, defaultName: false, suggestedName: null, suggestedTitle: null, entityUnit: null, openCard: null };
     expect(toInput(fromWatcher(w))).toEqual(input);
   });
 });
@@ -106,6 +106,12 @@ describe('Zeile in der Liste', () => {
     entityState: null,
     entityName: null,
     entityUnit: null,
+    subject: '',
+    deviceLabel: '',
+    nameHasDevice: false,
+    defaultName: false,
+    suggestedName: null,
+    suggestedTitle: null,
     openCard: null,
     ...extra,
   });
@@ -117,5 +123,40 @@ describe('Zeile in der Liste', () => {
     expect(watcherLine(counted, nameOf, 'Europe/Berlin')).toBe('2 von 3 · Zuletzt 14:05 Uhr');
     expect(watcherLine(w({ status: 'entity_missing' }), nameOf)).toBe('Entität fehlt in Home Assistant');
     expect(watcherLine(w({ status: 'target_missing' }), nameOf)).toMatch(/Pausiert/);
+  });
+});
+
+describe('Gerätenamen der Wächter in der Oberfläche', () => {
+  const w = (over: Partial<WatcherItem>): WatcherItem =>
+    ({ id: 'x', name: 'Batterie schwach', subject: 'Flur', deviceLabel: 'Flur', nameHasDevice: false, defaultName: true, suggestedName: 'Batterie schwach: Flur', suggestedTitle: null, card: { title: 'Batterie wechseln' }, ...over }) as WatcherItem;
+
+  it('Sammelknopf: nur Wächter mit Vorlagennamen und Vorschlag zählen, eigene Namen nie', () => {
+    const items = [
+      w({ id: '1' }),
+      w({ id: '2', name: 'Mamas Handy', defaultName: false, suggestedName: 'Mamas Handy: Handy' }),
+      w({ id: '3', nameHasDevice: true, suggestedName: null }),
+      w({ id: '4', suggestedName: null }), // Entität unbekannt
+      w({ id: '5', subject: 'Bad', suggestedName: 'Batterie schwach: Bad' }),
+    ];
+    expect(renameCandidates(items).map((x) => x.id)).toEqual(['1', '5']);
+    expect(renameCandidates([])).toEqual([]);
+  });
+
+  it('Sortierung: gleiche Namen nach Gerätename (Groß und Klein egal), dann nach Kennung; die Eingabe bleibt unverändert', () => {
+    const items = [w({ id: '3', subject: 'iPhone' }), w({ id: '1', subject: 'bad' }), w({ id: '2', subject: 'Bad' }), w({ id: '0', name: 'Abfall', subject: 'Z' })];
+    expect(sortWatchers(items).map((x) => x.id)).toEqual(['0', '1', '2', '3']);
+    expect(items.map((x) => x.id)).toEqual(['3', '1', '2', '0']);
+  });
+
+  it('im Editor setzt „Namen mit Gerät ergänzen“ den Namen und den Kartentitel, wenn einer vorgeschlagen ist', () => {
+    const f = { ...filled(), name: 'Batterie schwach', title: 'Batterie wechseln' };
+    expect(withSuggestedNames(f, { suggestedName: 'Batterie schwach: Flur', suggestedTitle: 'Batterie wechseln: Flur' })).toMatchObject({ name: 'Batterie schwach: Flur', title: 'Batterie wechseln: Flur' });
+    expect(withSuggestedNames(f, { suggestedName: 'Batterie schwach: Flur', suggestedTitle: null })).toMatchObject({ name: 'Batterie schwach: Flur', title: 'Batterie wechseln' });
+    expect(withSuggestedNames(f, { suggestedName: null, suggestedTitle: null })).toEqual(f);
+  });
+
+  it('ein im Editor schon geänderter Kartentitel bleibt', () => {
+    const f = { ...filled(), name: 'Batterie schwach', title: 'Mein Titel' };
+    expect(withSuggestedNames(f, { suggestedName: 'Batterie schwach: Flur', suggestedTitle: 'Batterie wechseln: Flur' }).title).toBe('Mein Titel');
   });
 });

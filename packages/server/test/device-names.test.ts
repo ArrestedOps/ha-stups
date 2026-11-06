@@ -33,6 +33,11 @@ describe('Gerätename aus dem Friendly Name', () => {
     expect(deviceLabel('', 'sensor.battery')).toBe('battery');
   });
 
+  it('ein „Friendly Name", der selbst eine Entitäts-ID ist (Home Assistant ohne Namen), wird wie die ID gelesen', () => {
+    expect(deviceLabel('sensor.flur_tuer_batterie_ladestand', 'sensor.flur_tuer_batterie_ladestand')).toBe('flur tuer');
+    expect(deviceLabel('sensor.flur_schliesszylinder_wohnungseingangstuer_batterie_ladestand_zusatzmodul', 'sensor.x')).toBe('flur schliesszylinder…');
+  });
+
   it('kürzt lange Namen an einer Wortgrenze mit Auslassungspunkten', () => {
     const label = deviceLabel('Wohnzimmer Heizkörperthermostat Südfenster links oben Battery', 'sensor.x');
     expect(label.length).toBeLessThanOrEqual(28);
@@ -60,6 +65,18 @@ describe('Name mit Gerät', () => {
   it('lässt den Namen, wenn das Gerät schon darin steht (ohne auf Groß und Klein zu achten)', () => {
     expect(withDevice('Waschmaschine fertig', 'Waschmaschine')).toBe('Waschmaschine fertig');
     expect(withDevice('Batterie schwach: iPhone Rene', 'iphone rene')).toBe('Batterie schwach: iPhone Rene');
+  });
+
+  it('steht ein Teil des Geräts schon im Namen, kommt nur der Rest dazu (zwei Waschmaschinen bleiben unterscheidbar)', () => {
+    expect(withDevice('Waschmaschine fertig', 'Waschmaschine Keller')).toBe('Waschmaschine fertig: Keller');
+    expect(withDevice('Trockner fertig', 'Steckdose Trockner')).toBe('Trockner fertig: Steckdose');
+  });
+
+  it('kurze Wörter zählen nur als ganzes Wort, damit „A" nicht in jedem Namen steckt; einmal angehängt, kommt nichts doppelt', () => {
+    expect(withDevice('Batterie schwach', 'Zimmer A')).toBe('Batterie schwach: Zimmer A');
+    const once = withDevice('Batterie schwach', 'WC');
+    expect(once).toBe('Batterie schwach: WC');
+    expect(withDevice(once, 'WC')).toBe(once);
   });
 
   it('ohne Gerät bleibt der Name', () => {

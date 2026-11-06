@@ -1,5 +1,6 @@
 import { t, tn } from './i18n/index.svelte';
 import { clock } from './nudge';
+import { withDevice } from './deviceName';
 import type { AssignMode, ConditionKind, DueRule, HaEntity, TemplateDraft, TriggerKind, WatcherInput, WatcherItem, WatcherTemplate } from './watcher-types';
 
 /** Das Formular im Sheet: alles als Text, damit Eingaben unfertig sein dürfen; toInput prüft und wandelt um */
@@ -46,6 +47,10 @@ export interface WatcherForm {
   leadHours: string;
   /** Vorhersage: Regen in den nächsten so vielen Stunden */
   forecastHours: string;
+  /** Nur im Assistenten: Name und Kartentitel der Vorlage ohne Gerät und der kurze Gerätename, damit die Wahl der Entität sie fortschreiben kann */
+  baseName: string;
+  baseTitle: string;
+  label: string;
 }
 
 export const emptyForm = (boardId = '', columnId = ''): WatcherForm => ({
@@ -88,6 +93,9 @@ export const emptyForm = (boardId = '', columnId = ''): WatcherForm => ({
   nudgeAfterMin: '',
   leadHours: '12',
   forecastHours: '3',
+  baseName: '',
+  baseTitle: '',
+  label: '',
 });
 
 // ---------- Vorlagen (vom Server) ----------
@@ -96,13 +104,16 @@ export const emptyForm = (boardId = '', columnId = ''): WatcherForm => ({
  * Wendet eine Vorlage des Servers auf das Formular an. Mit einem Treffer aus „Gefunden" (`hit`) steht auch die Entität schon drin;
  * sonst wählt man sie danach in der Suche. Der Mensch kann alles ändern.
  */
-export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft }): WatcherForm {
+export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft }): WatcherForm {
   const d = hit?.draft ?? tpl.draft;
   if (!d) return f;
   const out: WatcherForm = {
     ...f,
-    name: d.name,
-    title: d.card.title,
+    name: withDevice(d.name, hit?.label),
+    title: withDevice(d.card.title, hit?.label, 200),
+    baseName: d.name,
+    baseTitle: d.card.title,
+    label: hit?.label ?? '',
     dueKind: d.card.due.kind,
     dueMinutes: d.card.due.kind === 'in' ? String(d.card.due.minutes) : '30',
     dueDay: d.card.due.kind === 'at' ? d.card.due.day : 'tomorrow',
@@ -131,6 +142,40 @@ export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { enti
     out.doneValue = String(d.done.value);
   }
   return out;
+}
+
+/**
+ * Eine Entität für „Wenn" gewählt (Suche): Entität ins Formular; Name und Kartentitel einer Vorlage nennen das Gerät dazu,
+ * solange sie noch so lauten, wie die Vorlage sie vorgab (ein von Hand geänderter Text bleibt, ein früheres Gerät wird ersetzt).
+ */
+export function applyEntity(f: WatcherForm, e: HaEntity): WatcherForm {
+  const out: WatcherForm = { ...f, entityId: e.entityId, entityName: e.name, entityUnit: e.unit ?? '', label: e.label ?? '' };
+  if (f.baseName && f.name === withDevice(f.baseName, f.label)) out.name = withDevice(f.baseName, out.label);
+  else if (!f.name.trim()) out.name = e.name;
+  if (f.baseTitle && f.title === withDevice(f.baseTitle, f.label, 200)) out.title = withDevice(f.baseTitle, out.label, 200);
+  // Zahlenwerte und Zustände unterscheiden sich im Vorgabe-Typ
+  if (e.unit && f.kind === 'state') out.kind = 'below';
+  return out;
+}
+
+// ---------- Gerätenamen ----------
+
+/** Gleiche Namen (zehn Mal „Batterie schwach") stehen nach Gerätename, zuletzt nach Kennung: stabil, egal wie der Server sie liefert */
+export function sortWatchers<T extends Pick<WatcherItem, 'id' | 'name' | 'subject'>>(items: T[]): T[] {
+  return [...items].sort((a, b) => a.name.localeCompare(b.name) || a.subject.localeCompare(b.subject, undefined, { sensitivity: 'base' }) || a.id.localeCompare(b.id));
+}
+
+/** Wer vom Sammelknopf „Namen mit Gerät ergänzen" umbenannt würde: der Name ist noch der einer Vorlage und das Gerät fehlt; eigene Namen nie */
+export const renameCandidates = <T extends Pick<WatcherItem, 'defaultName' | 'suggestedName'>>(items: T[]): T[] => items.filter((w) => w.defaultName && w.suggestedName);
+
+/**
+ * Im Editor: „Namen mit Gerät ergänzen" setzt den Namen auf den Vorschlag und den Kartentitel mit, solange er noch der der Vorlage ist
+ * (der Vorschlag für den Titel baut auf dem alten Titel auf, ein inzwischen geänderter bleibt). Gespeichert wird erst mit dem Speichern.
+ */
+export function withSuggestedNames(f: WatcherForm, hints: Pick<WatcherItem, 'suggestedName' | 'suggestedTitle'>): WatcherForm {
+  if (!hints.suggestedName) return f;
+  const title = hints.suggestedTitle && hints.suggestedTitle.startsWith(`${f.title}: `) ? hints.suggestedTitle : f.title;
+  return { ...f, name: hints.suggestedName, title };
 }
 
 // ---------- Formular ↔ Server ----------
@@ -283,6 +328,9 @@ export function fromWatcher(w: WatcherItem, entities: Map<string, HaEntity> = ne
     nudgeAfterMin: w.nudgeAfterMin === null ? '' : String(w.nudgeAfterMin),
     leadHours: w.trigger.leadMin !== undefined ? String(Math.round(w.trigger.leadMin / 60)) : '12',
     forecastHours: w.trigger.forecast ? String(w.trigger.forecast.hours) : '3',
+    baseName: '',
+    baseTitle: '',
+    label: '',
   };
 }
 

@@ -49,7 +49,7 @@ test('Gefunden: Hinweis im Reiter Wächter, Treffer mit Begründung, Wächter au
   await dialog.getByRole('button', { name: 'Weiter: Wer' }).click();
   await dialog.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
   // Schritt 4: der Satz ist schon ausgefüllt
-  await expect(dialog.getByTestId('watcher-sentence')).toContainText('Wenn Steckdose Trockner Leistung länger als 3 Min. unter 5 W liegt, bekommt wer zu Hause ist, reihum die Karte „Wäsche aus dem Trockner holen“');
+  await expect(dialog.getByTestId('watcher-sentence')).toContainText('Wenn Steckdose Trockner Leistung länger als 3 Min. unter 5 W liegt, bekommt wer zu Hause ist, reihum die Karte „Wäsche aus dem Trockner holen: Steckdose“');
   // Ehrlich beim Selbst-Erledigen: der Leistungssensor kann das Ausräumen nicht belegen
   await expect(dialog.getByRole('switch', { name: 'Automatisch erledigen' })).toBeDisabled();
   await expect(dialog.getByTestId('self-note')).toContainText('weiß nicht, ob jemand das Gerät schon ausgeräumt hat');
@@ -62,7 +62,7 @@ test('Gefunden: Hinweis im Reiter Wächter, Treffer mit Begründung, Wächter au
   await dialog.getByRole('button', { name: 'Wächter anlegen' }).click();
   await expect(page.getByText('Wächter gespeichert')).toBeVisible();
   const list = (await (await request.get('/api/watchers')).json()) as { items: { name: string; trigger: { entityId: string; kind: string; value: number } }[] };
-  expect(list.items.find((w) => w.name === 'Trockner fertig')?.trigger).toMatchObject({ entityId: 'sensor.trockner_leistung', kind: 'below', value: 5 });
+  expect(list.items.find((w) => w.name === 'Trockner fertig: Steckdose')?.trigger).toMatchObject({ entityId: 'sensor.trockner_leistung', kind: 'below', value: 5 });
 
   // Der Trockner steht jetzt im Reiter Wächter (ruhig) und fehlt in „Gefunden"
   await page.keyboard.press('Escape');

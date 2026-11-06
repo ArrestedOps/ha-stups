@@ -1,11 +1,12 @@
 import { api, ApiError, type BoardView, type HaEntity, type WatcherItem, type WatcherRun } from './api';
 import { t } from './i18n/index.svelte';
 import type { EntityHistory } from './history';
-import { can, closeSheet, openSettings, toast, ui } from './store.svelte';
+import { can, closeSheet, openSettings, openSheet, toast, ui } from './store.svelte';
 import type { OrderView, TemplateDraft, WatcherTemplate } from './watcher-types';
-import { applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, type WatcherForm } from './watchers';
+import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, type WatcherForm } from './watchers';
+import { backAction } from './watcher-wizard';
 
-export type Hit = { entityId: string; name: string; unit?: string; draft?: TemplateDraft };
+export type Hit = { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft };
 
 /**
  * Der Zustand des Wächter-Editors, den Ablauf (Bearbeiten) und Assistent (Anlegen) teilen: das Formular, was vom Server dazukommt
@@ -150,17 +151,11 @@ export class WatcherEditor {
   }
 
   pick(e: HaEntity): void {
-    const f = this.form;
     if (this.picking === 'trigger') {
-      f.entityId = e.entityId;
-      f.entityName = e.name;
-      f.entityUnit = e.unit ?? '';
-      if (!f.name.trim()) f.name = e.name;
-      // Zahlenwerte und Zustände unterscheiden sich im Vorgabe-Typ
-      if (e.unit && f.kind === 'state') f.kind = 'below';
+      this.form = applyEntity(this.form, e);
     } else {
-      f.doneEntityId = e.entityId;
-      f.doneEntityName = e.name;
+      this.form.doneEntityId = e.entityId;
+      this.form.doneEntityName = e.name;
     }
     this.picking = null;
   }
@@ -188,8 +183,21 @@ export class WatcherEditor {
     return true;
   }
 
-  prev(): void {
-    if (this.step > 1) this.step = (this.step - 1) as 1 | 2 | 3 | 4;
+  /**
+   * „Zurück" im Assistenten (Kopfzeile, in jedem Schritt): zuerst eine offene Suche schließen, dann einen Schritt zurück (die Eingaben bleiben),
+   * am ersten Schritt zur vorherigen Auswahl (siehe `leave`)
+   */
+  goBack(): void {
+    const a = backAction(this.step, this.picking !== null);
+    if (a.kind === 'closePicker') this.picking = null;
+    else if (a.kind === 'step') this.step = a.step;
+    else this.leave();
+  }
+
+  /** Den Assistenten am Anfang verlassen: aus „Gefunden" dorthin zurück, sonst wie Schließen */
+  leave(): void {
+    if (ui.sheet?.type === 'watcher' && ui.sheet.from === 'found') openSheet({ type: 'found' });
+    else this.back();
   }
 
   /** Einen früheren Schritt oben antippen (nur bis zu dem, der schon erreicht ist) */

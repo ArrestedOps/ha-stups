@@ -15,7 +15,8 @@
 
   /**
    * Neuer Wächter in vier Schritten (Wenn, Dann, Wer, Feinschliff) nach den Entwürfen WaechterB bis B4: Fortschrittsleiste, eine Frage je Schritt,
-   * unten „Zurück" und der große Knopf zum nächsten Schritt; im letzten Schritt „Testen" (Probelauf über 7 Tage) und „Wächter anlegen".
+   * oben links in jedem Schritt „Zurück" (ein Schritt zurück, die Eingaben bleiben; am Anfang zur vorherigen Auswahl) und rechts „Schließen",
+   * unten der große Knopf zum nächsten Schritt; im letzten Schritt „Testen" (Probelauf über 7 Tage) und „Wächter anlegen".
    */
   let { ed }: { ed: WatcherEditor } = $props();
 
@@ -37,18 +38,27 @@
 </script>
 
 {#snippet foot()}
-  <div class="grid grid-cols-[1fr_2fr] gap-2">
-    {#if ed.step === 4}
+  {#if ed.step === 4}
+    <div class="grid grid-cols-[1fr_2fr] gap-2">
       <CtaButton ghost onclick={() => dry?.run()}>{t('Testen')}</CtaButton>
       <CtaButton disabled={ed.busy} onclick={() => ed.save()}><Icon name="check" size={20} stroke={2.6} />{ed.busy ? t('Speichert …') : t('Wächter anlegen')}</CtaButton>
-    {:else}
-      <CtaButton ghost onclick={() => (ed.step === 1 ? ed.back() : ed.prev())}>{t('Zurück')}</CtaButton>
-      <CtaButton onclick={() => ed.next()}>{NEXT}<Icon name="chevron-right" size={20} stroke={2.4} /></CtaButton>
-    {/if}
-  </div>
+    </div>
+  {:else}
+    <CtaButton onclick={() => ed.next()}>{NEXT}<Icon name="chevron-right" size={20} stroke={2.4} /></CtaButton>
+  {/if}
 {/snippet}
 
-<Sheet title={t('Neuer Wächter')} onclose={ed.back} footer={ed.loading ? undefined : foot}>
+{#snippet back()}
+  <button type="button" class="inline-flex h-11 items-center gap-0.5 pr-2 pl-0.5 text-[16px] font-semibold text-accent-text" aria-label={t('Zurück')} data-testid="wizard-back" onclick={() => ed.goBack()}>
+    <Icon name="chevron-left" size={22} stroke={2.2} />{t('Zurück')}
+  </button>
+{/snippet}
+
+{#snippet close()}
+  <button type="button" class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" data-testid="wizard-close" onclick={ed.back}>{t('Schließen')}</button>
+{/snippet}
+
+<Sheet title={t('Neuer Wächter')} onclose={ed.back} left={back} right={close} footer={ed.loading ? undefined : foot}>
   {#if ed.loading}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}

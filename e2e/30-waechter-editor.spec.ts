@@ -254,6 +254,9 @@ test('Sehr lange Entitätsnamen brechen um und machen die Seite nicht breiter (A
 
   await page.goto('/');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  // Die Batterie (Pegel, kein Vorgang) steht unter „Ruhig", nicht unter „Läuft gerade"
+  const quiet = page.getByTestId('home-quiet');
+  await quiet.getByRole('button', { name: /Wächter ohne offene Aktion/ }).click();
   await page.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByTestId('watcher-sentence')).toBeVisible();

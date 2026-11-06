@@ -5,7 +5,7 @@
   import { settingsOverview } from '../lib/settingsPages';
   import { applyHeaderHiding, isHeaderHidingWanted, setHeaderHidingWanted, showHaHeader } from '../lib/hideHaHeader';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { closeSheet, feat, openSettings, ui } from '../lib/store.svelte';
+  import { can, closeSheet, feat, openSettings, ui } from '../lib/store.svelte';
   import AccountPage from './settings/AccountPage.svelte';
   import BetaPage from './settings/BetaPage.svelte';
   import DashboardPage from './settings/DashboardPage.svelte';
@@ -39,10 +39,10 @@
 
   let headerHidden = $state(isHeaderHidingWanted());
 
-  // Administratoren sehen an „Feedback der Nutzer", wie viele Rückmeldungen neu sind
+  // Wer das Feedback verwalten darf, sieht an „Feedback der Nutzer", wie viele Rückmeldungen neu sind
   let newFeedback = $state(0);
   onMount(() => {
-    if (ui.isAdmin && !ui.isChild) void api.feedbackSummary().then((r) => (newFeedback = r.newCount)).catch(() => {});
+    if (can('feedback')) void api.feedbackSummary().then((r) => (newFeedback = r.newCount)).catch(() => {});
   });
   const groups = $derived(
     settingsOverview({

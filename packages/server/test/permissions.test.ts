@@ -6,8 +6,8 @@ import { cleanPermissions, hasPermission, PERMISSIONS } from '../src/permissions
 import { createStore, type Store } from '../src/store.js';
 
 describe('Liste der Berechtigungen', () => {
-  it('ist klein und fest: fünf Schlüssel', () => {
-    expect([...PERMISSIONS]).toEqual(['watchers', 'house', 'settings', 'people', 'confirm']);
+  it('ist klein und fest: sechs Schlüssel', () => {
+    expect([...PERMISSIONS]).toEqual(['watchers', 'house', 'settings', 'people', 'confirm', 'feedback']);
   });
 
   it('cleanPermissions: bekannte Schlüssel, ohne Doppelte, in fester Reihenfolge', () => {

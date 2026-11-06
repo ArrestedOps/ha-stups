@@ -131,12 +131,18 @@ describe('Einstellungen mit Berechtigungen (Mitglied, dem ein Administrator Rech
     expect(ids(member(['people']))).not.toContain('templates');
   });
 
+  it('„Feedback": die Seite Feedback der Nutzer', () => {
+    expect(ids(member(['feedback']))).toContain('feedback');
+    expect(ids(member([]))).not.toContain('feedback');
+    expect(ids(member(['feedback'], { isChild: true }))).not.toContain('feedback');
+  });
+
   it('„Bestätigen" schaltet keine Seite frei', () => {
     expect(ids(member(['confirm']))).toEqual(ids(member([])));
   });
 
   it('alle Rechte zusammen: so viel wie ein Administrator, außer Dashboard-Button und Umzug (der Titel der Daten-Seite bleibt)', () => {
-    const all = settingsGroups(member(['watchers', 'house', 'settings', 'people', 'confirm'])).flatMap((g) => g.pages);
+    const all = settingsGroups(member(['watchers', 'house', 'settings', 'people', 'confirm', 'feedback'])).flatMap((g) => g.pages);
     expect(all.map((p) => p.id)).not.toContain('bubble');
     expect(all.find((p) => p.id === 'data')!.title).toBe('Papierkorb und Archiv');
     expect(ids(addon).filter((id) => !all.some((p) => p.id === id))).toEqual(['bubble']);

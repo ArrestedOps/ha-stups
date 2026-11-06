@@ -25,6 +25,8 @@ export const PERMISSIONS = [
   'people',
   /** Erledigt-Anfragen von Kindern bestätigen oder ablehnen (wie ein gewählter Bestätiger, für alle Kinder) */
   'confirm',
+  /** Rückmeldungen der Nutzer lesen, den Stand ändern und löschen (samt Bildern) */
+  'feedback',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

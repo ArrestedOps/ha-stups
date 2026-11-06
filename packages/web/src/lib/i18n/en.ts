@@ -45,6 +45,7 @@ export const en: Catalog = {
   'Standard-Uhrzeit für Termine, Tageszusammenfassung, Symbole erkennen und Vorlagen löschen. Nicht dabei: Dashboard und Panel-Pfad.': 'Default time for due dates, daily summary, detect icons and delete templates. Not included: dashboard and panel path.',
   'Personen freigeben und Anzeigenamen ändern. Nicht dabei: Rollen, Anmeldungen, Entfernen und Berechtigungen.': 'Approve people and change display names. Not included: roles, sign-ins, removing and permissions.',
   'Bestätigen für Kinder': 'Confirm for children',
+  'Rückmeldungen aus der App lesen, als gelesen oder erledigt markieren und löschen.': 'Read feedback from the app, mark it as read or done, and delete it.',
   '„Erledigt“-Anfragen aller Kinder bestätigen oder zurückgeben.': 'Confirm or send back “Done” requests of all children.',
   '{name} bestätigt für {child}': '{name} confirms for {child}',
   'Administratoren dürfen immer bestätigen. Ist niemand gewählt, dürfen alle Erwachsenen.': 'Administrators may always confirm. If nobody is chosen, all adults may.',

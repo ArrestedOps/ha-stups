@@ -13,6 +13,7 @@ import {
   type FeedbackMeta,
 } from '../feedback.js';
 import { t } from '../i18n/index.js';
+import { requirePermission } from '../permissions.js';
 import { createUploadQuota } from '../upload-quota.js';
 import { type ApiKit, type Params } from './kit.js';
 
@@ -20,10 +21,10 @@ const HOUR_MS = 3_600_000;
 
 /**
  * Rückmeldungen: Jede angemeldete Person darf eine senden (Art, Text, optional ein Bild); lesen, den Stand ändern und löschen dürfen nur
- * Administratoren. Ein Kind sendet nichts (steht nicht auf der Erlaubnisliste, api/child-guard.ts). Es geht nichts an Dritte hinaus.
+ * Administratoren und Mitglieder mit dem Recht „feedback“. Ein Kind sendet nichts (steht nicht auf der Erlaubnisliste, api/child-guard.ts). Es geht nichts an Dritte hinaus.
  */
 export function registerFeedbackRoutes(app: FastifyInstance, k: ApiKit): void {
-  const { deps, store, body, requireAdmin, noContent } = k;
+  const { deps, store, body, noContent } = k;
   const now = () => (deps.now ?? (() => new Date()))();
   // Bilder zählen wie Anhänge gegen die Obergrenzen je Person und Stunde und gegen gleichzeitige Uploads (upload-quota.ts)
   const quota = createUploadQuota(deps.now, deps.uploadLimits);
@@ -94,23 +95,23 @@ export function registerFeedbackRoutes(app: FastifyInstance, k: ApiKit): void {
   });
 
   app.get('/api/feedback', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'feedback');
     return { items: store.listFeedback(), newCount: store.feedbackNewCount() };
   });
 
   // Nur die Zahl der neuen, für den Hinweis in den Einstellungen (ohne die ganze Liste zu laden)
   app.get('/api/feedback/summary', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'feedback');
     return { newCount: store.feedbackNewCount() };
   });
 
   app.patch<{ Params: Params }>('/api/feedback/:id', async (req) => {
-    requireAdmin(req);
+    requirePermission(req, 'feedback');
     return store.setFeedbackStatus(req.params.id, parseFeedbackStatus(body(req).status));
   });
 
   app.delete<{ Params: Params }>('/api/feedback/:id', async (req, reply) => {
-    requireAdmin(req);
+    requirePermission(req, 'feedback');
     const { image, thumb } = store.deleteFeedback(req.params.id);
     if (image) deps.files?.remove(image);
     if (thumb) deps.files?.remove(thumb);
@@ -128,11 +129,11 @@ export function registerFeedbackRoutes(app: FastifyInstance, k: ApiKit): void {
       .send(data);
   }
   app.get<{ Params: Params }>('/api/feedback/:id/image', async (req, reply) => {
-    requireAdmin(req);
+    requirePermission(req, 'feedback');
     return sendImage(reply, store.feedbackFilesOf(req.params.id).image, 'image');
   });
   app.get<{ Params: Params }>('/api/feedback/:id/thumb', async (req, reply) => {
-    requireAdmin(req);
+    requirePermission(req, 'feedback');
     return sendImage(reply, store.feedbackFilesOf(req.params.id).thumb, 'thumb');
   });
 }

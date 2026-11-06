@@ -42,6 +42,7 @@ let watcherId: string;
 let channelId: string;
 let cardId: string;
 let templateId: string;
+let feedbackId: string;
 let events: number;
 
 async function build() {
@@ -60,6 +61,7 @@ async function build() {
   cardId = store.createCard(boardId, { columnId, title: 'Zimmer aufräumen', assigneeIds: [ids.kim] }, ids.ben).id;
   store.requestConfirmation(cardId, ids.kim);
   templateId = store.saveBoardAsTemplate(boardId, 'Meine Vorlage', null).id; // gehört niemandem: löschen dürfen Administratoren (und mit Recht)
+  feedbackId = store.addFeedback({ id: 'fb-1', personId: ids.ben, personName: 'Ben', kind: 'idea', message: 'Mehr Farben bitte', meta: {}, image: null, thumb: null }).id;
   ha.set(ENTITY, '120', '2026-11-04T09:00:00Z', { friendly_name: 'Waschmaschine Leistung', unit_of_measurement: 'W' });
   const data = createWatcherData(db);
   const engine = createWatchers({ store, data, ha, now: () => new Date(), timeZone: () => 'Europe/Berlin' });
@@ -149,6 +151,11 @@ const ROUTES: Route[] = [
   { name: 'Namen einer Person ändern', perm: 'people', method: 'PATCH', url: () => `/api/access/people/${ids.ben}`, payload: () => ({ displayName: 'Benjamin' }), ok: 200 },
   { name: 'Foto einer Person setzen', perm: 'people', method: 'PUT', url: () => `/api/people/${ids.kim}/avatar`, ok: 200 },
   { name: 'Foto einer Person entfernen', perm: 'people', method: 'DELETE', url: () => `/api/people/${ids.kim}/avatar`, ok: 204 },
+  // Rückmeldungen der Nutzer
+  { name: 'Feedback lesen', perm: 'feedback', method: 'GET', url: () => '/api/feedback', ok: 200 },
+  { name: 'Feedback: Zahl der neuen', perm: 'feedback', method: 'GET', url: () => '/api/feedback/summary', ok: 200 },
+  { name: 'Feedback: Stand ändern', perm: 'feedback', method: 'PATCH', url: () => `/api/feedback/${feedbackId}`, payload: () => ({ status: 'gelesen' }), ok: 200 },
+  { name: 'Feedback löschen', perm: 'feedback', method: 'DELETE', url: () => `/api/feedback/${feedbackId}`, ok: 204 },
   // Bestätigungen
   { name: 'Bestätigen', perm: 'confirm', method: 'POST', url: () => `/api/cards/${cardId}/confirm`, ok: 200 },
   { name: 'Nochmal', perm: 'confirm', method: 'POST', url: () => `/api/cards/${cardId}/reject`, ok: 200 },

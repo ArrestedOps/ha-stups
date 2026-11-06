@@ -5,7 +5,7 @@ import { t } from './i18n/index.svelte';
  * Schlüssel); der Server entscheidet am Ende, die Oberfläche blendet nur aus und ein.
  * Nicht delegierbar (bleibt bei Administratoren): Administratorrechte, Rolle Kind, Berechtigungen selbst, Zugänge, Panel- und Dashboard-Pfad.
  */
-export const PERMISSION_KEYS = ['watchers', 'house', 'settings', 'people', 'confirm'] as const;
+export const PERMISSION_KEYS = ['watchers', 'house', 'settings', 'people', 'confirm', 'feedback'] as const;
 export type Permission = (typeof PERMISSION_KEYS)[number];
 
 export interface PermissionRow {
@@ -26,6 +26,7 @@ export function permissionRows(): PermissionRow[] {
     },
     { key: 'people', title: t('Personen'), hint: t('Personen freigeben und Anzeigenamen ändern. Nicht dabei: Rollen, Anmeldungen, Entfernen und Berechtigungen.') },
     { key: 'confirm', title: t('Bestätigen für Kinder'), hint: t('„Erledigt“-Anfragen aller Kinder bestätigen oder zurückgeben.') },
+    { key: 'feedback', title: t('Feedback der Nutzer'), hint: t('Rückmeldungen aus der App lesen, als gelesen oder erledigt markieren und löschen.') },
   ];
 }
 

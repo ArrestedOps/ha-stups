@@ -131,6 +131,98 @@ describe('Testen, Zähler, Läufe', () => {
   });
 });
 
+describe('Nachfrage nach dem Speichern', () => {
+  const DOOR = 'binary_sensor.tuer';
+  const doorInput = (extra: Record<string, unknown> = {}) =>
+    input({ name: 'Tür offen', trigger: { entityId: DOOR, kind: 'state', to: 'off', forMin: 0 }, card: { boardId, columnId, title: 'Tür schließen' }, ...extra });
+  const cardsNow = () => store.getBoardView(boardId).cards;
+
+  it('Anlegen: ein Zustandswächter, dessen Zielzustand schon gilt, meldet metNow, es entsteht keine Karte', async () => {
+    const res = await call(chef, 'POST', '/api/watchers', doorInput());
+    expect(res.status).toBe(201);
+    expect(res.body.metNow).toEqual({ entityName: 'Tür Waschküche', stateText: 'aus', reason: 'already_met' });
+    expect(cardsNow()).toHaveLength(0);
+  });
+
+  it('Anlegen: nicht erfüllt, dann metNow null', async () => {
+    const res = await call(chef, 'POST', '/api/watchers', input());
+    expect(res.body.metNow).toBeNull();
+  });
+
+  it('Anlegen: eine Batterie löst selbst aus und fragt nicht', async () => {
+    ha.set('sensor.knopf_batterie', '1', '2026-11-04T09:00:00Z', { device_class: 'battery', unit_of_measurement: '%' });
+    const res = await call(chef, 'POST', '/api/watchers', input({ trigger: { entityId: 'sensor.knopf_batterie', kind: 'below', value: 10, forMin: 0 } }));
+    expect(res.body.metNow).toBeNull();
+    expect(cardsNow()).toHaveLength(1);
+  });
+
+  it('Ändern: nur den Namen, dann keine Rückfrage; Zielzustand oder Entität geändert, dann schon', async () => {
+    const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+    expect((await call(chef, 'PATCH', `/api/watchers/${id}`, { name: 'Tür auf' })).body.metNow).toBeNull();
+    expect((await call(chef, 'PATCH', `/api/watchers/${id}`, { cooldownMin: 30, card: { boardId, columnId, title: 'Anderer Titel' } })).body.metNow).toBeNull();
+    // gleiche Bedingung noch einmal gespeichert (z. B. Assistent ohne Änderung): keine Rückfrage
+    expect((await call(chef, 'PATCH', `/api/watchers/${id}`, { trigger: { entityId: DOOR, kind: 'state', to: 'off', forMin: 5 } })).body.metNow).toBeNull();
+
+    ha.set(DOOR, 'on', '2026-11-04T09:00:00Z');
+    expect((await call(chef, 'PATCH', `/api/watchers/${id}`, { trigger: { entityId: DOOR, kind: 'state', to: 'on', forMin: 0 } })).body.metNow).toMatchObject({ stateText: 'an' });
+
+    ha.set('binary_sensor.fenster', 'off', '2026-11-04T09:00:00Z', { friendly_name: 'Fenster Bad' });
+    const moved = await call(chef, 'PATCH', `/api/watchers/${id}`, { trigger: { entityId: 'binary_sensor.fenster', kind: 'state', to: 'off', forMin: 0 } });
+    expect(moved.body.metNow).toEqual({ entityName: 'Fenster Bad', stateText: 'aus', reason: 'already_met' });
+  });
+
+  it('Pausieren und Wiedereinschalten fragen nicht', async () => {
+    const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+    await call(chef, 'PATCH', `/api/watchers/${id}`, { active: false });
+    expect((await call(chef, 'PATCH', `/api/watchers/${id}`, { active: true })).body.metNow).toBeUndefined();
+  });
+
+  it('die Liste enthält kein metNow', async () => {
+    await call(chef, 'POST', '/api/watchers', doorInput());
+    expect((await call(chef, 'GET', '/api/watchers')).body.items[0].metNow).toBeUndefined();
+  });
+
+  describe('POST /api/watchers/:id/fire-now', () => {
+    it('legt die Karte an, mit Zuweisung und dem Hinweis im Lauf', async () => {
+      const id = (await call(chef, 'POST', '/api/watchers', doorInput({ assign: { mode: 'fixed', personIds: [annaId] } }))).body.id;
+      const res = await call(chef, 'POST', `/api/watchers/${id}/fire-now`);
+      expect(res.status).toBe(200);
+      expect(res.body.openCard).toMatchObject({ title: 'Tür schließen', assigneeIds: [annaId] });
+      expect(cardsNow()).toHaveLength(1);
+      const runs = await call(chef, 'GET', `/api/watchers/${id}/runs`);
+      expect(runs.body[0]).toMatchObject({ result: 'created', note: 'beim Anlegen, auf Nachfrage' });
+    });
+
+    it('wer keine Wächter ändern darf, bekommt 403 (und es entsteht nichts)', async () => {
+      const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+      expect((await call(anna, 'POST', `/api/watchers/${id}/fire-now`)).status).toBe(403);
+      expect(cardsNow()).toHaveLength(0);
+    });
+
+    it('gilt die Bedingung nicht mehr: 409 mit freundlichem Text', async () => {
+      const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+      ha.set(DOOR, 'on', '2026-11-04T09:30:00Z');
+      const res = await call(chef, 'POST', `/api/watchers/${id}/fire-now`);
+      expect(res.status).toBe(409);
+      expect(res.body.error).toBe('Die Bedingung ist nicht mehr erfüllt, darum entsteht keine Karte.');
+      expect(cardsNow()).toHaveLength(0);
+    });
+
+    it('gibt es schon eine offene Karte: 409', async () => {
+      const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+      expect((await call(chef, 'POST', `/api/watchers/${id}/fire-now`)).status).toBe(200);
+      const again = await call(chef, 'POST', `/api/watchers/${id}/fire-now`);
+      expect(again.status).toBe(409);
+      expect(again.body.error).toBe('Zu diesem Wächter gibt es schon eine offene Karte.');
+      expect(cardsNow()).toHaveLength(1);
+    });
+
+    it('unbekannter Wächter: 404', async () => {
+      expect((await call(chef, 'POST', '/api/watchers/gibt-es-nicht/fire-now')).status).toBe(404);
+    });
+  });
+});
+
 describe('Reiter „Wächter"', () => {
   it('zeigt je Wächter Zustand der Entität und die offene Karte; die Aktivität nennt die Wächter, alle dürfen sie sehen', async () => {
     const id = (await call(chef, 'POST', '/api/watchers', input())).body.id;

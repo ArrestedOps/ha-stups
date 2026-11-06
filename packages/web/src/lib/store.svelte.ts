@@ -58,6 +58,19 @@ export interface Toast {
   action?: { label: string; run: () => Promise<void> | void };
 }
 
+/**
+ * Eine Rückfrage (ConfirmDialog). Ohne `tone` ist sie eine Warnung (rot, Papierkorb, „Abbrechen“); mit `tone: 'primary'` eine
+ * freundliche Frage mit eigener Beschriftung für „Nein“ (`cancelLabel`). „Nein“ und Escape schließen nur den Dialog.
+ */
+export interface ConfirmRequest {
+  title: string;
+  text: string;
+  label: string;
+  run: () => Promise<void> | void;
+  cancelLabel?: string;
+  tone?: 'danger' | 'primary';
+}
+
 export const ui = $state({
   ready: false,
   fatal: null as string | null,
@@ -107,7 +120,7 @@ export const ui = $state({
   viewer: null as null | { items: Attachment[]; index: number },
   toasts: [] as Toast[],
   /** Rückfrage vor einer Aktion, die sich nicht von selbst zurücknehmen lässt */
-  confirm: null as null | { title: string; text: string; label: string; run: () => Promise<void> | void },
+  confirm: null as null | ConfirmRequest,
 });
 
 /**

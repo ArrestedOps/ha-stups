@@ -97,6 +97,19 @@ export interface WatcherItem extends WatcherInput {
   openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; waiting: boolean } | null;
 }
 
+/** Die Bedingung gilt beim Speichern schon und der Wächter löst nicht von selbst aus: Die App fragt, ob die Karte jetzt entstehen soll */
+export interface MetNow {
+  entityName: string;
+  /** der Zustand in Worten („aus“, „412 W“), in der Sprache der Anfrage */
+  stateText: string;
+  reason: 'already_met';
+}
+
+/** Antwort auf Anlegen und Ändern: der Wächter, dazu `metNow` (fehlt, wenn nur pausiert oder wieder eingeschaltet wurde) */
+export interface SavedWatcher extends WatcherItem {
+  metNow?: MetNow | null;
+}
+
 export interface WatcherActivity extends WatcherRun {
   watcherName: string;
   /** Das Gerät unter dem Namen, solange der Name es nicht nennt */

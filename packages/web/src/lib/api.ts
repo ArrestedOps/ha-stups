@@ -3,7 +3,7 @@ import type { FeedbackContext, FeedbackItem, FeedbackKind, FeedbackStatus } from
 import type { Recurrence } from './recurrence';
 import type { Permission } from './permissions';
 import type { EntityHistory } from './history';
-import type { DryRunResult, HaEntity, OrderView, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from './watcher-types';
+import type { DryRunResult, HaEntity, OrderView, SavedWatcher, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from './watcher-types';
 
 export type Priority = 'low' | 'medium' | 'high';
 /** Aufwand einer Karte für die Fairness-Ansicht; leer zählt wie mittel */
@@ -742,8 +742,11 @@ export const api = {
 
   watchers: () => get<{ available: boolean; items: WatcherItem[] }>('watchers'),
   watcherActivity: () => get<WatcherActivity[]>('watchers/activity'),
-  createWatcher: (b: WatcherInput) => post<WatcherItem>('watchers', b),
-  updateWatcher: (id: string, b: Partial<WatcherInput>) => patch<WatcherItem>(`watchers/${id}`, b),
+  /** Antwort nach Anlegen und Ändern: mit `metNow`, wenn die Bedingung schon erfüllt ist und nichts von selbst auslöst (dann fragt die App) */
+  createWatcher: (b: WatcherInput) => post<SavedWatcher>('watchers', b),
+  updateWatcher: (id: string, b: Partial<WatcherInput>) => patch<SavedWatcher>(`watchers/${id}`, b),
+  /** „Ja, Karte erstellen“ auf diese Rückfrage (409, wenn die Bedingung nicht mehr gilt oder schon eine Karte offen ist) */
+  fireWatcherNow: (id: string) => post<WatcherItem>(`watchers/${id}/fire-now`),
   deleteWatcher: (id: string) => del(`watchers/${id}`),
   testWatcher: (id: string) => post<WatcherItem>(`watchers/${id}/test`),
   /** Sammelknopf: Wächter mit Vorlagennamen bekommen das Gerät im Namen (nur Administratoren) */
@@ -830,7 +833,7 @@ export interface NudgeInfo {
   people: NudgeTarget[];
 }
 
-export type { HaEntity, WatcherActivity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
+export type { HaEntity, SavedWatcher, WatcherActivity, WatcherInput, WatcherItem, WatcherRun } from './watcher-types';
 
 export interface NudgeResult {
   sent: { nudgeId: string; to: string; status: 'sent' | 'queued'; deliverAt: string }[];

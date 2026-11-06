@@ -223,6 +223,135 @@ describe('Pegel beim Anlegen schon über der Grenze', () => {
   });
 });
 
+describe('Nachfrage nach dem Speichern (metNow)', () => {
+  const DOOR = 'binary_sensor.waschkueche_tuer';
+  const door = (state: string, extra: Record<string, unknown> = {}) => {
+    ha.set(DOOR, state, '2026-11-04T09:00:00Z', { friendly_name: 'Tür Waschküche' });
+    return watcher({ name: 'Tür offen', trigger: { entityId: DOOR, kind: 'state', to: 'off', forMin: 0 }, card: { boardId, columnId, title: 'Tür schließen' }, ...extra });
+  };
+
+  it('ein Zustandswächter, dessen Zielzustand schon gilt, meldet das (kein automatisches Auslösen)', async () => {
+    const w = door('off');
+    expect(await engine.onSaved(w.id)).toEqual({ entityName: 'Tür Waschküche', stateText: 'aus', reason: 'already_met' });
+    expect(cards()).toHaveLength(0);
+  });
+
+  it('ein Vorgang (Leistung) meldet den Wert mit Einheit', async () => {
+    ha.set(ENTITY, '2.4', '2026-11-04T09:00:00Z', { device_class: 'power', unit_of_measurement: 'W', friendly_name: 'Waschmaschine Leistung' });
+    const w = watcher();
+    expect(await engine.onSaved(w.id)).toEqual({ entityName: 'Waschmaschine Leistung', stateText: '2,4 W', reason: 'already_met' });
+  });
+
+  it('ohne Friendly Name steht die Entitäts-ID da', async () => {
+    ha.set(DOOR, 'off');
+    const w = watcher({ trigger: { entityId: DOOR, kind: 'state', to: 'off', forMin: 0 } });
+    expect((await engine.onSaved(w.id))?.entityName).toBe(DOOR);
+  });
+
+  it('ein Pegel löst selbst aus und fragt deshalb nicht; auch nicht, solange er auf die Wartezeit wartet', async () => {
+    ha.set('sensor.knopf_batterie', '1', '2026-11-04T09:00:00Z', { device_class: 'battery', unit_of_measurement: '%' });
+    const a = watcher({ trigger: { entityId: 'sensor.knopf_batterie', kind: 'below', value: 10, forMin: 0 } });
+    expect(await engine.onSaved(a.id)).toBeNull();
+    expect(cards()).toHaveLength(1);
+    ha.set('sensor.knopf_batterie', '1', '2026-11-04T09:59:00Z', { device_class: 'battery', unit_of_measurement: '%' });
+    const b = watcher({ trigger: { entityId: 'sensor.knopf_batterie', kind: 'below', value: 10, forMin: 10 } });
+    expect(await engine.onSaved(b.id)).toBeNull();
+  });
+
+  it('ist die Bedingung nicht erfüllt, gibt es nichts zu fragen', async () => {
+    const w = door('on');
+    expect(await engine.onSaved(w.id)).toBeNull();
+  });
+
+  it('fehlt die Entität oder ist Home Assistant nicht erreichbar, gibt es nichts zu fragen', async () => {
+    const w = watcher({ trigger: { entityId: 'binary_sensor.gibt_es_nicht', kind: 'state', to: 'off', forMin: 0 } });
+    expect(await engine.onSaved(w.id)).toBeNull();
+    ha.failStates = true;
+    expect(await engine.onSaved(door('off').id)).toBeNull();
+  });
+
+  it('pausierte Wächter fragen nicht', async () => {
+    const w = door('off');
+    data.setActive(w.id, false);
+    expect(await engine.onSaved(w.id)).toBeNull();
+  });
+
+  it('gibt es schon eine offene Karte des Wächters, wird nicht gefragt', async () => {
+    const w = door('on');
+    await engine.onSaved(w.id);
+    ha.set(DOOR, 'off');
+    ha.emit(`w:${w.id}:fire`, 'off');
+    await engine.idle();
+    expect(cards()).toHaveLength(1);
+    expect(await engine.onSaved(w.id)).toBeNull();
+  });
+
+  it('Kalender und Vorhersage fragen nicht', async () => {
+    ha.set('calendar.familie', 'on');
+    const w = watcher({ trigger: { entityId: 'calendar.familie', kind: 'calendar_event', leadMin: 0 } });
+    expect(await engine.onSaved(w.id)).toBeNull();
+  });
+
+  describe('fireNow (Ja, Karte erstellen)', () => {
+    it('legt die Karte über den normalen Weg an: Zuweisung, Fälligkeit, Lauf mit Hinweis', async () => {
+      const w = door('off', { card: { boardId, columnId, title: 'Tür schließen', due: { kind: 'in', minutes: 30 } } });
+      await engine.onSaved(w.id);
+      await engine.fireNow(w.id);
+      expect(cards()).toHaveLength(1);
+      expect(cards()[0]).toMatchObject({ title: 'Tür schließen', assigneeIds: [anna] });
+      expect(cards()[0]!.dueAt).toBe(new Date(t + 30 * 60_000).toISOString());
+      expect(data.runs(w.id)[0]).toMatchObject({ result: 'created', note: 'beim Anlegen, auf Nachfrage' });
+      expect(data.getState(w.id).lastFireAt).not.toBeNull();
+      expect(data.getState(w.id).armed).toBe(false);
+      expect(assigned.map((a) => a.ids)).toEqual([[anna]]);
+    });
+
+    it('ist keine Testkarte (kein Hinweis in der Beschreibung)', async () => {
+      const w = door('off');
+      await engine.onSaved(w.id);
+      await engine.fireNow(w.id);
+      expect(cards()[0]!.description ?? '').not.toMatch(/Test/);
+    });
+
+    it('gilt die Bedingung nicht mehr, gibt es eine freundliche Absage und keine Karte', async () => {
+      const w = door('off');
+      await engine.onSaved(w.id);
+      ha.set(DOOR, 'on');
+      await expect(engine.fireNow(w.id)).rejects.toMatchObject({ status: 409, message: expect.stringMatching(/nicht mehr erfüllt/) });
+      expect(cards()).toHaveLength(0);
+    });
+
+    it('gibt es schon eine offene Karte, gibt es eine Absage und keine zweite', async () => {
+      const w = door('off');
+      await engine.onSaved(w.id);
+      await engine.fireNow(w.id);
+      await expect(engine.fireNow(w.id)).rejects.toMatchObject({ status: 409, message: expect.stringMatching(/offene Karte/) });
+      expect(cards()).toHaveLength(1);
+    });
+
+    it('die Sperrzeit eines früheren Auslösens hält die ausdrücklich gewünschte Karte nicht auf', async () => {
+      const w = door('off', { cooldownMin: 60 });
+      await engine.onSaved(w.id);
+      await engine.fireNow(w.id);
+      store.completeCard(cards()[0]!.id, { by: anna, source: 'app' });
+      advance(1);
+      await engine.fireNow(w.id);
+      expect(cards().filter((c) => !c.completedAt)).toHaveLength(1);
+    });
+
+    it('der Zähler hält sie ebenfalls nicht auf', async () => {
+      const w = door('off', { trigger: { entityId: DOOR, kind: 'state', to: 'off', forMin: 0, count: 3 } });
+      await engine.onSaved(w.id);
+      await engine.fireNow(w.id);
+      expect(cards()).toHaveLength(1);
+    });
+
+    it('einen Wächter, den es nicht gibt, kennt sie nicht', async () => {
+      await expect(engine.fireNow('gibt-es-nicht')).rejects.toBeDefined();
+    });
+  });
+});
+
 describe('Neustart-fest', () => {
   it('löst beim Anlegen nicht aus, wenn die Bedingung schon erfüllt ist; erst nach einem Wechsel wieder', async () => {
     ha.set(ENTITY, '2');

@@ -254,7 +254,7 @@ The conditions in detail:
 - A **lock time** (default 10 minutes) catches flapping sensors. It also applies to the counter.
 - As long as the watcher's card is **open**, no second one is created; the card's history says "Triggered again". This can be switched off.
 - **Nudge after … minutes** (optional): if the card is still open by then, the assignees get one reminder.
-- When **creating**, a watcher does not trigger even if the condition is already met. After a restart of Stups or Home Assistant the current state is reconciled: a missed transition triggers **exactly once**, never twice. The "from" value of state changes cannot be checked after a restart.
+- When **creating**, a watcher does not trigger by itself if the condition is already met (a device that is already off): after saving, Stups asks whether the card should be created now ("Yes, create card" or "No, wait for the next time"). Levels such as battery, temperature and humidity are the exception: a value that is already past the limit is a finding, so the card comes without a question. The same goes for changes, when the entity or the condition has changed. After a restart of Stups or Home Assistant the current state is reconciled: a missed transition triggers **exactly once**, never twice. The "from" value of state changes cannot be checked after a restart.
 - If the entity is missing in Home Assistant, the watcher shows "Entity missing", it is not deleted. If the board or column no longer exists, the watcher pauses with a hint.
 - The card is an entirely normal card (due push, reminders, nudging), with an eye symbol and the entry "Created by watcher …" in the history.
 - **Test** creates the card once immediately (marked "Test") so you can check push and assignment.

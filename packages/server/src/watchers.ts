@@ -7,6 +7,7 @@ import { isBusy } from './busy.js';
 import { isRunning, measuresLevel, phaseOf, type HomeItem, type HomeState, type PhaseMemory } from './home.js';
 import { orderView, type OrderView } from './assignment-order.js';
 import { personOfEntity, presenceOf, type PresenceMap } from './presence.js';
+import { stateText } from './state-text.js';
 import { fromLocal, toLocal } from './recurrence.js';
 import type { Card, Store, User } from './store.js';
 import type { Waiting, Watcher, WatcherData } from './watcher-data.js';
@@ -80,6 +81,16 @@ interface Seen {
 }
 
 const minutes = (n: number) => n * 60_000;
+
+/**
+ * Die Bedingung gilt beim Speichern schon, aber der Wächter löst nicht von selbst aus (Zustand, Vorgang, Unbekanntes): die Oberfläche
+ * fragt dann, ob die Karte jetzt entstehen soll. `stateText` ist der Zustand in Worten („aus", „412 W").
+ */
+export interface MetNow {
+  entityName: string;
+  stateText: string;
+  reason: 'already_met';
+}
 
 export function createWatchers(deps: WatcherDeps) {
   const { store, data, ha, now, timeZone } = deps;
@@ -361,7 +372,7 @@ export function createWatchers(deps: WatcherDeps) {
     return icon ? { icon, iconColor: w.card.iconColor ?? null, iconSource: 'auto' } : w.card.iconColor ? { iconColor: w.card.iconColor } : {};
   }
 
-  async function createCard(w: Watcher, nowMs: number, test: boolean, dedupeKey: string | null = null): Promise<void> {
+  async function createCard(w: Watcher, nowMs: number, test: boolean, dedupeKey: string | null = null, runNote?: string): Promise<void> {
     const people = store.people();
     const needsPresence = w.assign.mode === 'rotation_present' || w.assign.mode === 'all_present' || w.assign.mode === 'first_home' || w.assign.mode === 'suggest';
     const home = needsPresence ? (await presence()).home : new Set<string>();
@@ -399,7 +410,7 @@ export function createWatchers(deps: WatcherDeps) {
           result: test ? 'test' : decision.waiting ? 'waiting' : decision.suggest ? 'suggested' : 'created',
           cardId: created.id,
           assignedTo: decision.ids,
-          note: w.trigger.count > 1 && !test ? note(w, data.getState(w.id).counter) : undefined,
+          note: runNote ?? (w.trigger.count > 1 && !test ? note(w, data.getState(w.id).counter) : undefined),
         });
         return created;
       });
@@ -724,8 +735,16 @@ export function createWatchers(deps: WatcherDeps) {
 
   // ---------- Anlegen und Abgleich ----------
 
-  /** Nach dem Anlegen oder Ändern: Startzustand prüfen (kein Auslösen, wenn die Bedingung schon erfüllt ist) und abonnieren */
-  async function onSaved(id: string): Promise<void> {
+  /** Bedingungen, die Stups am Zustand der Entität prüft (Kalender und Vorhersage fragt der Takt ab) */
+  const checksState = (w: Watcher): boolean => w.trigger.kind === 'state' || w.trigger.kind === 'above' || w.trigger.kind === 'below';
+
+  /**
+   * Nach dem Anlegen oder Ändern: Startzustand prüfen (kein Auslösen, wenn die Bedingung schon erfüllt ist, außer bei Pegeln) und
+   * abonnieren. Antwort: `MetNow`, wenn die Bedingung schon erfüllt ist, nichts von selbst ausgelöst hat und keine Karte des Wächters
+   * offen ist, sonst null.
+   */
+  async function onSaved(id: string): Promise<MetNow | null> {
+    let metNow: MetNow | null = null;
     await guarded('Speichern', async () => {
       const w = data.get(id);
       let states: HaState[];
@@ -759,10 +778,15 @@ export function createWatchers(deps: WatcherDeps) {
         data.patchState(id, { armed: levelNow || !met, metSince: since });
         if (w.status === 'entity_missing') data.setStatus(id, 'ok');
         if (levelNow && since && nowMs - Date.parse(since) >= minutes(w.trigger.forMin)) await fire(w);
+        // Schon erfüllt und kein automatisches Auslösen: die Oberfläche darf fragen (nur wenn noch keine Karte des Wächters offen ist)
+        if (met && !levelNow && w.active && checksState(w) && !store.openCardOfWatcher(id)) {
+          metNow = { entityName: s.name ?? w.trigger.entityId, stateText: stateText(s.state, s.unit), reason: 'already_met' };
+        }
       }
       syncSubscriptions();
       deps.onChange?.();
     });
+    return metNow;
   }
 
   /** Nach (Wieder-)Verbinden: Zustände abgleichen, damit ein verpasster Übergang genau einmal auslöst */
@@ -881,6 +905,35 @@ export function createWatchers(deps: WatcherDeps) {
   async function test(id: string): Promise<void> {
     await enqueue(async () => {
       await fire(data.get(id), true);
+    });
+  }
+
+  /**
+   * „Ja, Karte erstellen" nach dem Speichern: legt die Karte über den normalen Weg an (Zuweisung, Fälligkeit, Spalte), aber nur, wenn
+   * die Bedingung weiterhin gilt und keine Karte des Wächters offen ist. Sperrzeit und Zähler gelten hier nicht: Der Mensch hat die
+   * Karte ausdrücklich gewollt, ein Schweigen wäre unverständlich. Keine Testkarte, im Lauf steht der Anlass.
+   */
+  async function fireNow(id: string): Promise<void> {
+    await enqueue(async () => {
+      const w = data.get(id);
+      // Der Mensch hat vielleicht eine Weile überlegt: den Stand frisch holen (ohne Verbindung gilt der zuletzt gesehene)
+      try {
+        for (const x of await ha.getStates()) {
+          const v = toSeen(x);
+          if (v) seen.set(x.entity_id, v);
+        }
+      } catch {
+        // der zuletzt gesehene Zustand genügt
+      }
+      const s = seenOf(w.trigger.entityId);
+      if (!w.active || !checksState(w) || !s || !conditionMet(w.trigger, s.state)) {
+        throw new ConflictError(t('Die Bedingung ist nicht mehr erfüllt, darum entsteht keine Karte.'));
+      }
+      if (store.openCardOfWatcher(id)) throw new ConflictError(t('Zu diesem Wächter gibt es schon eine offene Karte.'));
+      const nowMs = now().getTime();
+      data.patchState(id, { armed: false, lastFireAt: new Date(nowMs).toISOString() });
+      memoryOf(id).touched = false;
+      await createCard(w, nowMs, false, null, 'beim Anlegen, auf Nachfrage');
     });
   }
 
@@ -1106,7 +1159,7 @@ export function createWatchers(deps: WatcherDeps) {
     });
   }
 
-  return { start, presentPersonIds, order, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, homeState, pass, claim, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
+  return { start, presentPersonIds, order, onSaved, syncSubscriptions, snapshot, tick, test, fireNow, resetCounter, view, homeState, pass, claim, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };
 }
 
 export type Watchers = ReturnType<typeof createWatchers>;

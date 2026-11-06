@@ -152,6 +152,7 @@
   "POST /api/push/test",
   "POST /api/trash/:type/:id/restore",
   "POST /api/watchers",
+  "POST /api/watchers/:id/fire-now",
   "POST /api/watchers/:id/reset-counter",
   "POST /api/watchers/:id/test",
   "POST /api/watchers/dry-run",

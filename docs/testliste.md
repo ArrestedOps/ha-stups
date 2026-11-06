@@ -116,7 +116,7 @@ Zuerst Einstellungen › Diagnose-Seite › „Wächter-Test": Alle Zustände le
 - [ ] **Vergleich:** Eure bestehende Automation mit dem Zähler-Helfer zum Saugroboter läuft parallel mit; beide liefern dasselbe. Ob sie danach abgeschaltet wird, besprechen wir gemeinsam (Stups ändert nichts daran)
 - [ ] **Keine Doppelkarten:** Solange die Karte offen ist, entsteht keine zweite; im Verlauf der Karte steht „Erneut ausgelöst"
 - [ ] **Erledigt sich selbst:** Mit „Erledigt sich selbst, wenn …" (z. B. Tür der Waschmaschine) wird die Karte erledigt
-- [ ] **Neustart:** App neu starten, während eine Bedingung erfüllt ist: keine zweite Karte. Wächter beim Anlegen mit schon erfüllter Bedingung: keine Karte, erst beim nächsten Mal
+- [ ] **Neustart:** App neu starten, während eine Bedingung erfüllt ist: keine zweite Karte. Wächter beim Anlegen mit schon erfüllter Bedingung (Zustand, Leistung): Rückfrage „Karte jetzt erstellen?“, bei „Nein“ keine Karte, erst beim nächsten Mal, bei „Ja“ sofort; Batterie unter der Grenze: ohne Rückfrage sofort die Karte
 - [ ] **Eigene Automation:** Das Beispiel aus der Anleitung (`stups_create_card`) in einer Automation auslösen: Karte erscheint, ein zweites Auslösen mit demselben `dedupe_key` nicht; die Diagnose-Seite zeigt beide Ereignisse
 - [ ] **Sensor:** `sensor.stups_waechter_offen` zählt die offenen Wächter-Karten
 

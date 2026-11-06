@@ -405,6 +405,7 @@ export function noteText(note: string | null | undefined): string {
     'nach 24 Stunden niemand heimgekommen': () => t('nach 24 Stunden niemand heimgekommen'),
     'Die Spalte gibt es nicht mehr': () => t('Die Spalte gibt es nicht mehr'),
     Test: () => t('Test'),
+    'beim Anlegen, auf Nachfrage': () => t('beim Anlegen, auf Nachfrage'),
   };
   const f = fixed[note];
   if (f) return f();

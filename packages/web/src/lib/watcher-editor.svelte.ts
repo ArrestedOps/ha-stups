@@ -1,9 +1,10 @@
-import { api, ApiError, type BoardView, type HaEntity, type WatcherItem, type WatcherRun } from './api';
+import { api, ApiError, type BoardView, type HaEntity, type SavedWatcher, type WatcherItem, type WatcherRun } from './api';
 import { t } from './i18n/index.svelte';
 import type { EntityHistory } from './history';
 import { can, closeSheet, openSettings, openSheet, toast, ui } from './store.svelte';
 import type { OrderView, TemplateDraft, WatcherTemplate } from './watcher-types';
 import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, type WatcherForm } from './watchers';
+import { askCard, metNowOf } from './watcher-ask';
 import { backAction } from './watcher-wizard';
 
 export type Hit = { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft };
@@ -215,14 +216,30 @@ export class WatcherEditor {
     }
     this.busy = true;
     try {
-      if (this.id) await api.updateWatcher(this.id, toInput(this.form));
-      else await api.createWatcher(toInput(this.form));
+      const saved = this.id ? await api.updateWatcher(this.id, toInput(this.form)) : await api.createWatcher(toInput(this.form));
       toast(t('Wächter gespeichert'));
       this.back();
+      this.askAfterSave(saved);
     } catch (e) {
       toast(e instanceof ApiError ? e.message : t('Speichern fehlgeschlagen'), { tone: 'error' });
     }
     this.busy = false;
+  }
+
+  /** Gilt die Bedingung schon und löst der Wächter deshalb nicht von selbst aus, fragt die App, ob die Karte jetzt entstehen soll */
+  private askAfterSave(saved: SavedWatcher): void {
+    const met = metNowOf(saved);
+    if (!met) return;
+    ui.confirm = askCard(met, saved.card.title, async () => {
+      try {
+        await api.fireWatcherNow(saved.id);
+        ui.watchers = await api.watchers().catch(() => ui.watchers);
+        ui.rev += 1;
+        toast(t('Karte angelegt'));
+      } catch (e) {
+        toast(e instanceof ApiError ? e.message : t('Karte konnte nicht angelegt werden'), { tone: 'error' });
+      }
+    });
   }
 
   async test(): Promise<void> {

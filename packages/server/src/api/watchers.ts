@@ -17,6 +17,9 @@ const HISTORY_TIMEOUT_MS = 8_000;
 const single = (query: object): Record<string, string | undefined> =>
   Object.fromEntries(Object.entries(query).map(([k, v]) => [k, typeof v === 'string' ? v : undefined]));
 
+/** Hat sich geändert, was der Wächter beobachtet (Entität, Art, Zielzustand, Wert)? Wartezeit und Zähler gehören nicht dazu. */
+const conditionChanged = (a: WatchTrigger, b: WatchTrigger): boolean => a.entityId !== b.entityId || a.kind !== b.kind || a.to !== b.to || a.value !== b.value;
+
 /** Wächter und Diagnose */
 export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   const { deps, store, body, requireAdmin, noContent } = k;
@@ -208,8 +211,9 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     const config = parseWatcher(body(req));
     checkWatcherTargets(config);
     const created = data.create(config);
-    await engine.onSaved(created.id);
-    return reply.code(201).send(watcherView(created.id));
+    // `metNow`: die Bedingung gilt schon und es löst nichts von selbst aus, die Oberfläche fragt, ob die Karte jetzt entstehen soll
+    const metNow = await engine.onSaved(created.id);
+    return reply.code(201).send({ ...watcherView(created.id), metNow });
   });
   app.patch<{ Params: Params }>('/api/watchers/:id', async (req) => {
     requirePermission(req, 'watchers');
@@ -227,8 +231,9 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     const config = parseWatcher({ ...rest, ...b });
     checkWatcherTargets(config);
     data.update(current.id, config);
-    await engine.onSaved(current.id);
-    return watcherView(current.id);
+    const metNow = await engine.onSaved(current.id);
+    // gefragt wird nur, wenn sich Entität oder Bedingung geändert haben (nicht beim Umbenennen und Co.)
+    return { ...watcherView(current.id), metNow: conditionChanged(current.trigger, config.trigger) ? metNow : null };
   });
   app.delete<{ Params: Params }>('/api/watchers/:id', async (req, reply) => {
     requirePermission(req, 'watchers');
@@ -246,6 +251,14 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     } catch (err) {
       throw new ValidationError(err instanceof Error ? err.message : t('Test fehlgeschlagen'));
     }
+    return watcherView(req.params.id);
+  });
+  /** „Ja, Karte erstellen" auf die Rückfrage nach dem Speichern: nur wenn die Bedingung weiterhin gilt und keine Karte des Wächters offen ist (sonst 409) */
+  app.post<{ Params: Params }>('/api/watchers/:id/fire-now', async (req) => {
+    requirePermission(req, 'watchers');
+    const { engine, data } = watcherEngine();
+    data.get(req.params.id);
+    await engine.fireNow(req.params.id);
     return watcherView(req.params.id);
   });
   app.post<{ Params: Params }>('/api/watchers/:id/reset-counter', async (req) => {

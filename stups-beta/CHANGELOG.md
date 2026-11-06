@@ -2,6 +2,16 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.34.0-beta.1
+
+**Wächter: Gilt die Bedingung beim Speichern schon, fragt die App, ob die Karte jetzt entstehen soll.**
+
+- Bisher blieb ein Wächter „ruhig", wenn die Bedingung beim Anlegen schon erfüllt war (ein Gerät, das schon aus ist, oder eine Waschmaschine, die gerade nichts verbraucht), und löste erst nach dem nächsten Wechsel aus. Das war richtig, aber niemand erfuhr es.
+- Jetzt kommt nach dem Speichern die Frage: „Tür Waschküche ist gerade aus – die Bedingung ist also schon erfüllt. Soll jetzt eine Karte „Tür schließen" erstellt werden?" mit „Ja, Karte erstellen" und „Nein, erst beim nächsten Mal". Bei „Ja" entsteht die Karte wie bei jedem Auslösen (Zuweisung, Fälligkeit, Spalte); im Verlauf des Wächters steht „beim Anlegen, auf Nachfrage". Bei „Nein" oder Escape passiert nichts, der Wächter meldet sich beim nächsten Wechsel.
+- Gefragt wird nur bei Zuständen und Vorgängen (Leistung) und nur, wenn nicht ohnehin eine Karte entsteht: Batterie, Temperatur und Luftfeuchte lösen weiter von selbst aus, ohne Frage. Auch nicht gefragt wird, wenn der Wächter schon eine offene Karte hat.
+- Gefragt wird beim Anlegen (auch aus „Gefunden" und den Vorlagen) und beim Ändern, wenn sich Entität oder Bedingung geändert haben, nicht beim bloßen Umbenennen oder Pausieren. Wer keine Wächter anlegen darf, sieht die Frage nie.
+- „Ja" gilt ausdrücklich: Sperrzeit und Zähler halten die Karte nicht auf. Hat sich der Zustand inzwischen geändert oder gibt es schon eine offene Karte, entsteht keine zweite und die App sagt es freundlich.
+
 ## 1.33.0-beta.1
 
 **Gefunden: Stups schlägt jetzt alle passenden Geräte vor, nicht mehr nur fünf je Vorlage.** In neuen Umgebungen mit 100 und mehr Sensoren war die Liste bisher abgeschnitten.

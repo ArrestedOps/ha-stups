@@ -123,6 +123,7 @@ describe('Notizen der Läufe', () => {
     expect(noteText('Sperrzeit 10 Min.')).toBe('Lock time 10 min');
     expect(noteText('2 von 3')).toBe('2 of 3');
     expect(noteText('3 Auslösungen seit dem letzten Zurücksetzen')).toBe('3 triggers since the last reset');
+    expect(noteText('beim Anlegen, auf Nachfrage')).toBe('when created, on request');
     expect(noteText('nach 60 Min.')).toBe('after 60 min');
     expect(noteText('Zeitüberschreitung bei Home Assistant')).toBe('Zeitüberschreitung bei Home Assistant');
     expect(noteText(null)).toBe('');

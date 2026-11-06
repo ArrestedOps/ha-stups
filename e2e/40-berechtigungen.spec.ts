@@ -75,11 +75,11 @@ test('der Administrator sieht je Person „Berechtigungen“ (Administrator: Hin
     await page.getByRole('dialog').getByRole('button', { name: /Rene/ }).first().click();
     await expect(page.getByText('Administratoren dürfen alles.')).toBeVisible();
     await page.getByRole('dialog').getByRole('button', { name: /Rene/ }).first().click();
-    // Mitglied: fünf Schalter, alle aus
+    // Mitglied: sechs Schalter, alle aus
     await page.getByRole('dialog').getByRole('button', { name: new RegExp(NAME) }).first().click();
     const box = page.getByTestId(`permissions-${memberId}`);
     await expect(box).toBeVisible();
-    await expect(box.getByRole('switch')).toHaveCount(5);
+    await expect(box.getByRole('switch')).toHaveCount(6);
     await expect(box.getByRole('switch', { checked: true })).toHaveCount(0);
     await expect(box).toContainText('Nicht dabei: Dashboard und Panel-Pfad');
     await box.scrollIntoViewIfNeeded();

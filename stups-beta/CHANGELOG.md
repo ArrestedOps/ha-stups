@@ -2,6 +2,18 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.35.0-beta.1
+
+**Wächter: Alle Wächter stehen immer da, nach Kategorie sortiert, mit Schalter „aktiv/aus“.** Auf dem Desktop wird daraus eine Tabelle mit deutlich mehr Angaben.
+
+- Der Zuklapper „N Wächter ohne offene Aktion“ ist weg. Oben stehen wie bisher „Wartet auf jemanden“, „Läuft gerade“ und „Kommt bald“, darunter alle übrigen Wächter nach Kategorie. Jeder Wächter steht genau einmal da. Fehlt eine Entität, steht das rot an der Zeile.
+- Jeder Wächter hat einen Schalter in der Zeile. Ausgeschaltet bleibt er sichtbar (blasser, „Aus“), löst aber nichts aus. Der Server entscheidet: Wer das Recht „Wächter“ nicht hat, sieht den Schalter, kann ihn aber nicht bedienen. Tippen auf die Zeile öffnet den Wächter wie bisher.
+- Neu: Kategorie am Wächter (frei wählbar, bis 40 Zeichen). Beim Anlegen schlägt Stups eine vor (aus der Vorlage, sonst aus Entität und Geräteklasse, zum Beispiel „Batterien“, „Haushaltsgeräte“, „Müll & Abfall“, „Wetter“); sie ist vorbelegt und änderbar, auch über „Neue Kategorie …“. Im Editor steht sie als Chip „Kategorie: …“ unter Feinschliff, im Assistenten in Schritt 4. Gleiche Namen ohne Beachtung der Groß-/Kleinschreibung werden zusammengelegt.
+- Kategorien lassen sich auf- und zuklappen (Pfeil, Zähler); der Zustand wird auf dem Gerät gemerkt, Standard ist aufgeklappt. Die Suche am Desktop durchsucht auch die Kategorie und klappt Treffer-Gruppen auf.
+- Wächter ohne Kategorie stehen unter „Ohne Kategorie“ ganz unten. Der Knopf „Kategorien vorschlagen“ (nur mit dem Recht „Wächter“, mit Rückfrage) setzt bei ihnen den Vorschlag. Vorhandene Kategorien ändert er nie, das Ergebnis steht als Zahl da.
+- Desktop (ab 1024 px): breite Tabellenzeilen mit Spaltenkopf. Spalten: Wächter, Bedingung als kurzer Satz, aktueller Stand, Status, letzte Auslösung, nächste Karte, Zuständige, Schalter. Bei weniger Platz fallen Spalten weg, statt zu quetschen.
+- Server: neue Spalte `category` (Migration 26), `PATCH /api/watchers/:id` nimmt auch nur `category`, neu `POST /api/watchers/suggest-categories`; `GET /api/home` liefert jetzt auch ausgeschaltete Wächter mit `active`, Kategorie, Bedingung und letzter Auslösung.
+
 ## 1.34.0-beta.1
 
 **Wächter: Gilt die Bedingung beim Speichern schon, fragt die App, ob die Karte jetzt entstehen soll.**

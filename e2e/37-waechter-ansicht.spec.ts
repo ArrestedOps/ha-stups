@@ -20,6 +20,8 @@ const clear = async (request: APIRequestContext) => {
   for (const w of await watchers(request)) await request.delete(`/api/watchers/${w.id}`);
 };
 const setState = (request: APIRequestContext, entityId: string, state: string) => request.post(`${MOCK}/mock/state`, { data: { entityId, state } });
+// Jeder Test räumt hinter sich auf, auch wenn er scheitert (die Wächter gehören dem ganzen Lauf)
+test.afterEach(async ({ request }) => clear(request));
 const connyHeaders = { 'x-remote-user-id': 'ha-conny-e2e', 'x-remote-user-name': 'conny', 'x-remote-user-display-name': 'Conny' };
 
 async function setup(request: APIRequestContext) {
@@ -34,7 +36,8 @@ type S = Awaited<ReturnType<typeof setup>>;
 
 const make = (s: S, name: string, entityId: string, extra: Record<string, unknown> = {}) => ({
   name,
-  trigger: { entityId, kind: 'below', value: 20, forMin: 10 },
+  // Schwelle 5: die Batterien (12 %, 14 %) liegen darüber, der Wächter bleibt ruhig (unter 20 % legte er nach 10 Minuten sofort eine Karte an)
+  trigger: { entityId, kind: 'below', value: 5, forMin: 10 },
   card: { boardId: s.boardId, columnId: s.columnId, title: `Karte ${name}`, due: { kind: 'none' } },
   assign: { mode: 'fixed', personIds: [s.rene.id] },
   cooldownMin: 0,
@@ -158,6 +161,9 @@ test('Mitglied ohne Recht: der Schalter ist sichtbar, aber gesperrt; der Server 
 test('Neuer Wächter: die Kategorie wird vorgeschlagen und vorbelegt; eine eigene lässt sich anlegen; im Editor änderbar', async ({ page, request }) => {
   await clear(request);
   const s = await setup(request);
+  // die Werte neu setzen: unter 20 % legt ein neuer Batterie-Wächter nach 10 Minuten seit der letzten Änderung sofort eine Karte an
+  await setState(request, 'sensor.bad_batterie', '12');
+  await setState(request, 'sensor.iphone_rene_battery_level', '14');
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), s.boardId);
   await page.goto('/');
   await openBoards(page);

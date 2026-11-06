@@ -62,6 +62,9 @@ async function setupHit(page: Page, hitText: string | RegExp, boardId: string) {
 
 test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Namen und Kartentitel, auch in der Übersicht', async ({ page, request }) => {
   await clearWatchers(request);
+  // Werte neu setzen: unter 20 % legt ein neuer Batterie-Wächter nach 10 Minuten seit der letzten Änderung sofort eine Karte an (dann stünde er unter „Wartet")
+  await request.post(`${MOCK}/mock/state`, { data: { entityId: IPHONE, state: '14' } });
+  await request.post(`${MOCK}/mock/state`, { data: { entityId: BAD, state: '12' } });
   const b = await board(request);
   await openFound(page, b.boardId);
   const d = page.getByRole('dialog');

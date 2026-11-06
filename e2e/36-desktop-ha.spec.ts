@@ -4,6 +4,11 @@ import { expect, test } from '@playwright/test';
 const MOCK = 'http://127.0.0.1:18411';
 test.describe.configure({ timeout: 90_000 });
 
+// Die Wächter gehören dem ganzen Lauf: auch ein gescheiterter Test räumt auf
+test.afterEach(async ({ request }) => {
+  for (const w of ((await (await request.get('/api/watchers')).json()) as { items: { id: string }[] }).items) await request.delete(`/api/watchers/${w.id}`);
+});
+
 const sideNav = (page: import('@playwright/test').Page) => page.getByRole('navigation', { name: 'Ansicht' });
 
 test('Wächter: Raster in zwei oder drei Spalten, alle Karten einer Reihe gleich hoch, kein „+“ des Handys, Neuer Wächter als Knopf', async ({ page, request }) => {
@@ -83,7 +88,7 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
   const make = (name: string, entityId: string, category: string | null, extra: Record<string, unknown> = {}) => ({
     name,
     category,
-    trigger: { entityId, kind: 'below', value: 20, forMin: 10 },
+    trigger: { entityId, kind: 'below', value: 5, forMin: 10 }, // Batterien liegen darüber: ruhig, keine sofortige Karte
     card: { boardId: board.id, columnId, title: `Karte ${name}`, due: { kind: 'none' } },
     assign: { mode: 'fixed', personIds: [rene.id] },
     ...extra,
@@ -127,7 +132,7 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
     r.forEach((x, i) => expect(Math.abs(x - c.headCells[i]!), `Spalte ${i} bündig`).toBeLessThanOrEqual(2));
   }
   const row = page.getByTestId('watcher-row').filter({ hasText: `Bad ${tag}` });
-  await expect(row.getByTestId('watcher-condition')).toContainText('unter 20 % liegt');
+  await expect(row.getByTestId('watcher-condition')).toContainText('unter 5 % liegt');
   await expect(row.getByTestId('watcher-value')).toHaveText('12 %');
   await expect(row.getByTestId('watcher-last')).toHaveText('Nie');
   await expect(row.getByTestId('watcher-next')).toContainText(`Karte Bad ${tag}`);

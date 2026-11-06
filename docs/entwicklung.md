@@ -224,7 +224,7 @@ Migrationen 17 (Vorlagen `board_templates`), 18 (`cards.effort`, `users.weekly_s
 - **Home-Knopf:** `TopBar.svelte`, Reihenfolge Logo, „stups.“, Platzhalter, Home, Glocke, Zahnrad, Profil; nur mit `feat.haUi`. `goToDashboard` nimmt `dashboardTarget()`: `resolveDashboardPath` (`lib/dashboard.ts`): Wahl der Person (nie bei einem Kind), sonst `window.parent.localStorage.defaultPanel` (JSON, try/catch), sonst die Option `dashboard_path` (samt dem früher gesetzten gemeinsamen Wert), sonst „/“. Einstellungen › Home Assistant › **Dashboard** für jede Person außer Kindern (`DashboardPage.svelte`); „Zurück zum Dashboard“ steht nicht mehr in den Einstellungen (nur noch im Bildschirm „Kein Zugriff“). Browser-Tests `34-home-knopf.spec.ts` (Elternseite mit gleichem Ursprung wie in `9-embed.spec.ts`), `28-mitteilungen.spec.ts`.
 - **Abweichungen vom Entwurf:** Home-Knopf (Wunsch des Auftraggebers, im Entwurf nicht vorhanden); Chips immer alle fünf; „Alle gelesen“ ist ausgegraut, wenn nichts ungelesen ist; „Ältere laden“ am Ende, wenn es mehr als 100 Einträge gibt; Erinnerungen, Änderungen anderer und Bitten um Bestätigung stehen nur unter „Alle“ bzw. („Erledigt“ für Bestätigungen).
 
-### Berechtigungen je Person (seit 1.29.0, Migration 25)
+### Berechtigungen je Person (seit 1.30.0, Migration 25)
 
 Ein Administrator gibt einzelnen **Mitgliedern** gezielt Rechte, die sonst nur Administratoren haben. Der Server entscheidet, die Oberfläche blendet nur ein und aus.
 

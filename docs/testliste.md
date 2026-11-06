@@ -554,7 +554,7 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Mehr als 10 Rückmeldungen in einer Stunde je Person werden mit freundlichem Text abgelehnt; sehr lange Texte und Wörter ohne Leerzeichen laufen nicht über den Rand
 - [ ] Hell, Dunkel, Englisch; Update: Datenbank gesichert (Migration 24)
 
-## 38 · Berechtigungen je Person (seit 1.29.0)
+## 38 · Berechtigungen je Person (seit 1.30.0)
 
 - [ ] Einstellungen › Personen & Zugriff › Person aufklappen: als Administrator der Bereich **Berechtigungen** mit sechs Schaltern (Wächter, Ansage und Lampe, App-Einstellungen, Personen, Bestätigen für Kinder, Feedback der Nutzer), jeder mit kurzer Erklärung; bei einem Administrator nur „Administratoren dürfen alles.“, bei einem Kind gar nichts
 - [ ] Als Mitglied (ohne Rechte): kein Bereich Berechtigungen, keine Seiten Wächter, Vorlagen, Symbole, Termine, Tageszusammenfassung, Ansage und Lampe, Personen & Zugriff (wie bisher)

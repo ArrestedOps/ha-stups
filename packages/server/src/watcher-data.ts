@@ -3,6 +3,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { NotFoundError } from './errors.js';
 import type { AssignRule, CardTemplate, DoneTrigger, WatchTrigger, WatcherConfig, WatcherStatus } from './watcher-types.js';
 import { t } from './i18n/index.js';
+import { categoryKey, mergeCategory } from './watcher-categories.js';
 
 export interface Watcher extends WatcherConfig {
   id: string;
@@ -98,6 +99,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     cooldownMin: r.cooldown_min,
     dedupe: r.dedupe === 1,
     nudgeAfterMin: r.nudge_after_min,
+    category: r.category ?? null,
     status: r.status,
     lastFiredAt: r.last_fired_at,
     lastAssignees: JSON.parse(r.last_assignees) as string[],
@@ -113,7 +115,22 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     return toWatcher(r);
   }
 
-  const columns = (c: WatcherConfig) => [
+  /** Die vorhandenen Kategorien, ohne Doppelte (gleiche Namen ohne Beachtung der Schreibweise), in der Reihenfolge der Wächter; ohne die von `exceptId` */
+  function categories(exceptId?: string): string[] {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const r of all('select id, category from watchers where category is not null order by position, created_at, rowid')) {
+      if (r.id === exceptId) continue;
+      const k = categoryKey(r.category);
+      if (!seen.has(k)) {
+        seen.add(k);
+        out.push(r.category);
+      }
+    }
+    return out;
+  }
+
+  const columns = (c: WatcherConfig, exceptId?: string) => [
     c.name,
     c.active ? 1 : 0,
     JSON.stringify(c.trigger),
@@ -123,6 +140,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     c.cooldownMin,
     c.dedupe ? 1 : 0,
     c.nudgeAfterMin,
+    mergeCategory(c.category, categories(exceptId)),
   ];
 
   function create(c: WatcherConfig): Watcher {
@@ -131,8 +149,8 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     const position = ((one('select max(position) as m from watchers')?.m as number | null) ?? -1) + 1;
     run(
       `insert into watchers (id, name, active, trigger_json, card_json, assign_json, done_json, cooldown_min, dedupe, nudge_after_min,
-                             position, created_at, updated_at)
-       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                             category, position, created_at, updated_at)
+       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       ...columns(c),
       position,
@@ -147,8 +165,8 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     get(id);
     run(
       `update watchers set name = ?, active = ?, trigger_json = ?, card_json = ?, assign_json = ?, done_json = ?, cooldown_min = ?,
-                           dedupe = ?, nudge_after_min = ?, updated_at = ?, status = 'ok' where id = ?`,
-      ...columns(c),
+                           dedupe = ?, nudge_after_min = ?, category = ?, updated_at = ?, status = 'ok' where id = ?`,
+      ...columns(c, id),
       iso(),
       id,
     );
@@ -162,6 +180,12 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
 
   const setStatus = (id: string, status: WatcherStatus) => run('update watchers set status = ? where id = ?', status, id);
   const setActive = (id: string, active: boolean) => run('update watchers set active = ?, updated_at = ? where id = ?', active ? 1 : 0, iso(), id);
+
+  /** Nur die Kategorie ändern (Liste, „Kategorien vorschlagen"): kein erneutes Anmelden, kein Zurücksetzen des Status */
+  function setCategory(id: string, category: string | null): void {
+    get(id);
+    run('update watchers set category = ?, updated_at = ? where id = ?', mergeCategory(category, categories(id)), iso(), id);
+  }
 
   function markFired(id: string, assignees: string[]): void {
     run('update watchers set last_fired_at = ?, last_assignees = ? where id = ?', iso(), JSON.stringify(assignees), id);
@@ -289,6 +313,8 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     remove,
     setStatus,
     setActive,
+    setCategory,
+    categories,
     markFired,
     getState,
     patchState,

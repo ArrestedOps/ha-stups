@@ -151,13 +151,19 @@ describe('Zusammenfassung', () => {
 
 describe('Feinschliff-Chips', () => {
   it('Vorgaben des Entwurfs: Sperrzeit 10, keine zweite Karte, kein Stupsen, erst beim 1. Mal', () => {
-    expect(fineChips(filled()).map((c) => c.label)).toEqual(['Name: Waschmaschine fertig', 'Sperrzeit 10 Min.', 'Keine zweite Karte', 'Nicht stupsen', 'Erst beim 1. Mal']);
+    expect(fineChips(filled()).map((c) => c.label)).toEqual(['Name: Waschmaschine fertig', 'Kategorie: keine', 'Sperrzeit 10 Min.', 'Keine zweite Karte', 'Nicht stupsen', 'Erst beim 1. Mal']);
+  });
+
+  it('der Chip „Kategorie" nennt die gewählte Kategorie', () => {
+    const chips = fineChips(filled({ category: 'Batterien' }));
+    expect(chips.find((c) => c.key === 'category')!.label).toBe('Kategorie: Batterien');
+    expect(chips.map((c) => c.key).slice(0, 2)).toEqual(['name', 'category']);
   });
 
   it('gesetzte Werte', () => {
     const chips = fineChips(filled({ cooldownMin: '15', dedupe: false, nudgeAfterMin: '60', count: '3' }));
-    expect(chips.map((c) => c.label)).toEqual(['Name: Waschmaschine fertig', 'Sperrzeit 15 Min.', 'Zweite Karte erlaubt', 'Stupsen nach 60 Min.', 'Erst beim 3. Mal']);
-    expect(chips.map((c) => c.key)).toEqual(['name', 'cooldown', 'dedupe', 'nudge', 'count']);
+    expect(chips.map((c) => c.label)).toEqual(['Name: Waschmaschine fertig', 'Kategorie: keine', 'Sperrzeit 15 Min.', 'Zweite Karte erlaubt', 'Stupsen nach 60 Min.', 'Erst beim 3. Mal']);
+    expect(chips.map((c) => c.key)).toEqual(['name', 'category', 'cooldown', 'dedupe', 'nudge', 'count']);
   });
 
   it('Kalender und Vorhersage haben keinen Zähler', () => {

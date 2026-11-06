@@ -40,6 +40,8 @@ export class WatcherEditor {
   searchDomain = $state('');
   /** Nur Administratoren und Personen mit dem Recht „watchers“ ändern Wächter; alle anderen sehen Einstellungen und Verlauf lesend */
   readonly readOnly = $derived(!can('watchers'));
+  /** Die Kategorien, die es schon gibt (für die Auswahl im Editor) */
+  readonly categoryNames = $derived((ui.watchers?.items ?? []).flatMap((w) => (w.category ? [w.category] : [])));
   private historySeq = 0;
   private orderSeq = 0;
   private viewSeq = 0;

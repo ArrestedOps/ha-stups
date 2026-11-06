@@ -3,7 +3,7 @@ import type { FeedbackContext, FeedbackItem, FeedbackKind, FeedbackStatus } from
 import type { Recurrence } from './recurrence';
 import type { Permission } from './permissions';
 import type { EntityHistory } from './history';
-import type { DryRunResult, HaEntity, OrderView, SavedWatcher, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from './watcher-types';
+import type { AssignMode, DryRunResult, HaEntity, OrderView, SavedWatcher, WatchTrigger, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from './watcher-types';
 
 export type Priority = 'low' | 'medium' | 'high';
 /** Aufwand einer Karte für die Fairness-Ansicht; leer zählt wie mittel */
@@ -373,6 +373,18 @@ export interface HomeItem {
   entityMissing: boolean;
   openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; createdAt: string } | null;
   nextEvent: { title: string; at: string } | null;
+  /** Eingeschaltet (aus: löst nichts aus, bleibt aber in der Liste) */
+  active: boolean;
+  /** Kategorie zum Gruppieren (null = „Ohne Kategorie") */
+  category: string | null;
+  /** Die Bedingung (für den kurzen Satz der Tabelle) und die Einheit der Entität */
+  trigger: WatchTrigger;
+  entityUnit: string | null;
+  /** Zuletzt ausgelöst (null: noch nie) und für wen */
+  lastFiredAt: string | null;
+  lastAssigneeIds: string[];
+  /** An wen die Karte geht */
+  assign: { mode: AssignMode; personIds: string[] };
 }
 
 export interface HomeState {
@@ -751,6 +763,7 @@ export const api = {
   testWatcher: (id: string) => post<WatcherItem>(`watchers/${id}/test`),
   /** Sammelknopf: Wächter mit Vorlagennamen bekommen das Gerät im Namen (nur Administratoren) */
   renameWatchersWithDevice: () => post<{ renamed: number }>('watchers/rename-with-device'),
+  suggestWatcherCategories: () => post<{ updated: number }>('watchers/suggest-categories'),
   resetWatcherCounter: (id: string) => post<WatcherItem>(`watchers/${id}/reset-counter`),
   watcherRuns: (id: string) => get<WatcherRun[]>(`watchers/${id}/runs`),
   watcherTemplates: () => get<WatcherTemplate[]>('watchers/templates'),

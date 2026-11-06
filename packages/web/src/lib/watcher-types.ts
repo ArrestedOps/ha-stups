@@ -68,6 +68,8 @@ export interface WatcherInput {
   cooldownMin: number;
   dedupe: boolean;
   nudgeAfterMin: number | null;
+  /** Kategorie zum Gruppieren (null = „Ohne Kategorie"); gleiche Namen legt der Server zusammen */
+  category: string | null;
 }
 
 export interface WatcherItem extends WatcherInput {
@@ -94,6 +96,8 @@ export interface WatcherItem extends WatcherInput {
   /** So hieße der Wächter mit Gerät (null: nichts zu ergänzen oder Entität unbekannt) */
   suggestedName: string | null;
   suggestedTitle: string | null;
+  /** Die Kategorie, die Stups vorschlüge (für Wächter ohne) */
+  suggestedCategory: string;
   openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; waiting: boolean } | null;
 }
 
@@ -124,6 +128,8 @@ export interface HaEntity {
   state: string;
   unit: string | null;
   domain: string;
+  /** Vorschlag für die Kategorie des neuen Wächters (aus Domäne, Geräteklasse und Name) */
+  category?: string;
 }
 
 // ---------- Vorlagen, Gefunden, Probelauf (vom Server) ----------
@@ -152,6 +158,8 @@ export interface WatcherTemplate {
   /** Kann der Sensor belegen, dass die Aufgabe erledigt ist? */
   canSelfComplete: boolean;
   whyNoSelfComplete: string | null;
+  /** Kategorie, die der Assistent vorbelegt (Vorlagen ohne Wächter haben keine) */
+  category?: string | null;
 }
 
 export interface WatcherSuggestion {

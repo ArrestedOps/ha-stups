@@ -1,8 +1,9 @@
-import { conditionMet, type WatchTrigger } from './watcher-types.js';
+import { conditionMet, type AssignMode, type WatchTrigger } from './watcher-types.js';
 import type { Watcher } from './watcher-data.js';
 
 /**
- * Der Reiter „Zuhause" zeigt den Zustand der Wächter, nicht ihre Regeln. Jeder aktive Wächter ist in genau einer Phase:
+ * Der Reiter „Wächter" zeigt den Zustand der Wächter. Jeder Wächter ist in genau einer Phase (ein pausierter ist ruhig, es sei denn, seine
+ * Karte ist noch offen):
  * - waiting: seine Karte ist offen, jemand muss etwas tun
  * - running: der Vorgang, auf dessen Ende er wartet, ist gerade im Gang (die Waschmaschine läuft)
  * - soon: bald dran (Zähler steht auf „2 von 3", der nächste Termin steht an)
@@ -112,6 +113,19 @@ export interface HomeItem {
   entityMissing: boolean;
   openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; createdAt: string } | null;
   nextEvent: { title: string; at: string } | null;
+  /** Der Wächter ist eingeschaltet (aus: er löst nichts aus, bleibt aber in der Liste) */
+  active: boolean;
+  /** Kategorie zum Gruppieren (null = „Ohne Kategorie") */
+  category: string | null;
+  /** Die Bedingung: daraus baut die Oberfläche den kurzen Satz der Tabelle */
+  trigger: WatchTrigger;
+  /** Einheit der beobachteten Entität („W", „%"), null ohne */
+  entityUnit: string | null;
+  /** Wann der Wächter zuletzt eine Karte angelegt hat (null: noch nie) und für wen */
+  lastFiredAt: string | null;
+  lastAssigneeIds: string[];
+  /** An wen die Karte geht: Art und feste Personen bzw. Kreis */
+  assign: { mode: AssignMode; personIds: string[] };
 }
 
 export interface HomeState {

@@ -43,6 +43,9 @@ export interface WatcherForm {
   cooldownMin: string;
   dedupe: boolean;
   nudgeAfterMin: string;
+  /** Kategorie zum Gruppieren ('' = keine) und woher sie kommt: Vorlage und Entität schlagen sie vor, was der Mensch wählt, bleibt */
+  category: string;
+  categorySource: '' | 'template' | 'entity' | 'user';
   /** Kalender: so viele Stunden vor dem Termin entsteht die Karte */
   leadHours: string;
   /** Vorhersage: Regen in den nächsten so vielen Stunden */
@@ -91,6 +94,8 @@ export const emptyForm = (boardId = '', columnId = ''): WatcherForm => ({
   cooldownMin: '',
   dedupe: true,
   nudgeAfterMin: '',
+  category: '',
+  categorySource: '',
   leadHours: '12',
   forecastHours: '3',
   baseName: '',
@@ -123,6 +128,7 @@ export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { enti
     count: 'count' in d.trigger && d.trigger.count && d.trigger.count > 1 ? String(d.trigger.count) : '',
     forMin: 'forMin' in d.trigger ? String(d.trigger.forMin) : '',
     doneOn: false,
+    ...(tpl.category && f.categorySource !== 'user' ? { category: tpl.category, categorySource: 'template' as const } : {}),
   };
   if (d.trigger.kind === 'below' || d.trigger.kind === 'above') out.value = String(d.trigger.value);
   if (d.trigger.kind === 'state') out.to = d.trigger.to;
@@ -150,6 +156,11 @@ export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { enti
  */
 export function applyEntity(f: WatcherForm, e: HaEntity): WatcherForm {
   const out: WatcherForm = { ...f, entityId: e.entityId, entityName: e.name, entityUnit: e.unit ?? '', label: e.label ?? '' };
+  // Die Kategorie schlägt die Entität nur vor, solange weder die Vorlage noch der Mensch eine gewählt hat
+  if (e.category && (f.categorySource === '' || f.categorySource === 'entity')) {
+    out.category = e.category;
+    out.categorySource = 'entity';
+  }
   if (f.baseName && f.name === withDevice(f.baseName, f.label)) out.name = withDevice(f.baseName, out.label);
   else if (!f.name.trim()) out.name = e.name;
   if (f.baseTitle && f.title === withDevice(f.baseTitle, f.label, 200)) out.title = withDevice(f.baseTitle, out.label, 200);
@@ -157,6 +168,9 @@ export function applyEntity(f: WatcherForm, e: HaEntity): WatcherForm {
   if (e.unit && f.kind === 'state') out.kind = 'below';
   return out;
 }
+
+/** Der Mensch wählt die Kategorie: Vorschläge von Vorlage und Entität überschreiben sie danach nicht mehr */
+export const withCategory = (f: WatcherForm, category: string): WatcherForm => ({ ...f, category, categorySource: 'user' });
 
 // ---------- Gerätenamen ----------
 
@@ -280,6 +294,7 @@ export function toInput(f: WatcherForm): WatcherInput {
     cooldownMin: intOr(f.cooldownMin, 10),
     dedupe: f.dedupe,
     nudgeAfterMin: num(f.nudgeAfterMin) === null ? null : intOr(f.nudgeAfterMin, 60),
+    category: f.category.trim() || null,
   };
 }
 
@@ -326,6 +341,9 @@ export function fromWatcher(w: WatcherItem, entities: Map<string, HaEntity> = ne
     cooldownMin: String(w.cooldownMin),
     dedupe: w.dedupe,
     nudgeAfterMin: w.nudgeAfterMin === null ? '' : String(w.nudgeAfterMin),
+    // beim Bearbeiten gilt, was gespeichert ist: kein Vorschlag überschreibt es
+    category: w.category ?? '',
+    categorySource: 'user',
     leadHours: w.trigger.leadMin !== undefined ? String(Math.round(w.trigger.leadMin / 60)) : '12',
     forecastHours: w.trigger.forecast ? String(w.trigger.forecast.hours) : '3',
     baseName: '',

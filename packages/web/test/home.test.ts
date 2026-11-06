@@ -16,6 +16,13 @@ const item = (over: Partial<HomeItem>): HomeItem => ({
   entityMissing: false,
   openCard: null,
   nextEvent: null,
+  active: true,
+  category: null,
+  trigger: { entityId: 'sensor.x', kind: 'below', to: null, value: 20, forMin: 10, count: 1 },
+  entityUnit: null,
+  lastFiredAt: null,
+  lastAssigneeIds: [],
+  assign: { mode: 'rotation_present', personIds: [] },
   ...over,
 });
 

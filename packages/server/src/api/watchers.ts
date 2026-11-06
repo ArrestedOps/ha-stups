@@ -4,6 +4,7 @@ import { type HaState } from '../ha.js';
 import { DRY_RUN_DAYS, dryRun } from '../dry-run.js';
 import { clampHours, historyOf, unavailableHistory } from '../entity-history.js';
 import { deviceLabel } from '../device-names.js';
+import { categoryOfEntity, categoryOfTemplate, cleanCategory } from '../watcher-categories.js';
 import { hasPermission, requirePermission } from '../permissions.js';
 import { detectSuggestions, suggestionKey, watcherTemplates } from '../watcher-templates.js';
 import { MODES, parseTrigger, parseWatcher, type AssignRule, type WatchTrigger, type WatcherConfig } from '../watcher-types.js';
@@ -65,7 +66,8 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   // ----- Vorlagen, Gefunden (Erkennung) und Probelauf: Administratoren und Recht „watchers“, nichts davon speichert -----
   app.get('/api/watchers/templates', async (req) => {
     requirePermission(req, 'watchers');
-    return watcherTemplates();
+    // dazu die Kategorie, die der Assistent vorbelegt (Vorlagen ohne Wächter haben keine)
+    return watcherTemplates().map((tpl) => ({ ...tpl, category: categoryOfTemplate(tpl.id) }));
   });
   /** Was in Home Assistant zu einer Vorlage passt, ohne Entitäten, die schon ein Wächter beobachtet */
   app.get('/api/watchers/suggestions', async (req) => {
@@ -205,6 +207,21 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     }
     return { renamed };
   });
+  /**
+   * Sammelknopf: Wächter ohne Kategorie bekommen den Vorschlag (aus Entität, Geräteklasse und Name, siehe watcher-categories.ts).
+   * Vorhandene Kategorien bleiben immer. Antwort: bei wie vielen Wächtern eine Kategorie gesetzt wurde. Die Oberfläche fragt vorher nach.
+   */
+  app.post('/api/watchers/suggest-categories', async (req) => {
+    requirePermission(req, 'watchers');
+    const { engine, data } = watcherEngine();
+    let updated = 0;
+    for (const v of engine.view()) {
+      if (v.category) continue;
+      data.setCategory(v.id, v.suggestedCategory);
+      updated += 1;
+    }
+    return { updated };
+  });
   app.post('/api/watchers', async (req, reply) => {
     requirePermission(req, 'watchers');
     const { engine, data } = watcherEngine();
@@ -220,6 +237,11 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     const { engine, data } = watcherEngine();
     const current = data.get(req.params.id);
     const b = body(req);
+    if (Object.keys(b).length > 0 && Object.keys(b).every((k) => k === 'category')) {
+      // nur die Kategorie: nichts wird neu angemeldet, kein Status zurückgesetzt
+      data.setCategory(current.id, cleanCategory(b.category));
+      return watcherView(current.id);
+    }
     if (Object.keys(b).every((k) => k === 'active')) {
       // nur pausieren oder wieder einschalten
       data.setActive(current.id, b.active === true);
@@ -304,6 +326,13 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
         state: s.state,
         unit: typeof s.attributes?.unit_of_measurement === 'string' ? s.attributes.unit_of_measurement : null,
         domain: s.entity_id.split('.')[0]!,
+        /** Vorschlag für die Kategorie des neuen Wächters */
+        category: categoryOfEntity({
+          entityId: s.entity_id,
+          deviceClass: typeof s.attributes?.device_class === 'string' ? s.attributes.device_class : undefined,
+          unit: typeof s.attributes?.unit_of_measurement === 'string' ? s.attributes.unit_of_measurement : undefined,
+          name: name(s),
+        }),
       }));
   });
 }

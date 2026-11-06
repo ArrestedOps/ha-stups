@@ -178,10 +178,25 @@ describe('homeState', () => {
     expect(only()).toMatchObject({ phase: 'quiet', entityMissing: true });
   });
 
-  it('pausierte Wächter fehlen in der Liste', async () => {
+  it('pausierte Wächter bleiben in der Liste: ruhig, „aus", ohne Lauf-Erkennung', async () => {
     const w = await create();
     data.setActive(w.id, false);
-    expect(engine.homeState().items).toEqual([]);
+    expect(engine.homeState().items).toHaveLength(1);
+    expect(only()).toMatchObject({ watcherId: w.id, active: false, phase: 'quiet' });
+  });
+
+  it('ein pausierter Wächter gilt nicht als „läuft gerade", auch wenn die Leistung über der Schwelle liegt', async () => {
+    const w = await create();
+    data.setActive(w.id, false);
+    ha.set(ENTITY, '120', undefined, POWER);
+    await engine.snapshot();
+    ha.set(ENTITY, '120', undefined, POWER);
+    expect(only()).toMatchObject({ active: false, phase: 'quiet' });
+  });
+
+  it('ein aktiver Wächter ist active: true', async () => {
+    await create();
+    expect(only().active).toBe(true);
   });
 
   it('Verbindung: ohne Angabe der Verbindung gilt Home Assistant als erreichbar', async () => {
@@ -193,5 +208,48 @@ describe('homeState', () => {
     const lost = '2026-11-04T09:30:00.000Z';
     const e = createWatchers({ store, data, ha: Object.assign(ha, { connection: () => ({ connected: false, lostSince: lost }) }), now: () => new Date(t), timeZone: () => 'Europe/Berlin' });
     expect(e.homeState()).toMatchObject({ available: false, lostSince: lost });
+  });
+});
+
+describe('homeState: alles für die Wächter-Ansicht', () => {
+  it('Kategorie, Bedingung, Einheit, letzte Auslösung und Zuständige', async () => {
+    const w = await create({ category: 'Haushaltsgeräte' });
+    ha.set(ENTITY, '120', undefined, POWER);
+    await engine.snapshot();
+    const before = only();
+    expect(before).toMatchObject({
+      category: 'Haushaltsgeräte',
+      entityUnit: 'W',
+      lastFiredAt: null,
+      trigger: { kind: 'below', value: 5, forMin: 0, count: 1, to: null },
+      assign: { mode: 'fixed', personIds: [anna] },
+      lastAssigneeIds: [],
+    });
+    expect(before.trigger.entityId).toBe(ENTITY);
+    data.markFired(w.id, [anna]);
+    expect(only()).toMatchObject({ lastFiredAt: new Date(t).toISOString(), lastAssigneeIds: [anna] });
+  });
+
+  it('ohne Kategorie ist category null', async () => {
+    await create();
+    expect(only().category).toBeNull();
+  });
+});
+
+describe('view: Kategorie und Vorschlag', () => {
+  it('liefert category und active, dazu den Vorschlag aus der Geräteklasse', async () => {
+    const w = await create({ name: 'Irgendwas', trigger: { entityId: 'sensor.tuer_batterie', kind: 'below', value: 20, forMin: 0 } });
+    ha.set('sensor.tuer_batterie', '50', undefined, { device_class: 'battery', unit_of_measurement: '%', friendly_name: 'Tür Batterie' });
+    await engine.snapshot();
+    const v = engine.view().find((x) => x.id === w.id)!;
+    expect(v).toMatchObject({ active: true, category: null, suggestedCategory: 'Batterien' });
+    data.setCategory(w.id, 'Meine');
+    expect(engine.view().find((x) => x.id === w.id)).toMatchObject({ category: 'Meine' });
+  });
+
+  it('der Vorschlag gilt auch bei unbekannter Entität (aus Name und Domäne)', async () => {
+    ha.states = [];
+    await create({ name: 'Waschmaschine fertig' });
+    expect(engine.view()[0]!.suggestedCategory).toBe('Haushaltsgeräte');
   });
 });

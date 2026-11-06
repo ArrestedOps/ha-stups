@@ -546,4 +546,13 @@ export const migrations: Migration[] = [
       );
     `,
   },
+  {
+    version: 26,
+    // Kategorie am Wächter: ein frei wählbarer Text (null = „Ohne Kategorie"), mit dem die Oberfläche die Wächter gruppiert. Nur eine neue
+    // Spalte, nichts Vorhandenes wird angefasst; bestehende Wächter bleiben ohne Kategorie, bis ein Mensch eine wählt oder „Kategorien
+    // vorschlagen" drückt. Gleiche Namen (ohne Beachtung der Groß-/Kleinschreibung) legt der Server beim Speichern zusammen.
+    sql: `
+      alter table watchers add column category text;
+    `,
+  },
 ];

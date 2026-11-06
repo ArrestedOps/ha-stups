@@ -815,6 +815,32 @@ export function askRenameWatchers(n: number): void {
   };
 }
 
+/**
+ * Fragt vor dem Sammel-Vorschlag der Kategorien nach („Kategorien vorschlagen"): Wächter ohne Kategorie bekommen den Vorschlag von Stups,
+ * vorhandene Kategorien bleiben immer. Das Ergebnis steht als Zahl da.
+ */
+export function askSuggestWatcherCategories(n: number): void {
+  ui.confirm = {
+    title: t('Kategorien vorschlagen?'),
+    text: tn(
+      '{n} Wächter hat noch keine Kategorie. Er bekommt den Vorschlag von Stups, zum Beispiel „Batterien“. Vorhandene Kategorien bleiben.',
+      '{n} Wächter haben noch keine Kategorie. Sie bekommen den Vorschlag von Stups, zum Beispiel „Batterien“. Vorhandene Kategorien bleiben.',
+      n,
+    ),
+    label: t('Vorschlagen'),
+    run: async () => {
+      try {
+        const r = await api.suggestWatcherCategories();
+        ui.watchers = await api.watchers().catch(() => ui.watchers);
+        ui.rev += 1;
+        toast(tn('{n} Kategorie gesetzt', '{n} Kategorien gesetzt', r.updated));
+      } catch (e) {
+        toast(e instanceof Error ? e.message : t('Kategorien vorschlagen fehlgeschlagen'), { tone: 'error' });
+      }
+    },
+  };
+}
+
 /** Fragt vor dem Löschen nach; gelöscht wird erst nach „Löschen" */
 export function removeCard(card: Card): void {
   ui.confirm = {

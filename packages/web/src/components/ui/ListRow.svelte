@@ -26,6 +26,7 @@
     dashed = false,
     wrap = false,
     rightFull = false,
+    dim = false,
     expanded,
     pressed,
     inset = false,
@@ -53,6 +54,8 @@
     wrap?: boolean;
     /** der rechte Bereich ist so hoch wie die Zeile (ein Wert oben rechts, der Pfeil in der Mitte) */
     rightFull?: boolean;
+    /** gedämpft: ein ausgeschalteter Wächter (Kachel und Text blasser, der Rest der Zeile nicht) */
+    dim?: boolean;
     /** der Antippbereich klappt etwas auf (aria-expanded) */
     expanded?: boolean;
     /** der Antippbereich ist eine Auswahl (aria-pressed): die gewählte Zeile */
@@ -91,8 +94,8 @@
   {/if}
 
   {#snippet body()}
-    {#if tile}{@render tile()}{/if}
-    <span class="flex min-w-0 flex-1 flex-col gap-1">
+    {#if tile}{#if dim}<span class="flex shrink-0 opacity-60">{@render tile()}</span>{:else}{@render tile()}{/if}{/if}
+    <span class="flex min-w-0 flex-1 flex-col gap-1 {dim ? 'opacity-70' : ''}">
       <span class="{wrap ? 'wrap-anywhere' : 'truncate'} text-[15px] font-bold tracking-tight {variant === 'danger' ? 'text-danger' : ''} {strike ? 'text-hint line-through' : ''}">{title}</span>
       {#if meta}<span class="flex items-center gap-1.5 text-[13px] text-fg2 {wrap ? 'flex-wrap' : 'truncate'}">{@render meta()}</span>{/if}
     </span>

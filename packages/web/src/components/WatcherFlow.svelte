@@ -5,7 +5,7 @@
   import { ui } from '../lib/store.svelte';
     import type { WatcherEditor } from '../lib/watcher-editor.svelte';
   import { dueText, fineChips, modeSummary, nameSymbol, whenParts, type FineKey, type Part } from '../lib/watcher-flow';
-  import { noteText, RUN_TEXT, withSuggestedNames } from '../lib/watchers';
+  import { noteText, RUN_TEXT, withCategory, withSuggestedNames } from '../lib/watchers';
   import AssignOrder from './AssignOrder.svelte';
   import CardTile from './CardTile.svelte';
   import DoneEditor from './DoneEditor.svelte';
@@ -17,6 +17,7 @@
   import NumberField from './NumberField.svelte';
   import Sheet from './Sheet.svelte';
   import SymbolIcon from './SymbolIcon.svelte';
+  import WatcherCategoryField from './WatcherCategoryField.svelte';
   import WatcherSummary from './WatcherSummary.svelte';
   import WatcherThenEditor from './WatcherThenEditor.svelte';
   import WatcherWhenEditor from './WatcherWhenEditor.svelte';
@@ -217,6 +218,8 @@
         <div class="flex items-center justify-between gap-3 rounded-row border border-line bg-surface px-3.5 py-3" data-testid="fine-panel">
           {#if fine === 'name'}
             <input class="min-h-11 w-full bg-transparent text-[16px] font-semibold placeholder:text-dim" bind:value={f.name} maxlength="80" placeholder={t('z. B. Waschmaschine fertig')} aria-label={t('Name des Wächters')} />
+          {:else if fine === 'category'}
+            <span class="w-full min-w-0"><WatcherCategoryField value={f.category} options={ed.categoryNames} onchange={(v) => (ed.form = withCategory(ed.form, v))} /></span>
           {:else if fine === 'cooldown'}
             <span class="text-[15px] font-bold">{t('Sperrzeit')}<span class="block text-[13px] font-normal text-fg2">{t('gegen flatternde Sensoren')}</span></span>
             <NumberField bind:value={f.cooldownMin} label={t('Sperrzeit in Minuten')} unit={t('Min.')} placeholder="10" />

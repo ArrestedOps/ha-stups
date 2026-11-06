@@ -174,7 +174,7 @@ export const summaryText = (f: WatcherForm, personName: (id: string) => string):
 
 // ---------- Feinschliff ----------
 
-export type FineKey = 'name' | 'cooldown' | 'dedupe' | 'nudge' | 'count';
+export type FineKey = 'name' | 'category' | 'cooldown' | 'dedupe' | 'nudge' | 'count';
 
 /** Die Chips unter „Feinschliff" im Ablauf: Beschriftung je Einstellung mit dem aktuellen Wert */
 export function fineChips(f: WatcherForm): { key: FineKey; label: string }[] {
@@ -183,6 +183,7 @@ export function fineChips(f: WatcherForm): { key: FineKey; label: string }[] {
   const count = Math.max(1, intOr(f.count, 1));
   const chips: { key: FineKey; label: string }[] = [
     { key: 'name', label: t('Name: {name}', { name: f.name.trim() || '…' }) },
+    { key: 'category', label: t('Kategorie: {name}', { name: f.category.trim() || t('keine') }) },
     { key: 'cooldown', label: t('Sperrzeit {n} Min.', { n: cooldown }) },
     { key: 'dedupe', label: f.dedupe ? t('Keine zweite Karte') : t('Zweite Karte erlaubt') },
     { key: 'nudge', label: nudge === null ? t('Nicht stupsen') : t('Stupsen nach {n} Min.', { n: nudge }) },

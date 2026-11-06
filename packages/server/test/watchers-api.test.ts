@@ -247,7 +247,7 @@ describe('Entitäten suchen', () => {
   it('nur Administratoren; Suche nach Name oder Kennung, mit Zustand und Einheit', async () => {
     expect((await call(anna, 'GET', '/api/ha/entities?q=wasch')).status).toBe(403);
     const res = await call(chef, 'GET', '/api/ha/entities?q=waschmaschine');
-    expect(res.body).toEqual([{ entityId: ENTITY, name: 'Waschmaschine Leistung', label: 'Waschmaschine', state: '120', unit: 'W', domain: 'sensor' }]);
+    expect(res.body).toEqual([{ entityId: ENTITY, name: 'Waschmaschine Leistung', label: 'Waschmaschine', state: '120', unit: 'W', domain: 'sensor', category: 'Haushaltsgeräte' }]);
     expect((await call(chef, 'GET', '/api/ha/entities?q=wasch')).body.map((e: any) => e.entityId)).toEqual([ENTITY, 'binary_sensor.tuer']); // Treffer im Namen zuerst
     expect((await call(chef, 'GET', '/api/ha/entities?q=tür')).body.map((e: any) => e.entityId)).toEqual(['binary_sensor.tuer']);
     // der kurze Gerätename für Name und Kartentitel von Wächtern

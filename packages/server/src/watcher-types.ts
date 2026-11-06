@@ -1,6 +1,7 @@
 import { ValidationError } from './errors.js';
 import { t } from './i18n/index.js';
 import { parseIcon, parseIconColor } from './store/validate.js';
+import { cleanCategory } from './watcher-categories.js';
 
 /** Bedingungen auf dem Zustand einer Entität (live über subscribe_trigger beobachtet) */
 export type ConditionKind = 'state' | 'above' | 'below';
@@ -85,6 +86,8 @@ export interface WatcherConfig {
   dedupe: boolean;
   /** nach so vielen Minuten stupsen, wenn noch offen (null = nie) */
   nudgeAfterMin: number | null;
+  /** Kategorie zum Gruppieren in der Liste (frei wählbar, null = „Ohne Kategorie"); gleiche Namen legt die Daten-Schicht zusammen */
+  category: string | null;
 }
 
 export type WatcherStatus = 'ok' | 'entity_missing' | 'target_missing';
@@ -238,6 +241,7 @@ export function parseWatcher(raw: unknown): WatcherConfig {
     cooldownMin: int(o.cooldownMin, t('Die Sperrzeit'), 0, 1440, 10),
     dedupe: o.dedupe === undefined ? true : o.dedupe === true,
     nudgeAfterMin: o.nudgeAfterMin === undefined || o.nudgeAfterMin === null ? null : int(o.nudgeAfterMin, t('Das Stupsen nach'), 5, 1440, 60),
+    category: cleanCategory(o.category),
   };
 }
 

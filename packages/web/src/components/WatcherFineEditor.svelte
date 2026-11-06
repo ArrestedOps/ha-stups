@@ -2,9 +2,11 @@
   import { t } from '../lib/i18n/index.svelte';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
   import { doneText } from '../lib/watcher-flow';
+  import { withCategory } from '../lib/watchers';
   import DoneEditor from './DoneEditor.svelte';
   import Icon from './Icon.svelte';
   import NumberField from './NumberField.svelte';
+  import WatcherCategoryField from './WatcherCategoryField.svelte';
   import ListRow from './ui/ListRow.svelte';
   import Toggle from './ui/Toggle.svelte';
   import Tile from './ui/Tile.svelte';
@@ -54,5 +56,10 @@
       <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="watcher-name">{t('Name des Wächters')}</label>
       <input id="watcher-name" class="min-h-6 w-full bg-transparent text-[16px] font-semibold placeholder:text-dim" bind:value={f.name} maxlength="80" placeholder={t('z. B. Waschmaschine fertig')} />
     </span>
+  </div>
+  <div class="flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3">
+    <span class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Kategorie')}</span>
+    <WatcherCategoryField value={f.category} options={ed.categoryNames} onchange={(v) => (ed.form = withCategory(ed.form, v))} />
+    <p class="text-[12.5px] leading-[1.45] text-hint">{t('Danach sortiert die Liste der Wächter. Stups schlägt eine vor, du kannst sie ändern oder eine eigene anlegen.')}</p>
   </div>
 </div>

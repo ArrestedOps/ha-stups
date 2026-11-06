@@ -1,21 +1,24 @@
 <script lang="ts">
   import { clock } from '../lib/clock.svelte';
   import { onMount } from 'svelte';
-  import { api, type HomeState, type WatcherActivity } from '../lib/api';
+  import { api, ApiError, type HomeItem, type HomeState, type WatcherActivity } from '../lib/api';
   import { formatDue } from '../lib/datetime';
-  import { durationText, homeSections, openSinceText } from '../lib/home';
+  import { openSinceText } from '../lib/home';
   import { t, tn } from '../lib/i18n/index.svelte';
   import { canNudge } from '../lib/nudge';
   import { matchesQuery } from '../lib/search';
+  import { COL_MID, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
   import { noteText, renameCandidates, RUN_TEXT } from '../lib/watchers';
-  import { askRenameWatchers, can, completeCard, openCardAnywhere, openSettings, openSheet, personById, ui } from '../lib/store.svelte';
+  import { askRenameWatchers, askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openSettings, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import robot from '../assets/waechter-robot.webp';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
+  import WatcherRow from './WatcherRow.svelte';
+  import WatcherTableRow from './WatcherTableRow.svelte';
   import Banner from './ui/Banner.svelte';
   import ListRow from './ui/ListRow.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
-  import Tile, { type TileColor } from './ui/Tile.svelte';
+  import Tile from './ui/Tile.svelte';
 
   let data = $state<HomeState | null>(null);
   /** Wie viele weitere Geräte Stups in Home Assistant gefunden hat (nur Administratoren) */
@@ -39,7 +42,7 @@
       if (mine === request) failed = true;
     }
   }
-  // Neu laden, wenn sich etwas geändert hat (ui.rev, auch durch Live-Sync) und alle 30 Sekunden: ein Vorgang, der anläuft, ändert keine Karte
+  // Neu laden, wenn sich etwas geändert hat (ui.rev, auch durch Live-Sync) und alle 10 Sekunden: ein Vorgang, der anläuft, ändert keine Karte
   $effect(() => {
     void ui.rev;
     void load();
@@ -51,28 +54,76 @@
 
   const nowMs = $derived((void data, void clock.tick, Date.now()));
   const allItems = $derived(data?.items ?? []);
-  /** Desktop: das Suchfeld oben filtert nach Name, Gerät, offener Karte und der Karte, die danach kommt */
-  const query = $derived(ui.desktop ? ui.query : '');
-  const items = $derived(query ? allItems.filter((i) => matchesQuery(query, i.name, i.subject, i.openCard?.title, i.nextCard)) : allItems);
-  const sections = $derived(homeSections(items));
+  /** Desktop: das Suchfeld oben filtert nach Name, Gerät, Kategorie, offener Karte und der Karte, die danach kommt */
+  const query = $derived(ui.desktop ? ui.query.trim() : '');
+  const items = $derived(query ? allItems.filter((i) => matchesQuery(query, i.name, i.subject, i.entity, i.category, i.openCard?.title, i.nextCard)) : allItems);
+  const layout = $derived(watcherLayout(items));
   const names = (ids: string[]) => ids.map((id) => personById(id)?.displayName ?? '?').join(', ');
   /** Ein Wächter öffnet sich: Administratoren bearbeiten ihn dort, alle anderen sehen Einstellungen und Verlauf lesend */
   const openWatcher = (id: string) => openSheet({ type: 'watcher', id });
-  const PHASE_TILE: Record<string, TileColor> = { waiting: 'orange', running: 'green', soon: 'blue', quiet: 'teal' };
   let closed = $state<string[]>([]);
   const toggle = (key: string) => (closed = closed.includes(key) ? closed.filter((k) => k !== key) : [...closed, key]);
-  // Ruhig: eine Zusammenfassung („5 Wächter ohne offene Aktion"), die sich auf die einzelnen Wächter aufklappen lässt; fehlt eine Entität, steht dieser Wächter immer einzeln da
-  let quietOpen = $state(false);
-  const quietFine = $derived(sections.quiet.filter((i) => !i.entityMissing));
+
+  // Kategorien: auf- und zuklappbar, der Zustand wird je Gerät gemerkt (Standard: aufgeklappt); bei einer Suche sind Treffer-Gruppen offen
+  let memo = $state(loadCollapse());
+  const open = (key: string) => groupOpen(key, memo, query !== '');
+  function toggleCategory(key: string) {
+    memo = toggleGroup(memo, key, open(key));
+    saveCollapse(memo);
+  }
+
   /** Wie viele Wächter noch genau wie ihre Vorlage heißen und das Gerät nicht nennen (Sammelknopf, nur Administratoren) */
   const renamable = $derived(can('watchers') ? renameCandidates(ui.watchers?.items ?? []).length : 0);
-  const quietMissing = $derived(sections.quiet.filter((i) => i.entityMissing));
+  /** Wie viele Wächter noch keine Kategorie haben (Sammelknopf „Kategorien vorschlagen", nur mit dem Recht „watchers") */
+  const uncategorized = $derived(can('watchers') ? uncategorizedCount(allItems) : 0);
+
+  // Schalter „aktiv/aus": sofort umschalten, der Server entscheidet (ohne Recht 403: dann springt er zurück und eine Meldung sagt warum)
+  const canToggle = $derived(can('watchers'));
+  let busy = $state<string[]>([]);
+  const patchItem = (id: string, patch: Partial<HomeItem>) => {
+    if (data) data = { ...data, items: data.items.map((i) => (i.watcherId === id ? { ...i, ...patch } : i)) };
+  };
+  async function setActive(i: HomeItem, on: boolean) {
+    if (busy.includes(i.watcherId)) return;
+    busy = [...busy, i.watcherId];
+    patchItem(i.watcherId, { active: on });
+    try {
+      await api.updateWatcher(i.watcherId, { active: on });
+      ui.watchers = await api.watchers().catch(() => ui.watchers);
+      ui.rev += 1;
+    } catch (e) {
+      patchItem(i.watcherId, { active: !on });
+      toast(e instanceof ApiError ? e.message : t('Änderung fehlgeschlagen'), { tone: 'error' });
+    } finally {
+      busy = busy.filter((x) => x !== i.watcherId);
+    }
+  }
+
+  /** Läuft etwas in den Bereichen unten (Tabellenkopf nur, wenn es Zeilen gibt) */
+  const hasRows = $derived(layout.running.length + layout.soon.length + layout.groups.length > 0);
 </script>
 
 <!-- Das Gerät unter dem Namen (Friendly Name der Entität), eine Zeile, solange der Name es nicht nennt -->
 {#snippet subj(subject: string | null)}
   {#if subject}
     <span class="min-w-0 truncate text-tok" data-testid="watcher-subject">{subject}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span>
+  {/if}
+{/snippet}
+
+<!-- Die Zeilen eines Bereichs: auf dem Desktop eine Tabelle mit Spalten, auf dem Handy kompakte Zeilen untereinander -->
+{#snippet rowList(list: HomeItem[], current: boolean)}
+  {#if ui.desktop}
+    <ul class="mt-2 divide-y divide-line overflow-hidden rounded-row border border-line bg-surface">
+      {#each list as i (i.watcherId)}
+        <WatcherTableRow item={i} {nowMs} {canToggle} busy={busy.includes(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} />
+      {/each}
+    </ul>
+  {:else}
+    <ul class="mt-2 flex flex-col gap-2">
+      {#each list as i (i.watcherId)}
+        <li><WatcherRow item={i} {nowMs} {current} {canToggle} busy={busy.includes(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} /></li>
+      {/each}
+    </ul>
   {/if}
 {/snippet}
 
@@ -127,6 +178,15 @@
         </div>
       {/if}
 
+      {#if uncategorized > 0 && data?.available}
+        <div data-testid="home-categorize">
+          <Banner wrap title={t('Kategorien vorschlagen')} sub={tn('{n} Wächter ohne Kategorie', '{n} Wächter ohne Kategorie', uncategorized)} onclick={() => askSuggestWatcherCategories(uncategorized)}>
+            {#snippet leading()}<span class="text-banner-radio"><Icon name="folder" size={30} stroke={1.9} /></span>{/snippet}
+            {#snippet trailing()}<Icon name="chevron-right" size={20} stroke={2} />{/snippet}
+          </Banner>
+        </div>
+      {/if}
+
       {#if failed && !data}
         <p class="py-10 text-center text-fg2">{t('Die Seite „Wächter“ konnte nicht geladen werden.')}</p>
       {:else if !data}
@@ -157,12 +217,12 @@
         {#if query && items.length === 0}
           <p class="py-10 text-center text-fg2" data-testid="home-no-match">{t('Keine Treffer')}</p>
         {/if}
-        {#if sections.waiting.length > 0}
+        {#if layout.waiting.length > 0}
           <section aria-label={t('Wartet auf jemanden')} data-testid="home-waiting">
-            <SectionHeader title={t('Wartet auf jemanden')} icon="alert" iconTone="red" count={sections.waiting.length} large open={!closed.includes('waiting')} ontoggle={() => toggle('waiting')} />
+            <SectionHeader title={t('Wartet auf jemanden')} icon="alert" iconTone="red" count={layout.waiting.length} large open={!closed.includes('waiting')} ontoggle={() => toggle('waiting')} />
             {#if !closed.includes('waiting')}
               <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
-                {#each sections.waiting as i (i.watcherId)}
+                {#each layout.waiting as i (i.watcherId)}
                   {@const card = i.openCard!}
                   {@const canStupse = canNudge(card, ui.me?.id ?? null)}
                   <li>
@@ -177,7 +237,7 @@
                       }}
                       onclick={() => void openCardAnywhere(card)}
                     >
-                      {#snippet tile()}<Tile color={PHASE_TILE.waiting!}><Icon name="eye" size={24} /></Tile>{/snippet}
+                      {#snippet tile()}<Tile color="orange"><Icon name="eye" size={24} /></Tile>{/snippet}
                       {#snippet meta()}
                         <span class="inline-flex shrink-0 items-center gap-1"><Icon name="user" size={14} stroke={1.9} /><span class="max-w-[7rem] truncate">{card.assigneeIds.length ? names(card.assigneeIds) : t('Noch niemand zuständig')}</span></span>
                         <span class="shrink-0 text-sep" aria-hidden="true">•</span>
@@ -204,110 +264,44 @@
           </section>
         {/if}
 
-        {#if sections.running.length > 0}
-          <section aria-label={t('Läuft gerade')} data-testid="home-running">
-            <SectionHeader title={t('Läuft gerade')} icon="play" iconTone="green" count={sections.running.length} large open={!closed.includes('running')} ontoggle={() => toggle('running')} />
-            {#if !closed.includes('running')}
-              <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
-                {#each sections.running as i (i.watcherId)}
-                  <li>
-                    <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
-                      {#snippet tile()}<Tile color={PHASE_TILE.running!}><Icon name="eye" size={24} /></Tile>{/snippet}
-                      {#snippet meta()}
-                        {@render subj(i.subject)}
-                        {#if i.since}
-                          <span class="inline-flex shrink-0 items-center gap-1"><Icon name="play" size={14} stroke={1.9} />{durationText(i.since, nowMs)}</span>
-                          <span class="shrink-0 text-sep" aria-hidden="true">•</span>
-                        {/if}
-                        <span class="inline-flex min-w-0 items-center gap-1"><Icon name="robot" size={14} stroke={1.9} /><span class="truncate">{t('danach: {title}', { title: i.nextCard })}</span></span>
-                      {/snippet}
-                      {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
-                    </ListRow>
-                  </li>
-                {/each}
-              </ul>
-            {/if}
-          </section>
-        {/if}
+        <!-- Alle übrigen Wächter: Läuft gerade, Kommt bald, dann die Kategorien. Jeder Wächter steht genau einmal da. Die Breite der Liste
+             bestimmt auf dem Desktop die Spalten (Container-Abfrage). -->
+        <div class="@container flex flex-col gap-3.5" data-testid="watcher-list">
+          {#if ui.desktop && hasRows}
+            <div class="sticky top-0 z-10 -mx-1 bg-bg px-1 pt-1" data-testid="watcher-table-head">
+              <div class="grid items-center gap-x-4 rounded-row border border-transparent px-3.5 py-1.5 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase {TABLE_COLS}">
+                <span>{t('Wächter')}</span>
+                <span class={COL_MID}>{t('Bedingung')}</span>
+                <span>{t('Aktuell')}</span>
+                <span>{t('Status')}</span>
+                <span class={COL_MID}>{t('Letzte Auslösung')}</span>
+                <span class={COL_WIDE}>{t('Nächste Karte')}</span>
+                <span class={COL_WIDE}>{t('Zuständig')}</span>
+                <span class="sr-only">{t('Aktiv')}</span>
+              </div>
+            </div>
+          {/if}
 
-        {#if sections.soon.length > 0}
-          <section aria-label={t('Kommt bald')} data-testid="home-soon">
-            <SectionHeader title={t('Kommt bald')} icon="calendar" iconTone="orange" count={sections.soon.length} large open={!closed.includes('soon')} ontoggle={() => toggle('soon')} />
-            {#if !closed.includes('soon')}
-              <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
-                {#each sections.soon as i (i.watcherId)}
-                  <li>
-                    <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
-                      {#snippet tile()}<Tile color={PHASE_TILE.soon!}><Icon name="eye" size={24} /></Tile>{/snippet}
-                      {#snippet meta()}
-                        {@render subj(i.subject)}
-                        {#if i.progress}<span class="inline-flex shrink-0 items-center gap-1"><Icon name="robot" size={14} stroke={1.9} />{t('{n} von {total}', { n: i.progress.n, total: i.progress.of })}</span>{/if}
-                        {#if i.progress && i.nextEvent}<span class="shrink-0 text-sep" aria-hidden="true">•</span>{/if}
-                        {#if i.nextEvent}<span class="inline-flex min-w-0 items-center gap-1"><Icon name="calendar" size={14} stroke={1.9} /><span class="truncate">{i.nextEvent.title} · {formatDue(i.nextEvent.at, nowMs)}</span></span>{/if}
-                      {/snippet}
-                      {#snippet right()}
-                        {#if i.progress}
-                          <!-- Zähler mit drei Balken: gefüllt nach Anteil -->
-                          {@const filled = Math.round((Math.min(i.progress.n, i.progress.of) / Math.max(i.progress.of, 1)) * 3)}
-                          <span class="mr-1 flex items-center gap-1" role="img" aria-label={t('Zähler {n} von {total}', { n: i.progress.n, total: i.progress.of })}>
-                            {#each [0, 1, 2] as k (k)}<i class="h-1.5 w-[22px] rounded-[3px] {k < filled ? 'bg-accent-text' : 'bg-track'}"></i>{/each}
-                          </span>
-                        {:else}
-                          <span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
-                        {/if}
-                      {/snippet}
-                    </ListRow>
-                  </li>
-                {/each}
-              </ul>
+          {#each [{ key: 'running', title: t('Läuft gerade'), icon: 'play', tone: 'green', list: layout.running, label: t('Läuft gerade') }, { key: 'soon', title: t('Kommt bald'), icon: 'calendar', tone: 'orange', list: layout.soon, label: t('Kommt bald') }] as sec (sec.key)}
+            {#if sec.list.length > 0}
+              <section aria-label={sec.label} data-testid="home-{sec.key}">
+                <SectionHeader title={sec.title} icon={sec.icon} iconTone={sec.tone as 'green' | 'orange'} count={sec.list.length} large open={!closed.includes(sec.key)} ontoggle={() => toggle(sec.key)} />
+                {#if !closed.includes(sec.key)}{@render rowList(sec.list, true)}{/if}
+              </section>
             {/if}
-          </section>
-        {/if}
+          {/each}
 
-        {#if sections.quiet.length > 0}
-          <section aria-label={t('Ruhig')} data-testid="home-quiet">
-            <SectionHeader title={t('Ruhig')} icon="done" iconTone="green" count={sections.quiet.length} large open={!closed.includes('quiet')} ontoggle={() => toggle('quiet')} />
-            {#if !closed.includes('quiet')}
-              <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
-                {#each quietMissing as i (i.watcherId)}
-                  <li>
-                    <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
-                      {#snippet tile()}<Tile color={PHASE_TILE.quiet!}><Icon name="eye" size={24} /></Tile>{/snippet}
-                      {#snippet meta()}{@render subj(i.subject)}<span class="shrink-0 text-danger">{t('Entität fehlt')}</span>{/snippet}
-                      {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
-                    </ListRow>
-                  </li>
-                {/each}
-                {#if quietFine.length > 0}
-                  <li>
-                    <ListRow title={tn('{n} Wächter ohne offene Aktion', '{n} Wächter ohne offene Aktion', quietFine.length)} onclick={() => (quietOpen = !quietOpen)}>
-                      {#snippet tile()}<Tile color="green"><Icon name="leaf" size={24} /></Tile>{/snippet}
-                      {#snippet meta()}<span class="inline-flex items-center gap-1"><Icon name="done" size={14} stroke={1.9} />{t('Alles im grünen Bereich')}</span>{/snippet}
-                      {#snippet right()}<span class="flex text-text-soft2"><Icon name={quietOpen ? 'chevron-down' : 'chevron-right'} size={20} stroke={2} /></span>{/snippet}
-                    </ListRow>
-                  </li>
-                  {#if quietOpen}
-                    {#each quietFine as i (i.watcherId)}
-                      <li>
-                        <ListRow title={i.name} rightFull label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
-                          {#snippet tile()}<Tile color={PHASE_TILE.quiet!}><Icon name="eye" size={24} /></Tile>{/snippet}
-                          {#snippet meta()}<span class="min-w-0 truncate" data-testid="watcher-subject">{i.entity}</span>{/snippet}
-                          {#snippet right()}
-                            <!-- der aktuelle Wert oben rechts, in der Höhe des Titels; der Pfeil bleibt in der Mitte -->
-                            <span class="flex h-full items-center gap-2">
-                              {#if i.value}<span class="self-start pt-[13px] text-[13px] leading-[22px] text-fg2 tabular-nums" data-testid="watcher-value">{i.value}</span>{/if}
-                              <span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
-                            </span>
-                          {/snippet}
-                        </ListRow>
-                      </li>
-                    {/each}
-                  {/if}
-                {/if}
-              </ul>
-            {/if}
-          </section>
-        {/if}
+          {#if layout.groups.length > 0}
+            <section aria-label={t('Kategorien')} class="flex flex-col gap-3" data-testid="watcher-categories">
+              {#each layout.groups as g (g.key)}
+                <div data-testid="watcher-category" data-category={g.name ?? ''}>
+                  <SectionHeader title={g.name ?? t('Ohne Kategorie')} icon="folder" iconTone="soft" count={g.items.length} large open={open(g.key)} ontoggle={() => toggleCategory(g.key)} />
+                  {#if open(g.key)}{@render rowList(g.items, false)}{/if}
+                </div>
+              {/each}
+            </section>
+          {/if}
+        </div>
 
         {#if activity.length > 0}
           <section aria-label={t('Letzte Aktivität')} data-testid="home-activity">

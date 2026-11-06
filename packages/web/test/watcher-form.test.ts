@@ -125,7 +125,7 @@ describe('Vorlagen vom Server anwenden', () => {
 
   it('Bearbeiten: ein Kalender-Wächter kommt unverändert zurück ins Formular', () => {
     const cal = applyTemplate(emptyForm('b', 'c'), tpl('bins', draft({ trigger: { kind: 'calendar_event', leadMin: 600 } })), { entityId: 'calendar.abfall', name: 'Abfall' });
-    const item = { ...toInput(cal), id: 'w', status: 'ok', lastFiredAt: null, lastAssignees: [], armed: true, counter: 0, subscribed: true, lastRun: null, entityState: null, entityName: null, subject: '', deviceLabel: '', nameHasDevice: false, defaultName: false, suggestedName: null, suggestedTitle: null, entityUnit: null, openCard: null } as WatcherItem;
+    const item = { ...toInput(cal), id: 'w', status: 'ok', lastFiredAt: null, lastAssignees: [], armed: true, counter: 0, subscribed: true, lastRun: null, entityState: null, entityName: null, subject: '', deviceLabel: '', nameHasDevice: false, defaultName: false, suggestedName: null, suggestedTitle: null, suggestedCategory: '', entityUnit: null, openCard: null } as WatcherItem;
     expect(fromWatcher(item)).toMatchObject({ kind: 'calendar_event', leadHours: '10' });
   });
 

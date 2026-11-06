@@ -87,7 +87,7 @@ describe('Formular prüfen und umwandeln', () => {
 
   it('Hin und zurück: Wächter → Formular → Eingabe bleibt gleich', () => {
     const input = toInput(filled({ forMin: '3', count: '3', cooldownMin: '15', nudgeAfterMin: '90', categoryIds: ['k1'] }));
-    const w: WatcherItem = { ...input, id: 'w1', status: 'ok', lastFiredAt: null, lastAssignees: [], armed: true, counter: 0, subscribed: true, lastRun: null, entityState: null, entityName: null, subject: '', deviceLabel: '', nameHasDevice: false, defaultName: false, suggestedName: null, suggestedTitle: null, entityUnit: null, openCard: null };
+    const w: WatcherItem = { ...input, id: 'w1', status: 'ok', lastFiredAt: null, lastAssignees: [], armed: true, counter: 0, subscribed: true, lastRun: null, entityState: null, entityName: null, subject: '', deviceLabel: '', nameHasDevice: false, defaultName: false, suggestedName: null, suggestedTitle: null, suggestedCategory: '', entityUnit: null, openCard: null };
     expect(toInput(fromWatcher(w))).toEqual(input);
   });
 });
@@ -112,6 +112,7 @@ describe('Zeile in der Liste', () => {
     defaultName: false,
     suggestedName: null,
     suggestedTitle: null,
+    suggestedCategory: '',
     openCard: null,
     ...extra,
   });

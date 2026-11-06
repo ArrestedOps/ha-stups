@@ -4,7 +4,8 @@ import { ConflictError, ForbiddenError } from './errors.js';
 import type { HaState } from './ha.js';
 import { t } from './i18n/index.js';
 import { isBusy } from './busy.js';
-import { isRunning, measuresLevel, phaseOf, type HomeItem, type HomeState, type PhaseMemory } from './home.js';
+import { isRunning, measuresLevel, phaseOf, type HomeItem, type HomePhase, type HomeState, type PhaseMemory } from './home.js';
+import { categoryOfWatcher } from './watcher-categories.js';
 import { orderView, type OrderView } from './assignment-order.js';
 import { personOfEntity, presenceOf, type PresenceMap } from './presence.js';
 import { stateText } from './state-text.js';
@@ -993,6 +994,8 @@ export function createWatchers(deps: WatcherDeps) {
         entityUnit: seenOf(w.trigger.entityId)?.unit ?? null,
         /** Gerät und Namensvorschlag (siehe watcher-names.ts) */
         ...nameHints(w, seenOf(w.trigger.entityId), defaults),
+        /** Kategorie, die Stups für diesen Wächter vorschlüge (für „Kategorien vorschlagen" bei Wächtern ohne) */
+        suggestedCategory: categoryOfWatcher(w, seenOf(w.trigger.entityId)),
         /** die offene Karte dieses Wächters, falls es eine gibt */
         openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, waiting: waiting.has(open.id) } : null,
       };
@@ -1106,7 +1109,7 @@ export function createWatchers(deps: WatcherDeps) {
     });
   }
 
-  /** Für den Reiter „Zuhause": jeder aktive Wächter mit seiner Phase (siehe home.ts) */
+  /** Für den Reiter „Wächter": jeder Wächter (auch ein ausgeschalteter) mit seiner Phase (siehe home.ts) */
   function homeState(): HomeState {
     ensureStates();
     const link = ha.connection?.() ?? { connected: true, lostSince: null };
@@ -1114,23 +1117,29 @@ export function createWatchers(deps: WatcherDeps) {
     const items: HomeItem[] = [];
     const defaults = templateDefaults();
     for (const w of data.list()) {
-      if (!w.active) continue;
       const s = seenOf(w.trigger.entityId);
       const st = data.getState(w.id);
-      remember(w, s, st.lastFireAt);
       const open = store.openCardOfWatcher(w.id);
       const counter = w.trigger.count > 1 ? counterOf(w.id) : 0;
-      const nextEvent = nextEvents.get(w.id) ?? null;
-      const { phase, since } = phaseOf({
-        watcher: w,
-        seen: s,
-        lastFireAt: st.lastFireAt,
-        counter,
-        openCard: open ? { id: open.id, createdAt: open.createdAt } : null,
-        memory: memoryOf(w.id),
-        nextEvent,
-        nowIso,
-      });
+      const nextEvent = w.active ? (nextEvents.get(w.id) ?? null) : null;
+      // Ein ausgeschalteter Wächter läuft nie „gerade" und zählt nicht „bald"; nur seine noch offene Karte wartet weiter auf jemanden
+      let phase: HomePhase;
+      let since: string | null;
+      if (w.active) {
+        remember(w, s, st.lastFireAt);
+        ({ phase, since } = phaseOf({
+          watcher: w,
+          seen: s,
+          lastFireAt: st.lastFireAt,
+          counter,
+          openCard: open ? { id: open.id, createdAt: open.createdAt } : null,
+          memory: memoryOf(w.id),
+          nextEvent,
+          nowIso,
+        }));
+      } else {
+        ({ phase, since } = open ? { phase: 'waiting' as const, since: open.createdAt } : { phase: 'quiet' as const, since: null });
+      }
       items.push({
         watcherId: w.id,
         name: w.name,
@@ -1139,11 +1148,18 @@ export function createWatchers(deps: WatcherDeps) {
         value: s && s.state !== '' && s.state !== 'unknown' && s.state !== 'unavailable' ? `${s.state}${s.unit ? ` ${s.unit}` : ''}` : null,
         phase,
         since,
-        progress: w.trigger.count > 1 && counter > 0 ? { n: counter, of: w.trigger.count } : null,
+        progress: w.active && w.trigger.count > 1 && counter > 0 ? { n: counter, of: w.trigger.count } : null,
         nextCard: w.card.title,
         entityMissing: statesLoaded && (w.status === 'entity_missing' || s === null),
         openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, createdAt: open.createdAt } : null,
         nextEvent,
+        active: w.active,
+        category: w.category,
+        trigger: w.trigger,
+        entityUnit: s?.unit ?? null,
+        lastFiredAt: w.lastFiredAt,
+        lastAssigneeIds: w.lastAssignees,
+        assign: { mode: w.assign.mode, personIds: w.assign.personIds },
       });
     }
     return { available: link.connected, lostSince: link.lostSince, items };

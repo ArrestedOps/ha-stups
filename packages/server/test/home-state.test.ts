@@ -58,6 +58,62 @@ beforeEach(() => {
   engine.start();
 });
 
+describe('homeState nach einem Neustart', () => {
+  const make = () =>
+    data.create(
+      parseWatcher({
+        name: 'Waschmaschine fertig',
+        trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 0 },
+        card: { boardId, columnId, title: 'Wäsche aufhängen' },
+        assign: { mode: 'fixed', personIds: [anna] },
+      }),
+    );
+
+  it('vor dem ersten Abgleich gilt die Entität nicht als fehlend; der Blick in die Übersicht holt den Abgleich nach', async () => {
+    make();
+    expect(only().entityMissing).toBe(false);
+    await engine.idle();
+    expect(only()).toMatchObject({ entityMissing: false, value: '1 W' });
+  });
+
+  it('ein gescheiterter Abgleich beim Verbinden wird nachgeholt, ohne „Entität fehlt" dazwischen', async () => {
+    make();
+    ha.failStates = true;
+    ha.reconnect();
+    await engine.idle();
+    expect(only().entityMissing).toBe(false);
+    ha.failStates = false;
+    advance(1);
+    only(); // der nächste Blick stößt den Abgleich wieder an
+    await engine.idle();
+    expect(only()).toMatchObject({ entityMissing: false, value: '1 W' });
+  });
+
+  it('nicht öfter als alle 10 Sekunden neu versuchen', async () => {
+    make();
+    ha.failStates = true;
+    let calls = 0;
+    const real = ha.getStates.bind(ha);
+    ha.getStates = async () => {
+      calls += 1;
+      return real();
+    };
+    ha.reconnect();
+    await engine.idle();
+    for (let i = 0; i < 5; i++) only();
+    await engine.idle();
+    expect(calls).toBe(1);
+  });
+
+  it('nach geladenen Zuständen gilt eine wirklich fehlende Entität als fehlend', async () => {
+    make();
+    ha.states = [];
+    ha.reconnect();
+    await engine.idle();
+    expect(only().entityMissing).toBe(true);
+  });
+});
+
 describe('homeState', () => {
   it('ruhig, solange nichts läuft; der Wächter nennt die Karte, die danach kommt', async () => {
     await create();

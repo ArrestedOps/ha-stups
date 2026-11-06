@@ -2,6 +2,13 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.32.1-beta.1
+
+**Wächter: Nach einem Update oder Neustart steht nicht mehr „Entität fehlt", bis man einen Wächter öffnet.**
+
+- Ursache: Der Abgleich der Zustände mit Home Assistant beim Verbinden konnte scheitern (Home Assistant war gerade noch beschäftigt) und wurde dann nicht wiederholt. Stups kannte dann keine Zustände, und jeder Wächter stand als „Entität fehlt", bis das Öffnen eines Wächters die Zustände holte.
+- Jetzt gilt eine Entität erst als fehlend, wenn die Zustände wirklich geladen sind. Ein gescheiterter Abgleich wird beim nächsten Blick in die Übersicht und im Takt wiederholt (höchstens alle 10 Sekunden).
+
 ## 1.32.0-beta.2
 
 Nur ein Test angepasst (englisches Gerät), sonst wie 1.32.0-beta.1.

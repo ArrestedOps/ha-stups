@@ -91,6 +91,11 @@ export function createWatchers(deps: WatcherDeps) {
   const subscribed = new Map<string, string>();
   let persons: HaState[] = [];
   let personsAt = 0;
+  /** Die Zustände aus Home Assistant sind einmal geladen (Abgleich oder Speichern): erst dann gilt eine fehlende Entität als fehlend */
+  let statesLoaded = false;
+  /** Ein Abgleich läuft oder ist eingereiht; frühestens nach 10 s ein neuer Versuch aus Ansicht oder Takt */
+  let snapshotPending = false;
+  let lastSnapshotTry = 0;
   /** Was für „Zuhause" gemerkt wird (Beginn eines laufenden Vorgangs) */
   const memory = new Map<string, PhaseMemory>();
   /** Nächste Termine von Kalender-Wächtern (Stufe 6), je Wächter */
@@ -738,6 +743,7 @@ export function createWatchers(deps: WatcherDeps) {
       }
       persons = states.filter((x) => x.entity_id.startsWith('person.'));
       personsAt = now().getTime();
+      statesLoaded = true;
       const s = seenOf(w.trigger.entityId);
       if (!s) {
         data.setStatus(id, 'entity_missing');
@@ -755,6 +761,8 @@ export function createWatchers(deps: WatcherDeps) {
 
   /** Nach (Wieder-)Verbinden: Zustände abgleichen, damit ein verpasster Übergang genau einmal auslöst */
   async function snapshot(): Promise<void> {
+    snapshotPending = true;
+    lastSnapshotTry = now().getTime();
     await guarded('Abgleich', async () => {
       const states = await ha.getStates();
       const bySeen = new Map<string, Seen>();
@@ -771,8 +779,23 @@ export function createWatchers(deps: WatcherDeps) {
         if (!w.active) continue;
         await evaluate(w, bySeen.get(w.trigger.entityId) ?? null);
       }
+      statesLoaded = true;
       syncSubscriptions();
+    }).finally(() => {
+      snapshotPending = false;
     });
+  }
+
+  /**
+   * Nach einem Neustart ist der Abgleich beim Verbinden manchmal gescheitert (Home Assistant war noch beschäftigt): dann
+   * kennt Stups keine Zustände und alles stünde als „Entität fehlt", bis jemand einen Wächter öffnet. Darum holt jeder Blick in
+   * die Übersicht und der Takt den Abgleich nach, höchstens alle 10 Sekunden.
+   */
+  function ensureStates(): void {
+    if (statesLoaded || snapshotPending) return;
+    if (deps.enabled && !deps.enabled()) return;
+    if (now().getTime() - lastSnapshotTry < 10_000) return;
+    void snapshot();
   }
 
   /** „Nach X Minuten stupsen, wenn noch offen": einmal je Karte, gerechnet ab dem Anlegen bzw. der Zuweisung */
@@ -799,6 +822,7 @@ export function createWatchers(deps: WatcherDeps) {
   /** Takt (alle 30 Sekunden): Wartezeiten abwarten, Rückfall nach 24 Stunden. Ein Fehler bei einem Wächter hält die anderen nicht auf. */
   async function tick(): Promise<void> {
     if (deps.enabled && !deps.enabled()) return;
+    ensureStates();
     const nowMs = now().getTime();
     const fetched = await fetchExternal(nowMs); // Netz: außerhalb der Warteschlange
     await guarded('Takt', async () => {
@@ -891,6 +915,7 @@ export function createWatchers(deps: WatcherDeps) {
 
   /** Für die Oberfläche: Wächter mit Zustand, Zählerstand, Abo und letztem Lauf */
   function view() {
+    ensureStates();
     const active = new Set(ha.activeSubscriptions?.() ?? []);
     const waiting = new Set(data.listWaiting().map((x) => x.cardId));
     const defaults = templateDefaults();
@@ -1024,6 +1049,7 @@ export function createWatchers(deps: WatcherDeps) {
 
   /** Für den Reiter „Zuhause": jeder aktive Wächter mit seiner Phase (siehe home.ts) */
   function homeState(): HomeState {
+    ensureStates();
     const link = ha.connection?.() ?? { connected: true, lostSince: null };
     const nowIso = now().toISOString();
     const items: HomeItem[] = [];
@@ -1055,7 +1081,7 @@ export function createWatchers(deps: WatcherDeps) {
         since,
         progress: w.trigger.count > 1 && counter > 0 ? { n: counter, of: w.trigger.count } : null,
         nextCard: w.card.title,
-        entityMissing: w.status === 'entity_missing' || s === null,
+        entityMissing: statesLoaded && (w.status === 'entity_missing' || s === null),
         openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, createdAt: open.createdAt } : null,
         nextEvent,
       });

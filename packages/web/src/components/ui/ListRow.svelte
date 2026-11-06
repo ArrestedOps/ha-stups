@@ -25,6 +25,7 @@
     current = false,
     dashed = false,
     wrap = false,
+    rightFull = false,
     expanded,
     pressed,
     inset = false,
@@ -50,6 +51,8 @@
     dashed?: boolean;
     /** Titel und Meta dürfen umbrechen, die Zeile wächst mit (Wächter-Editor); sonst einzeilig mit „…“ wie in den Listen */
     wrap?: boolean;
+    /** der rechte Bereich ist so hoch wie die Zeile (ein Wert oben rechts, der Pfeil in der Mitte) */
+    rightFull?: boolean;
     /** der Antippbereich klappt etwas auf (aria-expanded) */
     expanded?: boolean;
     /** der Antippbereich ist eine Auswahl (aria-pressed): die gewählte Zeile */
@@ -103,5 +106,5 @@
     <div class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'}">{@render body()}</div>
   {/if}
 
-  {#if right}<span class="flex shrink-0 items-center {check ? 'gap-2.5' : 'gap-3'}">{@render right()}</span>{/if}
+  {#if right}<span class="flex shrink-0 items-center {rightFull ? 'self-stretch' : ''} {check ? 'gap-2.5' : 'gap-3'}">{@render right()}</span>{/if}
 </div>

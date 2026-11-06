@@ -2,6 +2,13 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.32.2-beta.1
+
+**Wächter, Liste „Ruhig": der Name der Entität steht klein und grau unter dem Titel, der aktuelle Stand oben rechts.**
+
+- Unter dem Titel steht jetzt immer der Friendly Name der Entität (Akkustand und Co. nicht mehr dort), in derselben kleinen grauen Schrift wie bisher der Stand, eine Zeile.
+- Der aktuelle Stand („95 %") steht rechtsbündig oben rechts auf Höhe des Titels, der Pfeil bleibt in der Mitte der Zeile.
+
 ## 1.32.1-beta.1
 
 **Wächter: Nach einem Update oder Neustart steht nicht mehr „Entität fehlt", bis man einen Wächter öffnet.**

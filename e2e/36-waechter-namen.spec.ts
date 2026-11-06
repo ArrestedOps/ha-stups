@@ -89,7 +89,15 @@ test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Name
   await expect(rows).toHaveCount(2);
   await expect(rows.first()).toContainText('Batterie schwach: Bad Fenster');
   await expect(rows.nth(1)).toContainText('Batterie schwach: iPhone Rene');
-  await expect(quiet.getByTestId('watcher-value').first()).toContainText('jetzt 12 %');
+  await expect(quiet.getByTestId('watcher-value').first()).toHaveText('12 %');
+  // der aktuelle Wert steht oben rechts (rechtsbündig, auf Höhe des Titels), der Gerätename klein darunter
+  const row = rows.first().locator('xpath=ancestor::li[1]');
+  const rowBox = (await row.boundingBox())!;
+  const valueBox = (await row.getByTestId('watcher-value').boundingBox())!;
+  const nameBox = (await row.getByTestId('watcher-subject').boundingBox())!;
+  expect(valueBox.y).toBeLessThan(rowBox.y + rowBox.height / 2);
+  expect(valueBox.y + valueBox.height).toBeLessThanOrEqual(nameBox.y + 4);
+  expect(valueBox.x).toBeGreaterThan(rowBox.x + rowBox.width / 2);
   await clearWatchers(request);
 });
 
@@ -243,7 +251,7 @@ test('Batterie über der Schwelle steht unter „Ruhig" mit dem Wert, nie unter 
   await expect(page.getByTestId('home-quiet')).toBeVisible();
   await expect(page.getByTestId('home-running')).toHaveCount(0);
   await page.getByTestId('home-quiet').getByRole('button', { name: /Wächter ohne offene Aktion/ }).click();
-  await expect(page.getByTestId('home-quiet').getByTestId('watcher-value')).toHaveText('jetzt 26 %');
+  await expect(page.getByTestId('home-quiet').getByTestId('watcher-value')).toHaveText('26 %');
   await request.post(`${MOCK}/mock/state`, { data: { entityId: FLUR, state: '85' } });
   await clearWatchers(request);
 });

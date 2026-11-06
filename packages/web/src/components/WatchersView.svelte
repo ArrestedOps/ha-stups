@@ -289,10 +289,16 @@
                   {#if quietOpen}
                     {#each quietFine as i (i.watcherId)}
                       <li>
-                        <ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
+                        <ListRow title={i.name} rightFull label={t('Wächter {name} öffnen', { name: i.name })} onclick={() => openWatcher(i.watcherId)}>
                           {#snippet tile()}<Tile color={PHASE_TILE.quiet!}><Icon name="eye" size={24} /></Tile>{/snippet}
-                          {#snippet meta()}{@render subj(i.subject)}<span class="min-w-0 truncate" data-testid="watcher-value">{i.value ? t('jetzt {value}', { value: i.value }) : t('Alles im grünen Bereich')}</span>{/snippet}
-                          {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
+                          {#snippet meta()}<span class="min-w-0 truncate" data-testid="watcher-subject">{i.entity}</span>{/snippet}
+                          {#snippet right()}
+                            <!-- der aktuelle Wert oben rechts, in der Höhe des Titels; der Pfeil bleibt in der Mitte -->
+                            <span class="flex h-full items-center gap-2">
+                              {#if i.value}<span class="self-start pt-[13px] text-[13px] leading-[22px] text-fg2 tabular-nums" data-testid="watcher-value">{i.value}</span>{/if}
+                              <span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
+                            </span>
+                          {/snippet}
                         </ListRow>
                       </li>
                     {/each}

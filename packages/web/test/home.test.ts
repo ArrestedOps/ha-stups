@@ -7,6 +7,7 @@ const item = (over: Partial<HomeItem>): HomeItem => ({
   watcherId: 'w',
   name: 'Wächter',
   subject: null,
+  entity: 'sensor.x',
   value: null,
   phase: 'quiet',
   since: null,

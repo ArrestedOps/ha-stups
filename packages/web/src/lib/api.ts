@@ -361,6 +361,8 @@ export interface HomeItem {
   name: string;
   /** Friendly Name der beobachteten Entität, solange der Name das Gerät nicht nennt (sonst null) */
   subject: string | null;
+  /** Friendly Name der beobachteten Entität (ohne Namen die Entitäts-ID) */
+  entity: string;
   /** Aktueller Wert mit Einheit ("26 %"), null ohne Wert */
   value: string | null;
   phase: 'waiting' | 'running' | 'soon' | 'quiet';

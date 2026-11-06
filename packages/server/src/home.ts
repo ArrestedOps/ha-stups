@@ -85,6 +85,8 @@ export interface HomeItem {
   name: string;
   /** Friendly Name der beobachteten Entität, solange der Name des Wächters das Gerät nicht nennt (sonst null) */
   subject: string | null;
+  /** Friendly Name der beobachteten Entität (ohne Namen: die Entitäts-ID), immer (für die Zeile bei „Ruhig") */
+  entity: string;
   phase: HomePhase;
   since: string | null;
   progress: { n: number; of: number } | null;

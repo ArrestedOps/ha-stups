@@ -1076,6 +1076,7 @@ export function createWatchers(deps: WatcherDeps) {
         watcherId: w.id,
         name: w.name,
         subject: subjectOf(w, s, defaults),
+        entity: s?.name?.trim() || w.trigger.entityId,
         value: s && s.state !== '' && s.state !== 'unknown' && s.state !== 'unavailable' ? `${s.state}${s.unit ? ` ${s.unit}` : ''}` : null,
         phase,
         since,

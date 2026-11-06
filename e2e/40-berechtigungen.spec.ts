@@ -8,6 +8,8 @@ test.describe.configure({ mode: 'serial', timeout: 90_000 });
 
 const tag = `${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
 const NAME = `Perm${tag}`;
+// Mit PERM_SHOTS=<Ordner> entstehen Bildschirmfotos (390 × 844) zum Ansehen; sonst keine
+const SHOTS = process.env.PERM_SHOTS;
 const headers = { 'x-remote-user-id': `ha-perm-${tag}`, 'x-remote-user-name': `perm${tag}`, 'x-remote-user-display-name': NAME, 'x-stups-language': 'de' };
 
 let memberId = '';
@@ -65,22 +67,26 @@ test('ohne Berechtigung sieht ein Mitglied keine Schalter, keine Seiten und der 
 
 test('der Administrator sieht je Person „Berechtigungen“ (Administrator: Hinweis) und gibt „App-Einstellungen“; das Mitglied folgt sofort', async ({ page, browser, baseURL }) => {
   const { ctx, page: mem } = await member(browser, String(baseURL));
+  if (SHOTS) await Promise.all([page.setViewportSize({ width: 390, height: 844 }), mem.setViewportSize({ width: 390, height: 844 })]);
   try {
     await page.goto('/');
     await openPeople(page);
     // Administrator: nur der Hinweis
-    await page.getByRole('button', { name: /Rene/ }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: /Rene/ }).first().click();
     await expect(page.getByText('Administratoren dürfen alles.')).toBeVisible();
-    await page.getByRole('button', { name: /Rene/ }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: /Rene/ }).first().click();
     // Mitglied: fünf Schalter, alle aus
-    await page.getByRole('button', { name: new RegExp(NAME) }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: new RegExp(NAME) }).first().click();
     const box = page.getByTestId(`permissions-${memberId}`);
     await expect(box).toBeVisible();
     await expect(box.getByRole('switch')).toHaveCount(5);
     await expect(box.getByRole('switch', { checked: true })).toHaveCount(0);
     await expect(box).toContainText('Nicht dabei: Dashboard und Panel-Pfad');
     await box.scrollIntoViewIfNeeded();
-    await page.screenshot({ path: 'test-results/berechtigungen-admin.png' });
+    if (SHOTS) {
+      await box.getByRole('switch').last().scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `${SHOTS}/berechtigungen-admin-${test.info().project.name}.png` });
+    }
 
     await toggle(page, 'App-Einstellungen').click();
     await expect(toggle(page, 'App-Einstellungen')).toHaveAttribute('aria-checked', 'true');
@@ -113,22 +119,25 @@ test('der Administrator sieht je Person „Berechtigungen“ (Administrator: Hin
 
 test('mit „Personen“ sieht das Mitglied die Liste ohne Berechtigungen, Rollen und Entfernen; Rechte vergeben bleibt verboten', async ({ page, browser, baseURL }) => {
   const { ctx, page: mem } = await member(browser, String(baseURL));
+  if (SHOTS) await Promise.all([page.setViewportSize({ width: 390, height: 844 }), mem.setViewportSize({ width: 390, height: 844 })]);
   try {
     await page.goto('/');
     await openPeople(page);
-    await page.getByRole('button', { name: new RegExp(NAME) }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: new RegExp(NAME) }).first().click();
     await toggle(page, 'Personen').click();
     await expect(toggle(page, 'Personen')).toHaveAttribute('aria-checked', 'true');
 
     await openPeopleAsMember(mem);
-    await mem.getByRole('button', { name: /Rene/ }).first().click();
+    await mem.getByRole('dialog').getByRole('button', { name: /Rene/ }).first().click();
     await expect(mem.getByLabel('Anzeigename von Rene')).toBeVisible();
     await expect(mem.getByRole('heading', { name: 'Person hinzufügen' })).toBeVisible();
     await expect(mem.getByTestId(/^permissions-/)).toHaveCount(0);
     await expect(mem.getByTestId('child-setup')).toHaveCount(0);
     await expect(mem.getByRole('button', { name: 'Aus Stups entfernen' })).toHaveCount(0);
     await expect(mem.getByRole('radio', { name: 'Nur diese Personen' })).toBeDisabled();
-    await mem.screenshot({ path: 'test-results/berechtigungen-mitglied-personen.png' });
+    if (SHOTS) {
+      await mem.screenshot({ path: `${SHOTS}/berechtigungen-mitglied-personen-${test.info().project.name}.png` });
+    }
 
     // Der Server: kein Rechte-Vergeben, keine Rolle, kein Entfernen
     for (const data of [{ permissions: ['watchers'] }, { isChild: true }]) {
@@ -154,7 +163,7 @@ test('ein Kind bekommt keine Berechtigungen: kein Bereich in der Liste, der Serv
   try {
     await page.goto('/');
     await openPeople(page);
-    await page.getByRole('button', { name: new RegExp(NAME) }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: new RegExp(NAME) }).first().click();
     await expect(page.getByTestId(`child-setup`)).toBeVisible();
     await expect(page.getByTestId(`permissions-${memberId}`)).toHaveCount(0);
     expect((await request.patch(`/api/access/people/${memberId}`, { data: { permissions: ['watchers'] } })).status()).toBe(409);

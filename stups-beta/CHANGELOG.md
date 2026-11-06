@@ -2,6 +2,20 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.29.0-beta.1
+
+**Desktop-Ansicht ab 1024 px Breite.** Auf dem Handy und in der Companion App ändert sich nichts; Tablets (ab 640 px) zeigen die Handy-Ansicht zentriert, Fenster (Karten, Einstellungen) höchstens 640 px breit.
+
+- **Seitenleiste** (256 px, fest) statt der Leiste unten: Aufgaben (mit Zähler für heute fällig und überfällig), Boards, Wächter, darunter alle Boards mit Farbpunkt und offenen Karten (ein Klick wechselt das Board) und „Neues Board“, ganz unten die Person mit Rolle und dem Zahnrad für die Einstellungen
+- **Kopfzeile** mit Titel und Untertitel, **Suche** (Strg/Cmd + K), „Neue Aufgabe“ statt des „+“-Knopfs, Home Assistant und Glocke. Die Suche filtert die schon geladenen Karten im Gerät: in Aufgaben nach Titel, Beschreibung, Board und Kategorie, in Boards nach Titel und Beschreibung (dasselbe Feld wie im Blatt „Filter“), in Wächtern nach dem Namen
+- **Aufgaben:** Ein Klick auf eine Zeile öffnet die Karte in einer **Detailspalte** rechts (380 px) neben der Liste: Eigenschaften, Checkliste, Kommentare, Stupsen und Erledigt; die gewählte Zeile ist markiert, Escape oder das Kreuz schließt, Pfeil auf und ab springt in der Liste. Ab 1280 px steht die Spalte fest daneben, schmaler legt sie sich über die Liste
+- **Boards:** Kanban über die volle Breite mit gleich breiten Spalten (Name, Zähler, „+“ legt in dieser Spalte an). Die Karten brechen die Zeile mit Termin, Kategorie und Zählern um, statt sie abzuschneiden. Karten lassen sich mit der Maus zwischen den Spalten ziehen
+- **Wächter:** Raster mit zwei oder drei gleich hohen Karten je Reihe; „Neuer Wächter“ als Knopf neben dem Kopf
+- **Fenster** (Neue Aufgabe, Einstellungen, Filter, Mitteilungen, Wächter, Zahlen …) öffnen am Desktop als **Dialog in der Mitte** (600 px) statt am Rand; Escape schließt, der Fokus kehrt zurück
+- Tasten: **N** legt eine Aufgabe an (nicht in Eingabefeldern), **Strg/Cmd + K** springt in die Suche, **Escape** schließt die Detailspalte; sichtbarer Fokusring und Hover-Zustände; bei sehr breiten Fenstern bleibt der Inhalt höchstens 1560 px breit
+- Langer Titel einer Karte wird gleich ganz angezeigt (das Feld misst nach dem Laden der Schrift noch einmal)
+- Keine Änderung an der Datenbank
+
 ## 1.28.0-beta.1
 
 **Neu: Feedback.** Fehler melden, Verbesserungen vorschlagen, loben oder kritisieren, direkt in Stups.

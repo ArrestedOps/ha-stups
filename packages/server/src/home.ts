@@ -13,6 +13,9 @@ export type HomePhase = 'waiting' | 'running' | 'soon' | 'quiet';
 export interface SeenState {
   state: string;
   lastChanged: string | null;
+  /** Einheit und Geräteklasse der Entität: daran erkennt Stups, ob sie einen Vorgang misst (Leistung) oder einen Pegel (Batterie) */
+  unit?: string;
+  deviceClass?: string;
 }
 
 /** Was Stups sich je Wächter merkt (im Speicher), um „läuft gerade" zu erkennen */
@@ -21,6 +24,8 @@ export interface PhaseMemory {
   runningSince: string | null;
   /** bei `above`: die Bedingung war seit dem letzten Auslösen einmal erfüllt (der Wert war über der Schwelle) */
   touched: boolean;
+  /** Stups hat seit dem Start schon einmal gesehen, dass nichts läuft: erst dann ist ein Beginn echt beobachtet, sonst bleibt er unbekannt */
+  sawQuiet?: boolean;
 }
 
 export interface PhaseInput {
@@ -34,6 +39,19 @@ export interface PhaseInput {
   nowIso: string;
 }
 
+const PROCESS_CLASSES = new Set(['power', 'apparent_power', 'reactive_power', 'current', 'energy']);
+const PROCESS_UNITS = new Set(['w', 'kw', 'va', 'a', 'ma', 'kwh', 'wh']);
+
+/**
+ * Misst die Entität einen Vorgang, der läuft und endet (Leistung einer Waschmaschine, Strom)? Dann heißt „über der Schwelle": läuft.
+ * Batterie, Temperatur, Luftfeuchte, Füllstand und alles Unbekannte sind Pegel: ein Normalzustand, kein Vorgang. Im Zweifel nein.
+ */
+export function measuresProcess(seen: Pick<SeenState, 'unit' | 'deviceClass'> | null): boolean {
+  if (!seen) return false;
+  if (seen.deviceClass) return PROCESS_CLASSES.has(seen.deviceClass);
+  return !!seen.unit && PROCESS_UNITS.has(seen.unit.trim().toLowerCase());
+}
+
 const numeric = (state: string): boolean => state !== '' && state !== 'unknown' && state !== 'unavailable' && Number.isFinite(Number(state));
 
 /**
@@ -44,8 +62,8 @@ const numeric = (state: string): boolean => state !== '' && state !== 'unknown' 
 export function isRunning(trigger: Pick<WatchTrigger, 'kind' | 'to' | 'value'>, seen: SeenState | null, lastFireAt: string | null, touched: boolean): boolean {
   if (!seen) return false;
   if (conditionMet(trigger, seen.state)) return false;
-  if (trigger.kind === 'below') return numeric(seen.state);
-  if (trigger.kind === 'above') return numeric(seen.state) && touched;
+  if (trigger.kind === 'below') return measuresProcess(seen) && numeric(seen.state);
+  if (trigger.kind === 'above') return measuresProcess(seen) && numeric(seen.state) && touched;
   if (trigger.kind === 'state') {
     if (!lastFireAt || !seen.lastChanged || seen.state === 'unknown' || seen.state === 'unavailable') return false;
     return Date.parse(seen.lastChanged) > Date.parse(lastFireAt);
@@ -56,7 +74,7 @@ export function isRunning(trigger: Pick<WatchTrigger, 'kind' | 'to' | 'value'>, 
 export function phaseOf(input: PhaseInput): { phase: HomePhase; since: string | null } {
   const { watcher: w, seen, openCard, memory } = input;
   if (openCard) return { phase: 'waiting', since: openCard.createdAt };
-  if (isRunning(w.trigger, seen, input.lastFireAt, memory.touched)) return { phase: 'running', since: memory.runningSince ?? input.nowIso };
+  if (isRunning(w.trigger, seen, input.lastFireAt, memory.touched)) return { phase: 'running', since: memory.runningSince };
   if (w.trigger.count > 1 && input.counter > 0) return { phase: 'soon', since: null };
   if (input.nextEvent) return { phase: 'soon', since: null };
   return { phase: 'quiet', since: null };
@@ -65,9 +83,13 @@ export function phaseOf(input: PhaseInput): { phase: HomePhase; since: string | 
 export interface HomeItem {
   watcherId: string;
   name: string;
+  /** Friendly Name der beobachteten Entität, solange der Name des Wächters das Gerät nicht nennt (sonst null) */
+  subject: string | null;
   phase: HomePhase;
   since: string | null;
   progress: { n: number; of: number } | null;
+  /** Aktueller Wert der Entität mit Einheit ("26 %"); null, wenn Home Assistant keinen Wert hat */
+  value: string | null;
   /** Titel der Karte, die danach kommt */
   nextCard: string;
   /** Die Entität gibt es in Home Assistant nicht (mehr) */

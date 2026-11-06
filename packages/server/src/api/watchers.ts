@@ -3,6 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '.
 import { type HaState } from '../ha.js';
 import { DRY_RUN_DAYS, dryRun } from '../dry-run.js';
 import { clampHours, historyOf, unavailableHistory } from '../entity-history.js';
+import { deviceLabel } from '../device-names.js';
 import { hasPermission, requirePermission } from '../permissions.js';
 import { detectSuggestions, suggestionKey, watcherTemplates } from '../watcher-templates.js';
 import { MODES, parseTrigger, parseWatcher, type AssignRule, type WatchTrigger, type WatcherConfig } from '../watcher-types.js';
@@ -183,6 +184,24 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     data.get(req.params.id);
     return data.runs(req.params.id);
   });
+  /**
+   * Einmaliger Sammelknopf: Wächter, die noch genau den Namen einer Vorlage tragen und das Gerät nicht nennen, bekommen es dazu
+   * („Batterie schwach" → „Batterie schwach: iPhone Rene"), der Kartentitel mit, solange er der der Vorlage ist. Eigene Namen bleiben,
+   * ebenso Wächter, deren Entität Home Assistant gerade nicht kennt. Antwort: wie viele umbenannt wurden. Die Oberfläche fragt vorher nach.
+   */
+  app.post('/api/watchers/rename-with-device', async (req) => {
+    requirePermission(req, 'watchers');
+    const { engine, data } = watcherEngine();
+    let renamed = 0;
+    for (const v of engine.view()) {
+      if (!v.defaultName || !v.suggestedName) continue;
+      const current = data.get(v.id);
+      const { id: _id, ...rest } = current;
+      data.update(current.id, parseWatcher({ ...rest, name: v.suggestedName, card: { ...rest.card, title: v.suggestedTitle ?? rest.card.title } }));
+      renamed += 1;
+    }
+    return { renamed };
+  });
   app.post('/api/watchers', async (req, reply) => {
     requirePermission(req, 'watchers');
     const { engine, data } = watcherEngine();
@@ -267,6 +286,8 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       .map(({ s }) => ({
         entityId: s.entity_id,
         name: name(s),
+        /** kurzer Gerätename für Name und Kartentitel */
+        label: deviceLabel(s.attributes?.friendly_name as string | undefined, s.entity_id),
         state: s.state,
         unit: typeof s.attributes?.unit_of_measurement === 'string' ? s.attributes.unit_of_measurement : null,
         domain: s.entity_id.split('.')[0]!,

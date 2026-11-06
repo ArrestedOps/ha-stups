@@ -155,6 +155,7 @@
   "POST /api/watchers/:id/reset-counter",
   "POST /api/watchers/:id/test",
   "POST /api/watchers/dry-run",
+  "POST /api/watchers/rename-with-device",
   "POST /api/watchers/suggestions/hide",
   "POST /api/watchers/suggestions/unhide",
   "PUT /api/access/mode",

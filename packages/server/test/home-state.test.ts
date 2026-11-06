@@ -17,6 +17,8 @@ let boardId: string;
 let columnId: string;
 let anna: string;
 
+/** Ein Leistungssensor: nur so ist „über der Schwelle" ein laufender Vorgang */
+const POWER = { unit_of_measurement: 'W', device_class: 'power' };
 const advance = (min: number) => (t += min * 60_000);
 const fireKey = (w: Watcher) => `w:${w.id}:fire`;
 const only = () => engine.homeState().items[0]!;
@@ -37,7 +39,7 @@ async function create(extra: Record<string, unknown> = {}): Promise<Watcher> {
 }
 async function emit(w: Watcher, value: string) {
   ha.set(ENTITY, value);
-  ha.emit(fireKey(w), value);
+  ha.emit(fireKey(w), value, undefined, POWER);
   await engine.idle();
 }
 
@@ -51,7 +53,7 @@ beforeEach(() => {
   const board = store.createBoard({ name: 'Haushalt', withPlanned: true });
   boardId = board.id;
   columnId = store.getBoardView(board.id).columns.find((c) => !c.isDone && !c.isPlanned)!.id;
-  ha.set(ENTITY, '1');
+  ha.set(ENTITY, '1', undefined, POWER);
   engine = createWatchers({ store, data, ha, now: () => new Date(t), timeZone: () => 'Europe/Berlin' });
   engine.start();
 });
@@ -60,6 +62,27 @@ describe('homeState', () => {
   it('ruhig, solange nichts läuft; der Wächter nennt die Karte, die danach kommt', async () => {
     await create();
     expect(only()).toMatchObject({ name: 'Waschmaschine fertig', phase: 'quiet', nextCard: 'Wäsche aufhängen', progress: null, entityMissing: false, openCard: null });
+  });
+
+  it('nennt den aktuellen Wert mit Einheit; ohne Wert (unavailable) nichts', async () => {
+    const w = await create();
+    expect(only().value).toBe('1 W');
+    await emit(w, 'unavailable');
+    expect(only().value).toBeNull();
+  });
+
+  it('ein Batterie-Wächter mit Wert über der Schwelle ist ruhig und zeigt den Wert, nie „läuft gerade"', async () => {
+    ha.set('sensor.handy_battery', '26', undefined, { unit_of_measurement: '%', device_class: 'battery' });
+    const w = data.create(
+      parseWatcher({
+        name: 'Batterie schwach',
+        trigger: { entityId: 'sensor.handy_battery', kind: 'below', value: 10, forMin: 10 },
+        card: { boardId, columnId, title: 'Batterie wechseln' },
+        assign: { mode: 'none' },
+      }),
+    );
+    await engine.onSaved(w.id);
+    expect(only()).toMatchObject({ phase: 'quiet', since: null, value: '26 %' });
   });
 
   it('läuft gerade, sobald die Leistung über den Schwellwert steigt, mit Dauer seit Beginn', async () => {

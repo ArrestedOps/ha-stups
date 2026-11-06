@@ -155,9 +155,11 @@ describe('Entitäten suchen', () => {
   it('nur Administratoren; Suche nach Name oder Kennung, mit Zustand und Einheit', async () => {
     expect((await call(anna, 'GET', '/api/ha/entities?q=wasch')).status).toBe(403);
     const res = await call(chef, 'GET', '/api/ha/entities?q=waschmaschine');
-    expect(res.body).toEqual([{ entityId: ENTITY, name: 'Waschmaschine Leistung', state: '120', unit: 'W', domain: 'sensor' }]);
+    expect(res.body).toEqual([{ entityId: ENTITY, name: 'Waschmaschine Leistung', label: 'Waschmaschine', state: '120', unit: 'W', domain: 'sensor' }]);
     expect((await call(chef, 'GET', '/api/ha/entities?q=wasch')).body.map((e: any) => e.entityId)).toEqual([ENTITY, 'binary_sensor.tuer']); // Treffer im Namen zuerst
     expect((await call(chef, 'GET', '/api/ha/entities?q=tür')).body.map((e: any) => e.entityId)).toEqual(['binary_sensor.tuer']);
+    // der kurze Gerätename für Name und Kartentitel von Wächtern
+    expect((await call(chef, 'GET', '/api/ha/entities?q=waschmaschine')).body[0]).toMatchObject({ name: 'Waschmaschine Leistung', label: 'Waschmaschine' });
     expect((await call(chef, 'GET', '/api/ha/entities?q=leistung waschmaschine')).body).toHaveLength(1);
   });
 
@@ -329,5 +331,118 @@ describe('Reihenfolge für „An wen"', () => {
     expect((await call(chef, 'GET', '/api/watchers/order?watcherId=gibt-es-nicht')).status).toBe(404);
     await build(false);
     expect((await call(chef, 'GET', '/api/watchers/order?mode=none')).status).toBe(409);
+  });
+});
+
+describe('Gerätenamen der Wächter', () => {
+  const battery = (entityId: string, extra: Record<string, unknown> = {}) =>
+    input({
+      name: 'Batterie schwach',
+      trigger: { entityId, kind: 'below', value: 20, forMin: 10 },
+      card: { boardId, columnId, title: 'Batterie wechseln', due: { kind: 'none' } },
+      assign: { mode: 'none' },
+      ...extra,
+    });
+  const IPHONE = 'sensor.iphone_rene_battery_level';
+  const IPAD = 'sensor.ipad_battery';
+
+  async function twoBatteries() {
+    ha.set(IPHONE, '15', '2026-11-04T09:00:00Z', { friendly_name: 'iPhone Rene Battery Level', device_class: 'battery', unit_of_measurement: '%' });
+    ha.set(IPAD, '12', '2026-11-04T09:00:00Z', { friendly_name: 'iPad Küche Batterie', device_class: 'battery', unit_of_measurement: '%' });
+    const a = (await call(chef, 'POST', '/api/watchers', battery(IPHONE))).body;
+    const b = (await call(chef, 'POST', '/api/watchers', battery(IPAD))).body;
+    return { a, b };
+  }
+  const list = async () => (await call(anna, 'GET', '/api/watchers')).body.items as any[];
+
+  it('die Liste nennt zu jedem Wächter den Friendly Name der Entität und einen Vorschlag mit Gerät', async () => {
+    await twoBatteries();
+    const items = await list();
+    const iphone = items.find((w) => w.trigger.entityId === IPHONE);
+    expect(iphone).toMatchObject({
+      subject: 'iPhone Rene Battery Level',
+      deviceLabel: 'iPhone Rene',
+      nameHasDevice: false,
+      defaultName: true,
+      suggestedName: 'Batterie schwach: iPhone Rene',
+      suggestedTitle: 'Batterie wechseln: iPhone Rene',
+    });
+    expect(items.find((w) => w.trigger.entityId === IPAD)).toMatchObject({ subject: 'iPad Küche Batterie', suggestedName: 'Batterie schwach: iPad Küche' });
+  });
+
+  it('ohne Home Assistant fällt der Gerätename auf die Entitäts-ID zurück und es gibt keinen Vorschlag', async () => {
+    const { a } = await twoBatteries();
+    ha.states = [];
+    ha.failStates = true;
+    // der Wächter einer unbekannten Entität (nie gesehen)
+    const lost = (await call(chef, 'POST', '/api/watchers', battery('sensor.flur_tuer_battery_level'))).body;
+    const items = await list();
+    expect(items.find((w) => w.id === lost.id)).toMatchObject({ subject: 'sensor.flur_tuer_battery_level', suggestedName: null, suggestedTitle: null, nameHasDevice: false });
+    expect(items.find((w) => w.id === a.id)?.subject).toBeTruthy();
+  });
+
+  it('ein Name, der das Gerät schon nennt, bekommt keinen Vorschlag', async () => {
+    ha.set(IPHONE, '15', '2026-11-04T09:00:00Z', { friendly_name: 'iPhone Rene Battery Level' });
+    const w = (await call(chef, 'POST', '/api/watchers', battery(IPHONE, { name: 'Batterie schwach: iPhone Rene' }))).body;
+    expect(w).toMatchObject({ nameHasDevice: true, suggestedName: null });
+  });
+
+  it('die Wächter-Seite (Zuhause) nennt das Gerät, solange der Name es nicht tut; die Aktivität auch', async () => {
+    const { a } = await twoBatteries();
+    await call(chef, 'POST', `/api/watchers/${a.id}/test`);
+    const home = (await call(chef, 'GET', '/api/home')).body.items as any[];
+    expect(home.map((i) => i.subject).sort()).toEqual(['iPad Küche Batterie', 'iPhone Rene Battery Level']);
+    const activity = (await call(anna, 'GET', '/api/watchers/activity')).body as any[];
+    expect(activity[0]).toMatchObject({ watcherName: 'Batterie schwach', subject: 'iPhone Rene Battery Level' });
+    // nach dem Ergänzen steht es schon im Namen: keine Doppelung
+    await call(chef, 'PATCH', `/api/watchers/${a.id}`, { name: 'Batterie schwach: iPhone Rene' });
+    const after = (await call(chef, 'GET', '/api/home')).body.items as any[];
+    expect(after.find((i) => i.watcherId === a.id)?.subject).toBeNull();
+  });
+
+  describe('Namen mit Gerät ergänzen (Sammelknopf)', () => {
+    it('nur Administratoren', async () => {
+      await twoBatteries();
+      expect((await call(anna, 'POST', '/api/watchers/rename-with-device')).status).toBe(403);
+      expect((await list()).every((w) => w.name === 'Batterie schwach')).toBe(true);
+    });
+
+    it('benennt Wächter mit Vorlagennamen um (Name und Kartentitel), zählt sie und lässt eigene Namen in Ruhe', async () => {
+      await twoBatteries();
+      ha.set('sensor.handy_mama_battery', '9', '2026-11-04T09:00:00Z', { friendly_name: 'Handy Mama Battery' });
+      const custom = (await call(chef, 'POST', '/api/watchers', battery('sensor.handy_mama_battery', { name: 'Mamas Handy laden', card: { boardId, columnId, title: 'Mama erinnern', due: { kind: 'none' } } }))).body;
+      const res = await call(chef, 'POST', '/api/watchers/rename-with-device');
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ renamed: 2 });
+      const items = await list();
+      expect(items.map((w) => [w.name, w.card.title]).sort()).toEqual([
+        ['Batterie schwach: iPad Küche', 'Batterie wechseln: iPad Küche'],
+        ['Batterie schwach: iPhone Rene', 'Batterie wechseln: iPhone Rene'],
+        ['Mamas Handy laden', 'Mama erinnern'],
+      ]);
+      expect(items.find((w) => w.id === custom.id)?.defaultName).toBe(false);
+      // ein zweiter Lauf ändert nichts mehr
+      expect((await call(chef, 'POST', '/api/watchers/rename-with-device')).body).toEqual({ renamed: 0 });
+    });
+
+    it('ein eigener Kartentitel bleibt, auch wenn der Name der Vorlage entspricht', async () => {
+      ha.set(IPHONE, '15', '2026-11-04T09:00:00Z', { friendly_name: 'iPhone Rene Battery Level' });
+      await call(chef, 'POST', '/api/watchers', battery(IPHONE, { card: { boardId, columnId, title: 'Rene laden!', due: { kind: 'none' } } }));
+      expect((await call(chef, 'POST', '/api/watchers/rename-with-device')).body).toEqual({ renamed: 1 });
+      expect((await list())[0]).toMatchObject({ name: 'Batterie schwach: iPhone Rene', card: { title: 'Rene laden!' } });
+    });
+
+    it('ohne bekannte Entität wird nichts umbenannt (kein Name aus der Entitäts-ID)', async () => {
+      await call(chef, 'POST', '/api/watchers', battery('sensor.nie_gesehen'));
+      expect((await call(chef, 'POST', '/api/watchers/rename-with-device')).body).toEqual({ renamed: 0 });
+      expect((await list())[0]?.name).toBe('Batterie schwach');
+    });
+
+    it('erkennt auch die englischen Vorlagennamen', async () => {
+      ha.set(IPHONE, '15', '2026-11-04T09:00:00Z', { friendly_name: 'iPhone Rene Battery Level' });
+      await call(chef, 'POST', '/api/watchers', battery(IPHONE, { name: 'Battery low', card: { boardId, columnId, title: 'Change the battery', due: { kind: 'none' } } }));
+      expect((await call(chef, 'POST', '/api/watchers/rename-with-device')).body).toEqual({ renamed: 1 });
+      expect((await list())[0]).toMatchObject({ name: 'Battery low: iPhone Rene', card: { title: 'Change the battery: iPhone Rene' } });
+    });
   });
 });

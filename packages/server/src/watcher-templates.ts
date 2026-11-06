@@ -1,4 +1,5 @@
 import type { HaState } from './ha.js';
+import { deviceLabel } from './device-names.js';
 import { t } from './i18n/index.js';
 import type { Recurrence } from './recurrence.js';
 import type { AssignMode, DueRule } from './watcher-types.js';
@@ -64,7 +65,12 @@ export interface Suggestion {
   variant: 'power' | 'status' | 'default';
   /** Ersatz für den Entwurf der Vorlage (beim Programmstatus: Wechsel in „finished") */
   draft?: TemplateDraft;
+  /** Kurzer Gerätename für Name und Kartentitel des neuen Wächters ("iPhone Rene" statt "iPhone Rene Battery Level") */
+  label: string;
 }
+
+/** Ein Treffer, bevor der Gerätename dazukommt (das geschieht einmal am Ende) */
+type Hit = Omit<Suggestion, 'label'>;
 
 const NOT_PROVABLE_APPLIANCE = () => t('Ein Sensor weiß nicht, ob jemand das Gerät schon ausgeräumt hat.');
 
@@ -150,7 +156,7 @@ export function watcherTemplates(): WatcherTemplate[] {
       id: 'battery',
       kind: 'watcher',
       title: t('Batterie schwach'),
-      hint: t('Batterie-Sensor eines Geräts. Der Titel nennt das Gerät erst, wenn du ihn anpasst.'),
+      hint: t('Batterie-Sensor eines Geräts. Name und Karte nennen das Gerät dazu.'),
       domain: 'sensor',
       search: t('batterie'),
       draft: {
@@ -220,7 +226,7 @@ const MAX_PER_TEMPLATE = 5;
 export const suggestionKey = (templateId: string, entityId: string): string => `${templateId}:${entityId}`;
 
 export function detectSuggestions(states: HaState[], watched: Set<string>, hidden: Set<string> = new Set()): Suggestion[] {
-  const out: Suggestion[] = [];
+  const out: Hit[] = [];
   /** Ausgeblendete Treffer fehlen schon vor der Grenze je Vorlage, damit der nächste nachrückt */
   const shown = (id: TemplateId, s: HaState): boolean => !hidden.has(suggestionKey(id, s.entity_id));
   const templates = new Map(watcherTemplates().map((tpl) => [tpl.id, tpl]));
@@ -229,7 +235,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>, hidde
   // Geräte: Leistungssensor oder Programmstatus
   for (const id of ['washer', 'dryer', 'dishwasher'] as const) {
     const words = WORDS[id];
-    const hits: Suggestion[] = [];
+    const hits: Hit[] = [];
     for (const s of fresh) {
       const domain = s.entity_id.split('.')[0];
       if (!shown(id, s) || !words.test(hay(s)) || (id === 'washer' && WORDS.dryer.test(hay(s)))) continue;
@@ -256,7 +262,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>, hidde
     ...fresh
       .filter((s) => s.entity_id.startsWith('calendar.') && BIN_WORDS.test(hay(s)) && shown('bins', s))
       .slice(0, MAX_PER_TEMPLATE)
-      .map((s): Suggestion => ({ templateId: 'bins', entityId: s.entity_id, name: nameOf(s), variant: 'default', reason: t('{name} ist ein Kalender mit Abfallterminen', { name: nameOf(s) }) })),
+      .map((s): Hit => ({ templateId: 'bins', entityId: s.entity_id, name: nameOf(s), variant: 'default', reason: t('{name} ist ein Kalender mit Abfallterminen', { name: nameOf(s) }) })),
   );
 
   // Wetter (eine Entität genügt meist)
@@ -264,7 +270,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>, hidde
     ...fresh
       .filter((s) => s.entity_id.startsWith('weather.') && shown('rain', s))
       .slice(0, 2)
-      .map((s): Suggestion => ({ templateId: 'rain', entityId: s.entity_id, name: nameOf(s), variant: 'default', reason: t('{name} liefert eine Wettervorhersage', { name: nameOf(s) }) })),
+      .map((s): Hit => ({ templateId: 'rain', entityId: s.entity_id, name: nameOf(s), variant: 'default', reason: t('{name} liefert eine Wettervorhersage', { name: nameOf(s) }) })),
   );
 
   // Batterien: die schwächsten zuerst, nur mit Zahlenwert
@@ -273,7 +279,7 @@ export function detectSuggestions(states: HaState[], watched: Set<string>, hidde
       .filter((s) => s.entity_id.startsWith('sensor.') && s.attributes?.device_class === 'battery' && num(s.state) !== null && shown('battery', s))
       .sort((a, b) => num(a.state)! - num(b.state)!)
       .slice(0, MAX_PER_TEMPLATE)
-      .map((s): Suggestion => ({ templateId: 'battery', entityId: s.entity_id, name: nameOf(s), variant: 'default', ...unitOf(s), reason: t('{name}: Batterie bei {n} %', { name: nameOf(s), n: Math.round(num(s.state)!) }) })),
+      .map((s): Hit => ({ templateId: 'battery', entityId: s.entity_id, name: nameOf(s), variant: 'default', ...unitOf(s), reason: t('{name}: Batterie bei {n} %', { name: nameOf(s), n: Math.round(num(s.state)!) }) })),
   );
 
   // Saugroboter
@@ -281,8 +287,9 @@ export function detectSuggestions(states: HaState[], watched: Set<string>, hidde
     ...fresh
       .filter((s) => s.entity_id.startsWith('vacuum.') && shown('vacuum', s))
       .slice(0, MAX_PER_TEMPLATE)
-      .map((s): Suggestion => ({ templateId: 'vacuum', entityId: s.entity_id, name: nameOf(s), variant: 'default', reason: t('{name} ist ein Saugroboter', { name: nameOf(s) }) })),
+      .map((s): Hit => ({ templateId: 'vacuum', entityId: s.entity_id, name: nameOf(s), variant: 'default', reason: t('{name} ist ein Saugroboter', { name: nameOf(s) }) })),
   );
 
-  return out;
+  const byId = new Map(fresh.map((s) => [s.entity_id, s]));
+  return out.map((h) => ({ ...h, label: deviceLabel(byId.get(h.entityId)?.attributes?.friendly_name, h.entityId) }));
 }

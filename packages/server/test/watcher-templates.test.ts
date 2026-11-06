@@ -58,6 +58,26 @@ describe('Erkennung', () => {
     expect(list.find((s) => s.entityId === 'sensor.bad_batterie')?.reason).toBe('Bad Fenster Batterie: Batterie bei 12 %');
   });
 
+  it('jeder Treffer trägt den kurzen Gerätenamen für Name und Kartentitel (ohne Endungen wie Battery Level)', () => {
+    const list = detectSuggestions(
+      [
+        state('sensor.iphone_rene_battery_level', '14', { device_class: 'battery', friendly_name: 'iPhone Rene Battery Level' }),
+        state('sensor.ohne_name_battery', '30', { device_class: 'battery' }),
+        state('sensor.waschmaschine_leistung', '120', { device_class: 'power', friendly_name: 'Waschmaschine Leistung' }),
+      ],
+      new Set(),
+    );
+    expect(Object.fromEntries(list.map((s) => [s.entityId, s.label]))).toEqual({
+      'sensor.iphone_rene_battery_level': 'iPhone Rene',
+      'sensor.ohne_name_battery': 'ohne name',
+      'sensor.waschmaschine_leistung': 'Waschmaschine',
+    });
+  });
+
+  it('der Hinweis der Batterie-Vorlage verspricht keinen Gerätenamen mehr, der fehlt', () => {
+    expect(watcherTemplates().find((x) => x.id === 'battery')!.hint).not.toMatch(/erst, wenn du ihn anpasst/);
+  });
+
   it('Programmstatus eines Geräts bekommt den Entwurf „wechselt in finished"', () => {
     const s = detectSuggestions(states, new Set()).find((x) => x.variant === 'status')!;
     expect(s.draft?.trigger).toEqual({ kind: 'state', to: 'finished', forMin: 0 });

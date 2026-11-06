@@ -323,7 +323,7 @@ export const en: Catalog = {
   'Wäsche reinholen, es regnet bald': 'Bring the laundry in, rain is coming',
   'Das Wetter weiß nicht, ob die Wäsche schon drin ist.': 'The weather cannot know whether the laundry is already inside.',
   'Batterie schwach': 'Battery low',
-  'Batterie-Sensor eines Geräts. Der Titel nennt das Gerät erst, wenn du ihn anpasst.': 'Battery sensor of a device. The title only names the device once you adjust it.',
+  'Batterie-Sensor eines Geräts. Name und Karte nennen das Gerät dazu.': 'Battery sensor of a device. The name and the card include the device.',
   'batterie': 'battery',
   'Batterie wechseln': 'Change the battery',
   'Saugroboter: Behälter leeren': 'Robot vacuum: empty the bin',

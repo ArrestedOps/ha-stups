@@ -1,4 +1,5 @@
 import { watcherIcon } from './watcher-icons.js';
+import { nameHints, templateDefaults } from './watcher-names.js';
 import { ConflictError, ForbiddenError } from './errors.js';
 import type { HaState } from './ha.js';
 import { t } from './i18n/index.js';
@@ -176,8 +177,12 @@ export function createWatchers(deps: WatcherDeps) {
     const m = memoryOf(w.id);
     if (s && w.trigger.kind === 'above' && conditionMet(w.trigger, s.state)) m.touched = true;
     const running = isRunning(w.trigger, s, lastFireAt, m.touched);
-    if (running && !m.runningSince) m.runningSince = now().toISOString();
-    else if (!running) m.runningSince = null;
+    // Ein Beginn gilt nur, wenn Stups ihn erlebt hat (vorher war es ruhig); beim Start mitten im Vorgang bleibt er unbekannt
+    if (running && !m.runningSince && m.sawQuiet) m.runningSince = now().toISOString();
+    else if (!running) {
+      m.runningSince = null;
+      m.sawQuiet = true;
+    }
   }
 
   // ---------- Zuweisung ----------
@@ -738,6 +743,7 @@ export function createWatchers(deps: WatcherDeps) {
         data.setStatus(id, 'entity_missing');
         data.patchState(id, { armed: true, metSince: null });
       } else {
+        remember(w, s, data.getState(id).lastFireAt); // der Stand beim Anlegen: lief schon etwas, ist der Beginn unbekannt
         const met = conditionMet(w.trigger, s.state);
         data.patchState(id, { armed: !met, metSince: met ? metSinceOf(w.trigger.kind, s, now().getTime()) : null });
         if (w.status === 'entity_missing') data.setStatus(id, 'ok');
@@ -877,10 +883,17 @@ export function createWatchers(deps: WatcherDeps) {
     return orderView({ rule, people, present, nextId: d.last ?? null });
   }
 
+  /** Das Gerät unter dem Namen in Listen: der Friendly Name der Entität, solange der Name des Wächters das Gerät nicht schon nennt */
+  function subjectOf(w: Watcher, s: Seen | null, defaults: ReturnType<typeof templateDefaults>): string | null {
+    const h = nameHints(w, s, defaults);
+    return h.nameHasDevice ? null : h.subject;
+  }
+
   /** Für die Oberfläche: Wächter mit Zustand, Zählerstand, Abo und letztem Lauf */
   function view() {
     const active = new Set(ha.activeSubscriptions?.() ?? []);
     const waiting = new Set(data.listWaiting().map((x) => x.cardId));
+    const defaults = templateDefaults();
     return data.list().map((w) => {
       const st = data.getState(w.id);
       const open = store.openCardOfWatcher(w.id);
@@ -894,6 +907,8 @@ export function createWatchers(deps: WatcherDeps) {
         entityState: seenOf(w.trigger.entityId)?.state ?? null,
         entityName: seenOf(w.trigger.entityId)?.name ?? null,
         entityUnit: seenOf(w.trigger.entityId)?.unit ?? null,
+        /** Gerät und Namensvorschlag (siehe watcher-names.ts) */
+        ...nameHints(w, seenOf(w.trigger.entityId), defaults),
         /** die offene Karte dieses Wächters, falls es eine gibt */
         openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, waiting: waiting.has(open.id) } : null,
       };
@@ -1012,6 +1027,7 @@ export function createWatchers(deps: WatcherDeps) {
     const link = ha.connection?.() ?? { connected: true, lostSince: null };
     const nowIso = now().toISOString();
     const items: HomeItem[] = [];
+    const defaults = templateDefaults();
     for (const w of data.list()) {
       if (!w.active) continue;
       const s = seenOf(w.trigger.entityId);
@@ -1033,6 +1049,8 @@ export function createWatchers(deps: WatcherDeps) {
       items.push({
         watcherId: w.id,
         name: w.name,
+        subject: subjectOf(w, s, defaults),
+        value: s && s.state !== '' && s.state !== 'unknown' && s.state !== 'unavailable' ? `${s.state}${s.unit ? ` ${s.unit}` : ''}` : null,
         phase,
         since,
         progress: w.trigger.count > 1 && counter > 0 ? { n: counter, of: w.trigger.count } : null,
@@ -1047,7 +1065,12 @@ export function createWatchers(deps: WatcherDeps) {
 
   /** Die letzten Läufe über alle Wächter (für den Reiter „Wächter") */
   function activity(limit = 20) {
-    return data.recentRuns(limit);
+    const defaults = templateDefaults();
+    const byId = new Map(data.list().map((w) => [w.id, w]));
+    return data.recentRuns(limit).map((r) => {
+      const w = byId.get(r.watcherId);
+      return { ...r, subject: w ? subjectOf(w, seenOf(w.trigger.entityId), defaults) : null };
+    });
   }
 
   return { start, presentPersonIds, order, onSaved, syncSubscriptions, snapshot, tick, test, resetCounter, view, homeState, pass, claim, activity, idle, arrival, counterOf, evaluate: (id: string, s: Seen | null) => guarded('Auswerten', () => evaluate(data.get(id), s)) };

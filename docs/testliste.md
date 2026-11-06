@@ -554,6 +554,19 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Mehr als 10 Rückmeldungen in einer Stunde je Person werden mit freundlichem Text abgelehnt; sehr lange Texte und Wörter ohne Leerzeichen laufen nicht über den Rand
 - [ ] Hell, Dunkel, Englisch; Update: Datenbank gesichert (Migration 24)
 
+## 38 · Berechtigungen je Person (seit 1.29.0)
+
+- [ ] Einstellungen › Personen & Zugriff › Person aufklappen: als Administrator der Bereich **Berechtigungen** mit fünf Schaltern (Wächter, Ansage und Lampe, App-Einstellungen, Personen, Bestätigen für Kinder), jeder mit kurzer Erklärung; bei einem Administrator nur „Administratoren dürfen alles.“, bei einem Kind gar nichts
+- [ ] Als Mitglied (ohne Rechte): kein Bereich Berechtigungen, keine Seiten Wächter, Vorlagen, Symbole, Termine, Tageszusammenfassung, Ansage und Lampe, Personen & Zugriff (wie bisher)
+- [ ] „App-Einstellungen“ geben: das Mitglied sieht **ohne Neuladen** die Seiten Termine, Symbole, Vorlagen (und mit Push die Tageszusammenfassung) und kann die Standard-Uhrzeit ändern; **Dashboard-Button** und Panel-Pfad bleiben verborgen; wieder entziehen: Seiten weg, Eingaben gesperrt
+- [ ] „Wächter“ geben: das Mitglied legt einen Wächter an und bearbeitet ihn (Reiter Wächter und Einstellungen › Wächter), ohne Recht nur ansehen
+- [ ] „Ansage und Lampe“ geben: Seite Ansage und Lampe und bei jeder Person die Kanäle (Lautsprecher, Lampe) einrichtbar
+- [ ] „Personen“ geben: Wartende freigeben, Personen hinzufügen, Anzeigenamen ändern; **nicht** sichtbar: Berechtigungen, Rolle Kind, Anmeldungen, Entfernen, Zugriff umstellen
+- [ ] „Bestätigen für Kinder“ geben: das Mitglied bestätigt oder gibt zurück, was ein Kind erledigt gemeldet hat, auch wenn es nicht als Bestätiger gewählt ist; „wartet auf dich“ und Mitteilungen zeigen es
+- [ ] Ein Mitglied kann sich oder andere nicht befördern (kein Schalter, Server antwortet 403); eine Person, die zum Kind gemacht wird, verliert ihre Berechtigungen
+- [ ] Datenbank: Migration 25 (Tabelle `user_permissions`, vorher Sicherung); nach dem Update hat niemand Berechtigungen
+- [ ] Englisch, Hell, Dunkel: nichts läuft über den Rand
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

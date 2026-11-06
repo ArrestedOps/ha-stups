@@ -4,6 +4,17 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 ## 1.29.0-beta.1
 
+**Berechtigungen: Ein Administrator kann einzelnen Personen gezielt Rechte geben**, ohne sie zu Administratoren zu machen. Einstellungen › Personen & Zugriff › Person aufklappen › **Berechtigungen** (nur für Administratoren sichtbar; für Administratoren steht dort „Administratoren dürfen alles“, Kinder bekommen keine).
+
+- **Wächter:** erstellen, bearbeiten, löschen und ausprobieren (auch Vorschläge, Probelauf, Suche in Home Assistant)
+- **Ansage und Lampe:** die Haus-Kanäle jeder Person und der Sprachdienst
+- **App-Einstellungen:** Standard-Uhrzeit für Termine, Tageszusammenfassung, Symbole erkennen, Vorlagen anderer löschen. **Nicht** dabei: Dashboard und Panel-Pfad (bleiben bei Administratoren)
+- **Personen:** Wartende freigeben, Personen hinzufügen, Anzeigenamen ändern. **Nicht** dabei: Rollen, Anmeldungen, Entfernen, Berechtigungen
+- **Bestätigen für Kinder:** Erledigt-Meldungen aller Kinder bestätigen oder zurückgeben
+- Die Seiten und Knöpfe erscheinen für die Person sofort (ohne Neuladen), und der Server prüft jede Anfrage selbst: Wer Berechtigungen hat, kann sie nicht an sich oder andere weitergeben, keine Administratorrechte vergeben und niemanden zum Kind machen. Fehlt ein Recht, steht „Dafür fehlt dir die Berechtigung“
+- Boards, Spalten, Kategorien und Vorlagen anlegen dürfen wie bisher alle Mitglieder (dafür ist keine Berechtigung nötig)
+- Datenbank: Migration 25 (neue Tabelle für die Berechtigungen, vorher legt die App eine Sicherung an); nach dem Update hat niemand Berechtigungen
+
 **Desktop-Ansicht ab 1024 px Breite.** Auf dem Handy und in der Companion App ändert sich nichts; Tablets (ab 640 px) zeigen die Handy-Ansicht zentriert, Fenster (Karten, Einstellungen) höchstens 640 px breit.
 
 - **Seitenleiste** (256 px, fest) statt der Leiste unten: Aufgaben (mit Zähler für heute fällig und überfällig), Boards, Wächter, darunter alle Boards mit Farbpunkt und offenen Karten (ein Klick wechselt das Board) und „Neues Board“, ganz unten die Person mit Rolle und dem Zahnrad für die Einstellungen

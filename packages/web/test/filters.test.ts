@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { costTotals, countByColumn, dueStats, filterCards, type FilterableCard } from '../src/lib/filters';
+import { costTotals, countByColumn, dueStats, filterCards, hiddenByPerson, type FilterableCard } from '../src/lib/filters';
 
 const card = (id: string, extra: Partial<FilterableCard> = {}): FilterableCard => ({
   id,
@@ -133,5 +133,21 @@ describe('filterCards: Personen-Chips der Boards (Meine, Alle, je Person)', () =
   it('ohne Auswahl bleibt alles; zusammen mit „nur meine" gelten beide', () => {
     expect(filterCards(cards, f([]), 'rene')).toHaveLength(4);
     expect(filterCards(cards, f(['conny'], true), 'rene').map((c) => c.id)).toEqual(['Rasen']);
+  });
+});
+
+describe('hiddenByPerson', () => {
+  it('„Meine" versteckt Karten ohne mich, auch unzugewiesene', () => {
+    expect(hiddenByPerson([], { onlyMine: true, personIds: [] }, 'me')).toBe(true);
+    expect(hiddenByPerson(['x'], { onlyMine: true, personIds: [] }, 'me')).toBe(true);
+    expect(hiddenByPerson(['me', 'x'], { onlyMine: true, personIds: [] }, 'me')).toBe(false);
+  });
+  it('gewählte Personen: eine Übereinstimmung genügt', () => {
+    expect(hiddenByPerson(['a'], { onlyMine: false, personIds: ['a', 'b'] }, 'me')).toBe(false);
+    expect(hiddenByPerson(['c'], { onlyMine: false, personIds: ['a', 'b'] }, 'me')).toBe(true);
+  });
+  it('ohne Personenfilter ist nichts versteckt; ohne bekannte Person versteckt „Meine" alles', () => {
+    expect(hiddenByPerson([], { onlyMine: false, personIds: [] }, 'me')).toBe(false);
+    expect(hiddenByPerson(['me'], { onlyMine: true, personIds: [] }, null)).toBe(true);
   });
 });

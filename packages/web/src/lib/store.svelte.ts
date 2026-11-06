@@ -18,7 +18,8 @@ import { applyAccent, hueFromStorage, type Scheme } from './accent';
 import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLanguage, t, tn } from './i18n/index.svelte';
 import { passkeysSupported } from './passkeys';
 import { mayDo, type Permission } from './permissions';
-import { DEFAULT_FILTER, effectiveFilter, parseScheduleFilter, type FilterContext, type ScheduleFilter } from './schedule';
+import { hiddenByPerson } from './filters';
+import { DEFAULT_FILTER, effectiveFilter, parseScheduleFilter, personFilterActive, type FilterContext, type ScheduleFilter } from './schedule';
 import { shiftDue, type ShiftTarget, type StatsKind } from './statsSheets';
 import { swipeTarget } from './swipe';
 import type { SettingsPageId } from './settingsPages';
@@ -528,9 +529,24 @@ function restoreView(): void {
     { personIds: ui.people.map((p) => p.id), boardIds: ui.boards.map((b) => b.id) },
     { isChild: ui.isChild },
   );
-  // Ein Gerät ohne Merkzettel startet bei „Meine": Aufgaben zeigt zuerst, was für mich dran ist
-  if (stored) ui.sf = stored;
-  else if (ui.me?.isPerson && !ui.isChild) ui.sf = { ...DEFAULT_FILTER, personIds: [ui.me.id] };
+  // Beim Start ist immer „Meine" gewählt (Aufgaben und Boards): zuerst sieht man, was für mich dran ist. Übrige gemerkte Filter bleiben.
+  const mine = ui.me?.isPerson && !ui.isChild ? ui.me.id : null;
+  ui.sf = mine ? { ...(stored ?? DEFAULT_FILTER), personIds: [mine], unassigned: false } : (stored ?? ui.sf);
+  ui.filter.onlyMine = mine !== null;
+}
+
+/**
+ * Eine neue Karte soll man sehen: Verstecken sie die Personenfilter (Start mit „Meine"), wechselt die Ansicht für Boards und
+ * Aufgaben auf „Alle", statt die Karte unauffindbar zu lassen.
+ */
+export function revealNewCard(card: { assigneeIds: string[] }): void {
+  if (hiddenByPerson(card.assigneeIds, ui.filter, ui.me?.id ?? null)) {
+    ui.filter.onlyMine = false;
+    ui.filter.personIds = [];
+  }
+  const sf = ui.sf;
+  const hiddenInList = personFilterActive(sf) && !(card.assigneeIds.some((id) => sf.personIds.includes(id)) || (sf.unassigned && card.assigneeIds.length === 0));
+  if (hiddenInList) setScheduleFilter({ personIds: [], unassigned: false });
 }
 
 export function selectTab(tab: Tab): void {

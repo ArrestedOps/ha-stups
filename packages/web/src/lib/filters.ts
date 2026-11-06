@@ -73,3 +73,9 @@ export function costTotals(
   }
   return { open, done };
 }
+
+/** Versteckt der Personenfilter von Boards („Meine" oder gewählte Personen) eine Karte mit diesen Zuständigen? */
+export function hiddenByPerson(assigneeIds: string[], f: Pick<Filter, 'onlyMine' | 'personIds'>, meId: string | null): boolean {
+  if (f.onlyMine && (!meId || !assigneeIds.includes(meId))) return true;
+  return !!f.personIds?.length && !assigneeIds.some((id) => f.personIds!.includes(id));
+}

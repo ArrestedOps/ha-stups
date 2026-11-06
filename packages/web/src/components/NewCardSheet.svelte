@@ -13,7 +13,7 @@
   import { parseQuickAdd, type QuickToken } from '../lib/quickadd';
   import { blockingProblem, chipLabel } from '../lib/quickadd/labels';
   import { describeRecurrence } from '../lib/recurrence';
-  import { act, closeSheet, openSheet, personById, toast, ui } from '../lib/store.svelte';
+  import { act, closeSheet, openSheet, personById, revealNewCard, toast, ui } from '../lib/store.svelte';
   import { columnForDue } from '../lib/swipe';
   import { detectSymbol } from '../lib/symbols/detect';
   import { symbolName } from '../lib/symbols/library';
@@ -261,6 +261,7 @@
       busy = false;
       return;
     }
+    revealNewCard(card);
 
     // Checkliste, Links und Anhänge gehören zur fertigen Karte; was schiefgeht, wird gemeldet, die Karte bleibt
     const problems: string[] = [];

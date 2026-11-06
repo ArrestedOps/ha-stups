@@ -55,13 +55,14 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
   await expect(agenda.getByText(s.t.fenster)).toBeVisible();
   await page.getByRole('dialog').getByRole('button', { name: /Aufgaben? anzeigen/ }).click();
 
-  // Der Filter bleibt auf dem Gerät erhalten
+  // Nach dem Neuladen ist wieder „Meine" gewählt (Start immer bei Meine), eine andere Personenwahl bleibt nicht stehen
   await page.getByTestId('tasks').getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
   await page.reload();
   await expect(page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByTestId('tasks')).toBeVisible();
-  await expect(agenda.getByText(s.t.fenster)).toBeVisible();
-  await expect(agenda.getByText(s.t.papier)).toBeHidden();
+  const people = page.getByTestId('tasks').getByRole('group', { name: 'Personen' });
+  await expect(people.getByRole('button', { name: 'Meine' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(people.getByRole('button', { name: /Conny/ })).toHaveAttribute('aria-pressed', 'false');
 });
 
 test('Agenda: Karte aus einem anderen Board öffnen und von dort erledigen', async ({ page, request }) => {

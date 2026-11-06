@@ -4,7 +4,7 @@
   import { columnForNew } from '../lib/calendar';
   import { formatDue, isFuture } from '../lib/datetime';
   import { boardColorKey, toggleId } from '../lib/schedule';
-  import { act, closeSheet, openCardAnywhere, selectBoard, toast, ui } from '../lib/store.svelte';
+  import { act, closeSheet, openCardAnywhere, revealNewCard, selectBoard, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Sheet from './Sheet.svelte';
   import Chip from './ui/Chip.svelte';
@@ -43,6 +43,7 @@
       : undefined;
     busy = false;
     if (!card) return;
+    revealNewCard(card);
     closeSheet();
     toast(t('Karte angelegt'), { action: { label: t('Öffnen'), run: () => void openCardAnywhere({ id: card.id, boardId }) } });
   }

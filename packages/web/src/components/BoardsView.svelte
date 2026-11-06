@@ -61,11 +61,6 @@
       {#if !ui.isChild}
         <div class="flex items-center gap-2">
           <div class="no-scrollbar -ml-3 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-3" role="group" aria-label={t('Personen')} use:scrollStrip={filterKey}>
-            {#if ui.me?.isPerson}
-              <Chip photo active={f.onlyMine} pressed={f.onlyMine} onclick={() => (ui.filter.onlyMine = !ui.filter.onlyMine)}>
-                <Avatar person={ui.me} size={32} />{t('Meine')}
-              </Chip>
-            {/if}
             <Chip
               active={!personActive}
               pressed={!personActive}
@@ -74,6 +69,11 @@
                 ui.filter.personIds = [];
               }}><Icon name="user" size={20} />{t('Alle')}</Chip
             >
+            {#if ui.me?.isPerson}
+              <Chip photo active={f.onlyMine} pressed={f.onlyMine} onclick={() => (ui.filter.onlyMine = !ui.filter.onlyMine)}>
+                <Avatar person={ui.me} size={32} />{t('Meine')}
+              </Chip>
+            {/if}
             {#each people as p (p.id)}
               <Chip photo active={f.personIds.includes(p.id)} pressed={f.personIds.includes(p.id)} onclick={() => (ui.filter.personIds = toggleId(ui.filter.personIds, p.id))}>
                 <Avatar person={p} size={32} />{p.displayName}

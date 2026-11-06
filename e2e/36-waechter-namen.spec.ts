@@ -29,10 +29,13 @@ async function clearWatchers(request: APIRequestContext) {
   for (const w of await watchers(request)) await request.delete(`/api/watchers/${w.id}`);
 }
 
-/** Ein Batterie-Wächter über die API, so benannt wie bisher (nur der Name der Vorlage) */
+/**
+ * Ein Batterie-Wächter über die API, so benannt wie bisher (nur der Name der Vorlage). Die Grenze liegt unter allen Ständen im Mock:
+ * Ein Pegel unter der Grenze löst beim Anlegen selbst aus (dann stünde der Wächter nicht mehr unter „Ruhig“).
+ */
 const plainBattery = (b: { boardId: string; columnId: string }, entityId: string, name = 'Batterie schwach', title = 'Batterie wechseln') => ({
   name,
-  trigger: { entityId, kind: 'below', value: 20, forMin: 10 },
+  trigger: { entityId, kind: 'below', value: 5, forMin: 10 },
   card: { boardId: b.boardId, columnId: b.columnId, title, due: { kind: 'none' } },
   assign: { mode: 'none' },
 });
@@ -50,6 +53,7 @@ async function setupHit(page: Page, hitText: string | RegExp, boardId: string) {
   const d = page.getByRole('dialog');
   await d.getByTestId('found-hit').filter({ hasText: hitText }).getByRole('button', { name: 'Einrichten' }).click();
   await expect(d.getByTestId('graph-card')).toBeVisible();
+  await d.getByLabel('Schwellwert').fill('5'); // unter dem Stand der Batterien: sonst löst der Wächter beim Anlegen gleich aus und steht nicht unter „Ruhig“
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
   await d.getByTestId('then-editor').getByLabel('Board', { exact: true }).selectOption(boardId);
   await d.getByRole('button', { name: 'Weiter: Wer' }).click();

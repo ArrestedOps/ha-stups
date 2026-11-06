@@ -32,7 +32,8 @@
   let select: HTMLSelectElement | undefined = $state();
   let text = $state('');
 
-  const read = () => (text = select?.selectedOptions[0]?.textContent?.trim() ?? '');
+  // `data-short` am Eintrag: kurzer Text für die Anzeige (die Liste zeigt den langen, zum Beispiel Haushalt · Alle)
+  const read = () => (text = select?.selectedOptions[0]?.dataset.short ?? select?.selectedOptions[0]?.textContent?.trim() ?? '');
 
   // Der angezeigte Text folgt dem gewählten Eintrag, auch wenn sich Einträge oder ihre Beschriftung ändern
   onMount(() => {
@@ -51,7 +52,7 @@
   class="relative inline-flex max-w-full min-w-0 items-center gap-1.5 {variant === 'box'
     ? 'min-h-11 rounded-xl border border-line bg-surface2 px-3 text-fg'
     : variant === 'pill'
-      ? 'min-h-11 gap-2 rounded-row border border-line bg-surface px-3.5 text-[15px] font-bold text-fg hover:border-line-chip hover:bg-surface2'
+      ? 'h-11 gap-2 rounded-row border border-line bg-surface px-3.5 text-[15px] font-bold whitespace-nowrap text-fg hover:border-line-chip hover:bg-surface2'
       : 'min-h-10 max-w-[220px] text-fg2'} focus-within:ring-2 focus-within:ring-accent {disabled ? 'opacity-60' : ''} {extra}"
 >
   {#if variant === 'pill' && caption}<span class="shrink-0 text-[11px] font-bold tracking-[0.08em] text-fg2 uppercase">{caption}</span>{/if}

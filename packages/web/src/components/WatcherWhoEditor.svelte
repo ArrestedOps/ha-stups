@@ -1,6 +1,5 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
-  import { ui } from '../lib/store.svelte';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
   import { modeOptions, needsPeople, usesCircle } from '../lib/watcher-flow';
   import { usesFallback } from '../lib/watchers';
@@ -18,7 +17,9 @@
   let { ed }: { ed: WatcherEditor } = $props();
 
   const f = $derived(ed.form);
-  const people = $derived(ui.people.filter((p) => p.isPerson));
+  /** nur Personen, die das Board sehen */
+  const people = $derived(ed.people);
+  const restricted = $derived(!!ed.board && ed.board.visibility !== 'all');
   const options = $derived(modeOptions());
   const toggle = (id: string) => (f.personIds = f.personIds.includes(id) ? f.personIds.filter((x) => x !== id) : [...f.personIds, id]);
 
@@ -71,6 +72,7 @@
     <SectionHeader title={needsPeople(f.assignMode) ? t('Personen') : t('Wer kommt infrage?')}>
       {#if !needsPeople(f.assignMode)}<span class="ml-auto text-[13px] text-fg2">{t('leer = alle')}</span>{/if}
     </SectionHeader>
+    {#if restricted}<p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint" data-testid="board-people-hint">{t('Zur Auswahl nur Personen aus dem Board')}</p>{/if}
     <div class="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3" role="group" aria-label={t('Personen')}>
       {#each people as p (p.id)}
         {@const on = f.personIds.includes(p.id)}

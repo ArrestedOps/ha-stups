@@ -5,6 +5,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import Icon from '../Icon.svelte';
+  import { arrowOnly, probeRight } from '../../lib/rowTap';
 
   /**
    * Die eine Zeile für Aufgaben, Board-Karten, Wächter und Einstellungen: 68 px hoch, links optional der
@@ -27,6 +28,7 @@
     wrap = false,
     rightFull = false,
     dim = false,
+    problem = false,
     expanded,
     pressed,
     inset = false,
@@ -54,6 +56,8 @@
     wrap?: boolean;
     /** der rechte Bereich ist so hoch wie die Zeile (ein Wert oben rechts, der Pfeil in der Mitte) */
     rightFull?: boolean;
+    /** Problem (zum Beispiel ein Wächter ohne Zuständige): roter Rand in der Farbe Gefahr, nicht Orange */
+    problem?: boolean;
     /** gedämpft: ein ausgeschalteter Wächter (Kachel und Text blasser, der Rest der Zeile nicht) */
     dim?: boolean;
     /** der Antippbereich klappt etwas auf (aria-expanded) */
@@ -65,11 +69,32 @@
     onclick?: (e: MouseEvent) => void;
     href?: string;
   } = $props();
+
+  // Steht rechts allein ein Pfeil, gehört er zum Antippbereich: Tippen darauf ist dasselbe wie Tippen auf die Zeile (zentral hier, nicht
+  // bei jedem Aufrufer). Schalter, Zahlenfeld, Foto, Wert oder Knopf rechts bleiben unberührt.
+  let rightEl = $state<HTMLElement>();
+  let arrow = $state(false);
+  $effect(() => {
+    if (!rightEl) return;
+    const el = rightEl;
+    const update = () => (arrow = !!(onclick || href) && arrowOnly(probeRight(el)));
+    update();
+    const watch = new MutationObserver(update);
+    watch.observe(el, { childList: true, subtree: true });
+    return () => watch.disconnect();
+  });
+
+  function tapRight(e: MouseEvent) {
+    if (!arrow) return;
+    const el = e.currentTarget as HTMLElement;
+    (el.parentElement?.querySelector('[data-row-open]') as HTMLElement | null)?.click();
+  }
 </script>
 
 <div
-  class="flex w-full items-center rounded-row border text-fg {inset ? (wrap ? 'min-h-16 bg-bg py-2' : 'h-16 bg-bg') : wrap ? `min-h-row py-2.5 ${current ? '' : 'bg-surface'}` : current ? 'h-row' : 'h-row bg-surface'} {highlight ? 'row-new' : current ? 'row-current' : 'border-line'} {dashed ? 'border-dashed' : ''} {onclick || href ? 'row-hover' : ''} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
+  class="flex w-full items-center rounded-row border text-fg {inset ? (wrap ? 'min-h-16 bg-bg py-2' : 'h-16 bg-bg') : wrap ? `min-h-row py-2.5 ${current ? '' : 'bg-surface'}` : current ? 'h-row' : 'h-row bg-surface'} {highlight ? 'row-new' : current ? 'row-current' : problem ? 'row-problem' : 'border-line'} {dashed ? 'border-dashed' : ''} {onclick || href ? 'row-hover' : ''} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
   data-variant={variant}
+  data-problem={problem ? '' : undefined}
 >
   {#if check}
     <button
@@ -109,5 +134,13 @@
     <div class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'}">{@render body()}</div>
   {/if}
 
-  {#if right}<span class="flex shrink-0 items-center {rightFull ? 'self-stretch' : ''} {check ? 'gap-2.5' : 'gap-3'}">{@render right()}</span>{/if}
+  {#if right}
+    <!-- Der Pfeil allein ist Teil des Antippbereichs (Tastatur und Screenreader nutzen den Knopf der Zeile) -->
+    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+    <span
+      bind:this={rightEl}
+      class="flex shrink-0 items-center {rightFull ? 'self-stretch' : ''} {check ? 'gap-2.5' : 'gap-3'} {arrow ? 'cursor-pointer' : ''}"
+      onclick={tapRight}>{@render right()}</span
+    >
+  {/if}
 </div>

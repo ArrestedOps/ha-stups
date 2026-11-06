@@ -7,6 +7,7 @@ import { cleanText, optionalText, parseDue, parsePriority, parseRemind, parseCos
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
+import type { Viewer } from './visibility.js';
 
 /** Karten */
 export function createCards(c: Ctx, late: unknown) {
@@ -14,7 +15,7 @@ export function createCards(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
-  const { closeOpenNudges, nudgeActivity, watcherActivity, completeCard, firstOpenColumn, inboxColumn, isFutureDue, lastPos, listAttachments, listCompletions, neighbours, plannedColumn, recordCompletion, snapshotOf, visibleBoard, visibleColumn } = lazy(s, ['closeOpenNudges', 'nudgeActivity', 'watcherActivity', 'completeCard', 'firstOpenColumn', 'inboxColumn', 'isFutureDue', 'lastPos', 'listAttachments', 'listCompletions', 'neighbours', 'plannedColumn', 'recordCompletion', 'snapshotOf', 'visibleBoard', 'visibleColumn'] as const);
+  const { boardPeopleIds, boardVisibleSql, visibleBoardsSql, closeOpenNudges, nudgeActivity, watcherActivity, completeCard, firstOpenColumn, inboxColumn, isFutureDue, lastPos, listAttachments, listCompletions, neighbours, plannedColumn, recordCompletion, snapshotOf, visibleBoard, visibleColumn } = lazy(s, ['boardPeopleIds', 'boardVisibleSql', 'visibleBoardsSql', 'closeOpenNudges', 'nudgeActivity', 'watcherActivity', 'completeCard', 'firstOpenColumn', 'inboxColumn', 'isFutureDue', 'lastPos', 'listAttachments', 'listCompletions', 'neighbours', 'plannedColumn', 'recordCompletion', 'snapshotOf', 'visibleBoard', 'visibleColumn'] as const);
 
   function loadCards(where: string, ...params: unknown[]): Card[] {
     const rows = all(`select * from cards where ${where} order by position, id`, ...params);
@@ -147,10 +148,14 @@ export function createCards(c: Ctx, late: unknown) {
     position: r.position,
   });
 
-  /** Mehrere Karten auf einmal, so wie die Board-Ansicht sie liefert (sichtbar, nicht archiviert); Unbekannte, Gelöschte und Archivierte fehlen */
-  function getCards(ids: string[]): Card[] {
+  /**
+   * Mehrere Karten auf einmal, so wie die Board-Ansicht sie liefert (sichtbar, nicht archiviert); Unbekannte, Gelöschte und Archivierte
+   * fehlen, ebenso Karten aus Boards, die `viewer` nicht sieht
+   */
+  function getCards(ids: string[], viewer: Viewer): Card[] {
     if (ids.length === 0) return [];
-    return loadCards(`id in (${ids.map(() => '?').join(', ')}) and deleted_at is null and archived_at is null`, ...ids);
+    const v = visibleBoardsSql(viewer);
+    return loadCards(`id in (${ids.map(() => '?').join(', ')}) and deleted_at is null and archived_at is null and board_id in (${v.sql})`, ...ids, ...v.args);
   }
 
   function getCard(id: string): CardDetail {
@@ -216,7 +221,8 @@ export function createCards(c: Ctx, late: unknown) {
       .slice(0, limit);
   }
 
-  function checkAssignees(ids: unknown): string[] {
+  /** Zuständige einer Karte: nur Personen aus Stups, die das Board sehen (auf einem privaten Board nur der Besitzer) */
+  function checkAssignees(ids: unknown, boardId: string): string[] {
     if (!Array.isArray(ids)) throw new ValidationError(t('Zuständige müssen eine Liste sein'));
     if (ids.some((x) => typeof x !== 'string')) throw new ValidationError(t('Zuständige müssen eine Liste sein'));
     const unique = [...new Set(ids as string[])];
@@ -224,6 +230,10 @@ export function createCards(c: Ctx, late: unknown) {
       if (!one('select 1 as ok from users where id = ? and is_person = 1', uid)) {
         throw new ValidationError(t('Zugewiesen werden können nur Personen aus Stups'));
       }
+    }
+    if (unique.length > 0) {
+      const seeing = new Set(boardPeopleIds(boardId));
+      if (unique.some((uid) => !seeing.has(uid))) throw new ValidationError(t('Zugewiesen werden können nur Personen, die das Board sehen'));
     }
     return unique;
   }
@@ -307,7 +317,7 @@ export function createCards(c: Ctx, late: unknown) {
     }
 
     return tx(() => {
-      const assignees = checkAssignees(input.assigneeIds ?? []);
+      const assignees = checkAssignees(input.assigneeIds ?? [], boardId);
       const categories = checkCategories(boardId, input.categoryIds ?? []);
       const id = randomUUID();
       const t = iso();
@@ -433,7 +443,7 @@ export function createCards(c: Ctx, late: unknown) {
         params.push(carry ? JSON.stringify(carry) : null);
       }
       if (patch.assigneeIds !== undefined) {
-        const ids = checkAssignees(patch.assigneeIds);
+        const ids = checkAssignees(patch.assigneeIds, card.board_id);
         run('delete from card_assignees where card_id = ?', id);
         for (const u of ids) run('insert into card_assignees (card_id, user_id) values (?, ?)', id, u);
       }
@@ -612,10 +622,11 @@ export function createCards(c: Ctx, late: unknown) {
    * Alle Karten mit Termin über alle Boards (für Agenda und Kalender), nach Termin sortiert.
    * `from` ist eingeschlossen, `to` ausgeschlossen; ohne `from` kommt auch alles Überfällige.
    */
-  function listSchedule(opts: { boardIds?: string[]; from?: string; to?: string; includeDone?: boolean; undated?: boolean }): ScheduleCard[] {
+  function listSchedule(opts: { viewer: Viewer; boardIds?: string[]; from?: string; to?: string; includeDone?: boolean; undated?: boolean }): ScheduleCard[] {
     // `undated`: nur offene Karten ohne Termin (Filter „Ohne Termin"); Zeitraum und Erledigte gibt es dort nicht
-    const where = [opts.undated ? 'due_at is null' : 'due_at is not null', 'deleted_at is null', 'archived_at is null', 'board_id in (select id from boards where deleted_at is null)'];
-    const params: unknown[] = [];
+    const seen = visibleBoardsSql(opts.viewer);
+    const where = [opts.undated ? 'due_at is null' : 'due_at is not null', 'deleted_at is null', 'archived_at is null', `board_id in (${seen.sql})`];
+    const params: unknown[] = [...seen.args];
     if (!opts.includeDone || opts.undated) where.push('completed_at is null');
     if (opts.from && !opts.undated) {
       where.push('due_at >= ?');
@@ -629,7 +640,8 @@ export function createCards(c: Ctx, late: unknown) {
       where.push(`board_id in (${opts.boardIds.map(() => '?').join(', ')})`);
       params.push(...opts.boardIds);
     }
-    const boards = new Map(all('select id, name, color from boards where deleted_at is null').map((b) => [b.id as string, b]));
+    const sees = boardVisibleSql('b', opts.viewer);
+    const boards = new Map(all(`select id, name, color from boards b where b.deleted_at is null and ${sees.sql}`, ...sees.args).map((b) => [b.id as string, b]));
     const cats = new Map(all('select id, name, color from categories where deleted_at is null').map((c) => [c.id as string, { id: c.id as string, name: c.name as string, color: c.color as string }]));
     return loadCards(where.join(' and '), ...params)
       .map((c) => ({

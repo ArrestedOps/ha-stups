@@ -95,6 +95,7 @@
   stroke-linecap="round"
   stroke-linejoin="round"
   aria-hidden="true"
+  data-icon={name}
 >
   <!-- eslint-disable-next-line svelte/no-at-html-tags -- feste Symbole aus diesem Modul, keine Nutzereingabe -->
   {@html paths[name] ?? ''}

@@ -84,9 +84,9 @@ describe('Entwurf: wurde etwas eingegeben?', () => {
 });
 
 describe('Name, wenn der Mensch keinen eingibt', () => {
-  it('mit Vorlage: Vorlagenname mit Gerät; sonst der Name der Entität; ohne alles leer', () => {
-    const f = applyTemplate(emptyForm('b', 'c'), tpl, { entityId: 'sensor.x', name: 'iPhone Rene Battery Level', label: 'iPhone Rene', unit: '%' });
-    expect(autoName(f)).toBe('Batterie schwach: iPhone Rene');
+  it('mit Vorlage: der Vorlagenname ohne Gerät; sonst der Name der Entität; ohne alles leer', () => {
+    const f = applyTemplate(emptyForm('b', 'c'), tpl, { entityId: 'sensor.x', name: 'iPhone Rene Battery Level', unit: '%' });
+    expect(autoName(f)).toBe('Batterie schwach');
     expect(autoName({ ...emptyForm(), entityName: 'Tür Waschküche' })).toBe('Tür Waschküche');
     expect(autoName(emptyForm())).toBe('');
   });
@@ -188,7 +188,7 @@ describe('Editor im Formular am Desktop', () => {
     ed.form = { ...emptyForm('b', 'c'), name: 'N', entityId: 'sensor.x', entityName: 'X', value: '20', title: 'T', assignMode: 'none' as const };
   };
 
-  it('applySuggestion füllt wie „Einrichten“ im Assistenten: Entität, Bedingung, Name mit Gerät, Titel, Kategorie', () => {
+  it('applySuggestion füllt wie „Einrichten“ im Assistenten: Entität, Bedingung, Name und Titel der Vorlage, Kategorie', () => {
     const ed = new WatcherEditor(null);
     ed.templates = [tpl];
     ed.applySuggestion(hit(7));
@@ -197,8 +197,8 @@ describe('Editor im Formular am Desktop', () => {
       kind: 'below',
       value: '20',
       forMin: '10',
-      name: 'Batterie schwach: Gerät 7',
-      title: 'Batterie wechseln: Gerät 7',
+      name: 'Batterie schwach',
+      title: 'Batterie wechseln',
       category: 'Batterien',
       categorySource: 'template',
       assignMode: 'rotation_present',

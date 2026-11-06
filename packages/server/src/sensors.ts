@@ -64,7 +64,8 @@ export function createSensors(deps: SensorDeps) {
   async function publish(): Promise<void> {
     const nowMs = deps.now().getTime();
     const tz = deps.timeZone();
-    const cards = store.openDueCards();
+    // Sensoren in Home Assistant liest jeder dort: nur Karten aus Boards, die alle sehen (nie aus privaten oder ausgewählten)
+    const cards = store.openDueCards({ publicOnly: true });
     const overdue = (list: OpenDueCard[]) => list.filter((c) => Date.parse(c.dueAt) < nowMs);
     const today = (list: OpenDueCard[]) =>
       list.filter((c) => Date.parse(c.dueAt) >= nowMs && dayDiff(Date.parse(c.dueAt), nowMs, tz) === 0);
@@ -91,8 +92,8 @@ export function createSensors(deps: SensorDeps) {
       put(`heute_faellig_${slug}`, `${sensorLabel} heute fällig (${person.name})`, 'mdi:calendar-today', today(mine));
     }
     // Offene Stupse: gesamt und je Person (die Namen der Sensoren beginnen wie die übrigen mit stups)
-    const nudges = store.openNudgeCounts();
-    const list = store.openNudgeList();
+    const nudges = store.openNudgeCounts({ publicOnly: true });
+    const list = store.openNudgeList({ publicOnly: true });
     writes.push(
       ha.setState(`${sensorPrefix}stupse_offen`, String(nudges.total), {
         friendly_name: `${sensorLabel} offene Stupse`,
@@ -102,7 +103,7 @@ export function createSensors(deps: SensorDeps) {
     );
     // Offene Karten, die ein Wächter angelegt hat
     writes.push(
-      ha.setState(`${sensorPrefix}waechter_offen`, String(store.openWatcherCardCount()), {
+      ha.setState(`${sensorPrefix}waechter_offen`, String(store.openWatcherCardCount({ publicOnly: true })), {
         friendly_name: `${sensorLabel} offene Wächter-Karten`,
         unit_of_measurement: 'Karten',
         icon: 'mdi:eye-outline',

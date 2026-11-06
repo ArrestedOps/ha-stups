@@ -6,14 +6,13 @@
   import { formatDue } from '../lib/datetime';
   import { onMount } from 'svelte';
   import type { WatcherTemplate } from '../lib/watcher-types';
-  import { conditionText, noteText, renameCandidates, RUN_TEXT, sortWatchers, watcherLine } from '../lib/watchers';
-  import { askRenameWatchers, can, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui } from '../lib/store.svelte';
+  import { conditionText, noteText, RUN_TEXT, sortWatchers, watcherLine } from '../lib/watchers';
+  import { can, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
   const data = $derived(ui.watchers);
   const items = $derived(sortWatchers(data?.items ?? []));
   const admin = $derived(can('watchers'));
-  const renamable = $derived(admin ? renameCandidates(items).length : 0);
   const personName = (id: string) => personById(id)?.displayName ?? '?';
 
   // Vorlagen des Servers für den Anfang (Administratoren und Recht „watchers“, nur solange es noch keinen Wächter gibt)
@@ -60,7 +59,9 @@
   const problem = (w: WatcherItem): string | null =>
     w.status === 'target_missing'
       ? t('Pausiert: Board oder Spalte gibt es nicht mehr')
-      : w.status === 'entity_missing'
+      : w.status === 'assignees_missing'
+        ? t('Keine Karten: braucht neue Zuständige')
+        : w.status === 'entity_missing'
         ? t('Die Entität gibt es in Home Assistant nicht')
         : w.active && !w.subscribed
           ? t('Home Assistant meldet nichts (Abo nicht aktiv)')
@@ -111,7 +112,7 @@
               <span class="mt-0.5 shrink-0 {w.active ? 'text-accent-text' : 'text-fg2'}"><Icon name="eye" size={22} /></span>
               <span class="min-w-0 flex-1">
                 <span class="block truncate text-[18px] font-bold">{w.name}</span>
-                {#if !w.nameHasDevice}<span class="block truncate text-[14px] text-tok" data-testid="watcher-subject">{w.subject}</span>{/if}
+                <span class="block truncate text-[14px] text-tok" data-testid="watcher-subject">{w.subject}</span>
                 <span class="mt-0.5 block text-[14px] text-fg2">{t('Wenn {condition}', { condition: condition(w) })}</span>
               </span>
             </button>
@@ -154,11 +155,6 @@
       {/each}
     </ul>
 
-    {#if renamable > 0}
-      <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-[16px] font-semibold text-accent-text" data-testid="rename-with-device" onclick={() => askRenameWatchers(renamable)}>
-        <Icon name="eye" size={18} />{t('Namen mit Gerät ergänzen')}
-      </button>
-    {/if}
     {#if admin}
       <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-[16px] font-semibold text-accent-text" onclick={() => openNewWatcher({ from: 'settings' })}>
         <Icon name="plus" size={18} stroke={2.6} />{t('Wächter hinzufügen')}

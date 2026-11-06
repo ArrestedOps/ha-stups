@@ -88,9 +88,19 @@ export interface WatcherConfig {
   nudgeAfterMin: number | null;
   /** Kategorie zum Gruppieren in der Liste (frei wählbar, null = „Ohne Kategorie"); gleiche Namen legt die Daten-Schicht zusammen */
   category: string | null;
+  /**
+   * Die Karten dieses Wächters zählen zur Fairness (zusätzlich zum Board: zählt das Board nicht, zählt auch der Wächter nicht). Ohne Angabe
+   * beim Anlegen gilt der Wert des Boards; der gespeicherte Wert bleibt auch dann, wenn das Board gerade nicht zählt.
+   */
+  countsForFairness: boolean;
 }
 
-export type WatcherStatus = 'ok' | 'entity_missing' | 'target_missing';
+/**
+ * ok; entity_missing: die beobachtete Entität gibt es nicht (mehr); target_missing: Board oder Spalte gibt es nicht mehr (pausiert);
+ * assignees_missing: es gibt keine gültigen Zuständigen mehr (zum Beispiel wurde die einzige Person aus dem Board genommen): der
+ * Wächter bleibt aktiv, legt aber keine Karten an, bis neue Zuständige gespeichert sind.
+ */
+export type WatcherStatus = 'ok' | 'entity_missing' | 'target_missing' | 'assignees_missing';
 
 const ENTITY_RE = /^[a-z0-9_]+\.[a-z0-9_]+$/;
 const HM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -242,6 +252,7 @@ export function parseWatcher(raw: unknown): WatcherConfig {
     dedupe: o.dedupe === undefined ? true : o.dedupe === true,
     nudgeAfterMin: o.nudgeAfterMin === undefined || o.nudgeAfterMin === null ? null : int(o.nudgeAfterMin, t('Das Stupsen nach'), 5, 1440, 60),
     category: cleanCategory(o.category),
+    countsForFairness: o.countsForFairness === undefined ? true : o.countsForFairness === true,
   };
 }
 

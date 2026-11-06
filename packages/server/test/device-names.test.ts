@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { containsDevice, deviceLabel, withDevice } from '../src/device-names.js';
+import { deviceLabel, withDevice } from '../src/device-names.js';
 
 describe('Gerätename aus dem Friendly Name', () => {
   it('entfernt Batterie-Endungen der Sensornamen, ohne sie zu verdoppeln', () => {
@@ -93,11 +93,5 @@ describe('Name mit Gerät', () => {
 
   it('ist kein Platz mehr für das Gerät, bleibt der Name', () => {
     expect(withDevice('Ein ziemlich langer Name eines Wächters', 'Flur', 41)).toBe('Ein ziemlich langer Name eines Wächters');
-  });
-
-  it('containsDevice prüft Teilstring und Wörter', () => {
-    expect(containsDevice('Batterie schwach: iPhone Rene', 'iPhone Rene')).toBe(true);
-    expect(containsDevice('Batterie schwach', 'iPhone Rene')).toBe(false);
-    expect(containsDevice('Batterie schwach', '')).toBe(true);
   });
 });

@@ -28,6 +28,10 @@ export interface InboxEntry {
   assigned: boolean;
   /** Termin der Karte (nur bei Erinnerungen: „überfällig seit …") */
   dueAt: string | null;
+  /** Kennung des Wächters (nur bei Mitteilungen zu Wächtern ohne Karte: `detail` ist dann `assignees_missing` oder `shrunk`) */
+  watcherId: string | null;
+  /** Die Angaben zu „braucht neue Zuständige" und „läuft weiter mit …" (sonst null); die Oberfläche bildet den Satz */
+  notice: { boardName: string; removedNames: string[]; remainingNames: string[] } | null;
 }
 
 export interface InboxResult {
@@ -49,21 +53,24 @@ const WATCHER_RESULTS = ['created', 'suggested', 'assigned', 'passed', 'suggest_
 export function createInbox(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { all, one, run, now, iso } = c;
-  const { confirmerIds } = lazy(s, ['confirmerIds'] as const);
+  const { confirmerIds, visibleBoardsSql, watcherNoticesFor } = lazy(s, ['confirmerIds', 'visibleBoardsSql', 'watcherNoticesFor'] as const);
 
   /**
    * Gehört die Karte (Alias `c`) zu dieser Person? Ein Kind: immer nur Karten, die ihm zugewiesen sind (nie fremde Boards). Sonst Karten,
    * die ihr zugewiesen sind, die sie angelegt hat oder an denen sie gestupst hat (`strict`). Gelöschte Karten und Boards gibt es nicht.
    */
-  function mine(child: boolean, me: string, strict = true): { sql: string; args: string[] } {
-    const base = `c.deleted_at is null and c.board_id in (select id from boards where deleted_at is null)`;
+  function mine(child: boolean, me: string, strict = true): { sql: string; args: (string | null)[] } {
+    // Nur Boards, die die Person sieht: Karten aus privaten Boards anderer erscheinen nie in ihren Mitteilungen
+    const seen = visibleBoardsSql(me);
+    const base = `c.deleted_at is null and c.board_id in (${seen.sql})`;
     const assigned = `exists (select 1 from card_assignees a where a.card_id = c.id and a.user_id = ?)`;
-    if (child) return { sql: `${base} and ${assigned}`, args: [me] };
+    // Die Platzhalter des Teils „base" stehen im SQL vor den übrigen
+    if (child) return { sql: `${base} and ${assigned}`, args: [...seen.args, me] };
     // Was mir direkt gilt (Stups an mich, Erinnerung an mich) braucht bei einem Erwachsenen keinen weiteren Bezug zur Karte
-    if (!strict) return { sql: base, args: [] };
+    if (!strict) return { sql: base, args: [...seen.args] };
     return {
       sql: `${base} and (${assigned} or c.created_by = ? or exists (select 1 from nudges n where n.card_id = c.id and n.from_user = ?))`,
-      args: [me, me, me],
+      args: [...seen.args, me, me, me],
     };
   }
 
@@ -76,6 +83,7 @@ export function createInbox(c: Ctx, late: unknown) {
     const before = opts.before ?? '9999-12-31T23:59:59.999Z';
     const m = mine(child, userId);
     const direct = mine(child, userId, false);
+    const seen = visibleBoardsSql(userId);
     const out: InboxEntry[] = [];
     const base = (r: Record<string, any>) => ({ cardId: r.card_id as string, cardTitle: r.title as string, boardId: r.board_id as string });
     const entry = (e: Partial<InboxEntry> & Pick<InboxEntry, 'id' | 'kind' | 'at' | 'cardId' | 'cardTitle' | 'boardId'>): InboxEntry => ({
@@ -85,6 +93,8 @@ export function createInbox(c: Ctx, late: unknown) {
       watcherName: null,
       assigned: false,
       dueAt: null,
+      watcherId: null,
+      notice: null,
       ...e,
     });
     const LIM = INBOX_LIMIT + 1;
@@ -114,9 +124,9 @@ export function createInbox(c: Ctx, late: unknown) {
       `select r.id, r.at, r.result, r.assigned_to, w.name as watcher_name, c.id as card_id, c.title, c.board_id from watcher_runs r
        join watchers w on w.id = r.watcher_id join cards c on c.id = r.card_id
        where r.result in (${WATCHER_RESULTS.map(() => '?').join(', ')}) and r.at >= ? and r.at < ? and c.deleted_at is null
-         and c.board_id in (select id from boards where deleted_at is null) ${child ? `and ${m.sql}` : ''}
+         and c.board_id in (${seen.sql}) ${child ? `and ${m.sql}` : ''}
        order by r.at desc limit 400`,
-      ...WATCHER_RESULTS, since, before, ...(child ? m.args : []),
+      ...WATCHER_RESULTS, since, before, ...seen.args, ...(child ? m.args : []),
     );
     let watcherCount = 0;
     for (const r of wq) {
@@ -130,6 +140,27 @@ export function createInbox(c: Ctx, late: unknown) {
       if (!assigned && (child || ids.length > 0 || !['created', 'suggested', 'suggest_fallback'].includes(r.result))) continue;
       if (++watcherCount > LIM) break;
       out.push(entry({ id: `watcher:${r.id}`, kind: 'watcher', at: r.at, ...base(r), detail: r.result, watcherName: r.watcher_name, assigned }));
+    }
+
+    // Wächter, die neue Zuständige brauchen oder nach dem Entfernen einer Person verkleinert weiterlaufen (ohne Karte; nie für ein Kind)
+    if (!child) {
+      for (const n of watcherNoticesFor(userId, since, before, LIM)) {
+        out.push(
+          entry({
+            id: `notice:${n.id}`,
+            kind: 'watcher',
+            at: n.at,
+            cardId: '',
+            cardTitle: '',
+            boardId: n.detail.boardId,
+            actorId: n.byUser,
+            detail: n.kind,
+            watcherName: n.watcherName,
+            watcherId: n.watcherId,
+            notice: { boardName: n.detail.boardName, removedNames: n.detail.removedNames, remainingNames: n.detail.remainingNames },
+          }),
+        );
+      }
     }
 
     // Erledigungen anderer auf meinen Karten
@@ -179,9 +210,9 @@ export function createInbox(c: Ctx, late: unknown) {
       for (const r of all(
         `select c.id as card_id, c.title, c.board_id, c.confirm_requested_at as at, c.confirm_requested_by as by from cards c
          where c.deleted_at is null and c.archived_at is null and c.completed_at is null and c.confirm_requested_at is not null
-           and c.confirm_requested_at >= ? and c.confirm_requested_at < ? and c.board_id in (select id from boards where deleted_at is null)
+           and c.confirm_requested_at >= ? and c.confirm_requested_at < ? and c.board_id in (${seen.sql})
          order by c.confirm_requested_at desc limit ${LIM}`,
-        since, before,
+        since, before, ...seen.args,
       )) {
         const childId = (r.by as string | null) ?? null;
         if (childId === userId || !(opts.confirmAll || (childId !== null && confirmerIds(childId).includes(userId)))) continue;

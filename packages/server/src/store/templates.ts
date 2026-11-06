@@ -67,11 +67,26 @@ export function createTemplates(c: Ctx, late: unknown) {
     return new Date(fromLocal({ y: day.getUTCFullYear(), m: day.getUTCMonth() + 1, d: day.getUTCDate(), h, mi, s: 0 }, tz)).toISOString();
   }
 
-  function createBoardFromTemplate(input: { name: string; template: string; lang: Lang; by: string | null }): Board {
+  function createBoardFromTemplate(input: {
+    name: string;
+    template: string;
+    lang: Lang;
+    by: string | null;
+    visibility?: unknown;
+    countsForFairness?: unknown;
+    memberIds?: unknown;
+  }): Board {
     const data = getTemplateData(input.template, input.lang);
     if (!data) throw new NotFoundError(t('Vorlage nicht gefunden'));
     return tx(() => {
-      const board = createBoard({ name: input.name, columns: data.columns });
+      const board = createBoard({
+        name: input.name,
+        columns: data.columns,
+        visibility: input.visibility,
+        ownerId: input.by,
+        countsForFairness: input.countsForFairness,
+        memberIds: input.memberIds,
+      });
       const columns = getBoardView(board.id).columns;
       const categoryIds = data.categories.map((cat) => addCategory(board.id, { name: cat.name, color: cat.color }).id);
       const firstOpen = columns.findIndex((col) => !col.isDone && !col.isPlanned);

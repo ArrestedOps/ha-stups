@@ -45,7 +45,9 @@ export type RunResult =
   /** jemand hat die vorgeschlagene Karte übernommen */
   | 'claimed'
   /** niemand hat sich in 30 Minuten gemeldet: der Rückfall des Wächters greift */
-  | 'suggest_fallback';
+  | 'suggest_fallback'
+  /** Der Wächter braucht neue Zuständige (Status `assignees_missing`): es wurde keine Karte angelegt */
+  | 'no_assignees';
 
 export interface WatcherRun {
   id: string;
@@ -100,7 +102,9 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     dedupe: r.dedupe === 1,
     nudgeAfterMin: r.nudge_after_min,
     category: r.category ?? null,
-    status: r.status,
+    countsForFairness: r.counts_for_fairness !== 0,
+    // „keine Zuständigen" ist ein eigener Merker (Spalte assignees_missing); ein fehlendes Ziel oder eine fehlende Entität geht vor
+    status: r.status !== 'ok' ? r.status : r.assignees_missing === 1 ? 'assignees_missing' : 'ok',
     lastFiredAt: r.last_fired_at,
     lastAssignees: JSON.parse(r.last_assignees) as string[],
     createdAt: r.created_at,
@@ -141,6 +145,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     c.dedupe ? 1 : 0,
     c.nudgeAfterMin,
     mergeCategory(c.category, categories(exceptId)),
+    c.countsForFairness ? 1 : 0,
   ];
 
   function create(c: WatcherConfig): Watcher {
@@ -149,8 +154,8 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     const position = ((one('select max(position) as m from watchers')?.m as number | null) ?? -1) + 1;
     run(
       `insert into watchers (id, name, active, trigger_json, card_json, assign_json, done_json, cooldown_min, dedupe, nudge_after_min,
-                             category, position, created_at, updated_at)
-       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                             category, counts_for_fairness, position, created_at, updated_at)
+       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       ...columns(c),
       position,
@@ -161,11 +166,17 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     return get(id);
   }
 
-  function update(id: string, c: WatcherConfig): Watcher {
+  /**
+   * `clearMissing`: gültige Zuständige sind gespeichert, der Status „braucht neue Zuständige" (assignees_missing) fällt weg. Bleibt er
+   * `false` (zum Beispiel beim Umbenennen eines Wächters ohne Zuständige), bleibt der Merker stehen.
+   */
+  function update(id: string, c: WatcherConfig, clearMissing = true): Watcher {
     get(id);
     run(
       `update watchers set name = ?, active = ?, trigger_json = ?, card_json = ?, assign_json = ?, done_json = ?, cooldown_min = ?,
-                           dedupe = ?, nudge_after_min = ?, category = ?, updated_at = ?, status = 'ok' where id = ?`,
+                           dedupe = ?, nudge_after_min = ?, category = ?, counts_for_fairness = ?, updated_at = ?, status = 'ok'${
+                             clearMissing ? ', assignees_missing = 0' : ''
+                           } where id = ?`,
       ...columns(c, id),
       iso(),
       id,
@@ -178,13 +189,24 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     run('delete from watchers where id = ?', id);
   }
 
-  const setStatus = (id: string, status: WatcherStatus) => run('update watchers set status = ? where id = ?', status, id);
+  /** „keine Zuständigen" ist ein eigener Merker und lässt `status` (Entität oder Ziel fehlt) in Ruhe; alles andere setzt `status` */
+  const setStatus = (id: string, status: WatcherStatus) =>
+    status === 'assignees_missing'
+      ? run('update watchers set assignees_missing = 1 where id = ?', id)
+      : run('update watchers set status = ? where id = ?', status === 'ok' ? 'ok' : status, id);
   const setActive = (id: string, active: boolean) => run('update watchers set active = ?, updated_at = ? where id = ?', active ? 1 : 0, iso(), id);
 
   /** Nur die Kategorie ändern (Liste, „Kategorien vorschlagen"): kein erneutes Anmelden, kein Zurücksetzen des Status */
   function setCategory(id: string, category: string | null): void {
     get(id);
     run('update watchers set category = ?, updated_at = ? where id = ?', mergeCategory(category, categories(id)), iso(), id);
+  }
+
+  /** Nur Name und Titel der Kartenvorlage (Aufräumen alter Gerätenamen): kein erneutes Anmelden, nichts sonst; null lässt den Text, wie er ist */
+  function setNames(id: string, to: { name: string | null; cardTitle: string | null }): void {
+    const w = get(id);
+    if (to.name !== null) run('update watchers set name = ? where id = ?', to.name, id);
+    if (to.cardTitle !== null) run('update watchers set card_json = ? where id = ?', JSON.stringify({ ...w.card, title: to.cardTitle }), id);
   }
 
   function markFired(id: string, assignees: string[]): void {
@@ -314,6 +336,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     setStatus,
     setActive,
     setCategory,
+    setNames,
     categories,
     markFired,
     getState,

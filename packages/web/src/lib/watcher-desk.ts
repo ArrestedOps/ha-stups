@@ -1,4 +1,3 @@
-import { withDevice } from './deviceName';
 import { t } from './i18n/index.svelte';
 import type { HomeItem } from './api';
 import type { AssignMode, WatcherSuggestion } from './watcher-types';
@@ -50,8 +49,8 @@ export function deskConditionItems(): { id: 'above' | 'below' | 'state'; label: 
 /** Hat der Mensch seit dem Aufklappen etwas geändert? `initial` ist der Stand, sobald alles geladen und vorbelegt ist (null: noch nicht) */
 export const formDirty = (current: WatcherForm, initial: WatcherForm | null): boolean => initial !== null && JSON.stringify(current) !== JSON.stringify(initial);
 
-/** Der Name, wenn das Feld leer bleibt: der der Vorlage mit Gerät, sonst der Name der Entität (dieselben Regeln wie beim Wählen der Entität) */
-export const autoName = (f: Pick<WatcherForm, 'baseName' | 'label' | 'entityName'>): string => (f.baseName ? withDevice(f.baseName, f.label) : f.entityName);
+/** Der Name, wenn das Feld leer bleibt: der der Vorlage (ohne Gerät), sonst der Name der Entität */
+export const autoName = (f: Pick<WatcherForm, 'baseName' | 'entityName'>): string => f.baseName || f.entityName;
 
 /** Das erste, was fehlt, in der Reihenfolge des Formulars: der Name (er füllt sich selbst) kommt zuletzt, sonst fehlte angeblich er, obwohl die Entität fehlt */
 export function deskProblem(f: WatcherForm): string | null {

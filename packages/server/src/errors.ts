@@ -4,6 +4,8 @@ export class AppError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    /** Zusätzliche Angaben für die Oberfläche (kommen neben `error` in der Antwort an), zum Beispiel die betroffenen Wächter */
+    readonly details?: Record<string, unknown>,
   ) {
     super(message);
   }
@@ -28,7 +30,7 @@ export class NotFoundError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(message: string) {
-    super(message, 409);
+  constructor(message: string, details?: Record<string, unknown>) {
+    super(message, 409, details);
   }
 }

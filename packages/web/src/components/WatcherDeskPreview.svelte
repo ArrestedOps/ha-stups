@@ -1,5 +1,6 @@
 <script lang="ts">
   import { valueText } from '../lib/history';
+  import { cardTitleWithEntity } from '../lib/cardTitle';
   import { t } from '../lib/i18n/index.svelte';
   import { personById, ui } from '../lib/store.svelte';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
@@ -29,6 +30,8 @@
   const minutes = $derived(Number(f.forMin.trim() === '' ? (f.kind === 'state' ? 0 : 3) : f.forMin.replace(',', '.')) || 0);
   const current = $derived(valueText(ed.history?.current ?? null, ed.history?.kind === 'state' ? null : unit));
   const auto = $derived(f.icon ? null : (nameSymbol(f.title) ?? nameSymbol(f.entityName)));
+  /** Der Titel der Karte, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
+  const shownTitle = $derived(cardTitleWithEntity(f.title, f.kind, f.entityName || f.entityId) || '…');
   const look = $derived({ icon: f.icon || auto, iconColor: f.iconColor || null });
   const board = $derived(ui.boards.find((b) => b.id === f.boardId));
   /** Wer die Karte bekommt, soweit es feststeht: die gewählten Personen (leer: kein Bild, nur das Schild des Wächters) */
@@ -58,7 +61,7 @@
 
   <h3 class="mt-1 text-[12px] font-bold tracking-[0.08em] text-fg2 uppercase">{t('So erscheint die Karte')}</h3>
   <div class="rounded-[18px] border border-dashed border-track bg-surface-inset p-2" data-testid="card-preview">
-    <ListRow wrap variant="task" title={f.title.trim() || '…'} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
+    <ListRow wrap variant="task" title={shownTitle} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
       {#snippet tile()}<CardTile card={look} />{/snippet}
       {#snippet meta()}
         <span class="shrink-0">{dueText(f)}</span>

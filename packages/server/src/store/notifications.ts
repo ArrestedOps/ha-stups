@@ -1,17 +1,25 @@
 import { type OpenDueCard, type RecentNotification, type NotificationKey } from './types.js';
-import type { Ctx } from './context.js';
+import { lazy, type Ctx } from './context.js';
+import type { Internals } from './internals.js';
+import type { Viewer } from './visibility.js';
 
 /** Benachrichtigungen (Sendeprotokoll) */
-export function createNotifications(c: Ctx) {
+export function createNotifications(c: Ctx, late: unknown) {
+  const s = late as Internals;
   const { iso, all, run } = c;
+  const { canSeeBoard, visibleBoardsSql } = lazy(s, ['canSeeBoard', 'visibleBoardsSql'] as const);
 
-  function openDueCards(): OpenDueCard[] {
+  /**
+   * Alle offenen Karten mit Fälligkeit (für Erinnerungen und Zusammenfassung: Karten gehen nur an ihre Zuständigen, und die sehen das
+   * Board). `publicOnly`: nur Karten aus Boards, die alle sehen (für Sensoren in Home Assistant, die jeder dort lesen kann).
+   */
+  function openDueCards(opts: { publicOnly?: boolean } = {}): OpenDueCard[] {
     const rows = all(
       `select c.id, c.title, c.board_id, b.name as board_name, c.due_at, c.remind_before_min, c.overdue_nag
        from cards c join boards b on b.id = c.board_id
        where c.deleted_at is null and c.archived_at is null and c.completed_at is null
          and c.due_at is not null and b.deleted_at is null
-         and c.confirm_requested_at is null
+         and c.confirm_requested_at is null${opts.publicOnly ? " and b.visibility = 'all'" : ''}
        order by c.due_at, c.id`,
     );
     const assignees = new Map<string, string[]>();
@@ -20,6 +28,13 @@ export function createNotifications(c: Ctx) {
     )) {
       assignees.set(r.card_id, [...(assignees.get(r.card_id) ?? []), r.user_id]);
     }
+    // Zuständig bleibt nur, wer das Board sieht (Meldungen gehen nie an jemanden, der die Karte gar nicht sehen darf)
+    const sees = new Map<string, boolean>();
+    const mayLook = (userId: string, boardId: string): boolean => {
+      const key = `${userId}\u0000${boardId}`;
+      if (!sees.has(key)) sees.set(key, canSeeBoard(userId, boardId));
+      return sees.get(key)!;
+    };
     return rows.map((r) => ({
       id: r.id,
       title: r.title,
@@ -28,7 +43,7 @@ export function createNotifications(c: Ctx) {
       dueAt: r.due_at,
       remindBeforeMin: r.remind_before_min,
       overdueNag: r.overdue_nag === 1,
-      assigneeIds: assignees.get(r.id) ?? [],
+      assigneeIds: (assignees.get(r.id) ?? []).filter((uid) => mayLook(uid, r.board_id)),
     }));
   }
 
@@ -51,13 +66,16 @@ export function createNotifications(c: Ctx) {
   }
 
   /** Letzte Einträge des Sendeprotokolls, neueste zuerst (für die Übersicht in den Einstellungen). */
-  function recentNotifications(limit = 20): RecentNotification[] {
+  function recentNotifications(limit: number, viewer: Viewer): RecentNotification[] {
+    const seen = visibleBoardsSql(viewer);
     return all(
       `select n.kind, n.status, n.sent_at, n.occurrence_key, c.title, u.name as user_name
        from sent_notifications n
        left join cards c on c.id = n.card_id
        left join users u on u.id = n.user_id
+       where c.id is null or c.board_id in (${seen.sql})
        order by n.id desc limit ?`,
+      ...seen.args,
       limit,
     ).map((r) => ({
       kind: r.kind,

@@ -5,6 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { afterEach, describe, expect, it } from 'vitest';
 import { openDb } from '../src/db.js';
 import { migrations } from '../src/migrations.js';
+import { withoutLater } from './helpers/later-columns.js';
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -57,8 +58,8 @@ describe('Migration 26 (Kategorie am Wächter)', () => {
     expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(migrations.at(-1)!.version);
     for (const t of TABLES) {
       const now = db.prepare(`select * from ${t} order by 1`).all() as Record<string, unknown>[];
-      // alles, was es vorher gab, ist unverändert; bei den Wächtern kommt nur `category` (leer) dazu
-      expect(now.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => !(t === 'watchers' && k === 'category')))), t).toEqual(snap[t]);
+      // alles, was es vorher gab, ist unverändert; neue Spalten späterer Migrationen zählen nicht
+      expect(withoutLater(t, now), t).toEqual(snap[t]);
     }
     expect(db.prepare('select id, category from watchers order by id').all()).toEqual([
       { id: 'w1', category: null },

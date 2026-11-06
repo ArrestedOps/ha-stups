@@ -2,9 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { ConflictError, ForbiddenError, ValidationError } from '../errors.js';
 import { isHm, quietEnd } from '../quiet.js';
 import { NUDGE_TEMPLATES, NUDGE_TEXT_MAX, NUDGE_COOLDOWN_MS, NUDGE_LATER_MS, NUDGE_LATER_MAX, type User, type NudgeTemplate, type Nudge, type NudgeSent, type NudgeSkipped, type NudgeTarget, type DueNudge, type RecentNudge, type ActivityEntry, type Row } from './types.js';
-import { OPEN_CARD } from './constants.js';
+import { OPEN_CARD, PUBLIC_BOARD } from './constants.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
+import type { Viewer } from './visibility.js';
 import { t } from '../i18n/index.js';
 
 /** Stupsen */
@@ -13,7 +14,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { now, timeZone, iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
-  const { quietOf, toUser, userRow, visibleCardRow } = lazy(s, ['quietOf', 'toUser', 'userRow', 'visibleCardRow'] as const);
+  const { quietOf, toUser, userRow, visibleCardRow, canSeeBoard, visibleBoardsSql } = lazy(s, ['quietOf', 'toUser', 'userRow', 'visibleCardRow', 'canSeeBoard', 'visibleBoardsSql'] as const);
 
   const toNudge = (r: Row): Nudge => ({
     id: r.id,
@@ -92,7 +93,8 @@ export function createNudgesPart(c: Ctx, late: unknown) {
           continue;
         }
         const to = typeof toId === 'string' ? one('select * from users where id = ?', toId) : undefined;
-        if (!to || to.is_person !== 1) {
+        // Wer die Karte nicht sehen darf (privates Board), bekommt keinen Stups zu ihr
+        if (!to || to.is_person !== 1 || !canSeeBoard(toId, card.board_id)) {
           skipped.push({ to: toId, reason: 'no_person', retryAt: null });
           continue;
         }
@@ -127,10 +129,11 @@ export function createNudgesPart(c: Ctx, late: unknown) {
 
   /** Wer in der Stups-Auswahl steht, wer vorausgewählt ist und warum jemand (noch) nicht wählbar ist */
   function nudgeTargets(cardId: string, fromId: string): NudgeTarget[] {
-    visibleCardRow(cardId);
+    const card = visibleCardRow(cardId);
     const nowMs = now().getTime();
     const assigned = new Set(all('select user_id from card_assignees where card_id = ?', cardId).map((r) => r.user_id as string));
-    const others = all('select * from users where is_person = 1 and id <> ? order by created_at, rowid', fromId);
+    // Nur Personen, die das Board der Karte sehen
+    const others = all('select * from users where is_person = 1 and id <> ? order by created_at, rowid', fromId).filter((u) => canSeeBoard(u.id as string, card.board_id as string));
     const targets = others.map((u): NudgeTarget => {
       const cooldown = hasDevice(u) ? nudgeCooldownEnd(cardId, fromId, u.id, nowMs) : null;
       const reason = !hasDevice(u) ? 'no_device' : cooldown !== null ? 'rate' : null;
@@ -253,10 +256,10 @@ export function createNudgesPart(c: Ctx, late: unknown) {
   const nudgeRecipients = (cardId: string): string[] =>
     all('select distinct to_user from nudges where card_id = ?', cardId).map((r) => r.to_user as string);
 
-  function openNudgeCounts(): { total: number; byUser: Record<string, number> } {
+  function openNudgeCounts(opts: { publicOnly?: boolean } = {}): { total: number; byUser: Record<string, number> } {
     const rows = all(
       `select n.to_user, count(*) as n from nudges n join cards c on c.id = n.card_id
-       where n.reply is null and ${OPEN_CARD} group by n.to_user`,
+       where n.reply is null and ${OPEN_CARD}${opts.publicOnly ? PUBLIC_BOARD : ''} group by n.to_user`,
     );
     const byUser: Record<string, number> = {};
     let total = 0;
@@ -268,21 +271,24 @@ export function createNudgesPart(c: Ctx, late: unknown) {
   }
 
   /** Offene Stupse mit Karte und Absender (für die Attribute der Sensoren) */
-  function openNudgeList(): { toId: string; card: string; from: string; since: string }[] {
+  function openNudgeList(opts: { publicOnly?: boolean } = {}): { toId: string; card: string; from: string; since: string }[] {
     return all(
       `select n.to_user, n.created_at, c.title as card_title, f.display_name as from_name
        from nudges n join cards c on c.id = n.card_id join users f on f.id = n.from_user
-       where n.reply is null and ${OPEN_CARD} order by n.created_at, n.rowid`,
+       where n.reply is null and ${OPEN_CARD}${opts.publicOnly ? PUBLIC_BOARD : ''} order by n.created_at, n.rowid`,
     ).map((r) => ({ toId: r.to_user, card: r.card_title, from: r.from_name, since: r.created_at }));
   }
 
-  function recentNudges(limit = 15): RecentNudge[] {
+  function recentNudges(limit: number, viewer: Viewer): RecentNudge[] {
     const nowIso = now().toISOString();
+    const seen = visibleBoardsSql(viewer);
     return all(
       `select n.*, c.title as card_title, f.display_name as from_name, t.display_name as to_name
        from nudges n join cards c on c.id = n.card_id
        join users f on f.id = n.from_user join users t on t.id = n.to_user
+       where c.board_id in (${seen.sql})
        order by n.created_at desc, n.rowid desc limit ?`,
+      ...seen.args,
       limit,
     ).map((r) => ({
       title: r.card_title,

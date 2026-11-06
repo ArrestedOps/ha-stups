@@ -12,8 +12,12 @@ import type { Store } from '../store.js';
  * sehen darf, entscheidet die Abfrage (siehe store/visibility.ts), hier geht es um die Routen.
  */
 
-/** Wie eine Route prüft, ob die Anfrage zur eigenen Karte gehört */
-type Own = 'none' | 'card' | 'checklist' | 'completion';
+/**
+ * Wie eine Route prüft, ob die Anfrage zur eigenen Karte gehört. Dazu das eigene Board: ein Board „nur ich", das das Kind selbst angelegt
+ * hat (`board`, `column`, `category`; `boardcard` für Karten darin; `create` für das Anlegen, das nur „nur ich" erlaubt). In einem solchen
+ * Board darf das Kind frei arbeiten, in allen anderen nur an den ihm zugewiesenen Karten.
+ */
+type Own = 'none' | 'card' | 'checklist' | 'completion' | 'create' | 'board' | 'column' | 'category' | 'boardcard';
 
 const ALLOWED: Record<string, Own> = {
   // Schreiben: nur an eigenen Karten
@@ -25,6 +29,25 @@ const ALLOWED: Record<string, Own> = {
   'PATCH /api/checklist/:id': 'checklist',
   'POST /api/completions/:id/undo': 'completion',
   // Sprache und Farbe der eigenen Oberfläche
+  // Eigene Boards („nur ich"): anlegen, einrichten und darin Karten pflegen
+  'POST /api/boards': 'create',
+  'PATCH /api/boards/:id': 'board',
+  'DELETE /api/boards/:id': 'board',
+  'GET /api/boards/:id/archive': 'board',
+  'POST /api/boards/:id/cards': 'board',
+  'POST /api/boards/:id/columns': 'board',
+  'POST /api/boards/:id/categories': 'board',
+  'PATCH /api/columns/:id': 'column',
+  'POST /api/columns/:id/move': 'column',
+  'DELETE /api/columns/:id': 'column',
+  'PATCH /api/categories/:id': 'category',
+  'DELETE /api/categories/:id': 'category',
+  'PATCH /api/cards/:id': 'boardcard',
+  'DELETE /api/cards/:id': 'boardcard',
+  'POST /api/cards/:id/move': 'boardcard',
+  'POST /api/cards/:id/duplicate': 'boardcard',
+  'POST /api/cards/:id/archive': 'boardcard',
+  'POST /api/cards/:id/restore-archived': 'boardcard',
   'PUT /api/me/language': 'none',
   'PUT /api/me/accent': 'none',
   // Lesen (gefiltert in den Abfragen)
@@ -52,11 +75,29 @@ const ALLOWED: Record<string, Own> = {
 export function registerChildGuard(app: FastifyInstance, store: Store): void {
   const deny = () => new ForbiddenError(t('Das darf ein Kind nicht'));
 
+  /** Ein Board „nur ich", das dieses Kind angelegt hat (unbekannt: ja, die Route antwortet selbst mit „nicht gefunden") */
+  function ownsBoard(req: FastifyRequest, boardId: string | null): boolean {
+    if (!boardId) return true;
+    try {
+      const board = store.getBoard(boardId);
+      return board.visibility === 'private' && board.ownerId === req.user!.id;
+    } catch {
+      return true;
+    }
+  }
+
   function isOwn(req: FastifyRequest, own: Own): boolean {
     if (own === 'none') return true;
     const id = (req.params as { id?: string }).id ?? '';
-    const cardId = own === 'card' ? id : own === 'checklist' ? store.cardIdOfChecklistItem(id) : store.cardIdOfCompletion(id);
+    if (own === 'create') return (req.body as { visibility?: unknown } | null)?.visibility === 'private';
+    if (own === 'board') return ownsBoard(req, id);
+    if (own === 'column') return ownsBoard(req, store.boardIdOfColumn(id));
+    if (own === 'category') return ownsBoard(req, store.boardIdOfCategory(id));
+    const cardId = own === 'card' || own === 'boardcard' ? id : own === 'checklist' ? store.cardIdOfChecklistItem(id) : store.cardIdOfCompletion(id);
     if (!cardId) return true; // gibt es nicht: die Route antwortet selbst mit „nicht gefunden"
+    // Karten im eigenen Board gehören dem Kind ganz; sonst nur, was ihm zugewiesen ist (und nur für Erledigen, Checkliste, Kommentare …)
+    if (ownsBoard(req, store.boardIdOfCardAny(cardId)) && store.boardIdOfCardAny(cardId)) return true;
+    if (own === 'boardcard') return false;
     try {
       return store.getCard(cardId).assigneeIds.includes(req.user!.id);
     } catch {
@@ -64,10 +105,11 @@ export function registerChildGuard(app: FastifyInstance, store: Store): void {
     }
   }
 
-  /** Boards, die dieses Kind sehen darf; null = alle (Kind mit „alle Boards", Mitglied, Administrator) */
+  /** Boards, die dieses Kind sehen darf; null = alle (Kind mit „alle Boards", Mitglied, Administrator). Die eigenen Boards „nur ich" kommen immer dazu. */
   function visibleBoards(req: FastifyRequest): Set<string> | null {
     if (!req.access?.isChild || !req.user || req.user.childScope !== 'assigned') return null;
-    return new Set(store.boardIdsWithCardsOf(req.user.id));
+    const own = store.listBoards(req.user.id).filter((b) => b.visibility === 'private' && b.ownerId === req.user!.id).map((b) => b.id);
+    return new Set([...store.boardIdsWithCardsOf(req.user.id), ...own]);
   }
 
   /** Die Karte (oder der Anhang) liegt in einem Board, das das Kind nicht sieht: für das Kind gibt es sie nicht */

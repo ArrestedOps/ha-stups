@@ -21,6 +21,8 @@ const e = (extra: Partial<InboxEntry> & Pick<InboxEntry, 'kind'>): InboxEntry =>
   watcherName: null,
   assigned: false,
   dueAt: null,
+  watcherId: null,
+  notice: null,
   ...extra,
 });
 
@@ -130,5 +132,30 @@ describe('Zusammenfassung eines Eintrags', () => {
     expect(v({ kind: 'change', detail: 'reopened' }).title).toBe('Conny hat wieder geöffnet');
     expect(v({ kind: 'change', detail: 'due' }).title).toBe('Conny hat den Termin geändert');
     expect(v({ kind: 'confirm', actorId: 'ben' }).title).toBe('Ben wartet auf deine Bestätigung');
+  });
+});
+
+describe('Mitteilungen zu Wächtern ohne Karte', () => {
+  it('„braucht neue Zuständige": roter Eintrag mit dem Grund', () => {
+    const v = entryView(
+      e({ kind: 'watcher', cardId: '', cardTitle: '', detail: 'assignees_missing', watcherName: 'Heizung prüfen', watcherId: 'w1', notice: { boardName: 'Bad-Umbau', removedNames: ['Anna'], remainingNames: [] } }),
+      ctx,
+    );
+    expect(v).toMatchObject({ title: 'Heizung prüfen braucht neue Zuständige', meta: 'Anna ist nicht mehr im Board „Bad-Umbau“', color: 'red' });
+  });
+
+  it('nur verkleinert: „Waschmaschine fertig: Anna entfernt", läuft weiter mit Rene', () => {
+    const v = entryView(
+      e({ kind: 'watcher', cardId: '', cardTitle: '', detail: 'shrunk', watcherName: 'Waschmaschine fertig', watcherId: 'w2', notice: { boardName: 'Bad-Umbau', removedNames: ['Anna'], remainingNames: ['Rene'] } }),
+      ctx,
+    );
+    expect(v).toMatchObject({ title: 'Waschmaschine fertig: Anna entfernt', meta: 'läuft weiter mit Rene', color: 'purple' });
+  });
+
+  it('mehrere Namen, Englisch, und sie stehen unter dem Chip „Wächter"', () => {
+    setLanguage('en');
+    const entry = e({ kind: 'watcher', cardId: '', detail: 'assignees_missing', watcherName: 'Heating', watcherId: 'w1', notice: { boardName: 'Bath', removedNames: ['Anna', 'Ben'], remainingNames: [] } });
+    expect(entryView(entry, ctx)).toMatchObject({ title: 'Heating needs new assignees', meta: 'Anna, Ben are no longer on the board “Bath”' });
+    expect(filterEntries([entry], 'watcher')).toHaveLength(1);
   });
 });

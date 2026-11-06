@@ -209,8 +209,8 @@ test('Vorschläge: drei Chips und „+N“; ein Chip füllt vor (Kategorie vorge
   await expect(page.getByTestId('desk-entity-id')).toHaveText('sensor.bad_batterie');
   await expect(page.getByTestId('category-field').locator('select')).toHaveValue('Batterien');
   await expect(page.getByTestId('category-suggested')).toBeVisible();
-  await expect(desk(page).getByTestId('desk-name')).toHaveValue('Batterie schwach: Bad Fenster');
-  await expect(desk(page).getByLabel('Titel der Karte')).toHaveValue('Batterie wechseln: Bad Fenster');
+  await expect(desk(page).getByTestId('desk-name')).toHaveValue('Batterie schwach');
+  await expect(desk(page).getByLabel('Titel der Karte')).toHaveValue('Batterie wechseln');
   await expect(page.getByTestId('category-suggested')).toBeVisible();
 });
 
@@ -259,7 +259,7 @@ test('Zustand schon erreicht: dieselbe Rückfrage wie im Assistenten; „Nein“
   await create();
   await ask.getByRole('button', { name: 'Ja, Karte erstellen' }).click();
   await expect(page.getByText('Karte angelegt', { exact: true })).toBeVisible();
-  await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([title]);
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([`${title}: Formular Tür ${s.tag}`]);
 });
 
 test('Batterie unter der Grenze: keine Frage, die Karte kommt sofort', async ({ page, request }) => {
@@ -274,7 +274,7 @@ test('Batterie unter der Grenze: keine Frage, die Karte kommt sofort', async ({ 
   await page.getByTestId('desk-submit').click();
   await expect(page.getByText('Wächter gespeichert').first()).toBeVisible();
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
-  await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([title]);
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([`${title}: iPhone Rene Battery Level`]);
 });
 
 test('Eingaben gehen beim Zuklappen verloren, aber vorher fragt die App (X, Knopf, Escape); „Weiter bearbeiten“ behält alles', async ({ page, request }) => {
@@ -318,7 +318,7 @@ test('Gefunden: „Einrichten“ am Desktop öffnet das Formular mit vorbelegten
   await expect(desk(page)).toBeVisible();
   await expect(page.getByTestId('new-watcher')).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByTestId('desk-entity-id')).toHaveText('sensor.bad_batterie');
-  await expect(desk(page).getByTestId('desk-name')).toHaveValue('Batterie schwach: Bad Fenster');
+  await expect(desk(page).getByTestId('desk-name')).toHaveValue('Batterie schwach');
   await expect(page.getByTestId('category-field').locator('select')).toHaveValue('Batterien');
   await expect(page.getByTestId('category-suggested')).toBeVisible();
   await expect(desk(page).getByLabel('Schwellwert')).toHaveValue('20');
@@ -326,7 +326,7 @@ test('Gefunden: „Einrichten“ am Desktop öffnet das Formular mit vorbelegten
   await page.getByTestId('desk-then').getByLabel('Board', { exact: true }).selectOption(s.boardId);
   await page.getByTestId('desk-submit').click();
   await expect(page.getByText('Wächter gespeichert').first()).toBeVisible();
-  await expect.poll(async () => (await watchers(request)).map((w) => [w.name, w.category])).toEqual([['Batterie schwach: Bad Fenster', 'Batterien']]);
+  await expect.poll(async () => (await watchers(request)).map((w) => [w.name, w.category])).toEqual([['Batterie schwach', 'Batterien']]);
   await expect(page.getByTestId('watcher-category').filter({ hasText: 'Batterien' })).toBeVisible();
 });
 

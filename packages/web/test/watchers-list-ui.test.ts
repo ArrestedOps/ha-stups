@@ -25,11 +25,6 @@ const w = (id: string, subject: string, over: Partial<WatcherItem> = {}): Watche
     entityName: subject,
     entityUnit: '%',
     subject,
-    deviceLabel: subject,
-    nameHasDevice: false,
-    defaultName: true,
-    suggestedName: `Batterie schwach: ${subject}`,
-    suggestedTitle: null,
     openCard: null,
     ...over,
   }) as unknown as WatcherItem;
@@ -48,9 +43,9 @@ describe('Wächter-Liste: Gerät unter dem Namen', () => {
     expect(order).toEqual(['Bad Fenster Batterie', 'Flur Tür Batterie', 'iPhone Rene Battery Level']);
   });
 
-  it('ein Name, der das Gerät schon nennt, bekommt keine Zusatzzeile', () => {
-    ui.watchers = { available: true, items: [w('1', 'Bad Fenster Batterie', { name: 'Batterie schwach: Bad Fenster', nameHasDevice: true, defaultName: false, suggestedName: null })] };
-    expect(html()).not.toContain('data-testid="watcher-subject"');
+  it('das Gerät steht immer unter dem Namen, auch wenn der Name es schon nennt', () => {
+    ui.watchers = { available: true, items: [w('1', 'Bad Fenster Batterie', { name: 'Batterie schwach: Bad Fenster' })] };
+    expect(count(html(), /data-testid="watcher-subject"/g)).toBe(1);
   });
 
   it('die Zeile bricht um, bleibt aber bei einer Zeile (abgeschnitten) in der Karte', () => {
@@ -59,20 +54,10 @@ describe('Wächter-Liste: Gerät unter dem Namen', () => {
   });
 });
 
-describe('Wächter-Liste: Sammelknopf', () => {
-  it('erscheint für Administratoren mit Wächtern, die noch den Vorlagennamen tragen', () => {
+describe('Wächter-Liste: kein Sammelknopf „Namen mit Gerät ergänzen“ mehr', () => {
+  it('auch für Administratoren steht er nicht da', () => {
     ui.watchers = { available: true, items: [w('1', 'Bad'), w('2', 'Flur')] };
-    expect(html()).toContain('data-testid="rename-with-device"');
-  });
-
-  it('fehlt, wenn nichts zu ergänzen ist (eigene Namen, Gerät schon im Namen)', () => {
-    ui.watchers = { available: true, items: [w('1', 'Bad', { defaultName: false, name: 'Mamas Handy' }), w('2', 'Flur', { suggestedName: null, nameHasDevice: true })] };
-    expect(html()).not.toContain('data-testid="rename-with-device"');
-  });
-
-  it('fehlt für Mitglieder', () => {
-    ui.isAdmin = false;
-    ui.watchers = { available: true, items: [w('1', 'Bad')] };
-    expect(html()).not.toContain('data-testid="rename-with-device"');
+    expect(html()).not.toContain('rename-with-device');
+    expect(html()).not.toContain('Namen mit Gerät');
   });
 });

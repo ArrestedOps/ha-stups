@@ -3,7 +3,7 @@
   import { t } from '../lib/i18n/index.svelte';
   import { durationText } from '../lib/home';
   import { formatDue } from '../lib/datetime';
-  import { rowStatus, statusLabel, type RowStatus } from '../lib/watcherList';
+  import { isProblem, problemText, rowStatus, statusLabel, type RowStatus } from '../lib/watcherList';
   import Icon from './Icon.svelte';
   import ListRow from './ui/ListRow.svelte';
   import Tile, { type TileColor } from './ui/Tile.svelte';
@@ -25,11 +25,12 @@
   }: { item: HomeItem; nowMs: number; current?: boolean; canToggle: boolean; busy?: boolean; onopen: () => void; ontoggle: (on: boolean) => void } = $props();
 
   const status = $derived<RowStatus>(rowStatus(i));
-  const TILE: Record<RowStatus, TileColor> = { waiting: 'orange', running: 'green', soon: 'blue', quiet: 'teal', off: 'gray', missing: 'red' };
+  const TILE: Record<RowStatus, TileColor> = { waiting: 'orange', running: 'green', soon: 'blue', quiet: 'teal', off: 'gray', missing: 'red', noassign: 'red', target: 'red' };
+  const problem = $derived(isProblem(i));
   const filled = $derived(i.progress ? Math.round((Math.min(i.progress.n, i.progress.of) / Math.max(i.progress.of, 1)) * 3) : 0);
 </script>
 
-<ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} rightFull dim={!i.active} onclick={onopen}>
+<ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} rightFull dim={!i.active} {problem} onclick={onopen}>
   {#snippet tile()}<Tile color={TILE[status]}><Icon name="eye" size={24} /></Tile>{/snippet}
   {#snippet meta()}
     {#if current && status === 'running'}
@@ -43,7 +44,7 @@
       {#if i.nextEvent}<span class="inline-flex min-w-0 items-center gap-1"><Icon name="calendar" size={14} stroke={1.9} /><span class="truncate">{i.nextEvent.title} · {formatDue(i.nextEvent.at, nowMs)}</span></span>{/if}
     {:else}
       <span class="min-w-0 truncate" data-testid="watcher-subject">{i.entity}</span>
-      {#if status === 'missing'}<span class="shrink-0 text-danger" data-testid="watcher-status">{statusLabel('missing')}</span>
+      {#if problem}<span class="min-w-0 truncate text-danger" data-testid="watcher-status">{problemText(i)}</span>
       {:else if status === 'off'}<span class="shrink-0 font-semibold" data-testid="watcher-status">{statusLabel('off')}</span>{/if}
     {/if}
   {/snippet}

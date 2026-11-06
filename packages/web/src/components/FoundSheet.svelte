@@ -47,7 +47,7 @@
   const recurring = $derived(templates.filter((x) => x.kind === 'recurring'));
 
   function setup(s: WatcherSuggestion) {
-    openNewWatcher({ template: s.templateId, from: 'found', hit: { entityId: s.entityId, name: s.name, ...(s.label ? { label: s.label } : {}), ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) } });
+    openNewWatcher({ template: s.templateId, from: 'found', hit: { entityId: s.entityId, name: s.name, ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) } });
   }
 
   /** Ausblenden gilt für immer (in der Datenbank), bis der Treffer hier wieder eingeblendet wird */

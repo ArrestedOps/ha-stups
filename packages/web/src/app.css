@@ -596,6 +596,20 @@
   color: var(--text-soft);
 }
 .head-icon:hover { border-color: var(--sep); color: var(--text); }
+/* Die Zahl an der Glocke: kleiner Kreis oben rechts, gedämpft (dunkles Orange statt Alarmfarbe); ab 10 steht „9+" darin */
+.bell-count {
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-end) 72%, var(--bg));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+  pointer-events: none;
+}
 
 /* Suchfeld: das eingebaute „x“ von WebKit weglassen, die Kopfzeile hat ihren eigenen Knopf */
 .desktop-search::-webkit-search-cancel-button,
@@ -603,7 +617,9 @@
 
 /* Die gewählte Zeile in der Liste (Detailspalte offen) und Zeilen, die sich anklicken lassen, reagieren auf die Maus */
 @media (hover: hover) {
-  .row-hover:not(.row-current, .row-new):hover { border-color: var(--sep); }
+  .row-hover:not(.row-current, .row-new, .row-problem):hover { border-color: var(--sep); }
+/* Zeile mit Problem (Wächter ohne Zuständige, fehlende Entität): roter Rand in der Farbe Gefahr */
+.row-problem { border-color: var(--danger); }
 }
 
 /* Der Schimmer hinter der Kopfzeile beginnt rechts neben der Seitenleiste (Desktop) */

@@ -22,7 +22,9 @@
   let { ed }: { ed: WatcherEditor } = $props();
 
   const f = $derived(ed.form);
-  const people = $derived(ui.people.filter((p) => p.isPerson));
+  /** nur Personen, die das Board sehen */
+  const people = $derived(ed.people);
+  const restricted = $derived(!!ed.board && ed.board.visibility !== 'all');
   const me = $derived(ui.me && people.some((p) => p.id === ui.me!.id) ? ui.me.id : null);
   const LABEL = $derived<Record<DeskMode, string>>({
     fixed: t('Eine feste Person'),
@@ -83,11 +85,14 @@
         {needsPeople(f.assignMode) ? t('Personen') : t('Wer kommt infrage?')}
         {#if !needsPeople(f.assignMode)}<span class="text-[12.5px] font-medium tracking-normal normal-case">{t('leer = alle')}</span>{/if}
       </span>
-      <div class="flex flex-wrap gap-2" role="group" aria-label={t('Personen')}>
+      <div class="flex flex-wrap items-center gap-2" role="group" aria-label={t('Personen')}>
         {#each people as p (p.id)}
           {@const on = f.personIds.includes(p.id)}
           <Chip photo active={on} pressed={on} onclick={() => toggle(p.id)}><Avatar person={p} size={32} ring={on ? 0 : 1.5} />{p.displayName}</Chip>
         {/each}
+        {#if restricted}
+          <span class="inline-flex h-6 shrink-0 items-center rounded-full border border-accent px-2.5 text-[11px] font-extrabold tracking-[0.06em] whitespace-nowrap text-accent-text uppercase" data-testid="board-people-chip">{t('Nur Mitglieder von „{board}“', { board: ed.board?.name ?? '' })}</span>
+        {/if}
       </div>
     </div>
     {#if f.assignMode !== 'fixed'}<AssignOrder order={ed.order} boxed />{/if}

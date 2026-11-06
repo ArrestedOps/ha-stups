@@ -103,7 +103,7 @@ test('Schalter: aus löst nicht mehr aus (der Server entscheidet), an wieder; di
   const created = await request.post('/api/watchers', { data: make(s, name, 'sensor.waschmaschine_leistung', { category: 'Test', trigger: { entityId: 'sensor.waschmaschine_leistung', kind: 'below', value: 5, forMin: 0 } }) });
   expect(created.status()).toBe(201);
   const id = ((await created.json()) as { id: string }).id;
-  const cards = async () => ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string }[] }).cards.filter((c) => c.title === `Karte ${name}`);
+  const cards = async () => ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string }[] }).cards.filter((c) => c.title.startsWith(`Karte ${name}`));
 
   await openList(page, s);
   const sw = page.getByRole('switch', { name: `${name} aktiv` });

@@ -68,11 +68,10 @@
         <span class="shrink-0 text-[13px] font-medium text-fg2" aria-label={t('{n} offen', { n: b.openCards })}>{b.openCards}</span>
       </button>
     {/each}
-    {#if !ui.isChild}
-      <button class="side-board h-10 gap-3 px-3.5 text-[14px] font-medium text-fg2" onclick={() => openSheet({ type: 'boards' })}>
-        <Icon name="plus" size={16} stroke={2} />{t('Neues Board')}
-      </button>
-    {/if}
+    <!-- auch ein Kind: es legt dort Boards „nur ich" an -->
+    <button class="side-board h-10 gap-3 px-3.5 text-[14px] font-medium text-fg2" onclick={() => openSheet({ type: 'boards' })}>
+      <Icon name="plus" size={16} stroke={2} />{t('Neues Board')}
+    </button>
   </nav>
 
   {#if ui.me}

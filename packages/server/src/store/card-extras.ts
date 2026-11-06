@@ -156,6 +156,10 @@ export function createCardExtras(c: Ctx, late: unknown) {
     });
   }
 
+  /** Die Karte eines Links oder Kommentars (für die Zugriffsprüfung); null, wenn es ihn nicht gibt */
+  const cardIdOfLink = (id: string): string | null => (one('select card_id from links where id = ?', id)?.card_id as string | undefined) ?? null;
+  const cardIdOfComment = (id: string): string | null => (one('select card_id from comments where id = ?', id)?.card_id as string | undefined) ?? null;
+
   /** Die Karte eines Checklistenpunkts (für die Rechte-Prüfung); null, wenn es ihn nicht gibt */
   const cardIdOfChecklistItem = (id: string): string | null => (one('select card_id from checklist_items where id = ?', id)?.card_id as string | undefined) ?? null;
 
@@ -259,6 +263,8 @@ export function createCardExtras(c: Ctx, late: unknown) {
     itemRow,
     updateChecklistItem,
     cardIdOfChecklistItem,
+    cardIdOfLink,
+    cardIdOfComment,
     deleteChecklistItem,
     addLink,
     linkRow,

@@ -56,7 +56,7 @@ describe('Spalte „Geplant"', () => {
     const s = board();
     card(s, s.open.id);
     card(s, s.open.id, { dueAt: NEXT_WEEK });
-    expect(store.listBoards()[0]?.openCards).toBe(1);
+    expect(store.listBoards(null)[0]?.openCards).toBe(1);
   });
 });
 

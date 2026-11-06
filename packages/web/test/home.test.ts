@@ -6,7 +6,8 @@ import { setLanguage } from '../src/lib/i18n/index.svelte';
 const item = (over: Partial<HomeItem>): HomeItem => ({
   watcherId: 'w',
   name: 'Wächter',
-  subject: null,
+  subject: '',
+  status: 'ok',
   entity: 'sensor.x',
   value: null,
   phase: 'quiet',
@@ -48,7 +49,7 @@ describe('homeSections', () => {
       item({ watcherId: '1', name: 'Batterie schwach', subject: 'iPhone Rene Battery Level' }),
       item({ watcherId: '2', name: 'Batterie schwach', subject: 'Bad Fenster Batterie' }),
       item({ watcherId: '3', name: 'Batterie schwach', subject: 'bad Tür Batterie' }),
-      item({ watcherId: '4', name: 'Batterie schwach: Zimmer', subject: null }),
+      item({ watcherId: '4', name: 'Batterie schwach: Zimmer', subject: '' }),
       item({ watcherId: '5', name: 'Batterie schwach', subject: 'Bad Fenster Batterie' }),
       item({ watcherId: '6', name: 'Abfall', subject: 'Z' }),
     ];

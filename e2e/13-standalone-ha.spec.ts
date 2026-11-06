@@ -126,8 +126,8 @@ test('Wächter: „wer ist zu Hause" findet die Personen über ihren Namen, die 
   await setState(request, 'vacuum.s7', 'cleaning');
   expect((await watcher('Saugroboter', 'vacuum.s7', 'Staubbehälter leeren')).status()).toBe(201);
   await setState(request, 'vacuum.s7', 'docked');
-  await expect.poll(async () => (await cardsOf(page, boardId)).filter((c) => c.title === 'Staubbehälter leeren').length, { timeout: 15_000 }).toBe(1);
-  expect((await cardsOf(page, boardId)).find((c) => c.title === 'Staubbehälter leeren')!.assigneeIds).toEqual([anna.id]);
+  await expect.poll(async () => (await cardsOf(page, boardId)).filter((c) => c.title.startsWith('Staubbehälter leeren')).length, { timeout: 15_000 }).toBe(1);
+  expect((await cardsOf(page, boardId)).find((c) => c.title.startsWith('Staubbehälter leeren'))!.assigneeIds).toEqual([anna.id]);
 
   // Jetzt nur Ben: Er bekommt die Karte und die Nachricht auf sein Handy, mit Link in Stups
   await setState(request, 'person.anna', 'not_home');
@@ -135,15 +135,15 @@ test('Wächter: „wer ist zu Hause" findet die Personen über ihren Namen, die 
   await setState(request, 'vacuum.s8', 'cleaning');
   expect((await watcher('Zweiter Roboter', 'vacuum.s8', 'Filter wechseln')).status()).toBe(201);
   await setState(request, 'vacuum.s8', 'docked');
-  await expect.poll(async () => (await cardsOf(page, boardId)).filter((c) => c.title === 'Filter wechseln').length, { timeout: 15_000 }).toBe(1);
-  const card = (await cardsOf(page, boardId)).find((c) => c.title === 'Filter wechseln')!;
+  await expect.poll(async () => (await cardsOf(page, boardId)).filter((c) => c.title.startsWith('Filter wechseln')).length, { timeout: 15_000 }).toBe(1);
+  const card = (await cardsOf(page, boardId)).find((c) => c.title.startsWith('Filter wechseln'))!;
   expect(card.assigneeIds).toEqual([ben.id]);
 
   await expect
     .poll(async () => ((await (await request.get(`${MOCK}/mock/pushes`)).json()) as { service: string; title: string }[]).map((p) => p.service), { timeout: 10_000 })
     .toEqual(['mobile_app_ben_e2e']);
   const [push] = (await (await request.get(`${MOCK}/mock/pushes`)).json()) as { title: string; message: string; data: { url: string; actions: unknown[] } }[];
-  expect(push).toMatchObject({ title: 'Filter wechseln', data: { url: `${APP}/?card=${card.id}` } });
+  expect(push).toMatchObject({ title: expect.stringMatching(/^Filter wechseln/), data: { url: `${APP}/?card=${card.id}` } });
   expect(push!.message).toMatch(/^Neue Karte für dich/);
   expect(push!.data.actions).toHaveLength(1);
 

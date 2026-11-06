@@ -63,6 +63,10 @@ export function createFairness(c: Ctx, late: unknown) {
     const { from, to } = bounds(period, now().getTime(), timeZone());
     const f = new Date(from).toISOString();
     const t = new Date(to).toISOString();
+    // Was nicht zählt: private Boards (nie), Boards, die ausgenommen sind, und Wächter, die ausgenommen sind (nur ihre Karten). Die Abfrage
+    // läuft über das Board der Karte und gilt darum rückwirkend: Wer ein Board später ausnimmt, nimmt auch die alten Zahlen heraus.
+    const counts = `b.visibility <> 'private' and b.counts_for_fairness = 1 and (c.watcher_id is null or coalesce(w.counts_for_fairness, 1) = 1)`;
+    const joins = `join boards b on b.id = c.board_id left join watchers w on w.id = c.watcher_id`;
     const by = <T extends object>(rows: T[], key: keyof T) => new Map(rows.map((r) => [r[key] as string, r]));
 
     const completed = by(
@@ -70,8 +74,8 @@ export function createFairness(c: Ctx, late: unknown) {
         `select co.completed_by as uid, count(*) as n,
                 sum(case coalesce(c.effort, 'medium') when 'small' then 1 when 'large' then 3 else 2 end) as effort,
                 sum(case when c.watcher_id is not null then 1 else 0 end) as watcher
-         from completions co join cards c on c.id = co.card_id
-         where co.completed_by is not null and co.completed_at >= ? and co.completed_at < ?
+         from completions co join cards c on c.id = co.card_id ${joins}
+         where ${counts} and co.completed_by is not null and co.completed_at >= ? and co.completed_at < ?
          group by co.completed_by`,
         f,
         t,
@@ -80,9 +84,9 @@ export function createFairness(c: Ctx, late: unknown) {
     );
     const created = by(
       all(
-        `select created_by as uid, count(*) as n from cards
-         where created_by is not null and repeated_from is null and watcher_id is null and created_at >= ? and created_at < ?
-         group by created_by`,
+        `select c.created_by as uid, count(*) as n from cards c ${joins}
+         where ${counts} and c.created_by is not null and c.repeated_from is null and c.watcher_id is null and c.created_at >= ? and c.created_at < ?
+         group by c.created_by`,
         f,
         t,
       ),
@@ -90,9 +94,9 @@ export function createFairness(c: Ctx, late: unknown) {
     );
     const answered = by(
       all(
-        `select to_user as uid, count(*) as n from nudges
-         where reply in ('ack', 'done') and reply_at >= ? and reply_at < ?
-         group by to_user`,
+        `select n.to_user as uid, count(*) as n from nudges n join cards c on c.id = n.card_id ${joins}
+         where ${counts} and n.reply in ('ack', 'done') and n.reply_at >= ? and n.reply_at < ?
+         group by n.to_user`,
         f,
         t,
       ),
@@ -120,7 +124,8 @@ export function createFairness(c: Ctx, late: unknown) {
       }),
       { done: 0, effort: 0, created: 0, nudgesAnswered: 0, watcherCards: 0 },
     );
-    const houseCards = (one('select count(*) as n from cards where watcher_id is not null and created_at >= ? and created_at < ?', f, t)?.n as number | undefined) ?? 0;
+    const houseCards =
+      (one(`select count(*) as n from cards c ${joins} where ${counts} and c.watcher_id is not null and c.created_at >= ? and c.created_at < ?`, f, t)?.n as number | undefined) ?? 0;
     return { period, from: f, to: t, people: list, total, houseCards };
   }
 

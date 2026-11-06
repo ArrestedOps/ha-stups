@@ -41,7 +41,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
   app.get<{ Querystring: { ids?: string } }>('/api/cards', async (req) => {
     const ids = [...new Set((req.query.ids ?? '').split(',').filter((x) => x !== ''))];
     if (ids.length > MAX_IDS) throw new ValidationError(t('Höchstens {max} Karten auf einmal', { max: MAX_IDS }));
-    return store.getCards(ids);
+    return store.getCards(ids, req.user?.id ?? null);
   });
   app.get<{ Params: Params }>('/api/cards/:id', async (req) => store.getCard(req.params.id));
   app.patch<{ Params: Params }>('/api/cards/:id', async (req) => {
@@ -93,13 +93,16 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     };
     const boardIds = q.boards ? q.boards.split(',').filter(Boolean) : undefined;
     return store
-      .listSchedule({ from: time(q.from, 'from'), to: time(q.to, 'to'), boardIds, includeDone: q.done === '1', undated: q.undated === '1' })
+      .listSchedule({ viewer: req.user?.id ?? null, from: time(q.from, 'from'), to: time(q.to, 'to'), boardIds, includeDone: q.done === '1', undated: q.undated === '1' })
       .slice(0, 2000);
   });
   app.post<{ Params: Params }>('/api/cards/:id/complete', async (req) => {
     const by = req.user?.id ?? null;
-    // Ein Kind, dessen „Erledigt" bestätigt werden muss, löst nur eine Anfrage aus: die Karte bleibt offen und zählt noch nicht
-    if (by && req.access?.isChild && store.needsConfirmation(req.params.id, by)) {
+    // Ein Kind, dessen „Erledigt" bestätigt werden muss, löst nur eine Anfrage aus: die Karte bleibt offen und zählt noch nicht.
+    // Ausgenommen die Karten im eigenen Board „nur ich": dort sieht niemand sonst, was zu bestätigen wäre.
+    const boardId = store.boardIdOfCardAny(req.params.id);
+    const inPrivateBoard = boardId !== null && store.getBoard(boardId).visibility === 'private';
+    if (by && req.access?.isChild && !inPrivateBoard && store.needsConfirmation(req.params.id, by)) {
       const asked = store.requestConfirmation(req.params.id, by);
       if (asked.created) void deps.notifier?.confirmationRequested?.(asked.card.id);
       return { card: asked.card, completionId: null, nextDueAt: null, nextCardId: null, awaitingConfirmation: true };

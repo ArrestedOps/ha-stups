@@ -45,6 +45,27 @@ const ALLOWED_READS = [
   'GET /api/today',
 ];
 
+// Nur im eigenen Board „nur ich" erlaubt (eigene Prüfung, siehe „Eigene Boards eines Kindes")
+const OWN_BOARD_ROUTES = [
+  'POST /api/boards',
+  'PATCH /api/boards/:id',
+  'DELETE /api/boards/:id',
+  'GET /api/boards/:id/archive',
+  'POST /api/boards/:id/cards',
+  'POST /api/boards/:id/columns',
+  'POST /api/boards/:id/categories',
+  'PATCH /api/columns/:id',
+  'POST /api/columns/:id/move',
+  'DELETE /api/columns/:id',
+  'PATCH /api/categories/:id',
+  'DELETE /api/categories/:id',
+  'PATCH /api/cards/:id',
+  'DELETE /api/cards/:id',
+  'POST /api/cards/:id/move',
+  'POST /api/cards/:id/duplicate',
+  'POST /api/cards/:id/archive',
+  'POST /api/cards/:id/restore-archived',
+];
 const isRead = (r: string) => r.startsWith('GET ');
 const WRITES = ROUTES.filter((r) => !isRead(r) && !r.startsWith('HEAD ') && !r.startsWith('OPTIONS '));
 const READS = ROUTES.filter((r) => isRead(r) && r !== 'GET /api/events'); // der WebSocket braucht einen Handschlag, siehe unten
@@ -94,13 +115,13 @@ beforeEach(async () => {
 
 describe('Erlaubnislisten', () => {
   it('jeder erlaubte Eintrag ist eine Route, die es gibt (kein Tippfehler macht etwas still unerreichbar)', () => {
-    for (const r of [...ALLOWED_WRITES, ...ALLOWED_READS]) expect(ROUTES, r).toContain(r);
+    for (const r of [...ALLOWED_WRITES, ...ALLOWED_READS, ...OWN_BOARD_ROUTES]) expect(ROUTES, r).toContain(r);
   });
 });
 
 describe('Ein Kind darf nur, was ausdrücklich erlaubt ist', () => {
   it('alle anderen schreibenden Routen: 403', async () => {
-    const denied = WRITES.filter((r) => !ALLOWED_WRITES.includes(r));
+    const denied = WRITES.filter((r) => !ALLOWED_WRITES.includes(r) && !OWN_BOARD_ROUTES.includes(r));
     expect(denied.length).toBeGreaterThan(30);
     for (const route of denied) {
       const res = await call(mia, route);
@@ -114,7 +135,7 @@ describe('Ein Kind darf nur, was ausdrücklich erlaubt ist', () => {
   });
 
   it('alle anderen lesenden Routen: 403', async () => {
-    const denied = READS.filter((r) => !ALLOWED_READS.includes(r));
+    const denied = READS.filter((r) => !ALLOWED_READS.includes(r) && !OWN_BOARD_ROUTES.includes(r));
     expect(denied).toEqual(expect.arrayContaining(['GET /api/fairness', 'GET /api/access', 'GET /api/house/channels', 'GET /api/watchers', 'GET /api/watchers/history', 'GET /api/watchers/order', 'GET /api/templates', 'GET /api/trash']));
     for (const route of denied) {
       const res = await call(mia, route);
@@ -172,6 +193,55 @@ describe('Ein Kind darf nur, was ausdrücklich erlaubt ist', () => {
   });
 });
 
+describe('Eigene Boards eines Kindes („nur ich")', () => {
+  const send = (who: object, method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?: object) =>
+    app.inject({ method, url, headers: who as Record<string, string>, payload: method === 'GET' ? undefined : (payload ?? {}) });
+
+  it('ein Kind legt nur Boards „nur ich" an, Boards für alle oder Ausgewählte nie', async () => {
+    expect((await send(mia, 'POST', '/api/boards', { name: 'Geheim' })).statusCode).toBe(403);
+    expect((await send(mia, 'POST', '/api/boards', { name: 'Alle', visibility: 'all' })).statusCode).toBe(403);
+    expect((await send(mia, 'POST', '/api/boards', { name: 'Gruppe', visibility: 'selected', memberIds: [] })).statusCode).toBe(403);
+    const ok = await send(mia, 'POST', '/api/boards', { name: 'Meins', visibility: 'private' });
+    expect(ok.statusCode).toBe(201);
+    expect(ok.json()).toMatchObject({ visibility: 'private', ownerId: miaId });
+  });
+
+  it('im eigenen Board darf das Kind frei arbeiten, in anderen nur an zugewiesenen Karten', async () => {
+    const own = (await send(mia, 'POST', '/api/boards', { name: 'Meins', visibility: 'private' })).json() as { id: string };
+    const col = store.getBoardView(own.id).columns[0]!.id;
+    const card = await send(mia, 'POST', `/api/boards/${own.id}/cards`, { columnId: col, title: 'Mein Plan' });
+    expect(card.statusCode).toBe(201);
+    const id = (card.json() as { id: string }).id;
+    expect((await send(mia, 'PATCH', `/api/cards/${id}`, { title: 'Neu' })).statusCode).toBe(200);
+    expect((await send(mia, 'PATCH', `/api/boards/${own.id}`, { name: 'Meins 2' })).statusCode).toBe(200);
+    // an der zugewiesenen Karte im geteilten Board bleibt es beim Erledigen
+    expect((await send(mia, 'PATCH', `/api/cards/${mine}`, { title: 'x' })).statusCode).toBe(403);
+    expect((await send(mia, 'POST', `/api/boards/${boardId}/cards`, { title: 'x' })).statusCode).toBe(403);
+    expect((await send(mia, 'PATCH', `/api/boards/${boardId}`, { name: 'x' })).statusCode).toBe(403);
+    // Sichtbarkeit ändern: nur auf „nur ich"
+    expect((await send(mia, 'PATCH', `/api/boards/${own.id}`, { visibility: 'all' })).statusCode).toBe(403);
+  });
+
+  it('Erledigen im eigenen Board braucht keine Bestätigung (niemand sonst sieht die Karte)', async () => {
+    store.setChild(miaId, { isChild: true, confirmDefault: true });
+    const own = (await send(mia, 'POST', '/api/boards', { name: 'Meins', visibility: 'private' })).json() as { id: string };
+    const col = store.getBoardView(own.id).columns[0]!.id;
+    const id = (await send(mia, 'POST', `/api/boards/${own.id}/cards`, { columnId: col, title: 'Mein Plan' })).json().id as string;
+    const done = await send(mia, 'POST', `/api/cards/${id}/complete`);
+    expect(done.statusCode).toBe(200);
+    expect(done.json().awaitingConfirmation).toBeUndefined();
+    expect(store.getCard(id).completedAt).not.toBeNull();
+  });
+
+  it('ein Kind sieht seine Boards „nur ich" auch mit „nur Boards mit eigenen Karten", Erwachsene nie', async () => {
+    store.setChild(miaId, { isChild: true, childScope: 'assigned' });
+    const own = (await send(mia, 'POST', '/api/boards', { name: 'Meins', visibility: 'private' })).json() as { id: string };
+    expect(((await send(mia, 'GET', '/api/boards')).json() as { id: string }[]).map((b) => b.id)).toContain(own.id);
+    expect((await send(ben, 'GET', `/api/boards/${own.id}`)).statusCode).toBe(404);
+    expect(((await send(admin, 'GET', '/api/boards')).json() as { id: string }[]).map((b) => b.id)).not.toContain(own.id);
+  });
+});
+
 describe('Mitteilungen eines Kindes: nur Eigenes', () => {
   const inbox = async (who: object, qs = '') => (await app.inject({ method: 'GET', url: `/api/inbox${qs}`, headers: who as Record<string, string> })).json() as { items: { cardId: string; kind: string }[]; seenAt: string | null };
 
@@ -205,7 +275,7 @@ describe('Mitteilungen eines Kindes: nur Eigenes', () => {
 
 describe('Routen, die es in diesem Aufbau nicht gibt', () => {
   it('es sind nur die mit eigenen Abhängigkeiten (Konten, Passkeys, ntfy, Beta, Wächter, Home Assistant, Haus)', async () => {
-    for (const route of [...WRITES.filter((r) => !ALLOWED_WRITES.includes(r)), ...READS.filter((r) => !ALLOWED_READS.includes(r))]) {
+    for (const route of [...WRITES.filter((r) => !ALLOWED_WRITES.includes(r) && !OWN_BOARD_ROUTES.includes(r)), ...READS.filter((r) => !ALLOWED_READS.includes(r) && !OWN_BOARD_ROUTES.includes(r))]) {
       if (isMissing(await call(mia, route))) missing.push(route);
     }
     const known = ['/api/auth', '/api/passkeys', '/api/push', '/api/beta', '/api/house', '/api/ha/', '/api/watchers', '/api/admin'];

@@ -32,7 +32,7 @@ describe('Termine über alle Boards (Agenda und Kalender)', () => {
     add(haushalt, colH, 'B', '2026-11-06T10:00:00Z');
     add(umbau, colU, 'A', '2026-11-05T10:00:00Z');
     add(haushalt, colH, 'ohne Termin', null);
-    const list = store.listSchedule({});
+    const list = store.listSchedule({ viewer: null });
     expect(list.map((c) => [c.title, c.boardName, c.boardColor])).toEqual([
       ['A', 'Umbau', null],
       ['B', 'Haushalt', 'blue'],
@@ -45,21 +45,21 @@ describe('Termine über alle Boards (Agenda und Kalender)', () => {
     add(haushalt, colH, 'genau von', '2026-11-04T10:00:00Z');
     add(haushalt, colH, 'mittendrin', '2026-11-05T10:00:00Z');
     add(haushalt, colH, 'genau bis', '2026-11-06T10:00:00Z');
-    const r = store.listSchedule({ from: '2026-11-04T10:00:00Z', to: '2026-11-06T10:00:00Z' });
+    const r = store.listSchedule({ viewer: null, from: '2026-11-04T10:00:00Z', to: '2026-11-06T10:00:00Z' });
     expect(r.map((c) => c.title)).toEqual(['genau von', 'mittendrin']);
   });
 
   it('ohne Untergrenze kommt auch alles Überfällige', () => {
     add(haushalt, colH, 'alt', '2026-09-01T10:00:00Z');
     add(haushalt, colH, 'spät', '2027-05-01T10:00:00Z');
-    expect(store.listSchedule({ to: '2026-12-01T00:00:00Z' }).map((c) => c.title)).toEqual(['alt']);
+    expect(store.listSchedule({ viewer: null, to: '2026-12-01T00:00:00Z' }).map((c) => c.title)).toEqual(['alt']);
   });
 
   it('filtert nach Boards', () => {
     add(haushalt, colH, 'H', '2026-11-05T10:00:00Z');
     add(umbau, colU, 'U', '2026-11-05T11:00:00Z');
-    expect(store.listSchedule({ boardIds: [umbau] }).map((c) => c.title)).toEqual(['U']);
-    expect(store.listSchedule({ boardIds: [haushalt, umbau] })).toHaveLength(2);
+    expect(store.listSchedule({ viewer: null, boardIds: [umbau] }).map((c) => c.title)).toEqual(['U']);
+    expect(store.listSchedule({ viewer: null, boardIds: [haushalt, umbau] })).toHaveLength(2);
   });
 
   it('erledigte Karten nur auf Wunsch, gelöschte, archivierte und Karten gelöschter Boards nie', () => {
@@ -75,13 +75,13 @@ describe('Termine über alle Boards (Agenda und Kalender)', () => {
     store.createCard(old.id, { columnId: store.getBoardView(old.id).columns[0]!.id, title: 'im toten Board', dueAt: '2026-11-05T14:00:00Z' }, rene.id);
     store.deleteBoard(old.id);
 
-    expect(store.listSchedule({}).map((c) => c.title)).toEqual(['offen']);
-    expect(store.listSchedule({ includeDone: true }).map((c) => c.title)).toEqual(['erledigt', 'offen']);
+    expect(store.listSchedule({ viewer: null }).map((c) => c.title)).toEqual(['offen']);
+    expect(store.listSchedule({ viewer: null, includeDone: true }).map((c) => c.title)).toEqual(['erledigt', 'offen']);
   });
 
   it('übernimmt Zuständige und offene Stupse der Karte', () => {
     const c = add(haushalt, colH, 'X', '2026-11-05T10:00:00Z', { assigneeIds: [rene.id] });
-    expect(store.listSchedule({})[0]).toMatchObject({ id: c.id, assigneeIds: [rene.id] });
+    expect(store.listSchedule({ viewer: null })[0]).toMatchObject({ id: c.id, assigneeIds: [rene.id] });
   });
 });
 
@@ -93,11 +93,11 @@ describe('Karten ohne Termin (Filter „Ohne Termin")', () => {
     add(umbau, colU, 'zweite', null);
     const done = add(umbau, colU, 'fertig', null);
     store.completeCard(done.id, { by: rene.id, source: 'app' });
-    expect(store.listSchedule({ undated: true }).map((c) => c.title)).toEqual(['erste', 'zweite']);
-    expect(store.listSchedule({ undated: true, includeDone: true }).map((c) => c.title)).toEqual(['erste', 'zweite']);
-    expect(store.listSchedule({ undated: true, boardIds: [umbau] }).map((c) => c.title)).toEqual(['zweite']);
+    expect(store.listSchedule({ viewer: null, undated: true }).map((c) => c.title)).toEqual(['erste', 'zweite']);
+    expect(store.listSchedule({ viewer: null, undated: true, includeDone: true }).map((c) => c.title)).toEqual(['erste', 'zweite']);
+    expect(store.listSchedule({ viewer: null, undated: true, boardIds: [umbau] }).map((c) => c.title)).toEqual(['zweite']);
     // ohne den Schalter bleibt alles beim Alten: nur Karten mit Termin
-    expect(store.listSchedule({}).map((c) => c.title)).toEqual(['mit Termin']);
+    expect(store.listSchedule({ viewer: null }).map((c) => c.title)).toEqual(['mit Termin']);
   });
 });
 
@@ -151,7 +151,7 @@ describe('Kategorien der Karten in der Terminliste (Aufgaben zeigt sie in der Ze
     const familie = store.addCategory(haushalt, { name: 'Familie', color: 'pink' });
     add(haushalt, colH, 'mit zwei', '2026-11-05T10:00:00Z', { categoryIds: [familie.id, putzen.id] });
     add(haushalt, colH, 'ohne', '2026-11-06T10:00:00Z');
-    const list = store.listSchedule({});
+    const list = store.listSchedule({ viewer: null });
     const two = list.find((c) => c.title === 'mit zwei')!;
     expect(two.categories.map((c) => c.id)).toEqual(two.categoryIds); // gleiche Reihenfolge wie an der Karte
     expect(two.categories).toHaveLength(2);
@@ -166,6 +166,6 @@ describe('Kategorien der Karten in der Terminliste (Aufgaben zeigt sie in der Ze
     const putzen = store.addCategory(haushalt, { name: 'Putzen', color: 'blue' });
     add(haushalt, colH, 'K', '2026-11-05T10:00:00Z', { categoryIds: [putzen.id] });
     store.deleteCategory(putzen.id);
-    expect(store.listSchedule({}).find((c) => c.title === 'K')!.categories).toEqual([]);
+    expect(store.listSchedule({ viewer: null }).find((c) => c.title === 'K')!.categories).toEqual([]);
   });
 });

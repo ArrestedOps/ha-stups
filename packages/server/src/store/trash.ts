@@ -5,6 +5,7 @@ import { TRASH_DAYS } from './constants.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
+import type { Viewer } from './visibility.js';
 
 /** Papierkorb */
 export function createTrash(c: Ctx, late: unknown) {
@@ -12,19 +13,33 @@ export function createTrash(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { now, iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
-  const { lastPos, visibleColumns } = lazy(s, ['lastPos', 'visibleColumns'] as const);
+  const { lastPos, visibleColumns, canSeeBoard } = lazy(s, ['lastPos', 'visibleColumns', 'canSeeBoard'] as const);
 
   const purgeAt = (deletedAt: string) =>
     new Date(Date.parse(deletedAt) + TRASH_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
-  function listTrash(): TrashItem[] {
+  /** Das Board eines Eintrags im Papierkorb (für die Zugriffsprüfung); null, wenn es ihn nicht gibt */
+  function boardIdOfTrash(type: string, id: string): string | null {
+    if (type === 'board') return one('select id from boards where id = ?', id)?.id ?? null;
+    const table = ({ column: 'columns', category: 'categories', card: 'cards' } as Record<string, string>)[type];
+    return table ? ((one(`select board_id from ${table} where id = ?`, id)?.board_id as string | undefined) ?? null) : null;
+  }
+
+  /** Der Papierkorb, soweit `viewer` die Boards sieht: Eingeschränkte Boards stehen nur für Berechtigte darin */
+  function listTrash(viewer: Viewer): TrashItem[] {
     const rows: Row[] = [
       ...all("select 'board' as type, id, name as title, id as board_id, deleted_at from boards where deleted_at is not null"),
       ...all("select 'column' as type, id, name as title, board_id, deleted_at from columns where deleted_at is not null"),
       ...all("select 'category' as type, id, name as title, board_id, deleted_at from categories where deleted_at is not null"),
       ...all("select 'card' as type, id, title, board_id, deleted_at from cards where deleted_at is not null"),
     ];
+    const seen = new Map<string, boolean>();
+    const mayLook = (boardId: string): boolean => {
+      if (!seen.has(boardId)) seen.set(boardId, canSeeBoard(viewer, boardId));
+      return seen.get(boardId)!;
+    };
     return rows
+      .filter((r) => mayLook(r.board_id as string))
       .map((r) => ({
         type: r.type as TrashType,
         id: r.id as string,
@@ -86,6 +101,7 @@ export function createTrash(c: Ctx, late: unknown) {
 
   return {
     purgeAt,
+    boardIdOfTrash,
     listTrash,
     restoreFromTrash,
     purgeTrash,

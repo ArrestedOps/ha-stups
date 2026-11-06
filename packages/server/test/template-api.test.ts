@@ -47,10 +47,10 @@ describe('Board aus einer Vorlage anlegen', () => {
   });
 
   it('unbekannte Vorlage: 404, es entsteht kein Board', async () => {
-    const before = store.listBoards().length;
+    const before = store.listBoards(null).length;
     expect((await call(ben, 'POST', '/api/boards', { name: 'X', template: 'gibt-es-nicht' })).statusCode).toBe(404);
     expect((await call(ben, 'POST', '/api/boards', { name: 'X', template: 7 })).statusCode).toBe(400);
-    expect(store.listBoards().length).toBe(before);
+    expect(store.listBoards(null).length).toBe(before);
   });
 });
 

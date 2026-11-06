@@ -96,10 +96,10 @@ describe('Board aus einer eingebauten Vorlage', () => {
   });
 
   it('unbekannte Vorlage und leerer Name: Fehler, nichts angelegt', () => {
-    const before = store.listBoards().length;
+    const before = store.listBoards(null).length;
     expect(() => store.createBoardFromTemplate({ name: 'X', template: 'gibt-es-nicht', lang: 'de', by: rene })).toThrow(/Vorlage/);
     expect(() => store.createBoardFromTemplate({ name: '  ', template: 'household', lang: 'de', by: rene })).toThrow();
-    expect(store.listBoards().length).toBe(before);
+    expect(store.listBoards(null).length).toBe(before);
   });
 });
 

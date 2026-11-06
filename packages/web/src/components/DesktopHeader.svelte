@@ -1,7 +1,8 @@
 <script lang="ts">
   import { unread } from '../lib/inbox.svelte';
+  import { bellText } from '../lib/inbox';
   import { columnForNew } from '../lib/calendar';
-  import { t } from '../lib/i18n/index.svelte';
+  import { t, tn } from '../lib/i18n/index.svelte';
   import { feat, goToDashboard, openSheet, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
   import SymbolIcon from './SymbolIcon.svelte';
@@ -24,7 +25,7 @@
 
   const newColumn = $derived(columnForNew(view?.columns ?? [], false));
   const canCreate = $derived(!!view && !!newColumn && !ui.isChild);
-  const fresh = $derived(unread() > 0);
+  const unseen = $derived(unread());
 
   const value = $derived(ui.tab === 'boards' ? ui.filter.search : ui.query);
   function setValue(v: string) {
@@ -87,8 +88,8 @@
       <SymbolIcon id="home-assistant" size={26} />
     </button>
   {/if}
-  <button class="head-icon relative" aria-label={fresh ? t('Mitteilungen, es gibt Ungelesenes') : t('Mitteilungen')} data-testid="bell" onclick={() => openSheet({ type: 'notifications' })}>
+  <button class="head-icon relative" aria-label={unseen > 0 ? tn('Mitteilungen, {n} ungelesen', 'Mitteilungen, {n} ungelesen', unseen) : t('Mitteilungen')} data-testid="bell" onclick={() => openSheet({ type: 'notifications' })}>
     <Icon name="bell" size={24} />
-    {#if fresh}<span class="absolute top-[11px] right-[13px] h-[9px] w-[9px] rounded-full bg-brand-dot" data-testid="bell-dot"></span>{/if}
+    {#if unseen > 0}<span class="bell-count absolute top-[8px] right-[9px]" data-testid="bell-dot" aria-hidden="true">{bellText(unseen)}</span>{/if}
   </button>
 </header>

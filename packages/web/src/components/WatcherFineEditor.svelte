@@ -7,6 +7,7 @@
   import Icon from './Icon.svelte';
   import NumberField from './NumberField.svelte';
   import WatcherCategoryField from './WatcherCategoryField.svelte';
+  import WatcherFairnessRow from './WatcherFairnessRow.svelte';
   import ListRow from './ui/ListRow.svelte';
   import Toggle from './ui/Toggle.svelte';
   import Tile from './ui/Tile.svelte';
@@ -63,6 +64,7 @@
     {#snippet meta()}<span class="wrap-anywhere">{t('solange eine offen ist')}</span>{/snippet}
     {#snippet right()}<Toggle label={t('Keine Doppelkarten')} checked={f.dedupe} onchange={(v) => (f.dedupe = v)} />{/snippet}
   </ListRow>
+  <div class={columns ? 'col-span-full' : ''}><WatcherFairnessRow {ed} wide={columns} /></div>
   {#if name}
     <div class="focus-ring-in flex items-center gap-3 rounded-row border border-line bg-surface px-3.5 py-3">
       <span class="flex min-w-0 flex-1 flex-col gap-1.5">

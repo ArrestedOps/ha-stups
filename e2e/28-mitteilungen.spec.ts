@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
 
-// Glocke und Mitteilungen: der Posteingang je Person (Server: GET /api/inbox). Der Punkt zeigt nur Ungelesenes, „Alle gelesen“ gilt je Person
+// Glocke und Mitteilungen: der Posteingang je Person (Server: GET /api/inbox). Die kleine Zahl zeigt nur Ungelesenes, „Alle gelesen“ gilt je Person
 // und bleibt nach dem Neuladen; ein Kind sieht nur Eigenes. Der Test-Server meldet jeden als „rene" an, Conny kommt über die Header des Ingress-Proxys.
 const connyHeaders = {
   'x-remote-user-id': 'ha-conny-e2e',
@@ -42,6 +42,9 @@ test('Glocke: ein Stups an mich setzt den Punkt, Blatt und Banner zeigen ihn, ei
 
     // Conny sieht es ohne Neuladen: Punkt an der Glocke und Banner in Aufgaben
     await expect(conny.getByTestId('bell-dot')).toBeVisible({ timeout: 20_000 });
+    // eine kleine Zahl (ab 10 „9+"), der Screenreader nennt die Anzahl
+    await expect(conny.getByTestId('bell-dot')).toHaveText(/^(\d|9\+)$/);
+    await expect(conny.getByTestId('bell')).toHaveAccessibleName(/^Mitteilungen, \d+ ungelesen$/);
     await expect(conny.getByRole('button', { name: /Rene stupst dich!/ })).toBeVisible();
 
     // Das Blatt zeigt den Stups mit der Karte; ein Tipp öffnet die Karte

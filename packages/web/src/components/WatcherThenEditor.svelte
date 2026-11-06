@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cardTitleWithEntity } from '../lib/cardTitle';
   import { t } from '../lib/i18n/index.svelte';
   import { ui } from '../lib/store.svelte';
     import type { WatcherEditor } from '../lib/watcher-editor.svelte';
@@ -25,6 +26,8 @@
   const board = $derived(ui.boards.find((b) => b.id === f.boardId));
   const column = $derived(ed.view?.columns.find((c) => c.id === f.columnId));
   const auto = $derived(f.icon ? null : (nameSymbol(f.title) ?? nameSymbol(f.entityName)));
+  /** Der Titel der Karte, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
+  const shownTitle = $derived(cardTitleWithEntity(f.title, f.kind, f.entityName || f.entityId) || '…');
   const look = $derived({ icon: f.icon || auto, iconColor: f.iconColor || null });
   let symbolOpen = $state(false);
   let dueOpen = $state(false);
@@ -84,8 +87,8 @@
         <span class="wrap-anywhere text-[13px] text-fg2">{t('Board')}</span>
       </span>
       <span class="flex shrink-0 text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
-      <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" bind:value={f.boardId} aria-label="Board">
-        {#each ui.boards as b (b.id)}<option value={b.id}>{b.name}</option>{/each}
+      <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" bind:value={f.boardId} aria-label="Board" onchange={() => ed.pruneToBoard()}>
+        {#each ed.boardOptions as o (o.id)}<option value={o.id} disabled={o.disabled} data-short={o.short}>{o.label}</option>{/each}
       </select>
     </div>
     <div class="relative flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
@@ -158,7 +161,7 @@
   {#if preview}
     <SectionHeader title={t('So erscheint sie')} />
     <div class="rounded-[18px] border border-dashed border-track bg-surface-inset p-2.5" data-testid="card-preview">
-      <ListRow wrap variant="task" title={f.title.trim() || '…'} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
+      <ListRow wrap variant="task" title={shownTitle} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
         {#snippet tile()}<CardTile card={look} />{/snippet}
         {#snippet meta()}<span class="shrink-0">{dueText(f)}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span><span class="wrap-anywhere">{board?.name ?? ''}</span>{/snippet}
         {#snippet right()}<span class="flex text-fg2"><Icon name="shield" size={18} stroke={1.8} /></span>{/snippet}

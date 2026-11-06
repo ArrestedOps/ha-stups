@@ -14,6 +14,8 @@ import type { createFairness } from './fairness.js';
 import type { createConfirmation } from './confirmation.js';
 import type { createToday } from './today.js';
 import type { createInbox } from './inbox.js';
+import type { createVisibility } from './visibility.js';
+import type { createBoardAccess } from './board-access.js';
 
 export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createBoards> &
@@ -29,4 +31,6 @@ export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createFairness> &
   ReturnType<typeof createConfirmation> &
   ReturnType<typeof createToday> &
-  ReturnType<typeof createInbox>;
+  ReturnType<typeof createInbox> &
+  ReturnType<typeof createVisibility> &
+  ReturnType<typeof createBoardAccess>;

@@ -12,8 +12,8 @@
   import { WatcherEditor } from '../lib/watcher-editor.svelte';
   import type { SavedWatcher } from '../lib/watcher-types';
   import { categoryKeyOf, COL_LAST, COL_MID, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
-  import { noteText, renameCandidates, RUN_TEXT } from '../lib/watchers';
-  import { askRenameWatchers, askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openSettings, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
+  import { noteText, RUN_TEXT } from '../lib/watchers';
+  import { askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openSettings, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
   import robot from '../assets/waechter-robot.webp';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
@@ -78,7 +78,6 @@
   }
 
   /** Wie viele Wächter noch genau wie ihre Vorlage heißen und das Gerät nicht nennen (Sammelknopf, nur Administratoren) */
-  const renamable = $derived(can('watchers') ? renameCandidates(ui.watchers?.items ?? []).length : 0);
   /** Wie viele Wächter noch keine Kategorie haben (Sammelknopf „Kategorien vorschlagen", nur mit dem Recht „watchers") */
   const uncategorized = $derived(can('watchers') ? uncategorizedCount(allItems) : 0);
 
@@ -164,7 +163,7 @@
   onMount(() => () => clearTimeout(freshTimer));
 </script>
 
-<!-- Das Gerät unter dem Namen (Friendly Name der Entität), eine Zeile, solange der Name es nicht nennt -->
+<!-- Das Gerät unter dem Namen (Friendly Name der Entität), eine Zeile -->
 {#snippet subj(subject: string | null)}
   {#if subject}
     <span class="min-w-0 truncate text-tok" data-testid="watcher-subject">{subject}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span>
@@ -172,9 +171,9 @@
 {/snippet}
 
 <!-- Die Zeilen eines Bereichs: auf dem Desktop eine Tabelle mit Spalten, auf dem Handy kompakte Zeilen untereinander -->
-{#snippet rowList(list: HomeItem[], current: boolean)}
+{#snippet rowList(list: HomeItem[], current: boolean, problem = false)}
   {#if ui.desktop}
-    <ul class="mt-2 divide-y divide-line overflow-hidden rounded-row border border-line bg-surface">
+    <ul class="mt-2 divide-y divide-line overflow-hidden rounded-row border bg-surface {problem ? 'border-danger' : 'border-line'}">
       {#each list as i (i.watcherId)}
         <WatcherTableRow item={i} {nowMs} {canToggle} busy={busy.includes(i.watcherId)} fresh={fresh === i.watcherId} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} />
       {/each}
@@ -265,15 +264,6 @@
         </div>
       {/if}
 
-      {#if renamable > 0 && data?.available}
-        <div data-testid="home-rename">
-          <Banner wrap title={t('Namen mit Gerät ergänzen')} sub={tn('{n} Wächter ohne Gerät im Namen', '{n} Wächter ohne Gerät im Namen', renamable)} onclick={() => askRenameWatchers(renamable)}>
-            {#snippet leading()}<span class="text-banner-radio"><Icon name="eye" size={30} stroke={1.9} /></span>{/snippet}
-            {#snippet trailing()}<Icon name="chevron-right" size={20} stroke={2} />{/snippet}
-          </Banner>
-        </div>
-      {/if}
-
       {#if uncategorized > 0 && data?.available}
         <div data-testid="home-categorize">
           <Banner wrap title={t('Kategorien vorschlagen')} sub={tn('{n} Wächter ohne Kategorie', '{n} Wächter ohne Kategorie', uncategorized)} onclick={() => askSuggestWatcherCategories(uncategorized)}>
@@ -312,6 +302,12 @@
       {:else}
         {#if query && items.length === 0}
           <p class="py-10 text-center text-fg2" data-testid="home-no-match">{t('Keine Treffer')}</p>
+        {/if}
+        <!-- Wächter mit Problem (keine Zuständigen, Entität oder Ziel fehlt): ganz oben, vor allem anderen, mit rotem Rand und dem Grund als Text -->
+        {#if layout.problems.length > 0}
+          <section class="@container" aria-label={t('Wächter mit Problem')} data-testid="home-problems">
+            {@render rowList(layout.problems, false, true)}
+          </section>
         {/if}
         {#if layout.waiting.length > 0}
           <section aria-label={t('Wartet auf jemanden')} data-testid="home-waiting">

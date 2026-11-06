@@ -90,7 +90,8 @@ test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Karte erscheint live 
     await setState(request, 'sensor.waschmaschine_leistung', '2');
     await expect.poll(async () => (await cardsOf(request, s.boardId)).length, { timeout: 15_000 }).toBe(1);
     const card = (await cardsOf(request, s.boardId))[0]!;
-    expect(card).toMatchObject({ title, assigneeIds: [s.rene.id] });
+    // die Karte bekommt den Namen der Entität dazu, der Wächter selbst bleibt sauber
+    expect(card).toMatchObject({ title: `${title}: Waschmaschine Leistung`, assigneeIds: [s.rene.id] });
     expect(card.watcherId).not.toBeNull();
     expect(card.dueAt).not.toBeNull();
 
@@ -110,7 +111,7 @@ test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Karte erscheint live 
 
     // Push an Rene mit „Erledigt"
     const pushes = (await (await request.get(`${MOCK}/mock/pushes`)).json()) as { service: string; title: string; message: string; data: { actions?: unknown[] } }[];
-    const toRene = pushes.find((p) => p.service === 'mobile_app_rene_e2e' && p.title === title);
+    const toRene = pushes.find((p) => p.service === 'mobile_app_rene_e2e' && p.title === `${title}: Waschmaschine Leistung`);
     expect(toRene?.message).toMatch(/^Neue Karte für dich · fällig/);
     expect(toRene?.data.actions).toHaveLength(1);
     expect(pushes.some((p) => p.service === 'mobile_app_conny_e2e')).toBe(false);
@@ -216,5 +217,5 @@ test('„Testen" legt eine Karte an (Einstellungen › Wächter)', async ({ page
 
   const cards = await cardsOf(request, s.boardId);
   expect(cards).toHaveLength(1);
-  expect(cards[0]).toMatchObject({ title: `Probe ${s.tag}`, assigneeIds: [s.rene.id], watcherId: id });
+  expect(cards[0]).toMatchObject({ title: `Probe ${s.tag}: Waschmaschine Leistung`, assigneeIds: [s.rene.id], watcherId: id });
 });

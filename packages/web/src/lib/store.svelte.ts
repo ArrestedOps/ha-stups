@@ -39,7 +39,7 @@ export type Sheet =
   | { type: 'boardSettings' }
   | { type: 'settings'; page?: SettingsPageId }
   | { type: 'people' }
-  | { type: 'watcher'; id: string | null; template?: string; /** geöffnet aus Einstellungen › Wächter oder aus „Gefunden": dorthin geht Zurück */ from?: 'settings' | 'found'; hit?: { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft } }
+  | { type: 'watcher'; id: string | null; template?: string; /** geöffnet aus Einstellungen › Wächter oder aus „Gefunden": dorthin geht Zurück */ from?: 'settings' | 'found'; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
   | { type: 'found' }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
@@ -74,7 +74,7 @@ export interface ConfirmRequest {
 /** Womit der Bereich „Neuer Wächter“ aufklappt: eine Vorlage und/oder ein Treffer aus „Gefunden“ (Entität schon gewählt) */
 export interface NewWatcherRequest {
   template?: string;
-  hit?: { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft };
+  hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft };
 }
 
 export const ui = $state({
@@ -813,29 +813,6 @@ export function openViewer(items: Attachment[], index: number): void {
 }
 export function closeViewer(): void {
   ui.viewer = null;
-}
-
-/** Fragt vor dem Sammel-Umbenennen nach („Namen mit Gerät ergänzen"); umbenannt wird erst nach der Zustimmung, das Ergebnis steht als Zahl da */
-export function askRenameWatchers(n: number): void {
-  ui.confirm = {
-    title: t('Namen mit Gerät ergänzen?'),
-    text: tn(
-      '{n} Wächter heißt noch wie die Vorlage. Er bekommt das Gerät dazu, zum Beispiel „Batterie schwach: iPhone Rene“. Eigene Namen bleiben.',
-      '{n} Wächter heißen noch wie die Vorlage. Sie bekommen das Gerät dazu, zum Beispiel „Batterie schwach: iPhone Rene“. Eigene Namen bleiben.',
-      n,
-    ),
-    label: t('Ergänzen'),
-    run: async () => {
-      try {
-        const r = await api.renameWatchersWithDevice();
-        ui.watchers = await api.watchers().catch(() => ui.watchers);
-        ui.rev += 1;
-        toast(tn('{n} Wächter umbenannt', '{n} Wächter umbenannt', r.renamed));
-      } catch (e) {
-        toast(e instanceof Error ? e.message : t('Umbenennen fehlgeschlagen'), { tone: 'error' });
-      }
-    },
-  };
 }
 
 /**

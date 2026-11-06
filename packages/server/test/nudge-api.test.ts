@@ -55,7 +55,7 @@ describe('POST /api/cards/:id/nudge', () => {
     await new Promise((res) => setTimeout(res, 5));
     expect(ticks).toBe(1);
 
-    const board = (await call(anna, 'GET', `/api/boards/${store.listBoards()[0]!.id}`)).body;
+    const board = (await call(anna, 'GET', `/api/boards/${store.listBoards(null)[0]!.id}`)).body;
     expect(board.cards[0].openNudges).toEqual([{ id: r.body.sent[0].nudgeId, fromId: annaId, toId: benId, delivered: false }]);
   });
 

@@ -40,9 +40,33 @@
   let house = $state<HouseInfo | null>(null);
   let entities = $state<HouseEntities | null>(null);
 
+  // Boards ohne Besitzer (die Person ist entfernt): niemand sieht sie; ein Administrator sieht nur Name und Zahl der Karten und darf sie löschen
+  let orphans = $state<{ id: string; name: string; cards: number }[]>([]);
+  async function loadOrphans() {
+    orphans = await api.orphanBoards().catch(() => orphans);
+  }
+  function askDeleteOrphan(b: { id: string; name: string; cards: number }) {
+    ui.confirm = {
+      title: t('Board „{name}“ löschen?', { name: b.name }),
+      text: tn('Das Board hat keinen Besitzer mehr. Es wird mit {n} Karte endgültig gelöscht.', 'Das Board hat keinen Besitzer mehr. Es wird mit {n} Karten endgültig gelöscht.', b.cards),
+      label: t('Löschen'),
+      run: async () => {
+        try {
+          await api.deleteOrphanBoard(b.id);
+          toast(t('Board gelöscht'));
+          await loadOrphans();
+          await refresh();
+        } catch (e) {
+          toast(e instanceof Error ? e.message : t('Löschen fehlgeschlagen'), { tone: 'error' });
+        }
+      },
+    };
+  }
+
   async function load() {
     try {
       info = await api.access();
+      if (info.isAdmin) void loadOrphans();
       if (feat.standalone && info.isAdmin) accounts = await api.accounts().catch(() => accounts);
       if (feat.house && can('house')) {
         house = await api.houseChannels().catch(() => house);
@@ -437,6 +461,21 @@
           </ListRow>
         {/each}
         {@render manualForm(t('Anderen Namen eintragen'), t('Name der neuen Person'))}
+      </div>
+    {/if}
+    {#if admin && orphans.length > 0}
+      <div class="mt-3.5 flex flex-col gap-2" data-testid="orphan-boards">
+        <SectionHeader title={t('Boards ohne Besitzer')} count={orphans.length} />
+        <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Der Besitzer ist nicht mehr dabei. Niemand sieht diese Boards, auch du nicht; du kannst sie nur löschen.')}</p>
+        {#each orphans as b (b.id)}
+          <ListRow title={b.name}>
+            {#snippet tile()}<Tile color="gray"><Icon name="layers" size={22} stroke={1.8} /></Tile>{/snippet}
+            {#snippet meta()}{tn('{n} Karte', '{n} Karten', b.cards)}{/snippet}
+            {#snippet right()}
+              <button class="bg-danger-bg inline-flex h-[34px] items-center rounded-[12px] px-3 text-[13px] font-bold text-danger" onclick={() => askDeleteOrphan(b)}>{t('Löschen')}</button>
+            {/snippet}
+          </ListRow>
+        {/each}
       </div>
     {/if}
   {/if}

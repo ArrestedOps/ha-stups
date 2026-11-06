@@ -555,4 +555,54 @@ export const migrations: Migration[] = [
       alter table watchers add column category text;
     `,
   },
+  {
+    version: 27,
+    // Boards: Sichtbarkeit und Fairness, dazu Wächter-Regeln. visibility: all (jeder mit Zugriff) | private (nur der Besitzer) | selected
+    // (Besitzer und Mitglieder aus board_members). owner_id ist bei Bestandsboards null (sie bleiben für alle sichtbar). counts_for_fairness:
+    // 0 nimmt das Board aus der Fairness-Auswertung (private Boards zählen nie, egal was hier steht). Am Wächter: counts_for_fairness (Bestand: 1)
+    // und assignees_missing (1 = es sind keine gültigen Zuständigen mehr da: der Wächter legt keine Karten an, bis neue gewählt sind).
+    // Die Läufe der Wächter bekommen das Ergebnis no_assignees (Tabellenumbau wie in Migration 20); watcher_notices sind die Mitteilungen
+    // für die Glocke („braucht neue Zuständige", „läuft weiter mit …").
+    sql: `
+      alter table boards add column visibility text not null default 'all' check (visibility in ('all', 'private', 'selected'));
+      alter table boards add column owner_id text references users(id) on delete set null;
+      alter table boards add column counts_for_fairness integer not null default 1;
+      create table board_members (
+        board_id text not null references boards(id) on delete cascade,
+        user_id  text not null references users(id) on delete cascade,
+        primary key (board_id, user_id)
+      );
+      create index ix_board_members_user on board_members(user_id);
+
+      alter table watchers add column counts_for_fairness integer not null default 1;
+      alter table watchers add column assignees_missing integer not null default 0;
+
+      create table watcher_runs_new (
+        id          text primary key,
+        watcher_id  text not null references watchers(id) on delete cascade,
+        at          text not null,
+        result      text not null check (result in
+                      ('created', 'retriggered', 'counted', 'cooldown', 'waiting', 'assigned', 'auto_done', 'nudged', 'test', 'error', 'passed', 'suggested', 'claimed', 'suggest_fallback', 'no_assignees')),
+        card_id     text,
+        assigned_to text not null default '[]',
+        note        text
+      );
+      insert into watcher_runs_new select id, watcher_id, at, result, card_id, assigned_to, note from watcher_runs;
+      drop table watcher_runs;
+      alter table watcher_runs_new rename to watcher_runs;
+      create index ix_watcher_runs on watcher_runs(watcher_id, at);
+      create index ix_watcher_runs_at on watcher_runs(at);
+
+      create table watcher_notices (
+        id         text primary key,
+        watcher_id text not null references watchers(id) on delete cascade,
+        kind       text not null check (kind in ('assignees_missing', 'shrunk')),
+        at         text not null,
+        by_user    text,
+        recipients text not null default '[]',
+        detail     text not null default '{}'
+      );
+      create index ix_watcher_notices_at on watcher_notices(at);
+    `,
+  },
 ];

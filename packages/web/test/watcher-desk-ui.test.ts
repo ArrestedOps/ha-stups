@@ -90,7 +90,7 @@ describe('Kategorie im Formular', () => {
   it('ohne Vorschlag keine Kennzeichnung', () => {
     expect(html(editor())).not.toContain('data-testid="category-suggested"');
   });
-  it('aus Vorlage oder Treffer vorbelegt und als „vorgeschlagen“ gekennzeichnet; Name und Titel nennen das Gerät', () => {
+  it('aus Vorlage oder Treffer vorbelegt und als „vorgeschlagen“ gekennzeichnet; Der Name bleibt der der Vorlage, der Titel nennt das Gerät', () => {
     const ed = editor();
     ed.applySuggestion(hit(7));
     const out = html(ed);
@@ -98,7 +98,7 @@ describe('Kategorie im Formular', () => {
     expect(out).toContain('vorgeschlagen');
     expect(out).toContain('Batterien');
     expect(out).toContain('Batterie wechseln: Gerät 7'); // Titel im Feld und in der Vorschau
-    expect(out).toContain('Batterie schwach: Gerät 7'); // Name unten
+    expect(out).not.toContain('Batterie schwach: Gerät 7'); // der Name bleibt der der Vorlage
   });
   it('eine selbst gewählte Kategorie ist nicht „vorgeschlagen“', () => {
     const ed = editor();

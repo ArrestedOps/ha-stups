@@ -50,7 +50,7 @@ describe('Kopfzeile', () => {
     expect(btn).not.toContain('M3 11l9-8 9 8'); // der frühere Haus-Pfad
   });
 
-  it('Punkt an der Glocke nur bei Ungelesenem', () => {
+  it('Zahl an der Glocke nur bei Ungelesenem: klein, ab 10 „9+", Screenreader-Beschriftung mit Anzahl', () => {
     expect(html()).not.toContain('bell-dot');
     inbox.items = [{ id: 'c:1', kind: 'comment', at: '2026-11-04T09:00:00.000Z' } as never];
     inbox.seenAt = '2026-11-04T09:00:00.000Z';
@@ -58,8 +58,13 @@ describe('Kopfzeile', () => {
     inbox.seenAt = '2026-11-04T08:00:00.000Z';
     const out = html();
     expect(out).toContain('bell-dot');
-    expect(out).toContain('Mitteilungen, es gibt Ungelesenes');
+    expect(out).toMatch(/class="bell-count[^"]*"[^>]*data-testid="bell-dot"[^>]*>1</);
+    expect(out).toContain('Mitteilungen, 1 ungelesen');
     inbox.seenAt = null;
     expect(html()).toContain('bell-dot');
+    inbox.items = Array.from({ length: 12 }, (_, i) => ({ id: `c:${i}`, kind: 'comment', at: '2026-11-04T09:00:00.000Z' }) as never);
+    const many = html();
+    expect(many).toMatch(/data-testid="bell-dot"[^>]*>9\+</);
+    expect(many).toContain('Mitteilungen, 12 ungelesen');
   });
 });

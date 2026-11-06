@@ -62,7 +62,7 @@ describe('Sonntags-Zusammenfassung einschalten', () => {
 
 describe('GET /api/fairness: wartet auf dich', () => {
   it('Bestätigungen von Kindern, die diese Person bestätigen darf', async () => {
-    const board = store.listBoards()[0]!;
+    const board = store.listBoards(null)[0]!;
     const col = store.getBoardView(board.id).columns[0]!.id;
     const kid = store.addPerson({ haUserId: 'ha-kid', name: 'Kind' }).id;
     store.setChild(kid, { isChild: true, confirmDefault: true, confirmers: [store.people().find((p) => p.name === 'Anna')!.id] });

@@ -583,7 +583,7 @@ describe('Protokoll', () => {
     await n.tick();
 
     expect(lines).toEqual(['Push (due) „Bad putzen" an Rene gesendet']);
-    expect(store.recentNotifications()).toEqual([
+    expect(store.recentNotifications(20, null)).toEqual([
       { kind: 'due', status: 'sent', at: now.toISOString(), title: 'Bad putzen', user: 'Rene' },
     ]);
   });
@@ -607,7 +607,7 @@ describe('Protokoll', () => {
     card({ dueAt: '2026-10-31T09:00:00Z', assigneeIds: [rene.id] });
     const n = makeNotifier();
     await n.tick();
-    expect(store.recentNotifications()[0]).toMatchObject({ kind: 'due', status: 'skipped', title: 'Bad putzen' });
+    expect(store.recentNotifications(20, null)[0]).toMatchObject({ kind: 'due', status: 'skipped', title: 'Bad putzen' });
   });
 });
 

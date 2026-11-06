@@ -1,7 +1,8 @@
 <script lang="ts">
   import logo from '../assets/stups-icon.png';
   import { unread } from '../lib/inbox.svelte';
-  import { t } from '../lib/i18n/index.svelte';
+  import { bellText } from '../lib/inbox';
+  import { t, tn } from '../lib/i18n/index.svelte';
   import { feat, goToDashboard, openSheet, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
@@ -9,12 +10,12 @@
 
   /**
    * Kopf aller drei Reiter wie im Mockup: Zeile mit Logo und Wortmarke, rechts Home (nur in Home Assistant: zurück zum Dashboard der Person),
-   * Glocke (mit Punkt, wenn es Ungelesenes gibt), Zahnrad (Einstellungen) und Profilbild (ebenfalls Einstellungen, dort steht oben das Profil),
+   * Glocke (mit kleiner Zahl, wenn es Ungelesenes gibt), Zahnrad (Einstellungen) und Profilbild (ebenfalls Einstellungen, dort steht oben das Profil),
    * darunter Titel und Untertitel des Reiters. Welches Dashboard der Home-Knopf öffnet, wählt jede Person unter Einstellungen › Home Assistant.
    */
   let { title, sub, subTestid }: { title: string; sub: string; subTestid?: string } = $props();
 
-  const fresh = $derived(unread() > 0);
+  const unseen = $derived(unread());
 </script>
 
 <!-- Auf dem Desktop (ab 1024 px) steht der Kopf in DesktopHeader.svelte, über allen Reitern; hier bleibt nichts -->
@@ -36,12 +37,12 @@
     {/if}
     <button
       class="relative flex h-11 w-11 items-center justify-center rounded-full text-text-soft"
-      aria-label={fresh ? t('Mitteilungen, es gibt Ungelesenes') : t('Mitteilungen')}
+      aria-label={unseen > 0 ? tn('Mitteilungen, {n} ungelesen', 'Mitteilungen, {n} ungelesen', unseen) : t('Mitteilungen')}
       data-testid="bell"
       onclick={() => openSheet({ type: 'notifications' })}
     >
       <Icon name="bell" size={24} />
-      {#if fresh}<span class="absolute top-[9px] right-[11px] h-[9px] w-[9px] rounded-full bg-brand-dot" data-testid="bell-dot"></span>{/if}
+      {#if unseen > 0}<span class="bell-count absolute top-[6px] right-[7px]" data-testid="bell-dot" aria-hidden="true">{bellText(unseen)}</span>{/if}
     </button>
     <button class="flex h-11 w-11 items-center justify-center rounded-full text-text-soft" aria-label={t('Einstellungen öffnen')} onclick={() => openSheet({ type: 'settings' })}>
       <Icon name="gear" size={24} />

@@ -4,7 +4,7 @@
   import { filterEntries, groupByDay, entryView, isUnread, timeLabel, INBOX_CHIPS, type InboxChip, type InboxGroupKey } from '../lib/inbox';
   import { inbox, loadInbox, loadMoreInbox, markAllRead, unread } from '../lib/inbox.svelte';
   import { deviceTz } from '../lib/datetime';
-  import { closeSheet, openCardAnywhere, ui } from '../lib/store.svelte';
+  import { closeSheet, openCardAnywhere, openSheet, ui } from '../lib/store.svelte';
   import { onMount } from 'svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
@@ -37,9 +37,14 @@
   // Beim Öffnen den neuesten Stand holen (die Kopfzeile lädt nur im Takt der Aufgaben)
   onMount(() => void loadInbox());
 
-  const open = (cardId: string, boardId: string) => {
+  // Eine Karte öffnet die Karte; eine Mitteilung zu einem Wächter (ohne Karte) öffnet direkt den Wächter, im Editor mit dem Hinweis
+  const open = (e: { cardId: string; boardId: string; watcherId: string | null }) => {
+    if (e.watcherId) {
+      openSheet({ type: 'watcher', id: e.watcherId });
+      return;
+    }
     closeSheet();
-    void openCardAnywhere({ id: cardId, boardId });
+    void openCardAnywhere({ id: e.cardId, boardId: e.boardId });
   };
 </script>
 
@@ -76,7 +81,7 @@
           {#each g.items as e (e.id)}
             {@const v = entryView(e, ctx)}
             {@const fresh = isUnread(e, inbox.seenAt)}
-            <ListRow title={v.title} highlight={fresh} onclick={() => open(e.cardId, e.boardId)}>
+            <ListRow title={v.title} highlight={fresh} onclick={() => open(e)}>
               {#snippet tile()}<Tile color={v.color}><Icon name={v.icon} size={22} /></Tile>{/snippet}
               {#snippet meta()}<span class="truncate">{v.meta}</span>{/snippet}
               {#snippet right()}

@@ -1,4 +1,5 @@
 import { api, ApiError, type BoardView, type HaEntity, type SavedWatcher, type WatcherItem, type WatcherRun } from './api';
+import { boardCounts, boardPeople, watcherBoardOption } from './boardAccess';
 import { t } from './i18n/index.svelte';
 import type { EntityHistory } from './history';
 import { can, closeSheet, openSettings, openSheet, toast, ui } from './store.svelte';
@@ -7,7 +8,7 @@ import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepPr
 import { askCard, metNowOf } from './watcher-ask';
 import { backAction } from './watcher-wizard';
 
-export type Hit = { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft };
+export type Hit = { entityId: string; name: string; unit?: string; draft?: TemplateDraft };
 
 /**
  * Der Zustand des Wächter-Editors, den Ablauf (Bearbeiten) und Assistent (Anlegen) teilen: das Formular, was vom Server dazukommt
@@ -42,6 +43,21 @@ export class WatcherEditor {
   readonly readOnly = $derived(!can('watchers'));
   /** Die Kategorien, die es schon gibt (für die Auswahl im Editor) */
   readonly categoryNames = $derived((ui.watchers?.items ?? []).flatMap((w) => (w.category ? [w.category] : [])));
+  /** Das gewählte Board (null: nicht in der Liste, zum Beispiel weil es diese Person nicht sieht) */
+  readonly board = $derived(ui.boards.find((b) => b.id === this.form.boardId));
+  /** Die Personen, aus denen „Wer?" wählt: nur die, die das Board sehen (ohne gewähltes Board alle) */
+  readonly people = $derived(boardPeople(this.board, ui.people));
+  /** Die Boards zur Auswahl mit „Name · Alle" oder „Name · Rene, Anna"; private Boards stehen da, sind aber nicht wählbar */
+  readonly boardOptions = $derived.by(() => {
+    const options = ui.boards.map((b) => watcherBoardOption(b, ui.people));
+    // das Ziel eines vorhandenen Wächters, das diese Person nicht sieht, bleibt stehen (sonst wäre die Auswahl leer)
+    if (this.form.boardId && !options.some((o) => o.id === this.form.boardId)) options.push({ id: this.form.boardId, label: t('Board (nicht sichtbar)'), short: t('Board (nicht sichtbar)'), disabled: false });
+    return options;
+  });
+  /** Zählt das Board zur Fairness (ein privates nie)? Danach richtet sich die Zeile „Zählt zur Fairness" */
+  readonly boardCounts = $derived(boardCounts(this.board));
+  /** Der angezeigte Wert des Schalters: die eigene Wahl, sonst der Wert des Boards (beim Anlegen) */
+  readonly counts = $derived(this.form.countsForFairness ?? this.boardCounts);
   private historySeq = 0;
   private orderSeq = 0;
   private viewSeq = 0;
@@ -112,6 +128,18 @@ export class WatcherEditor {
       });
   }
 
+  /**
+   * Das Board wurde gewechselt: „Wer?" kennt nur noch Personen aus dem neuen Board. Wer es nicht sieht, fällt aus dem Kreis und als Rückfall
+   * heraus (der Server prüft das beim Speichern noch einmal).
+   */
+  pruneToBoard(): void {
+    if (!this.board) return;
+    const ids = new Set(this.people.map((p) => p.id));
+    this.form.personIds = this.form.personIds.filter((id) => ids.has(id));
+    if (this.form.fallbackPersonId && !ids.has(this.form.fallbackPersonId)) this.form.fallbackPersonId = '';
+    this.loadOrder();
+  }
+
   /** Verlauf der Entität mit der Regel des Formulars (Auslösepunkte); veraltete Antworten fallen weg */
   loadHistory(): void {
     const f = this.form;
@@ -140,7 +168,7 @@ export class WatcherEditor {
     const f = this.form;
     const mine = ++this.orderSeq;
     api
-      .watcherOrder({ ...(this.id ? { watcherId: this.id } : {}), mode: f.assignMode, personIds: f.personIds, fallback: f.fallback, fallbackPersonId: f.fallbackPersonId })
+      .watcherOrder({ ...(this.id ? { watcherId: this.id } : {}), ...(f.boardId ? { boardId: f.boardId } : {}), mode: f.assignMode, personIds: f.personIds, fallback: f.fallback, fallbackPersonId: f.fallbackPersonId })
       .then((o) => {
         if (mine === this.orderSeq) this.order = o;
       })
@@ -176,10 +204,10 @@ export class WatcherEditor {
 
   /** Ein Vorschlag aus „Gefunden“ (Chip im Formular am Desktop): dieselbe Vorbelegung wie „Einrichten“ im Assistenten */
   applySuggestion(s: WatcherSuggestion): void {
-    const found: Hit = { entityId: s.entityId, name: s.name, ...(s.label ? { label: s.label } : {}), ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) };
+    const found: Hit = { entityId: s.entityId, name: s.name, ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) };
     const tpl = this.templates.find((x) => x.id === s.templateId);
     if (tpl) this.applyTemplate(tpl, found);
-    else this.form = applyEntity(this.form, { entityId: s.entityId, name: s.name, state: '', unit: s.unit ?? null, domain: '', ...(s.label ? { label: s.label } : {}) });
+    else this.form = applyEntity(this.form, { entityId: s.entityId, name: s.name, state: '', unit: s.unit ?? null, domain: '' });
     this.picking = null;
   }
 

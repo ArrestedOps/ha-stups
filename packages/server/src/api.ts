@@ -25,6 +25,7 @@ import { registerInboxRoutes } from './api/inbox.js';
 import { registerHomeStateRoutes } from './api/home-state.js';
 import { registerFeedbackRoutes } from './api/feedback.js';
 import { registerChildGuard } from './api/child-guard.js';
+import { registerBoardGuard, visibleChanges } from './api/board-guard.js';
 
 export type { ApiDeps } from './api/kit.js';
 
@@ -52,7 +53,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   registerLanguageHook(app);
 
   app.setErrorHandler((err: Error & { statusCode?: number }, _req: FastifyRequest, reply: FastifyReply) => {
-    if (err instanceof AppError) return reply.code(err.status).send({ error: err.message });
+    if (err instanceof AppError) return reply.code(err.status).send({ ...err.details, error: err.message });
     if (err.statusCode && err.statusCode < 500) return reply.code(err.statusCode).send({ error: err.message });
     app.log.error(err);
     return reply.code(500).send({ error: t('Interner Fehler') });
@@ -70,6 +71,8 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
 
   // Rolle „Kind": nur, was ausdrücklich erlaubt ist (Erlaubnisliste)
   registerChildGuard(app, store);
+  // Sichtbarkeit von Boards: Anfragen an Boards, Karten und Co., die die Person nicht sehen darf, gibt es nicht (404)
+  registerBoardGuard(app, store);
 
   // Jede erfolgreiche Änderung wird allen Geräten gemeldet, die sie dann nachladen.
   app.addHook('onResponse', async (req, reply) => {
@@ -77,10 +80,12 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   });
 
   await ensureWebsocket(app);
-  app.get('/api/events', { websocket: true }, (socket) => {
+  app.get('/api/events', { websocket: true }, (socket, req) => {
     const bus = deps.bus;
+    // Die Karten einer Meldung gehen nur an Personen, die ihr Board sehen (die Nummer bleibt, damit keine Lücke entsteht)
+    const viewer = req.user?.id ?? null;
     socket.send(JSON.stringify({ type: 'hello', seq: bus?.seq ?? 0 }));
-    const off = bus?.subscribe((e) => socket.send(JSON.stringify({ type: 'changed', seq: e.seq, by: e.by, changes: e.changes })));
+    const off = bus?.subscribe((e) => socket.send(JSON.stringify({ type: 'changed', seq: e.seq, by: e.by, changes: visibleChanges(store, e.changes, viewer) })));
     const ping = setInterval(() => socket.ping(), 25_000);
     socket.on('close', () => {
       off?.();

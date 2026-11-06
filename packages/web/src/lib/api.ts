@@ -89,6 +89,30 @@ export interface Board {
   color: string | null;
   position: string;
   archiveAfterDays: number;
+  /** Wer das Board sieht: alle, nur der Besitzer, oder der Besitzer und die gewählten Mitglieder */
+  visibility: 'all' | 'private' | 'selected';
+  /** Wer es angelegt hat und Sichtbarkeit und Fairness ändern darf (null: Bestandsboard, dann ein Administrator) */
+  ownerId: string | null;
+  /** Zählt zur Fairness der Woche (ein privates Board nie, egal was hier steht) */
+  countsForFairness: boolean;
+  /** Die gewählten Mitglieder bei "ausgewählte Personen", ohne den Besitzer */
+  memberIds: string[];
+}
+/** Wer und was von einem Wechsel der Sichtbarkeit oder der Mitglieder betroffen wäre (Vorschau für den Bestätigungsdialog) */
+export interface BoardAccessPreview {
+  /** Personen, die das Board danach nicht mehr sehen */
+  removedIds: string[];
+  /** Betroffene Wächter: Zuständige jetzt (before) und danach (after); missing: niemand bleibt, der Wächter legt dann keine Karten an */
+  watchers: { watcherId: string; name: string; mode: string; before: string[]; after: string[]; missing: boolean; circleEmpty: boolean; fallbackCleared: boolean }[];
+  /** Wächter, die verhindern, dass das Board privat wird */
+  blocking: { id: string; name: string }[];
+  /** Karten, bei denen Zuständige entfernt werden */
+  assigneeCards: number;
+}
+export interface BoardAccessInput {
+  visibility?: 'all' | 'private' | 'selected';
+  countsForFairness?: boolean;
+  memberIds?: string[];
 }
 export interface BoardSummary extends Board {
   openCards: number;
@@ -322,6 +346,10 @@ export interface InboxEntry {
   watcherName: string | null;
   assigned: boolean;
   dueAt: string | null;
+  /** Kennung des Wächters bei Mitteilungen ohne Karte (`detail` ist dann `assignees_missing` oder `shrunk`); sonst null */
+  watcherId: string | null;
+  /** Die Angaben zu "braucht neue Zuständige" und "läuft weiter mit ..." (sonst null) */
+  notice: { boardName: string; removedNames: string[]; remainingNames: string[] } | null;
 }
 export interface InboxPage {
   items: InboxEntry[];
@@ -359,10 +387,12 @@ export interface Today {
 export interface HomeItem {
   watcherId: string;
   name: string;
-  /** Friendly Name der beobachteten Entität, solange der Name das Gerät nicht nennt (sonst null) */
-  subject: string | null;
+  /** Friendly Name der beobachteten Entität (ohne Namen die Entitäts-ID): steht in der Liste immer unter dem Namen */
+  subject: string;
   /** Friendly Name der beobachteten Entität (ohne Namen die Entitäts-ID) */
   entity: string;
+  /** ok, entity_missing, target_missing (pausiert) oder assignees_missing (legt keine Karten an, braucht neue Zuständige) */
+  status: 'ok' | 'entity_missing' | 'target_missing' | 'assignees_missing';
   /** Aktueller Wert mit Einheit ("26 %"), null ohne Wert */
   value: string | null;
   phase: 'waiting' | 'running' | 'soon' | 'quiet';
@@ -648,11 +678,21 @@ export const api = {
   board: (id: string) => get<BoardView>(`boards/${id}`),
   /** Einzelne Karten (für den Live-Sync); gelöschte und archivierte fehlen in der Antwort */
   cardsByIds: (ids: string[]) => get<Card[]>(`cards?ids=${ids.map(encodeURIComponent).join(',')}`),
-  createBoard: (name: string, template?: string) => post<Board>('boards', template ? { name, template } : { name }),
+  createBoard: (name: string, template?: string, access: BoardAccessInput = {}) => post<Board>('boards', { name, ...(template ? { template } : {}), ...access }),
   templates: () => get<TemplateInfo[]>('templates'),
   saveAsTemplate: (boardId: string, name: string) => post<TemplateInfo>(`boards/${boardId}/save-as-template`, { name }),
   deleteTemplate: (id: string) => del(`templates/${id}`),
-  updateBoard: (id: string, b: Partial<{ name: string; archiveAfterDays: number }>) => patch<Board>(`boards/${id}`, b),
+  updateBoard: (id: string, b: Partial<{ name: string; archiveAfterDays: number }> & BoardAccessInput) => patch<Board>(`boards/${id}`, b),
+  /** Was ein Wechsel der Sichtbarkeit oder der Mitglieder bewirken würde, ohne ihn auszuführen */
+  boardAccessPreview: (id: string, q: BoardAccessInput) => {
+    const p = new URLSearchParams();
+    if (q.visibility) p.set('visibility', q.visibility);
+    if (q.memberIds) p.set('members', q.memberIds.join(','));
+    return get<BoardAccessPreview>(`boards/${id}/access-preview?${p}`);
+  },
+  /** Boards ohne Besitzer (nur Administratoren): nur Name und Zahl der Karten */
+  orphanBoards: () => get<{ id: string; name: string; cards: number }[]>('admin/orphan-boards'),
+  deleteOrphanBoard: (id: string) => del(`admin/orphan-boards/${id}`),
   deleteBoard: (id: string) => del(`boards/${id}`),
   archived: (boardId: string) => get<Card[]>(`boards/${boardId}/archive`),
 
@@ -762,7 +802,6 @@ export const api = {
   deleteWatcher: (id: string) => del(`watchers/${id}`),
   testWatcher: (id: string) => post<WatcherItem>(`watchers/${id}/test`),
   /** Sammelknopf: Wächter mit Vorlagennamen bekommen das Gerät im Namen (nur Administratoren) */
-  renameWatchersWithDevice: () => post<{ renamed: number }>('watchers/rename-with-device'),
   suggestWatcherCategories: () => post<{ updated: number }>('watchers/suggest-categories'),
   resetWatcherCounter: (id: string) => post<WatcherItem>(`watchers/${id}/reset-counter`),
   watcherRuns: (id: string) => get<WatcherRun[]>(`watchers/${id}/runs`),
@@ -781,9 +820,10 @@ export const api = {
     return get<EntityHistory>(`watchers/history?${p}`);
   },
   /** Die Reihenfolge für „An wen": für einen gespeicherten Wächter (`watcherId`) oder einen Entwurf */
-  watcherOrder: (q: { watcherId?: string; mode?: string; personIds?: string[]; fallback?: string; fallbackPersonId?: string }) => {
+  watcherOrder: (q: { watcherId?: string; boardId?: string; mode?: string; personIds?: string[]; fallback?: string; fallbackPersonId?: string }) => {
     const p = new URLSearchParams();
     if (q.watcherId) p.set('watcherId', q.watcherId);
+    if (q.boardId) p.set('boardId', q.boardId);
     if (q.mode) p.set('mode', q.mode);
     if (q.personIds) p.set('personIds', q.personIds.join(','));
     if (q.fallback) p.set('fallback', q.fallback);

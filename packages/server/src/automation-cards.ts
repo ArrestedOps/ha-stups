@@ -87,7 +87,8 @@ export function createAutomationCards(deps: AutomationDeps) {
     const title = asText(data.title);
     try {
       if (!title) throw new Error('title fehlt');
-      const boards = store.listBoards();
+      // Automationen aus Home Assistant kennen nur Boards, die alle sehen (private oder ausgewählte Boards erreichen sie nie)
+      const boards = store.listBoards(null);
       const boardKey = asText(data.board);
       const board = boardKey ? boards.find((b) => b.id === boardKey || same(b.name, boardKey)) : boards[0];
       if (!board) throw new Error(`Board „${boardKey ?? ''}" gibt es nicht`);

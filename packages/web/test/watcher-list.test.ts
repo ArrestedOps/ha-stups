@@ -19,7 +19,8 @@ import {
 
 const item = (over: Partial<HomeItem> & { watcherId: string }): HomeItem => ({
   name: 'Wächter',
-  subject: null,
+  subject: '',
+  status: 'ok',
   entity: 'sensor.x',
   value: null,
   phase: 'quiet',
@@ -79,10 +80,10 @@ describe('watcherLayout: genau einmal, oben die aktuellen', () => {
   });
 
   it('in der Gruppe nach Name, dann Gerät, stabil', () => {
-    const mk = (id: string, name: string, subject: string | null) => item({ watcherId: id, name, subject, category: 'X' });
-    const l = watcherLayout([mk('1', 'Batterie schwach', 'Z'), mk('2', 'Batterie schwach', 'A'), mk('3', 'Abfall', null)]);
+    const mk = (id: string, name: string, subject: string) => item({ watcherId: id, name, subject, category: 'X' });
+    const l = watcherLayout([mk('1', 'Batterie schwach', 'Z'), mk('2', 'Batterie schwach', 'A'), mk('3', 'Abfall', '')]);
     expect(l.groups[0]!.items.map((i) => i.watcherId)).toEqual(['3', '2', '1']);
-    expect(watcherLayout([mk('3', 'Abfall', null), mk('2', 'Batterie schwach', 'A'), mk('1', 'Batterie schwach', 'Z')]).groups[0]!.items.map((i) => i.watcherId)).toEqual(['3', '2', '1']);
+    expect(watcherLayout([mk('3', 'Abfall', ''), mk('2', 'Batterie schwach', 'A'), mk('1', 'Batterie schwach', 'Z')]).groups[0]!.items.map((i) => i.watcherId)).toEqual(['3', '2', '1']);
   });
 
   it('ausgeschaltete Wächter bleiben sichtbar, in ihrer Kategorie; wartet noch ihre Karte, steht sie oben', () => {
@@ -98,7 +99,7 @@ describe('watcherLayout: genau einmal, oben die aktuellen', () => {
   });
 
   it('keine Wächter: keine Gruppen', () => {
-    expect(watcherLayout([])).toEqual({ waiting: [], running: [], soon: [], groups: [] });
+    expect(watcherLayout([])).toEqual({ problems: [], waiting: [], running: [], soon: [], groups: [] });
   });
 
   it('Wartende: die am längsten wartende zuerst', () => {

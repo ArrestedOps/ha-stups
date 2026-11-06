@@ -4,6 +4,8 @@
   import { api, type TemplateInfo } from '../lib/api';
   import { act, closeSheet, openSheet, selectBoard, ui } from '../lib/store.svelte';
   import BoardTile from './BoardTile.svelte';
+  import BoardVisibilityPicker from './BoardVisibilityPicker.svelte';
+  import type { Visibility } from '../lib/boardAccess';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
   import CtaButton from './ui/CtaButton.svelte';
@@ -14,6 +16,10 @@
 
   let name = $state('');
   let busy = $state(false);
+  // Wer das Board sieht und ob es zur Fairness zählt (Standard: alle, zählt mit). Ein Kind legt nur „Nur ich" an.
+  let visibility = $state<Visibility>(ui.isChild ? 'private' : 'all');
+  let memberIds = $state<string[]>([]);
+  let counts = $state(true);
   // Vorlagen: „" = leeres Board
   let templates = $state<TemplateInfo[]>([]);
   let template = $state('');
@@ -36,11 +42,16 @@
     const n = name.trim();
     if (!n || busy) return;
     busy = true;
-    const board = await act(() => api.createBoard(n, template || undefined));
+    const board = await act(() =>
+      api.createBoard(n, template || undefined, { visibility, countsForFairness: counts, ...(visibility === 'selected' ? { memberIds } : {}) }),
+    );
     busy = false;
     if (board) {
       name = '';
       template = '';
+      visibility = ui.isChild ? 'private' : 'all';
+      memberIds = [];
+      counts = true;
       await selectBoard(board.id);
     }
   }
@@ -53,9 +64,7 @@
     {/if}
   {/snippet}
   {#snippet footer()}
-    {#if !ui.isChild}
-      <CtaButton disabled={!name.trim() || busy} onclick={() => create()}><Icon name="plus" size={22} stroke={2.2} />{t('Board anlegen')}</CtaButton>
-    {/if}
+    <CtaButton disabled={!name.trim() || busy} onclick={() => create()}><Icon name="plus" size={22} stroke={2.2} />{t('Board anlegen')}</CtaButton>
   {/snippet}
 
   <div class="flex flex-col gap-3.5 pt-1">
@@ -74,8 +83,8 @@
       </ListRow>
     </div>
 
-    {#if !ui.isChild}
-      <div>
+    <div>
+      {#if !ui.isChild}
         <SectionHeader title={t('Neues Board')} />
         <p class="px-1 pt-1 pb-2 text-[12.5px] leading-[1.45] text-hint">{t('Starte leer oder mit einer Vorlage. Spalten und Kategorien sind danach frei änderbar.')}</p>
         <div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t('Vorlage für das neue Board')}>
@@ -107,10 +116,21 @@
             {tn('{n} Spalte', '{n} Spalten', chosen.columns)} · {tn('{n} Kategorie', '{n} Kategorien', chosen.categories)} · {tn('{n} Karte', '{n} Karten', chosen.cards)}
           </p>
         {/if}
-      </div>
-      <form onsubmit={create}>
-        <Field id="board-name" label={t('Name des neuen Boards')} bind:value={name} maxlength={80} enterkeyhint="done" placeholder={t('Neues Board')} />
-      </form>
-    {/if}
+      {:else}
+        <SectionHeader title={t('Neues Board')} />
+      {/if}
+    </div>
+    <form onsubmit={create}>
+      <Field id="board-name" label={t('Name des neuen Boards')} bind:value={name} maxlength={80} enterkeyhint="done" placeholder={t('Neues Board')} />
+    </form>
+    <BoardVisibilityPicker
+      {visibility}
+      {memberIds}
+      {counts}
+      ownerId={ui.me?.id ?? null}
+      onvisibility={(v) => (visibility = v)}
+      onmembers={(ids) => (memberIds = ids)}
+      oncounts={(on) => (counts = on)}
+    />
   </div>
 </Sheet>

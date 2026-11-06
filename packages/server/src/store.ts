@@ -6,6 +6,8 @@ import { createFairness } from './store/fairness.js';
 import { createConfirmation } from './store/confirmation.js';
 import { createToday } from './store/today.js';
 import { createInbox } from './store/inbox.js';
+import { createVisibility } from './store/visibility.js';
+import { createBoardAccess } from './store/board-access.js';
 import { createFeedback } from './store/feedback.js';
 import { createCards } from './store/cards.js';
 import { createBoards } from './store/boards.js';
@@ -33,11 +35,13 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
   Object.assign(
     s,
     createPeople(c, s),
+    createVisibility(c, s),
+    createBoardAccess(c, s),
     createBoards(c, s),
     createCards(c, s),
     createCardExtras(c, s),
     createCompletion(c, s),
-    createNotifications(c),
+    createNotifications(c, s),
     createNudgesPart(c, s),
     createWatcherCards(c, s),
     createTrash(c, s),
@@ -98,6 +102,22 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     openConfirmations: s.openConfirmations,
     boardIdsWithCardsOf: s.boardIdsWithCardsOf,
     boardIdOfCard: s.boardIdOfCard,
+    boardIdOfCardAny: s.boardIdOfCardAny,
+    boardIdOfColumn: s.boardIdOfColumn,
+    boardIdOfCategory: s.boardIdOfCategory,
+    boardIdOfTrash: s.boardIdOfTrash,
+    cardIdOfLink: s.cardIdOfLink,
+    cardIdOfComment: s.cardIdOfComment,
+    canSeeBoard: s.canSeeBoard,
+    canSeeCard: s.canSeeCard,
+    visibleBoardIds: s.visibleBoardIds,
+    boardPeopleIds: s.boardPeopleIds,
+    previewBoardAccess: s.previewBoardAccess,
+    addWatcherNotice: s.addWatcherNotice,
+    orphanBoards: s.orphanBoards,
+    deleteOrphanBoard: s.deleteOrphanBoard,
+    updateBoardWithEffects: s.updateBoardWithEffects,
+    getBoard: s.getBoard,
     pushSecret: s.pushSecret,
     rawSetting: s.rawSetting,
     putRawSetting: s.putRawSetting,

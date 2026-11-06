@@ -5,6 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { afterEach, describe, expect, it } from 'vitest';
 import { openDb } from '../src/db.js';
 import { migrations } from '../src/migrations.js';
+import { withoutLater } from './helpers/later-columns.js';
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -66,11 +67,10 @@ describe('Migration 23 (Posteingang und Dashboard je Person)', () => {
     const t1 = Date.now();
     expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(migrations[migrations.length - 1]!.version);
 
-    // Spalten, die spätere Migrationen anhängen (watchers.category), gehören nicht zu diesem Vergleich
-    const later = new Set(['category']);
+    // Spalten, die spätere Migrationen anhängen, gehören nicht zu diesem Vergleich
     for (const t of TABLES) {
       const rows = db.prepare(`select * from ${t} order by 1, 2`).all() as Record<string, unknown>[];
-      expect(rows.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => !(t === 'watchers' && later.has(k))))), t).toEqual(snap[t]);
+      expect(withoutLater(t, rows), t).toEqual(snap[t]);
     }
 
     const users = db.prepare('select * from users order by id').all() as Record<string, unknown>[];

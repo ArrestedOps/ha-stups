@@ -196,7 +196,7 @@ describe('getCards: genau die gewünschten, sichtbaren Karten', () => {
     const a = card('A');
     const b = card('B');
     const view = store.getBoardView(boardId).cards;
-    expect(store.getCards([b.id, a.id])).toEqual(view.filter((x) => [a.id, b.id].includes(x.id)));
+    expect(store.getCards([b.id, a.id], null)).toEqual(view.filter((x) => [a.id, b.id].includes(x.id)));
   });
 
   it('gelöschte, archivierte und unbekannte Karten fehlen (der Aufrufer entfernt sie dann)', () => {
@@ -205,11 +205,11 @@ describe('getCards: genau die gewünschten, sichtbaren Karten', () => {
     const c = card('C');
     store.deleteCard(a.id);
     store.setArchived(b.id, true);
-    expect(store.getCards([a.id, b.id, c.id, 'gibt-es-nicht']).map((x) => x.id)).toEqual([c.id]);
+    expect(store.getCards([a.id, b.id, c.id, 'gibt-es-nicht'], null).map((x) => x.id)).toEqual([c.id]);
   });
 
   it('eine leere Liste ist leer', () => {
-    expect(store.getCards([])).toEqual([]);
+    expect(store.getCards([], null)).toEqual([]);
   });
 });
 

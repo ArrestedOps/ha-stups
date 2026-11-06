@@ -44,11 +44,11 @@ describe('Seitenleiste', () => {
     expect(out.slice(out.indexOf(active[0]![0]), out.indexOf(active[0]![0]) + 900)).toContain('Boards');
   });
 
-  it('ein Kind sieht keine Wächter und kein „Neues Board“', () => {
+  it('ein Kind sieht keine Wächter, aber „Neues Board“ (dort legt es nur Boards „Nur ich“ an)', () => {
     ui.isChild = true;
     const out = render(Sidebar).body;
     expect(out).not.toContain('Wächter');
-    expect(out).not.toContain('Neues Board');
+    expect(out).toContain('Neues Board');
     expect(out).toContain('Kind');
   });
 

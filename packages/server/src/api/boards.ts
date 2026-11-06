@@ -1,38 +1,136 @@
-import type { FastifyInstance } from 'fastify';
-import { ValidationError } from '../errors.js';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
+import { ForbiddenError, ValidationError } from '../errors.js';
 import { currentLanguage, t } from '../i18n/index.js';
+import type { Board, BoardEffects } from '../store.js';
 import { type ApiKit, type Params } from './kit.js';
 
 /** Boards, Spalten und Kategorien */
 export function registerBoardRoutes(app: FastifyInstance, k: ApiKit): void {
-  const { store, body, noContent } = k;
+  const { deps, store, body, noContent, requireAdmin } = k;
+
+  /** Darf diese Anfrage Sichtbarkeit, Fairness und Mitglieder des Boards ändern? Der Besitzer; bei Boards ohne (aktiven) Besitzer ein Administrator. */
+  function mayChangeAccess(req: FastifyRequest, board: Board): boolean {
+    const me = req.user?.id;
+    if (!me) return false;
+    if (board.ownerId === me) return true;
+    const ownerActive = board.ownerId !== null && store.people().some((p) => p.id === board.ownerId);
+    return !ownerActive && req.access?.isAdmin === true;
+  }
+
+  /**
+   * Wer von den Personen eine Mitteilung bekommt, wenn ein Wächter neue Zuständige braucht: die Person, die geändert hat, der Besitzer des
+   * Boards, alle mit dem Recht „Wächter" und alle Administratoren; ohne Doppelte, ohne Kinder (Wächter sehen Erwachsene, auch wenn das
+   * Board nicht ihres ist: die Mitteilung nennt nur Wächter, Board und die entfernte Person).
+   */
+  async function noticeRecipients(boardId: string, by: string | null): Promise<string[]> {
+    const ids = new Set<string>();
+    const board = store.getBoard(boardId);
+    for (const p of store.people()) {
+      if (p.isChild) continue;
+      let admin = !deps.directory; // ohne Verzeichnis (Entwicklung) gelten Personen als Administratoren
+      if (deps.directory) admin = p.haUserId ? (await deps.directory.isAdmin(p.haUserId)) === true : false;
+      if (p.id === by || p.id === board.ownerId || admin || store.permissionsOf(p.id).includes('watchers')) ids.add(p.id);
+    }
+    return [...ids];
+  }
+
+  /** Mitteilungen für die Glocke zu den Wächtern, die eine Änderung der Personen eines Boards getroffen hat */
+  async function announce(board: Board, effects: BoardEffects, by: string | null): Promise<void> {
+    if (effects.watchers.length === 0) return;
+    const names = new Map(store.people().map((p) => [p.id, p.displayName]));
+    const nameOf = (id: string) => names.get(id) ?? '?';
+    const recipients = await noticeRecipients(board.id, by);
+    for (const w of effects.watchers) {
+      const removed = effects.removedIds.filter((id) => w.before.includes(id));
+      if (removed.length === 0) continue;
+      store.addWatcherNotice({
+        watcherId: w.watcherId,
+        kind: w.missing ? 'assignees_missing' : 'shrunk',
+        byUser: by,
+        recipients,
+        detail: { boardId: board.id, boardName: board.name, removedNames: removed.map(nameOf), remainingNames: w.after.map(nameOf) },
+      });
+    }
+  }
 
   // ----- boards -----
-  app.get('/api/boards', async () => store.listBoards());
+  app.get('/api/boards', async (req) => store.listBoards(req.user?.id ?? null));
   app.post('/api/boards', async (req, reply) => {
     const b = body(req);
+    // Ein Kind darf nur Boards „nur für mich" anlegen
+    if (req.access?.isChild && b.visibility !== 'private') throw new ForbiddenError(t('Das darf ein Kind nicht'));
     if (b.template !== undefined && b.template !== null) {
       if (typeof b.template !== 'string') throw new ValidationError(t('Die Vorlage ist ungültig'));
-      const board = store.createBoardFromTemplate({ name: b.name, template: b.template, lang: currentLanguage(), by: req.user?.id ?? null });
+      const board = store.createBoardFromTemplate({
+        name: b.name,
+        template: b.template,
+        lang: currentLanguage(),
+        by: req.user?.id ?? null,
+        visibility: b.visibility,
+        countsForFairness: b.countsForFairness,
+        memberIds: b.memberIds,
+      });
       return reply.code(201).send(board);
     }
     // Neue Boards bekommen die Spalte „Geplant", außer es wird ausdrücklich abgelehnt
-    return reply
-      .code(201)
-      .send(store.createBoard({ name: b.name, icon: b.icon, color: b.color, withPlanned: b.withPlanned !== false }));
+    return reply.code(201).send(
+      store.createBoard({
+        name: b.name,
+        icon: b.icon,
+        color: b.color,
+        withPlanned: b.withPlanned !== false,
+        visibility: b.visibility,
+        ownerId: req.user?.id ?? null,
+        countsForFairness: b.countsForFairness,
+        memberIds: b.memberIds,
+      }),
+    );
   });
   app.get<{ Params: Params }>('/api/boards/:id', async (req) => store.getBoardView(req.params.id));
   app.patch<{ Params: Params }>('/api/boards/:id', async (req) => {
     const b = body(req);
-    return store.updateBoard(req.params.id, {
-      name: b.name,
-      icon: b.icon,
-      color: b.color,
-      archiveAfterDays: b.archiveAfterDays,
-    });
+    const touchesAccess = b.visibility !== undefined || b.countsForFairness !== undefined || b.memberIds !== undefined;
+    if (touchesAccess) {
+      if (!mayChangeAccess(req, store.getBoard(req.params.id))) throw new ForbiddenError(t('Das darf nur der Besitzer des Boards'));
+      if (req.access?.isChild && b.visibility !== undefined && b.visibility !== 'private') throw new ForbiddenError(t('Das darf ein Kind nicht'));
+    }
+    const by = req.user?.id ?? null;
+    const { board, effects } = store.updateBoardWithEffects(
+      req.params.id,
+      { name: b.name, icon: b.icon, color: b.color, archiveAfterDays: b.archiveAfterDays, visibility: b.visibility, countsForFairness: b.countsForFairness, memberIds: b.memberIds },
+      by,
+    );
+    if (effects) await announce(board, effects, by);
+    return board;
+  });
+  /**
+   * Was eine Änderung der Sichtbarkeit oder der Mitglieder bewirken würde, ohne sie auszuführen (für den Bestätigungsdialog): wer das
+   * Board nicht mehr sieht, welche Wächter das trifft (Zuständige jetzt und danach), wie viele Karten Zuständige verlieren und welche
+   * Wächter verhindern, dass das Board privat wird. Query: `visibility`, `members` (Kennungen, getrennt durch Komma).
+   */
+  app.get<{ Params: Params; Querystring: { visibility?: string; members?: string } }>('/api/boards/:id/access-preview', async (req) => {
+    if (!mayChangeAccess(req, store.getBoard(req.params.id))) throw new ForbiddenError(t('Das darf nur der Besitzer des Boards'));
+    const q = req.query;
+    const plan = store.previewBoardAccess(
+      req.params.id,
+      { visibility: typeof q.visibility === 'string' ? q.visibility : undefined, memberIds: typeof q.members === 'string' ? q.members.split(',').filter(Boolean) : undefined },
+      req.user?.id ?? null,
+    );
+    const { rules: _rules, ...summary } = plan;
+    return summary;
   });
   app.delete<{ Params: Params }>('/api/boards/:id', async (req, reply) => {
     store.deleteBoard(req.params.id);
+    return noContent(reply);
+  });
+  // Boards ohne Besitzer (die Person ist entfernt): niemand sieht sie; ein Administrator sieht nur Name und Zahl der Karten und darf sie löschen
+  app.get('/api/admin/orphan-boards', async (req) => {
+    requireAdmin(req);
+    return store.orphanBoards();
+  });
+  app.delete<{ Params: Params }>('/api/admin/orphan-boards/:id', async (req, reply) => {
+    requireAdmin(req);
+    store.deleteOrphanBoard(req.params.id);
     return noContent(reply);
   });
   app.get<{ Params: Params }>('/api/boards/:id/archive', async (req) => store.listArchived(req.params.id));

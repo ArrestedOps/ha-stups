@@ -59,11 +59,6 @@ function missingWords(name: string, label: string): string[] {
     .filter((w) => (w.length >= 3 ? !n.includes(w.toLowerCase()) : !tokens.includes(w.toLowerCase())));
 }
 
-/** Steht das Gerät schon im Namen? (Alle seine Wörter sind darin.) Ohne Gerät: ja */
-export function containsDevice(name: string, label: string): boolean {
-  return missingWords(name, label).length === 0;
-}
-
 /**
  * „Batterie schwach" + „iPhone Rene" → „Batterie schwach: iPhone Rene". Steht Teil des Geräts schon im Namen, kommt nur der Rest dazu
  * („Waschmaschine fertig" + „Waschmaschine Keller" → „Waschmaschine fertig: Keller"), steht alles darin, bleibt der Name.

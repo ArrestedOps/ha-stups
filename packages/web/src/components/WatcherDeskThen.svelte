@@ -1,6 +1,5 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
-  import { ui } from '../lib/store.svelte';
   import { symbolName } from '../lib/symbols/library';
   import { categorySuggested } from '../lib/watcher-desk';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
@@ -84,9 +83,9 @@
     <input id="{uid}-title" class="min-h-10 min-w-0 flex-1 bg-transparent text-[17px] font-bold outline-none placeholder:text-dim" bind:value={f.title} maxlength="200" placeholder={t('Titel der Karte, z. B. Waschmaschine ausräumen')} autocapitalize="sentences" data-testid="desk-title" />
   </div>
 
-  <div class="flex flex-wrap items-center gap-2" data-testid="desk-pills">
-    <SelectField variant="pill" caption={t('Board')} label="Board" bind:value={f.boardId}>
-      {#each ui.boards as b (b.id)}<option value={b.id}>{b.name}</option>{/each}
+  <div class="flex flex-wrap items-start gap-2" data-testid="desk-pills">
+    <SelectField variant="pill" caption={t('Board')} label="Board" bind:value={f.boardId} onchange={() => ed.pruneToBoard()}>
+      {#each ed.boardOptions as o (o.id)}<option value={o.id} disabled={o.disabled} data-short={o.short}>{o.label}</option>{/each}
     </SelectField>
     <SelectField variant="pill" caption={t('Spalte')} label={t('Spalte')} bind:value={f.columnId}>
       {#each ed.view?.columns ?? [] as c (c.id)}<option value={c.id}>{c.name}</option>{/each}

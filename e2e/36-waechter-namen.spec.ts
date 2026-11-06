@@ -82,19 +82,20 @@ test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Name
   await expect(page.getByText('Wächter gespeichert').first()).toBeVisible();
 
   const items = (await watchers(request)).filter((w) => [IPHONE, BAD].includes(w.trigger.entityId));
+  // der Wächter heißt wie die Vorlage (das Gerät steht darunter), der Kartentitel der Vorlage bleibt sauber (die Karte bekommt den Namen der Entität erst, wenn sie entsteht)
   expect(items.map((w) => [w.name, w.card.title]).sort()).toEqual([
-    ['Batterie schwach: Bad Fenster', 'Batterie wechseln: Bad Fenster'],
-    ['Batterie schwach: iPhone Rene', 'Batterie wechseln: iPhone Rene'],
+    ['Batterie schwach', 'Batterie wechseln'],
+    ['Batterie schwach', 'Batterie wechseln'],
   ]);
 
   // Übersicht: beide stehen in der Kategorie „Batterien", nach Namen sortiert, mit dem aktuellen Wert
   await page.keyboard.press('Escape');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   const quiet = page.getByTestId('watcher-category').filter({ hasText: 'Batterien' });
-  const rows = quiet.getByRole('button', { name: /^Wächter Batterie schwach: .* öffnen$/ });
+  const rows = quiet.getByRole('button', { name: 'Wächter Batterie schwach öffnen' });
   await expect(rows).toHaveCount(2);
-  await expect(rows.first()).toContainText('Batterie schwach: Bad Fenster');
-  await expect(rows.nth(1)).toContainText('Batterie schwach: iPhone Rene');
+  await expect(rows.first()).toContainText('Bad Fenster Batterie');
+  await expect(rows.nth(1)).toContainText('iPhone Rene Battery Level');
   await expect(quiet.getByTestId('watcher-value').first()).toHaveText('12 %');
   // der aktuelle Wert steht oben rechts (rechtsbündig, auf Höhe des Titels), der Gerätename klein darunter
   const row = rows.first().locator('xpath=ancestor::li[1]');
@@ -162,7 +163,7 @@ test('Zurück im Assistenten: in jedem Schritt da, Eingaben bleiben, am Anfang z
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('Entität von Hand gewählt (Vorlage ohne Treffer): Name und Titel nennen das Gerät', async ({ page, request }) => {
+test('Entität von Hand gewählt (Vorlage ohne Treffer): der Name bleibt der der Vorlage, der Titel nennt das Gerät', async ({ page, request }) => {
   await clearWatchers(request);
   const b = await board(request);
   await openFound(page, b.boardId);
@@ -172,17 +173,17 @@ test('Entität von Hand gewählt (Vorlage ohne Treffer): Name und Titel nennen d
   await d.getByLabel('Entität suchen').fill('iphone rene');
   await d.getByTestId('entity-picker').getByRole('button', { name: /iPhone Rene Battery Level/ }).click();
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
-  await expect(d.getByLabel('Titel der Karte')).toHaveValue('Batterie wechseln: iPhone Rene');
+  await expect(d.getByLabel('Titel der Karte')).toHaveValue('Batterie wechseln');
   await d.getByTestId('then-editor').getByLabel('Board', { exact: true }).selectOption(b.boardId);
   await d.getByRole('button', { name: 'Weiter: Wer' }).click();
   await d.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
-  await expect(d.getByLabel('Name des Wächters')).toHaveValue('Batterie schwach: iPhone Rene');
+  await expect(d.getByLabel('Name des Wächters')).toHaveValue('Batterie schwach');
   await d.getByRole('button', { name: 'Wächter anlegen' }).click();
   await expect(page.getByText('Wächter gespeichert')).toBeVisible();
   await clearWatchers(request);
 });
 
-test('Bestehende Wächter: Gerät unter dem Namen (nach Gerät sortiert), Vorschlag im Editor, Sammelknopf mit Rückfrage', async ({ page, request }) => {
+test('Bestehende Wächter: Gerät immer unter dem Namen (nach Gerät sortiert), kein Vorschlag im Editor, kein Sammelknopf', async ({ page, request }) => {
   await clearWatchers(request);
   const b = await board(request);
   const FLUR = 'sensor.flur_schliesszylinder_wohnungseingangstuer_batterie_ladestand_zusatzmodul';
@@ -209,35 +210,15 @@ test('Bestehende Wächter: Gerät unter dem Namen (nach Gerät sortiert), Vorsch
   expect(box!.height).toBeLessThan(24);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
-  // Editor: Vorschlag, keine stille Umbenennung
+  // Editor und Übersicht: kein Vorschlag „Namen mit Gerät ergänzen", nichts wird umbenannt
   await page.getByRole('button', { name: 'Wächter Batterie schwach öffnen' }).first().click();
   const d = page.getByRole('dialog');
-  await expect(d.getByTestId('name-suggest')).toContainText('Batterie schwach: Bad Fenster');
-  await d.getByTestId('name-suggest').click();
   await expect(d.getByTestId('name-suggest')).toHaveCount(0);
-  expect((await watchers(request)).filter((w) => w.name === 'Batterie schwach')).toHaveLength(3); // noch nichts gespeichert
-  await d.getByRole('button', { name: 'Speichern' }).first().click();
-  await expect(page.getByText('Wächter gespeichert')).toBeVisible();
-  expect((await watchers(request)).map((w) => w.name).sort()).toEqual(['Batterie schwach', 'Batterie schwach', 'Batterie schwach: Bad Fenster', 'Mamas Wäsche']);
-
-  // Sammelknopf in der Übersicht: fragt vorher nach, nur Vorlagennamen, das Ergebnis ist eine Zahl
-  await page.goto('/');
-  await openBoards(page);
-  await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByTestId('home-rename').getByRole('button', { name: /Namen mit Gerät ergänzen/ }).click();
-  const confirm = page.getByRole('alertdialog').or(page.getByRole('dialog')).last();
-  await expect(confirm).toContainText('2 Wächter heißen noch wie die Vorlage');
-  await confirm.getByRole('button', { name: 'Ergänzen' }).click();
-  await expect(page.getByText('2 Wächter umbenannt')).toBeVisible();
-  const after = await watchers(request);
-  expect(after.map((w) => w.name).sort()).toEqual([
-    'Batterie schwach: Bad Fenster',
-    'Batterie schwach: flur schliesszylinder',
-    'Batterie schwach: iPhone Rene',
-    'Mamas Wäsche',
-  ]);
-  expect(after.find((w) => w.name === 'Mamas Wäsche')!.card.title).toBe('Wäsche holen');
+  await expect(d.getByText('Namen mit Gerät ergänzen')).toHaveCount(0);
+  await page.keyboard.press('Escape');
   await expect(page.getByTestId('home-rename')).toHaveCount(0);
+  await expect(page.getByText('Namen mit Gerät ergänzen')).toHaveCount(0);
+  expect((await watchers(request)).map((w) => w.name).sort()).toEqual(['Batterie schwach', 'Batterie schwach', 'Batterie schwach', 'Mamas Wäsche']);
   await clearWatchers(request);
 });
 

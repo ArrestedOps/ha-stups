@@ -70,7 +70,7 @@ describe('Sperre bei „nur freigegebene"', () => {
     const me = await call(fremd, 'GET', '/api/me');
     expect(me.status).toBe(200);
     expect(me.body).toMatchObject({ allowed: false, isAdmin: false, people: [], accessMode: 'selected' });
-    expect(store.listBoards()).toEqual([]);
+    expect(store.listBoards(null)).toEqual([]);
   });
 
   it('Personen und Administratoren kommen hinein', async () => {

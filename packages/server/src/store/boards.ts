@@ -2,8 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { generateKeyBetween, generateNKeysBetween } from 'fractional-indexing';
 import { ConflictError, NotFoundError, ValidationError } from '../errors.js';
 import { startOfTomorrow } from '../time.js';
-import { type Board, type BoardSummary, type Column, type Category, type BoardView, type Row } from './types.js';
+import { type Board, type BoardSummary, type BoardVisibility, type Column, type Category, type BoardView, type Row } from './types.js';
 import { cleanText, optionalText } from './validate.js';
+import type { Viewer } from './visibility.js';
+import type { BoardAccessPlan, BoardEffects } from './board-access.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
@@ -14,7 +16,16 @@ export function createBoards(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { now, timeZone, iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
-  const { loadCards, placeCard, touchCard } = lazy(s, ['loadCards', 'placeCard', 'touchCard'] as const);
+  const { loadCards, placeCard, touchCard, boardVisibleSql, boardMemberIds, peopleSeeing, planBoardAccess, applyBoardAccess } = lazy(s, [
+    'loadCards',
+    'placeCard',
+    'touchCard',
+    'boardVisibleSql',
+    'boardMemberIds',
+    'peopleSeeing',
+    'planBoardAccess',
+    'applyBoardAccess',
+  ] as const);
 
   const toBoard = (r: Row): Board => ({
     id: r.id,
@@ -23,7 +34,39 @@ export function createBoards(c: Ctx, late: unknown) {
     color: r.color,
     position: r.position,
     archiveAfterDays: r.archive_after_days,
+    visibility: (r.visibility ?? 'all') as BoardVisibility,
+    ownerId: r.owner_id ?? null,
+    countsForFairness: r.counts_for_fairness !== 0,
+    memberIds: boardMemberIds(r.id),
   });
+
+  const VISIBILITIES: BoardVisibility[] = ['all', 'private', 'selected'];
+
+  function parseVisibility(raw: unknown): BoardVisibility {
+    if (typeof raw !== 'string' || !VISIBILITIES.includes(raw as BoardVisibility)) {
+      throw new ValidationError(t('Die Sichtbarkeit muss „all", „private" oder „selected" sein'));
+    }
+    return raw as BoardVisibility;
+  }
+
+  function parseFairness(raw: unknown): boolean {
+    if (typeof raw !== 'boolean') throw new ValidationError(t('„Zählt zur Fairness" muss wahr oder falsch sein'));
+    return raw;
+  }
+
+  /** Mitglieder eines Boards: nur Personen in Stups, ohne Doppelte und ohne den Besitzer (er sieht das Board immer) */
+  function parseMembers(raw: unknown, ownerId: string | null): string[] {
+    if (!Array.isArray(raw) || raw.some((x) => typeof x !== 'string')) throw new ValidationError(t('Die Mitglieder müssen eine Liste sein'));
+    const unique = [...new Set(raw as string[])].filter((id) => id !== ownerId);
+    for (const id of unique) {
+      if (!one('select 1 as ok from users where id = ? and is_person = 1', id)) {
+        throw new ValidationError(t('Mitglied eines Boards können nur Personen aus Stups sein'));
+      }
+    }
+    return unique;
+  }
+
+  const isPerson = (id: string | null): boolean => id !== null && !!one('select 1 as ok from users where id = ? and is_person = 1', id);
 
   function visibleBoard(id: string): Row {
     const r = one('select * from boards where id = ? and deleted_at is null', id);
@@ -42,13 +85,27 @@ export function createBoards(c: Ctx, late: unknown) {
     withPlanned?: boolean;
     /** Eigene Spalten (aus einer Vorlage) statt der Standardspalten */
     columns?: { name: string; done?: boolean; planned?: boolean }[];
+    /** Wer das Board sieht (Standard: alle). Alles außer „alle" braucht einen Besitzer, der eine Person in Stups ist. */
+    visibility?: unknown;
+    /** Wer das Board angelegt hat; ohne Angabe (Bestand, Dienste) bleibt es ohne Besitzer */
+    ownerId?: string | null;
+    /** Zählt zur Fairness der Woche (Standard: ja) */
+    countsForFairness?: unknown;
+    /** Mitglieder bei „ausgewählte Personen" */
+    memberIds?: unknown;
   }): Board {
     const name = cleanText(input.name, t('Der Name'), 80);
+    const visibility = input.visibility === undefined ? 'all' : parseVisibility(input.visibility);
+    const ownerId = input.ownerId ?? null;
+    if (visibility !== 'all' && !isPerson(ownerId)) throw new ValidationError(t('Private Boards und Boards für ausgewählte Personen können nur Personen in Stups anlegen'));
+    const counts = input.countsForFairness === undefined ? true : parseFairness(input.countsForFairness);
+    const members = visibility === 'selected' && input.memberIds !== undefined ? parseMembers(input.memberIds, ownerId) : [];
     return tx(() => {
       const id = randomUUID();
       const stamp = iso();
       run(
-        'insert into boards (id, name, icon, color, position, archive_after_days, created_at, updated_at) values (?, ?, ?, ?, ?, 7, ?, ?)',
+        `insert into boards (id, name, icon, color, position, archive_after_days, created_at, updated_at, visibility, owner_id, counts_for_fairness)
+         values (?, ?, ?, ?, ?, 7, ?, ?, ?, ?, ?)`,
         id,
         name,
         optionalText(input.icon, t('Das Symbol'), 40),
@@ -56,7 +113,11 @@ export function createBoards(c: Ctx, late: unknown) {
         generateKeyBetween(lastPos('boards', '1 = 1'), null),
         stamp,
         stamp,
+        visibility,
+        ownerId,
+        counts ? 1 : 0,
       );
+      for (const uid of members) run('insert into board_members (board_id, user_id) values (?, ?)', id, uid);
       const defaults: { name: string; done?: boolean; planned?: boolean }[] = input.columns ?? [
         { name: t('Offen') },
         ...(input.withPlanned ? [{ name: t('Geplant'), planned: true }] : []),
@@ -79,8 +140,10 @@ export function createBoards(c: Ctx, late: unknown) {
     });
   }
 
-  function listBoards(): BoardSummary[] {
-    return all('select * from boards where deleted_at is null order by position, id').map((r) => ({
+  /** Die Boards, die `viewer` sieht (jede Liste von Boards fragt hier, nie ohne Person) */
+  function listBoards(viewer: Viewer): BoardSummary[] {
+    const v = boardVisibleSql('b', viewer);
+    return all(`select * from boards b where b.deleted_at is null and ${v.sql} order by b.position, b.id`, ...v.args).map((r) => ({
       ...toBoard(r),
       openCards: one(
         `select count(*) as n from cards c join columns col on col.id = c.column_id
@@ -91,37 +154,111 @@ export function createBoards(c: Ctx, late: unknown) {
     }));
   }
 
-  function updateBoard(
-    id: string,
-    patch: { name?: string; icon?: string | null; color?: string | null; archiveAfterDays?: number },
-  ): Board {
-    visibleBoard(id);
-    const sets: string[] = [];
-    const params: unknown[] = [];
-    if (patch.name !== undefined) {
-      sets.push('name = ?');
-      params.push(cleanText(patch.name, t('Der Name'), 80));
+  type AccessPatch = { visibility?: unknown; memberIds?: unknown };
+
+  /**
+   * Wer das Board vorher und nachher sieht, wenn diese Änderung gilt (ohne etwas zu schreiben). `by` ist die Person, die ändert: Wer ein
+   * Bestandsboard auf „nur ich" oder „ausgewählt" stellt, wird sein Besitzer.
+   */
+  function accessChange(id: string, before: Row, patch: AccessPatch, by: string | null) {
+    const oldVisibility = (before.visibility ?? 'all') as BoardVisibility;
+    const visibility = patch.visibility !== undefined ? parseVisibility(patch.visibility) : oldVisibility;
+    const oldOwner: string | null = before.owner_id ?? null;
+    let owner = oldOwner;
+    if (visibility !== 'all' && owner === null) owner = by;
+    if (visibility !== 'all' && !isPerson(owner)) {
+      throw new ValidationError(t('Private Boards und Boards für ausgewählte Personen können nur Personen in Stups anlegen'));
     }
-    if (patch.icon !== undefined) {
-      sets.push('icon = ?');
-      params.push(optionalText(patch.icon, t('Das Symbol'), 40));
-    }
-    if (patch.color !== undefined) {
-      sets.push('color = ?');
-      params.push(optionalText(patch.color, t('Die Farbe'), 40));
-    }
-    if (patch.archiveAfterDays !== undefined) {
-      if (!Number.isInteger(patch.archiveAfterDays) || patch.archiveAfterDays < 0 || patch.archiveAfterDays > 3650) {
-        throw new ValidationError(t('Die Archivfrist muss zwischen 0 und 3650 Tagen liegen'));
-      }
-      sets.push('archive_after_days = ?');
-      params.push(patch.archiveAfterDays);
-    }
-    if (sets.length > 0) {
-      run(`update boards set ${sets.join(', ')}, updated_at = ? where id = ?`, ...params, iso(), id);
-    }
-    return toBoard(one('select * from boards where id = ?', id)!);
+    const oldMembers = boardMemberIds(id);
+    const members = patch.memberIds !== undefined ? parseMembers(patch.memberIds, owner) : oldMembers.filter((m) => m !== owner);
+    const changed = visibility !== oldVisibility || owner !== oldOwner || patch.memberIds !== undefined;
+    return {
+      visibility,
+      owner,
+      members,
+      changed,
+      oldPeople: peopleSeeing(oldVisibility, oldOwner, oldMembers),
+      newPeople: peopleSeeing(visibility, owner, members),
+    };
   }
+
+  /** Was eine Änderung der Sichtbarkeit oder der Mitglieder bewirken würde (für den Bestätigungsdialog), ohne etwas zu ändern */
+  function previewBoardAccess(id: string, patch: AccessPatch, by: string | null = null): BoardAccessPlan {
+    const before = visibleBoard(id);
+    const ch = accessChange(id, before, patch, by);
+    return planBoardAccess(id, { visibility: ch.visibility, oldPeople: ch.oldPeople, newPeople: ch.newPeople });
+  }
+
+  function updateBoardWithEffects(
+    id: string,
+    patch: {
+      name?: string;
+      icon?: string | null;
+      color?: string | null;
+      archiveAfterDays?: number;
+      visibility?: unknown;
+      countsForFairness?: unknown;
+      memberIds?: unknown;
+    },
+    by: string | null = null,
+  ): { board: Board; effects: BoardEffects | null } {
+    const before = visibleBoard(id);
+    return tx(() => {
+      const sets: string[] = [];
+      const params: unknown[] = [];
+      if (patch.name !== undefined) {
+        sets.push('name = ?');
+        params.push(cleanText(patch.name, t('Der Name'), 80));
+      }
+      if (patch.icon !== undefined) {
+        sets.push('icon = ?');
+        params.push(optionalText(patch.icon, t('Das Symbol'), 40));
+      }
+      if (patch.color !== undefined) {
+        sets.push('color = ?');
+        params.push(optionalText(patch.color, t('Die Farbe'), 40));
+      }
+      if (patch.archiveAfterDays !== undefined) {
+        if (!Number.isInteger(patch.archiveAfterDays) || patch.archiveAfterDays < 0 || patch.archiveAfterDays > 3650) {
+          throw new ValidationError(t('Die Archivfrist muss zwischen 0 und 3650 Tagen liegen'));
+        }
+        sets.push('archive_after_days = ?');
+        params.push(patch.archiveAfterDays);
+      }
+      if (patch.countsForFairness !== undefined) {
+        sets.push('counts_for_fairness = ?');
+        params.push(parseFairness(patch.countsForFairness) ? 1 : 0);
+      }
+
+      // Sichtbarkeit und Mitglieder: erst prüfen, was die Änderung kostet (Wächter, die auf ein plötzlich privates Board zeigen, verbieten sie)
+      let effects: BoardEffects | null = null;
+      const ch = accessChange(id, before, patch, by);
+      if (ch.changed) {
+        const plan = planBoardAccess(id, { visibility: ch.visibility, oldPeople: ch.oldPeople, newPeople: ch.newPeople });
+        if (plan.blocking.length > 0) {
+          throw new ConflictError(t('Das Board kann nicht privat werden, solange Wächter darauf zeigen'), { watchers: plan.blocking });
+        }
+        sets.push('visibility = ?', 'owner_id = ?');
+        params.push(ch.visibility, ch.owner);
+        if (patch.memberIds !== undefined) {
+          run('delete from board_members where board_id = ?', id);
+          for (const uid of ch.members) run('insert into board_members (board_id, user_id) values (?, ?)', id, uid);
+        }
+        effects = applyBoardAccess(id, plan);
+      }
+      if (sets.length > 0) {
+        run(`update boards set ${sets.join(', ')}, updated_at = ? where id = ?`, ...params, iso(), id);
+      }
+      return { board: toBoard(one('select * from boards where id = ?', id)!), effects };
+    });
+  }
+
+  function updateBoard(id: string, patch: Parameters<typeof updateBoardWithEffects>[1], by: string | null = null): Board {
+    return updateBoardWithEffects(id, patch, by).board;
+  }
+
+  /** Ein Board (ohne Karten); Zugriffsprüfung macht der Aufrufer */
+  const getBoard = (id: string): Board => toBoard(visibleBoard(id));
 
   function deleteBoard(id: string): void {
     visibleBoard(id);
@@ -431,6 +568,10 @@ export function createBoards(c: Ctx, late: unknown) {
   const boardIdOfCard = (cardId: string): string | null =>
     (one('select board_id from cards where id = ? and deleted_at is null', cardId)?.board_id as string | undefined) ?? null;
 
+  /** Das Board einer Spalte oder Kategorie (für die Zugriffsprüfung, auch gelöschte); null, wenn es sie nicht gibt */
+  const boardIdOfColumn = (id: string): string | null => (one('select board_id from columns where id = ?', id)?.board_id as string | undefined) ?? null;
+  const boardIdOfCategory = (id: string): string | null => (one('select board_id from categories where id = ?', id)?.board_id as string | undefined) ?? null;
+
   function ensureDefaultBoard(): void {
     if (one('select count(*) as n from boards')!.n === 0) createBoard({ name: t('Haushalt'), withPlanned: true });
   }
@@ -442,6 +583,9 @@ export function createBoards(c: Ctx, late: unknown) {
     createBoard,
     listBoards,
     updateBoard,
+    getBoard,
+    updateBoardWithEffects,
+    previewBoardAccess,
     deleteBoard,
     toColumn,
     visibleColumn,
@@ -465,6 +609,8 @@ export function createBoards(c: Ctx, late: unknown) {
     getBoardView,
     boardIdsWithCardsOf,
     boardIdOfCard,
+    boardIdOfColumn,
+    boardIdOfCategory,
     ensureDefaultBoard,
   };
 }

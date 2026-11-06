@@ -152,6 +152,11 @@ export interface RecentNudge {
 
 export type AccessMode = 'everyone' | 'selected';
 
+export type { BoardEffects, BoardAccessPlan, WatcherImpact, WatcherNotice } from './board-access.js';
+
+/** Wer ein Board sieht: alle mit Zugriff, nur der Besitzer, oder der Besitzer und die gewählten Mitglieder (auch Administratoren sehen fremde private Boards nicht) */
+export type BoardVisibility = 'all' | 'private' | 'selected';
+
 export interface Board {
   id: string;
   name: string;
@@ -159,6 +164,13 @@ export interface Board {
   color: string | null;
   position: string;
   archiveAfterDays: number;
+  visibility: BoardVisibility;
+  /** Wer das Board angelegt hat und Sichtbarkeit und Fairness ändern darf; null bei Bestandsboards (dann ein Administrator) */
+  ownerId: string | null;
+  /** Das Board zählt zur Fairness der Woche (ein privates Board zählt nie, auch wenn hier true steht: so bleibt die Wahl beim Zurückstellen erhalten) */
+  countsForFairness: boolean;
+  /** Die gewählten Mitglieder (nur bei visibility = selected), ohne den Besitzer */
+  memberIds: string[];
 }
 
 export interface BoardSummary extends Board {

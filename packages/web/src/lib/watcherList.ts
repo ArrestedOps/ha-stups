@@ -18,6 +18,8 @@ export interface WatcherGroup {
 }
 
 export interface WatcherLayout {
+  /** Wächter mit Problem (keine Zuständigen, Entität oder Ziel fehlt): ganz oben, vor allen anderen, mit rotem Rand */
+  problems: HomeItem[];
   waiting: HomeItem[];
   running: HomeItem[];
   soon: HomeItem[];
@@ -38,14 +40,23 @@ const byName = (a: HomeItem, b: HomeItem): number =>
 /** Am längsten Wartende zuerst; was am längsten läuft, zuerst */
 const bySince = (list: HomeItem[]): HomeItem[] => [...list].sort((a, b) => (a.since ?? '').localeCompare(b.since ?? '') || byName(a, b));
 
+/**
+ * Hat der Wächter ein Problem? `assignees_missing` (legt keine Karten an), `entity_missing` oder `target_missing` (pausiert). Solche Wächter
+ * stehen ganz oben in der Liste, mit rotem Rand und dem Grund als Text.
+ */
+export const isProblem = (i: Pick<HomeItem, 'status' | 'entityMissing'>): boolean =>
+  i.status === 'assignees_missing' || i.status === 'entity_missing' || i.status === 'target_missing' || i.entityMissing === true;
+
 export function watcherLayout(items: HomeItem[]): WatcherLayout {
+  const problems: HomeItem[] = [];
   const waiting: HomeItem[] = [];
   const running: HomeItem[] = [];
   const soon: HomeItem[] = [];
   const rest: HomeItem[] = [];
   for (const i of items) {
     // Ein ausgeschalteter Wächter läuft nie „gerade" und kommt nicht „bald": nur seine offene Karte wartet weiter
-    if (i.phase === 'waiting') waiting.push(i);
+    if (isProblem(i)) problems.push(i);
+    else if (i.phase === 'waiting') waiting.push(i);
     else if (i.phase === 'running' && i.active) running.push(i);
     else if (i.phase === 'soon' && i.active) soon.push(i);
     else rest.push(i);
@@ -58,7 +69,7 @@ export function watcherLayout(items: HomeItem[]): WatcherLayout {
     g.items.push(i);
   }
   const groups = [...byKey.values()].sort((a, b) => (a.name === null ? 1 : b.name === null ? -1 : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })));
-  return { waiting: bySince(waiting), running: bySince(running), soon: [...soon].sort(byName), groups };
+  return { problems: [...problems].sort(byName), waiting: bySince(waiting), running: bySince(running), soon: [...soon].sort(byName), groups };
 }
 
 /** Wie viele Wächter haben noch keine Kategorie (für „Kategorien vorschlagen") */
@@ -125,13 +136,26 @@ export function saveCollapse(memo: CollapseMemo, store: Store | null = defaultSt
 
 // ---------- Texte der Zeile ----------
 
-export type RowStatus = 'missing' | 'off' | 'waiting' | 'running' | 'soon' | 'quiet';
+export type RowStatus = 'noassign' | 'target' | 'missing' | 'off' | 'waiting' | 'running' | 'soon' | 'quiet';
 
-/** Was die Statusspalte zeigt: fehlende Entität vor „Aus" vor der Phase */
-export const rowStatus = (i: Pick<HomeItem, 'entityMissing' | 'active' | 'phase'>): RowStatus => (i.entityMissing ? 'missing' : !i.active ? 'off' : i.phase);
+/** Was die Statusspalte zeigt: Probleme (keine Zuständigen, Ziel oder Entität fehlt) vor „Aus" vor der Phase */
+export const rowStatus = (i: Pick<HomeItem, 'entityMissing' | 'active' | 'phase'> & { status?: HomeItem['status'] }): RowStatus =>
+  i.status === 'assignees_missing' ? 'noassign' : i.status === 'target_missing' ? 'target' : i.entityMissing || i.status === 'entity_missing' ? 'missing' : !i.active ? 'off' : i.phase;
+
+/** Der Grund eines Problems als Satz für die Zeile („Keine Karten: braucht neue Zuständige"); null: kein Problem */
+export function problemText(i: Pick<HomeItem, 'status' | 'entityMissing'>): string | null {
+  if (i.status === 'assignees_missing') return t('Keine Karten: braucht neue Zuständige');
+  if (i.status === 'target_missing') return t('Pausiert: Board oder Spalte gibt es nicht mehr');
+  if (i.status === 'entity_missing' || i.entityMissing) return t('Entität fehlt');
+  return null;
+}
 
 export function statusLabel(s: RowStatus): string {
   switch (s) {
+    case 'noassign':
+      return t('Keine Karten');
+    case 'target':
+      return t('Pausiert');
     case 'missing':
       return t('Entität fehlt');
     case 'off':

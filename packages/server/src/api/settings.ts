@@ -52,8 +52,10 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
     const byId = new Map(people.map((p) => [p.id, p]));
     const now = Date.now();
     // Offene Karten mit Termin: wer bekommt dafür eine Nachricht?
+    const me = req.user?.id ?? null;
     const upcoming = store
       .openDueCards()
+      .filter((c) => store.canSeeBoard(me, c.boardId))
       .filter((c) => Date.parse(c.dueAt) > now - 12 * 3600_000)
       .slice(0, 10)
       .map((c) => {
@@ -91,8 +93,8 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
             status: deps.house!.push.status(c.id),
           }))
         : null,
-      recent: store.recentNotifications(15),
-      nudges: store.recentNudges(10),
+      recent: store.recentNotifications(15, me),
+      nudges: store.recentNudges(10, me),
     };
   });
   // Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (mit ntfy zusätzlich ein Knopf, der den Rückweg prüft)

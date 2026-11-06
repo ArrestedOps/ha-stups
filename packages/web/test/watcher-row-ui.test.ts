@@ -11,7 +11,8 @@ const NOW = Date.parse('2026-11-06T12:00:00Z');
 const item = (over: Partial<HomeItem> = {}): HomeItem => ({
   watcherId: 'w1',
   name: 'Batterie schwach: Tür',
-  subject: null,
+  subject: '',
+  status: 'ok',
   entity: 'Tür Batterie',
   value: '26 %',
   phase: 'quiet',

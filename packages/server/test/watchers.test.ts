@@ -120,7 +120,7 @@ describe('Auslösen', () => {
     await done(w);
     expect(cards()).toHaveLength(1);
     const c = cards()[0]!;
-    expect(c).toMatchObject({ title: 'Waschmaschine ausräumen', assigneeIds: [anna], watcherId: w.id });
+    expect(c).toMatchObject({ title: 'Waschmaschine ausräumen: sensor.waschmaschine_leistung', assigneeIds: [anna], watcherId: w.id });
     expect(c.dueAt).toBe('2026-11-04T10:30:00.000Z');
     expect(assigned.map((a) => a.ids)).toEqual([[anna]]);
     expect(data.runs(w.id)[0]).toMatchObject({ result: 'created', cardId: c.id, assignedTo: [anna] });
@@ -175,7 +175,7 @@ describe('Pegel beim Anlegen schon über der Grenze', () => {
     ha.set(BATT, '1', '2026-11-04T09:00:00Z', { device_class: 'battery', unit_of_measurement: '%' });
     const w = await battery();
     expect(cards()).toHaveLength(1);
-    expect(cards()[0]!.title).toBe('Batterie wechseln');
+    expect(cards()[0]!.title).toBe('Batterie wechseln: sensor.smart_button_batterie');
     expect(data.runs(w.id)[0]).toMatchObject({ result: 'created' });
   });
 
@@ -298,7 +298,7 @@ describe('Nachfrage nach dem Speichern (metNow)', () => {
       await engine.onSaved(w.id);
       await engine.fireNow(w.id);
       expect(cards()).toHaveLength(1);
-      expect(cards()[0]).toMatchObject({ title: 'Tür schließen', assigneeIds: [anna] });
+      expect(cards()[0]).toMatchObject({ title: 'Tür schließen: Tür Waschküche', assigneeIds: [anna] });
       expect(cards()[0]!.dueAt).toBe(new Date(t + 30 * 60_000).toISOString());
       expect(data.runs(w.id)[0]).toMatchObject({ result: 'created', note: 'beim Anlegen, auf Nachfrage' });
       expect(data.getState(w.id).lastFireAt).not.toBeNull();
@@ -756,7 +756,7 @@ describe('Wer zuerst nach Hause kommt', () => {
     await engine.idle();
     advance(24 * 60 + 1);
     await engine.tick();
-    expect(store.getCard(cards().find((c) => c.title === 'Zweite Karte')!.id).assigneeIds).toEqual([ben]);
+    expect(store.getCard(cards().find((c) => c.title.startsWith('Zweite Karte'))!.id).assigneeIds).toEqual([ben]);
   });
 
   it('nur Personen aus dem Kreis des Wächters bekommen die Karte', async () => {
@@ -823,7 +823,7 @@ describe('Nach Wartezeit erinnern', () => {
     expect(nudged).toHaveLength(0);
     advance(2);
     await engine.tick();
-    expect(nudged.map((n) => [n.card.title, n.ids])).toEqual([['Waschmaschine ausräumen', [anna]]]);
+    expect(nudged.map((n) => [n.card.title, n.ids])).toEqual([['Waschmaschine ausräumen: sensor.waschmaschine_leistung', [anna]]]);
     advance(120);
     await engine.tick();
     expect(nudged).toHaveLength(1);

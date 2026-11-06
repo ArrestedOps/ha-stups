@@ -76,7 +76,7 @@ test('„Ja, Karte erstellen“ legt die Karte an (mit Hinweis im Lauf), und das
   await ask.getByRole('button', { name: 'Ja, Karte erstellen' }).click();
   await expect(ask).toHaveCount(0);
   await expect(page.getByText('Karte angelegt', { exact: true })).toBeVisible();
-  await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([title]);
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([`${title}: Nachfrage Tür ${s.tag}`]);
 
   const watcher = ((await (await request.get('/api/watchers')).json()) as { items: { id: string; card: { title: string } }[] }).items.find((w) => w.card.title === title)!;
   const runs = (await (await request.get(`/api/watchers/${watcher.id}/runs`)).json()) as { result: string; note: string | null }[];
@@ -121,5 +121,5 @@ test('Pegel (Batterie) unter der Grenze: keine Frage, die Karte kommt sofort', a
   const title = `Batterie wechseln ${s.tag}`;
   await createWatcher(page, s, { search: `nachfrage knopf ${s.tag}`, entity: /Nachfrage Knopf/, threshold: '20', wait: 'sofort', title });
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
-  await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([title]);
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([`${title}: Nachfrage Knopf ${s.tag}`]);
 });

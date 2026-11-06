@@ -63,7 +63,7 @@ test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Karte 
   // Fertig: die Karte entsteht, der Wächter wartet auf Rene
   await setState(request, 'sensor.waschmaschine_leistung', '2');
   await expect(page.getByTestId('home-waiting')).toContainText(title, { timeout: 20_000 });
-  expect((await cardsOf(request, s.boardId)).some((c) => c.title === title)).toBe(true);
+  expect((await cardsOf(request, s.boardId)).some((c) => c.title.startsWith(title))).toBe(true);
 
   // Aufgaben: „Vom Haus", mit Türkis-Quelle; Erledigen
   await nav(page).getByRole('button', { name: 'Aufgaben' }).click();
@@ -71,7 +71,7 @@ test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Karte 
   await expect(house).toContainText(name);
   await expect(house.getByText(title)).toBeVisible();
   await house.getByRole('button', { name: 'Erledigt' }).first().click();
-  await expect.poll(async () => (await cardsOf(request, s.boardId)).find((c) => c.title === title)?.completedAt ?? null).not.toBeNull();
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).find((c) => c.title.startsWith(title))?.completedAt ?? null).not.toBeNull();
   await expect(house.getByText(title)).toHaveCount(0);
 });
 
@@ -111,8 +111,8 @@ test('Aufgaben: Weitergeben schiebt die Karte an die nächste Person, ohne sie z
   await setState(request, 'person.conny', 'home');
   await house.getByRole('button', { name: 'Weitergeben' }).first().click();
   await expect(page.getByText('Weitergegeben an Conny')).toBeVisible();
-  await expect.poll(async () => (await cardsOf(request, s.boardId)).find((c) => c.title === title)?.assigneeIds).toEqual([s.conny.id]);
-  expect((await cardsOf(request, s.boardId)).find((c) => c.title === title)?.completedAt).toBeNull();
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).find((c) => c.title.startsWith(title))?.assigneeIds).toEqual([s.conny.id]);
+  expect((await cardsOf(request, s.boardId)).find((c) => c.title.startsWith(title))?.completedAt).toBeNull();
   await expect(house.getByText(title)).toHaveCount(0);
 });
 

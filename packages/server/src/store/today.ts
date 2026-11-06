@@ -33,7 +33,7 @@ export interface Today {
 export function createToday(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { all, one, now, timeZone } = c;
-  const { loadCards, people, userById } = lazy(s, ['loadCards', 'people', 'userById'] as const);
+  const { loadCards, people, userById, visibleBoardsSql } = lazy(s, ['loadCards', 'people', 'userById', 'visibleBoardsSql'] as const);
 
   /** Der Satz „warum bin ich dran?" nach der Zuweisungsart des Wächters (null, wenn es nichts zu sagen gibt) */
   function whyOfWatcher(watcherId: string, assigned: boolean): string | null {
@@ -63,10 +63,13 @@ export function createToday(c: Ctx, late: unknown) {
   function today(userId: string, nowMs = now().getTime(), tz = timeZone()): Today {
     const child = userById(userId)?.isChild === true;
     // Karten, die auf Bestätigung warten, sind aus Sicht der Person erledigt
+    // Nur Boards, die diese Person sieht (private Boards anderer erscheinen nie, auch nicht in den Zahlen der anderen)
+    const seen = visibleBoardsSql(userId);
     const open = loadCards(
-      'completed_at is null and deleted_at is null and archived_at is null and confirm_requested_at is null and board_id in (select id from boards where deleted_at is null)',
+      `completed_at is null and deleted_at is null and archived_at is null and confirm_requested_at is null and board_id in (${seen.sql})`,
+      ...seen.args,
     );
-    const boards = new Map(all('select id, name from boards where deleted_at is null').map((b) => [b.id as string, b.name as string]));
+    const boards = new Map(all(`select b.id, b.name from boards b where b.id in (${seen.sql})`, ...seen.args).map((b) => [b.id as string, b.name as string]));
     const watchers = new Map(all('select id, name from watchers').map((w) => [w.id as string, w.name as string]));
     const view = (card: Card, withWhy: boolean): TodayCard => ({
       id: card.id,

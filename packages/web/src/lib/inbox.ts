@@ -35,6 +35,9 @@ export const isUnread = (entry: Pick<InboxEntry, 'at'>, seenAt: string | null): 
 
 export const unreadCount = (items: Pick<InboxEntry, 'at'>[], seenAt: string | null): number => items.filter((i) => isUnread(i, seenAt)).length;
 
+/** Die Zahl an der Glocke: 1 bis 9 wie sie ist, ab 10 „9+" (klein und dezent, kein Alarm) */
+export const bellText = (n: number): string => (n >= 10 ? '9+' : String(n));
+
 // ----- Tage in der Zeitzone der Person -----
 
 const dayFormats = new Map<string, Intl.DateTimeFormat>();
@@ -118,6 +121,9 @@ function nudgeText(e: InboxEntry): string | null {
   return e.text;
 }
 
+/** Namen als Aufzählung ("Anna", "Anna, Ben") */
+const list = (names: string[]): string => names.join(', ');
+
 /** Titel, Zeile darunter, Symbol und Farbe eines Eintrags: Text entsteht hier aus Art und Daten (zweisprachig), nicht im Server */
 export function entryView(e: InboxEntry, ctx: InboxContext): InboxView {
   const who = ctx.nameOf(e.actorId);
@@ -129,6 +135,26 @@ export function entryView(e: InboxEntry, ctx: InboxContext): InboxView {
     case 'reply':
       return { title: t('{name}: Mach ich 👍', { name: who }), meta: t('Antwort auf deinen Stups · {card}', { card: e.cardTitle }), icon: 'user', color: 'teal' };
     case 'watcher': {
+      // Ohne Karte: Zuständige weg (der Wächter legt keine Karten mehr an) oder nur kleiner geworden (läuft weiter)
+      if (e.notice && e.detail === 'assignees_missing') {
+        return {
+          title: t('{name} braucht neue Zuständige', { name: e.watcherName ?? '' }),
+          meta:
+            e.notice.removedNames.length === 1
+              ? t('{who} ist nicht mehr im Board „{board}“', { who: list(e.notice.removedNames), board: e.notice.boardName })
+              : t('{who} sind nicht mehr im Board „{board}“', { who: list(e.notice.removedNames), board: e.notice.boardName }),
+          icon: 'shield',
+          color: 'red',
+        };
+      }
+      if (e.notice) {
+        return {
+          title: t('{name}: {who} entfernt', { name: e.watcherName ?? '', who: list(e.notice.removedNames) }),
+          meta: t('läuft weiter mit {rest}', { rest: list(e.notice.remainingNames) }),
+          icon: 'shield',
+          color: 'purple',
+        };
+      }
       const title = t('Wächter: {name}', { name: e.watcherName ?? '' });
       let meta: string;
       if (!e.assigned) meta = t('„{title}“ sucht jemanden, der sie übernimmt', { title: e.cardTitle });

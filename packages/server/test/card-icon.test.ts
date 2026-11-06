@@ -304,7 +304,7 @@ describe('Umzug und Export', () => {
     const db = openDb(dbPath);
     const s = createStore(db);
     s.ensureDefaultBoard();
-    const b = s.listBoards()[0]!;
+    const b = s.listBoards(null)[0]!;
     const col = s.getBoardView(b.id).columns[0]!.id;
     s.createCard(b.id, { columnId: col, title: 'Müll', icon: 'trash-can-outline', iconColor: 'red', iconSource: 'auto' }, null);
     const share = mkdtempSync(join(tmpdir(), 'stups-share-'));
@@ -313,7 +313,7 @@ describe('Umzug und Export', () => {
     expect(importTransfer(target, join(dir, 'files'), share)).toBe(true);
     expect(existsSync(target)).toBe(true);
     const copy = createStore(openDb(target));
-    const card = copy.getBoardView(copy.listBoards()[0]!.id).cards[0]!;
+    const card = copy.getBoardView(copy.listBoards(null)[0]!.id).cards[0]!;
     expect(card).toMatchObject({ icon: 'trash-can-outline', iconColor: 'red', iconSource: 'auto' });
   });
 

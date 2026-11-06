@@ -1,6 +1,7 @@
 import { type Card, type ActivityEntry } from './types.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
+import { PUBLIC_BOARD } from './constants.js';
 
 /** Karten der Wächter */
 export function createWatcherCards(c: Ctx, late: unknown) {
@@ -65,9 +66,11 @@ export function createWatcherCards(c: Ctx, late: unknown) {
   }
 
   /** Wie viele offene Karten ein Wächter angelegt hat (Sensor) */
-  function openWatcherCardCount(): number {
+  function openWatcherCardCount(opts: { publicOnly?: boolean } = {}): number {
     return (
-      one('select count(*) as n from cards where watcher_id is not null and completed_at is null and deleted_at is null and archived_at is null')?.n ?? 0
+      one(
+        `select count(*) as n from cards c where c.watcher_id is not null and c.completed_at is null and c.deleted_at is null and c.archived_at is null${opts.publicOnly ? PUBLIC_BOARD : ''}`,
+      )?.n ?? 0
     );
   }
 

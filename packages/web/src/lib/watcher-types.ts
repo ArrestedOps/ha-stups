@@ -51,7 +51,7 @@ export interface WatcherRun {
   id: string;
   watcherId: string;
   at: string;
-  result: 'created' | 'retriggered' | 'counted' | 'cooldown' | 'waiting' | 'assigned' | 'auto_done' | 'nudged' | 'test' | 'error' | 'passed' | 'suggested' | 'claimed' | 'suggest_fallback';
+  result: 'created' | 'retriggered' | 'counted' | 'cooldown' | 'waiting' | 'assigned' | 'auto_done' | 'nudged' | 'test' | 'error' | 'passed' | 'suggested' | 'claimed' | 'suggest_fallback' | 'no_assignees';
   cardId: string | null;
   assignedTo: string[];
   note: string | null;
@@ -70,11 +70,15 @@ export interface WatcherInput {
   nudgeAfterMin: number | null;
   /** Kategorie zum Gruppieren (null = „Ohne Kategorie"); gleiche Namen legt der Server zusammen */
   category: string | null;
+  /** Die Karten zählen zur Fairness (zusätzlich zum Board). Ohne Angabe beim Anlegen gilt der Wert des Boards. */
+  countsForFairness?: boolean;
 }
 
-export interface WatcherItem extends WatcherInput {
+export interface WatcherItem extends Omit<WatcherInput, 'countsForFairness'> {
+  countsForFairness: boolean;
   id: string;
-  status: 'ok' | 'entity_missing' | 'target_missing';
+  /** assignees_missing: keine gültigen Zuständigen mehr, der Wächter bleibt aktiv, legt aber keine Karten an */
+  status: 'ok' | 'entity_missing' | 'target_missing' | 'assignees_missing';
   lastFiredAt: string | null;
   lastAssignees: string[];
   armed: boolean;
@@ -87,15 +91,6 @@ export interface WatcherItem extends WatcherInput {
   entityUnit: string | null;
   /** Friendly Name der Entität, ohne ihn die Entitäts-ID (immer gesetzt) */
   subject: string;
-  /** Kurzer Gerätename */
-  deviceLabel: string;
-  /** Der Name nennt das Gerät schon */
-  nameHasDevice: boolean;
-  /** Der Name ist noch der einer Vorlage */
-  defaultName: boolean;
-  /** So hieße der Wächter mit Gerät (null: nichts zu ergänzen oder Entität unbekannt) */
-  suggestedName: string | null;
-  suggestedTitle: string | null;
   /** Die Kategorie, die Stups vorschlüge (für Wächter ohne) */
   suggestedCategory: string;
   openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; waiting: boolean } | null;
@@ -123,8 +118,6 @@ export interface WatcherActivity extends WatcherRun {
 export interface HaEntity {
   entityId: string;
   name: string;
-  /** Kurzer Gerätename für Name und Kartentitel eines Wächters ("iPhone Rene" statt "iPhone Rene Battery Level") */
-  label?: string;
   state: string;
   unit: string | null;
   domain: string;

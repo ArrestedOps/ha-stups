@@ -1,5 +1,6 @@
 import { conditionMet, type AssignMode, type WatchTrigger } from './watcher-types.js';
 import type { Watcher } from './watcher-data.js';
+import type { WatcherStatus } from './watcher-types.js';
 
 /**
  * Der Reiter „Wächter" zeigt den Zustand der Wächter. Jeder Wächter ist in genau einer Phase (ein pausierter ist ruhig, es sei denn, seine
@@ -98,8 +99,8 @@ export function phaseOf(input: PhaseInput): { phase: HomePhase; since: string | 
 export interface HomeItem {
   watcherId: string;
   name: string;
-  /** Friendly Name der beobachteten Entität, solange der Name des Wächters das Gerät nicht nennt (sonst null) */
-  subject: string | null;
+  /** Friendly Name der beobachteten Entität (ohne Namen die Entitäts-ID): steht in der Liste immer unter dem Namen */
+  subject: string;
   /** Friendly Name der beobachteten Entität (ohne Namen: die Entitäts-ID), immer (für die Zeile bei „Ruhig") */
   entity: string;
   phase: HomePhase;
@@ -111,6 +112,8 @@ export interface HomeItem {
   nextCard: string;
   /** Die Entität gibt es in Home Assistant nicht (mehr) */
   entityMissing: boolean;
+  /** ok, entity_missing, target_missing (Board oder Spalte weg, pausiert) oder assignees_missing (keine Karten, braucht neue Zuständige) */
+  status: WatcherStatus;
   openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; createdAt: string } | null;
   nextEvent: { title: string; at: string } | null;
   /** Der Wächter ist eingeschaltet (aus: er löst nichts aus, bleibt aber in der Liste) */

@@ -15,7 +15,7 @@ function oldInstall() {
   const db = openDb(join(dataDir, 'stups.sqlite'));
   const store = createStore(db);
   store.ensureDefaultBoard();
-  const board = store.listBoards()[0]!;
+  const board = store.listBoards(null)[0]!;
   const view = store.getBoardView(board.id);
   const rene = store.addPerson({ haUserId: 'ha-rene', name: 'Rene' });
   store.createCard(board.id, { title: 'Müll rausbringen', columnId: view.columns[0]!.id }, rene.id);
@@ -76,7 +76,7 @@ describe('Umzug', () => {
     // die Datenbank ist vollständig und wird normal geöffnet (Version bleibt erhalten)
     const copy = openDb(dbPath);
     const store = createStore(copy);
-    const board = store.listBoards()[0]!;
+    const board = store.listBoards(null)[0]!;
     expect(store.getBoardView(board.id).cards.map((c) => c.title)).toEqual(['Müll rausbringen']);
   });
 

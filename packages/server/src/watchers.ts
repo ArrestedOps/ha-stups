@@ -1,5 +1,5 @@
 import { watcherIcon } from './watcher-icons.js';
-import { nameHints, templateDefaults } from './watcher-names.js';
+import { cardTitleOf, plainName, subjectOf, templateCardTitles, templateNames } from './watcher-names.js';
 import { ConflictError, ForbiddenError } from './errors.js';
 import type { HaState } from './ha.js';
 import { t } from './i18n/index.js';
@@ -70,6 +70,8 @@ const POLL_RETRY_MS = 5 * 60_000;
 /** So lange wartet eine Karte auf die erste heimkehrende Person */
 const WAIT_LIMIT_MS = 24 * 3_600_000;
 const TEST_NOTE = 'Test';
+/** Merker in den Einstellungen: die alten Gerätenamen sind aus den Namen genommen (siehe cleanAutoNames) */
+const NAMES_CLEANED = 'watcherNamesCleaned';
 
 interface Seen {
   state: string;
@@ -96,6 +98,12 @@ export interface MetNow {
 export function createWatchers(deps: WatcherDeps) {
   const { store, data, ha, now, timeZone } = deps;
   const log = deps.log ?? { info: () => undefined, warn: () => undefined };
+
+  /** Personen, aus denen dieser Wächter wählen darf: die, die das Board seiner Karten sehen (auf einem privaten Board nur der Besitzer) */
+  function peopleOf(w: Pick<Watcher, 'card'>): User[] {
+    const seeing = new Set(store.boardPeopleIds(w.card.boardId));
+    return store.people().filter((p) => seeing.has(p.id));
+  }
 
   /** Zuletzt gesehene Zustände beobachteter Entitäten */
   const seen = new Map<string, Seen>();
@@ -374,7 +382,17 @@ export function createWatchers(deps: WatcherDeps) {
   }
 
   async function createCard(w: Watcher, nowMs: number, test: boolean, dedupeKey: string | null = null, runNote?: string): Promise<void> {
-    const people = store.people();
+    // Keine gültigen Zuständigen mehr: der Wächter bleibt aktiv, legt aber nichts an, bis neue Zuständige gespeichert sind
+    if (w.status === 'assignees_missing') {
+      if (test) throw new ConflictError(t('Der Wächter braucht neue Zuständige, darum entsteht keine Karte.'));
+      // Ein Hinweis im Protokoll genügt (nicht bei jedem Takt einer)
+      if (data.runs(w.id, 1)[0]?.result !== 'no_assignees') {
+        data.addRun({ watcherId: w.id, result: 'no_assignees', note: 'Keine Karte angelegt: braucht neue Zuständige' });
+        deps.onChange?.();
+      }
+      return;
+    }
+    const people = peopleOf(w);
     const needsPresence = w.assign.mode === 'rotation_present' || w.assign.mode === 'all_present' || w.assign.mode === 'first_home' || w.assign.mode === 'suggest';
     const home = needsPresence ? (await presence()).home : new Set<string>();
     const busy = new Set(people.filter((p) => isBusy(p.busyUntil, nowMs, timeZone())).map((p) => p.id));
@@ -391,7 +409,7 @@ export function createWatchers(deps: WatcherDeps) {
           w.card.boardId,
           {
             columnId: columnFor(w.card, dueAt, nowMs),
-            title: w.card.title,
+            title: cardTitleOf(w.card.title, w.trigger.kind, subjectOf(seenOf(w.trigger.entityId), w.trigger.entityId)),
             description: description || null,
             priority: w.card.priority,
             dueAt,
@@ -693,7 +711,7 @@ export function createWatchers(deps: WatcherDeps) {
         continue;
       }
       const inCircle = w.assign.personIds.length === 0 || w.assign.personIds.includes(who.id);
-      if (!inCircle || card.assigneeIds.includes(who.id)) continue;
+      if (!inCircle || card.assigneeIds.includes(who.id) || !store.canSeeBoard(who.id, card.boardId)) continue;
       await assign(row, w, [who.id], nowMs);
     }
     syncPresenceSubscription();
@@ -718,7 +736,7 @@ export function createWatchers(deps: WatcherDeps) {
       }
       data.removeWaiting(row.cardId);
       if (card.completedAt || card.assigneeIds.length > 0) continue;
-      const people = store.people();
+      const people = peopleOf(w);
       const ids =
         w.assign.waitFallback === 'all'
           ? people.filter((p) => w.assign.personIds.length === 0 || w.assign.personIds.includes(p.id)).map((p) => p.id)
@@ -764,6 +782,7 @@ export function createWatchers(deps: WatcherDeps) {
       persons = states.filter((x) => x.entity_id.startsWith('person.'));
       personsAt = now().getTime();
       statesLoaded = true;
+      cleanAutoNames();
       const s = seenOf(w.trigger.entityId);
       if (!s) {
         data.setStatus(id, 'entity_missing');
@@ -811,6 +830,7 @@ export function createWatchers(deps: WatcherDeps) {
         await evaluate(w, bySeen.get(w.trigger.entityId) ?? null);
       }
       statesLoaded = true;
+      cleanAutoNames();
       syncSubscriptions();
     }).finally(() => {
       snapshotPending = false;
@@ -917,6 +937,7 @@ export function createWatchers(deps: WatcherDeps) {
   async function fireNow(id: string): Promise<void> {
     await enqueue(async () => {
       const w = data.get(id);
+      if (w.status === 'assignees_missing') throw new ConflictError(t('Der Wächter braucht neue Zuständige, darum entsteht keine Karte.'));
       // Der Mensch hat vielleicht eine Weile überlegt: den Stand frisch holen (ohne Verbindung gilt der zuletzt gesehene)
       try {
         for (const x of await ha.getStates()) {
@@ -949,8 +970,11 @@ export function createWatchers(deps: WatcherDeps) {
    * Zuweisung, speichert und schaltet aber nichts weiter. `watcherId` liefert die zuletzt gewählte Person (Rotation); für einen Entwurf
    * ohne Wächter beginnt der Kreis vorn.
    */
-  async function order(rule: AssignRule, watcherId: string | null): Promise<OrderView> {
-    const people = store.people();
+  async function order(rule: AssignRule, watcherId: string | null, boardId: string | null = null): Promise<OrderView> {
+    // Nur die Personen des Boards (der gespeicherte Wächter bringt sein Board mit, ein Entwurf nennt es)
+    const board = boardId ?? (watcherId ? (data.list().find((x) => x.id === watcherId)?.card.boardId ?? null) : null);
+    const seeing = board ? new Set(store.boardPeopleIds(board)) : null;
+    const people = store.people().filter((p) => !seeing || seeing.has(p.id));
     const present = new Map<string, boolean | null>();
     let home = new Set<string>();
     try {
@@ -967,10 +991,31 @@ export function createWatchers(deps: WatcherDeps) {
     return orderView({ rule, people, present, nextId: d.last ?? null });
   }
 
-  /** Das Gerät unter dem Namen in Listen: der Friendly Name der Entität, solange der Name des Wächters das Gerät nicht schon nennt */
-  function subjectOf(w: Watcher, s: Seen | null, defaults: ReturnType<typeof templateDefaults>): string | null {
-    const h = nameHints(w, s, defaults);
-    return h.nameHasDevice ? null : h.subject;
+  /**
+   * Einmalig: Namen und Kartentitel der Vorlagen, an die frühere Versionen das Gerät gehängt haben („Trockner fertig: Nachfrage mw50gdjw"),
+   * verlieren es wieder. Angefasst wird nur ein Text, der genau so aussieht, wie die alte Regel ihn aus dem Namen einer Vorlage und dem Gerät der Entität
+   * baute; eigene Namen bleiben, ebenso alles, was nicht sicher passt. Läuft, sobald die Zustände aus Home Assistant da sind (dann ist
+   * auch der Friendly Name bekannt), und merkt sich, dass es gelaufen ist.
+   */
+  function cleanAutoNames(): void {
+    if (!statesLoaded || store.rawSetting(NAMES_CLEANED) === '1') return;
+    const bases = templateNames();
+    const titles = templateCardTitles();
+    let changed = 0;
+    for (const w of data.list()) {
+      const friendly = seenOf(w.trigger.entityId)?.name;
+      // auch der Kartentitel der Vorlage: sonst hinge zur Laufzeit der Name der Entität ein zweites Mal an
+      const name = plainName(w.name, w.trigger.entityId, friendly, bases);
+      const title = plainName(w.card.title, w.trigger.entityId, friendly, titles, 200);
+      if (name === null && title === null) continue;
+      data.setNames(w.id, { name, cardTitle: title });
+      changed += 1;
+    }
+    store.putRawSetting(NAMES_CLEANED, '1');
+    if (changed > 0) {
+      log.info(`Wächter: bei ${changed} Wächtern das Gerät aus dem Namen genommen`);
+      deps.onChange?.();
+    }
   }
 
   /** Für die Oberfläche: Wächter mit Zustand, Zählerstand, Abo und letztem Lauf */
@@ -978,7 +1023,6 @@ export function createWatchers(deps: WatcherDeps) {
     ensureStates();
     const active = new Set(ha.activeSubscriptions?.() ?? []);
     const waiting = new Set(data.listWaiting().map((x) => x.cardId));
-    const defaults = templateDefaults();
     return data.list().map((w) => {
       const st = data.getState(w.id);
       const open = store.openCardOfWatcher(w.id);
@@ -992,8 +1036,8 @@ export function createWatchers(deps: WatcherDeps) {
         entityState: seenOf(w.trigger.entityId)?.state ?? null,
         entityName: seenOf(w.trigger.entityId)?.name ?? null,
         entityUnit: seenOf(w.trigger.entityId)?.unit ?? null,
-        /** Gerät und Namensvorschlag (siehe watcher-names.ts) */
-        ...nameHints(w, seenOf(w.trigger.entityId), defaults),
+        /** das Gerät unter dem Namen (siehe watcher-names.ts) */
+        subject: subjectOf(seenOf(w.trigger.entityId), w.trigger.entityId),
         /** Kategorie, die Stups für diesen Wächter vorschlüge (für „Kategorien vorschlagen" bei Wächtern ohne) */
         suggestedCategory: categoryOfWatcher(w, seenOf(w.trigger.entityId)),
         /** die offene Karte dieses Wächters, falls es eine gibt */
@@ -1045,7 +1089,7 @@ export function createWatchers(deps: WatcherDeps) {
         continue;
       }
       if (nowMs - Date.parse(row.since) < minutes(SUGGEST_WAIT_MIN)) continue;
-      const people = store.people();
+      const people = peopleOf(w);
       const eligible = new Set(people.map((p) => p.id));
       const pool = (w.assign.personIds.length > 0 ? w.assign.personIds : people.map((p) => p.id)).filter((id) => eligible.has(id));
       const busy = new Set(people.filter((p) => isBusy(p.busyUntil, nowMs, timeZone())).map((p) => p.id));
@@ -1081,7 +1125,7 @@ export function createWatchers(deps: WatcherDeps) {
       } catch {
         throw new ConflictError(t('Den Wächter dieser Karte gibt es nicht mehr'));
       }
-      const people = store.people();
+      const people = peopleOf(w);
       const rule = w.assign;
       const eligible = new Set(people.map((p) => p.id));
       const pool = (rule.personIds.length > 0 ? rule.personIds : people.map((p) => p.id)).filter((id) => eligible.has(id));
@@ -1115,7 +1159,6 @@ export function createWatchers(deps: WatcherDeps) {
     const link = ha.connection?.() ?? { connected: true, lostSince: null };
     const nowIso = now().toISOString();
     const items: HomeItem[] = [];
-    const defaults = templateDefaults();
     for (const w of data.list()) {
       const s = seenOf(w.trigger.entityId);
       const st = data.getState(w.id);
@@ -1143,7 +1186,7 @@ export function createWatchers(deps: WatcherDeps) {
       items.push({
         watcherId: w.id,
         name: w.name,
-        subject: subjectOf(w, s, defaults),
+        subject: subjectOf(s, w.trigger.entityId),
         entity: s?.name?.trim() || w.trigger.entityId,
         value: s && s.state !== '' && s.state !== 'unknown' && s.state !== 'unavailable' ? `${s.state}${s.unit ? ` ${s.unit}` : ''}` : null,
         phase,
@@ -1151,6 +1194,7 @@ export function createWatchers(deps: WatcherDeps) {
         progress: w.active && w.trigger.count > 1 && counter > 0 ? { n: counter, of: w.trigger.count } : null,
         nextCard: w.card.title,
         entityMissing: statesLoaded && (w.status === 'entity_missing' || s === null),
+        status: w.status,
         openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, createdAt: open.createdAt } : null,
         nextEvent,
         active: w.active,
@@ -1167,11 +1211,10 @@ export function createWatchers(deps: WatcherDeps) {
 
   /** Die letzten Läufe über alle Wächter (für den Reiter „Wächter") */
   function activity(limit = 20) {
-    const defaults = templateDefaults();
     const byId = new Map(data.list().map((w) => [w.id, w]));
     return data.recentRuns(limit).map((r) => {
       const w = byId.get(r.watcherId);
-      return { ...r, subject: w ? subjectOf(w, seenOf(w.trigger.entityId), defaults) : null };
+      return { ...r, subject: w ? subjectOf(seenOf(w.trigger.entityId), w.trigger.entityId) : null };
     });
   }
 

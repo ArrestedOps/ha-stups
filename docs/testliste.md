@@ -570,6 +570,20 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Datenbank: Migration 25 (Tabelle `user_permissions`, vorher Sicherung); nach dem Update hat niemand Berechtigungen
 - [ ] Englisch, Hell, Dunkel: nichts läuft über den Rand
 
+## 39 · Board-Sichtbarkeit, Fairness und Wächter-Regeln (seit 1.37.0-beta.1)
+
+- [ ] Boards › Neues Board: drei Auswahlkarten (🔒 Nur ich, 🏠 Alle in Stups, 👥 Ausgewählte Personen mit Personen-Chips) und die Zeile „Zählt zur Fairness der Woche“; bei „Nur ich“ ist der Schalter grau, aus und gesperrt („Private Boards zählen nie mit.“), beim Zurückwechseln gilt der Wert von vorher
+- [ ] Ein privates Board sieht nur sein Besitzer (auch nicht ein Administrator): nicht in Board-Liste, Heute, Kalender, Agenda, Mitteilungen, Papierkorb, Stups-Auswahl; ein Direktaufruf der Karte oder des Boards gibt „nicht gefunden“; Home-Assistant-Sensoren zählen nur Boards für alle
+- [ ] Board-Einstellungen: dieselben Felder; nur der Besitzer (bei Bestandsboards ein Administrator) darf; Wechsel auf „Nur ich“ fragt nach („Zuständigkeiten anderer werden entfernt“)
+- [ ] Person aus „Ausgewählte“ nehmen: Dialog vor dem Entfernen mit allen betroffenen Wächtern („Zuständige jetzt → Danach“, „Rene (reihum)“, bei niemand die orange Zeile); Desktop breit, Wächter und „Zuständige jetzt“ einzeilig
+- [ ] Board auf „Nur ich“ bei Wächtern darauf: „Board kann nicht privat werden“ mit Liste und „Wächter öffnen“
+- [ ] Wächter: private Boards ausgegraut mit „privat“, Auswahl „Name · Alle“ / „Name · Rene, Anna“; „Wer?“ nur mit Personen des Boards; Zeile „Zählt zur Fairness“ (gesperrt, wenn das Board nicht zählt)
+- [ ] Wächter ohne Zuständige: ganz oben in der Liste mit rotem Rand und „Keine Karten: braucht neue Zuständige“; im Editor Hinweis mit „Zuständige wählen“; er legt keine Karten an
+- [ ] Glocke: kleine gedämpfte Zahl statt Punkt (ab 10 „9+“); Mitteilung „braucht neue Zuständige“ öffnet den Wächter
+- [ ] Pfeil rechts bei Termin und Wiederholung (Neue Aufgabe) tippbar wie die Zeile
+- [ ] Wächter-Namen: kein „Namen mit Gerät ergänzen“ mehr; neue Wächter heißen wie die Vorlage, die Karte „Titel: Entität“; alte Gerätenamen sind einmalig weg
+- [ ] Datenbank: Migration 27 (vorher Sicherung); Bestandsboards bleiben für alle sichtbar
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

@@ -99,7 +99,11 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
     const sheet = page.getByRole('dialog');
     await expect(sheet.getByText(`Kinderboard ${tag}`)).toBeVisible();
     await expect(sheet.getByText(`Erwachsenenboard ${tag}`)).toHaveCount(0);
-    await expect(sheet.getByLabel('Name des neuen Boards')).toHaveCount(0);
+    // ein Kind legt Boards an, aber nur „Nur ich“ (die anderen beiden Karten fehlen)
+    await expect(sheet.getByLabel('Name des neuen Boards')).toHaveCount(1);
+    await expect(sheet.getByRole('radio', { name: /Nur ich/ })).toBeVisible();
+    await expect(sheet.getByRole('radio', { name: /Alle in Stups/ })).toHaveCount(0);
+    await expect(sheet.getByRole('radio', { name: /Ausgewählte Personen/ })).toHaveCount(0);
     await expect(sheet.getByRole('button', { name: 'Bearbeiten' })).toHaveCount(0);
     await expect(sheet.getByRole('button', { name: 'Papierkorb' })).toHaveCount(0);
 

@@ -68,7 +68,7 @@ describe('boards', () => {
     store.createBoard({ name: 'Hauskauf' });
     store.createCard(b.id, { columnId: open.id, title: 'A' }, rene.id);
     store.createCard(b.id, { columnId: done.id, title: 'B' }, rene.id);
-    const list = store.listBoards();
+    const list = store.listBoards(null);
     expect(list.map((x) => x.name)).toEqual(['Haushalt', 'Hauskauf']);
     expect(list[0]?.openCards).toBe(1);
     expect(list[1]?.openCards).toBe(0);
@@ -90,11 +90,11 @@ describe('boards', () => {
   it('moves a deleted board to the trash and restores it', () => {
     const { b } = board();
     store.deleteBoard(b.id);
-    expect(store.listBoards()).toHaveLength(0);
+    expect(store.listBoards(null)).toHaveLength(0);
     expect(() => store.getBoardView(b.id)).toThrow(NotFoundError);
-    expect(store.listTrash().map((t) => [t.type, t.id])).toContainEqual(['board', b.id]);
+    expect(store.listTrash(null).map((t) => [t.type, t.id])).toContainEqual(['board', b.id]);
     store.restoreFromTrash('board', b.id);
-    expect(store.listBoards()).toHaveLength(1);
+    expect(store.listBoards(null)).toHaveLength(1);
   });
 });
 
@@ -152,7 +152,7 @@ describe('columns', () => {
 });
 
 describe('Erledigt-Spalte löschen oder umstellen', () => {
-  const openCount = (id: string) => store.listBoards().find((x) => x.id === id)!.openCards;
+  const openCount = (id: string) => store.listBoards(null).find((x) => x.id === id)!.openCards;
 
   it('Löschen der Erledigt-Spalte mit Ziel „Offen“ öffnet die Karten wieder und zählt sie als offen', () => {
     const { b, open, done } = board();
@@ -363,7 +363,7 @@ describe('cards', () => {
     store.deleteCard(a.id);
     expect(store.getBoardView(b.id).cards).toHaveLength(0);
     expect(() => store.getCard(a.id)).toThrow(NotFoundError);
-    expect(store.listTrash()[0]).toMatchObject({ type: 'card', id: a.id, title: 'A' });
+    expect(store.listTrash(null)[0]).toMatchObject({ type: 'card', id: a.id, title: 'A' });
     store.restoreFromTrash('card', a.id);
     expect(store.getBoardView(b.id).cards).toHaveLength(1);
   });
@@ -428,7 +428,7 @@ describe('trash', () => {
     now = new Date('2026-12-01T10:00:00Z'); // 32 days after "alt", 16 after "neu"
     const purged = store.purgeTrash();
     expect(purged).toBe(1);
-    expect(store.listTrash().map((t) => t.title)).toEqual(['neu']);
+    expect(store.listTrash(null).map((t) => t.title)).toEqual(['neu']);
     expect(() => store.restoreFromTrash('card', old.id)).toThrow(NotFoundError);
   });
 
@@ -436,7 +436,7 @@ describe('trash', () => {
     const { b, open } = board();
     const a = store.createCard(b.id, { columnId: open.id, title: 'A' }, rene.id);
     store.deleteCard(a.id);
-    expect(store.listTrash()[0]?.purgeAt).toBe('2026-11-29T10:00:00.000Z');
+    expect(store.listTrash(null)[0]?.purgeAt).toBe('2026-11-29T10:00:00.000Z');
   });
 });
 
@@ -445,6 +445,6 @@ describe('seed', () => {
     const s = createStore(openDb(':memory:'), { now: () => now });
     s.ensureDefaultBoard();
     s.ensureDefaultBoard();
-    expect(s.listBoards().map((x) => x.name)).toEqual(['Haushalt']);
+    expect(s.listBoards(null).map((x) => x.name)).toEqual(['Haushalt']);
   });
 });

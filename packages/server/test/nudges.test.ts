@@ -348,7 +348,7 @@ describe('Verlauf, Zähler und Übersicht', () => {
     at('2026-11-04T22:30:00Z');
     const c2 = card({ title: 'Nachts' });
     store.createNudges(c2.id, rene.id, { to: [conny.id], template: 'today' });
-    const list = store.recentNudges(10);
+    const list = store.recentNudges(10, null);
     expect(list.map((n) => [n.title, n.from, n.to, n.state])).toEqual([
       ['Nachts', 'Rene', 'Conny', 'wartet'],
       ['Mülltonne raus', 'Rene', 'Conny', 'offen'],

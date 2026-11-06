@@ -1,9 +1,8 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../errors.js';
 import { type HaState } from '../ha.js';
 import { DRY_RUN_DAYS, dryRun } from '../dry-run.js';
 import { clampHours, historyOf, unavailableHistory } from '../entity-history.js';
-import { deviceLabel } from '../device-names.js';
 import { categoryOfEntity, categoryOfTemplate, cleanCategory } from '../watcher-categories.js';
 import { hasPermission, requirePermission } from '../permissions.js';
 import { detectSuggestions, suggestionKey, watcherTemplates } from '../watcher-templates.js';
@@ -44,23 +43,37 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     if (!deps.watchers || !deps.watcherData) throw new ConflictError(t('Wächter brauchen die Verbindung zu Home Assistant'));
     return { engine: deps.watchers, data: deps.watcherData };
   };
-  /** Board, Spalte, Kategorien und Personen müssen es geben (sonst entstünde nie eine Karte) */
-  function checkWatcherTargets(c: WatcherConfig): void {
+  /**
+   * Board, Spalte, Kategorien und Personen müssen es geben (sonst entstünde nie eine Karte). Das Board darf nicht privat sein (ein
+   * Wächter legt Karten für andere an) und muss für die Person sichtbar sein, die es wählt (ein unverändertes Board nicht: wer nur
+   * umbenennt, muss es nicht sehen). Zuständige kommen nur aus den Personen, die das Board sehen.
+   */
+  function checkWatcherTargets(req: FastifyRequest, c: WatcherConfig, unchangedBoard: string | null = null): void {
     let view;
     try {
       view = store.getBoardView(c.card.boardId);
     } catch {
       throw new ValidationError(t('Das Board gibt es nicht'));
     }
+    if (view.board.visibility === 'private') throw new ValidationError(t('Private Boards sind für Wächter nicht wählbar: ein Wächter legt Karten für andere an'));
+    if (c.card.boardId !== unchangedBoard && !store.canSeeBoard(req.user?.id ?? null, c.card.boardId)) throw new ValidationError(t('Das Board gibt es nicht'));
     if (!view.columns.some((x) => x.id === c.card.columnId)) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
     const cats = new Set(view.categories.map((x) => x.id));
     if (c.card.categoryIds.some((id) => !cats.has(id))) throw new ValidationError(t('Eine Kategorie gehört nicht zu diesem Board'));
     const people = new Set(store.people().map((p) => p.id));
     const ids = [...c.assign.personIds, ...(c.assign.fallbackPersonId ? [c.assign.fallbackPersonId] : [])];
     if (ids.some((id) => !people.has(id))) throw new ValidationError(t('Eine gewählte Person gibt es in Stups nicht'));
+    const seeing = new Set(store.boardPeopleIds(c.card.boardId));
+    if (ids.some((id) => !seeing.has(id))) throw new ValidationError(t('Zur Auswahl stehen nur Personen aus dem Board'));
+  }
+
+  /** Karten aus Boards, die die Person nicht sieht, tauchen im Wächter nicht auf (die offene Karte wird weggelassen) */
+  function hideCards<T extends { openCard: { boardId: string } | null }>(req: FastifyRequest, items: T[]): T[] {
+    const me = req.user?.id ?? null;
+    return items.map((w) => (w.openCard && !store.canSeeBoard(me, w.openCard.boardId) ? { ...w, openCard: null } : w));
   }
   const watcherView = (id: string) => deps.watchers!.view().find((w) => w.id === id);
-  app.get('/api/watchers', async () => ({ available: !!deps.watchers, items: deps.watchers?.view() ?? [] }));
+  app.get('/api/watchers', async (req) => ({ available: !!deps.watchers, items: hideCards(req, deps.watchers?.view() ?? []) }));
   /** Letzte Aktivität über alle Wächter (Reiter „Wächter") */
   app.get('/api/watchers/activity', async () => (deps.watchers ? deps.watchers.activity(20) : []));
   // ----- Vorlagen, Gefunden (Erkennung) und Probelauf: Administratoren und Recht „watchers“, nichts davon speichert -----
@@ -182,30 +195,12 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       waitFallback: saved?.assign.waitFallback ?? 'none',
       fallbackPersonId: q.fallbackPersonId || saved?.assign.fallbackPersonId || null,
     };
-    return deps.watchers.order(rule, saved?.id ?? null);
+    return deps.watchers.order(rule, saved?.id ?? null, q.boardId || null);
   });
   app.get<{ Params: Params }>('/api/watchers/:id/runs', async (req) => {
     const { data } = watcherEngine();
     data.get(req.params.id);
     return data.runs(req.params.id);
-  });
-  /**
-   * Einmaliger Sammelknopf: Wächter, die noch genau den Namen einer Vorlage tragen und das Gerät nicht nennen, bekommen es dazu
-   * („Batterie schwach" → „Batterie schwach: iPhone Rene"), der Kartentitel mit, solange er der der Vorlage ist. Eigene Namen bleiben,
-   * ebenso Wächter, deren Entität Home Assistant gerade nicht kennt. Antwort: wie viele umbenannt wurden. Die Oberfläche fragt vorher nach.
-   */
-  app.post('/api/watchers/rename-with-device', async (req) => {
-    requirePermission(req, 'watchers');
-    const { engine, data } = watcherEngine();
-    let renamed = 0;
-    for (const v of engine.view()) {
-      if (!v.defaultName || !v.suggestedName) continue;
-      const current = data.get(v.id);
-      const { id: _id, ...rest } = current;
-      data.update(current.id, parseWatcher({ ...rest, name: v.suggestedName, card: { ...rest.card, title: v.suggestedTitle ?? rest.card.title } }));
-      renamed += 1;
-    }
-    return { renamed };
   });
   /**
    * Sammelknopf: Wächter ohne Kategorie bekommen den Vorschlag (aus Entität, Geräteklasse und Name, siehe watcher-categories.ts).
@@ -225,8 +220,18 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   app.post('/api/watchers', async (req, reply) => {
     requirePermission(req, 'watchers');
     const { engine, data } = watcherEngine();
-    const config = parseWatcher(body(req));
-    checkWatcherTargets(config);
+    const raw = body(req);
+    // Ohne Angabe gilt der Wert des Boards (ein Board, das nicht zählt, nimmt seine Wächter mit)
+    if (raw.countsForFairness === undefined && typeof raw.card?.boardId === 'string') {
+      try {
+        const board = store.getBoard(raw.card.boardId);
+        raw.countsForFairness = board.visibility !== 'private' && board.countsForFairness;
+      } catch {
+        /* unbekanntes Board: die Prüfung unten meldet es */
+      }
+    }
+    const config = parseWatcher(raw);
+    checkWatcherTargets(req, config);
     const created = data.create(config);
     // `metNow`: die Bedingung gilt schon und es löst nichts von selbst aus, die Oberfläche fragt, ob die Karte jetzt entstehen soll
     const metNow = await engine.onSaved(created.id);
@@ -250,9 +255,14 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       return watcherView(current.id);
     }
     const { id: _id, ...rest } = current;
-    const config = parseWatcher({ ...rest, ...b });
-    checkWatcherTargets(config);
-    data.update(current.id, config);
+    // Ein Wächter ohne Zuständige (feste Person weg) lässt sich umbenennen, ohne dass die leere Liste erst gefüllt sein muss
+    const keepAssign = current.status === 'assignees_missing' && !('assign' in b);
+    const config = parseWatcher({ ...rest, ...b, ...(keepAssign ? { assign: { ...rest.assign, mode: 'none' } } : {}) });
+    if (keepAssign) config.assign = rest.assign;
+    checkWatcherTargets(req, config, current.card.boardId);
+    // „Braucht neue Zuständige" fällt erst weg, wenn Zuständige gewählt sind (ein leerer Kreis hieße „alle im Board": dahin fällt der Wächter nie zurück)
+    const clearMissing = config.assign.mode === 'none' || config.assign.personIds.length > 0;
+    data.update(current.id, config, clearMissing);
     const metNow = await engine.onSaved(current.id);
     // gefragt wird nur, wenn sich Entität oder Bedingung geändert haben (nicht beim Umbenennen und Co.)
     return { ...watcherView(current.id), metNow: conditionChanged(current.trigger, config.trigger) ? metNow : null };
@@ -321,8 +331,6 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       .map(({ s }) => ({
         entityId: s.entity_id,
         name: name(s),
-        /** kurzer Gerätename für Name und Kartentitel */
-        label: deviceLabel(s.attributes?.friendly_name as string | undefined, s.entity_id),
         state: s.state,
         unit: typeof s.attributes?.unit_of_measurement === 'string' ? s.attributes.unit_of_measurement : null,
         domain: s.entity_id.split('.')[0]!,

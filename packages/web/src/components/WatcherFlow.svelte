@@ -1,11 +1,14 @@
 <script lang="ts">
+  import { cardTitleWithEntity } from '../lib/cardTitle';
   import { t } from '../lib/i18n/index.svelte';
   import { valueText } from '../lib/history';
+  import { inbox } from '../lib/inbox.svelte';
+  import { tick } from 'svelte';
   import { clock } from '../lib/nudge';
   import { ui } from '../lib/store.svelte';
     import type { WatcherEditor } from '../lib/watcher-editor.svelte';
   import { dueText, fineChips, modeSummary, nameSymbol, whenParts, type FineKey, type Part } from '../lib/watcher-flow';
-  import { noteText, RUN_TEXT, withCategory, withSuggestedNames } from '../lib/watchers';
+  import { noteText, RUN_TEXT, withCategory } from '../lib/watchers';
   import AssignOrder from './AssignOrder.svelte';
   import CardTile from './CardTile.svelte';
   import DoneEditor from './DoneEditor.svelte';
@@ -18,6 +21,7 @@
   import Sheet from './Sheet.svelte';
   import SymbolIcon from './SymbolIcon.svelte';
   import WatcherCategoryField from './WatcherCategoryField.svelte';
+  import WatcherFairnessRow from './WatcherFairnessRow.svelte';
   import WatcherSummary from './WatcherSummary.svelte';
   import WatcherThenEditor from './WatcherThenEditor.svelte';
   import WatcherWhenEditor from './WatcherWhenEditor.svelte';
@@ -53,6 +57,8 @@
   const threshold = $derived(f.kind === 'below' || f.kind === 'above' ? num(f.value) : null);
   const current = $derived(valueText(ed.history?.current ?? ed.item?.entityState ?? null, ed.history?.kind === 'state' ? null : unit));
   const board = $derived(ui.boards.find((b) => b.id === f.boardId));
+  /** Der Titel der Karte, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
+  const shownTitle = $derived(cardTitleWithEntity(f.title, f.kind, f.entityName || f.entityId) || '…');
   const look = $derived({ icon: f.icon || nameSymbol(f.title) || nameSymbol(f.entityName), iconColor: f.iconColor || null });
   const doneParts = $derived<Part[]>(
     f.doneOn && f.doneEntityId
@@ -68,13 +74,30 @@
         ? t('pausiert')
         : ed.item.status === 'entity_missing'
           ? t('Entität fehlt')
-          : ed.item.status === 'target_missing'
+          : ed.item.status === 'assignees_missing'
+            ? t('Keine Karten: braucht neue Zuständige')
+            : ed.item.status === 'target_missing'
             ? t('Board oder Spalte fehlt')
             : ed.item.subscribed
               ? t('aktiv')
               : t('Abo nicht aktiv'),
   );
-  const statusBad = $derived(!!ed.item && ed.item.active && !ed.item.subscribed);
+  const statusBad = $derived((!!ed.item && ed.item.active && !ed.item.subscribed) || ed.item?.status === 'assignees_missing');
+
+  // Keine Zuständigen mehr: der Hinweis oben nennt, wer weg ist (aus der Mitteilung, falls es sie noch gibt), und springt zu „Wer?"
+  const missing = $derived(ed.item?.status === 'assignees_missing');
+  const missingNote = $derived.by(() => {
+    const entry = inbox.items.find((i) => i.watcherId === ed.id && i.detail === 'assignees_missing' && i.notice);
+    const boardName = entry?.notice?.boardName ?? board?.name ?? '';
+    if (!entry?.notice) return t('Niemand ist mehr zuständig im Board „{board}“', { board: boardName });
+    const who = entry.notice.removedNames.join(', ');
+    return entry.notice.removedNames.length === 1 ? t('{who} ist nicht mehr im Board „{board}“', { who, board: boardName }) : t('{who} sind nicht mehr im Board „{board}“', { who, board: boardName });
+  });
+  async function chooseAssignees() {
+    open = 'who';
+    await tick();
+    document.getElementById('flow-who')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
 
   function tapFine(key: FineKey) {
     if (key === 'dedupe') f.dedupe = !f.dedupe;
@@ -115,18 +138,16 @@
       {#if readOnly}
         <p class="rounded-row border border-line bg-surface px-4 py-3 text-[15px]" data-testid="watcher-readonly">{t('Wächter ändern Administratoren und wer die Berechtigung „Wächter“ hat. Du kannst hier alles ansehen, auch den Verlauf.')}</p>
       {/if}
-      <WatcherSummary form={f} personName={ed.personName} />
-
-      {#if !readOnly && ed.item?.suggestedName && f.name !== ed.item.suggestedName}
-        <!-- Vorschlag, keine stille Umbenennung: erst „Speichern" macht es gültig -->
-        <button type="button" class="flex min-h-14 w-full items-center gap-3 rounded-row border border-line bg-surface py-2 pr-2.5 pl-3 text-left" data-testid="name-suggest" onclick={() => (ed.form = withSuggestedNames(ed.form, ed.item!))}>
-          <Tile color="orange"><Icon name="spark" size={22} stroke={1.8} /></Tile>
-          <span class="flex min-w-0 flex-1 flex-col gap-1">
-            <span class="wrap-anywhere text-[15px] font-bold tracking-tight">{t('Namen mit Gerät ergänzen')}</span>
-            <span class="wrap-anywhere text-[13px] text-tok">{ed.item.suggestedName}</span>
-          </span>
-        </button>
+      {#if missing}
+        <div class="flex flex-col gap-2 rounded-row border border-accent bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface))] px-4 py-3" role="alert" data-testid="assignees-missing">
+          <p class="text-[15px] font-bold" data-testid="assignees-missing-title">{missingNote}</p>
+          <p class="text-[13px] text-fg2">{t('Wähle neue Zuständige, sonst legt der Wächter keine Karten an.')}</p>
+          {#if !readOnly}
+            <button type="button" class="inline-flex h-11 items-center self-start rounded-xl bg-surface px-4 text-[15px] font-bold" data-testid="choose-assignees" onclick={chooseAssignees}>{t('Zuständige wählen')}</button>
+          {/if}
+        </div>
       {/if}
+      <WatcherSummary form={f} personName={ed.personName} />
 
       <div class="flex flex-col" data-testid="watcher-flow">
         <!-- WENN -->
@@ -155,7 +176,7 @@
         <!-- DANN KARTE -->
         <section class="flow-card" aria-label={t('Dann Karte')}>
           <div class="flex items-center gap-2">{@render tag('then', t('DANN KARTE'))}{@render change('then')}</div>
-          <ListRow wrap inset variant="task" title={f.title.trim() || '…'} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
+          <ListRow wrap inset variant="task" title={shownTitle} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
             {#snippet tile()}<CardTile card={look} />{/snippet}
             {#snippet meta()}<span class="shrink-0">{dueText(f)}</span><span class="shrink-0 text-sep" aria-hidden="true">•</span><span class="wrap-anywhere">{board?.name ?? ''}</span>{/snippet}
             {#snippet right()}<span class="flex text-fg2"><Icon name="shield" size={18} stroke={1.8} /></span>{/snippet}
@@ -166,12 +187,13 @@
         <div class="flow-link" aria-hidden="true"></div>
 
         <!-- AN WEN -->
-        <section class="flow-card" aria-label={t('An wen')}>
+        <section class="flow-card" id="flow-who" aria-label={t('An wen')}>
           <div class="flex items-center gap-2">
             {@render tag('who', t('AN WEN'))}
             <span class="min-w-0 wrap-anywhere text-[13px] text-fg2">{modeSummary(f.assignMode)}</span>
             {@render change('who')}
           </div>
+          {#if ed.board && ed.board.visibility !== 'all'}<p class="text-[12.5px] text-hint" data-testid="board-people-hint">{t('Zur Auswahl nur Personen aus dem Board')}</p>{/if}
           <AssignOrder order={ed.order} />
           {#if open === 'who'}<div class="border-t border-line pt-3"><WatcherWhoEditor {ed} /></div>{/if}
         </section>
@@ -232,6 +254,8 @@
           {/if}
         </div>
       {/if}
+
+      <WatcherFairnessRow {ed} {readOnly} />
 
       {#if !readOnly}<DryRunPanel form={f} />{/if}
 

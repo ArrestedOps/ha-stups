@@ -121,5 +121,9 @@
       <Icon name="checklist" size={14} />
       <span>{t('Der Balken zeigt den Aufwand: große Aufgaben zählen mehr als kleine. Es geht nicht um einen Wettbewerb.')}</span>
     </p>
+    <p class="mt-2 flex items-start gap-2 px-1 text-[13px] text-fg2" data-testid="fairness-excluded">
+      <Icon name="lock" size={14} />
+      <span>{t('Private Boards und Boards, die nicht zur Fairness zählen, sind nicht eingerechnet, auch nicht rückwirkend. Dasselbe gilt für Wächter, die du ausgenommen hast.')}</span>
+    </p>
   {/if}
 </div>

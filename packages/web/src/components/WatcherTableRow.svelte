@@ -26,8 +26,8 @@
   }: { item: HomeItem; nowMs: number; canToggle: boolean; busy?: boolean; /** gerade angelegt: kurz hervorgehoben */ fresh?: boolean; onopen: () => void; ontoggle: (on: boolean) => void } = $props();
 
   const status = $derived<RowStatus>(rowStatus(i));
-  const TILE: Record<RowStatus, TileColor> = { waiting: 'orange', running: 'green', soon: 'blue', quiet: 'teal', off: 'gray', missing: 'red' };
-  const DOT: Record<RowStatus, string> = { waiting: 'text-sig-orange', running: 'text-sig-green', soon: 'text-sig-blue', quiet: 'text-text-soft2', off: 'text-text-soft2', missing: 'text-danger' };
+  const TILE: Record<RowStatus, TileColor> = { waiting: 'orange', running: 'green', soon: 'blue', quiet: 'teal', off: 'gray', missing: 'red', noassign: 'red', target: 'red' };
+  const DOT: Record<RowStatus, string> = { waiting: 'text-sig-orange', running: 'text-sig-green', soon: 'text-sig-blue', quiet: 'text-text-soft2', off: 'text-text-soft2', missing: 'text-danger', noassign: 'text-danger', target: 'text-danger' };
   const people = $derived(i.assign.personIds.map(personById).filter((p) => p !== undefined));
   const who = $derived(whoText(i.assign, (id) => personById(id)?.displayName ?? '?'));
   /** Feste Personen zeigen nur ihre Bilder; sonst steht die Art der Zuweisung dabei („abwechselnd, nur Anwesende") */

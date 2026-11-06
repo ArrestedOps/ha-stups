@@ -5,6 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { afterEach, describe, expect, it } from 'vitest';
 import { openDb } from '../src/db.js';
 import { migrations } from '../src/migrations.js';
+import { withoutLater } from './helpers/later-columns.js';
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -47,7 +48,7 @@ describe('Migration 24 (Rückmeldungen)', () => {
 
     const db = openDb(file, { migrations, backupDir, now: () => new Date('2026-11-05T10:00:00Z') });
     expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(migrations[migrations.length - 1]!.version);
-    for (const t of TABLES) expect(db.prepare(`select * from ${t} order by 1`).all(), t).toEqual(snap[t]);
+    for (const t of TABLES) expect(withoutLater(t, db.prepare(`select * from ${t} order by 1`).all() as Record<string, unknown>[]), t).toEqual(snap[t]);
     expect(db.prepare('select count(*) as n from feedback').get()).toEqual({ n: 0 });
     const cols = (db.prepare('pragma table_info(feedback)').all() as { name: string }[]).map((c) => c.name);
     expect(cols).toEqual(['id', 'person_id', 'person_name', 'kind', 'message', 'image', 'thumb', 'meta', 'status', 'created_at']);

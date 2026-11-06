@@ -155,7 +155,7 @@ describe('homeState', () => {
     await emit(w, '120');
     advance(30);
     await emit(w, '1');
-    expect(only()).toMatchObject({ phase: 'waiting', openCard: { title: 'Wäsche aufhängen', assigneeIds: [anna] } });
+    expect(only()).toMatchObject({ phase: 'waiting', openCard: { title: 'Wäsche aufhängen: sensor.waschmaschine_leistung', assigneeIds: [anna] } });
     // die Karte wird erledigt: wieder ruhig
     store.completeCard(only().openCard!.id, { by: anna, source: 'app' });
     expect(only().phase).toBe('quiet');

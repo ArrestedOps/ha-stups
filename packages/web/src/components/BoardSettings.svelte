@@ -1,9 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { api } from '../lib/api';
+  import { api, ApiError, type BoardAccessInput, type BoardAccessPreview } from '../lib/api';
+  import { boardWho, type Visibility } from '../lib/boardAccess';
   import { CATEGORY_COLORS } from '../lib/colors';
-  import { act, closeSheet, openSheet, ui } from '../lib/store.svelte';
+  import { act, closeSheet, openSheet, refresh, toast, ui } from '../lib/store.svelte';
+  import BoardAccessDialog from './BoardAccessDialog.svelte';
+  import BoardVisibilityPicker from './BoardVisibilityPicker.svelte';
   import Icon from './Icon.svelte';
   import SelectField from './SelectField.svelte';
   import Sheet from './Sheet.svelte';
@@ -39,6 +42,67 @@
     if (ui.boardId) void api.archived(ui.boardId).then((l) => (archivedCount = l.length)).catch(() => undefined);
     void api.trash().then((l) => (trashCount = l.length)).catch(() => undefined);
   });
+
+  // ----- Wer sieht das Board, zählt es zur Fairness? Nur der Besitzer ändert das (bei Boards ohne Besitzer ein Administrator) -----
+  const board = $derived(view?.board);
+  const mayChangeAccess = $derived(!!board && (board.ownerId === ui.me?.id || (board.ownerId === null && ui.isAdmin)));
+  /** Was gerade gilt; die Auswahl springt nach einem abgelehnten Wechsel hierher zurück */
+  const visibility = $derived<Visibility>(board?.visibility ?? 'all');
+  /** Ein Wechsel wartet auf die Bestätigung im Dialog (Personen entfernen) oder wurde abgelehnt (Wächter zeigen auf das Board) */
+  let pending = $state<{ kind: 'remove' | 'blocked'; change: BoardAccessInput; preview: BoardAccessPreview; title: string } | null>(null);
+
+  async function applyAccess(change: BoardAccessInput) {
+    if (!board) return;
+    try {
+      await api.updateBoard(board.id, change);
+    } catch (e) {
+      // ein Wächter zeigt auf das Board: der Server liefert die Liste
+      if (e instanceof ApiError && e.status === 409 && Array.isArray((e.data as { watchers?: unknown })?.watchers)) {
+        const watchers = (e.data as { watchers: { id: string; name: string }[] }).watchers;
+        pending = { kind: 'blocked', change, preview: { removedIds: [], watchers: [], blocking: watchers, assigneeCards: 0 }, title: t('Board kann nicht privat werden') };
+      } else {
+        toast(e instanceof Error ? e.message : t('Änderung fehlgeschlagen'), { tone: 'error' });
+      }
+    }
+    await refresh();
+  }
+
+  /**
+   * Sichtbarkeit oder Mitglieder ändern. Erst fragt der Server, was es kostet: Verhindern Wächter es (Board auf „Nur ich"), sagt ein Dialog
+   * welche; verlieren Personen den Blick auf das Board, bestätigt ein Dialog mit allen betroffenen Wächtern („jetzt → danach").
+   */
+  async function changeAccess(change: BoardAccessInput) {
+    if (!board) return;
+    const next = { visibility: change.visibility ?? board.visibility, memberIds: change.memberIds ?? board.memberIds };
+    let preview: BoardAccessPreview;
+    try {
+      preview = await api.boardAccessPreview(board.id, next);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : t('Änderung fehlgeschlagen'), { tone: 'error' });
+      return;
+    }
+    if (preview.blocking.length > 0) {
+      pending = { kind: 'blocked', change, preview, title: t('Board kann nicht privat werden') };
+      return;
+    }
+    const names = preview.removedIds.map((id) => ui.people.find((p) => p.id === id)?.displayName ?? '?').join(', ');
+    if (next.visibility === 'private' && board.visibility !== 'private') {
+      pending = { kind: 'remove', change, preview, title: t('„{board}“ nur für dich?', { board: board.name }) };
+    } else if (preview.removedIds.length > 0) {
+      pending = { kind: 'remove', change, preview, title: t('{names} aus „{board}“ entfernen?', { names, board: board.name }) };
+    } else {
+      await applyAccess(change);
+    }
+  }
+  async function confirmAccess() {
+    const p = pending;
+    pending = null;
+    if (p) await applyAccess(p.change);
+  }
+  function openWatcher(id: string) {
+    pending = null;
+    openSheet({ type: 'watcher', id });
+  }
 
   const cardsIn = (columnId: string) => (view?.cards ?? []).filter((c) => c.columnId === columnId).length;
   const dot = (color: string) => `var(--c-${color}-fg)`;
@@ -124,6 +188,20 @@
           if (n && n !== view.board.name) void act(() => api.updateBoard(view.board.id, { name: n }));
         }}
       />
+
+      {#if mayChangeAccess && board}
+        <BoardVisibilityPicker
+          {visibility}
+          memberIds={board.memberIds}
+          counts={board.countsForFairness}
+          ownerId={board.ownerId ?? ui.me?.id ?? null}
+          onvisibility={(v) => void changeAccess({ visibility: v })}
+          onmembers={(ids) => void changeAccess({ memberIds: ids })}
+          oncounts={(on) => void act(() => api.updateBoard(board.id, { countsForFairness: on }))}
+        />
+      {:else if board}
+        <p class="px-1 text-[13px] text-fg2" data-testid="board-who">{t('Sichtbar für: {who}', { who: boardWho(board, ui.people) })}</p>
+      {/if}
 
       <ListRow title={t('Erledigte archivieren')}>
         {#snippet tile()}<Tile color="gray"><Icon name="archive" size={22} stroke={1.8} /></Tile>{/snippet}
@@ -303,3 +381,16 @@
     </div>
   {/if}
 </Sheet>
+
+{#if pending && board}
+  <BoardAccessDialog
+    kind={pending.kind}
+    boardName={board.name}
+    title={pending.title}
+    preview={pending.preview}
+    confirmLabel={pending.change.visibility === 'private' ? t('Auf „Nur ich“ stellen') : t('Entfernen')}
+    onconfirm={() => void confirmAccess()}
+    onclose={() => (pending = null)}
+    onopenwatcher={openWatcher}
+  />
+{/if}

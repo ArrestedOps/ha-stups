@@ -41,7 +41,7 @@ test('Solange die Wächter aus sind, legen sie keine Karten an; nach dem Einscha
   const view = (await (await page.request.get(`/api/boards/${boards[0]!.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
   const columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;
   const cards = async () =>
-    ((await (await page.request.get(`/api/boards/${boards[0]!.id}`)).json()) as { cards: { title: string }[] }).cards.filter((c) => c.title === 'Staubbehälter leeren');
+    ((await (await page.request.get(`/api/boards/${boards[0]!.id}`)).json()) as { cards: { title: string }[] }).cards.filter((c) => c.title.startsWith('Staubbehälter leeren'));
 
   const people = (await (await page.request.get('/api/people')).json()) as { id: string; name: string }[];
   await setState(request, 'vacuum.s7', 'cleaning');

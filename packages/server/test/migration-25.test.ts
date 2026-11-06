@@ -5,6 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { afterEach, describe, expect, it } from 'vitest';
 import { openDb } from '../src/db.js';
 import { migrations } from '../src/migrations.js';
+import { withoutLater } from './helpers/later-columns.js';
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -50,7 +51,7 @@ describe('Migration 25 (Berechtigungen je Person)', () => {
 
     const db = openDb(file, { migrations, backupDir });
     expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(migrations.at(-1)!.version);
-    for (const t of TABLES) expect(db.prepare(`select * from ${t} order by 1`).all(), t).toEqual(snap[t]);
+    for (const t of TABLES) expect(withoutLater(t, db.prepare(`select * from ${t} order by 1`).all() as Record<string, unknown>[]), t).toEqual(snap[t]);
     expect(db.prepare('select count(*) as n from user_permissions').get()).toEqual({ n: 0 });
 
     expect(existsSync(backupDir)).toBe(true);

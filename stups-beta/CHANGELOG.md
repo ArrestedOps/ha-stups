@@ -2,6 +2,15 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.33.0-beta.1
+
+**Gefunden: Stups schlägt jetzt alle passenden Geräte vor, nicht mehr nur fünf je Vorlage.** In neuen Umgebungen mit 100 und mehr Sensoren war die Liste bisher abgeschnitten.
+
+- Der Server liefert alle Treffer. Nur als Schutz gilt eine Obergrenze von 500 Treffern insgesamt. Die Reihenfolge je Vorlage bleibt (Batterien: die schwächste zuerst), die Begründungen auch.
+- Im Blatt „Gefunden“ stehen die Treffer nach Vorlage gruppiert: Kopf mit Symbol, Titel der Vorlage und Zähler (zum Beispiel „Batterie schwach (37)“). Kleine Gruppen stehen offen. Gruppen mit mehr als fünf Treffern zeigen die ersten fünf und „Alle N anzeigen“.
+- Ab 12 Treffern gibt es ein Suchfeld (bleibt beim Blättern oben stehen). Es filtert nach Gerätename, Entität und Begründung und zeigt dann alle passenden Treffer.
+- Der Hinweis im Reiter Wächter nennt die Gesamtzahl. „Einrichten“ und „Ausblenden“ gibt es weiter je Treffer.
+
 ## 1.32.4-beta.1
 
 **Desktop: Auswahllisten (zum Beispiel das Board im Wächter-Assistenten) sind nicht mehr weiß.** Die aufklappende Liste folgt jetzt dem Theme (dunkel und hell).

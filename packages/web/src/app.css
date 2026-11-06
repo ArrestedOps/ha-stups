@@ -319,6 +319,7 @@
 }
 
 /* Das Feld der aktuellen Spalte im Karten-Menü: orange Rand, heller Orange-Ton */
+.row-fresh { background-color: color-mix(in srgb, var(--accent) 14%, var(--surface)); box-shadow: inset 3px 0 0 var(--brand-dot); }
 .move-current { border-color: var(--brand-dot); color: var(--accent-text); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 
 /* Gewählte Antwort in einer Liste (Stupsen: Nachricht): orange Rand, heller Grund, weicher Ring */

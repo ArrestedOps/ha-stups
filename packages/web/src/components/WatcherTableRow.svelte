@@ -20,9 +20,10 @@
     nowMs,
     canToggle,
     busy = false,
+    fresh = false,
     onopen,
     ontoggle,
-  }: { item: HomeItem; nowMs: number; canToggle: boolean; busy?: boolean; onopen: () => void; ontoggle: (on: boolean) => void } = $props();
+  }: { item: HomeItem; nowMs: number; canToggle: boolean; busy?: boolean; /** gerade angelegt: kurz hervorgehoben */ fresh?: boolean; onopen: () => void; ontoggle: (on: boolean) => void } = $props();
 
   const status = $derived<RowStatus>(rowStatus(i));
   const TILE: Record<RowStatus, TileColor> = { waiting: 'orange', running: 'green', soon: 'blue', quiet: 'teal', off: 'gray', missing: 'red' };
@@ -34,7 +35,7 @@
   const dim = $derived(i.active ? '' : 'opacity-70');
 </script>
 
-<li class="relative grid min-h-16 items-center gap-x-3 px-3.5 py-2 hover:bg-surface2 has-[[data-row-open]:focus-visible]:bg-surface2 has-[[data-row-open]:focus-visible]:outline-2 has-[[data-row-open]:focus-visible]:-outline-offset-2 has-[[data-row-open]:focus-visible]:outline-accent {TABLE_COLS}" data-testid="watcher-row" data-status={status}>
+<li class="relative grid min-h-16 scroll-mt-14 items-center gap-x-3 px-3.5 py-2 transition-colors duration-700 hover:bg-surface2 {fresh ? 'row-fresh' : ''} has-[[data-row-open]:focus-visible]:bg-surface2 has-[[data-row-open]:focus-visible]:outline-2 has-[[data-row-open]:focus-visible]:-outline-offset-2 has-[[data-row-open]:focus-visible]:outline-accent {TABLE_COLS}" data-testid="watcher-row" data-status={status} data-watcher-id={i.watcherId} data-fresh={fresh ? '' : undefined}>
   <!-- Die ganze Zeile öffnet den Wächter: ein Knopf, der die Zeile ausfüllt und über den Zellen liegt (ohne Text, der Name steht im Label);
        er steht zuerst, damit die Tab-Reihenfolge stimmt. Der Schalter liegt darüber. -->
   <button type="button" class="absolute inset-0 z-[1] cursor-pointer focus-visible:outline-none" data-row-open aria-label={t('Wächter {name} öffnen', { name: i.name })} onclick={onopen}></button>

@@ -8,7 +8,13 @@
    * für einen eigenen Namen (höchstens 40 Zeichen). Gleiche Namen ohne Beachtung der Groß-/Kleinschreibung legt der Server zusammen.
    * `options`: die Kategorien, die es schon gibt; die aktuelle Wahl steht immer dabei.
    */
-  let { value, options, disabled = false, onchange }: { value: string; options: string[]; disabled?: boolean; onchange: (value: string) => void } = $props();
+  let {
+    value,
+    options,
+    disabled = false,
+    pill = false,
+    onchange,
+  }: { value: string; options: string[]; disabled?: boolean; onchange: (value: string) => void; /** Formular am Desktop: Auswahl als Pille „KATEGORIE …“, das Feld für einen neuen Namen steht daneben */ pill?: boolean } = $props();
 
   const NEW = '\u0000new';
   let custom = $state(false);
@@ -24,8 +30,16 @@
   }
 </script>
 
-<div class="flex min-w-0 flex-col gap-2" data-testid="category-field">
-  <SelectField variant="box" label={t('Kategorie')} value={selected} {disabled} onchange={pick} class="w-full justify-between">
+<div class="flex min-w-0 gap-2 {pill ? 'flex-wrap items-center' : 'flex-col'}" data-testid="category-field">
+  <SelectField
+    variant={pill ? 'pill' : 'box'}
+    caption={pill ? t('Kategorie') : undefined}
+    label={t('Kategorie')}
+    value={selected}
+    {disabled}
+    onchange={pick}
+    class={pill ? '' : 'w-full justify-between'}
+  >
     <option value="">{t('Ohne Kategorie')}</option>
     {#each list as o (o)}<option value={o}>{o}</option>{/each}
     <option value={NEW}>{t('Neue Kategorie …')}</option>
@@ -33,7 +47,7 @@
   {#if custom && !disabled}
     <input
       bind:this={input}
-      class="min-h-11 w-full rounded-xl border border-line bg-surface2 px-3 text-[16px] font-semibold placeholder:text-dim focus:border-brand-dot focus:outline-none"
+      class="min-h-11 rounded-xl border border-line bg-surface2 px-3 text-[16px] font-semibold placeholder:text-dim focus:border-brand-dot focus:outline-none {pill ? 'w-56 max-w-full' : 'w-full'}"
       maxlength="40"
       placeholder={t('Name der Kategorie')}
       aria-label={t('Name der neuen Kategorie')}

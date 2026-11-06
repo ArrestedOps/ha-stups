@@ -71,6 +71,12 @@ export interface ConfirmRequest {
   tone?: 'danger' | 'primary';
 }
 
+/** Womit der Bereich „Neuer Wächter“ aufklappt: eine Vorlage und/oder ein Treffer aus „Gefunden“ (Entität schon gewählt) */
+export interface NewWatcherRequest {
+  template?: string;
+  hit?: { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft };
+}
+
 export const ui = $state({
   ready: false,
   fatal: null as string | null,
@@ -121,6 +127,8 @@ export const ui = $state({
   toasts: [] as Toast[],
   /** Rückfrage vor einer Aktion, die sich nicht von selbst zurücknehmen lässt */
   confirm: null as null | ConfirmRequest,
+  /** Desktop: „Neuer Wächter“ soll im Reiter Wächter aufklappen (aus „Gefunden“ oder den Einstellungen); die Ansicht liest und löscht es */
+  newWatcher: null as null | NewWatcherRequest,
 });
 
 /**
@@ -633,6 +641,21 @@ export function hopCard(id: string): void {
 export function openSheet(s: Sheet): void {
   if (s?.type === 'card') openCard(s.id);
   else ui.sheet = s;
+}
+/**
+ * „Neuer Wächter“ öffnen. Auf dem Desktop klappt im Reiter Wächter der Bereich über der Liste auf (die Ansicht liest `ui.newWatcher`),
+ * auf dem Handy öffnet wie bisher der Assistent als Fenster; `from` sagt ihm, wohin „Zurück“ führt.
+ */
+export function openNewWatcher(init: NewWatcherRequest & { from?: 'settings' | 'found' } = {}): void {
+  const { from, ...request } = init;
+  if (ui.desktop) {
+    ui.sheet = null;
+    ui.detailId = null;
+    ui.tab = 'watchers';
+    ui.newWatcher = request;
+  } else {
+    ui.sheet = { type: 'watcher', id: null, ...(from ? { from } : {}), ...request };
+  }
 }
 /** Öffnet die Einstellungen, auf Wunsch gleich eine Unterseite */
 export function openSettings(page?: SettingsPageId): void {

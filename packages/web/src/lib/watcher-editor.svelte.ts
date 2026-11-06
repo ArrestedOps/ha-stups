@@ -2,7 +2,7 @@ import { api, ApiError, type BoardView, type HaEntity, type SavedWatcher, type W
 import { t } from './i18n/index.svelte';
 import type { EntityHistory } from './history';
 import { can, closeSheet, openSettings, openSheet, toast, ui } from './store.svelte';
-import type { OrderView, TemplateDraft, WatcherTemplate } from './watcher-types';
+import type { OrderView, TemplateDraft, WatcherSuggestion, WatcherTemplate } from './watcher-types';
 import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, type WatcherForm } from './watchers';
 import { askCard, metNowOf } from './watcher-ask';
 import { backAction } from './watcher-wizard';
@@ -46,8 +46,12 @@ export class WatcherEditor {
   private orderSeq = 0;
   private viewSeq = 0;
 
-  constructor(id: string | null) {
+  /** Desktop (Formular über der Liste): Was nach dem Speichern geschieht, statt das Fenster zu schließen (`back`) */
+  private readonly onsaved: ((saved: SavedWatcher) => void) | undefined;
+
+  constructor(id: string | null, opts: { onsaved?: (saved: SavedWatcher) => void } = {}) {
     this.id = id;
+    this.onsaved = opts.onsaved;
   }
 
   /** Aus Einstellungen › Wächter geht es dorthin zurück; aus dem Reiter Wächter schließt es das Fenster, von anderswo geht es in die Einstellungen */
@@ -170,6 +174,15 @@ export class WatcherEditor {
     if (!found) this.startPicking('trigger', tpl.search, tpl.domain ?? '');
   }
 
+  /** Ein Vorschlag aus „Gefunden“ (Chip im Formular am Desktop): dieselbe Vorbelegung wie „Einrichten“ im Assistenten */
+  applySuggestion(s: WatcherSuggestion): void {
+    const found: Hit = { entityId: s.entityId, name: s.name, ...(s.label ? { label: s.label } : {}), ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) };
+    const tpl = this.templates.find((x) => x.id === s.templateId);
+    if (tpl) this.applyTemplate(tpl, found);
+    else this.form = applyEntity(this.form, { entityId: s.entityId, name: s.name, state: '', unit: s.unit ?? null, domain: '', ...(s.label ? { label: s.label } : {}) });
+    this.picking = null;
+  }
+
   // ---------- Assistent ----------
 
   /** Ein Schritt weiter, wenn der aktuelle stimmt; sonst sagt eine Meldung, was fehlt */
@@ -220,7 +233,8 @@ export class WatcherEditor {
     try {
       const saved = this.id ? await api.updateWatcher(this.id, toInput(this.form)) : await api.createWatcher(toInput(this.form));
       toast(t('Wächter gespeichert'));
-      this.back();
+      if (this.onsaved) this.onsaved(saved);
+      else this.back();
       this.askAfterSave(saved);
     } catch (e) {
       toast(e instanceof ApiError ? e.message : t('Speichern fehlgeschlagen'), { tone: 'error' });

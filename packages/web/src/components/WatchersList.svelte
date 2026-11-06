@@ -7,7 +7,7 @@
   import { onMount } from 'svelte';
   import type { WatcherTemplate } from '../lib/watcher-types';
   import { conditionText, noteText, renameCandidates, RUN_TEXT, sortWatchers, watcherLine } from '../lib/watchers';
-  import { askRenameWatchers, can, openCardAnywhere, openSheet, personById, toast, ui } from '../lib/store.svelte';
+  import { askRenameWatchers, can, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
   const data = $derived(ui.watchers);
@@ -88,7 +88,7 @@
           {#each templates as tpl (tpl.id)}
             <button
               class="flex min-h-12 items-center gap-3 rounded-2xl border border-line bg-surface2 px-4 text-left text-[16px] font-semibold"
-              onclick={() => openSheet({ type: 'watcher', id: null, template: tpl.id, from: 'settings' })}
+              onclick={() => openNewWatcher({ template: tpl.id, from: 'settings' })}
             >
               <Icon name="eye" size={20} />{tpl.title}
             </button>
@@ -160,7 +160,7 @@
       </button>
     {/if}
     {#if admin}
-      <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-[16px] font-semibold text-accent-text" onclick={() => openSheet({ type: 'watcher', id: null, from: 'settings' })}>
+      <button class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line text-[16px] font-semibold text-accent-text" onclick={() => openNewWatcher({ from: 'settings' })}>
         <Icon name="plus" size={18} stroke={2.6} />{t('Wächter hinzufügen')}
       </button>
     {/if}

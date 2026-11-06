@@ -5,7 +5,7 @@
   import { t } from '../lib/i18n/index.svelte';
   import type { Recurrence } from '../lib/recurrence';
   import type { WatcherSuggestion, WatcherTemplate } from '../lib/watcher-types';
-  import { closeSheet, openSheet, refresh, toast, ui } from '../lib/store.svelte';
+  import { closeSheet, openNewWatcher, refresh, toast, ui } from '../lib/store.svelte';
   import FoundHits from './FoundHits.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
@@ -47,7 +47,7 @@
   const recurring = $derived(templates.filter((x) => x.kind === 'recurring'));
 
   function setup(s: WatcherSuggestion) {
-    openSheet({ type: 'watcher', id: null, template: s.templateId, from: 'found', hit: { entityId: s.entityId, name: s.name, ...(s.label ? { label: s.label } : {}), ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) } });
+    openNewWatcher({ template: s.templateId, from: 'found', hit: { entityId: s.entityId, name: s.name, ...(s.label ? { label: s.label } : {}), ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) } });
   }
 
   /** Ausblenden gilt für immer (in der Datenbank), bis der Treffer hier wieder eingeblendet wird */
@@ -154,7 +154,7 @@
     {#if showAll}
       <div class="mt-2 divide-y divide-line overflow-hidden rounded-[18px] border border-line bg-surface">
         {#each device as tpl (tpl.id)}
-          <button class="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left" onclick={() => openSheet({ type: 'watcher', id: null, template: tpl.id, from: 'found' })}>
+          <button class="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left" onclick={() => openNewWatcher({ template: tpl.id, from: 'found' })}>
             <span class="min-w-0 flex-1">
               <span class="block truncate text-[16px] font-semibold">{tpl.title}</span>
               <span class="block text-[13px] text-fg2">{tpl.hint}</span>

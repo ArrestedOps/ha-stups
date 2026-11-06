@@ -1,5 +1,37 @@
 # Änderungen
 
+## 1.26.0
+
+*English first, German version below.*
+
+This version is the beta app's 1.36.0-beta.1 and contains everything since 1.25.1.
+
+- **Desktop layout (from 1024 px wide).** A fixed sidebar replaces the bottom bar (tabs, boards, user card), the header has search (Ctrl/Cmd + K), "New task", Home and the bell. Tasks open in a detail column on the right, Boards are a full-width Kanban, Watchers a table. Windows open as a centred dialog. Phones and the Companion App look exactly as before; tablets show the phone view centred.
+- **Watchers: all watchers always visible**, sorted by **category** (suggested when you create one, or your own), collapsible, each with an **on/off switch**. Running ones stay on top. On the desktop it is a table with condition, current value, status, last trigger, next card and who. Creating a watcher on the desktop is **one form that unfolds above the list**; on the phone the assistant stays, now with a "Back" button in every step.
+- **Watchers: the device is in the name** ("Battery low: iPhone Rene"), existing ones show the entity's friendly name below the title and the current value at the top right; one button adds the device to old names (only with your consent).
+- **Watchers: "Found" suggests every matching device**, grouped by template with search (no more limit of five per template).
+- **Watchers: already met when you create it?** Levels like a battery below the limit create the card right away. For everything else the app asks "Create the card now?". Fixed: battery watchers were shown as "Running", and after an update all watchers briefly showed "Entity missing".
+- **Tasks: the three numbers are tappable** and open a sheet (due today, overdue with "Tomorrow" / "Move all", done today with Undo). **Chips** are now All, Mine, people; the app always starts on "Mine".
+- **Permissions.** An administrator can give individual people specific rights (watchers, announcements and lamps, app settings, people, confirming for children, feedback) without making them administrators.
+- **Feedback.** Report bugs, suggest improvements, praise or criticise from inside the app (type, up to 1000 characters, optional picture); administrators read it under Settings › Help and data. Everything stays on your installation.
+- **Security and robustness.** Several hardenings (login behind a reverse proxy, uploads, link previews, the move export without secrets, push actions only for the assigned person), a more robust connection to Home Assistant and a more careful database migration. Update recommended.
+- Database: **migrations 24 to 26** (feedback, permissions, watcher categories), with a backup beforehand as always.
+
+**Deutsch**
+
+Diese Version ist die 1.36.0-beta.1 der Beta-App und enthält alles seit 1.25.1.
+
+- **Desktop-Ansicht (ab 1024 px Breite).** Eine feste Seitenleiste ersetzt die Leiste unten (Reiter, Boards, Nutzerkarte), die Kopfzeile hat Suche (Strg/Cmd + K), „Neue Aufgabe“, Home und Glocke. Aufgaben öffnen in einer Detailspalte rechts, Boards sind ein Kanban über die volle Breite, Wächter eine Tabelle. Fenster öffnen als Dialog in der Mitte. Handy und Companion App sehen aus wie bisher, Tablets zeigen die Handy-Ansicht zentriert.
+- **Wächter: alle Wächter stehen immer da**, nach **Kategorie** sortiert (beim Anlegen vorgeschlagen oder eigene), zuklappbar, jeder mit **Schalter an/aus**. Laufende stehen oben. Auf dem Desktop ist es eine Tabelle mit Bedingung, Stand, Status, letzter Auslösung, nächster Karte und Zuständigen. Einen Wächter anlegen ist am Desktop **ein Formular, das über der Liste aufklappt**; am Handy bleibt der Assistent, jetzt mit „Zurück“ in jedem Schritt.
+- **Wächter: das Gerät steht im Namen** („Batterie schwach: iPhone Rene“), bestehende zeigen den Friendly Name der Entität unter dem Titel und den aktuellen Stand oben rechts; ein Knopf ergänzt das Gerät in alten Namen (nur mit deiner Zustimmung).
+- **Wächter: „Gefunden“ schlägt alle passenden Geräte vor**, nach Vorlage gruppiert und mit Suche (nicht mehr höchstens fünf je Vorlage).
+- **Wächter: Bedingung beim Anlegen schon erfüllt?** Pegel wie eine Batterie unter der Grenze legen die Karte sofort an. Bei allem anderen fragt die App „Karte jetzt erstellen?“. Behoben: Batterie-Wächter standen fälschlich unter „Läuft gerade“, und nach einem Update stand kurz bei allen Wächtern „Entität fehlt“.
+- **Aufgaben: die drei Zahlen sind antippbar** und öffnen ein Blatt (heute fällig, überfällig mit „Morgen“ / „Alle verschieben“, heute erledigt mit Rückgängig). Die **Chips** heißen jetzt Alle, Meine, Personen; die App startet immer bei „Meine“.
+- **Berechtigungen.** Ein Administrator kann einzelnen Personen gezielt Rechte geben (Wächter, Ansage und Lampe, App-Einstellungen, Personen, Bestätigen für Kinder, Feedback), ohne sie zu Administratoren zu machen.
+- **Feedback.** Fehler melden, Verbesserungen vorschlagen, loben oder kritisieren, direkt in der App (Art, bis zu 1000 Zeichen, optional Bild); Administratoren lesen es unter Einstellungen › Hilfe und Daten. Alles bleibt auf deiner Installation.
+- **Sicherheit und Robustheit.** Mehrere Härtungen (Anmeldung hinter Reverse Proxy, Uploads, Link-Vorschauen, Umzug-Export ohne Geheimnisse, Push-Aktionen nur für die zugewiesene Person), eine robustere Verbindung zu Home Assistant und eine vorsichtigere Datenbank-Migration. Update empfohlen.
+- Datenbank: **Migrationen 24 bis 26** (Feedback, Berechtigungen, Wächter-Kategorien), vorher wie immer eine Sicherung.
+
 ## 1.25.1
 
 *English first, German version below.*

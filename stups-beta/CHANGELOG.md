@@ -2,6 +2,16 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.40.0-beta.1
+
+**Boards: Auswahl, Einstellungen, Löschen, Archivieren, Duplizieren.**
+
+- **Board-Auswahl:** nur noch die Liste (Name, offene Karten, wer es sieht), darunter „Neues Board erstellen“ (der bisherige Anlege-Ablauf mit Sichtbarkeit und Fairness), „Board-Einstellungen“ und, wenn es welche gibt, „Archivierte Boards“. „Einstellungen“ (allgemein) und „Bearbeiten“ entfallen; die allgemeinen Einstellungen öffnen über das Zahnrad oben. „Reihenfolge ändern“ (Ziehgriff und Pfeile) gilt für alle. Desktop: die Seitenleiste bekommt „Neues Board“, „Board-Einstellungen“, „Archivierte Boards“ und „Reihenfolge ändern“.
+- **Board-Einstellungen:** oben die Wahl, für welches Board (wechselbar ohne Schließen), dann Name, Symbol und Farbe, Sichtbarkeit und Fairness, Spalten, Kategorien, Erledigte archivieren, Archiv, Papierkorb und die Gruppe „Board verwalten“ (Duplizieren, Als Vorlage speichern, Archivieren), abgesetzt „Board löschen“. Am Desktop ein breites Fenster mit den Boards links.
+- **Löschen:** der Dialog nennt Aufgaben (davon offen), wiederkehrende Aufgaben mit Regel, Wächter und persönliche Erinnerungen. Je Wächter wählbar: Pausieren (Standard, „Pausiert: Board fehlt“), Umziehen (nicht in private Boards; fehlen dort die Zuständigen, legt er keine Karten an) oder Löschen; alles in einer Transaktion. Beim Wiederherstellen aus dem Papierkorb laufen pausierte Wächter wieder. Das letzte sichtbare Board und fremde Boards (nur Besitzer oder Administrator) sind gesperrt, auch im Server.
+- **Archivieren:** neue Spalte `boards.archived_at` (Migration 29). Archivierte Boards fehlen in Auswahl, Listen, Heute, Kalender, Fairness, Sensoren, Erinnerungen und Stupsen, bleiben aber unverändert; Wächter pausieren („Pausiert: Board archiviert“) und laufen beim Wiederherstellen wieder.
+- **Duplizieren** („X (Kopie)“; Spalten und Kategorien, offene Aufgaben ohne Zuständige, Sichtbarkeit; Wächter nie) und **Als Vorlage speichern** (nur Spalten und Kategorien).
+
 ## 1.39.0-beta.1
 
 **Nachhaken: Erinnerung an Aufgaben und Stupsen im Wächter.**

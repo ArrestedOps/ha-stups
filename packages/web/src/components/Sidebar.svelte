@@ -74,16 +74,16 @@
     </button>
     {#if !ui.isChild}
       <button class="side-board side-board-add h-10 gap-3 px-3.5 text-[14px] font-medium text-fg2" onclick={() => openSheet({ type: 'boardSettings' })}>
-        <Icon name="gear" size={16} stroke={2} />{t('Board-Einstellungen')}
+        <Icon name="gear" size={16} stroke={2} /><span class="min-w-0 truncate">{t('Board-Einstellungen')}</span>
       </button>
       {#if ui.archivedBoards.length > 0}
         <button class="side-board h-10 gap-3 px-3.5 text-[14px] font-medium text-fg2" onclick={() => openSheet({ type: 'archivedBoards' })}>
-          <Icon name="archive" size={16} stroke={2} />{t('Archivierte Boards')} ({ui.archivedBoards.length})
+          <Icon name="archive" size={16} stroke={2} /><span class="min-w-0 truncate">{t('Archivierte Boards')} ({ui.archivedBoards.length})</span>
         </button>
       {/if}
       {#if ui.boards.length > 1}
         <button class="side-board h-10 gap-3 px-3.5 text-[14px] font-medium text-fg2" onclick={() => openSheet({ type: 'boardOrder' })}>
-          <Icon name="arrow-up" size={16} stroke={2} />{t('Reihenfolge ändern')}
+          <Icon name="arrow-up" size={16} stroke={2} /><span class="min-w-0 truncate">{t('Reihenfolge ändern')}</span>
         </button>
       {/if}
     {/if}

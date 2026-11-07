@@ -117,9 +117,9 @@ test('eigenes Board als Vorlage speichern, daraus ein neues Board anlegen, die V
   await expect(page.getByTestId('board-name')).toHaveText(name);
   const created = (await boardByName(request, name))!;
   boardIds.push(created.id);
-  const view = (await (await request.get(`/api/boards/${created.id}`)).json()) as { cards: unknown[]; columns: unknown[] };
-  expect(view.cards).toEqual([]);
-  expect(view.columns.length).toBe(saved.columns);
+  const copy = (await (await request.get(`/api/boards/${created.id}`)).json()) as { cards: unknown[]; columns: unknown[] };
+  expect(copy.cards).toEqual([]);
+  expect(copy.columns.length).toBe(saved.columns);
 
   // Löschen mit Rückfrage
   const res = await request.delete(`/api/templates/${saved.id}`);

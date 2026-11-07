@@ -24,6 +24,7 @@
   <div class="flex h-11 items-center gap-0.5 px-0.5">
     <img src={logo} alt="" class="block h-8 w-8 rounded-lg" width="32" height="32" />
     <span class="ml-2 text-[24px] font-extrabold tracking-tight" aria-hidden="true">stups<span class="text-brand-dot">.</span></span>
+    {#if feat.beta}<span class="ml-1.5 rounded-md bg-brand-dot/20 px-1.5 py-0.5 text-[11px] leading-none font-extrabold tracking-wider text-brand-dot uppercase" data-testid="beta-badge">{t('Beta')}</span>{/if}
     <span class="flex-1"></span>
     {#if !ui.online}
       <span class="mr-1 flex items-center gap-1.5 rounded-full bg-surface2 px-3 py-1 text-[13px] text-fg2" role="status">

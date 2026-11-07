@@ -2,6 +2,10 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.40.1-beta.1
+
+**Beta-Marke am Logo.** In der Beta steht neben „stups.“ (Handy-Kopfzeile und Desktop-Seitenleiste) ein kleines „BETA“, damit man immer sieht, in welcher Instanz man ist. Die normale App zeigt es nicht.
+
 ## 1.40.0-beta.3
 
 (beta.1 und beta.2 waren dieselbe Änderung; sie machen nur Browser-Tests robuster: unabhängig vom Wochentag und ohne Wettlauf beim Wechsel der Fenster.)

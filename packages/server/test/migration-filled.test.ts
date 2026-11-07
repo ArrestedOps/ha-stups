@@ -74,7 +74,10 @@ function seed21(db: DatabaseSync): void {
   `);
 }
 
-type Dump = Record<string, { cols: string[]; rows: string[] }>;
+type Dump = Record<string, { cols: string[]; rows: Record<string, unknown>[] }>;
+
+/** Migration 28 entfernt diese Spalten (cards.overdue_nag, watchers.nudge_after_min): ihre Werte wandern in card_reminders bzw. watchers.nudge_json (eigene Tests) */
+const REMOVED = new Set(['cards.overdue_nag', 'watchers.nudge_after_min']);
 
 /** Alle Zeilen aller Tabellen, nach Spalten des alten Stands (neue Spalten zählen nicht) */
 function dump(db: DatabaseSync): Dump {
@@ -82,15 +85,17 @@ function dump(db: DatabaseSync): Dump {
   const names = (db.prepare("select name from sqlite_master where type = 'table' and name not like 'sqlite_%' order by name").all() as { name: string }[]).map((r) => r.name);
   for (const t of names) {
     const cols = (db.prepare(`pragma table_info(${t})`).all() as { name: string }[]).map((c) => c.name);
-    out[t] = { cols, rows: (db.prepare(`select ${cols.join(', ')} from ${t}`).all() as object[]).map((r) => JSON.stringify(r)).sort() };
+    out[t] = { cols, rows: db.prepare(`select ${cols.join(', ')} from ${t}`).all() as Record<string, unknown>[] };
   }
   return out;
 }
 
 function expectUnchanged(before: Dump, db: DatabaseSync): void {
   for (const [table, { cols, rows }] of Object.entries(before)) {
-    const now = (db.prepare(`select ${cols.join(', ')} from ${table}`).all() as object[]).map((r) => JSON.stringify(r)).sort();
-    expect(now, `Tabelle ${table}`).toEqual(rows);
+    const keep = cols.filter((c) => !REMOVED.has(`${table}.${c}`));
+    const project = (r: Record<string, unknown>) => JSON.stringify(Object.fromEntries(keep.map((c) => [c, r[c]])));
+    const now = (db.prepare(`select ${keep.join(', ')} from ${table}`).all() as Record<string, unknown>[]).map(project).sort();
+    expect(now, `Tabelle ${table}`).toEqual(rows.map(project).sort());
   }
 }
 

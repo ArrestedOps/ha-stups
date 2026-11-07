@@ -22,6 +22,8 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
       effectiveDashboardPath: s.dashboardPath ?? fallback,
       defaultDailySummaryTime: summary,
       effectiveDailySummaryTime: s.dailySummaryTime ?? summary,
+      /** Uhrzeit, zu der ein Nachhaken in Tagen oder Wochen kommt, wenn nichts anderes gewählt ist (Add-on-Option) */
+      overdueNagTime: deps.overdueNagTime ?? '18:00',
     };
   };
   app.get('/api/settings', async () => effectiveSettings());

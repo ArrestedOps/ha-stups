@@ -70,7 +70,7 @@ describe('Eingabe prüfen', () => {
     expect(() => parseWatcher(input({ assign: { mode: 'fixed', personIds: [] } }))).toThrow(/mindestens eine Person/);
     expect(() => parseWatcher(input({ assign: { mode: 'rotation_present', fallback: 'fixed' } }))).toThrow(/Rückfall/);
     expect(() => parseWatcher(input({ card: { boardId: 'b', columnId: 'c', title: 'x', due: { kind: 'at', day: 'gestern', time: '08:00' } } }))).toThrow(/heute oder morgen/);
-    expect(() => parseWatcher(input({ nudgeAfterMin: 1 }))).toThrow(/Stupsen/);
+    expect(() => parseWatcher(input({ nudge: { afterMin: 1 } }))).toThrow(/Zeit bis zum Nachhaken/);
   });
 
   it('Bedingungen: Zustand und Zahlenwerte (nicht verfügbar zählt nie)', () => {

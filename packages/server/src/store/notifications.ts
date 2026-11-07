@@ -15,7 +15,7 @@ export function createNotifications(c: Ctx, late: unknown) {
    */
   function openDueCards(opts: { publicOnly?: boolean } = {}): OpenDueCard[] {
     const rows = all(
-      `select c.id, c.title, c.board_id, b.name as board_name, c.due_at, c.remind_before_min, c.overdue_nag
+      `select c.id, c.title, c.board_id, b.name as board_name, c.due_at, c.remind_before_min
        from cards c join boards b on b.id = c.board_id
        where c.deleted_at is null and c.archived_at is null and c.completed_at is null
          and c.due_at is not null and b.deleted_at is null
@@ -42,7 +42,6 @@ export function createNotifications(c: Ctx, late: unknown) {
       boardName: r.board_name,
       dueAt: r.due_at,
       remindBeforeMin: r.remind_before_min,
-      overdueNag: r.overdue_nag === 1,
       assigneeIds: (assignees.get(r.id) ?? []).filter((uid) => mayLook(uid, r.board_id)),
     }));
   }

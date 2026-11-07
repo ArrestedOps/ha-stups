@@ -14,7 +14,7 @@ export function createCompletion(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { now, timeZone, iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
-  const { closeOpenNudges, columnName, getCard, isFutureDue, lastPos, logEvent, placeCard, plannedColumn, touchCard, visibleCardRow, visibleColumn, visibleColumns } = lazy(s, ['closeOpenNudges', 'columnName', 'getCard', 'isFutureDue', 'lastPos', 'logEvent', 'placeCard', 'plannedColumn', 'touchCard', 'visibleCardRow', 'visibleColumn', 'visibleColumns'] as const);
+  const { copyReminders, closeOpenNudges, columnName, getCard, isFutureDue, lastPos, logEvent, placeCard, plannedColumn, touchCard, visibleCardRow, visibleColumn, visibleColumns } = lazy(s, ['copyReminders', 'closeOpenNudges', 'columnName', 'getCard', 'isFutureDue', 'lastPos', 'logEvent', 'placeCard', 'plannedColumn', 'touchCard', 'visibleCardRow', 'visibleColumn', 'visibleColumns'] as const);
 
   function listCompletions(cardId: string, limit = 50): Completion[] {
     return all(
@@ -71,9 +71,9 @@ export function createCompletion(c: Ctx, late: unknown) {
     const col = toPlanned ? planned! : firstOpenColumn(src.board_id);
     run(
       `insert into cards (id, board_id, column_id, position, title, description, priority, due_at, recurrence,
-                          remind_before_min, overdue_nag, cost_cents, carry_over, repeated_from, created_by, created_at, updated_at, effort,
+                          remind_before_min, cost_cents, carry_over, repeated_from, created_by, created_at, updated_at, effort,
                           icon, icon_color, icon_source)
-       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       newId,
       src.board_id,
       col.id,
@@ -84,7 +84,6 @@ export function createCompletion(c: Ctx, late: unknown) {
       nextDueAt,
       src.recurrence,
       src.remind_before_min,
-      src.overdue_nag,
       carry.includes('cost') ? src.cost_cents : null,
       src.carry_over,
       src.id,
@@ -98,6 +97,7 @@ export function createCompletion(c: Ctx, late: unknown) {
     );
     run('update cards set confirm = ? where id = ?', src.confirm ?? null, newId); // die Bestätigungspflicht gehört zur Aufgabe
     run('insert into card_assignees (card_id, user_id) select ?, user_id from card_assignees where card_id = ?', newId, src.id);
+    copyReminders(src.id, newId); // Nachhaken gehört zur Aufgabe: kommt mit, zählt aber bei der neuen Karte von vorn
     run(
       `insert into card_categories (card_id, category_id)
        select ?, cc.category_id from card_categories cc

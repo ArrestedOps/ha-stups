@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
 import { NotFoundError } from './errors.js';
-import type { AssignRule, CardTemplate, DoneTrigger, WatchTrigger, WatcherConfig, WatcherStatus } from './watcher-types.js';
+import type { AssignRule, CardTemplate, DoneTrigger, WatchTrigger, WatcherConfig, WatcherNudge, WatcherStatus } from './watcher-types.js';
 import { t } from './i18n/index.js';
 import { categoryKey, mergeCategory } from './watcher-categories.js';
 
@@ -100,7 +100,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     done: r.done_json ? (JSON.parse(r.done_json) as DoneTrigger) : null,
     cooldownMin: r.cooldown_min,
     dedupe: r.dedupe === 1,
-    nudgeAfterMin: r.nudge_after_min,
+    nudge: r.nudge_json ? (JSON.parse(r.nudge_json) as WatcherNudge) : null,
     category: r.category ?? null,
     countsForFairness: r.counts_for_fairness !== 0,
     // „keine Zuständigen" ist ein eigener Merker (Spalte assignees_missing); ein fehlendes Ziel oder eine fehlende Entität geht vor
@@ -143,7 +143,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     c.done ? JSON.stringify(c.done) : null,
     c.cooldownMin,
     c.dedupe ? 1 : 0,
-    c.nudgeAfterMin,
+    c.nudge ? JSON.stringify(c.nudge) : null,
     mergeCategory(c.category, categories(exceptId)),
     c.countsForFairness ? 1 : 0,
   ];
@@ -153,7 +153,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     const t = iso();
     const position = ((one('select max(position) as m from watchers')?.m as number | null) ?? -1) + 1;
     run(
-      `insert into watchers (id, name, active, trigger_json, card_json, assign_json, done_json, cooldown_min, dedupe, nudge_after_min,
+      `insert into watchers (id, name, active, trigger_json, card_json, assign_json, done_json, cooldown_min, dedupe, nudge_json,
                              category, counts_for_fairness, position, created_at, updated_at)
        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
@@ -174,7 +174,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     get(id);
     run(
       `update watchers set name = ?, active = ?, trigger_json = ?, card_json = ?, assign_json = ?, done_json = ?, cooldown_min = ?,
-                           dedupe = ?, nudge_after_min = ?, category = ?, counts_for_fairness = ?, updated_at = ?, status = 'ok'${
+                           dedupe = ?, nudge_json = ?, category = ?, counts_for_fairness = ?, updated_at = ?, status = 'ok'${
                              clearMissing ? ', assignees_missing = 0' : ''
                            } where id = ?`,
       ...columns(c, id),

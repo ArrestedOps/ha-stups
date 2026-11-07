@@ -15,6 +15,7 @@ import { createCompletion } from './store/completion.js';
 import { createContext } from './store/context.js';
 import type { Internals } from './store/internals.js';
 import { createNotifications } from './store/notifications.js';
+import { createReminders } from './store/reminders.js';
 import { createNudgesPart } from './store/nudges.js';
 import { createPeople } from './store/people.js';
 import { createTrash } from './store/trash.js';
@@ -42,6 +43,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     createCardExtras(c, s),
     createCompletion(c, s),
     createNotifications(c, s),
+    createReminders(c, s),
     createNudgesPart(c, s),
     createWatcherCards(c, s),
     createTrash(c, s),
@@ -150,6 +152,15 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     getSettings: s.getSettings,
     setSettings: s.setSettings,
     openDueCards: s.openDueCards,
+    myReminder: s.myReminder,
+    setReminder: s.setReminder,
+    syncWatcherNudge: s.syncWatcherNudge,
+    resetDueReminders: s.resetDueReminders,
+    restartReminders: s.restartReminders,
+    dueReminders: s.dueReminders,
+    planReminder: s.planReminder,
+    settleReminder: s.settleReminder,
+    recordWatcherNudge: s.recordWatcherNudge,
     claimNotification: s.claimNotification,
     releaseNotification: s.releaseNotification,
     recentNotifications: s.recentNotifications,

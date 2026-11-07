@@ -263,6 +263,8 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     // „Braucht neue Zuständige" fällt erst weg, wenn Zuständige gewählt sind (ein leerer Kreis hieße „alle im Board": dahin fällt der Wächter nie zurück)
     const clearMissing = config.assign.mode === 'none' || config.assign.personIds.length > 0;
     data.update(current.id, config, clearMissing);
+    const open = store.openCardOfWatcher(current.id);
+    if (open) store.syncWatcherNudge(open.id, config.nudge ? { anchor: 'created', ...config.nudge, atTime: null } : null);
     const metNow = await engine.onSaved(current.id);
     // gefragt wird nur, wenn sich Entität oder Bedingung geändert haben (nicht beim Umbenennen und Co.)
     return { ...watcherView(current.id), metNow: conditionChanged(current.trigger, config.trigger) ? metNow : null };

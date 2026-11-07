@@ -50,8 +50,6 @@ export interface WatcherDeps {
   pollTimeoutMs?: number;
   /** Karte ist (jetzt) jemandem zugewiesen: hier geht die Push-Nachricht raus */
   onAssigned?: (card: Card, userIds: string[]) => void;
-  /** Die Karte ist nach der eingestellten Zeit noch offen: an die Zuständigen erinnern */
-  onNudge?: (card: Card, userIds: string[]) => void;
   /** "Erst vorschlagen": die Karte ist noch niemandem zugewiesen, diese Personen (zu Hause) werden gefragt, wer sie übernimmt */
   onSuggest?: (card: Card, userIds: string[]) => void;
   /** Der Vorschlag ist vorbei (übernommen oder Rückfall): die Frage bei den anderen wegräumen */
@@ -431,6 +429,7 @@ export function createWatchers(deps: WatcherDeps) {
           assignedTo: decision.ids,
           note: runNote ?? (w.trigger.count > 1 && !test ? note(w, data.getState(w.id).counter) : undefined),
         });
+        if (!test && !decision.waiting && !decision.suggest) armNudge(w, created.id);
         return created;
       });
     } catch (err) {
@@ -662,6 +661,14 @@ export function createWatchers(deps: WatcherDeps) {
     return t === '' ? null : t;
   };
 
+  /**
+   * Stupsen, wenn noch offen: Die Regel des Wächters wird eine Erinnerung der Karte an die jeweils Zuständigen (gezählt ab dem Anlegen bzw.
+   * Zuweisen; der Planer in notifications.ts sendet sie und beendet sie mit der Erledigung).
+   */
+  function armNudge(w: Watcher, cardId: string): void {
+    store.setReminder(cardId, null, w.nudge ? { anchor: 'created', afterMin: w.nudge.afterMin, everyMin: w.nudge.everyMin, max: w.nudge.max, atTime: null } : null);
+  }
+
   async function assign(row: Waiting, w: Watcher, ids: string[], nowMs: number): Promise<void> {
     const card = store.getCard(row.cardId);
     store.transaction(() => {
@@ -674,6 +681,7 @@ export function createWatchers(deps: WatcherDeps) {
       if (first) data.markFirstAssigned(card.id);
       data.markFired(w.id, merged);
       data.addRun({ watcherId: w.id, result: 'assigned', cardId: card.id, assignedTo: ids, note: first ? 'erste Person zu Hause' : 'kurz danach auch zu Hause' });
+      armNudge(w, card.id);
     });
     deps.onChange?.();
     deps.onAssigned?.(store.getCard(card.id), ids);
@@ -746,6 +754,7 @@ export function createWatchers(deps: WatcherDeps) {
       store.transaction(() => {
         store.updateCard(card.id, { assigneeIds: ids, description: stripMarker(card.description), ...(ids.length ? { dueAt: dueFor(w.card, nowMs) } : {}) });
         data.addRun({ watcherId: w.id, result: 'assigned', cardId: card.id, assignedTo: ids, note: 'nach 24 Stunden niemand heimgekommen' });
+        if (ids.length > 0) armNudge(w, card.id);
       });
       deps.onChange?.();
       if (ids.length > 0) deps.onAssigned?.(store.getCard(card.id), ids);
@@ -849,22 +858,6 @@ export function createWatchers(deps: WatcherDeps) {
     void snapshot();
   }
 
-  /** „Nach X Minuten stupsen, wenn noch offen": einmal je Karte, gerechnet ab dem Anlegen bzw. der Zuweisung */
-  function checkNudges(nowMs: number): void {
-    for (const w of data.list()) {
-      if (!w.active || w.nudgeAfterMin === null) continue;
-      const card = store.openCardOfWatcher(w.id);
-      if (!card || card.assigneeIds.length === 0) continue;
-      const runs = data.runsOfCard(card.id);
-      const start = [...runs].reverse().find((r) => r.result === 'created' || r.result === 'assigned');
-      if (!start || runs.some((r) => r.result === 'nudged' && r.at >= start.at)) continue;
-      if (nowMs - Date.parse(start.at) < minutes(w.nudgeAfterMin)) continue;
-      data.addRun({ watcherId: w.id, result: 'nudged', cardId: card.id, assignedTo: card.assigneeIds, note: `nach ${w.nudgeAfterMin} Min.` });
-      deps.onChange?.();
-      deps.onNudge?.(card, card.assigneeIds);
-    }
-  }
-
   /** Personen, die gerade zu Hause sind (auch für Automationen über stups_create_card) */
   async function presentPersonIds(): Promise<string[]> {
     return [...(await presence()).home];
@@ -913,7 +906,6 @@ export function createWatchers(deps: WatcherDeps) {
       }
       await each('Warten', () => checkWaiting(nowMs));
       await each('Vorschläge', () => checkSuggestions(nowMs));
-      await each('Stupsen', () => checkNudges(nowMs));
     });
   }
 

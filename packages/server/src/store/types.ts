@@ -260,8 +260,6 @@ export interface Card {
   version: number;
   /** Vorab-Erinnerung in Minuten vor der Fälligkeit */
   remindBeforeMin: number | null;
-  /** täglich nachhaken, solange überfällig */
-  overdueNag: boolean;
   costCents: number | null;
   /** Aufwand für die Fairness-Ansicht; leer zählt wie mittel */
   effort: Effort | null;
@@ -347,7 +345,6 @@ export interface OpenDueCard {
   boardName: string;
   dueAt: string;
   remindBeforeMin: number | null;
-  overdueNag: boolean;
   assigneeIds: string[];
 }
 
@@ -429,7 +426,8 @@ export interface CardInput {
   dueAt?: string | null;
   recurrence?: unknown;
   remindBeforeMin?: number | null;
-  overdueNag?: unknown;
+  /** Nachhaken der anlegenden Person (ReminderSpec); null oder fehlend: keins */
+  reminder?: unknown;
   costCents?: number | null;
   effort?: unknown;
   icon?: unknown;

@@ -192,12 +192,12 @@ describe('Karten-Felder', () => {
       title: 'Fenster',
       dueAt: '2026-11-01T09:00:00Z',
       remindBeforeMin: 1440,
-      overdueNag: true,
+      reminder: { anchor: 'due', afterMin: 1440, everyMin: 1440, max: 3, atTime: '09:00' },
       costCents: 420000,
     });
-    expect(res.body).toMatchObject({ remindBeforeMin: 1440, overdueNag: true, costCents: 420000 });
-    const upd = await call('PATCH', `/api/cards/${res.body.id}`, { costCents: 500000, overdueNag: false });
-    expect(upd.body).toMatchObject({ costCents: 500000, overdueNag: false });
+    expect(res.body).toMatchObject({ remindBeforeMin: 1440, costCents: 420000, reminder: { anchor: 'due', afterMin: 1440, everyMin: 1440, max: 3, atTime: '09:00' } });
+    const upd = await call('PATCH', `/api/cards/${res.body.id}`, { costCents: 500000, reminder: null });
+    expect(upd.body).toMatchObject({ costCents: 500000, reminder: null });
     expect((await call('GET', `/api/boards/${b.id}`)).body.costTotalCents).toBe(500000);
   });
 });

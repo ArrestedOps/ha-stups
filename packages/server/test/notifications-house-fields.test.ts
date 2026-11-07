@@ -68,20 +68,25 @@ describe('kind und spoken an der Nachricht', () => {
 
     sent = [];
     now = new Date('2026-11-01T17:30:00Z'); // 18:30 Berlin, am Tag der Fälligkeit
-    store.createCard(boardId, { columnId: openCol, title: 'Müll', dueAt: '2026-10-31T10:00:00Z', overdueNag: true, assigneeIds: [conny.id] }, rene.id);
+    const muell = store.createCard(boardId, { columnId: openCol, title: 'Müll', dueAt: '2026-10-31T10:00:00Z', assigneeIds: [conny.id] }, rene.id);
+    store.setReminder(muell.id, conny.id, { anchor: 'due', afterMin: 1440, everyMin: 1440, max: 99, atTime: null });
     await notifier().tick();
     const nag = to(conny.id).find((m) => m.body.startsWith('Überfällig'));
     expect(nag).toMatchObject({ kind: 'due', spoken: `${conny.displayName}, Müll ist überfällig.` });
   });
 
-  it('Karte vom Wächter zugewiesen oder noch offen: kind watcher', async () => {
+  it('Karte vom Wächter zugewiesen: kind watcher', async () => {
     const card = store.createCard(boardId, { columnId: openCol, title: 'Waschmaschine ausräumen', assigneeIds: [rene.id] }, rene.id);
     await notifier().notifyAssigned({ id: card.id, title: card.title, dueAt: null }, [rene.id]);
     expect(to(rene.id)[0]).toMatchObject({ kind: 'watcher', spoken: `${rene.displayName}, neue Aufgabe: Waschmaschine ausräumen.` });
+  });
 
-    sent = [];
-    await notifier().notifyStillOpen({ id: card.id, title: card.title, dueAt: null }, [rene.id]);
-    expect(to(rene.id)[0]).toMatchObject({ kind: 'watcher', spoken: `${rene.displayName}, noch offen: Waschmaschine ausräumen.` });
+  it('Nachhaken ohne Überfälligkeit: kind due, „noch offen“ im Satz', async () => {
+    const card = store.createCard(boardId, { columnId: openCol, title: 'Waschmaschine ausräumen', assigneeIds: [rene.id] }, rene.id);
+    store.setReminder(card.id, rene.id, { anchor: 'created', afterMin: 5, everyMin: null, max: 1, atTime: null });
+    now = new Date(now.getTime() + 6 * 60_000);
+    await notifier().tick();
+    expect(to(rene.id)[0]).toMatchObject({ kind: 'due', spoken: `${rene.displayName}, noch offen: Waschmaschine ausräumen.` });
   });
 
   it('Stups mit Vorlage: kind nudge, Absender, Karte und Text im Satz, Kennung des Stupses dabei', async () => {

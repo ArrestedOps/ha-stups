@@ -70,7 +70,7 @@ describe('Migration 23 (Posteingang und Dashboard je Person)', () => {
     // Spalten, die spätere Migrationen anhängen, gehören nicht zu diesem Vergleich
     for (const t of TABLES) {
       const rows = db.prepare(`select * from ${t} order by 1, 2`).all() as Record<string, unknown>[];
-      expect(withoutLater(t, rows), t).toEqual(snap[t]);
+      expect(withoutLater(t, rows), t).toEqual(withoutLater(t, snap[t] as Record<string, unknown>[]));
     }
 
     const users = db.prepare('select * from users order by id').all() as Record<string, unknown>[];

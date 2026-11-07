@@ -359,7 +359,9 @@ describe('Vorab-Erinnerung', () => {
 
 describe('Nachhaken bei Überfälligkeit', () => {
   it('einmal täglich zur eingestellten Uhrzeit ab dem Tag nach der Fälligkeit, bis erledigt', async () => {
-    const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id], overdueNag: true });
+    const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id] });
+    // so wird das frühere „Täglich nachhaken, solange überfällig“ migriert: persönlich, ab dem Tag nach dem Termin, täglich, bis zu 99 ×
+    store.setReminder(c.id, conny.id, { anchor: 'due', afterMin: 1440, everyMin: 1440, max: 99, atTime: null });
     const n = makeNotifier();
 
     now = new Date('2026-11-01T09:00:00Z');
@@ -389,7 +391,7 @@ describe('Nachhaken bei Überfälligkeit', () => {
     expect(calls).toHaveLength(3);
   });
 
-  it('ohne Nachhaken-Schalter passiert nichts', async () => {
+  it('ohne Erinnerung passiert nichts', async () => {
     card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id] });
     const n = makeNotifier();
     now = new Date('2026-11-01T09:00:00Z');

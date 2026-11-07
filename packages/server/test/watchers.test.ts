@@ -11,6 +11,7 @@ const ENTITY = 'sensor.waschmaschine_leistung';
 let t: number;
 let ha: FakeHa;
 let store: Store;
+let db: ReturnType<typeof openDb>;
 let data: WatcherData;
 let engine: Watchers;
 let boardId: string;
@@ -77,7 +78,7 @@ beforeEach(() => {
   enabled = true;
   ha = new FakeHa();
   assigned = [];
-  const db = openDb(':memory:');
+  db = openDb(':memory:');
   store = createStore(db, { now: () => new Date(t), timeZone: () => 'Europe/Berlin' });
   data = createWatcherData(db, () => new Date(t));
   anna = store.addPerson({ haUserId: 'u-anna', name: 'Anna' }).id;
@@ -799,67 +800,42 @@ describe('Fälligkeit, Spalte und Test', () => {
   });
 });
 
-describe('Nach Wartezeit erinnern', () => {
-  let nudged: { card: Card; ids: string[] }[];
-  beforeEach(() => {
-    nudged = [];
-    engine = createWatchers({
-      store,
-      data,
-      ha,
-      now: () => new Date(t),
-      timeZone: () => 'Europe/Berlin',
-      onAssigned: (card, ids) => assigned.push({ card, ids }),
-      onNudge: (card, ids) => nudged.push({ card, ids }),
-    });
-    engine.start();
+describe('Stupsen, wenn noch offen (Erinnerung der Karte)', () => {
+  const rows = () =>
+    (db.prepare('select * from card_reminders order by rowid').all() as any[]).map((r) => ({ user: r.user_id, anchor: r.anchor, after: r.after_min, every: r.every_min, max: r.max_count, anchorAt: r.anchor_at }));
+
+  it('legt beim Anlegen der Karte eine Erinnerung an die Zuständigen an, mit der Regel des Wächters', async () => {
+    const w = await create({ nudge: { afterMin: 60, everyMin: 30, max: 3 } });
+    await done(w);
+    expect(rows()).toEqual([{ user: null, anchor: 'created', after: 60, every: 30, max: 3, anchorAt: new Date(t).toISOString() }]);
   });
 
-  it('erinnert einmal, wenn die Karte nach der Zeit noch offen ist', async () => {
-    const w = await create({ nudgeAfterMin: 60 });
+  it('ohne Stupsen keine Erinnerung; die Regel gehört dem Wächter und lässt sich ändern', async () => {
+    const w = await create();
     await done(w);
-    advance(59);
-    await engine.tick();
-    expect(nudged).toHaveLength(0);
-    advance(2);
-    await engine.tick();
-    expect(nudged.map((n) => [n.card.title, n.ids])).toEqual([['Waschmaschine ausräumen: sensor.waschmaschine_leistung', [anna]]]);
-    advance(120);
-    await engine.tick();
-    expect(nudged).toHaveLength(1);
-    expect(data.runs(w.id)[0]!.result).toBe('nudged');
-    expect(store.getCard(cards()[0]!.id).activity.some((a) => a.kind === 'watcher' && /Erinnerung gesendet/.test(a.text ?? ''))).toBe(true);
-  });
-
-  it('nichts, wenn die Karte erledigt oder niemandem zugewiesen ist', async () => {
-    const w = await create({ nudgeAfterMin: 5, cooldownMin: 0 });
-    await done(w);
-    store.completeCard(cards()[0]!.id, { by: anna, source: 'app' });
-    advance(10);
-    await engine.tick();
-    expect(nudged).toHaveLength(0);
-
-    const w2 = await create({ nudgeAfterMin: 5, assign: { mode: 'none' }, name: 'Zweiter' });
+    expect(rows()).toEqual([]);
+    const w2 = await create({ nudge: { afterMin: 5, everyMin: null, max: 1 }, name: 'Zweiter', cooldownMin: 0 });
     await running(w2);
     await done(w2);
-    advance(10);
-    await engine.tick();
-    expect(nudged).toHaveLength(0);
+    expect(rows()).toHaveLength(1);
   });
 
-  it('bei der ersten Heimkehr zählt die Zeit ab der Zuweisung', async () => {
+  it('ein Wächter ohne Zuweisung legt erst mit der Zuweisung (erste Heimkehr) die Erinnerung an', async () => {
     ha.set('vacuum.s7', 'cleaning');
-    const w = await create({ trigger: { entityId: 'vacuum.s7', kind: 'state', to: 'docked' }, assign: { mode: 'first_home', personIds: [] }, nudgeAfterMin: 30 });
+    const w = await create({ trigger: { entityId: 'vacuum.s7', kind: 'state', to: 'docked' }, assign: { mode: 'first_home', personIds: [] }, nudge: { afterMin: 30, everyMin: null, max: 1 } });
     ha.emit(fireKey(w), 'docked');
     await engine.idle();
     advance(600); // lange nichts
-    await engine.tick();
-    expect(nudged).toHaveLength(0);
+    expect(rows()).toEqual([]);
     ha.arrive('person.ben');
     await engine.idle();
-    advance(31);
-    await engine.tick();
-    expect(nudged.map((n) => n.ids)).toEqual([[ben]]);
+    expect(rows()).toMatchObject([{ user: null, anchor: 'created', after: 30, every: null, max: 1, anchorAt: new Date(t).toISOString() }]);
+  });
+
+  it('Testkarten stupsen nicht', async () => {
+    const w = await create({ nudge: { afterMin: 5, everyMin: null, max: 1 } });
+    await engine.test(w.id);
+    expect(rows()).toEqual([]);
   });
 });
 

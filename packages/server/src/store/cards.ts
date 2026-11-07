@@ -2,8 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { generateKeyBetween } from 'fractional-indexing';
 import { NotFoundError, ValidationError } from '../errors.js';
 import { type Recurrence } from '../recurrence.js';
+import { parseReminder } from '../reminders.js';
 import { type OpenNudge, type Card, type ScheduleCard, type ChecklistItem, type CardLink, type ActivityEntry, type CardDetail, type CardInput, type CardPatch, type Row } from './types.js';
-import { cleanText, optionalText, parseDue, parsePriority, parseRemind, parseCost, parseEffort, parseIcon, parseIconColor, parseIconSource, parseConfirm, parseCarryOver, resolveCarry, parseBool, parseRecurrence } from './validate.js';
+import { cleanText, optionalText, parseDue, parsePriority, parseRemind, parseCost, parseEffort, parseIcon, parseIconColor, parseIconSource, parseConfirm, parseCarryOver, resolveCarry, parseRecurrence } from './validate.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
@@ -15,7 +16,7 @@ export function createCards(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
-  const { boardPeopleIds, boardVisibleSql, visibleBoardsSql, closeOpenNudges, nudgeActivity, watcherActivity, completeCard, firstOpenColumn, inboxColumn, isFutureDue, lastPos, listAttachments, listCompletions, neighbours, plannedColumn, recordCompletion, snapshotOf, visibleBoard, visibleColumn } = lazy(s, ['boardPeopleIds', 'boardVisibleSql', 'visibleBoardsSql', 'closeOpenNudges', 'nudgeActivity', 'watcherActivity', 'completeCard', 'firstOpenColumn', 'inboxColumn', 'isFutureDue', 'lastPos', 'listAttachments', 'listCompletions', 'neighbours', 'plannedColumn', 'recordCompletion', 'snapshotOf', 'visibleBoard', 'visibleColumn'] as const);
+  const { copyReminders, resetDueReminders, setReminder, boardPeopleIds, boardVisibleSql, visibleBoardsSql, closeOpenNudges, nudgeActivity, watcherActivity, completeCard, firstOpenColumn, inboxColumn, isFutureDue, lastPos, listAttachments, listCompletions, neighbours, plannedColumn, recordCompletion, snapshotOf, visibleBoard, visibleColumn } = lazy(s, ['copyReminders', 'resetDueReminders', 'setReminder', 'boardPeopleIds', 'boardVisibleSql', 'visibleBoardsSql', 'closeOpenNudges', 'nudgeActivity', 'watcherActivity', 'completeCard', 'firstOpenColumn', 'inboxColumn', 'isFutureDue', 'lastPos', 'listAttachments', 'listCompletions', 'neighbours', 'plannedColumn', 'recordCompletion', 'snapshotOf', 'visibleBoard', 'visibleColumn'] as const);
 
   function loadCards(where: string, ...params: unknown[]): Card[] {
     const rows = all(`select * from cards where ${where} order by position, id`, ...params);
@@ -101,7 +102,6 @@ export function createCards(c: Ctx, late: unknown) {
       updatedAt: r.updated_at,
       version: r.version,
       remindBeforeMin: r.remind_before_min,
-      overdueNag: r.overdue_nag === 1,
       costCents: r.cost_cents,
       effort: r.effort ?? null,
       icon: r.icon ?? null,
@@ -309,7 +309,8 @@ export function createCards(c: Ctx, late: unknown) {
     const effort = parseEffort(input.effort);
     const ico = resolveIcon(input);
     const carry = parseCarryOver(input.carryOver);
-    const nag = parseBool(input.overdueNag, t('Nachhaken'));
+    const reminder = input.reminder === null || input.reminder === undefined ? null : parseReminder(input.reminder);
+    if (reminder && !createdBy) throw new ValidationError(t('Nachhaken gilt für eine Person: melde dich an'));
     const description = optionalText(input.description, t('Die Beschreibung'), 20000);
     if (remind !== null && !dueAt) throw new ValidationError(t('Eine Vorab-Erinnerung braucht eine Fälligkeit'));
     if (col.is_planned === 1 && !isFutureDue(dueAt)) {
@@ -323,9 +324,9 @@ export function createCards(c: Ctx, late: unknown) {
       const t = iso();
       run(
         `insert into cards (id, board_id, column_id, position, title, description, priority, due_at, recurrence,
-                            remind_before_min, overdue_nag, cost_cents, carry_over, created_by, created_at, updated_at, effort,
+                            remind_before_min, cost_cents, carry_over, created_by, created_at, updated_at, effort,
                             icon, icon_color, icon_source)
-         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         id,
         boardId,
         col.id,
@@ -336,7 +337,6 @@ export function createCards(c: Ctx, late: unknown) {
         dueAt,
         recurrence ? JSON.stringify(recurrence) : null,
         remind,
-        nag ? 1 : 0,
         cost,
         carry ? JSON.stringify(carry) : null,
         createdBy,
@@ -349,6 +349,7 @@ export function createCards(c: Ctx, late: unknown) {
       );
       for (const u of assignees) run('insert into card_assignees (card_id, user_id) values (?, ?)', id, u);
       for (const c of categories) run('insert into card_categories (card_id, category_id) values (?, ?)', id, c);
+      if (reminder) setReminder(id, createdBy, reminder, t);
       syncPlannedCard(id);
       return getCard(id);
     });
@@ -399,7 +400,10 @@ export function createCards(c: Ctx, late: unknown) {
       if (patch.dueAt !== undefined) {
         sets.push('due_at = ?');
         params.push(dueAt);
-        if (dueAt !== card.due_at) logEvent(id, 'due', by, card.due_at, dueAt);
+        if (dueAt !== card.due_at) {
+          logEvent(id, 'due', by, card.due_at, dueAt);
+          resetDueReminders(id); // Nachhaken ab Termin fängt beim neuen Termin von vorn an
+        }
         // Ohne Fälligkeit gibt es nichts, wovor erinnert werden könnte.
         if (dueAt === null && patch.remindBeforeMin === undefined) {
           sets.push('remind_before_min = ?');
@@ -416,9 +420,11 @@ export function createCards(c: Ctx, late: unknown) {
         sets.push('remind_before_min = ?');
         params.push(remind);
       }
-      if (patch.overdueNag !== undefined) {
-        sets.push('overdue_nag = ?');
-        params.push(parseBool(patch.overdueNag, t('Nachhaken')) ? 1 : 0);
+      if (patch.reminder !== undefined) {
+        // Nachhaken ist persönlich: es gehört der Person, die es einstellt, und ändert nie das Nachhaken anderer
+        const spec = patch.reminder === null ? null : parseReminder(patch.reminder);
+        if (spec && !by) throw new ValidationError(t('Nachhaken gilt für eine Person: melde dich an'));
+        if (by) setReminder(id, by, spec, iso());
       }
       if (patch.costCents !== undefined) {
         sets.push('cost_cents = ?');
@@ -487,9 +493,9 @@ export function createCards(c: Ctx, late: unknown) {
         : generateKeyBetween(lastPos('cards', 'column_id = ?', col.id), null);
       run(
         `insert into cards (id, board_id, column_id, position, title, description, priority, due_at, recurrence,
-                            remind_before_min, overdue_nag, cost_cents, carry_over, created_by, created_at, updated_at, effort,
+                            remind_before_min, cost_cents, carry_over, created_by, created_at, updated_at, effort,
                             icon, icon_color, icon_source)
-         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         newId,
         src.board_id,
         col.id,
@@ -500,7 +506,6 @@ export function createCards(c: Ctx, late: unknown) {
         src.due_at,
         src.recurrence,
         src.remind_before_min,
-        src.overdue_nag,
         src.cost_cents,
         src.carry_over,
         by,
@@ -540,6 +545,7 @@ export function createCards(c: Ctx, late: unknown) {
           l.position,
         );
       }
+      if (by) copyReminders(id, newId, by);
       syncPlannedCard(newId);
       return getCard(newId);
     });

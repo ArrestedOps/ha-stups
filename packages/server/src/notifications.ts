@@ -2,10 +2,12 @@ import { t, tn, withLanguage, type Lang } from './i18n/index.js';
 import type { Options } from './config.js';
 import type { NotificationAction } from './ha.js';
 import type { PushGateway, PushMessage } from './push.js';
-import { quietEnd } from './quiet.js';
+import { DEFAULT_QUIET, quietEnd } from './quiet.js';
+import { firstAt, nextAfter } from './reminders.js';
 import { toLocal } from './recurrence.js';
 import { dayDiff, formatDue, formatLead, localDateKey, minutesOfDay, parseHm } from './time.js';
 import { NUDGE_LATER_MAX, type ClosedNudge, type DueNudge, type NotificationKey, type NotificationKind, type OpenDueCard, type Store } from './store.js';
+import type { DueReminder } from './store/reminders.js';
 
 export interface NotifierDeps {
   store: Store;
@@ -154,33 +156,6 @@ export function createNotifier(deps: NotifierDeps) {
   /** Die Frage „Wer übernimmt?" ist beantwortet oder verfallen: bei allen Personen wegräumen */
   async function suggestClosed(card: { id: string }): Promise<void> {
     await Promise.allSettled(store.people().map((p) => push.clear(p.id, cardTag(card.id))));
-  }
-
-  /** Eine Karte eines Wächters ist nach der eingestellten Zeit noch offen: freundlich erinnern */
-  async function notifyStillOpen(card: { id: string; title: string; dueAt: string | null }, userIds: string[]): Promise<void> {
-    for (const id of userIds) {
-      if (!push.canReach(id, 'watcher')) {
-        warnNoServices(id);
-        continue;
-      }
-      const message = inLang(id, (): PushMessage => {
-        const m: PushMessage = {
-          title: card.title,
-          body: t('Noch offen: Denkst du dran?'),
-          tag: cardTag(card.id),
-          group: GROUP,
-          open: { cardId: card.id },
-          level: 'time-sensitive',
-          kind: 'watcher',
-          spoken: t('{name}, noch offen: {title}.', { name: nameOf(id), title: speakable(card.title) }),
-        };
-        if (card.dueAt) m.actions = [doneAction(card.id, card.dueAt)];
-        return m;
-      });
-      if (await send(id, message)) {
-        log.info(`Push (noch offen) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
-      }
-    }
   }
 
   /** true, wenn tatsächlich gesendet wurde */
@@ -454,31 +429,108 @@ export function createNotifier(deps: NotifierDeps) {
               if (await deliver(key('due', card.dueAt), payload)) sent += 1;
             }
           }
-
-          if (
-            card.overdueNag &&
-            dayDiff(dueMs, nowMs, tz) < 0 &&
-            minutesOfDay(nowMs, tz) >= parseHm(options.overdueNagTime)
-          ) {
-            const payload = inLang(userId, () =>
-              cardPayload(
-                card,
-                t('Überfällig seit {due} · {board}', { due, board: card.boardName }),
-                t('{name}, {title} ist überfällig.', { name: nameOf(userId), title: speakable(card.title) }),
-              ),
-            );
-            if (await deliver(key('nag', localDateKey(nowMs, tz)), payload)) sent += 1;
-          }
         }
       }
       sent += await summaries(cards, nowMs, tz);
       sent += await weeklySummaries(nowMs, tz);
       sent += await confirmationReminders(nowMs, tz);
+      sent += await deliverReminders(nowMs, tz);
       sent += await deliverNudges(nowMs);
       return sent;
     } finally {
       running = false;
     }
+  }
+
+  // ---------- Nachhaken ----------
+
+  /**
+   * Die Nachricht „noch offen“: bei Wächter-Karten wie der bisherige Stups („Denkst du dran?“), bei Aufgaben nach dem Termin „Überfällig seit …“.
+   * „Erledigt“ gibt es nur für Zuständige und nur mit Termin (die Aktion gilt für einen bestimmten Termin).
+   */
+  function reminderPayload(r: DueReminder, userId: string, nowMs: number, tz: string): PushMessage {
+    return inLang(userId, (): PushMessage => {
+      const overdue = r.dueAt !== null && Date.parse(r.dueAt) < nowMs && !r.watcherId;
+      const m: PushMessage = {
+        title: r.title,
+        body: overdue ? t('Überfällig seit {due} · {board}', { due: formatDue(Date.parse(r.dueAt!), nowMs, tz), board: r.boardName }) : t('Noch offen: Denkst du dran?'),
+        tag: cardTag(r.cardId),
+        group: GROUP,
+        open: { cardId: r.cardId },
+        level: 'time-sensitive',
+        kind: r.watcherId ? 'watcher' : 'due',
+        spoken: overdue ? t('{name}, {title} ist überfällig.', { name: nameOf(userId), title: speakable(r.title) }) : t('{name}, noch offen: {title}.', { name: nameOf(userId), title: speakable(r.title) }),
+      };
+      if (r.dueAt && r.assigneeIds.includes(userId)) m.actions = [doneAction(r.cardId, r.dueAt)];
+      return m;
+    });
+  }
+
+  /**
+   * Nachhaken: „Wenn nicht erledigt“ (Tabelle card_reminders, für Aufgaben persönlich, für Wächter an die jeweils Zuständigen). Fällig, wenn der
+   * Zeitpunkt da ist und die Karte noch offen ist; danach der nächste Zeitpunkt, bis zur Höchstzahl. Erledigte, gelöschte und archivierte Karten
+   * liefert der Store nicht mehr: damit endet alles von selbst. In der Ruhezeit einer Person kommt nichts (sie wartet bis zum Ende).
+   */
+  async function deliverReminders(nowMs: number, tz: string): Promise<number> {
+    let sent = 0;
+    const defaultTime = options.overdueNagTime;
+    for (const r of store.dueReminders(new Date(nowMs).toISOString())) {
+      const at = r.nextAt === null ? firstAt(r.spec, r.baseMs, tz, defaultTime) : Date.parse(r.nextAt);
+      if (r.nextAt === null) store.planReminder(r.id, new Date(at).toISOString());
+      if (at > nowMs) continue;
+
+      // Wer bekommt es? Persönlich nur diese Person (und nur, wenn sie das Board sieht), sonst die jetzigen Zuständigen
+      const people = r.userId ? (store.userById(r.userId)?.isPerson && store.canSeeBoard(r.userId, r.boardId) ? [r.userId] : []) : r.assigneeIds;
+      if (people.length === 0) continue; // niemand zuständig (noch): es wartet, der erste Zeitpunkt bleibt gültig
+
+      const awake = people.filter((id) => quietEnd(nowMs, tz, store.userById(id)?.nudgeQuiet ?? { ...DEFAULT_QUIET, off: true }) === null);
+      if (awake.length === 0) {
+        const ends = people.map((id) => quietEnd(nowMs, tz, store.userById(id)!.nudgeQuiet)).filter((e): e is number => e !== null);
+        store.planReminder(r.id, new Date(Math.min(...ends)).toISOString()); // verschoben auf das Ende der Ruhezeit, nichts gezählt
+        continue;
+      }
+
+      const retryKey = `reminder:${r.id}:${r.sentCount}`;
+      const retry = retries.get(retryKey);
+      if (retry && retry.nextAt > nowMs) continue;
+      let delivered = 0;
+      let failed = 0;
+      for (const id of awake) {
+        const k: NotificationKey = { cardId: r.cardId, userId: id, kind: 'nag', key: `reminder:${r.id}:${r.sentCount}` };
+        if (!push.canReach(id, r.watcherId ? 'watcher' : 'due')) {
+          warnNoServices(id);
+          continue;
+        }
+        if (await send(id, reminderPayload(r, id, nowMs, tz))) {
+          delivered += 1;
+          store.claimNotification(k); // fürs Sendeprotokoll
+          log.info(`Push (noch offen) „${r.title}" an ${nameOf(id)} gesendet`);
+        } else {
+          failed += 1;
+        }
+      }
+      if (delivered === 0 && failed > 0) {
+        // Zustellung gescheitert: nach 1, 5 und 15 Minuten noch einmal, dann gilt dieser Zeitpunkt als erledigt
+        const attempts = (retry?.attempts ?? 0) + 1;
+        if (attempts <= delays.length) {
+          retries.set(retryKey, { attempts, nextAt: nowMs + delays[attempts - 1]! * MINUTE });
+          continue;
+        }
+        log.warn(`Nachhaken für Karte ${r.cardId} endgültig fehlgeschlagen`);
+      }
+      retries.delete(retryKey);
+      sent += delivered;
+      if (r.watcherId) store.recordWatcherNudge(r.cardId, people, `nach ${Math.round((at - r.baseMs) / MINUTE)} Min.`);
+
+      // Der nächste Zeitpunkt (verpasste werden übersprungen, nicht nachgeholt); nach der Höchstzahl oder ohne Wiederholung ist Schluss
+      const count = r.sentCount + 1;
+      let next = nextAfter(r.spec, at, tz, defaultTime);
+      while (next !== null && next <= nowMs) next = nextAfter(r.spec, next, tz, defaultTime);
+      const done = next === null || count >= r.spec.max;
+      store.settleReminder(r.id, { sentCount: count, nextAt: done ? null : new Date(next!).toISOString(), done });
+    }
+    if (sent > 0) deps.onChange?.();
+    return sent;
   }
 
   /** Entfernt die Nachrichten einer Karte von allen Geräten der Zuständigen. */
@@ -715,7 +767,7 @@ export function createNotifier(deps: NotifierDeps) {
     return 'completed';
   }
 
-  return { tick, handleAction, clearFor, nudgesClosed, notifyAssigned, notifySuggest, suggestClosed, notifyStillOpen, confirmationRequested, confirmationAnswered, idle };
+  return { tick, handleAction, clearFor, nudgesClosed, notifyAssigned, notifySuggest, suggestClosed, confirmationRequested, confirmationAnswered, idle };
 }
 
 export type Notifier = ReturnType<typeof createNotifier>;

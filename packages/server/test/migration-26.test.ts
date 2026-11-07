@@ -59,7 +59,7 @@ describe('Migration 26 (Kategorie am Wächter)', () => {
     for (const t of TABLES) {
       const now = db.prepare(`select * from ${t} order by 1`).all() as Record<string, unknown>[];
       // alles, was es vorher gab, ist unverändert; neue Spalten späterer Migrationen zählen nicht
-      expect(withoutLater(t, now), t).toEqual(snap[t]);
+      expect(withoutLater(t, now), t).toEqual(withoutLater(t, snap[t] as Record<string, unknown>[]));
     }
     expect(db.prepare('select id, category from watchers order by id').all()).toEqual([
       { id: 'w1', category: null },

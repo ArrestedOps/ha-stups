@@ -34,13 +34,14 @@ describe('Karte duplizieren', () => {
         dueAt: '2026-10-30T15:00:00Z',
         recurrence: { type: 'fixed', freq: 'weekly', every: 1, weekdays: [5] },
         remindBeforeMin: 60,
-        overdueNag: true,
         costCents: 1500,
         assigneeIds: [conny.id],
         categoryIds: [cat.id],
       },
       rene.id,
     );
+    store.setReminder(orig.id, rene.id, { anchor: 'due', afterMin: 1440, everyMin: 1440, max: 4, atTime: '08:00' });
+    store.setReminder(orig.id, conny.id, { anchor: 'created', afterMin: 60, everyMin: null, max: 1, atTime: null });
     const after = store.createCard(s.b.id, { columnId: s.open.id, title: 'danach' }, rene.id);
     const item = store.addChecklistItem(orig.id, 'Spiegel');
     store.updateChecklistItem(item.id, { done: true });
@@ -57,7 +58,6 @@ describe('Karte duplizieren', () => {
       dueAt: '2026-10-30T15:00:00.000Z',
       recurrence: { type: 'fixed', freq: 'weekly', every: 1, weekdays: [5] },
       remindBeforeMin: 60,
-      overdueNag: true,
       costCents: 1500,
       assigneeIds: [conny.id],
       categoryIds: [cat.id],
@@ -65,6 +65,9 @@ describe('Karte duplizieren', () => {
       completedAt: null,
       columnId: s.open.id,
     });
+    // Nachhaken ist persönlich: die Kopie bekommt nur das der Person, die kopiert
+    expect(store.myReminder(copy.id, conny.id)).toEqual({ anchor: 'created', afterMin: 60, everyMin: null, max: 1, atTime: null });
+    expect(store.myReminder(copy.id, rene.id)).toBeNull();
     expect(copy.checklistItems.map((i) => [i.text, i.done])).toEqual([['Spiegel', false]]);
     expect(copy.links.map((l) => l.url)).toEqual(['https://example.com/']);
     expect(copy.history).toEqual([]);

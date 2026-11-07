@@ -2,6 +2,7 @@ import { ValidationError } from './errors.js';
 import { t } from './i18n/index.js';
 import { parseIcon, parseIconColor } from './store/validate.js';
 import { cleanCategory } from './watcher-categories.js';
+import { parseReminder } from './reminders.js';
 
 /** Bedingungen auf dem Zustand einer Entität (live über subscribe_trigger beobachtet) */
 export type ConditionKind = 'state' | 'above' | 'below';
@@ -10,6 +11,13 @@ export type ConditionKind = 'state' | 'above' | 'below';
  * Vorhersage einer Wetter-Entität.
  */
 export type TriggerKind = ConditionKind | 'calendar_event' | 'forecast';
+
+/** Das Stupsen eines Wächters: an die jeweils Zuständigen, endet mit der Erledigung der Karte */
+export interface WatcherNudge {
+  afterMin: number;
+  everyMin: number | null;
+  max: number;
+}
 
 /** Wann ein Wächter auslöst */
 export interface WatchTrigger {
@@ -84,8 +92,8 @@ export interface WatcherConfig {
   cooldownMin: number;
   /** keine zweite Karte, solange die erste offen ist */
   dedupe: boolean;
-  /** nach so vielen Minuten stupsen, wenn noch offen (null = nie) */
-  nudgeAfterMin: number | null;
+  /** Stupsen, wenn noch offen: nach `afterMin` Minuten, danach alle `everyMin` (null = nur einmal), höchstens `max` ×; null = nie */
+  nudge: WatcherNudge | null;
   /** Kategorie zum Gruppieren in der Liste (frei wählbar, null = „Ohne Kategorie"); gleiche Namen legt die Daten-Schicht zusammen */
   category: string | null;
   /**
@@ -238,6 +246,12 @@ export function parseAssign(raw: unknown): AssignRule {
   return { mode, personIds, fallback, waitFallback, fallbackPersonId };
 }
 
+function parseNudge(raw: unknown): WatcherNudge | null {
+  if (raw === undefined || raw === null) return null;
+  const spec = parseReminder({ ...obj(raw, t('Das Stupsen')), anchor: 'created' }, { maxMin: 1440 });
+  return { afterMin: spec.afterMin, everyMin: spec.everyMin, max: spec.max };
+}
+
 /** Prüft und normalisiert die Eingabe der Oberfläche (Anlegen und Ändern) */
 export function parseWatcher(raw: unknown): WatcherConfig {
   const o = obj(raw, t('Der Wächter'));
@@ -250,7 +264,7 @@ export function parseWatcher(raw: unknown): WatcherConfig {
     done: parseDone(o.done),
     cooldownMin: int(o.cooldownMin, t('Die Sperrzeit'), 0, 1440, 10),
     dedupe: o.dedupe === undefined ? true : o.dedupe === true,
-    nudgeAfterMin: o.nudgeAfterMin === undefined || o.nudgeAfterMin === null ? null : int(o.nudgeAfterMin, t('Das Stupsen nach'), 5, 1440, 60),
+    nudge: parseNudge(o.nudge),
     category: cleanCategory(o.category),
     countsForFairness: o.countsForFairness === undefined ? true : o.countsForFairness === true,
   };

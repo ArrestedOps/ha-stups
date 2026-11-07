@@ -27,12 +27,15 @@ describe('Erinnerungs-, Nachhak- und Kostenfelder', () => {
     const { b, open } = setup();
     const card = store.createCard(
       b.id,
-      { columnId: open.id, title: 'Fenster', dueAt: '2026-11-01T09:00:00Z', remindBeforeMin: 60, overdueNag: true, costCents: 420000 },
+      { columnId: open.id, title: 'Fenster', dueAt: '2026-11-01T09:00:00Z', remindBeforeMin: 60, reminder: { anchor: 'due', afterMin: 60, everyMin: null, max: 1 }, costCents: 420000 },
       rene.id,
     );
-    expect(card).toMatchObject({ remindBeforeMin: 60, overdueNag: true, costCents: 420000 });
-    const upd = store.updateCard(card.id, { remindBeforeMin: null, overdueNag: false, costCents: null });
-    expect(upd).toMatchObject({ remindBeforeMin: null, overdueNag: false, costCents: null });
+    expect(card).toMatchObject({ remindBeforeMin: 60, costCents: 420000 });
+    expect(store.myReminder(card.id, rene.id)).toEqual({ anchor: 'due', afterMin: 60, everyMin: null, max: 1, atTime: null });
+    expect(store.myReminder(card.id, conny.id)).toBeNull(); // persönlich: andere haben keins
+    const upd = store.updateCard(card.id, { remindBeforeMin: null, reminder: null, costCents: null }, rene.id);
+    expect(upd).toMatchObject({ remindBeforeMin: null, costCents: null });
+    expect(store.myReminder(card.id, rene.id)).toBeNull();
   });
 
   it('prüft die Werte', () => {
@@ -41,7 +44,9 @@ describe('Erinnerungs-, Nachhak- und Kostenfelder', () => {
     expect(mk({ remindBeforeMin: 0 })).toThrow(ValidationError);
     expect(mk({ remindBeforeMin: 1.5 })).toThrow(ValidationError);
     expect(mk({ costCents: -1 })).toThrow(ValidationError);
-    expect(mk({ overdueNag: 'ja' })).toThrow(ValidationError);
+    expect(mk({ reminder: { afterMin: 1 } })).toThrow(ValidationError);
+    expect(mk({ reminder: { afterMin: 60, max: 100, everyMin: 60 } })).toThrow(ValidationError);
+    expect(mk({ reminder: 'ja' })).toThrow(ValidationError);
   });
 
   it('summiert die Kosten eines Boards ohne gelöschte Karten', () => {
@@ -129,7 +134,7 @@ describe('Benachrichtigungs-Hilfen', () => {
 
     const due = store.openDueCards();
     expect(due).toHaveLength(1);
-    expect(due[0]).toMatchObject({ id: a.id, title: 'A', boardName: 'Haushalt', assigneeIds: [conny.id], overdueNag: false });
+    expect(due[0]).toMatchObject({ id: a.id, title: 'A', boardName: 'Haushalt', assigneeIds: [conny.id] });
   });
 
   it('claimNotification ist atomar und wird durch release wieder frei', () => {

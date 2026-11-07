@@ -23,7 +23,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
         dueAt: b.dueAt,
         recurrence: b.recurrence,
         remindBeforeMin: b.remindBeforeMin,
-        overdueNag: b.overdueNag,
+        reminder: b.reminder,
         costCents: b.costCents,
         effort: b.effort,
         icon: b.icon,
@@ -35,7 +35,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
       },
       req.user?.id ?? null,
     );
-    return reply.code(201).send(card);
+    return reply.code(201).send(mine(card, req.user?.id ?? null));
   });
   // Mehrere Karten in einem Aufruf (für den Live-Sync: nur holen, was sich geändert hat). Unbekannte und gelöschte fehlen.
   app.get<{ Querystring: { ids?: string } }>('/api/cards', async (req) => {
@@ -43,7 +43,9 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     if (ids.length > MAX_IDS) throw new ValidationError(t('Höchstens {max} Karten auf einmal', { max: MAX_IDS }));
     return store.getCards(ids, req.user?.id ?? null);
   });
-  app.get<{ Params: Params }>('/api/cards/:id', async (req) => store.getCard(req.params.id));
+  // Nachhaken ist persönlich: zur Karte gehört nur die eigene Erinnerung der anfragenden Person (`reminder`), nie die der anderen
+  const mine = <C extends { id: string }>(card: C, userId: string | null) => ({ ...card, reminder: store.myReminder(card.id, userId) });
+  app.get<{ Params: Params }>('/api/cards/:id', async (req) => mine(store.getCard(req.params.id), req.user?.id ?? null));
   app.patch<{ Params: Params }>('/api/cards/:id', async (req) => {
     const b = body(req);
     const patch: Record<string, unknown> = {};
@@ -54,7 +56,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
       'dueAt',
       'recurrence',
       'remindBeforeMin',
-      'overdueNag',
+      'reminder',
       'costCents',
       'effort',
       'icon',
@@ -67,7 +69,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     ]) {
       if (key in b) patch[key] = b[key];
     }
-    return store.updateCard(req.params.id, patch, req.user?.id ?? null);
+    return mine(store.updateCard(req.params.id, patch, req.user?.id ?? null), req.user?.id ?? null);
   });
   app.delete<{ Params: Params }>('/api/cards/:id', async (req, reply) => {
     store.deleteCard(req.params.id);

@@ -605,4 +605,52 @@ export const migrations: Migration[] = [
       create index ix_watcher_notices_at on watcher_notices(at);
     `,
   },
+  {
+    version: 28,
+    // Nachhaken: eine Tabelle für alle Erinnerungen „wenn noch nicht erledigt“ (Aufgaben und Wächter). Je Karte und Person höchstens eine Zeile
+    // (user_id null = die jeweils Zuständigen, so beim Wächter; sonst eine Person, nur für sie sichtbar). anchor: due = ab Termin, created =
+    // ab Anlegen/Zuweisen (anchor_at; ohne Termin zählt auch „due“ ab dem Anlegen). next_at bleibt leer, bis der Planer den ersten Zeitpunkt
+    // rechnet; done = 1: alle Erinnerungen gesendet. at_time (HH:MM) gilt nur bei Tagen/Wochen; leer: die Uhrzeit aus overdue_nag_time.
+    // Das alte „Täglich nachhaken, solange überfällig“ (cards.overdue_nag) wird eine persönliche Erinnerung je zuständiger Person: ab dem Tag
+    // nach dem Termin, täglich, bis zu 99 ×. Am Wächter ersetzt nudge_json ({afterMin, everyMin, max}) die Spalte nudge_after_min (alter Wert N
+    // wird {afterMin: N, everyMin: null, max: 1}); offene Wächter-Karten mit noch ausstehendem Stups bekommen ihre Zeile.
+    sql: `
+      create table card_reminders (
+        id         text primary key,
+        card_id    text not null references cards(id) on delete cascade,
+        user_id    text references users(id) on delete cascade,
+        anchor     text not null check (anchor in ('due', 'created')),
+        anchor_at  text,
+        after_min  integer not null,
+        every_min  integer,
+        max_count  integer not null default 5,
+        at_time    text,
+        sent_count integer not null default 0,
+        next_at    text,
+        done       integer not null default 0,
+        created_at text not null
+      );
+      create unique index ux_card_reminders on card_reminders(card_id, ifnull(user_id, ''));
+      create index ix_card_reminders_next on card_reminders(next_at) where done = 0;
+
+      insert into card_reminders (id, card_id, user_id, anchor, after_min, every_min, max_count, created_at)
+      select lower(hex(randomblob(16))), c.id, ca.user_id, 'due', 1440, 1440, 99, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      from cards c
+      join card_assignees ca on ca.card_id = c.id
+      join users u on u.id = ca.user_id and u.is_person = 1
+      where c.overdue_nag = 1 and c.due_at is not null and c.deleted_at is null and c.completed_at is null;
+      alter table cards drop column overdue_nag;
+
+      alter table watchers add column nudge_json text;
+      update watchers set nudge_json = json_object('afterMin', nudge_after_min, 'everyMin', null, 'max', 1) where nudge_after_min is not null;
+      insert into card_reminders (id, card_id, user_id, anchor, anchor_at, after_min, every_min, max_count, created_at)
+      select lower(hex(randomblob(16))), c.id, null, 'created', s.at, w.nudge_after_min, null, 1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      from cards c
+      join watchers w on w.id = c.watcher_id
+      join (select card_id, max(at) as at from watcher_runs where result in ('created', 'assigned') group by card_id) s on s.card_id = c.id
+      where w.nudge_after_min is not null and c.deleted_at is null and c.archived_at is null and c.completed_at is null
+        and not exists (select 1 from watcher_runs r where r.card_id = c.id and r.result = 'nudged' and r.at >= s.at);
+      alter table watchers drop column nudge_after_min;
+    `,
+  },
 ];

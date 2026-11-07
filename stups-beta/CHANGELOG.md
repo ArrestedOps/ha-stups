@@ -2,9 +2,9 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
-## 1.40.0-beta.2
+## 1.40.0-beta.3
 
-(1.40.0-beta.1 war dieselbe Änderung; beta.2 macht nur zwei Browser-Tests unabhängig vom Wochentag.)
+(beta.1 und beta.2 waren dieselbe Änderung; sie machen nur Browser-Tests robuster: unabhängig vom Wochentag und ohne Wettlauf beim Wechsel der Fenster.)
 
 **Boards: Auswahl, Einstellungen, Löschen, Archivieren, Duplizieren.**
 

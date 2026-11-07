@@ -132,7 +132,9 @@ test('Reihenfolge ändern: Pfeile verschieben, „Abbrechen“ lässt alles, „
   await again.getByRole('button', { name: 'Fertig' }).click();
   await expect.poll(order).toEqual([c, a, b]);
   // die Auswahl zeigt die neue Reihenfolge
-  const names = await page.getByRole('dialog', { name: 'Boards' }).getByRole('button', { name: new RegExp(`^(Erste|Zweite|Dritte) ${tag}$`) }).allInnerTexts();
+  const rows = page.getByRole('dialog', { name: 'Boards' }).getByRole('button', { name: new RegExp(`^(Erste|Zweite|Dritte) ${tag}$`) });
+  await expect(rows).toHaveCount(3);
+  const names = await rows.allInnerTexts();
   expect(names.map((n) => n.split('\n')[0])).toEqual([`Dritte ${tag}`, `Erste ${tag}`, `Zweite ${tag}`]);
 });
 

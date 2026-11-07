@@ -12,8 +12,7 @@ const setState = (request: APIRequestContext, entityId: string, state: string) =
 async function einstellungen(page: Page) {
   await page.goto('/');
   await openBoards(page);
-  await page.getByRole('button', { name: 'Board wechseln' }).click();
-  await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   return page.getByRole('dialog');
 }
 

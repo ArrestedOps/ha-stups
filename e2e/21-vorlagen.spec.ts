@@ -25,9 +25,15 @@ async function openSwitcher(page: Page) {
   await page.getByRole('button', { name: 'Board wechseln' }).click();
 }
 
+/** Die Board-Auswahl, darin „Neues Board erstellen" (Name, Vorlage, Sichtbarkeit) */
+async function openCreate(page: Page) {
+  await openSwitcher(page);
+  await page.getByRole('button', { name: 'Neues Board erstellen' }).click();
+}
+
 test('neues Board aus der Vorlage „Haushalt": Vorschau, Spalten und Karten kommen mit', async ({ page, request }) => {
   const name = `Haus ${unique()}`;
-  await openSwitcher(page);
+  await openCreate(page);
   const templates = page.getByRole('radiogroup', { name: 'Vorlage für das neue Board' });
   await templates.getByRole('radio', { name: 'Haushalt' }).click();
   const preview = page.getByTestId('template-preview');
@@ -58,7 +64,7 @@ test('neues Board aus der Vorlage „Haushalt": Vorschau, Spalten und Karten kom
 
 test('ein leeres Board bleibt leer, auch wenn die Vorlagen-Auswahl vorher benutzt wurde', async ({ page, request }) => {
   const name = `Leer ${unique()}`;
-  await openSwitcher(page);
+  await openCreate(page);
   const templates = page.getByRole('radiogroup', { name: 'Vorlage für das neue Board' });
   await templates.getByRole('radio', { name: 'Haushalt' }).click();
   await templates.getByRole('radio', { name: 'Leer', exact: true }).click();
@@ -82,17 +88,20 @@ test('eigenes Board als Vorlage speichern, daraus ein neues Board anlegen, die V
 
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
   await openSwitcher(page);
-  await page.getByRole('button', { name: 'Bearbeiten' }).click();
-  const field = page.getByLabel('Name der Vorlage');
-  await field.scrollIntoViewIfNeeded();
+  await page.getByRole('button', { name: 'Board-Einstellungen' }).click();
+  await page.getByRole('button', { name: /^Als Vorlage speichern/ }).click();
+  const dialog = page.getByTestId('board-template-dialog');
+  const field = dialog.getByLabel('Vorlagenname');
   await field.fill(tplName);
   await field.press('Enter');
-  await expect(page.getByTestId(/^own-template-/).filter({ hasText: tplName })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Vorlage gespeichert' })).toBeVisible();
 
-  const list = (await (await request.get('/api/templates')).json()) as { id: string; name: string; builtin: boolean; cards: number }[];
+  const list = (await (await request.get('/api/templates')).json()) as { id: string; name: string; builtin: boolean; cards: number; columns: number }[];
   const saved = list.find((x) => x.name === tplName)!;
   templateIds.push(saved.id);
-  expect(saved).toMatchObject({ builtin: false, cards: 1 });
+  // nur Spalten und Kategorien, keine Aufgaben
+  expect(saved).toMatchObject({ builtin: false, cards: 0 });
+  expect(saved.columns).toBeGreaterThan(0);
 
   // Daraus ein neues Board
   const name = `Aus Vorlage ${unique()}`;
@@ -100,14 +109,17 @@ test('eigenes Board als Vorlage speichern, daraus ein neues Board anlegen, die V
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
+  await page.getByRole('button', { name: 'Neues Board erstellen' }).click();
   await page.getByRole('radiogroup', { name: 'Vorlage für das neue Board' }).getByRole('radio', { name: tplName }).click();
-  await expect(page.getByTestId('template-preview')).toContainText('1 Karte');
+  await expect(page.getByTestId('template-preview')).toContainText('0 Karten');
   await page.getByLabel('Name des neuen Boards').fill(name);
   await page.getByLabel('Name des neuen Boards').press('Enter');
   await expect(page.getByTestId('board-name')).toHaveText(name);
   const created = (await boardByName(request, name))!;
   boardIds.push(created.id);
-  await expect(page.getByRole('button', { name: /Vorlagen-Karte/ }).first()).toBeVisible();
+  const view = (await (await request.get(`/api/boards/${created.id}`)).json()) as { cards: unknown[]; columns: unknown[] };
+  expect(view.cards).toEqual([]);
+  expect(view.columns.length).toBe(saved.columns);
 
   // Löschen mit Rückfrage
   const res = await request.delete(`/api/templates/${saved.id}`);

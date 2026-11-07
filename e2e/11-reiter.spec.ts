@@ -88,8 +88,7 @@ test('Kopfzeile: auf jedem Reiter der Avatar oben rechts öffnet die Einstellung
 test('Die Einstellungen haben keine Zeile „Wächter", die Verwaltung öffnet im Reiter Wächter über „Alle Wächter verwalten"', async ({ page }) => {
   await page.goto('/');
   await openBoards(page);
-  await page.getByRole('button', { name: 'Board wechseln' }).click();
-  await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await expect(page.getByRole('dialog').getByRole('button', { name: /^Wächter/ })).toHaveCount(0);
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');

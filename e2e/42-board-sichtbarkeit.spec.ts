@@ -63,6 +63,7 @@ test('Board anlegen: drei Auswahlkarten; bei „Nur ich" ist der Schalter grau, 
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
+  await page.getByRole('button', { name: 'Neues Board erstellen' }).click();
   const sheet = page.getByRole('dialog');
   await expect(sheet.getByTestId('visibility-picker')).toBeVisible();
   for (const label of ['🔒 Nur ich', '🏠 Alle in Stups', '👥 Ausgewählte Personen']) await expect(sheet.getByRole('radio', { name: new RegExp(label.slice(3)) })).toBeVisible();
@@ -102,7 +103,7 @@ test('später ändern: auf „Alle" stellen macht das Board für Conny sichtbar,
     await page.reload();
     await openBoards(page);
     await page.getByRole('button', { name: 'Board wechseln' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Bearbeiten' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Board-Einstellungen' }).click();
     const settings = page.getByRole('dialog', { name: 'Board-Einstellungen' });
     await settings.getByTestId('visibility-all').click();
     await expect.poll(async () => (await names(c.ctx)).includes(name)).toBe(true);

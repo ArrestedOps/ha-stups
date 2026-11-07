@@ -38,6 +38,7 @@ test('Neues Board: Name eingeben und mit dem sichtbaren Knopf anlegen', async ({
 
   await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
+  await page.getByRole('button', { name: 'Neues Board erstellen' }).click();
   const name = `Zweites Board ${Date.now().toString(36)}`;
   await page.getByLabel('Name des neuen Boards').fill(name);
   await page.getByRole('button', { name: 'Board anlegen' }).click();

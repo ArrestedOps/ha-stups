@@ -85,7 +85,7 @@ test('Board auf „Nur ich": solange Wächter darauf zeigen, nein, mit Liste und
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Bearbeiten' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Board-Einstellungen' }).click();
   const settings = page.getByRole('dialog', { name: 'Board-Einstellungen' });
   await settings.getByTestId('visibility-private').click();
   const dialog = page.getByTestId('board-access-dialog');
@@ -101,7 +101,7 @@ test('Conny aus dem Board entfernen: Dialog mit allen betroffenen Wächtern „j
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('button', { name: 'Board wechseln' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Bearbeiten' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Board-Einstellungen' }).click();
   const settings = page.getByRole('dialog', { name: 'Board-Einstellungen' });
   await settings.getByTestId('visibility-members').getByRole('button', { name: 'Conny' }).click();
   const dialog = page.getByTestId('board-access-dialog');

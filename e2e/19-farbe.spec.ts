@@ -15,8 +15,7 @@ const savedHue = async (page: Page) => ((await (await page.request.get('/api/me'
 async function openWheel(page: Page) {
   await page.goto('/');
   await openBoards(page);
-  await page.getByRole('button', { name: 'Board wechseln' }).click();
-  await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Sprache und Farbe' }).click();
   const wheel = page.getByTestId('accent-wheel');
   await wheel.scrollIntoViewIfNeeded();
@@ -41,8 +40,7 @@ test('Farbkreis: Antippen ändert die Farbe sofort, speichert sie und sie bleibt
 
   await openBoards(page);
   expect(await accentVar(page)).toMatch(/^#[0-9a-f]{6}$/);
-  await page.getByRole('button', { name: 'Board wechseln' }).click();
-  await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+  await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Sprache und Farbe' }).click();
   await expect(page.getByTestId('accent-wheel')).toHaveAttribute('aria-valuenow', '90');
 });

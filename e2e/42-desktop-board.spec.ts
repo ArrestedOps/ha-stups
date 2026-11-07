@@ -39,8 +39,7 @@ test('Dialog „Conny entfernen": breit, Spalten „Wächter" und „Zuständige
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), boardId);
   await page.goto('/');
   await nav(page).getByRole('button', { name: 'Boards' }).click();
-  await page.getByRole('button', { name: 'Neues Board' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Bearbeiten' }).click();
+  await page.getByRole('button', { name: 'Board-Einstellungen' }).click();
   const settings = page.getByRole('dialog', { name: 'Board-Einstellungen' });
   await settings.getByTestId('visibility-members').getByRole('button', { name: /Conny/ }).click();
   const dialog = page.getByTestId('board-access-dialog');

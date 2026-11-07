@@ -99,16 +99,20 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
     const sheet = page.getByRole('dialog');
     await expect(sheet.getByText(`Kinderboard ${tag}`)).toBeVisible();
     await expect(sheet.getByText(`Erwachsenenboard ${tag}`)).toHaveCount(0);
+    await expect(sheet.getByRole('button', { name: 'Board-Einstellungen' })).toHaveCount(0);
+    await expect(sheet.getByRole('button', { name: 'Reihenfolge ändern' })).toHaveCount(0);
+    await expect(sheet.getByRole('button', { name: 'Archivierte Boards' })).toHaveCount(0);
+    await expect(sheet.getByRole('button', { name: 'Papierkorb' })).toHaveCount(0);
     // ein Kind legt Boards an, aber nur „Nur ich“ (die anderen beiden Karten fehlen)
+    await sheet.getByRole('button', { name: 'Neues Board erstellen' }).click();
     await expect(sheet.getByLabel('Name des neuen Boards')).toHaveCount(1);
     await expect(sheet.getByRole('radio', { name: /Nur ich/ })).toBeVisible();
     await expect(sheet.getByRole('radio', { name: /Alle in Stups/ })).toHaveCount(0);
     await expect(sheet.getByRole('radio', { name: /Ausgewählte Personen/ })).toHaveCount(0);
-    await expect(sheet.getByRole('button', { name: 'Bearbeiten' })).toHaveCount(0);
-    await expect(sheet.getByRole('button', { name: 'Papierkorb' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
 
-    // Einstellungen: nur Sprache und Farbe
-    await sheet.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+    // Einstellungen (über das Zahnrad oben, nicht mehr über die Board-Auswahl): nur Sprache und Farbe
+    await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
     const settings = page.getByRole('dialog');
     await expect(settings.getByRole('button', { name: 'Sprache und Farbe' })).toBeVisible();
     await expect(settings.getByRole('button', { name: 'Personen & Zugriff' })).toHaveCount(0);

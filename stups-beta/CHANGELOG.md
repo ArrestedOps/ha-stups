@@ -2,6 +2,10 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.37.0-beta.2
+
+**Nur ein Test:** Der Browser-Test „Kanban über die volle Breite“ legte Karten mit Termin in 1 bis 3 Stunden an; nach 22 Uhr (UTC) rückten sie nach „Geplant“ und der Test schlug fehl. Seine Karten haben jetzt Termine in 5, 10 und 15 Minuten. Die App ist unverändert gegenüber 1.37.0-beta.1.
+
 ## 1.37.0-beta.1
 
 **Boards können privat sein oder für Ausgewählte, zählen auf Wunsch nicht zur Fairness, und Wächter wissen, wer zuständig sein darf.** Dazu eine kleine Zahl an der Glocke und ein paar Aufräumarbeiten bei den Wächter-Namen.

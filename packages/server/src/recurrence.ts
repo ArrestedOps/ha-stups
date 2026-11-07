@@ -1,14 +1,19 @@
 export type Recurrence =
   | {
       type: 'fixed';
-      freq: 'daily' | 'weekly' | 'monthly' | 'yearly';
+      freq: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+      /** hourly: alle N Stunden; sonst alle N Tage/Wochen/Monate/Jahre */
       every: number;
       /** weekly: 1 = Montag … 7 = Sonntag. Ohne Angabe der Wochentag des bisherigen Termins. */
       weekdays?: number[];
       /** monthly: 1–31, -1 = letzter Tag. Ohne Angabe der Tag des bisherigen Termins. */
       monthDay?: number;
+      /** nur wöchentlich/monatlich: so viele ganze Tage darf die Erledigung nach dem Termin liegen, ohne dass der Plan neu beginnt */
+      lateTolerance?: number;
+      /** nur stündlich: Termine nur zwischen `from` und `to` (HH:MM, Ortszeit, beide einschließlich) */
+      window?: { from: string; to: string };
     }
-  | { type: 'after_completion'; every: number; unit: 'days' | 'weeks' | 'months' };
+  | { type: 'after_completion'; every: number; unit: 'hours' | 'days' | 'weeks' | 'months' };
 
 export interface Local {
   y: number;
@@ -20,6 +25,7 @@ export interface Local {
 }
 
 const MIN = 60_000;
+const HOUR = 3_600_000;
 const DAY = 86_400_000;
 const MAX_STEPS = 200_000;
 
@@ -100,6 +106,13 @@ function isoWeekday(l: Ymd): number {
   return new Date(Date.UTC(l.y, l.m - 1, l.d)).getUTCDay() || 7;
 }
 
+/** Anzahl ganzer Kalendertage von a bis b (negativ, wenn b vor a liegt) */
+function dayDiff(a: Ymd, b: Ymd): number {
+  return Math.round((Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / DAY);
+}
+
+const hhmm = (v: string): number => Number(v.slice(0, 2)) * 60 + Number(v.slice(3, 5));
+
 function parse(iso: string, what: string): number {
   const ms = Date.parse(iso);
   if (Number.isNaN(ms)) throw new Error(`${what} ist kein gültiges Datum: ${iso}`);
@@ -111,7 +124,11 @@ function parse(iso: string, what: string): number {
  *
  * - `fixed`: erster Termin der Regel nach max(bisheriger Termin, Erledigungszeitpunkt). Verpasste Termine
  *   werden übersprungen.
- * - `after_completion`: Erledigungsdatum (Ortszeit) + Intervall.
+ * - `after_completion`: Erledigungsdatum (Ortszeit) + Intervall; bei Stunden der Erledigungszeitpunkt + N Stunden.
+ * - `fixed` stündlich: Raster aus ganzen Stunden ab dem bisherigen Termin; mit Zeitfenster rücken Termine außerhalb
+ *   auf den Fensteranfang des nächsten passenden Tages.
+ * - `lateTolerance` (wöchentlich/monatlich): Liegt die Erledigung mehr als so viele Tage nach dem Termin, beginnt der
+ *   Plan neu: Wochentag der Woche (Mo–So) bzw. Tag des Monats der Erledigung, dazu `every` Wochen/Monate.
  *
  * Die Uhrzeit ist immer die Ortszeit des bisherigen Termins.
  * Bekannte Randfälle: Wird ein Termin wegen der Zeitumstellung verschoben (02:30 → 03:30), bleibt der
@@ -124,6 +141,7 @@ export function nextDue(rule: Recurrence, prevDueIso: string, completedAtIso: st
   const at = (d: Ymd) => new Date(fromLocal({ ...d, h: pl.h, mi: pl.mi, s: pl.s }, tz)).toISOString();
 
   if (rule.type === 'after_completion') {
+    if (rule.unit === 'hours') return new Date(Math.floor(done / MIN) * MIN + rule.every * HOUR).toISOString();
     const cl = toLocal(done, tz);
     if (rule.unit === 'days') return at(addDays(cl, rule.every));
     if (rule.unit === 'weeks') return at(addDays(cl, 7 * rule.every));
@@ -137,7 +155,26 @@ export function nextDue(rule: Recurrence, prevDueIso: string, completedAtIso: st
   };
   const result = (ms: number) => new Date(ms).toISOString();
 
+  const doneL = toLocal(done, tz);
+  const restart = rule.lateTolerance !== undefined && dayDiff(pl, doneL) > rule.lateTolerance;
+
   switch (rule.freq) {
+    case 'hourly': {
+      const step = rule.every * HOUR;
+      const k = Math.max(1, Math.floor((threshold - prev) / step) + 1);
+      let ms = prev + k * step;
+      if (rule.window) {
+        const from = hhmm(rule.window.from);
+        const to = hhmm(rule.window.to);
+        const l = toLocal(ms, tz);
+        const minutes = l.h * 60 + l.mi;
+        if (minutes < from || minutes > to) {
+          const day = minutes < from ? l : addDays(l, 1);
+          ms = fromLocal({ y: day.y, m: day.m, d: day.d, h: Math.floor(from / 60), mi: from % 60, s: 0 }, tz);
+        }
+      }
+      return result(ms);
+    }
     case 'daily': {
       let k = Math.max(0, Math.floor((threshold - prev) / (rule.every * DAY)) - 1);
       for (let i = 0; i < MAX_STEPS; i++, k++) {
@@ -148,6 +185,11 @@ export function nextDue(rule: Recurrence, prevDueIso: string, completedAtIso: st
     }
     case 'weekly': {
       const weekdays = [...new Set(rule.weekdays?.length ? rule.weekdays : [isoWeekday(pl)])].sort((a, b) => a - b);
+      if (restart) {
+        // Neustart: erster gewählter Wochentag in der Woche der Erledigung + every Wochen
+        const first = addDays(addDays(doneL, 1 - isoWeekday(doneL)), 7 * rule.every + weekdays[0]! - 1);
+        return result(fromLocal({ ...first, h: pl.h, mi: pl.mi, s: pl.s }, tz));
+      }
       const monday = addDays(pl, 1 - isoWeekday(pl));
       let w = Math.max(0, Math.floor((threshold - prev) / (7 * rule.every * DAY)) - 1);
       for (let i = 0; i < MAX_STEPS; i++, w++) {
@@ -161,6 +203,7 @@ export function nextDue(rule: Recurrence, prevDueIso: string, completedAtIso: st
     }
     case 'monthly': {
       const day = rule.monthDay ?? pl.d;
+      if (restart) return result(fromLocal({ ...addMonths(doneL.y, doneL.m, rule.every, day), h: pl.h, mi: pl.mi, s: pl.s }, tz));
       for (let k = 0; k < MAX_STEPS; k++) {
         const ms = after(addMonths(pl.y, pl.m, k * rule.every, day));
         if (ms !== null) return result(ms);

@@ -245,3 +245,23 @@ describe('Umzug: Export ohne Geheimnisse, mit Ablaufdatum', () => {
     expect(importTransfer(join(target, 'stups.sqlite'), join(target, 'files'), share)).toBe(true);
   });
 });
+
+describe('Umzug: Wiederholung mit Zeitfenster und Toleranz', () => {
+  it('Export und Import behalten lateTolerance und window', () => {
+    const { dataDir, db, boardId } = oldInstall();
+    const store = createStore(db);
+    const col = store.getBoardView(boardId).columns[0]!;
+    const tolerant = { type: 'fixed', freq: 'weekly', every: 2, weekdays: [6], lateTolerance: 3 } as const;
+    const hourly = { type: 'fixed', freq: 'hourly', every: 3, window: { from: '08:00', to: '20:00' } } as const;
+    store.createCard(boardId, { title: 'Bad', columnId: col.id, dueAt: '2026-11-14T09:00:00Z', recurrence: tolerant }, null);
+    store.createCard(boardId, { title: 'Trinken', columnId: col.id, dueAt: '2026-11-14T09:00:00Z', recurrence: hourly }, null);
+    const share = tmp();
+    exportData(db, dataDir, share);
+    const newData = tmp();
+    const dbPath = join(newData, 'stups.sqlite');
+    expect(importTransfer(dbPath, join(newData, 'files'), share)).toBe(true);
+    const copy = createStore(openDb(dbPath));
+    const recs = copy.getBoardView(boardId).cards.map((c) => c.recurrence);
+    expect(recs).toEqual(expect.arrayContaining([tolerant, hourly]));
+  });
+});

@@ -123,6 +123,7 @@ export function isPosInt(n: unknown): n is number {
 
 /** Obergrenze für „alle n …“: darüber rechnet der nächste Termin ins Ungültige, und die Karte ließe sich nie mehr erledigen */
 const MAX_EVERY = 999;
+const MAX_TOLERANCE = 365;
 
 export function parseRecurrence(value: unknown): Recurrence | null {
   if (value === null || value === undefined) return null;
@@ -130,7 +131,7 @@ export function parseRecurrence(value: unknown): Recurrence | null {
   const bad = () => new ValidationError(t('Die Wiederholung ist ungültig'));
   if (typeof r !== 'object' || Array.isArray(r)) throw bad();
   if (r.type === 'fixed') {
-    if (!['daily', 'weekly', 'monthly', 'yearly'].includes(r.freq as string) || !isPosInt(r.every) || r.every > MAX_EVERY) throw bad();
+    if (!['hourly', 'daily', 'weekly', 'monthly', 'yearly'].includes(r.freq as string) || !isPosInt(r.every) || r.every > MAX_EVERY) throw bad();
     if (r.weekdays !== undefined) {
       if (!Array.isArray(r.weekdays) || r.weekdays.some((d) => !Number.isInteger(d) || d < 1 || d > 7)) throw bad();
     }
@@ -139,18 +140,31 @@ export function parseRecurrence(value: unknown): Recurrence | null {
         throw bad();
       }
     }
+    if (r.lateTolerance !== undefined) {
+      const lt = r.lateTolerance;
+      if (!['weekly', 'monthly'].includes(r.freq as string) || typeof lt !== 'number' || !Number.isInteger(lt) || lt < 0 || lt > MAX_TOLERANCE) throw bad();
+    }
+    let window: { from: string; to: string } | undefined;
+    if (r.window !== undefined) {
+      const w = r.window as Record<string, unknown>;
+      const time = (v: unknown): v is string => typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+      if (r.freq !== 'hourly' || typeof w !== 'object' || w === null || Array.isArray(w) || !time(w.from) || !time(w.to) || w.from >= w.to) throw bad();
+      window = { from: w.from, to: w.to };
+    }
     // nur bekannte Felder werden gespeichert
     return {
       type: 'fixed',
-      freq: r.freq as 'daily' | 'weekly' | 'monthly' | 'yearly',
+      freq: r.freq as 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly',
       every: r.every,
+      ...(r.lateTolerance !== undefined ? { lateTolerance: r.lateTolerance as number } : {}),
+      ...(window ? { window } : {}),
       ...(r.weekdays !== undefined ? { weekdays: r.weekdays as number[] } : {}),
       ...(r.monthDay !== undefined ? { monthDay: r.monthDay as number } : {}),
     };
   }
   if (r.type === 'after_completion') {
-    if (!isPosInt(r.every) || r.every > MAX_EVERY || !['days', 'weeks', 'months'].includes(r.unit as string)) throw bad();
-    return { type: 'after_completion', every: r.every, unit: r.unit as 'days' | 'weeks' | 'months' };
+    if (!isPosInt(r.every) || r.every > MAX_EVERY || !['hours', 'days', 'weeks', 'months'].includes(r.unit as string)) throw bad();
+    return { type: 'after_completion', every: r.every, unit: r.unit as 'hours' | 'days' | 'weeks' | 'months' };
   }
   throw bad();
 }

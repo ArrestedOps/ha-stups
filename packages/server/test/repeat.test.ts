@@ -140,3 +140,44 @@ describe('Verlauf und Verkettung', () => {
     expect(store.referencedFiles()).toEqual(new Set(['file-1.jpg', 'thumb-1.jpg']));
   });
 });
+
+describe('Stündlich, Zeitfenster und Toleranz bleiben beim Wiederholen erhalten', () => {
+  const hourly: Recurrence = { type: 'fixed', freq: 'hourly', every: 3, window: { from: '08:00', to: '20:00' } };
+  const tolerant: Recurrence = { type: 'fixed', freq: 'weekly', every: 2, weekdays: [6], lateTolerance: 3 };
+
+  it('Erledigen: Folgekarte mit gleicher Regel und dem berechneten Termin', () => {
+    const { b, open } = setup();
+    // jetzt Fr 30.10. 11:00 Berlin; Termin 10:00 Berlin (09:00Z)
+    const card = store.createCard(b.id, { columnId: open.id, title: 'Trinken', dueAt: '2026-10-30T09:00:00Z', recurrence: hourly }, rene.id);
+    const res = store.completeCard(card.id, { by: rene.id, source: 'app' });
+    expect(res.nextDueAt).toBe('2026-10-30T12:00:00.000Z');
+    expect(store.getCard(res.nextCardId!).recurrence).toEqual(hourly);
+  });
+
+  it('Erledigen mit Toleranz: zu spät → Plan beginnt neu', () => {
+    const { b, open } = setup();
+    // fällig Sa 14.11. 10:00, erledigt Mi 18.11.
+    now = new Date('2026-11-18T12:00:00Z');
+    const card = store.createCard(b.id, { columnId: open.id, title: 'Bad', dueAt: '2026-11-14T09:00:00Z', recurrence: tolerant }, rene.id);
+    const res = store.completeCard(card.id, { by: rene.id, source: 'app' });
+    expect(res.nextDueAt).toBe('2026-12-05T09:00:00.000Z');
+    expect(store.getCard(res.nextCardId!).recurrence).toEqual(tolerant);
+  });
+
+  it('Duplizieren und Vorlage behalten Fenster und Toleranz', () => {
+    const { b, open } = setup();
+    const card = store.createCard(b.id, { columnId: open.id, title: 'Bad', dueAt: '2026-11-14T09:00:00Z', recurrence: tolerant }, rene.id);
+    expect(store.duplicateCard(card.id, rene.id).recurrence).toEqual(tolerant);
+    store.createCard(b.id, { columnId: open.id, title: 'Trinken', dueAt: '2026-11-14T09:00:00Z', recurrence: hourly }, rene.id);
+    const saved = store.saveBoardAsTemplate(b.id, 'Meine', rene.id);
+    const board = store.createBoardFromTemplate({ name: 'Neu', template: saved.id, lang: 'de', by: rene.id });
+    const recs = store.getBoardView(board.id).cards.map((c) => c.recurrence);
+    expect(recs).toEqual(expect.arrayContaining([tolerant, hourly]));
+  });
+
+  it('Aktualisieren speichert die neuen Felder', () => {
+    const { b, open } = setup();
+    const card = store.createCard(b.id, { columnId: open.id, title: 'Bad', dueAt: '2026-11-14T09:00:00Z' }, rene.id);
+    expect(store.updateCard(card.id, { recurrence: tolerant }).recurrence).toEqual(tolerant);
+  });
+});

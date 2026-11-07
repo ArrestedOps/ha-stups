@@ -78,7 +78,11 @@
           : ed.item.status === 'assignees_missing'
             ? t('Keine Karten: braucht neue Zuständige')
             : ed.item.status === 'target_missing'
-            ? t('Board oder Spalte fehlt')
+            ? ed.item.pausedBy === 'archived'
+              ? t('Board archiviert')
+              : ed.item.pausedBy === 'deleted'
+                ? t('Board fehlt')
+                : t('Board oder Spalte fehlt')
             : ed.item.subscribed
               ? t('aktiv')
               : t('Abo nicht aktiv'),

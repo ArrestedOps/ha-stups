@@ -397,8 +397,15 @@ export function previewSentence(f: WatcherForm, personName: (id: string) => stri
 }
 
 /** Zeile unter dem Namen in der Liste: letzter Lauf, Zählerstand, Probleme */
+/** Warum ein Wächter pausiert: sein Board ist archiviert oder gelöscht („Board fehlt"); fehlt nur die Spalte, bleibt der allgemeine Satz */
+export function pausedText(i: { pausedBy?: 'archived' | 'deleted' | null }): string {
+  if (i.pausedBy === 'archived') return t('Pausiert: Board archiviert');
+  if (i.pausedBy === 'deleted') return t('Pausiert: Board fehlt');
+  return t('Pausiert: Board oder Spalte gibt es nicht mehr');
+}
+
 export function watcherLine(w: WatcherItem, personName: (id: string) => string, tz?: string, withCounter = true): string {
-  if (w.status === 'target_missing') return t('Pausiert: Board oder Spalte gibt es nicht mehr');
+  if (w.status === 'target_missing') return pausedText(w);
   if (w.status === 'assignees_missing') return t('Keine Karten: braucht neue Zuständige');
   if (w.status === 'entity_missing') return t('Entität fehlt in Home Assistant');
   const parts: string[] = [];

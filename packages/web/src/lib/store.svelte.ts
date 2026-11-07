@@ -36,7 +36,11 @@ export type Sheet =
   | { type: 'new'; columnId: string; dueAt?: string; /** die Spalte ist gewählt (das „+“ über einer Spalte im Kanban): der Termin ändert sie nicht von selbst */ picked?: boolean }
   | { type: 'slot'; at: string }
   | { type: 'boards' }
-  | { type: 'boardSettings' }
+  | { type: 'newBoard' }
+  | { type: 'boardOrder' }
+  | { type: 'archivedBoards' }
+  /** `boardId`: für dieses Board öffnen (sonst das aktuelle) */
+  | { type: 'boardSettings'; boardId?: string }
   | { type: 'settings'; page?: SettingsPageId }
   | { type: 'people' }
   | { type: 'watcher'; id: string | null; template?: string; /** geöffnet aus Einstellungen › Wächter oder aus „Gefunden": dorthin geht Zurück */ from?: 'settings' | 'found'; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
@@ -96,6 +100,8 @@ export const ui = $state({
   allowed: true,
   people: [] as User[],
   boards: [] as BoardSummary[],
+  /** Archivierte Boards, die die Person sehen dürfte (nur für Erwachsene; für „Archivierte Boards“) */
+  archivedBoards: [] as BoardSummary[],
   boardId: null as string | null,
   view: null as BoardView | null,
   columnId: null as string | null,
@@ -369,6 +375,7 @@ async function load(): Promise<void> {
     ui.view = ui.boardId ? await api.board(ui.boardId) : null;
     ensureColumn();
     ui.watchers = await api.watchers().catch(() => ui.watchers);
+    ui.archivedBoards = ui.isChild ? [] : await api.archivedBoards().catch(() => ui.archivedBoards);
     ui.rev += 1;
     ui.online = true;
     ui.allowed = true; // der Zugriff war entzogen und ist zurück: die Erklärung verschwindet ohne Neuladen
@@ -453,6 +460,7 @@ export async function init(): Promise<void> {
     if (ui.boardId) ui.view = await api.board(ui.boardId);
     ensureColumn();
     ui.watchers = await api.watchers().catch(() => null);
+    ui.archivedBoards = ui.isChild ? [] : await api.archivedBoards().catch(() => []);
     ui.ready = true;
   } catch (e) {
     ui.fatal = errorText(e);
@@ -532,6 +540,16 @@ export async function selectBoard(id: string): Promise<void> {
   ui.columnId = null;
   ui.filter.categoryIds = [];
   ui.sheet = null;
+  memo.set('stups.board', id);
+  await refresh();
+}
+
+/** Wie `selectBoard`, lässt aber das offene Fenster stehen (Board-Einstellungen: ein anderes Board wählen, ohne zu schließen) */
+export async function showBoard(id: string): Promise<void> {
+  if (ui.boardId === id) return;
+  ui.boardId = id;
+  ui.columnId = null;
+  ui.filter.categoryIds = [];
   memo.set('stups.board', id);
   await refresh();
 }

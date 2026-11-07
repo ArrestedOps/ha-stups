@@ -81,7 +81,7 @@ export function createBoardLifecycle(c: Ctx, late: unknown) {
     if (!board || board.deleted_at !== null || board.archived_at !== null) return [];
     const ids: string[] = [];
     for (const r of all("select id, card_json from watchers where status = 'target_missing'")) {
-      let card: { boardId?: string; columnId?: string } = {};
+      let card: { boardId?: string; columnId?: string };
       try {
         card = JSON.parse(r.card_json ?? '{}');
       } catch {

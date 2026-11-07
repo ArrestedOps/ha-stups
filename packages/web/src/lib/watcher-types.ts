@@ -81,6 +81,8 @@ export interface WatcherItem extends Omit<WatcherInput, 'countsForFairness'> {
   id: string;
   /** assignees_missing: keine gültigen Zuständigen mehr, der Wächter bleibt aktiv, legt aber keine Karten an */
   status: 'ok' | 'entity_missing' | 'target_missing' | 'assignees_missing';
+  /** Bei target_missing: das Board ist archiviert oder gelöscht (fehlt oder null: nur die Spalte fehlt) */
+  pausedBy?: 'archived' | 'deleted' | null;
   lastFiredAt: string | null;
   lastAssignees: string[];
   armed: boolean;

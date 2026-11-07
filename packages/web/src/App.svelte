@@ -11,6 +11,9 @@
   import TasksView from './components/TasksView.svelte';
   import WeekSheet from './components/WeekSheet.svelte';
   import BoardsView from './components/BoardsView.svelte';
+  import ArchivedBoards from './components/ArchivedBoards.svelte';
+  import BoardCreate from './components/BoardCreate.svelte';
+  import BoardOrder from './components/BoardOrder.svelte';
   import BoardSettings from './components/BoardSettings.svelte';
   import BoardSwitcher from './components/BoardSwitcher.svelte';
   import CardMenu from './components/CardMenu.svelte';
@@ -165,6 +168,12 @@
     <SlotSheet at={ui.sheet.at} />
   {:else if ui.sheet?.type === 'boards'}
     <BoardSwitcher />
+  {:else if ui.sheet?.type === 'newBoard'}
+    <BoardCreate />
+  {:else if ui.sheet?.type === 'boardOrder'}
+    <BoardOrder />
+  {:else if ui.sheet?.type === 'archivedBoards'}
+    <ArchivedBoards />
   {:else if ui.sheet?.type === 'boardSettings'}
     <BoardSettings />
   {:else if ui.sheet?.type === 'settings'}

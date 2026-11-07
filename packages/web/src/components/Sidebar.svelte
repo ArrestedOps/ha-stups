@@ -69,9 +69,24 @@
       </button>
     {/each}
     <!-- auch ein Kind: es legt dort Boards „nur ich" an -->
-    <button class="side-board h-10 gap-3 px-3.5 text-[14px] font-medium text-fg2" onclick={() => openSheet({ type: 'boards' })}>
+    <button class="side-board side-board-add h-10 gap-3 px-3.5 text-[14px] font-medium text-fg2" onclick={() => openSheet({ type: 'newBoard' })}>
       <Icon name="plus" size={16} stroke={2} />{t('Neues Board')}
     </button>
+    {#if !ui.isChild}
+      <button class="side-board side-board-add h-10 gap-3 px-3.5 text-[14px] font-medium text-fg2" onclick={() => openSheet({ type: 'boardSettings' })}>
+        <Icon name="gear" size={16} stroke={2} />{t('Board-Einstellungen')}
+      </button>
+      {#if ui.archivedBoards.length > 0}
+        <button class="side-board h-10 gap-3 px-3.5 text-[14px] font-medium text-fg2" onclick={() => openSheet({ type: 'archivedBoards' })}>
+          <Icon name="archive" size={16} stroke={2} />{t('Archivierte Boards')} ({ui.archivedBoards.length})
+        </button>
+      {/if}
+      {#if ui.boards.length > 1}
+        <button class="side-board h-10 gap-3 px-3.5 text-[14px] font-medium text-fg2" onclick={() => openSheet({ type: 'boardOrder' })}>
+          <Icon name="arrow-up" size={16} stroke={2} />{t('Reihenfolge ändern')}
+        </button>
+      {/if}
+    {/if}
   </nav>
 
   {#if ui.me}

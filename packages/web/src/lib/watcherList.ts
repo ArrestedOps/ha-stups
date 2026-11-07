@@ -1,7 +1,7 @@
 import type { HomeItem } from './api';
 import { t } from './i18n/index.svelte';
 import { modeSummary } from './watcher-flow';
-import { conditionText } from './watchers';
+import { conditionText, pausedText } from './watchers';
 
 /**
  * Die Ansicht „Wächter": Wer steht wo? Jeder Wächter steht genau einmal. Oben die aktuellen (Wartet, Läuft, Bald), darunter alle übrigen
@@ -143,9 +143,9 @@ export const rowStatus = (i: Pick<HomeItem, 'entityMissing' | 'active' | 'phase'
   i.status === 'assignees_missing' ? 'noassign' : i.status === 'target_missing' ? 'target' : i.entityMissing || i.status === 'entity_missing' ? 'missing' : !i.active ? 'off' : i.phase;
 
 /** Der Grund eines Problems als Satz für die Zeile („Keine Karten: braucht neue Zuständige"); null: kein Problem */
-export function problemText(i: Pick<HomeItem, 'status' | 'entityMissing'>): string | null {
+export function problemText(i: Pick<HomeItem, 'status' | 'entityMissing' | 'pausedBy'>): string | null {
   if (i.status === 'assignees_missing') return t('Keine Karten: braucht neue Zuständige');
-  if (i.status === 'target_missing') return t('Pausiert: Board oder Spalte gibt es nicht mehr');
+  if (i.status === 'target_missing') return pausedText(i);
   if (i.status === 'entity_missing' || i.entityMissing) return t('Entität fehlt');
   return null;
 }

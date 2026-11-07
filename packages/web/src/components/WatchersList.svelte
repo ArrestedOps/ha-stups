@@ -6,7 +6,7 @@
   import { formatDue } from '../lib/datetime';
   import { onMount } from 'svelte';
   import type { WatcherTemplate } from '../lib/watcher-types';
-  import { conditionText, noteText, RUN_TEXT, sortWatchers, watcherLine } from '../lib/watchers';
+  import { conditionText, noteText, pausedText, RUN_TEXT, sortWatchers, watcherLine } from '../lib/watchers';
   import { can, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
@@ -58,7 +58,7 @@
 
   const problem = (w: WatcherItem): string | null =>
     w.status === 'target_missing'
-      ? t('Pausiert: Board oder Spalte gibt es nicht mehr')
+      ? pausedText(w)
       : w.status === 'assignees_missing'
         ? t('Keine Karten: braucht neue Zuständige')
         : w.status === 'entity_missing'

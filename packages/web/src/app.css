@@ -581,6 +581,8 @@
   background: var(--brand-dot);
 }
 .side-board[aria-current='true'] { background: var(--surface); border-color: var(--line-chip); color: var(--text); }
+/* „Neues Board“ und „Board-Einstellungen“: gestrichelt, damit sie nicht wie Boards aussehen */
+.side-board-add { border-style: dashed; border-color: var(--line); }
 
 /* Runde Knöpfe in der Kopfzeile des Desktops (Home Assistant, Glocke) */
 .head-icon {

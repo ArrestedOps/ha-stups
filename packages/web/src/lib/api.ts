@@ -98,6 +98,31 @@ export interface Board {
   countsForFairness: boolean;
   /** Die gewählten Mitglieder bei "ausgewählte Personen", ohne den Besitzer */
   memberIds: string[];
+  /** Seit wann archiviert (null oder fehlt: nicht archiviert) */
+  archivedAt?: string | null;
+}
+/** Was das Löschen eines Boards trifft (Antwort für den Bestätigungsdialog); `lock` sperrt es, `mayManage` sagt, ob die Person es verwalten darf */
+export interface BoardDeletePreview {
+  cards: { total: number; open: number };
+  recurring: { id: string; title: string; recurrence: Recurrence }[];
+  watchers: { id: string; name: string; active: boolean }[];
+  /** Persönliche Erinnerungen (Nachhaken) an Karten des Boards */
+  reminders: number;
+  lock: null | 'last';
+  mayManage: boolean;
+  /** Besitzer des Boards, wenn die Person es nicht verwalten darf (sonst null) */
+  ownerName: string | null;
+}
+/** Was mit einem Wächter geschieht, dessen Board gelöscht wird */
+export type WatcherChoice = { action: 'pause' } | { action: 'move'; boardId: string } | { action: 'delete' };
+export interface BoardDuplicateInput {
+  name?: string;
+  /** Spalten und Kategorien kopieren (Standard: ja) */
+  structure?: boolean;
+  /** Offene Aufgaben kopieren (Standard: nein) */
+  openCards?: boolean;
+  /** Sichtbarkeit wie das Original (Standard: ja, sonst „Alle") */
+  keepVisibility?: boolean;
 }
 /** Wer und was von einem Wechsel der Sichtbarkeit oder der Mitglieder betroffen wäre (Vorschau für den Bestätigungsdialog) */
 export interface BoardAccessPreview {
@@ -398,6 +423,8 @@ export interface HomeItem {
   entity: string;
   /** ok, entity_missing, target_missing (pausiert) oder assignees_missing (legt keine Karten an, braucht neue Zuständige) */
   status: 'ok' | 'entity_missing' | 'target_missing' | 'assignees_missing';
+  /** Bei target_missing: das Board ist archiviert oder gelöscht (fehlt oder null: nur die Spalte fehlt) */
+  pausedBy?: 'archived' | 'deleted' | null;
   /** Aktueller Wert mit Einheit ("26 %"), null ohne Wert */
   value: string | null;
   phase: 'waiting' | 'running' | 'soon' | 'quiet';
@@ -685,9 +712,9 @@ export const api = {
   cardsByIds: (ids: string[]) => get<Card[]>(`cards?ids=${ids.map(encodeURIComponent).join(',')}`),
   createBoard: (name: string, template?: string, access: BoardAccessInput = {}) => post<Board>('boards', { name, ...(template ? { template } : {}), ...access }),
   templates: () => get<TemplateInfo[]>('templates'),
-  saveAsTemplate: (boardId: string, name: string) => post<TemplateInfo>(`boards/${boardId}/save-as-template`, { name }),
+  saveAsTemplate: (boardId: string, name: string, withCards = true) => post<TemplateInfo>(`boards/${boardId}/save-as-template`, { name, ...(withCards ? {} : { withCards: false }) }),
   deleteTemplate: (id: string) => del(`templates/${id}`),
-  updateBoard: (id: string, b: Partial<{ name: string; archiveAfterDays: number }> & BoardAccessInput) => patch<Board>(`boards/${id}`, b),
+  updateBoard: (id: string, b: Partial<{ name: string; icon: string | null; color: string | null; archiveAfterDays: number }> & BoardAccessInput) => patch<Board>(`boards/${id}`, b),
   /** Was ein Wechsel der Sichtbarkeit oder der Mitglieder bewirken würde, ohne ihn auszuführen */
   boardAccessPreview: (id: string, q: BoardAccessInput) => {
     const p = new URLSearchParams();
@@ -699,6 +726,16 @@ export const api = {
   orphanBoards: () => get<{ id: string; name: string; cards: number }[]>('admin/orphan-boards'),
   deleteOrphanBoard: (id: string) => del(`admin/orphan-boards/${id}`),
   deleteBoard: (id: string) => del(`boards/${id}`),
+  /** Was das Löschen trifft: Aufgaben, wiederkehrende Aufgaben, Wächter, Erinnerungen; ob es gesperrt ist */
+  boardDeletePreview: (id: string) => get<BoardDeletePreview>(`boards/${id}/delete-preview`),
+  /** Löschen mit der Wahl je Wächter (Schlüssel: Kennung des Wächters) */
+  deleteBoardWith: (id: string, watchers: Record<string, WatcherChoice>) => post<{ paused: string[]; moved: string[]; removed: string[] }>(`boards/${id}/delete`, { watchers }),
+  archiveBoard: (id: string) => post<{ paused: string[] }>(`boards/${id}/archive-board`),
+  unarchiveBoard: (id: string) => post<{ resumed: string[] }>(`boards/${id}/unarchive`),
+  archivedBoards: () => get<BoardSummary[]>('boards/archived'),
+  /** Reihenfolge der Boards (gilt für alle): genau die Boards, die die Person sieht */
+  reorderBoards: (ids: string[]) => post<void>('boards/order', { ids }),
+  duplicateBoard: (id: string, input: BoardDuplicateInput) => post<Board>(`boards/${id}/duplicate`, input),
   archived: (boardId: string) => get<Card[]>(`boards/${boardId}/archive`),
 
   addColumn: (boardId: string, name: string) => post<Column>(`boards/${boardId}/columns`, { name }),

@@ -16,8 +16,12 @@ export interface SyncInfo {
 export interface SyncEnv {
   create(url: string): WebSocket;
   url(): string;
-  onVisible(cb: () => void): void;
+  /** `awayMs`: wie lange die App unsichtbar war (fehlt: unbekannt, zählt als kurz) */
+  onVisible(cb: (awayMs?: number) => void): void;
 }
+
+/** Nach so langer Abwesenheit gilt eine „offene" Verbindung als tot (iOS beendet sie im Hintergrund still) */
+const STALE_AFTER_MS = 5000;
 
 const browserEnv: SyncEnv = {
   create: (url) => new WebSocket(url),
@@ -26,10 +30,18 @@ const browserEnv: SyncEnv = {
     u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
     return u.toString();
   },
-  onVisible: (cb) =>
+  onVisible: (cb) => {
+    let hiddenAt: number | null = null;
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') cb();
-    }),
+      if (document.visibilityState === 'hidden') hiddenAt = Date.now();
+      else {
+        cb(hiddenAt === null ? undefined : Date.now() - hiddenAt);
+        hiddenAt = null;
+      }
+    });
+    // Netz kommt zurück (z. B. WLAN nach dem Aufwachen): sofort neu verbinden
+    window.addEventListener('online', () => cb(Infinity));
+  },
 };
 
 export function startSync(
@@ -103,7 +115,18 @@ export function startSync(
     sock.onerror = () => sock.close();
   }
 
-  env.onVisible(() => {
+  env.onVisible((awayMs = 0) => {
+    if (ws && ws.readyState <= 1 && awayMs >= STALE_AFTER_MS) {
+      // Zombie-Verbindung: wirkt offen, ist aber tot. Verwerfen und frisch verbinden.
+      const old = ws;
+      ws = null; // ab jetzt zählen Ereignisse des alten Sockets nicht mehr
+      retry = 0;
+      try {
+        old.close();
+      } catch {
+        /* schon zu */
+      }
+    }
     if (!ws || ws.readyState > 1) connect();
     onChange();
   });

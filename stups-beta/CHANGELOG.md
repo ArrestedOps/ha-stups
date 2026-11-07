@@ -2,6 +2,10 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.40.1-beta.2
+
+**Nicht mehr „Offline“ hängen bleiben.** Nach längerer Pause (iPhone gesperrt, App im Hintergrund) verbindet sich Stups jetzt beim Zurückkehren sofort neu, auch wenn die alte Verbindung nur noch scheinbar offen war. Ist das Netz noch nicht da, versucht die App es von selbst alle paar Sekunden weiter und springt auf „online“, sobald es klappt. Auch wenn das WLAN zurückkommt, lädt sie sofort neu.
+
 ## 1.40.1-beta.1
 
 **Beta-Marke am Logo.** In der Beta steht neben „stups.“ (Handy-Kopfzeile und Desktop-Seitenleiste) ein kleines „BETA“, damit man immer sieht, in welcher Instanz man ist. Die normale App zeigt es nicht.

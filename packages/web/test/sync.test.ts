@@ -33,8 +33,9 @@ let online: boolean[];
 const env: SyncEnv = {
   create: (url) => new FakeSocket(url) as unknown as WebSocket,
   url: () => 'ws://stups.test/api/events',
-  onVisible: (cb) => void (visible = cb),
+  onVisible: (cb) => void (visible = cb as () => void),
 };
+const visibleAfter = (ms: number) => (visible as unknown as (a: number) => void)(ms);
 const sockets = () => FakeSocket.all;
 const live = () => sockets().filter((s) => s.readyState <= 1);
 
@@ -70,6 +71,28 @@ describe('Live-Sync: Verbindung', () => {
       live()[0]?.open();
     }
     expect(live()).toHaveLength(1);
+  });
+
+  it('nach langer Abwesenheit wird eine scheinbar offene (tote) Verbindung ersetzt', () => {
+    const a = sockets()[0]!;
+    a.open();
+    a.say({ type: 'hello', seq: 3 });
+    visibleAfter(60_000); // iPhone lange gesperrt, a meldet nie „close"
+    expect(a.readyState).toBe(3);
+    expect(live()).toHaveLength(1);
+    const b = live()[0]!;
+    expect(b).not.toBe(a);
+    b.open();
+    expect(online.at(-1)).toBe(true);
+    b.say({ type: 'hello', seq: 9 });
+    expect(changes.length).toBeGreaterThan(0); // lädt alles neu
+  });
+
+  it('nach kurzer Abwesenheit bleibt die offene Verbindung', () => {
+    const a = sockets()[0]!;
+    a.open();
+    visibleAfter(1000);
+    expect(live()).toEqual([a]);
   });
 
   it('eine verwaiste Verbindung meldet nicht „offline“, solange die aktuelle offen ist', () => {

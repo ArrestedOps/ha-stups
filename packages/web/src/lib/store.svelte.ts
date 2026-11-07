@@ -357,6 +357,24 @@ function ensureColumn(): void {
   if (!cols.some((c) => c.id === ui.columnId)) ui.columnId = cols[0]?.id ?? null;
 }
 
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
+let retryCount = 0;
+
+/** Solange „offline" gilt, alle paar Sekunden neu laden (bis 15 s Abstand); Erfolg setzt `ui.online` zurück */
+function scheduleRetry(): void {
+  if (retryTimer) return;
+  retryTimer = setTimeout(
+    () => {
+      retryTimer = null;
+      void refresh().then(() => {
+        if (ui.online) retryCount = 0;
+        else retryCount++;
+      });
+    },
+    Math.min(2000 * 2 ** retryCount, 15_000),
+  );
+}
+
 async function load(): Promise<void> {
   try {
     // Die Personenliste gehört zur Ansicht: Änderungen von anderen Geräten (neue Person, Umbenennen) kommen so mit
@@ -380,8 +398,10 @@ async function load(): Promise<void> {
     ui.online = true;
     ui.allowed = true; // der Zugriff war entzogen und ist zurück: die Erklärung verschwindet ohne Neuladen
   } catch (e) {
-    if (e instanceof ApiError && e.status === 0) ui.online = false;
-    else if (e instanceof ApiError && e.status === 403) ui.allowed = false; // Zugriff wurde entzogen
+    if (e instanceof ApiError && e.status === 0) {
+      ui.online = false;
+      scheduleRetry(); // Netz noch nicht da (z. B. gleich nach dem Aufwachen): von selbst weiter versuchen
+    } else if (e instanceof ApiError && e.status === 403) ui.allowed = false; // Zugriff wurde entzogen
     else toast(errorText(e), { tone: 'error' });
   }
 }

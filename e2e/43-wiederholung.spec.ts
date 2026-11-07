@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 import { newTaskSheet, openBoards } from './helpers';
 
 // Wiederholung ohne Termin-Pflicht, Stündlich, Verspätung (Plan bleibt fest / Kleine Verspätung / Neu zählen).
@@ -22,6 +22,16 @@ async function openNew(page: Page) {
 }
 const repeatSheet = (page: Page) => page.getByRole('dialog', { name: 'Wiederholung' });
 
+/** Genau „Sa“ gewählt, egal welcher Wochentag heute vorbelegt ist (der Test darf nicht vom Tag der Ausführung abhängen) */
+async function onlySaturday(rep: Locator) {
+  const days = rep.getByRole('group', { name: 'Wochentage' }).getByRole('button');
+  for (const d of await days.all()) {
+    const on = (await d.getAttribute('aria-pressed')) === 'true';
+    const sat = ((await d.textContent()) ?? '').trim() === 'Sa';
+    if (on !== sat) await d.click();
+  }
+}
+
 test('Neue Aufgabe: Wiederholung ohne Termin wählbar, der erste Termin wird automatisch gesetzt', async ({ page, request }) => {
   const boardId = await ownBoard(request, page, unique('Wdh'));
   const input = await openNew(page);
@@ -36,7 +46,7 @@ test('Neue Aufgabe: Wiederholung ohne Termin wählbar, der erste Termin wird aut
   await expect(rep.getByText('Und wenn ich später fertig werde?')).toHaveCount(0);
   await rep.getByRole('button', { name: 'Wöchentlich', exact: true }).click();
   await expect(rep.getByTestId('recurrence-preview')).toContainText('Erster Termin wird automatisch gesetzt:');
-  await rep.getByRole('group', { name: 'Wochentage' }).getByRole('button', { name: 'Sa', exact: true }).click();
+  await onlySaturday(rep);
   await expect(rep.getByRole('group', { name: 'Wochentage' }).getByRole('button', { name: 'Sa', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await rep.getByRole('button', { name: 'Fertig', exact: true }).click();
 
@@ -81,7 +91,7 @@ test('Verspätung: drei Karten mit Beispielen aus der echten Regel, Toleranz wir
   await sheet.getByRole('button', { name: /^Wiederholung wählen/ }).click();
   const rep = repeatSheet(page);
   await rep.getByRole('button', { name: 'Alle 2 Wochen', exact: true }).click();
-  await rep.getByRole('group', { name: 'Wochentage' }).getByRole('button', { name: 'Sa', exact: true }).click();
+  await onlySaturday(rep);
 
   const group = rep.getByRole('radiogroup', { name: 'Und wenn ich später fertig werde?' });
   await expect(group.getByRole('radio')).toHaveCount(3);

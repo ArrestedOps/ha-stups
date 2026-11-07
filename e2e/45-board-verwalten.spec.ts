@@ -70,7 +70,7 @@ test('Board-Auswahl: Liste mit offenen Karten und Sichtbarkeit, darunter Neues B
   await expect(page.getByLabel('Name des neuen Boards')).toBeVisible();
   await expect(page.getByTestId('visibility-picker')).toBeVisible();
   // Zurück führt in die Auswahl
-  await page.getByRole('dialog').getByRole('button', { name: 'Zurück' }).click();
+  await page.getByRole('dialog', { name: 'Neues Board erstellen' }).getByRole('button', { name: 'Zurück' }).click();
   await expect(page.getByRole('dialog', { name: 'Boards' })).toBeVisible();
   // ein Tipp auf ein Board wählt es
   await page.getByRole('dialog', { name: 'Boards' }).getByRole('button', { name }).click();

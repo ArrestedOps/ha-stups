@@ -38,6 +38,7 @@ export function createBoards(c: Ctx, late: unknown) {
     ownerId: r.owner_id ?? null,
     countsForFairness: r.counts_for_fairness !== 0,
     memberIds: boardMemberIds(r.id),
+    archivedAt: r.archived_at ?? null,
   });
 
   const VISIBILITIES: BoardVisibility[] = ['all', 'private', 'selected'];
@@ -69,6 +70,13 @@ export function createBoards(c: Ctx, late: unknown) {
   const isPerson = (id: string | null): boolean => id !== null && !!one('select 1 as ok from users where id = ? and is_person = 1', id);
 
   function visibleBoard(id: string): Row {
+    const r = one('select * from boards where id = ? and deleted_at is null and archived_at is null', id);
+    if (!r) throw new NotFoundError(t('Board nicht gefunden'));
+    return r;
+  }
+
+  /** Das Board, auch wenn es archiviert ist (Archivieren und Wiederherstellen); gelöscht gibt es nicht */
+  function anyBoard(id: string): Row {
     const r = one('select * from boards where id = ? and deleted_at is null', id);
     if (!r) throw new NotFoundError(t('Board nicht gefunden'));
     return r;
@@ -277,7 +285,7 @@ export function createBoards(c: Ctx, late: unknown) {
   function visibleColumn(id: string): Row {
     const r = one(
       `select c.* from columns c join boards b on b.id = c.board_id
-       where c.id = ? and c.deleted_at is null and b.deleted_at is null`,
+       where c.id = ? and c.deleted_at is null and b.deleted_at is null and b.archived_at is null`,
       id,
     );
     if (!r) throw new NotFoundError(t('Spalte nicht gefunden'));
@@ -414,7 +422,7 @@ export function createBoards(c: Ctx, late: unknown) {
 
   /** Alle Boards abgleichen. Gibt die Zahl der verschobenen Karten zurück. */
   function syncPlanned(): number {
-    return tx(() => all('select id from boards where deleted_at is null').reduce((n, b) => n + syncPlannedBoard(b.id), 0));
+    return tx(() => all('select id from boards where deleted_at is null and archived_at is null').reduce((n, b) => n + syncPlannedBoard(b.id), 0));
   }
 
   /**
@@ -424,7 +432,7 @@ export function createBoards(c: Ctx, late: unknown) {
   function ensurePlannedColumns(): void {
     if (one("select 1 as ok from settings where key = 'plannedColumnsAdded'")) return;
     tx(() => {
-      for (const b of all('select id from boards where deleted_at is null')) {
+      for (const b of all('select id from boards where deleted_at is null and archived_at is null')) {
         if (all('select id from columns where board_id = ? and is_planned = 1', b.id).length > 0) continue;
         const cols = visibleColumns(b.id);
         const inbox = inboxColumn(b.id);
@@ -559,7 +567,7 @@ export function createBoards(c: Ctx, late: unknown) {
       `select distinct c.board_id as id from cards c
          join card_assignees a on a.card_id = c.id
          join boards b on b.id = c.board_id
-        where a.user_id = ? and c.deleted_at is null and b.deleted_at is null`,
+        where a.user_id = ? and c.deleted_at is null and b.deleted_at is null and b.archived_at is null`,
       userId,
     ).map((r) => r.id as string);
   }
@@ -579,6 +587,7 @@ export function createBoards(c: Ctx, late: unknown) {
   return {
     toBoard,
     visibleBoard,
+    anyBoard,
     lastPos,
     createBoard,
     listBoards,

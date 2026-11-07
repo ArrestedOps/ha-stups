@@ -13,7 +13,7 @@ export function createTrash(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { now, iso, one, all, run, tx } = c;
   // Funktionen aus anderen Themen: erst beim Aufruf nachgeschlagen (alle Teile sind bei der Verwendung zusammengesetzt)
-  const { lastPos, visibleColumns, canSeeBoard } = lazy(s, ['lastPos', 'visibleColumns', 'canSeeBoard'] as const);
+  const { lastPos, visibleColumns, canSeeBoard, resumeWatchersOfBoard } = lazy(s, ['lastPos', 'visibleColumns', 'canSeeBoard', 'resumeWatchersOfBoard'] as const);
 
   const purgeAt = (deletedAt: string) =>
     new Date(Date.parse(deletedAt) + TRASH_DAYS * 24 * 60 * 60 * 1000).toISOString();
@@ -77,6 +77,8 @@ export function createTrash(c: Ctx, late: unknown) {
         run('update columns set deleted_at = null where id = ?', id);
       } else {
         run(`update ${table} set deleted_at = null where id = ?`, id);
+        // Das Board ist zurück: die Wächter, die es pausiert hat, laufen von selbst wieder
+        if (type === 'board') resumeWatchersOfBoard(id);
       }
     });
   }

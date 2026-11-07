@@ -17,6 +17,7 @@ import type { createToday } from './today.js';
 import type { createInbox } from './inbox.js';
 import type { createVisibility } from './visibility.js';
 import type { createBoardAccess } from './board-access.js';
+import type { createBoardLifecycle } from './board-lifecycle.js';
 
 export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createBoards> &
@@ -35,4 +36,5 @@ export type Internals = ReturnType<typeof createPeople> &
   ReturnType<typeof createToday> &
   ReturnType<typeof createInbox> &
   ReturnType<typeof createVisibility> &
-  ReturnType<typeof createBoardAccess>;
+  ReturnType<typeof createBoardAccess> &
+  ReturnType<typeof createBoardLifecycle>;

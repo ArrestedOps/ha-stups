@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { ConflictError, ForbiddenError, ValidationError } from '../errors.js';
 import { isHm, quietEnd } from '../quiet.js';
 import { NUDGE_TEMPLATES, NUDGE_TEXT_MAX, NUDGE_COOLDOWN_MS, NUDGE_LATER_MS, NUDGE_LATER_MAX, type User, type NudgeTemplate, type Nudge, type NudgeSent, type NudgeSkipped, type NudgeTarget, type DueNudge, type RecentNudge, type ActivityEntry, type Row } from './types.js';
-import { OPEN_CARD, PUBLIC_BOARD } from './constants.js';
+import { LIVE_BOARD, OPEN_CARD, PUBLIC_BOARD } from './constants.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import type { Viewer } from './visibility.js';
@@ -167,7 +167,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
        join cards c on c.id = n.card_id
        join users f on f.id = n.from_user
        join users t on t.id = n.to_user and t.is_person = 1
-       where n.reply is null and n.delivered_round < n.later_count and n.deliver_at <= ? and ${OPEN_CARD}
+       where n.reply is null and n.delivered_round < n.later_count and n.deliver_at <= ? and ${OPEN_CARD}${LIVE_BOARD}
        order by n.deliver_at, n.rowid`,
       now().toISOString(),
     ).map((r) => ({

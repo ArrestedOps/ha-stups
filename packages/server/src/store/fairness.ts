@@ -65,7 +65,7 @@ export function createFairness(c: Ctx, late: unknown) {
     const t = new Date(to).toISOString();
     // Was nicht zählt: private Boards (nie), Boards, die ausgenommen sind, und Wächter, die ausgenommen sind (nur ihre Karten). Die Abfrage
     // läuft über das Board der Karte und gilt darum rückwirkend: Wer ein Board später ausnimmt, nimmt auch die alten Zahlen heraus.
-    const counts = `b.visibility <> 'private' and b.counts_for_fairness = 1 and (c.watcher_id is null or coalesce(w.counts_for_fairness, 1) = 1)`;
+    const counts = `b.archived_at is null and b.visibility <> 'private' and b.counts_for_fairness = 1 and (c.watcher_id is null or coalesce(w.counts_for_fairness, 1) = 1)`;
     const joins = `join boards b on b.id = c.board_id left join watchers w on w.id = c.watcher_id`;
     const by = <T extends object>(rows: T[], key: keyof T) => new Map(rows.map((r) => [r[key] as string, r]));
 

@@ -12,7 +12,7 @@ export function registerTemplateRoutes(app: FastifyInstance, k: ApiKit): void {
 
   app.post<{ Params: Params }>('/api/boards/:id/save-as-template', async (req, reply) => {
     const b = body(req);
-    return reply.code(201).send(store.saveBoardAsTemplate(req.params.id, b.name, req.user?.id ?? null));
+    return reply.code(201).send(store.saveBoardAsTemplate(req.params.id, b.name, req.user?.id ?? null, { withCards: b.withCards !== false }));
   });
 
   // Löschen darf der Ersteller, ein Administrator und wer das Recht „settings“ hat (der Datenteil prüft das)

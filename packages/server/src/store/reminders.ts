@@ -120,7 +120,7 @@ export function createReminders(c: Ctx, late: unknown) {
        join boards b on b.id = c.board_id
        left join watchers w on w.id = c.watcher_id
        where r.done = 0 and (r.next_at is null or r.next_at <= ?)
-         and c.deleted_at is null and c.archived_at is null and c.completed_at is null and b.deleted_at is null
+         and c.deleted_at is null and c.archived_at is null and c.completed_at is null and b.deleted_at is null and b.archived_at is null
          and c.confirm_requested_at is null and (c.watcher_id is null or w.active = 1)
        order by r.next_at, r.rowid`,
       nowIso,

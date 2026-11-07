@@ -284,7 +284,7 @@ export function createCompletion(c: Ctx, late: unknown) {
       `select c.id, c.completed_at, b.archive_after_days as days
        from cards c join boards b on b.id = c.board_id
        where c.deleted_at is null and c.archived_at is null and c.completed_at is not null
-         and b.deleted_at is null and b.archive_after_days > 0`,
+         and b.deleted_at is null and b.archived_at is null and b.archive_after_days > 0`,
     );
     let n = 0;
     for (const r of rows) {

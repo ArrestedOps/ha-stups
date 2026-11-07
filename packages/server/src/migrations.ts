@@ -653,4 +653,13 @@ export const migrations: Migration[] = [
       alter table watchers drop column nudge_after_min;
     `,
   },
+  {
+    version: 29,
+    // Boards archivieren: archived_at (null = nicht archiviert). Ein archiviertes Board verschwindet aus Auswahl, Listen und Auswertungen, bleibt
+    // aber unverändert gespeichert (Karten, Spalten, Einstellungen) und lässt sich wiederherstellen. Die Reihenfolge der Boards (Spalte
+    // position) gibt es seit Anfang an und gilt für alle.
+    sql: `
+      alter table boards add column archived_at text;
+    `,
+  },
 ];

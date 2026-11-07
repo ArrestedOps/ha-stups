@@ -1032,6 +1032,8 @@ export function createWatchers(deps: WatcherDeps) {
         subject: subjectOf(seenOf(w.trigger.entityId), w.trigger.entityId),
         /** Kategorie, die Stups für diesen Wächter vorschlüge (für „Kategorien vorschlagen" bei Wächtern ohne) */
         suggestedCategory: categoryOfWatcher(w, seenOf(w.trigger.entityId)),
+        /** Bei `target_missing`: Board archiviert oder gelöscht (sonst null) */
+        pausedBy: w.status === 'target_missing' ? store.targetGone(w.card.boardId) : null,
         /** die offene Karte dieses Wächters, falls es eine gibt */
         openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, waiting: waiting.has(open.id) } : null,
       };
@@ -1187,6 +1189,7 @@ export function createWatchers(deps: WatcherDeps) {
         nextCard: w.card.title,
         entityMissing: statesLoaded && (w.status === 'entity_missing' || s === null),
         status: w.status,
+        pausedBy: w.status === 'target_missing' ? store.targetGone(w.card.boardId) : null,
         openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, createdAt: open.createdAt } : null,
         nextEvent,
         active: w.active,

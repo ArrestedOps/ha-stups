@@ -22,12 +22,21 @@ export function createVisibility(c: Ctx, late: unknown) {
   const { one, all } = c;
   const { people } = lazy(s, ['people'] as const);
 
-  /** SQL-Bedingung: `viewer` sieht das Board mit diesem Alias (Platzhalter in `args`, in dieser Reihenfolge) */
-  function boardVisibleSql(alias: string, viewer: Viewer): { sql: string; args: (string | null)[] } {
+  /**
+   * SQL-Bedingung: `viewer` darf dieses Board sehen, ohne auf Archiv zu achten (nur die Sichtbarkeit); für die Liste „Archivierte Boards"
+   * und das Wiederherstellen. Alles andere fragt `boardVisibleSql`.
+   */
+  function boardAccessSql(alias: string, viewer: Viewer): { sql: string; args: (string | null)[] } {
     return {
       sql: `(${alias}.visibility = 'all' or (? in (select pu.id from users pu where pu.is_person = 1) and (${alias}.owner_id = ? or (${alias}.visibility = 'selected' and exists (select 1 from board_members bm where bm.board_id = ${alias}.id and bm.user_id = ?)))))`,
       args: [viewer, viewer, viewer],
     };
+  }
+
+  /** SQL-Bedingung: `viewer` sieht das Board mit diesem Alias (Platzhalter in `args`, in dieser Reihenfolge); ein archiviertes Board sieht niemand */
+  function boardVisibleSql(alias: string, viewer: Viewer): { sql: string; args: (string | null)[] } {
+    const a = boardAccessSql(alias, viewer);
+    return { sql: `(${alias}.archived_at is null and ${a.sql})`, args: a.args };
   }
 
   /** SQL-Teilabfrage: die Kennungen aller (nicht gelöschten) Boards, die `viewer` sieht, für `board_id in (…)` */
@@ -39,6 +48,12 @@ export function createVisibility(c: Ctx, late: unknown) {
   /** Sieht die Person dieses Board? (Auch ein gelöschtes Board bleibt geschützt: es steht im Papierkorb nur für Berechtigte.) Unbekannt: nein. */
   function canSeeBoard(viewer: Viewer, boardId: string): boolean {
     const v = boardVisibleSql('b', viewer);
+    return !!one(`select 1 as ok from boards b where b.id = ? and ${v.sql}`, boardId, ...v.args);
+  }
+
+  /** Darf die Person das Board sehen, auch wenn es archiviert ist? (Wiederherstellen aus dem Archiv, Zugriffsprüfung der Routen.) Unbekannt: nein. */
+  function canAccessBoard(viewer: Viewer, boardId: string): boolean {
+    const v = boardAccessSql('b', viewer);
     return !!one(`select 1 as ok from boards b where b.id = ? and ${v.sql}`, boardId, ...v.args);
   }
 
@@ -82,5 +97,5 @@ export function createVisibility(c: Ctx, late: unknown) {
     return peopleSeeing(r.visibility as BoardVisibility, (r.owner_id as string | null) ?? null, boardMemberIds(boardId));
   }
 
-  return { boardVisibleSql, visibleBoardsSql, canSeeBoard, visibleBoardIds, boardIdOfCardAny, canSeeCard, boardMemberIds, peopleSeeing, boardPeopleIds };
+  return { boardAccessSql, boardVisibleSql, visibleBoardsSql, canSeeBoard, canAccessBoard, visibleBoardIds, boardIdOfCardAny, canSeeCard, boardMemberIds, peopleSeeing, boardPeopleIds };
 }

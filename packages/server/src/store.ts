@@ -8,6 +8,7 @@ import { createToday } from './store/today.js';
 import { createInbox } from './store/inbox.js';
 import { createVisibility } from './store/visibility.js';
 import { createBoardAccess } from './store/board-access.js';
+import { createBoardLifecycle } from './store/board-lifecycle.js';
 import { createFeedback } from './store/feedback.js';
 import { createCards } from './store/cards.js';
 import { createBoards } from './store/boards.js';
@@ -39,6 +40,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     createVisibility(c, s),
     createBoardAccess(c, s),
     createBoards(c, s),
+    createBoardLifecycle(c, s),
     createCards(c, s),
     createCardExtras(c, s),
     createCompletion(c, s),
@@ -111,6 +113,18 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     cardIdOfLink: s.cardIdOfLink,
     cardIdOfComment: s.cardIdOfComment,
     canSeeBoard: s.canSeeBoard,
+    canAccessBoard: s.canAccessBoard,
+    deletePreview: s.deletePreview,
+    deleteBoardWith: s.deleteBoardWith,
+    archiveBoard: s.archiveBoard,
+    unarchiveBoard: s.unarchiveBoard,
+    listArchivedBoards: s.listArchivedBoards,
+    duplicateBoard: s.duplicateBoard,
+    reorderBoards: s.reorderBoards,
+    isLastBoard: s.isLastBoard,
+    pauseWatchersOfBoard: s.pauseWatchersOfBoard,
+    resumeWatchersOfBoard: s.resumeWatchersOfBoard,
+    targetGone: s.targetGone,
     canSeeCard: s.canSeeCard,
     visibleBoardIds: s.visibleBoardIds,
     boardPeopleIds: s.boardPeopleIds,

@@ -80,6 +80,7 @@ export function createConfirmation(c: Ctx, late: unknown) {
     return all(
       `select id, title, board_id, confirm_requested_at, confirm_requested_by from cards
        where deleted_at is null and archived_at is null and completed_at is null and confirm_requested_at is not null
+         and board_id in (select id from boards where deleted_at is null and archived_at is null)
        order by confirm_requested_at, id`,
     ).map((r) => ({ cardId: r.id, title: r.title, boardId: r.board_id, childId: r.confirm_requested_by ?? null, requestedAt: r.confirm_requested_at }));
   }

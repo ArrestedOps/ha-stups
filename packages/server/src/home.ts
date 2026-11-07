@@ -114,6 +114,8 @@ export interface HomeItem {
   entityMissing: boolean;
   /** ok, entity_missing, target_missing (Board oder Spalte weg, pausiert) oder assignees_missing (keine Karten, braucht neue Zuständige) */
   status: WatcherStatus;
+  /** Bei `target_missing`: das Board ist archiviert (`archived`) oder gelöscht (`deleted`); sonst null (zum Beispiel fehlt nur die Spalte) */
+  pausedBy: 'archived' | 'deleted' | null;
   openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; createdAt: string } | null;
   nextEvent: { title: string; at: string } | null;
   /** Der Wächter ist eingeschaltet (aus: er löst nichts aus, bleibt aber in der Liste) */

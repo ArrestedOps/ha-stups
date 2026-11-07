@@ -18,6 +18,25 @@ export function registerBoardRoutes(app: FastifyInstance, k: ApiKit): void {
   }
 
   /**
+   * Darf diese Anfrage das Board verwalten (löschen, archivieren)? Der Besitzer und Administratoren; ein Board ohne Besitzer (Bestand) darf
+   * jeder Erwachsene verwalten wie bisher. Sonst 403 mit dem Namen des Besitzers.
+   */
+  function requireManage(req: FastifyRequest, board: Board, verb: 'delete' | 'archive'): void {
+    const me = req.user?.id;
+    if (req.access?.isAdmin === true || (me && board.ownerId === me) || (board.ownerId === null && req.access?.isChild !== true)) return;
+    const owner = board.ownerId ? store.people().find((p) => p.id === board.ownerId) : undefined;
+    if (verb === 'delete') {
+      throw new ForbiddenError(owner ? t('Nur {owner} oder ein Administrator darf löschen.', { owner: owner.displayName }) : t('Nur ein Administrator darf löschen.'));
+    }
+    throw new ForbiddenError(owner ? t('Nur {owner} oder ein Administrator darf archivieren.', { owner: owner.displayName }) : t('Nur ein Administrator darf archivieren.'));
+  }
+
+  /** Nach einer Aktion am Board: die Abos der Wächter abgleichen (pausierte, umgezogene und gelöschte Wächter) */
+  function syncWatchers(): void {
+    deps.watchers?.syncSubscriptions();
+  }
+
+  /**
    * Wer von den Personen eine Mitteilung bekommt, wenn ein Wächter neue Zuständige braucht: die Person, die geändert hat, der Besitzer des
    * Boards, alle mit dem Recht „Wächter" und alle Administratoren; ohne Doppelte, ohne Kinder (Wächter sehen Erwachsene, auch wenn das
    * Board nicht ihres ist: die Mitteilung nennt nur Wächter, Board und die entfernte Person).
@@ -119,9 +138,59 @@ export function registerBoardRoutes(app: FastifyInstance, k: ApiKit): void {
     const { rules: _rules, ...summary } = plan;
     return summary;
   });
+  /**
+   * Was das Löschen trifft (für den Bestätigungsdialog): Aufgaben, wiederkehrende Aufgaben, Wächter, persönliche Erinnerungen; dazu, ob
+   * die Person es verwalten darf (`mayManage`, sonst mit Besitzer) und ob es das letzte sichtbare Board ist (`lock`).
+   */
+  app.get<{ Params: Params }>('/api/boards/:id/delete-preview', async (req) => {
+    const board = store.getBoard(req.params.id);
+    let mayManage = true;
+    let ownerName: string | null = null;
+    try {
+      requireManage(req, board, 'delete');
+    } catch {
+      mayManage = false;
+      ownerName = store.people().find((p) => p.id === board.ownerId)?.displayName ?? null;
+    }
+    return { ...store.deletePreview(req.params.id, req.user?.id ?? null), mayManage, ownerName };
+  });
+  // Löschen mit der Wahl je Wächter: { watchers: { [id]: { action: 'pause' } | { action: 'move', boardId } | { action: 'delete' } } }; ohne Angabe pausieren sie
+  app.post<{ Params: Params }>('/api/boards/:id/delete', async (req) => {
+    requireManage(req, store.getBoard(req.params.id), 'delete');
+    const effects = store.deleteBoardWith(req.params.id, body(req).watchers, req.user?.id ?? null);
+    syncWatchers();
+    return effects;
+  });
   app.delete<{ Params: Params }>('/api/boards/:id', async (req, reply) => {
-    store.deleteBoard(req.params.id);
+    requireManage(req, store.getBoard(req.params.id), 'delete');
+    store.deleteBoardWith(req.params.id, undefined, req.user?.id ?? null);
+    syncWatchers();
     return noContent(reply);
+  });
+  // Archivieren: das Board verschwindet aus Auswahl und Listen, bleibt unverändert gespeichert; seine Wächter pausieren
+  app.post<{ Params: Params }>('/api/boards/:id/archive-board', async (req) => {
+    requireManage(req, store.getBoard(req.params.id), 'archive');
+    const effects = store.archiveBoard(req.params.id, req.user?.id ?? null);
+    syncWatchers();
+    return effects;
+  });
+  app.post<{ Params: Params }>('/api/boards/:id/unarchive', async (req) => {
+    const result = store.unarchiveBoard(req.params.id);
+    syncWatchers();
+    // Die Wächter laufen wieder: Startzustand prüfen und abonnieren
+    for (const id of result.resumed) await deps.watchers?.onSaved(id);
+    return result;
+  });
+  app.get('/api/boards/archived', async (req) => store.listArchivedBoards(req.user?.id ?? null));
+  // Reihenfolge der Boards (gilt für alle): { ids: [...] } mit genau den Boards, die die Person sieht
+  app.post('/api/boards/order', async (req, reply) => {
+    store.reorderBoards(body(req).ids, req.user?.id ?? null);
+    return noContent(reply);
+  });
+  // Kopie: { name?, structure?, openCards?, keepVisibility? }; Besitzer ist, wer kopiert
+  app.post<{ Params: Params }>('/api/boards/:id/duplicate', async (req, reply) => {
+    const b = body(req);
+    return reply.code(201).send(store.duplicateBoard(req.params.id, { name: b.name, structure: b.structure, openCards: b.openCards, keepVisibility: b.keepVisibility }, req.user?.id ?? null));
   });
   // Boards ohne Besitzer (die Person ist entfernt): niemand sieht sie; ein Administrator sieht nur Name und Zahl der Karten und darf sie löschen
   app.get('/api/admin/orphan-boards', async (req) => {

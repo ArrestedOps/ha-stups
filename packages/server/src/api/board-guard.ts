@@ -18,6 +18,8 @@ import type { Changes } from '../store/context.js';
 interface Target {
   board: string | null;
   what: string;
+  /** Die Route betrifft ein archiviertes Board (Wiederherstellen): es zählt nur die Sichtbarkeit, nicht das Archiv */
+  archived?: boolean;
 }
 
 export function boardOfRoute(store: Store, req: FastifyRequest): Target | null {
@@ -26,7 +28,7 @@ export function boardOfRoute(store: Store, req: FastifyRequest): Target | null {
   const id = params.id ?? '';
   const card = (cardId: string | null): Target => ({ board: cardId ? store.boardIdOfCardAny(cardId) : null, what: t('Karte nicht gefunden') });
 
-  if (/^\/api\/boards\/:id(\/|$)/.test(url)) return { board: id, what: t('Board nicht gefunden') };
+  if (/^\/api\/boards\/:id(\/|$)/.test(url)) return { board: id, what: t('Board nicht gefunden'), archived: url === '/api/boards/:id/unarchive' };
   if (/^\/api\/columns\/:id(\/|$)/.test(url)) return { board: store.boardIdOfColumn(id), what: t('Spalte nicht gefunden') };
   if (/^\/api\/categories\/:id(\/|$)/.test(url)) return { board: store.boardIdOfCategory(id), what: t('Kategorie nicht gefunden') };
   if (/^\/api\/cards\/:id(\/|$)/.test(url)) return card(id);
@@ -60,6 +62,7 @@ export function registerBoardGuard(app: FastifyInstance, store: Store): void {
     if (!req.principal) return;
     const target = boardOfRoute(store, req);
     if (!target || target.board === null) return;
-    if (!store.canSeeBoard(req.user?.id ?? null, target.board)) throw new NotFoundError(target.what);
+    const allowed = target.archived ? store.canAccessBoard(req.user?.id ?? null, target.board) : store.canSeeBoard(req.user?.id ?? null, target.board);
+    if (!allowed) throw new NotFoundError(target.what);
   });
 }

@@ -4,7 +4,7 @@
  */
 const LATER: Record<string, string[]> = {
   watchers: ['category', 'counts_for_fairness', 'assignees_missing', 'nudge_json', 'nudge_after_min'],
-  boards: ['visibility', 'owner_id', 'counts_for_fairness'],
+  boards: ['visibility', 'owner_id', 'counts_for_fairness', 'archived_at'],
   // Migration 28 hat diese Spalten entfernt (Nachhaken wurde eine eigene Tabelle): sie zählen auf keiner Seite des Vergleichs
   cards: ['overdue_nag'],
 };

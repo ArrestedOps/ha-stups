@@ -110,8 +110,13 @@ describe('boards, columns, categories', () => {
     const { b } = await boardWithColumns();
     const upd = await call('PATCH', `/api/boards/${b.id}`, { name: 'Zuhause', archiveAfterDays: 14 });
     expect(upd.body).toMatchObject({ name: 'Zuhause', archiveAfterDays: 14 });
+    // das letzte Board lässt sich nicht löschen
+    const last = await call('DELETE', `/api/boards/${b.id}`);
+    expect(last.status).toBe(409);
+    expect(last.body.error).toMatch(/letzte Board/);
+    const other = (await call('POST', '/api/boards', { name: 'Zweites' })).body;
     expect((await call('DELETE', `/api/boards/${b.id}`)).status).toBe(204);
-    expect((await call('GET', '/api/boards')).body).toEqual([]);
+    expect((await call('GET', '/api/boards')).body.map((x: any) => x.id)).toEqual([other.id]);
   });
 });
 

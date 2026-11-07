@@ -119,14 +119,14 @@ export function createTemplates(c: Ctx, late: unknown) {
     });
   }
 
-  /** Speichert Spalten, Kategorien und offene Karten eines Boards als eigene Vorlage (ohne Zuweisungen, Anhänge, Kommentare, Erledigtes) */
-  function saveBoardAsTemplate(boardId: string, name: unknown, by: string | null): TemplateInfo {
+  /** Speichert Spalten, Kategorien und offene Karten eines Boards als eigene Vorlage (ohne Zuweisungen, Anhänge, Kommentare, Erledigtes); `withCards: false`: nur Spalten und Kategorien */
+  function saveBoardAsTemplate(boardId: string, name: unknown, by: string | null, opts: { withCards?: boolean } = {}): TemplateInfo {
     const view = getBoardView(boardId);
     const clean = cleanText(name, t('Der Name'), 60);
     const columnIndex = new Map(view.columns.map((col, i) => [col.id, i]));
     const categoryIndex = new Map(view.categories.map((cat, i) => [cat.id, i]));
     const doneColumns = new Set(view.columns.filter((col) => col.isDone).map((col) => col.id));
-    const open = view.cards.filter((card) => !card.completedAt && !doneColumns.has(card.columnId));
+    const open = opts.withCards === false ? [] : view.cards.filter((card) => !card.completedAt && !doneColumns.has(card.columnId));
 
     // Termine relativ zum frühesten, damit die Vorlage an jedem Tag gilt
     const tz = timeZone();

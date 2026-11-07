@@ -171,6 +171,8 @@ export interface Board {
   countsForFairness: boolean;
   /** Die gewählten Mitglieder (nur bei visibility = selected), ohne den Besitzer */
   memberIds: string[];
+  /** Seit wann das Board archiviert ist (null: nicht archiviert). Ein archiviertes Board gibt es für alle Listen und Auswertungen nicht. */
+  archivedAt: string | null;
 }
 
 export interface BoardSummary extends Board {

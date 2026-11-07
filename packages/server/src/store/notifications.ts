@@ -18,7 +18,7 @@ export function createNotifications(c: Ctx, late: unknown) {
       `select c.id, c.title, c.board_id, b.name as board_name, c.due_at, c.remind_before_min
        from cards c join boards b on b.id = c.board_id
        where c.deleted_at is null and c.archived_at is null and c.completed_at is null
-         and c.due_at is not null and b.deleted_at is null
+         and c.due_at is not null and b.deleted_at is null and b.archived_at is null
          and c.confirm_requested_at is null${opts.publicOnly ? " and b.visibility = 'all'" : ''}
        order by c.due_at, c.id`,
     );

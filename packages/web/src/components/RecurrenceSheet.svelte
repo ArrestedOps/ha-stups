@@ -5,6 +5,7 @@
   import type { Recurrence } from '../lib/recurrence';
   import RecurrenceEditor from './RecurrenceEditor.svelte';
   import Sheet from './Sheet.svelte';
+  import CtaButton from './ui/CtaButton.svelte';
 
   /** „Wiederholung“ als eigenes Fenster (aus der Zeile in Neue Aufgabe): der Editor der Karte, jede Änderung gilt sofort */
   let {
@@ -18,18 +19,16 @@
     value: Recurrence | null;
     dueAt: string | null;
     carryOver?: CarryField[];
-    onchange: (rule: Recurrence | null) => void;
+    onchange: (rule: Recurrence | null, autoDue?: string) => void;
     oncarry: (fields: CarryField[]) => void;
     onclose: () => void;
   } = $props();
 </script>
 
-{#snippet done()}
-  <button type="button" class="inline-flex h-11 items-center px-2 text-[16px] font-bold text-accent-text" onclick={onclose}>{t('Fertig')}</button>
+{#snippet foot()}
+  <CtaButton onclick={onclose}>{t('Fertig')}</CtaButton>
 {/snippet}
 
-<Sheet title={t('Wiederholung')} {onclose} hideClose right={done}>
-  <div class="rounded-row border border-line bg-surface p-4">
-    <RecurrenceEditor {value} {dueAt} carryOver={carryOver ?? DEFAULT_CARRY} {onchange} {oncarry} />
-  </div>
+<Sheet title={t('Wiederholung')} {onclose} hideClose footer={foot}>
+  <RecurrenceEditor {value} {dueAt} carryOver={carryOver ?? DEFAULT_CARRY} {onchange} {oncarry} />
 </Sheet>

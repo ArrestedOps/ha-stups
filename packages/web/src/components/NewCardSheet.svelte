@@ -320,7 +320,7 @@
   );
   const recurTitle = $derived(fields.recurrence ? describeRecurrence(fields.recurrence) : t('Nicht wiederholen'));
   const recurMeta = $derived(
-    !fields.dueAt ? t('Zuerst einen Termin wählen') : fields.recurrence ? (fields.recurrence.type === 'fixed' ? t('fester Rhythmus • ab Termin') : t('nach dem Erledigen')) : t('Einmalige Aufgabe'),
+    fields.recurrence ? (fields.recurrence.type === 'fixed' ? t('fester Rhythmus • ab Termin') : t('nach dem Erledigen')) : t('Einmalige Aufgabe'),
   );
   const remindOn = $derived(fields.remindBeforeMin !== null || fields.overdueNag);
   const remindTitle = $derived(t('Erinnern {lead} vorher', { lead: formatLead(fields.remindBeforeMin ?? 30) }));
@@ -526,10 +526,10 @@
         {#snippet right()}{@render go()}{/snippet}
       </ListRow>
 
-      <ListRow title={recurTitle} onclick={fields.dueAt ? () => (repeatOpen = true) : undefined} label={t('Wiederholung wählen, gerade: {rule}', { rule: recurTitle })}>
+      <ListRow title={recurTitle} onclick={() => (repeatOpen = true)} label={t('Wiederholung wählen, gerade: {rule}', { rule: recurTitle })}>
         {#snippet tile()}<Tile color="teal"><Icon name="repeat" size={24} /></Tile>{/snippet}
         {#snippet meta()}<span class="truncate">{recurMeta}</span>{/snippet}
-        {#snippet right()}{#if fields.dueAt}{@render go()}{/if}{/snippet}
+        {#snippet right()}{@render go()}{/snippet}
       </ListRow>
 
       <ListRow title={remindTitle}>
@@ -731,7 +731,7 @@
     value={fields.recurrence}
     dueAt={fields.dueAt}
     carryOver={fields.carryOver}
-    onchange={(rule) => void onsave({ recurrence: rule })}
+    onchange={(rule, autoDue) => void onsave({ recurrence: rule, ...(autoDue ? { dueAt: autoDue } : {}) })}
     oncarry={(c) => void onsave({ carryOver: c })}
     onclose={() => (repeatOpen = false)}
   />

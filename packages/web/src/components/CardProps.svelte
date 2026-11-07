@@ -221,8 +221,8 @@
   {@render chip('cat', 'tag', catNames.length ? catNames.join(', ') : t('Kategorie'), catNames.length > 0, '', catNames.length ? 'dot' : undefined)}
   {@render chip('cost', 'euro', card.costCents !== null ? formatCost(card.costCents) : t('Kosten'), card.costCents !== null)}
   {@render chip('effort', 'task-check', effortLabel, !!card.effort)}
+  {@render chip('rec', 'repeat', card.recurrence ? describeRecurrence(card.recurrence) : t('Wiederholen'), !!card.recurrence)}
   {#if card.dueAt}
-    {@render chip('rec', 'repeat', card.recurrence ? describeRecurrence(card.recurrence) : t('Wiederholen'), !!card.recurrence)}
     {@render chip(
       'rem',
       'bell',
@@ -277,7 +277,7 @@
         value={card.recurrence}
         dueAt={card.dueAt}
         carryOver={card.carryOver ?? DEFAULT_CARRY}
-        onchange={(rule: Recurrence | null) => onsave({ recurrence: rule })}
+        onchange={(rule: Recurrence | null, autoDue?: string) => onsave({ recurrence: rule, ...(autoDue ? { dueAt: autoDue } : {}) })}
         oncarry={(fields: CarryField[]) => onsave({ carryOver: fields })}
       />
     {:else if panel === 'rem'}

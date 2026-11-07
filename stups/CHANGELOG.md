@@ -1,5 +1,37 @@
 # Änderungen
 
+## 1.27.0
+
+*English first, German version below.*
+
+This version is the beta app's 1.40.1-beta.2 and contains everything since 1.26.0.
+
+- **Private and shared boards.** Each board is visible to "Only me", "Everyone in Stups" or "Selected people". Nobody else sees a private board, not even administrators; the server hides it everywhere (cards, Today, calendar, notifications, attachments, sensors, live sync). Existing boards stay visible to everyone. Children can create "Only me" boards.
+- **Fairness per board.** A switch decides whether a board counts towards the weekly fairness (private boards never do; retroactive). Watchers have their own switch.
+- **Watchers know who may be responsible.** Only board members can be chosen, private boards cannot be targets, and removing a person from a board first shows every affected watcher. A watcher left without anyone to assign is marked "needs new assignees" (red, at the top of the list) and creates no cards until you choose someone; the bell tells the right people.
+- **Bell with a small number** instead of a dot. Watcher names are just the template name; created cards get the entity added ("Replace battery: Nuki lock").
+- **Repeat without a due date, hourly, and a small delay is okay.** The repeat row is always tappable, "Hourly" (optionally only within a time window) is new, and weekly/monthly rules can tolerate a few days of lateness. Every option shows a live example.
+- **Nudge yourself.** "Remind me again if not done" on tasks (after X, repeat every X, at most N times; only for you). Watchers can nudge the people responsible after a time, repeating, with a maximum.
+- **Boards: selection, settings, delete, archive, duplicate.** The board list shows only boards; "New board", "Board settings" (name, icon, who sees it, fairness, columns …) and "Archived boards" sit below it. Deleting a board lists its tasks, repeating tasks, watchers and reminders, and for each watcher you choose pause, move or delete. Boards can be archived, duplicated or saved as a template; the order can be changed.
+- **Beta badge** next to the logo in the beta app only.
+- **Back online by itself.** After the phone slept, the app reconnects immediately and no longer stays on "Offline".
+- Database: **migrations 27 to 29** (board visibility and fairness, reminders, archived boards), with a backup beforehand as always.
+
+**Deutsch**
+
+Diese Version ist die 1.40.1-beta.2 der Beta-App und enthält alles seit 1.26.0.
+
+- **Private und geteilte Boards.** Jedes Board ist für „Nur ich“, „Alle in Stups“ oder „Ausgewählte Personen“ sichtbar. Ein privates Board sieht sonst niemand, auch kein Administrator; der Server blendet es überall aus (Karten, Heute, Kalender, Mitteilungen, Anhänge, Sensoren, Live-Sync). Bestehende Boards bleiben für alle sichtbar. Kinder können „Nur ich“-Boards anlegen.
+- **Fairness je Board.** Ein Schalter bestimmt, ob ein Board zur Fairness der Woche zählt (private nie; auch rückwirkend). Wächter haben einen eigenen Schalter.
+- **Wächter wissen, wer zuständig sein darf.** Zur Auswahl stehen nur Mitglieder des Boards, private Boards sind als Ziel nicht möglich, und wer ein Mitglied entfernt, sieht vorher alle betroffenen Wächter. Bleibt ein Wächter ohne Zuständige, steht er rot ganz oben in der Liste („braucht neue Zuständige“) und legt keine Karten an, bis jemand gewählt ist; die Glocke sagt es den Richtigen.
+- **Glocke mit kleiner Zahl** statt Punkt. Wächter heißen wie ihre Vorlage; erzeugte Karten bekommen die Entität dazu („Batterie wechseln: Nuki Türschloss“).
+- **Wiederholung ohne Termin, stündlich, und kleine Verspätung ist okay.** Die Wiederholungs-Zeile ist immer antippbar, „Stündlich“ (auf Wunsch nur in einem Zeitfenster) ist neu, und wöchentliche/monatliche Regeln dürfen ein paar Tage zu spät erledigt werden. Jede Option zeigt ein Beispiel live.
+- **Sich selbst stupsen.** „Nochmal erinnern, wenn nicht erledigt“ an Aufgaben (nach X, alle X wiederholen, höchstens N ×; nur für dich). Wächter können die Zuständigen nach einer Zeit stupsen, wiederholt, mit Höchstzahl.
+- **Boards: Auswahl, Einstellungen, Löschen, Archivieren, Duplizieren.** Die Board-Liste zeigt nur Boards; darunter „Neues Board“, „Board-Einstellungen“ (Name, Symbol, wer sieht es, Fairness, Spalten …) und „Archivierte Boards“. Beim Löschen stehen Aufgaben, wiederkehrende Aufgaben, Wächter und Erinnerungen in der Liste, und je Wächter wählst du Pausieren, Umziehen oder Löschen. Boards lassen sich archivieren, duplizieren und als Vorlage speichern; die Reihenfolge ist änderbar.
+- **Beta-Marke** neben dem Logo, nur in der Beta-App.
+- **Von selbst wieder online.** Nach dem Schlafen des Handys verbindet sich die App sofort neu und bleibt nicht mehr auf „Offline“ hängen.
+- Datenbank: **Migrationen 27 bis 29** (Sichtbarkeit und Fairness der Boards, Erinnerungen, archivierte Boards), vorher wie immer mit Sicherung.
+
 ## 1.26.0
 
 *English first, German version below.*

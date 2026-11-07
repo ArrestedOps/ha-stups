@@ -2,6 +2,16 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.38.0-beta.1
+
+**Wiederholung ohne Termin, stündlich und mit Toleranz bei Verspätung.**
+
+- **Kein Termin nötig:** Die Zeile „Wiederholung“ in „Neue Aufgabe“ und am Chip „Wiederholen“ der Karte ist immer antippbar. Wer eine Regel wählt, ohne dass es einen Termin gibt, bekommt den ersten Termin automatisch (nächster passender Tag, Uhrzeit = Standard-Fälligkeitszeit); die Vorschau zeigt „Erster Termin wird automatisch gesetzt“ mit den nächsten drei Terminen, und der Termin bleibt änderbar. „Nie“ entfernt nur die Regel. Schnell-Eingabe („jeden Montag“) funktioniert wie bisher.
+- **Neuer Editor:** Chips „Nie · Stündlich · Täglich · Wöchentlich · Alle 2 Wochen · Monatlich · Jährlich · Eigene …“, bei wöchentlich „An welchem Tag?“, dazu die Frage „Und wenn ich später fertig werde?“ mit drei Karten, jede mit einem Beispiel, das live aus der echten Regel und dem echten Termin gerechnet ist (dieselbe Rechnung wie im Server): **Plan bleibt fest** (wie bisher), **Kleine Verspätung ist okay** (nur wöchentlich und monatlich) und **Neu zählen ab Erledigung**.
+- **Stündlich:** alle N Stunden (Chip „Stündlich“, „Eigene …“ erlaubt N Stunden; „Neu zählen“ gibt es ebenfalls in Stunden). Optional nur zwischen zwei Uhrzeiten (zum Beispiel 08:00–20:00, beide einschließlich): Termine außerhalb rücken auf den Fensteranfang des nächsten passenden Tages. Stunden zählen als echte Stunden, die Fensterzeiten in Ortszeit, auch über die Zeitumstellung. Karten, Kalender, Agenda und Vorlagen zeigen „stündlich“ und „alle 3 Std.“.
+- **Kleine Verspätung ist okay:** Ein Feld „Toleranz“ (ganze Tage, Standard 3). Liegt die Erledigung höchstens so viele Tage nach dem Termin, bleibt der Plan; danach beginnt er neu (wöchentlich: der gewählte Wochentag in der Woche der Erledigung plus der Wochenabstand; monatlich: der Tag im Monat der Erledigung plus der Monatsabstand). Beispiel Samstag alle 2 Wochen, fällig Sa 14.11., Toleranz 3: erledigt Mo 16.11. → Sa 28.11.; erledigt Mi 18.11. → Sa 5.12.
+- Server: Regel `fixed` mit `freq: 'hourly'`, `window`, `lateTolerance`, `after_completion` mit `unit: 'hours'`; die Prüfung lehnt Fenster außerhalb von „stündlich“ und Toleranz außerhalb von wöchentlich und monatlich ab. Toleranz und Fenster bleiben beim Wiederholen, in Vorlagen, beim Duplizieren und beim Export und Import erhalten. Wächter und ihre Sperrzeit sind unverändert.
+
 ## 1.37.0-beta.2
 
 **Nur ein Test:** Der Browser-Test „Kanban über die volle Breite“ legte Karten mit Termin in 1 bis 3 Stunden an; nach 22 Uhr (UTC) rückten sie nach „Geplant“ und der Test schlug fehl. Seine Karten haben jetzt Termine in 5, 10 und 15 Minuten. Die App ist unverändert gegenüber 1.37.0-beta.1.

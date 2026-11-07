@@ -5,6 +5,7 @@
   import { withCategory } from '../lib/watchers';
   import DoneEditor from './DoneEditor.svelte';
   import Icon from './Icon.svelte';
+  import NudgeCard from './NudgeCard.svelte';
   import NumberField from './NumberField.svelte';
   import WatcherCategoryField from './WatcherCategoryField.svelte';
   import WatcherFairnessRow from './WatcherFairnessRow.svelte';
@@ -42,11 +43,7 @@
   </ListRow>
   {#if f.doneOn}<div class={columns ? 'col-span-full' : ''}><DoneEditor {ed} /></div>{:else if ed.selfNote}<p class="px-1 text-[13px] text-fg2 {columns ? 'col-span-full' : ''}" data-testid="self-note">{ed.selfNote}</p>{/if}
 
-  <ListRow wrap title={t('Stupsen, wenn noch offen')}>
-    {#snippet tile()}<Tile color="orange"><Icon name="hand" size={22} stroke={1.8} /></Tile>{/snippet}
-    {#snippet meta()}<span class="wrap-anywhere">{t('freundlich erinnern')}</span>{/snippet}
-    {#snippet right()}<NumberField bind:value={f.nudgeAfterMin} label={t('Stupsen nach Minuten')} unit={t('Min.')} placeholder={t('nie')} />{/snippet}
-  </ListRow>
+  <div class={columns ? 'col-span-full' : ''}><NudgeCard {ed} wide={columns} /></div>
   {#if showCount}
     <ListRow wrap title={t('Erst beim N-ten Mal')}>
       {#snippet tile()}<Tile color="teal"><Icon name="repeat" size={22} stroke={1.8} /></Tile>{/snippet}

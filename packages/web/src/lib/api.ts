@@ -1,6 +1,7 @@
 import { i18n, type LanguageChoice, t } from './i18n/index.svelte';
 import type { FeedbackContext, FeedbackItem, FeedbackKind, FeedbackStatus } from './feedback';
 import type { Recurrence } from './recurrence';
+import type { ReminderSpec } from './reminder';
 import type { Permission } from './permissions';
 import type { EntityHistory } from './history';
 import type { AssignMode, DryRunResult, HaEntity, OrderView, SavedWatcher, WatchTrigger, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from './watcher-types';
@@ -161,7 +162,6 @@ export interface Card {
   updatedAt: string;
   version: number;
   remindBeforeMin: number | null;
-  overdueNag: boolean;
   costCents: number | null;
   /** Was die nächste Karte übernimmt, wenn sich diese wiederholt */
   carryOver: CarryField[];
@@ -233,6 +233,8 @@ export interface Attachment {
   url?: string;
 }
 export interface CardDetail extends Card {
+  /** Mein Nachhaken an dieser Karte (persönlich: die Erinnerungen anderer bekomme ich nie); null = keins */
+  reminder: ReminderSpec | null;
   checklistItems: ChecklistItem[];
   links: CardLink[];
   history: Completion[];
@@ -266,6 +268,8 @@ export interface Settings {
   dailySummaryTime: string | null;
   defaultDailySummaryTime: string;
   effectiveDailySummaryTime: string;
+  /** Uhrzeit, zu der ein Nachhaken in Tagen oder Wochen kommt, wenn nichts anderes gewählt ist */
+  overdueNagTime?: string;
 }
 export interface TrashItem {
   type: 'board' | 'column' | 'category' | 'card';
@@ -297,7 +301,8 @@ export interface CardInput {
   dueAt?: string | null;
   recurrence?: Recurrence | null;
   remindBeforeMin?: number | null;
-  overdueNag?: boolean;
+  /** Nachhaken der eigenen Person (persönlich); null = aus */
+  reminder?: ReminderSpec | null;
   costCents?: number | null;
   carryOver?: CarryField[];
   assigneeIds?: string[];

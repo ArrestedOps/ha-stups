@@ -17,6 +17,7 @@
   import EntityPicker from './EntityPicker.svelte';
   import EntityRow from './EntityRow.svelte';
   import Icon from './Icon.svelte';
+  import NudgeCard from './NudgeCard.svelte';
   import NumberField from './NumberField.svelte';
   import Sheet from './Sheet.svelte';
   import SymbolIcon from './SymbolIcon.svelte';
@@ -236,7 +237,9 @@
           <Chip small disabled={readOnly} pressed={c.key === 'dedupe' ? f.dedupe : fine === c.key} onclick={() => tapFine(c.key)}>{c.label}</Chip>
         {/each}
       </div>
-      {#if fine && !readOnly}
+      {#if fine === 'nudge' && !readOnly}
+        <NudgeCard {ed} />
+      {:else if fine && !readOnly}
         <div class="flex items-center justify-between gap-3 rounded-row border border-line bg-surface px-3.5 py-3" data-testid="fine-panel">
           {#if fine === 'name'}
             <input class="min-h-11 w-full bg-transparent text-[16px] font-semibold placeholder:text-dim" bind:value={f.name} maxlength="80" placeholder={t('z. B. Waschmaschine fertig')} aria-label={t('Name des Wächters')} />
@@ -245,9 +248,6 @@
           {:else if fine === 'cooldown'}
             <span class="text-[15px] font-bold">{t('Sperrzeit')}<span class="block text-[13px] font-normal text-fg2">{t('gegen flatternde Sensoren')}</span></span>
             <NumberField bind:value={f.cooldownMin} label={t('Sperrzeit in Minuten')} unit={t('Min.')} placeholder="10" />
-          {:else if fine === 'nudge'}
-            <span class="text-[15px] font-bold">{t('Stupsen, wenn noch offen')}<span class="block text-[13px] font-normal text-fg2">{t('leer = nie')}</span></span>
-            <NumberField bind:value={f.nudgeAfterMin} label={t('Stupsen nach Minuten')} unit={t('Min.')} placeholder={t('nie')} />
           {:else if fine === 'count'}
             <span class="text-[15px] font-bold">{t('Erst beim N-ten Mal')}<span class="block text-[13px] font-normal text-fg2">{t('z. B. Saugroboter nach 3 Läufen')}</span></span>
             <NumberField bind:value={f.count} label={t('Anzahl')} unit="×" placeholder="1" />

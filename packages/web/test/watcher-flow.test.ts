@@ -161,7 +161,7 @@ describe('Feinschliff-Chips', () => {
   });
 
   it('gesetzte Werte', () => {
-    const chips = fineChips(filled({ cooldownMin: '15', dedupe: false, nudgeAfterMin: '60', count: '3' }));
+    const chips = fineChips(filled({ cooldownMin: '15', dedupe: false, nudgeAfter: '60', count: '3' }));
     expect(chips.map((c) => c.label)).toEqual(['Name: Waschmaschine fertig', 'Kategorie: keine', 'Sperrzeit 15 Min.', 'Zweite Karte erlaubt', 'Stupsen nach 60 Min.', 'Erst beim 3. Mal']);
     expect(chips.map((c) => c.key)).toEqual(['name', 'category', 'cooldown', 'dedupe', 'nudge', 'count']);
   });
@@ -224,7 +224,7 @@ describe('Symbol der Karte bleibt beim Bearbeiten erhalten', () => {
       done: null,
       cooldownMin: 10,
       dedupe: true,
-      nudgeAfterMin: null,
+      nudge: null,
     }) as unknown as WatcherItem;
 
   it('Symbol und Farbe aus einer Vorlage gehen beim Speichern wieder an den Server', () => {

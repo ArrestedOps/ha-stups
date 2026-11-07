@@ -75,7 +75,7 @@ describe('Formular prüfen und umwandeln', () => {
     expect(i.trigger).toEqual({ entityId: 'sensor.waschmaschine_leistung', kind: 'below', to: null, value: 4.5, forMin: 3, count: 3 });
     expect(i.cooldownMin).toBe(10);
     expect(i.card).toMatchObject({ title: 'Waschmaschine ausräumen', description: null, priority: 'high', due: { kind: 'in', minutes: 30 } });
-    expect(i.nudgeAfterMin).toBeNull();
+    expect(i.nudge).toBeNull();
     expect(i.done).toBeNull();
   });
 
@@ -86,9 +86,29 @@ describe('Formular prüfen und umwandeln', () => {
   });
 
   it('Hin und zurück: Wächter → Formular → Eingabe bleibt gleich', () => {
-    const input = toInput(filled({ forMin: '3', count: '3', cooldownMin: '15', nudgeAfterMin: '90', categoryIds: ['k1'], countsForFairness: true }));
+    const input = toInput(filled({ forMin: '3', count: '3', cooldownMin: '15', nudgeAfter: '90', nudgeEvery: '30', nudgeMax: '4', categoryIds: ['k1'], countsForFairness: true }));
     const w: WatcherItem = { ...input, countsForFairness: true, id: 'w1', status: 'ok', lastFiredAt: null, lastAssignees: [], armed: true, counter: 0, subscribed: true, lastRun: null, entityState: null, entityName: null, subject: '', suggestedCategory: '', entityUnit: null, openCard: null };
     expect(toInput(fromWatcher(w))).toEqual(input);
+  });
+});
+
+describe('Stupsen, wenn noch offen (Formular ↔ Eingabe)', () => {
+  it('leer bei „Nach“ = nie; leer bei „Wiederholen alle“ = nur einmal (genau ein Stups, egal was bei Höchstens steht)', () => {
+    expect(toInput(filled()).nudge).toBeNull();
+    expect(toInput(filled({ nudgeAfter: '45' })).nudge).toEqual({ afterMin: 45, everyMin: null, max: 1 });
+    expect(toInput(filled({ nudgeAfter: '45', nudgeMax: '7' })).nudge).toEqual({ afterMin: 45, everyMin: null, max: 1 });
+  });
+
+  it('wiederholen: Höchstens leer = 3, Werte werden auf die Grenzen des Servers gebracht', () => {
+    expect(toInput(filled({ nudgeAfter: '30', nudgeEvery: '30' })).nudge).toEqual({ afterMin: 30, everyMin: 30, max: 3 });
+    expect(toInput(filled({ nudgeAfter: '1', nudgeEvery: '99999', nudgeMax: '500' })).nudge).toEqual({ afterMin: 5, everyMin: 1440, max: 99 });
+  });
+
+  it('beim Bearbeiten kommen alle drei Felder aus dem gespeicherten Stupsen', () => {
+    const base = { ...toInput(filled({ nudgeAfter: '30', nudgeEvery: '15', nudgeMax: '4' })), countsForFairness: true } as WatcherItem;
+    expect(fromWatcher(base)).toMatchObject({ nudgeAfter: '30', nudgeEvery: '15', nudgeMax: '4' });
+    const once = { ...base, nudge: { afterMin: 60, everyMin: null, max: 1 } } as WatcherItem;
+    expect(fromWatcher(once)).toMatchObject({ nudgeAfter: '60', nudgeEvery: '', nudgeMax: '' });
   });
 });
 

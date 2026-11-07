@@ -2,6 +2,7 @@
   import { t } from '../lib/i18n/index.svelte';
   import type { CarryField, Priority } from '../lib/api';
   import type { Recurrence } from '../lib/recurrence';
+  import type { ReminderSpec } from '../lib/reminder';
 
   /** Die Felder, die eine neue und eine bestehende Karte gemeinsam haben */
   export interface CardFields {
@@ -10,7 +11,8 @@
     dueAt: string | null;
     recurrence: Recurrence | null;
     remindBeforeMin: number | null;
-    overdueNag: boolean;
+    /** mein Nachhaken (persönlich); null = keins */
+    reminder: ReminderSpec | null;
     priority: Priority | null;
     effort?: Effort | null;
     categoryIds: string[];
@@ -25,7 +27,6 @@
 </script>
 
 <script lang="ts">
-  import Toggle from './ui/Toggle.svelte';
   import type { CardPatch, Column, Effort } from '../lib/api';
   import { formatCost, formatDue, formatLead, fromInputValue, isOverdue, parseCost, toInputValue } from '../lib/datetime';
   import { DEFAULT_CARRY } from '../lib/carry';
@@ -38,6 +39,7 @@
   import Icon from './Icon.svelte';
   import PeoplePicker from './PeoplePicker.svelte';
   import RecurrenceEditor from './RecurrenceEditor.svelte';
+  import ReminderEditor from './ReminderEditor.svelte';
   import SelectField from './SelectField.svelte';
 
   let {
@@ -81,7 +83,6 @@
     ['large', t('Groß')],
   ]);
   const effortLabel = $derived(card.effort ? (EFFORTS.find((e) => e[0] === card.effort)?.[1] ?? '') : t('Aufwand'));
-  const REMINDERS = [15, 30, 60, 120, 1440, 2880];
 
   // Bestätigung: nur sinnvoll, wenn der Karte ein Kind zugewiesen ist
   const hasChild = $derived(ui.people.some((p) => p.isChild && card.assigneeIds.includes(p.id)));
@@ -222,14 +223,12 @@
   {@render chip('cost', 'euro', card.costCents !== null ? formatCost(card.costCents) : t('Kosten'), card.costCents !== null)}
   {@render chip('effort', 'task-check', effortLabel, !!card.effort)}
   {@render chip('rec', 'repeat', card.recurrence ? describeRecurrence(card.recurrence) : t('Wiederholen'), !!card.recurrence)}
-  {#if card.dueAt}
-    {@render chip(
-      'rem',
-      'bell',
-      card.remindBeforeMin ? t('{lead} vorher', { lead: formatLead(card.remindBeforeMin) }) : card.overdueNag ? t('Nachhaken') : t('Erinnerung'),
-      !!card.remindBeforeMin || card.overdueNag,
-    )}
-  {/if}
+  {@render chip(
+    'rem',
+    'bell',
+    card.remindBeforeMin ? t('{lead} vorher', { lead: formatLead(card.remindBeforeMin) }) : card.reminder ? t('Nachhaken') : t('Erinnerung'),
+    !!card.remindBeforeMin || !!card.reminder,
+  )}
   {#if card.confirm !== undefined && hasChild}
     {@render chip('confirm', 'task-check', confirmLabel, card.confirm !== null)}
   {/if}
@@ -281,23 +280,14 @@
         oncarry={(fields: CarryField[]) => onsave({ carryOver: fields })}
       />
     {:else if panel === 'rem'}
-      <label class="flex items-center justify-between gap-3">
-        <span class="text-[16px]">{t('Vorab erinnern')}</span>
-        <SelectField
-          variant="box"
-          class="!min-h-10"
-          value={card.remindBeforeMin ?? ''}
-          label={t('Vorab-Erinnerung')}
-          onchange={(e) => onsave({ remindBeforeMin: e.currentTarget.value ? Number(e.currentTarget.value) : null })}
-        >
-          <option value="">{t('Nur zur Fälligkeit')}</option>
-          {#each REMINDERS as m (m)}<option value={m}>{t('{lead} vorher', { lead: formatLead(m) })}</option>{/each}
-        </SelectField>
-      </label>
-      <div class="mt-3 flex items-center justify-between gap-3">
-        <span class="text-[16px]">{t('Täglich nachhaken, solange überfällig')}</span>
-        <Toggle checked={card.overdueNag} label={t('Täglich nachhaken, solange überfällig')} onchange={(on) => onsave({ overdueNag: on })} />
-      </div>
+      <ReminderEditor
+        fromNow
+        dueAt={card.dueAt}
+        remindBeforeMin={card.remindBeforeMin}
+        reminder={card.reminder}
+        onremind={(min) => onsave({ remindBeforeMin: min })}
+        onnag={(spec) => onsave({ reminder: spec })}
+      />
     {:else if panel === 'prio'}
       <div class="flex flex-wrap gap-2" role="group" aria-label={t('Priorität')}>
         {#each PRIORITIES as [value, label] (label)}

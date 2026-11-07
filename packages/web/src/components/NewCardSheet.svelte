@@ -23,6 +23,7 @@
   import DateSheet from './DateSheet.svelte';
   import Icon from './Icon.svelte';
   import RecurrenceSheet from './RecurrenceSheet.svelte';
+  import ReminderSheet from './ReminderSheet.svelte';
   import Sheet from './Sheet.svelte';
   import SymbolIcon from './SymbolIcon.svelte';
   import SymbolSheet from './SymbolSheet.svelte';
@@ -31,7 +32,6 @@
   import ListRow from './ui/ListRow.svelte';
   import Segmented from './ui/Segmented.svelte';
   import Tile, { type TileColor } from './ui/Tile.svelte';
-  import Toggle from './ui/Toggle.svelte';
 
   /** dueAt: vorbelegter Termin, z. B. aus dem Kalender */
   let { columnId, dueAt = null, picked = false }: { columnId: string; dueAt?: string | null; picked?: boolean } = $props();
@@ -67,7 +67,7 @@
     dueAt: dueAt ?? (startsPlanned ? tomorrowNine() : null),
     recurrence: null,
     remindBeforeMin: null,
-    overdueNag: false,
+    reminder: null,
     priority: null,
     effort: null,
     categoryIds: [],
@@ -126,6 +126,7 @@
   let symbolOpen = $state(false);
   let dateOpen = $state(false);
   let repeatOpen = $state(false);
+  let remindOpen = $state(false);
 
   let description = $state('');
   let items = $state<string[]>([]);
@@ -166,7 +167,7 @@
 
   function setDue(iso: string | null) {
     dateOpen = false;
-    void onsave(iso ? { dueAt: iso } : { dueAt: null, recurrence: null, remindBeforeMin: null, overdueNag: false });
+    void onsave(iso ? { dueAt: iso } : { dueAt: null, recurrence: null, remindBeforeMin: null });
   }
 
   function addItem(e: Event) {
@@ -251,6 +252,8 @@
     const card = await act(() =>
       api.createCard(ui.boardId!, {
         ...fields,
+        // Zählt ab Termin, wenn es einen gibt (er kann nach der Wahl noch geändert worden sein), sonst ab dem Anlegen
+        reminder: fields.reminder ? { ...fields.reminder, anchor: fields.dueAt ? 'due' : 'created' } : null,
         categoryIds: [...fields.categoryIds, ...newCategoryIds],
         title: parsed.title,
         description: description.trim() || null,
@@ -322,10 +325,15 @@
   const recurMeta = $derived(
     fields.recurrence ? (fields.recurrence.type === 'fixed' ? t('fester Rhythmus • ab Termin') : t('nach dem Erledigen')) : t('Einmalige Aufgabe'),
   );
-  const remindOn = $derived(fields.remindBeforeMin !== null || fields.overdueNag);
-  const remindTitle = $derived(t('Erinnern {lead} vorher', { lead: formatLead(fields.remindBeforeMin ?? 30) }));
+  const remindTitle = $derived(
+    fields.remindBeforeMin !== null ? t('Erinnern {lead} vorher', { lead: formatLead(fields.remindBeforeMin) }) : fields.reminder ? t('Nachhaken, wenn nicht erledigt') : t('Keine Erinnerung'),
+  );
   const remindMeta = $derived(
-    assignees.length ? `${t('Push an {names}', { names: assignees.map((p) => (p.id === ui.me?.id ? t('dich') : p.displayName)).join(' & ') })} • ${t('Nachhaken, wenn überfällig')}` : t('Niemand zuständig, keine Erinnerung'),
+    fields.reminder
+      ? `${t('Nur für dich')} • ${fields.reminder.everyMin === null ? t('einmal') : t('bis zu {n} ×', { n: fields.reminder.max })}`
+      : assignees.length
+        ? t('Push an {names}', { names: assignees.map((p) => (p.id === ui.me?.id ? t('dich') : p.displayName)).join(' & ') })
+        : t('Niemand zuständig, keine Erinnerung'),
   );
 
   const PRIOS: { id: Priority; label: string; icon: string }[] = $derived([
@@ -532,17 +540,10 @@
         {#snippet right()}{@render go()}{/snippet}
       </ListRow>
 
-      <ListRow title={remindTitle}>
+      <ListRow title={remindTitle} onclick={() => (remindOpen = true)} label={t('Erinnerung wählen, gerade: {what}', { what: remindTitle })}>
         {#snippet tile()}<Tile color="blue"><Icon name="bell" size={24} /></Tile>{/snippet}
         {#snippet meta()}<span class="truncate">{remindMeta}</span>{/snippet}
-        {#snippet right()}
-          <Toggle
-            checked={remindOn}
-            label={t('Erinnerung')}
-            disabled={!fields.dueAt}
-            onchange={(v) => void onsave(v ? { remindBeforeMin: 30, overdueNag: true } : { remindBeforeMin: null, overdueNag: false })}
-          />
-        {/snippet}
+        {#snippet right()}{@render go()}{/snippet}
       </ListRow>
     </div>
 
@@ -734,5 +735,15 @@
     onchange={(rule, autoDue) => void onsave({ recurrence: rule, ...(autoDue ? { dueAt: autoDue } : {}) })}
     oncarry={(c) => void onsave({ carryOver: c })}
     onclose={() => (repeatOpen = false)}
+  />
+{/if}
+{#if remindOpen}
+  <ReminderSheet
+    dueAt={fields.dueAt}
+    remindBeforeMin={fields.remindBeforeMin}
+    reminder={fields.reminder}
+    onremind={(min) => void onsave({ remindBeforeMin: min })}
+    onnag={(spec) => void onsave({ reminder: spec })}
+    onclose={() => (remindOpen = false)}
   />
 {/if}

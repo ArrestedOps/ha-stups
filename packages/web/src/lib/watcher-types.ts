@@ -1,4 +1,5 @@
 // Wächter: Karten automatisch aus Zuständen in Home Assistant. Diese Typen spiegeln die Schnittstelle des Servers.
+import type { Nudge } from './reminder';
 
 export type ConditionKind = 'state' | 'above' | 'below';
 /** Dazu Termine eines Kalenders (mit Vorlauf) und Regen in der Vorhersage: Stups fragt sie im Takt ab */
@@ -67,7 +68,8 @@ export interface WatcherInput {
   done: DoneTrigger | null;
   cooldownMin: number;
   dedupe: boolean;
-  nudgeAfterMin: number | null;
+  /** Stupsen, wenn noch offen: nach …, danach alle … (null = nur einmal), höchstens … ×; null = nie */
+  nudge: Nudge | null;
   /** Kategorie zum Gruppieren (null = „Ohne Kategorie"); gleiche Namen legt der Server zusammen */
   category: string | null;
   /** Die Karten zählen zur Fairness (zusätzlich zum Board). Ohne Angabe beim Anlegen gilt der Wert des Boards. */

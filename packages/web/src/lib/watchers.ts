@@ -1,5 +1,6 @@
 import { t, tn } from './i18n/index.svelte';
 import { clock } from './nudge';
+import { NUDGE_DEFAULT_MAX, type Nudge } from './reminder';
 import type { AssignMode, ConditionKind, DueRule, HaEntity, TemplateDraft, TriggerKind, WatcherInput, WatcherItem, WatcherTemplate } from './watcher-types';
 
 /** Das Formular im Sheet: alles als Text, damit Eingaben unfertig sein dürfen; toInput prüft und wandelt um */
@@ -41,7 +42,10 @@ export interface WatcherForm {
   doneValue: string;
   cooldownMin: string;
   dedupe: boolean;
-  nudgeAfterMin: string;
+  /** Stupsen, wenn noch offen: nach … Minuten (leer = nie), wiederholen alle … Minuten (leer = nur einmal), höchstens … × (leer = 3) */
+  nudgeAfter: string;
+  nudgeEvery: string;
+  nudgeMax: string;
   /** Kategorie zum Gruppieren ('' = keine) und woher sie kommt: Vorlage und Entität schlagen sie vor, was der Mensch wählt, bleibt */
   category: string;
   categorySource: '' | 'template' | 'entity' | 'user';
@@ -92,7 +96,9 @@ export const emptyForm = (boardId = '', columnId = ''): WatcherForm => ({
   doneValue: '',
   cooldownMin: '',
   dedupe: true,
-  nudgeAfterMin: '',
+  nudgeAfter: '',
+  nudgeEvery: '',
+  nudgeMax: '',
   category: '',
   categorySource: '',
   countsForFairness: null,
@@ -188,6 +194,16 @@ const intOr = (s: string, fallback: number): number => {
   return n === null ? fallback : Math.round(n);
 };
 
+const clamp = (n: number, min: number, max: number): number => Math.min(max, Math.max(min, n));
+
+/** Das Stupsen aus den Feldern des Formulars: leer bei „Nach“ = nie; leer bei „Wiederholen alle“ = nur einmal (dann genau ein Stups) */
+export function nudgeOf(f: Pick<WatcherForm, 'nudgeAfter' | 'nudgeEvery' | 'nudgeMax'>): Nudge | null {
+  if (num(f.nudgeAfter) === null) return null;
+  const afterMin = clamp(intOr(f.nudgeAfter, 30), 5, 1440);
+  const everyMin = num(f.nudgeEvery) === null ? null : clamp(intOr(f.nudgeEvery, 30), 5, 1440);
+  return { afterMin, everyMin, max: everyMin === null ? 1 : clamp(intOr(f.nudgeMax, NUDGE_DEFAULT_MAX), 1, 99) };
+}
+
 /** Bei diesen Arten gilt der Rückfall „wenn niemand zu Hause ist / sich niemand meldet“; bei den anderen bleibt er unbenutzt */
 export const usesFallback = (mode: AssignMode): boolean => mode === 'rotation_present' || mode === 'all_present' || mode === 'suggest';
 
@@ -275,7 +291,7 @@ export function toInput(f: WatcherForm): WatcherInput {
       : null,
     cooldownMin: intOr(f.cooldownMin, 10),
     dedupe: f.dedupe,
-    nudgeAfterMin: num(f.nudgeAfterMin) === null ? null : intOr(f.nudgeAfterMin, 60),
+    nudge: nudgeOf(f),
     category: f.category.trim() || null,
     // Ohne eigene Wahl entscheidet beim Anlegen das Board
     ...(f.countsForFairness === null ? {} : { countsForFairness: f.countsForFairness }),
@@ -324,7 +340,9 @@ export function fromWatcher(w: WatcherItem, entities: Map<string, HaEntity> = ne
     doneValue: s(w.done?.value ?? null),
     cooldownMin: String(w.cooldownMin),
     dedupe: w.dedupe,
-    nudgeAfterMin: w.nudgeAfterMin === null ? '' : String(w.nudgeAfterMin),
+    nudgeAfter: w.nudge ? String(w.nudge.afterMin) : '',
+    nudgeEvery: w.nudge?.everyMin ? String(w.nudge.everyMin) : '',
+    nudgeMax: w.nudge && w.nudge.everyMin !== null ? String(w.nudge.max) : '',
     // beim Bearbeiten gilt, was gespeichert ist: kein Vorschlag überschreibt es
     category: w.category ?? '',
     categorySource: 'user',

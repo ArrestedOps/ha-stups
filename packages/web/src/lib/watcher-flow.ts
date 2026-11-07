@@ -1,7 +1,8 @@
 import { i18n, t, tn } from './i18n/index.svelte';
+import { nudgeSentence } from './reminder';
 import { detectSymbol } from './symbols/detect';
 import type { AssignMode } from './watcher-types';
-import { conditionText, sentenceParts, type WatcherForm } from './watchers';
+import { conditionText, nudgeOf, sentenceParts, type WatcherForm } from './watchers';
 
 // Reine Logik für den Wächter-Editor (Ablauf beim Bearbeiten, Assistent beim Anlegen): Texte, Auswahllisten, Chips.
 
@@ -165,6 +166,8 @@ export function summaryParts(f: WatcherForm, personName: (id: string) => string)
     const due = f.dueKind === 'none' ? '' : ` (${t('fällig {when}', { when: dueText(f) })})`;
     parts.push({ text: `${due}.`, bold: false });
   }
+  const nudge = nudgeOf(f);
+  if (nudge) parts.push({ text: ` ${nudgeSentence(nudge)}`, bold: false });
   if (f.doneOn && f.doneEntityId) parts.push({ text: ` ${t('Sie erledigt sich, {cond}.', { cond: doneText(f) })}`, bold: false });
   return parts;
 }
@@ -179,14 +182,14 @@ export type FineKey = 'name' | 'category' | 'cooldown' | 'dedupe' | 'nudge' | 'c
 /** Die Chips unter „Feinschliff" im Ablauf: Beschriftung je Einstellung mit dem aktuellen Wert */
 export function fineChips(f: WatcherForm): { key: FineKey; label: string }[] {
   const cooldown = intOr(f.cooldownMin, 10);
-  const nudge = f.nudgeAfterMin.trim() === '' ? null : intOr(f.nudgeAfterMin, 60);
+  const nudge = nudgeOf(f);
   const count = Math.max(1, intOr(f.count, 1));
   const chips: { key: FineKey; label: string }[] = [
     { key: 'name', label: t('Name: {name}', { name: f.name.trim() || '…' }) },
     { key: 'category', label: t('Kategorie: {name}', { name: f.category.trim() || t('keine') }) },
     { key: 'cooldown', label: t('Sperrzeit {n} Min.', { n: cooldown }) },
     { key: 'dedupe', label: f.dedupe ? t('Keine zweite Karte') : t('Zweite Karte erlaubt') },
-    { key: 'nudge', label: nudge === null ? t('Nicht stupsen') : t('Stupsen nach {n} Min.', { n: nudge }) },
+    { key: 'nudge', label: nudge === null ? t('Nicht stupsen') : nudge.everyMin === null ? t('Stupsen nach {n} Min.', { n: nudge.afterMin }) : t('Stupsen nach {n} Min., alle {e} Min., {max} ×', { n: nudge.afterMin, e: nudge.everyMin, max: nudge.max }) },
     { key: 'count', label: t('Erst beim {n}. Mal', { n: count }) },
   ];
   // Kalender und Vorhersage fragen im Takt ab: ein Zähler ergibt dort keinen Sinn

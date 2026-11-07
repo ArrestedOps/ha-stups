@@ -40,7 +40,6 @@
   import PeoplePicker from './PeoplePicker.svelte';
   import RecurrenceEditor from './RecurrenceEditor.svelte';
   import ReminderEditor from './ReminderEditor.svelte';
-  import SelectField from './SelectField.svelte';
 
   let {
     card,

@@ -246,7 +246,7 @@
       <div class="text-[13px] text-fg2">{planTitle}</div>
       <div class="mt-2 flex flex-wrap gap-1.5">
         {#each steps as s, i (i)}
-          <span class="inline-flex h-[28px] items-center rounded-full bg-surface2 px-2.5 text-[13px] font-semibold {s.gap ? 'text-fg2' : ''}">{s.when}{#if s.last}{' '}<span class="font-normal text-fg2">{t('(letzte)')}</span>{/if}</span>
+          <span class="inline-flex h-[28px] items-center rounded-full bg-surface2 px-2.5 text-[13px] font-semibold {s.gap ? 'text-fg2' : ''}">{s.last ? `${s.when} ${t('(letzte)')}` : s.when}</span>
         {/each}
       </div>
     </div>

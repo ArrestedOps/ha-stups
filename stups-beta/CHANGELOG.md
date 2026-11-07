@@ -2,6 +2,14 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.39.0-beta.1
+
+**Nachhaken: Erinnerung an Aufgaben und Stupsen im Wächter.**
+
+- **Aufgabe:** Die Glockenzeile in „Neue Aufgabe“ öffnet das Fenster „Erinnerung“ (an der Karte der Chip „Erinnerung“): „Vorher erinnern“ wie bisher, darunter „Nachhaken, wenn nicht erledigt“ mit den Chips Aus · Nach 1 Std. · Morgen · Nach 3 Tagen · Nach 1 Woche · Eigene … (Zahl und Einheit), „Danach wiederholen?“ (Nein · Stündlich · Täglich · Wöchentlich · Eigene …), Uhrzeit (nur bei Tagen und Wochen) und „Höchstens N ×“ (Standard 5). Der Ablauf steht als Text darunter, mit den nächsten Zeitpunkten und dem letzten markiert. Mit der Erledigung endet alles automatisch, Ruhezeiten gelten, und es ist **nur für dich** (andere sehen es nie). Ohne Termin zählt es ab dem Anlegen. Das alte „Täglich nachhaken, solange überfällig“ ist darin aufgegangen: Es wurde je zuständiger Person zu einer persönlichen Erinnerung (ab dem Tag nach dem Termin, täglich zur Uhrzeit aus `overdue_nag_time`, bis zu 99 ×).
+- **Wächter:** „Stupsen, wenn noch offen“ ist jetzt eine Karte mit Nach / Wiederholen alle (leer = nur einmal) / Höchstens und einem Beispiel mit den echten Werten (Handy: in der Karte; Desktop: breite Karte, die drei Felder auf einer Linie, rechts der Zeitstrahl). Der Satz in der Vorschau nennt das Stupsen. Der Stups geht an die jeweils Zuständigen und endet, sobald die Karte erledigt ist. Ein alter Wert N wurde zu „nach N Min., einmal“.
+- Intern: eine Tabelle `card_reminders` (Migration 28) und ein Planer in der Benachrichtigung für beides; „Erledigt“ in der Mitteilung beendet es.
+
 ## 1.38.0-beta.1
 
 **Wiederholung ohne Termin, stündlich und mit Toleranz bei Verspätung.**

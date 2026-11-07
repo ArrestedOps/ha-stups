@@ -35,7 +35,7 @@
     <p class="rounded-xl bg-surface2 px-3 py-2.5 text-[13.5px] leading-[1.5]" data-testid="nudge-example">
       {t('Karte angelegt 12:00')} →
       {t('Stups')}
-      {#each steps as s, i (i)}{i > 0 ? ' · ' : ''}<b class="font-bold text-accent-text">{s.text}</b>{#if s.last}{' '}{t('(letzter)')}{/if}{/each}<br />
+      {#each steps as s, i (i)}{i > 0 ? ' · ' : ''}<b class="font-bold text-accent-text">{s.text}</b>{s.last ? ` ${t('(letzter)')}` : ''}{/each}<br />
       {t('Endet, sobald die Karte erledigt ist.')}
     </p>
   {:else}
@@ -77,7 +77,7 @@
             <li class="relative flex min-w-0 flex-col items-center gap-1 text-center">
               <span class="text-[12px] font-semibold whitespace-nowrap">{s.gap ? '' : t('Stups {n}', { n: i + 1 })}</span>
               <span class="h-3 w-3 rounded-full {s.gap ? 'bg-track' : 'bg-accent'}"></span>
-              <span class="text-[12px] whitespace-nowrap text-fg2">{s.text}{#if s.last}{' · '}{t('letzter')}{/if}</span>
+              <span class="text-[12px] whitespace-nowrap text-fg2">{s.last ? `${s.text} · ${t('letzter')}` : s.text}</span>
             </li>
           {/each}
         </ol>

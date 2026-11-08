@@ -127,7 +127,7 @@
   {/snippet}
 
   {#if href}
-    <a {href} aria-label={label} aria-current={current ? 'true' : undefined} data-row-open class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left">{@render body()}</a>
+    <a {href} target={/^(https?|geo|tel|mailto):/i.test(href) ? '_blank' : undefined} rel="noopener noreferrer" aria-label={label} aria-current={current ? 'true' : undefined} data-row-open class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left">{@render body()}</a>
   {:else if onclick}
     <button type="button" aria-label={label} aria-current={current ? 'true' : undefined} aria-expanded={expanded} aria-pressed={pressed} data-row-open class="flex h-full min-w-0 flex-1 items-center {check ? 'gap-2.5' : 'gap-3'} text-left" {onclick}>{@render body()}</button>
   {:else}

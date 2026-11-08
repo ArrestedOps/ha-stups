@@ -25,7 +25,11 @@ const repeatSheet = (page: Page) => page.getByRole('dialog', { name: 'Wiederholu
 /** Genau „Sa“ gewählt, egal welcher Wochentag heute vorbelegt ist (der Test darf nicht vom Tag der Ausführung abhängen) */
 async function onlySaturday(rep: Locator) {
   const days = rep.getByRole('group', { name: 'Wochentage' }).getByRole('button');
-  for (const d of await days.all()) {
+  // Erst „Sa“ einschalten: der letzte gewählte Tag lässt sich nicht abwählen
+  const all = await days.all();
+  const isSat = async (d: Locator) => ((await d.textContent()) ?? '').trim() === 'Sa';
+  for (const d of all) if ((await isSat(d)) && (await d.getAttribute('aria-pressed')) !== 'true') await d.click();
+  for (const d of all) {
     const on = (await d.getAttribute('aria-pressed')) === 'true';
     const sat = ((await d.textContent()) ?? '').trim() === 'Sa';
     if (on !== sat) await d.click();

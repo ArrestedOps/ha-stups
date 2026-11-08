@@ -2,6 +2,10 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.40.1-beta.4
+
+Nur ein Browser-Test wurde angepasst (hing vom Wochentag ab); die App ist unverändert gegenüber beta.3.
+
 ## 1.40.1-beta.3
 
 **Links öffnen im Handy-Browser.** Ein Link an einer Karte öffnet jetzt in einem neuen Tab bzw. im Standardbrowser des Handys, statt in einem schwarzen Fenster innerhalb der App.

@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.27.1
+
+*English first, German version below.*
+
+This version is the beta app's 1.40.1-beta.4.
+
+**Links open in the phone's browser.** A link on a card now opens in a new tab / the default browser instead of a black window inside the app.
+
+**Links öffnen im Handy-Browser.** Ein Link an einer Karte öffnet jetzt in einem neuen Tab bzw. im Standardbrowser des Handys, statt in einem schwarzen Fenster innerhalb der App.
+
 ## 1.27.0
 
 *English first, German version below.*

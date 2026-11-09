@@ -584,6 +584,18 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Wächter-Namen: kein „Namen mit Gerät ergänzen“ mehr; neue Wächter heißen wie die Vorlage, die Karte „Titel: Entität“; alte Gerätenamen sind einmalig weg
 - [ ] Datenbank: Migration 27 (vorher Sicherung); Bestandsboards bleiben für alle sichtbar
 
+## 40 · Einrichtung beim ersten Start (seit 1.40.1-beta.6)
+
+Nur auf einer **frischen** Installation (oder über Einstellungen › Hilfe und Daten › „Einrichtung nochmal durchgehen“). Eine Bestandsinstallation zeigt sie nicht von selbst.
+
+- [ ] **Testnachricht kommt an:** Im Schritt „Probier es gleich aus“ auf „Testnachricht senden“ tippen. Die Nachricht erscheint auf dem iPhone mit dem Titel des Wächters (oder „Waschmaschine fertig“) und deinem Vornamen im Text
+- [ ] **Erledigt-Knopf:** Die Nachricht gedrückt halten: Die Knöpfe **Erledigt** und **Später** erscheinen. Ein Tipp darauf ändert nichts (es ist nur der Test); die Nachricht verschwindet
+- [ ] **Ohne Handy:** Bei einer Person ohne Companion App steht „Kein Handy gefunden“ mit den Links zum App Store und zu Google Play; beide öffnen **außerhalb** von Stups (neuer Tab bzw. Browser)
+- [ ] **Abbruch und Wiederaufnahme:** Mitten in der Einrichtung die App schließen und neu öffnen (oder am Desktop öffnen): Sie macht beim selben Schritt weiter, die Personen stehen nicht doppelt in der Liste
+- [ ] **Überspringen:** „Überspringen“ im ersten Schritt öffnet die App normal; sie erscheint danach nicht wieder
+- [ ] **Mitglied:** Wer als Person ohne Administrator zum ersten Mal öffnet, sieht nur „Handy verbinden“ und „Farbe wählen“, ein Kind nur „Handy verbinden“
+- [ ] **Dunkel und hell, Handy und Desktop:** alle Texte gut lesbar, Knöpfe lassen sich mit dem Daumen treffen, am Desktop steht die Vorschau der Nachricht rechts
+
 ## Bekannte Lücken
 
 - Dass die Kopfzeile ausgeblendet wird, ließ sich ohne Companion App nicht sehen (zwei Wege eingebaut, siehe 1).

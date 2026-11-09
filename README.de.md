@@ -1,5 +1,11 @@
 <p align="center"><img src="docs/images/stups-logo.png" alt="Stups" width="420"></p>
 
+<div align="center">
+
+🇬🇧 [English version](README.md) · Die englische Fassung ist maßgeblich.
+
+</div>
+
 <h3 align="center">Dein Zuhause merkt, was zu tun ist.<br>Ihr entscheidet, wer es macht.</h3>
 
 <p align="center">
@@ -92,7 +98,7 @@ Am einfachsten geht es mit dem Knopf oben („Zu Home Assistant hinzufügen“).
 
 1. In Home Assistant: **Einstellungen → Apps → App-Store → ⋮ → Repositories**
 2. `https://github.com/ArrestedOps/ha-stups` hinzufügen
-3. **Stups** installieren und starten, in der Seitenleiste öffnen. Personen wählst du in der App (oder in den Optionen); fertig.
+3. **Stups** installieren und starten, in der Seitenleiste öffnen. Beim ersten Start führt dich Stups in drei Minuten durch die Einrichtung; Personen wählst du in der App (oder in den Optionen).
 
 Bedienung und Optionen: [stups/DOCS.md](stups/DOCS.md). Änderungen: [stups/CHANGELOG.md](stups/CHANGELOG.md).
 

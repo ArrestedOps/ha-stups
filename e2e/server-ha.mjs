@@ -32,6 +32,8 @@ process.env.DATA_DIR = dir;
 process.env.OPTIONS_PATH = join(dir, 'options.json');
 process.env.PORT = String(PORT);
 process.env.ENFORCE_INGRESS_IP = 'false';
+// Die Einrichtung beim ersten Start erscheint in diesen Tests nie (Personen, die die Specs per API anlegen, hätten sonst keinen Status); getestet wird sie in server-onboarding.mjs
+process.env.DEV_NO_ONBOARDING = '1';
 process.env.DEV_USER = FIRST;
 process.env.SUPERVISOR_TOKEN = 'e2e-token';
 process.env.HA_URL = `http://127.0.0.1:${HA_PORT}`;

@@ -155,3 +155,11 @@ Fertig, wenn: (1) alle Leitregeln aus Abschnitt 1 nachweisbar erfüllt sind, (2)
 4. **Personen ohne Handy bekommen einen Link zur Home-Assistant-Companion-App** im App Store (iPhone) bzw. bei Google Play (Android), statt einer Einladung in Stups. Wo ein Handy fehlt (Schritt „Wer wohnt hier?“ bei „Kein Handy gefunden“ und Schritt „Testnachricht“ bei fehlendem Push-Weg), steht ein kleiner Link „Companion App installieren“ mit beiden Stores. Er öffnet außerhalb der App (`target="_blank"`, siehe 1.27.1). Personen, die noch nicht in Home Assistant stehen, werden **nicht** eingeladen; das legt man weiterhin in Home Assistant an.
 
 Weitere Fragen, die beim Bauen auftauchen: kurz beim Projektinhaber nachfragen, nicht raten.
+
+## 11. Umsetzung: Abweichungen vom Text (1.40.1-beta.6)
+
+- **Gemeinsame Funktion statt Auslagerung aus `FoundSheet`:** „Einrichten“ in `FoundSheet` legt nichts an, es öffnet den Assistenten. Die gemeinsame Vorbelegung steckt in `applyTemplate` (`lib/watchers.ts`); `lib/watcherFromHit.ts` baut darauf den fertigen Wächter fürs Onboarding. `FoundSheet` blieb unverändert.
+- **Testnachricht, Hinweis:** Auf dem iPhone erscheinen die Knöpfe, wenn man die Nachricht **gedrückt hält** (Rückmeldung des Projektinhabers). Der Text lautet deshalb „Auf dem iPhone die Nachricht gedrückt halten, dann erscheint Erledigt. Bei Android ziehst du sie nach unten auf.“ statt „nach links wischen und Ansicht“; die Vorschau sagt, dass sie den gedrückten Zustand zeigt.
+- **Wann sie erscheint, Mitglieder:** Mitglieder und Kinder sehen die Kurzfassung (3.6) beim ersten Start auch in einer vollen Installation, nur der Administrator braucht dafür eine neue Installation (oder gespeicherten Fortschritt). Sonst gäbe es die Kurzfassung für die Personen, die der Administrator im Onboarding anlegt, nie.
+- **Probelauf:** eine Zeile mit dem Satz des Servers (`DryRunResult.sentence`), nur mit Verlauf; `DryRunPanel` selbst ist nicht eingebunden (er braucht ein Formular und zeigt Fehler, hier soll die Zeile dann fehlen).
+- **Pegel-Wächter und `metNow`:** der Server legt Pegel-Wächter (Batterie …) bei erfüllter Bedingung schon selbst sofort an und meldet `metNow` nur für den Rest; das Onboarding fragt nie nach.

@@ -1,5 +1,11 @@
 <p align="center"><img src="docs/images/stups-logo.png" alt="Stups" width="420"></p>
 
+<div align="center">
+
+🇩🇪 [Deutsche Fassung](README.de.md) · This English version is the authoritative one.
+
+</div>
+
 <h3 align="center">Your home notices what needs doing.<br>You decide who does it.</h3>
 
 <p align="center">
@@ -12,8 +18,6 @@
   <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FArrestedOps%2Fha-stups"><img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Add to Home Assistant"></a>
   <br><sub>Opens the dialog in your Home Assistant with the repository address filled in. You confirm adding and installing there yourself.</sub>
 </p>
-
-<p align="center"><sub>🇩🇪 <a href="README.de.md">Deutsche Fassung</a> · This English version is the authoritative one.</sub></p>
 
 ---
 
@@ -92,7 +96,7 @@ The easiest way is the button at the top ("Add to Home Assistant"). By hand:
 
 1. In Home Assistant: **Settings → Apps → App Store → ⋮ → Repositories**
 2. Add `https://github.com/ArrestedOps/ha-stups`
-3. Install and start **Stups**, open it from the sidebar. You pick the people in the app (or in the options); done.
+3. Install and start **Stups**, open it from the sidebar. On first start Stups guides you through the setup in three minutes; you pick the people in the app (or in the options).
 
 Usage and options: [stups/DOCS.md](stups/DOCS.md). Changes: [stups/CHANGELOG.md](stups/CHANGELOG.md).
 

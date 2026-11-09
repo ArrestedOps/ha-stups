@@ -131,6 +131,12 @@ describe('Entwicklung und Tests', () => {
     expect(r.identity.enforceIngressIp).toBe(false);
     expect(r.identity.devAdmins).toEqual(['dev-rene', 'dev-anna']);
   });
+
+  it('DEV_NO_ONBOARDING schaltet die Einrichtung für die Browser-Tests ab, aber nur ohne IP-Prüfung', () => {
+    expect(resolveRuntime({ ENFORCE_INGRESS_IP: 'false', DEV_NO_ONBOARDING: '1' }, files()).identity.devNoOnboarding).toBe(true);
+    expect(resolveRuntime({ ENFORCE_INGRESS_IP: 'false' }, files()).identity.devNoOnboarding).toBe(false);
+    expect(resolveRuntime({ DEV_NO_ONBOARDING: '1' }, files()).identity.devNoOnboarding).toBe(false);
+  });
 });
 
 describe('ntfy', () => {

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, skipOnboarding } from './helpers';
 
 // Betriebsart 3: eigener Container ohne Home Assistant (e2e/server-standalone.mjs), Anmeldung mit eigenem Konto.
 // Die Tests bauen aufeinander auf: erst die Einrichtung, dann Anmeldung, Benutzer, Mitglied.
@@ -53,6 +53,7 @@ test('Erster Start: ohne Konto sperrt die API, die Einrichtung verlangt den Code
 
   await form.getByLabel('Passwort wiederholen').fill(PW);
   await form.getByRole('button', { name: 'Einrichten' }).click();
+  await skipOnboarding(page); // frischer Container: Stups zeigt die Einrichtung
   await expect(nav(page)).toBeVisible(); // gleich angemeldet
 });
 
@@ -128,6 +129,7 @@ test('Administrator legt Ben an; Ben meldet sich an und sieht keine Verwaltung',
   const ben = await ctx.newPage();
   try {
     await melden(ben, 'ben', 'bens-passwort-1');
+    await skipOnboarding(ben); // ein Mitglied sieht beim ersten Start die Kurzfassung
     await expect(nav(ben)).toBeVisible();
     await openBoards(ben);
     await expect(ben.getByText('Fenster putzen').first()).toBeVisible(); // gemeinsame Boards

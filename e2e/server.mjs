@@ -29,6 +29,8 @@ process.env.DATA_DIR = dir;
 process.env.OPTIONS_PATH = join(dir, 'options.json');
 process.env.PORT = process.env.PORT ?? '18400';
 process.env.ENFORCE_INGRESS_IP = 'false';
+// Die Einrichtung beim ersten Start erscheint in diesen Tests nie (Personen, die die Specs per API anlegen, hätten sonst keinen Status); getestet wird sie in server-onboarding.mjs
+process.env.DEV_NO_ONBOARDING = '1';
 process.env.DEV_USER = 'rene';
 // Nur rene ist Administrator, wer sonst dazukommt, ist Mitglied (sonst gälten ohne Home Assistant alle Personen als Administratoren)
 process.env.DEV_ADMINS = 'dev-rene';

@@ -27,7 +27,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
       /** Einrichtung beim ersten Start: Status der Person, gemerkter Schritt und die eine Regel, ob sie jetzt erscheint (store.needsOnboarding) */
       onboarding: onboarding?.status ?? null,
       onboardingProgress: onboarding?.progress ?? null,
-      needsOnboarding: req.user && allowed ? store.needsOnboarding(req.user.id, { isAdmin: req.access?.isAdmin ?? false }) : false,
+      needsOnboarding: req.user && allowed && !deps.noOnboarding ? store.needsOnboarding(req.user.id, { isAdmin: req.access?.isAdmin ?? false }) : false,
     };
   });
   // Sprache der Person: die Wahl und die Sprache, die ihr Gerät zeigt (für Push, wenn kein Browser dabei ist)

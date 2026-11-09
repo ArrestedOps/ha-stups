@@ -82,6 +82,11 @@ describe('Onboarding: Personen im Schritt „Wer wohnt hier?"', () => {
     expect(defaultSelection(c)).toEqual(['self', 'p:p-anna', 'ha:ha-ben', 'ha:Gast']);
   });
 
+  it('Du steht nicht noch einmal als Person aus Home Assistant da (gleiche Benutzer-Id oder gleicher Name)', () => {
+    const c = buildCandidates({ me, people: [], haPersons: [{ name: 'Rene', userId: 'ha-me' }, { name: 'rene', userId: null }, { name: 'Ben', userId: 'ha-ben' }], services: [] });
+    expect(c.map((x) => x.key)).toEqual(['self', 'ha:ha-ben']);
+  });
+
   it('ist Du schon eine Person, steht sie nur einmal da und behält ihre Id', () => {
     const self = { ...(me as object), isPerson: true } as never;
     const c = buildCandidates({ me: self, people: [self, anna], haPersons: [], services: [] });

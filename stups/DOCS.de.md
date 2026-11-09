@@ -6,6 +6,8 @@ Dein Zuhause merkt, was zu tun ist, ihr entscheidet, wer es macht. Stups läuft 
 
 ## Einrichtung
 
+**Erster Start:** Auf einer neuen Installation führt Stups Administratoren zuerst durch eine kurze Einrichtung, etwa drei Minuten: **Wer wohnt hier?** (die Personen aus Home Assistant sind vorgewählt, Handys erkennt Stups selbst, und wer kein Handy hat, bekommt einen Link zur Companion App im App Store oder bei Google Play), **Erster Wächter** (was Stups bei dir gefunden hat, mit Probelauf der letzten 7 Tage), **Testnachricht** (eine Nachricht mit den Knöpfen *Erledigt* und *Später* auf dem Handy; auf dem iPhone die Nachricht gedrückt halten, dann erscheinen die Knöpfe) und **Fertig**. Jeder Schritt lässt sich überspringen und später in den Einstellungen nachholen. Wo du aufgehört hast, merkt sich der Server: Du kannst auf einem anderen Gerät weitermachen. Mitglieder und Kinder sehen eine Kurzfassung (**Handy verbinden**, **Farbe wählen**). Bestehende Installationen zeigen sie nicht von selbst; *Einstellungen › Hilfe und Daten › Einrichtung nochmal durchgehen* öffnet sie jederzeit. Die Liste unten ist das, was die Einrichtung tut, so findest du es in den Einstellungen.
+
 1. App starten und in der Seitenleiste **Stups** öffnen.
 2. **Avatar oben rechts › Haushalt › Personen und Kinder** öffnen (Administratoren):
    - **Personen hinzufügen:** Die Personen aus Home Assistant (Einstellungen › Personen) stehen zur Auswahl. Wer hinzugefügt ist, kann zugewiesen werden und bekommt Push-Nachrichten.
@@ -218,7 +220,7 @@ Der Avatar oben rechts öffnet die Einstellungen als Übersicht mit Unterseiten.
 | **Für mich** (alle) | Benachrichtigungen (Test an mich, meine Geräte oder ntfy-Thema, Ruhezeit, Sonntagsrückblick, Wenig Zeit) · Sprache und Farbe · Konto und Anmeldung (nur im Container) |
 | **Haushalt** (Administratoren) | Personen und Kinder · Wächter · Vorlagen (Board-Vorlagen) · Termine (Standard-Uhrzeit) |
 | **Home Assistant** (Administratoren) | Dashboard und Kopfzeile (Zurück-Dashboard, HA-Kopfzeile ausblenden, Bubble-Card-Knopf) · Ansage und Lampe (Sprachdienst) |
-| **Hilfe und Daten** | Warum kommt nichts an? · Papierkorb, Archiv, Umzug · Beta (nur in der Beta) |
+| **Hilfe und Daten** | Warum kommt nichts an? · Papierkorb, Archiv, Umzug · Beta (nur in der Beta) · Einrichtung nochmal durchgehen |
 
 Am Fuß stehen die Version und der Link zur Diagnose-Seite. Mitglieder sehen „Haushalt" und „Home Assistant" nicht; ein Kind sieht nur „Sprache und Farbe". Die Wahl „HA-Kopfzeile ausblenden" gilt nur für das Gerät; Mitglieder finden sie unter *Sprache und Farbe*.
 

@@ -2,6 +2,10 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.40.1-beta.6
+
+**Einrichtung beim ersten Start.** Wer Stups zum ersten Mal öffnet, wird in etwa drei Minuten durch die Einrichtung geführt: **Wer wohnt hier?** (die Personen aus Home Assistant sind vorgewählt, Handys erkennt Stups selbst, wer keins hat, bekommt den Link zur Companion App), **Das haben wir bei dir gefunden** (der beste Treffer mit Regel als Satz und Probelauf, bis zu zwei weitere zum Einschalten), **Testnachricht** (Vorschau, Senden, mit Erledigt und Später; auf dem iPhone die Nachricht gedrückt halten) und **Fertig** (mit erster Aufgabe per Schnell-Eingabe). Jeder Schritt lässt sich überspringen; der Stand liegt auf dem Server, ein Abbruch lässt sich auf einem anderen Gerät weiterführen. Mitglieder sehen eine Kurzfassung (Handy verbinden, Farbe wählen), Kinder nur das Handy. Bestehende Installationen zeigen sie nicht von selbst; unter Einstellungen › Hilfe und Daten gibt es „Einrichtung nochmal durchgehen“. **Neu im Server:** Migration 30 (Status je Person, Bestandspersonen gelten als eingerichtet), `needsOnboarding` in `/api/me`, `PUT`/`DELETE /api/me/onboarding`, Testnachricht mit Vorschau-Texten. Außerdem: Der Link zur deutschen und englischen Fassung der README steht wieder oben (der Test dafür war seit beta.5 rot).
+
 ## 1.40.1-beta.5
 
 **Dokumentation auf dem Stand der App** (drei Reiter, Aufgaben als Startseite, Kalender unter Aufgaben, Wächter-Reiter, private Boards, Kinder-Boards, Wiederholungen, Erinnerungen, Berechtigungen, Feedback, Desktop-Ansicht) und eine neue README. **Release-Ablauf:** Die normale App wird künftig über den Branch `release` gebaut; `main` wird erst nachgezogen, wenn die Images fertig sind. So zeigt Home Assistant ein Update erst, wenn es sich installieren lässt. An der App selbst ändert sich nichts.

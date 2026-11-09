@@ -30,6 +30,8 @@ declare module 'fastify' {
 
 export interface ApiDeps {
   store: Store;
+  /** Nur für Browser-Tests (DEV_NO_ONBOARDING): die Einrichtung erscheint nie */
+  noOnboarding?: boolean;
   /** Looks up the <title> of a page. Injected so tests need no network. */
   fetchTitle?: (url: string) => Promise<string | null>;
   /** Löst Google-Kurzlinks auf; null = nichts zu tun */

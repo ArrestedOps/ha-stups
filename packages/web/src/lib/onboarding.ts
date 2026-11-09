@@ -113,7 +113,10 @@ export function buildCandidates(input: {
     if (p.id === me.id) continue;
     out.push(make({ key: `p:${p.id}`, name: p.displayName, haUserId: p.haUserId, personId: p.id, self: false, isChild: p.isChild }, p));
   }
-  for (const h of haPersons) {
+  // Du steht oben und nicht noch einmal als Person aus Home Assistant (die Administratorin ist dort eine Person, in Stups noch nicht)
+  const isMe = (h: { name: string; userId: string | null }) =>
+    (h.userId !== null && h.userId === me.haUserId) || [me.displayName, me.name].some((n) => fold(n) === fold(h.name));
+  for (const h of haPersons.filter((x) => !isMe(x))) {
     out.push(make({ key: `ha:${h.userId ?? h.name}`, name: h.name, haUserId: h.userId, personId: null, self: false, isChild: false }, null));
   }
   return out;

@@ -18,7 +18,7 @@ let app: FastifyInstance;
 let store: Store;
 let db: ReturnType<typeof openDb>;
 
-async function build(opts: { directory?: boolean; people?: boolean } = {}): Promise<void> {
+async function build(opts: { directory?: boolean; people?: boolean; noOnboarding?: boolean } = {}): Promise<void> {
   db = openDb(':memory:');
   store = createStore(db, { now: () => new Date('2026-10-30T10:00:00Z') });
   if (opts.people) store.addPerson({ haUserId: 'ha-anna', name: 'Anna' });
@@ -26,6 +26,7 @@ async function build(opts: { directory?: boolean; people?: boolean } = {}): Prom
   await app.register(ingressAuth, { enforceIp: false });
   await app.register(apiRoutes, {
     store,
+    noOnboarding: opts.noOnboarding,
     ...(opts.directory === false ? {} : { directory: { isAdmin: async (id: string) => id === 'ha-chef', persons: async () => [] } }),
   });
 }
@@ -116,6 +117,15 @@ describe('needsOnboarding: wer die Einrichtung sieht', () => {
   it('Container ohne Home Assistant (kein Verzeichnis): der Erste auf einer leeren Installation sieht es', async () => {
     await build({ directory: false });
     expect(await me(chef)).toMatchObject({ isAdmin: true, needsOnboarding: true });
+  });
+});
+
+describe('Entwicklungsschalter', () => {
+  it('noOnboarding (nur für die Browser-Tests): needsOnboarding ist nie wahr, Status und Fortschritt bleiben les- und setzbar', async () => {
+    await build({ noOnboarding: true });
+    expect(await me(chef)).toMatchObject({ needsOnboarding: false, onboarding: null });
+    await call(chef, 'DELETE', '/api/me/onboarding');
+    expect((await me(chef)).needsOnboarding).toBe(false);
   });
 });
 

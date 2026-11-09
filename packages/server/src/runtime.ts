@@ -55,6 +55,8 @@ export interface Runtime {
     /** Nur für Entwicklung und Tests */
     devUser?: { id: string; name: string; displayName: string };
     devAdmins?: string[];
+    /** Nur für Browser-Tests: die Einrichtung beim ersten Start erscheint nie (DEV_NO_ONBOARDING, nur ohne IP-Prüfung) */
+    devNoOnboarding: boolean;
   };
 }
 
@@ -195,6 +197,7 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
       enforceIngressIp: !noIpCheck,
       devUser: devName ? { id: `dev-${devName}`, name: devName, displayName: devName } : undefined,
       devAdmins: devAdmins === undefined ? undefined : devAdmins.split(',').map((s) => s.trim()).filter(Boolean),
+      devNoOnboarding: noIpCheck && set(env.DEV_NO_ONBOARDING) === '1',
     },
   };
 }

@@ -6,6 +6,8 @@ Your home notices what needs doing, you decide who does it. Stups runs right ins
 
 ## Setup
 
+**First start:** on a new installation Stups first guides administrators through a short setup, about three minutes: **Who lives here?** (the people from Home Assistant are preselected, phones are detected by themselves, and anyone without a phone gets a link to the Companion App in the App Store or Google Play), **First watcher** (what Stups found in your home, with a dry run over the last 7 days), **Test message** (a message with *Done* and *Later* buttons on your phone; on an iPhone press and hold the message to see the buttons) and **Done**. Every step can be skipped and done later in the settings. Where you stopped is saved on the server, so you can carry on on another device. Members and children see a short version (**Connect phone**, **Choose a colour**). Installations that already existed do not show it by themselves; *Settings › Help and data › Go through the setup again* opens it any time. The list below is what the setup does, found in the settings.
+
 1. Start the app and open **Stups** in the sidebar.
 2. Open **avatar at the top right › Household › People and children** (administrators):
    - **Add people:** the people from Home Assistant (Settings › People) are offered. Whoever is added can be assigned cards and receives push messages.
@@ -222,7 +224,7 @@ The avatar at the top right opens the settings as an overview with sub-pages. At
 | **For me** (everyone) | Notifications (test to me, my devices or ntfy topic, quiet time, Sunday recap, little time) · Language and colour · Account and sign-in (container only) |
 | **Household** (administrators) | People and children · Watchers · Templates (board templates) · Dates (default time) |
 | **Home Assistant** (administrators) | Dashboard and header (back dashboard, hide the HA header, Bubble Card button) · Announcements and lamp (speech service) |
-| **Help and data** | Why does nothing arrive? · Bin, archive, move · Beta (beta only) |
+| **Help and data** | Why does nothing arrive? · Bin, archive, move · Beta (beta only) · Go through the setup again |
 
 At the bottom are the version and the link to the diagnostics page. Members do not see "Household" and "Home Assistant"; a child only sees "Language and colour". The "hide the HA header" choice only applies to the device; members find it under *Language and colour*.
 

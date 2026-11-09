@@ -337,6 +337,16 @@ Diese Regeln gelten für jede Änderung; zu jeder gibt es Tests.
 - **Datenschutz:** Gespeichert wird nur auf dieser Installation; mitgesendet werden Version, Kanal, Ansicht, Sprache, Hell/Dunkel, Fenstergröße, eingebettet ja/nein und der gekürzte User-Agent, nie Anmeldedaten, Adressen oder Geheimnisse. Nichts geht an Dritte; „Als Text kopieren“ gibt der Administrator selbst weiter.
 - **Browser-Test:** `e2e/35-feedback.spec.ts`; allein auf eigenen Ports (19700): `pnpm exec playwright test -c e2e/playwright.feedback.config.ts`.
 
+### Einrichtung beim ersten Start (seit 1.40.1-beta.6)
+
+Die Übergabe mit Entscheidungen und Mockups steht in `docs/onboarding/`. Hier nur, wie es zusammenhängt:
+
+- **Wann sie erscheint (`needsOnboarding`)** entscheidet allein der Server (`store.needsOnboarding` in `store/people.ts`) und liefert es in `GET /api/me` zusammen mit `onboarding` (`done`, `skipped`, `null`) und `onboardingProgress`. Regel: Ist `done` oder `skipped` gespeichert, nie. **Mitglieder und Kinder** (Personen): sonst immer (Kurzfassung). **Administratoren:** auf einer neuen Installation (keine Karten, keine Wächter, keine anderen Personen) **oder** mitten in der Einrichtung (es ist ein Fortschritt gespeichert; sonst wäre die Installation nach dem Anlegen der Personen nicht mehr „neu“). Wer vor Migration 30 eine Person war, steht auf `done`.
+- **Speicher:** Spalten `users.onboarding` und `users.onboarding_progress` (JSON: Schritt und eine kleine Auswahl, höchstens 4000 Zeichen). `PUT /api/me/onboarding` (`done`/`skipped`, löscht den Fortschritt), `DELETE` (nochmal durchgehen: Status weg, Fortschritt `welcome`, damit sie auch in einer Bestandsinstallation aufgeht), `PUT /api/me/onboarding/progress`. Jede Person ändert nur den eigenen Stand, auch ein Kind.
+- **Testnachricht:** `POST /api/push/test` ohne Rumpf bleibt der bisherige Test. Mit `{ kind: 'onboarding', title?, body? }` kommt die Vorschau mit den Knöpfen Erledigt und Später (Aktionen `STUPS_ONBOARDING_DONE`/`_LATER`, der Notifier ignoriert sie); ohne Texte gelten die Vorgaben in der Sprache der Person.
+- **Oberfläche:** `Onboarding.svelte` ersetzt in `App.svelte` die Reiter, solange `ui.onboarding.needs` gilt (Fenster wie Einstellungen und „Prüfen“ öffnen darüber, z-30 gegen z-40). Zustand und Aufrufe in `lib/onboarding.svelte.ts`, reine Funktionen (Schritte, Personen, Handys, Rangfolge der Treffer, Links zur Companion App) in `lib/onboarding.ts`, der Wächter aus einem Treffer in `lib/watcherFromHit.ts` (baut auf `applyTemplate` und `toInput` des Assistenten auf).
+- **Browser-Tests:** `46-onboarding.spec.ts` läuft gegen `server-onboarding.mjs` (frisch, ohne Schalter). Alle anderen Server der Browser-Tests setzen `DEV_NO_ONBOARDING=1` (nur ohne IP-Prüfung wirksam, wie `DEV_ADMINS`), sonst sähe jede per API angelegte Person die Einrichtung. Im Container mit eigenen Konten (`12-`, `13-standalone`) überspringt `skipOnboarding` in `helpers.ts` sie.
+
 ## 4. Bekannte Grenzen
 
 - Das Wischen und die Tastatur-Anpassung sind in den Browser-Tests nur mit Zeiger-Ereignissen bzw. per Rechenfunktion abgedeckt. Echtes Touch und die echte Bildschirmtastatur lassen sich nur am iPhone prüfen.

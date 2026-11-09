@@ -11,6 +11,24 @@ export async function openBoards(page: Page): Promise<void> {
 }
 
 /**
+ * Nach der ersten Anmeldung in einem frischen Container zeigt Stups die Einrichtung (46-onboarding.spec.ts testet sie): Wer die App
+ * danach braucht, überspringt sie. Ist sie nicht da (Bestand, Mitglied mit Status), passiert nichts.
+ */
+export async function skipOnboarding(page: Page): Promise<void> {
+  const dialog = page.getByRole('dialog', { name: 'Einrichtung' });
+  const nav = page.getByRole('navigation', { name: 'Ansicht' });
+  await expect(dialog.or(nav)).toBeVisible();
+  if ((await dialog.count()) === 0) return;
+  const skip = dialog.getByRole('button', { name: 'Überspringen' });
+  if (await skip.count()) return skip.click(); // Administrator: Willkommen
+  // Mitglied: „Handy verbinden", dann „Farbe wählen" (ein Kind hat nur den ersten Schritt)
+  await dialog.getByRole('button', { name: 'Später' }).click();
+  const done = dialog.getByRole('button', { name: 'Zu den Aufgaben' });
+  await expect(done.or(nav)).toBeVisible();
+  if (await done.count()) await done.click();
+}
+
+/**
  * Aufgaben öffnen, auf Wunsch „Alle“ statt „Meine“ wählen (die Standardwahl ist „Meine“; der Filter gilt auch im Kalender) und eine Ansicht
  * wählen: die Liste, oder Tag, Woche, Monat (der Kalender ist eine Seite unter Aufgaben, der Kalender-Knopf der Wochenleiste öffnet sie)
  */

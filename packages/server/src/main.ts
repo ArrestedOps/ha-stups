@@ -285,6 +285,7 @@ const liveOptions = Object.create(options, {
 await app.register(spikeRoutes, { options: liveOptions, ha, now: () => new Date() });
 await app.register(apiRoutes, {
   store,
+  noOnboarding: runtime.identity.devNoOnboarding,
   bus,
   notifier,
   // Ohne Verbindung zu Home Assistant gibt es keinen Client: sonst wartet jede Anfrage, die ihn fragt (Personen & Zugriff,

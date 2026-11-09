@@ -15,7 +15,7 @@ const cap = (n) => n[0].toUpperCase() + n.slice(1);
  * first ist die erste Person (der angemeldete Administrator), second die zweite.
  * token: Long-Lived-Token, den das nachgebaute Home Assistant verlangt (ohne Angabe jeder).
  */
-export async function startMockHa({ port, first, second, token }) {
+export async function startMockHa({ port, first, second, token, extraPersons = [] }) {
   const iso = () => new Date().toISOString();
   const states = new Map();
   const subs = new Set(); // { ws, id, entities: string[], to?: string }
@@ -43,6 +43,8 @@ export async function startMockHa({ port, first, second, token }) {
 
   setState(`person.${first}`, 'home', { friendly_name: cap(first), user_id: `dev-${first}` });
   setState(`person.${second}`, 'home', { friendly_name: cap(second), user_id: `ha-${second}-e2e` });
+  // Weitere Personen in Home Assistant, ohne Handy (kein Push-Dienst der Companion App): für die Einrichtung
+  for (const name of extraPersons) setState(`person.${name}`, 'home', { friendly_name: cap(name), user_id: `ha-${name}-e2e` });
   setState('sensor.waschmaschine_leistung', '120', { friendly_name: 'Waschmaschine Leistung', unit_of_measurement: 'W', device_class: 'power' });
   // Dazu, was „Gefunden" erkennen soll: Trockner (Leistung), Abfallkalender, Wetter, Batterie
   setState('sensor.trockner_leistung', '2', { friendly_name: 'Steckdose Trockner Leistung', unit_of_measurement: 'W', device_class: 'power' });
@@ -213,7 +215,7 @@ export async function startMockHa({ port, first, second, token }) {
         case 'config/auth/list':
           return ok([{ id: `dev-${first}`, is_owner: true, is_active: true, system_generated: false, group_ids: ['system-admin'] }]);
         case 'person/list':
-          return ok({ storage: [{ name: cap(first), user_id: `dev-${first}` }, { name: cap(second), user_id: `ha-${second}-e2e` }], config: [] });
+          return ok({ storage: [{ name: cap(first), user_id: `dev-${first}` }, { name: cap(second), user_id: `ha-${second}-e2e` }, ...extraPersons.map((n) => ({ name: cap(n), user_id: `ha-${n}-e2e` }))], config: [] });
         case 'lovelace/dashboards/list':
           return ok([]);
         case 'history/history_during_period': {

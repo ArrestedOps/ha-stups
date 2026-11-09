@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, skipOnboarding } from './helpers';
 
 // Betriebsart 2: eigener Container mit Verbindung zu Home Assistant (e2e/server-standalone-ha.mjs, nachgebautes Home Assistant
 // auf PORT+1 mit Long-Lived-Token), Anmeldung mit eigenem Konto. Die Tests bauen aufeinander auf.
@@ -57,6 +57,7 @@ test('Erster Start mit Home Assistant: Einrichtung, dann Wächter-Reiter und Ver
   await form.getByLabel('Passwort', { exact: true }).fill(PW);
   await form.getByLabel('Passwort wiederholen').fill(PW);
   await form.getByRole('button', { name: 'Einrichten' }).click();
+  await skipOnboarding(page); // frischer Container: Stups zeigt die Einrichtung
   await expect(nav(page)).toBeVisible();
 
   // Was die Oberfläche anbietet, sagt der Server

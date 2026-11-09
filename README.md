@@ -15,10 +15,6 @@
 
 <p align="center"><sub>🇩🇪 <a href="README.de.md">Deutsche Fassung</a> · This English version is the authoritative one.</sub></p>
 
-<p align="center">
-  <img src="docs/images/demo.en.gif" alt="Stups in action: quick entry, completing a card, agenda" width="30%">
-</p>
-
 ---
 
 ## Sound familiar?

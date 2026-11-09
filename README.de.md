@@ -15,10 +15,6 @@
 
 <p align="center"><sub>Deutsche Fassung. Die englische Fassung (<a href="README.md">README.md</a>) ist maßgeblich.</sub></p>
 
-<p align="center">
-  <img src="docs/images/demo.de.gif" alt="Stups in Aktion: Schnell-Eingabe, Karte erledigen, Aufgaben" width="30%">
-</p>
-
 ---
 
 ## Kommt dir das bekannt vor?

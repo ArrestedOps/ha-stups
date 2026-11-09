@@ -53,7 +53,7 @@ Schlagzeile, ein Beispiel „Waschmaschine fertig → Anna ist dran → Anna bek
 - Pro Zeile: Avatar, Name, **Handy-Status** („iPhone von Anna erkannt“ oder „Kein Handy gefunden“). Quelle für Geräte: dieselbe Logik wie in Einstellungen › Personen (`PeopleSheet.svelte`, Notify-Dienste `mobile_app_*`); die Geräte werden **automatisch gewählt**, wenn genau eins zur Person passt.
 - Pro Zeile eine kleine Wahl „Kind“ (Rolle Kind, siehe Doku „Child role“). Standard: Mitglied. Kinder sehen nur eigene Karten.
 - Abgewählte Personen werden **nicht** angelegt. Es wird nichts gelöscht.
-- Weiter-Knopf zeigt die Zahl: „Weiter mit 3 Personen“. Speichern erst beim Weiter (ein Aufruf pro Person über `POST /api/access/people` und `PATCH /api/access/people/:id`; bestehende Personen nicht doppelt anlegen).
+- Bei „Kein Handy gefunden“ steht der Link „Companion App installieren“ (Entscheidung 4 in Abschnitt 10). Weiter-Knopf zeigt die Zahl: „Weiter mit 3 Personen“. Speichern erst beim Weiter (ein Aufruf pro Person über `POST /api/access/people` und `PATCH /api/access/people/:id`; bestehende Personen nicht doppelt anlegen).
 - Ist die Installation durch `users` in den Add-on-Optionen verwaltet (siehe `notManaged()` in `api/access.ts`), ist der Schritt **nur Anzeige** („Die Personen kommen aus der Konfiguration“) und führt weiter.
 - Im Container ohne Home Assistant (eigene Konten) gibt es keine HA-Personen: der Schritt entfällt, stattdessen der bestehende Konto-Ablauf (nicht anfassen).
 
@@ -70,13 +70,13 @@ Schlagzeile, ein Beispiel „Waschmaschine fertig → Anna ist dran → Anna bek
 
 - Zeigt die Mitteilung wie auf dem Sperrbildschirm (Titel „Waschmaschine fertig“ bzw. der Name des gewählten Wächters, Knöpfe Erledigt / Später), mit dem Vornamen der Person.
 - Knopf „Testnachricht senden“ ruft `POST /api/push/test` auf (existiert; sendet bisher „Stups: Test“ mit dem Rückweg-Knopf nur bei ntfy). **Erweitern**: ein optionaler Body `{ kind: 'onboarding', title, body }` lässt die Vorschau-Texte senden, mit denselben Knöpfen wie eine echte Wächter-Nachricht (Erledigt, Später). Die Texte müssen in beiden Sprachen vorliegen und serverseitig die Sprache der Person nutzen.
-- Fehlerfälle (jeweils mit klarer Anweisung statt Fehlermeldung): kein Push-Weg (`Für dich ist noch kein Push-Weg eingetragen`) → Hinweis „Öffne Home Assistant auf deinem iPhone und melde dich in der Companion App an“ plus „Weiter ohne Test“. Nachricht nicht angekommen → „Prüfen“ und „Weiter ohne Test“. Die bestehende Diagnose („Warum kommt nichts an?“) wird verlinkt, nicht kopiert.
+- Fehlerfälle (jeweils mit klarer Anweisung statt Fehlermeldung): kein Push-Weg (`Für dich ist noch kein Push-Weg eingetragen`) → Hinweis „Öffne Home Assistant auf deinem iPhone und melde dich in der Companion App an“ mit Store-Links (Entscheidung 4) plus „Weiter ohne Test“. Nachricht nicht angekommen → „Prüfen“ und „Weiter ohne Test“. Die bestehende Diagnose („Warum kommt nichts an?“) wird verlinkt, nicht kopiert.
 - Der Text „Wisch die Nachricht nach links und tippe auf Ansicht, dann erscheint Erledigt“ gehört dazu (iPhone-Eigenheit).
 
 ### 3.5 Fertig
 
 - Haken-Übersicht: Personen, Wächter, Testnachricht (nur, was wirklich passiert ist; übersprungene Schritte erscheinen als „Später einrichten“ mit Link in die Einstellungen, nicht als Haken).
-- Optionale nächste Schritte: **erste Aufgabe** per Schnell-Eingabe (vorhandenes Eingabefeld und Parser, siehe `NewCardSheet.svelte` und `lib/cardTitle.ts`; mit Chips wie im Mockup), „Kind einrichten“ (nur wenn ein Kind gewählt wurde und es kein Handy hat; führt zu Haus-Kanälen), „Dashboard-Knopf“ (Einstellungen › Dashboard und Kopfzeile, Bubble-Card-Knopf).
+- Optionale nächste Schritte (nur diese zwei): **erste Aufgabe** per Schnell-Eingabe (vorhandenes Eingabefeld und Parser, siehe `NewCardSheet.svelte` und `lib/cardTitle.ts`; mit Chips wie im Mockup), „Dashboard-Knopf“ (Einstellungen › Dashboard und Kopfzeile, Bubble-Card-Knopf).
 - Hauptknopf „Zu den Aufgaben“ setzt den Status `done` und öffnet den Reiter Aufgaben. Es gibt dort beim ersten Besuch keine zusätzlichen Hinweisblasen.
 
 ### 3.6 Mitglieder (keine Administratoren)
@@ -147,11 +147,11 @@ Fertig, wenn: (1) alle Leitregeln aus Abschnitt 1 nachweisbar erfüllt sind, (2)
 - `docs/testliste.md`: Prüfpunkte fürs Handy (Testnachricht kommt an, Erledigt-Knopf, Abbruch und Wiederaufnahme).
 - `docs/entwicklung.md`: kurzer Abschnitt, wie `needsOnboarding` berechnet wird.
 
-## 10. Offene Entscheidungen (bitte früh beim Projektinhaber klären, nicht raten)
+## 10. Entschieden (vom Projektinhaber)
 
-1. Reihenfolge: Personen vor Wächter (Vorschlag, weil Wächter „wer zu Hause ist“ brauchen) oder Wächter zuerst?
-2. Soll Mia (Kind ohne Handy) im Onboarding schon eine Haus-Ansage bekommen oder erst später?
-3. Soll die Testnachricht Pflicht-Schritt werden, wenn ein Handy erkannt wurde (jetzt: überspringbar)?
-4. Soll „Wer wohnt hier?“ weitere Personen **einladen** können, die noch nicht in Home Assistant stehen?
+1. **Reihenfolge: Personen zuerst, dann Wächter.** Grund: Der Wächter kann die gewählten Personen direkt als Zuständige bekommen.
+2. **Keine Haus-Ansage im Onboarding** (auch nicht für Kinder ohne Handy). Haus-Kanäle bleiben in den Einstellungen; im Schritt „Fertig“ **entfällt** deshalb der Eintrag „Kind einrichten“ (Abschnitt 3.5).
+3. **Die Testnachricht ist überspringbar**, auch wenn ein Handy erkannt wurde. Es bleibt bei „Ohne Test weiter“.
+4. **Personen ohne Handy bekommen einen Link zur Home-Assistant-Companion-App** im App Store (iPhone) bzw. bei Google Play (Android), statt einer Einladung in Stups. Wo ein Handy fehlt (Schritt „Wer wohnt hier?“ bei „Kein Handy gefunden“ und Schritt „Testnachricht“ bei fehlendem Push-Weg), steht ein kleiner Link „Companion App installieren“ mit beiden Stores. Er öffnet außerhalb der App (`target="_blank"`, siehe 1.27.1). Personen, die noch nicht in Home Assistant stehen, werden **nicht** eingeladen; das legt man weiterhin in Home Assistant an.
 
-Bei diesen Punkten den Vorschlag aus dem Mockup umsetzen, wenn keine Antwort vorliegt, und die Annahme im Changelog nennen.
+Weitere Fragen, die beim Bauen auftauchen: kurz beim Projektinhaber nachfragen, nicht raten.

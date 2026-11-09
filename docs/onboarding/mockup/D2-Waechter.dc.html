@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Erster Wächter (Desktop)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif}
+a{text-decoration:none}
+</style>
+</helmet>
+<div style="width:1280px;height:800px;box-sizing:border-box;background:#fff6ee;color:#1d1a1b;font-family:'Inter',system-ui,sans-serif;display:flex">
+  <!-- Fortschritt -->
+  <div style="width:300px;flex-shrink:0;box-sizing:border-box;padding:40px 32px;display:flex;flex-direction:column;gap:36px;border-right:1px solid #eadfd5;background:#fffaf5">
+    <div style="font-size:28px;font-weight:800;letter-spacing:-0.03em">stups<span style="color:#f05400">.</span></div>
+    <ol style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px">
+      <li style="display:flex;gap:12px;align-items:center;height:52px;padding:0 12px;font-size:15px;color:#6b6468"><span style="width:28px;height:28px;border-radius:50%;background:#0f8f84;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>Personen</li>
+      <li style="display:flex;gap:12px;align-items:center;height:52px;padding:0 12px;border-radius:14px;background:#fff;border:1px solid #eadfd5;font-weight:700;font-size:15px"><span style="width:28px;height:28px;border-radius:50%;background:#f05400;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px">2</span>Erster Wächter</li>
+      <li style="display:flex;gap:12px;align-items:center;height:52px;padding:0 12px;font-size:15px;color:#6b6468"><span style="width:28px;height:28px;border-radius:50%;border:2px solid #d9cbbf;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:14px">3</span>Testnachricht</li>
+      <li style="display:flex;gap:12px;align-items:center;height:52px;padding:0 12px;font-size:15px;color:#6b6468"><span style="width:28px;height:28px;border-radius:50%;border:2px solid #d9cbbf;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:14px">4</span>Fertig</li>
+    </ol>
+    <div style="margin-top:auto;font-size:13px;line-height:1.5;color:#6b6468">Wächter beobachten dein Zuhause und legen Karten von selbst an. Du brauchst dafür kein YAML.</div>
+  </div>
+
+  <!-- Inhalt -->
+  <div style="flex:1;min-width:0;box-sizing:border-box;padding:48px 48px 40px;display:flex;flex-direction:column">
+    <div style="font-size:13px;font-weight:700;letter-spacing:0.06em;color:#c24100">SCHRITT 2 VON 4</div>
+    <h1 style="margin:8px 0 8px;font-size:36px;line-height:1.1;font-weight:800;letter-spacing:-0.03em">Das haben wir bei dir gefunden</h1>
+    <p style="margin:0 0 24px;font-size:17px;line-height:1.45;color:#6b6468;max-width:560px">Stups hat dein Haus durchsucht. Schalte ein, was dir helfen soll.</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:#e2f6f3;border:1px solid #b6e4de;border-radius:18px;padding:18px 20px;display:flex;gap:16px;align-items:center">
+        <div style="width:48px;height:48px;border-radius:13px;background:#0f8f84;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M4 4h16"/></svg></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:18px;font-weight:700">Waschmaschine fertig</div>
+          <div style="font-size:14px;line-height:1.45;color:#0b4f48;margin-top:4px">Wenn die Waschmaschine <b>fertig</b> ist, bekommt <b>wer zu Hause ist</b>, reihum, die Karte <b>„Waschmaschine ausräumen“</b>.</div>
+          <div style="font-size:13px;color:#0b6b62;margin-top:6px">Gefunden: Steckdose „Waschmaschine“ misst den Strom · Probelauf: 4× in 7 Tagen, kein Fehlalarm</div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:36px" aria-hidden="true"><span style="width:7px;height:12px;background:#8ccfc7;border-radius:2px"></span><span style="width:7px;height:28px;background:#0f8f84;border-radius:2px"></span><span style="width:7px;height:9px;background:#8ccfc7;border-radius:2px"></span><span style="width:7px;height:32px;background:#0f8f84;border-radius:2px"></span><span style="width:7px;height:11px;background:#8ccfc7;border-radius:2px"></span><span style="width:7px;height:26px;background:#0f8f84;border-radius:2px"></span></div>
+        <span style="width:52px;height:32px;border-radius:16px;background:#0f8f84;position:relative;display:inline-block;flex-shrink:0"><span style="position:absolute;right:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#fff"></span></span>
+      </div>
+      <div style="background:#fff;border:1px solid #eadfd5;border-radius:18px;padding:14px 20px;display:flex;gap:16px;align-items:center;min-height:68px;box-sizing:border-box">
+        <div style="flex:1"><div style="font-size:16px;font-weight:700">Müll rausbringen</div><div style="font-size:13px;color:#6b6468;margin-top:2px">Abfallkalender, 12 Std. vorher</div></div>
+        <span style="width:52px;height:32px;border-radius:16px;background:#0f8f84;position:relative;display:inline-block"><span style="position:absolute;right:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#fff"></span></span>
+      </div>
+      <div style="background:#fff;border:1px solid #eadfd5;border-radius:18px;padding:14px 20px;display:flex;gap:16px;align-items:center;min-height:68px;box-sizing:border-box">
+        <div style="flex:1"><div style="font-size:16px;font-weight:700">Batterie wechseln</div><div style="font-size:13px;color:#6b6468;margin-top:2px">3 Geräte, z. B. Türschloss bei 8 %</div></div>
+        <span style="width:52px;height:32px;border-radius:16px;background:#cdbfb3;position:relative;display:inline-block"><span style="position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#fff"></span></span>
+      </div>
+      <div style="font-size:14px;color:#6b6468;padding:4px 4px">Noch 3 weitere Vorschläge (Trockner, Regen, Saugroboter) findest du später unter Wächter › Gefunden.</div>
+    </div>
+
+    <div style="margin-top:auto;display:flex;align-items:center;gap:16px">
+      <a href="D3-Fertig.dc.html" style="display:inline-flex;align-items:center;justify-content:center;height:52px;padding:0 32px;border-radius:26px;background:linear-gradient(135deg,#f05400,#d34800);font-size:16px;font-weight:700;color:#fff">2 Wächter einschalten</a>
+      <a href="D3-Fertig.dc.html" style="font-size:15px;color:#6b6468;padding:12px">Nicht jetzt</a>
+    </div>
+  </div>
+
+  <!-- Live-Vorschau -->
+  <div style="width:340px;flex-shrink:0;box-sizing:border-box;padding:48px 28px 40px 0;display:flex;flex-direction:column">
+    <div style="font-size:13px;font-weight:700;letter-spacing:0.06em;color:#6b6468;margin-bottom:12px">SO KOMMT ES BEI ANNA AN</div>
+    <div style="border-radius:28px;background:linear-gradient(160deg,#2b2540,#1a1630 60%,#241a2e);padding:24px 14px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff">
+      <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:#ffffffb3">Montag, 9. November</div><div style="font-size:46px;font-weight:300;letter-spacing:-0.02em;line-height:1">19:42</div></div>
+      <div style="width:100%;box-sizing:border-box;background:#ffffff24;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="width:34px;height:34px;border-radius:9px;background:#f05400;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex-shrink:0">s</div>
+          <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700"><span>Waschmaschine fertig</span><span style="font-size:11px;font-weight:500;color:#ffffffa6">jetzt</span></div><div style="font-size:13px;color:#ffffffe0;margin-top:2px;line-height:1.3">Anna, die Waschmaschine ist fertig. Ausräumen?</div></div>
+        </div>
+        <div style="display:flex;gap:8px"><div style="flex:1;height:38px;border-radius:11px;background:#ffffff2e;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">Erledigt</div><div style="flex:1;height:38px;border-radius:11px;background:#ffffff1a;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">Später</div></div>
+      </div>
+    </div>
+    <div style="margin-top:14px;font-size:13px;line-height:1.5;color:#6b6468">Die Vorschau ändert sich live, wenn du links etwas ein- oder ausschaltest.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

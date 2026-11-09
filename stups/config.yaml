@@ -1,7 +1,7 @@
 name: Stups
 version: "1.27.1"
 slug: stups
-description: "Kanban-Board mit Push-Erinnerungen: ein Stups, wenn etwas fällig ist"
+description: "Dein Zuhause merkt, was zu tun ist. Ihr entscheidet, wer es macht: Aufgaben aus Home Assistant, Erinnerungen und ein freundlicher Stups"
 url: https://github.com/ArrestedOps/ha-stups
 arch:
   - aarch64

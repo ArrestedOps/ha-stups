@@ -2,7 +2,7 @@
 
 > 🇩🇪 [Deutsche Fassung](DOCS.de.md). This English version is the authoritative one.
 
-A Kanban board for the household, right inside Home Assistant (Ingress, no separate login). Several boards, recurring tasks, push reminders with a "Done" button and live sync between all devices.
+Your home notices what needs doing, you decide who does it. Stups runs right inside Home Assistant (Ingress, no separate login): watchers turn what your smart home knows into tasks, and boards, recurring tasks, push reminders with a "Done" button, nudges and live sync between all devices take it from there.
 
 ## Setup
 

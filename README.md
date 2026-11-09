@@ -1,10 +1,11 @@
 <p align="center"><img src="docs/images/stups-logo.png" alt="Stups" width="420"></p>
 
-<h3 align="center">The household runs itself. Nobody has to nag.</h3>
+<h3 align="center">Your home notices what needs doing.<br>You decide who does it.</h3>
 
 <p align="center">
-  Tasks, calendar and a friendly nudge, built right into Home Assistant.<br>
-  The washing machine finishes and the right person gets the card, with a <b>Done</b> button on their lock screen.
+  Stups turns what your smart home already knows into tasks, hands them to the right person and nudges kindly.<br>
+  The washing machine finishes, whoever is home gets the card, with a <b>Done</b> button on their lock screen.<br>
+  <sub>Tasks, boards and calendar are all there too, built right into Home Assistant.</sub>
 </p>
 
 <p align="center">
@@ -59,35 +60,31 @@ Everything lives in your Home Assistant (SQLite in the add-on storage, part of t
 Built for the iPhone: dark and light mode, swipe to move cards, live sync between all devices, English and German (push messages included). On a desktop you get a **sidebar layout** with search (Ctrl/Cmd + K), a Kanban over the full width and a detail column.
 
 <p align="center">
-  <img src="docs/images/en/board-dunkel.png" alt="Board, dark" width="23%">
-  <img src="docs/images/en/aufgaben-dunkel.png" alt="Tasks, dark" width="23%">
-  <img src="docs/images/en/kalender-woche-dunkel.png" alt="Calendar, week, dark" width="23%">
+  <img src="docs/images/en/waechter-dunkel.png" alt="Watchers, dark" width="23%">
+  <img src="docs/images/en/gefunden-dunkel.png" alt="Found: Stups suggests devices, dark" width="23%">
+  <img src="docs/images/en/waechter-bearbeiten-dunkel.png" alt="A watcher as a flow, dark" width="23%">
   <img src="docs/images/en/stupsen-dunkel.png" alt="Nudging, dark" width="23%">
 </p>
 <p align="center">
-  <img src="docs/images/en/board-hell.png" alt="Board, light" width="23%">
+  <img src="docs/images/en/aufgaben-dunkel.png" alt="Tasks, dark" width="23%">
+  <img src="docs/images/en/board-dunkel.png" alt="Board, dark" width="23%">
+  <img src="docs/images/en/kalender-woche-dunkel.png" alt="Calendar, week, dark" width="23%">
   <img src="docs/images/en/aufgaben-hell.png" alt="Tasks, light" width="23%">
-  <img src="docs/images/en/kalender-woche-hell.png" alt="Calendar, week, light" width="23%">
-  <img src="docs/images/en/stupsen-hell.png" alt="Nudging, light" width="23%">
-</p>
-<p align="center">
-  <img src="docs/images/en/waechter-dunkel.png" alt="Watchers, dark" width="23%">
-  <img src="docs/images/en/gefunden-dunkel.png" alt="Found, dark" width="23%">
-  <img src="docs/images/en/waechter-bearbeiten-dunkel.png" alt="A watcher as a flow, dark" width="23%">
-  <img src="docs/images/en/einstellungen-dunkel.png" alt="Settings, dark" width="23%">
 </p>
 
 ## What you get
 
+The house detects, Stups distributes and reminds, and the board is simply where it all lands.
+
 | | |
 |---|---|
+| **Watchers** | Cards from Home Assistant entities: suggested devices, four-step assistant, flow editor, trial run on the last 7 days, "pass on", "suggest first" (whoever taps first takes it), nudging after a while. |
+| **Push and nudging** | Companion App notifications with action buttons, daily summary, follow-ups, nudges with lock and quiet time. |
 | **Tasks (start page)** | What is on for you: cards from the house on top, your numbers (due today, overdue, done today), the week, a banner when someone nudged you, and your cards grouped as Overdue, Today, This week, Later. Chips switch between Mine, All and each person. |
 | **Boards** | Several boards with their own columns and categories. Cards with assignees, due date, priority, cost, effort, description, checklist, links, photos/PDFs and comments. Swipe to move. Archive, duplicate, or save as a template (Household, Moving house, Renovation and more). |
 | **Private & shared boards** | Visible to "Only me", "Everyone in Stups" or "Selected people". Children can create their own private boards. |
 | **Calendar** | Day, week, month or list. Tap a free slot to create a card for that time. Filter by person and board. |
 | **Recurring tasks** | Fixed rhythm or counted from completion, also hourly (optionally within a time window), with "a small delay is okay". Every option shows a live example. The finished card keeps its history; the next one is created. |
-| **Watchers** | Cards from Home Assistant entities: suggested devices, four-step assistant, flow editor, trial run on the last 7 days, "pass on", "suggest first" (whoever taps first takes it), nudging after a while. |
-| **Push and nudging** | Companion App notifications with action buttons, daily summary, follow-ups, nudges with lock and quiet time. |
 | **Fairness** | Effort per person for this week or month, optional Sunday-evening summary, per-board switch. |
 | **People and access** | Everyone gets a picture (from Home Assistant or uploaded). Control who may open the app. Roles: administrator, member, child. |
 | **Sensors for Home Assistant** | Overdue and due-today cards, in total and per person, and open nudges. Use them on dashboards and in automations. |

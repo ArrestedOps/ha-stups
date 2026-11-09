@@ -2,7 +2,7 @@
 
 > Deutsche Fassung. Die englische Fassung ([DOCS.md](DOCS.md)) ist maßgeblich.
 
-Kanban-Board für den Haushalt, direkt in Home Assistant (Ingress, kein eigener Login). Mehrere Boards, wiederkehrende Aufgaben, Push-Erinnerungen mit „Erledigt"-Button und Live-Sync zwischen allen Geräten.
+Dein Zuhause merkt, was zu tun ist, ihr entscheidet, wer es macht. Stups läuft direkt in Home Assistant (Ingress, kein eigener Login): Wächter machen aus dem, was dein Smart Home weiß, Aufgaben; Boards, wiederkehrende Aufgaben, Push-Erinnerungen mit „Erledigt"-Button, Stupse und Live-Sync zwischen allen Geräten übernehmen den Rest.
 
 ## Einrichtung
 

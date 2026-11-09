@@ -1,10 +1,11 @@
 <p align="center"><img src="docs/images/stups-logo.png" alt="Stups" width="420"></p>
 
-<h3 align="center">Der Haushalt läuft von selbst. Niemand muss hinterherfragen.</h3>
+<h3 align="center">Dein Zuhause merkt, was zu tun ist.<br>Ihr entscheidet, wer es macht.</h3>
 
 <p align="center">
-  Aufgaben, Kalender und ein freundlicher Stups, direkt in Home Assistant.<br>
-  Die Waschmaschine ist fertig, die richtige Person bekommt die Karte, mit „Erledigt“-Knopf auf dem Sperrbildschirm.
+  Stups macht aus dem, was dein Smart Home längst weiß, Aufgaben, gibt sie der richtigen Person und erinnert freundlich.<br>
+  Die Waschmaschine ist fertig, wer zu Hause ist bekommt die Karte, mit „Erledigt“-Knopf auf dem Sperrbildschirm.<br>
+  <sub>Aufgaben, Boards und Kalender gibt es natürlich auch, direkt in Home Assistant.</sub>
 </p>
 
 <p align="center">
@@ -59,35 +60,31 @@ Alles liegt in deinem Home Assistant (SQLite im Add-on-Speicher, Teil des normal
 Fürs iPhone gebaut: Dunkel- und Hellmodus, Wischen verschiebt Karten, Live-Sync zwischen allen Geräten, Deutsch und English (auch die Push-Nachrichten). Am Desktop gibt es eine **Seitenleiste** mit Suche (Strg/Cmd + K), ein Kanban über die volle Breite und eine Detailspalte.
 
 <p align="center">
-  <img src="docs/images/board-dunkel.png" alt="Board, dunkel" width="23%">
-  <img src="docs/images/aufgaben-dunkel.png" alt="Aufgaben, dunkel" width="23%">
-  <img src="docs/images/kalender-woche-dunkel.png" alt="Kalender, Woche, dunkel" width="23%">
+  <img src="docs/images/waechter-dunkel.png" alt="Wächter, dunkel" width="23%">
+  <img src="docs/images/gefunden-dunkel.png" alt="Gefunden: Stups schlägt Geräte vor, dunkel" width="23%">
+  <img src="docs/images/waechter-bearbeiten-dunkel.png" alt="Ein Wächter als Ablauf, dunkel" width="23%">
   <img src="docs/images/stupsen-dunkel.png" alt="Stupsen, dunkel" width="23%">
 </p>
 <p align="center">
-  <img src="docs/images/board-hell.png" alt="Board, hell" width="23%">
+  <img src="docs/images/aufgaben-dunkel.png" alt="Aufgaben, dunkel" width="23%">
+  <img src="docs/images/board-dunkel.png" alt="Board, dunkel" width="23%">
+  <img src="docs/images/kalender-woche-dunkel.png" alt="Kalender, Woche, dunkel" width="23%">
   <img src="docs/images/aufgaben-hell.png" alt="Aufgaben, hell" width="23%">
-  <img src="docs/images/kalender-woche-hell.png" alt="Kalender, Woche, hell" width="23%">
-  <img src="docs/images/stupsen-hell.png" alt="Stupsen, hell" width="23%">
-</p>
-<p align="center">
-  <img src="docs/images/waechter-dunkel.png" alt="Wächter, dunkel" width="23%">
-  <img src="docs/images/gefunden-dunkel.png" alt="Gefunden, dunkel" width="23%">
-  <img src="docs/images/waechter-bearbeiten-dunkel.png" alt="Ein Wächter als Ablauf, dunkel" width="23%">
-  <img src="docs/images/einstellungen-dunkel.png" alt="Einstellungen, dunkel" width="23%">
 </p>
 
 ## Was du bekommst
 
+Das Haus erkennt, Stups verteilt und erinnert, und das Board ist einfach der Ort, an dem alles landet.
+
 | | |
 |---|---|
+| **Wächter** | Karten aus Entitäten von Home Assistant: vorgeschlagene Geräte, Assistent in vier Schritten, Ablauf-Editor, Probelauf über 7 Tage, „Weitergeben“, „Erst vorschlagen“ (wer zuerst tippt, übernimmt), Stupsen nach einer Weile. |
+| **Push und Stupsen** | Companion-App-Nachrichten mit Aktionsknöpfen, Tageszusammenfassung, Nachhaken, Stupse mit Sperr- und Ruhezeit. |
 | **Aufgaben (Startseite)** | Was für dich dran ist: Karten vom Haus oben, deine Zahlen (heute fällig, überfällig, heute erledigt), die Woche, ein Banner, wenn dich jemand gestupst hat, und deine Karten gruppiert nach Überfällig, Heute, Diese Woche, Später. Chips schalten zwischen Meine, Alle und jeder Person um. |
 | **Boards** | Mehrere Boards mit eigenen Spalten und Kategorien. Karten mit Zuständigen, Termin, Priorität, Kosten, Aufwand, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt. Archivieren, duplizieren oder als Vorlage speichern (Haushalt, Umzug, Renovierung und mehr). |
 | **Private und geteilte Boards** | Sichtbar für „Nur ich“, „Alle in Stups“ oder „Ausgewählte Personen“. Kinder können eigene private Boards anlegen. |
 | **Kalender** | Tag, Woche, Monat oder Liste. Auf einen freien Zeitpunkt tippen legt eine Karte dafür an. Filter nach Person und Board. |
 | **Wiederkehrende Aufgaben** | Fester Rhythmus oder ab Erledigung, auch stündlich (auf Wunsch nur im Zeitfenster), mit „kleine Verspätung ist okay“. Jede Option zeigt ein Beispiel live. Die erledigte Karte behält ihren Verlauf, die nächste entsteht. |
-| **Wächter** | Karten aus Entitäten von Home Assistant: vorgeschlagene Geräte, Assistent in vier Schritten, Ablauf-Editor, Probelauf über 7 Tage, „Weitergeben“, „Erst vorschlagen“ (wer zuerst tippt, übernimmt), Stupsen nach einer Weile. |
-| **Push und Stupsen** | Companion-App-Nachrichten mit Aktionsknöpfen, Tageszusammenfassung, Nachhaken, Stupse mit Sperr- und Ruhezeit. |
 | **Fairness** | Aufwand pro Person für diese Woche oder diesen Monat, optionale Zusammenfassung am Sonntagabend, Schalter je Board. |
 | **Personen und Zugriff** | Jeder bekommt ein Bild (aus Home Assistant oder hochgeladen). Du bestimmst, wer die App öffnen darf. Rollen: Administrator, Mitglied, Kind. |
 | **Sensoren für Home Assistant** | Überfällige und heute fällige Karten, gesamt und pro Person, und offene Stupse. Für Dashboards und Automationen. |

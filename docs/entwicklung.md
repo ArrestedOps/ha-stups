@@ -1,6 +1,6 @@
 # Stups: Betrieb und Entwicklung
 
-Stups ist ein Kanban-Board mit Agenda und Kalender als Home-Assistant-App. Es läuft im Ingress von Home Assistant, speichert alles in SQLite, schickt Push-Nachrichten über die Companion App und ist für das iPhone gebaut.
+Stups ist ein Haushaltsassistent als Home-Assistant-App: Wächter erzeugen Aufgaben aus dem Zustand des Hauses, dazu Boards, Kalender, Erinnerungen und Stupse. Es läuft im Ingress von Home Assistant, speichert alles in SQLite, schickt Push-Nachrichten über die Companion App und ist für das iPhone gebaut.
 
 ## 1. Wo was liegt
 

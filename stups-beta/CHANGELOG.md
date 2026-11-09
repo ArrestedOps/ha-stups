@@ -2,6 +2,10 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.40.1-beta.5
+
+**Dokumentation auf dem Stand der App** (drei Reiter, Aufgaben als Startseite, Kalender unter Aufgaben, Wächter-Reiter, private Boards, Kinder-Boards, Wiederholungen, Erinnerungen, Berechtigungen, Feedback, Desktop-Ansicht) und eine neue README. **Release-Ablauf:** Die normale App wird künftig über den Branch `release` gebaut; `main` wird erst nachgezogen, wenn die Images fertig sind. So zeigt Home Assistant ein Update erst, wenn es sich installieren lässt. An der App selbst ändert sich nichts.
+
 ## 1.40.1-beta.4
 
 Nur ein Browser-Test wurde angepasst (hing vom Wochentag ab); die App ist unverändert gegenüber beta.3.

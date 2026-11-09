@@ -47,7 +47,7 @@ You find the device names in Home Assistant under Developer tools › Actions (s
 
 ## Usage
 
-- **Boards** are switched by the title at the top. Each board has its own columns and categories. The easiest way to create categories is directly on the card (field "Category" › "New category"); renaming, recolouring and deleting works under Board switcher › Board settings. A new board gets the columns "Open", "Planned", "In progress" and "Done" in your language.
+- **Boards** are chosen on the Boards tab (the list shows only boards; below it "New board", "Board settings" and "Archived boards"). Each board has its own columns and categories, and a **visibility**: *Only me* (nobody else sees it, not even administrators), *Everyone in Stups* or *Selected people*. Board settings also hold the name, icon, whether the board counts towards fairness, and the order. A board can be **archived**, **duplicated** or saved as a template; deleting one lists its tasks, repeating tasks, watchers and reminders first, and for each watcher you choose pause, move or delete. The easiest way to create categories is directly on the card (field "Category" › "New category"); renaming, recolouring and deleting works under Board settings. A new board gets the columns "Open", "Planned", "In progress" and "Done" in your language.
 - **Cards** have a title, column, assignees, due date (always with a time), repeat, reminder, priority, categories, cost, description, checklist, links, attachments and comments.
 - **Completing:** the circle on the left of the card, "Mark as done" at the top of the card window, or from the push message. For a moment there is "Undo".
 - **Swiping:** swiping a card to the left moves it to the next status, to the right to the previous one. Behind the card it says where it will jump. "Planned" is skipped.
@@ -82,25 +82,31 @@ Good to know: a **weekday** on its own means the next one after today (if today 
 
 Dark and light follow the iPhone (or the device). A coloured **bar on the left** of every card shows urgency: red overdue, orange today, yellow in the next two days, grey later. The card shows the title (at most two lines) and **one line** with the most important things: due date (red when overdue), repeat, priority as a flag (orange medium, red high), checklist ("1/2"), comments, links, attachments and cost. **Categories** appear as small coloured dots on the right. When the card was created ("Created …") is shown in the card window with time and person.
 
-### The four tabs and the header
+### The tabs and the header
 
-The bar at the bottom has four tabs: **Today** (the start: the app always opens there, only Boards and Calendar are remembered), **Boards**, **Calendar** and **Home**. A child and the container without Home Assistant have three (no Home). The same header sits on every tab: **"‹ Dashboard"** on the left (add-on only; takes you back to the Home Assistant dashboard), an **offline notice** on the right when the connection is missing, and your **avatar**. The avatar opens the settings. It shows your picture (from Home Assistant or uploaded by you) or your initial in your colour.
+The bar at the bottom has three tabs: **Tasks** (the start: the app always opens there; only Boards is remembered), **Boards** and **Watchers**. Children and the container without Home Assistant do not see Watchers. The same header sits on every tab: **"‹ Dashboard"** on the left (add-on only; takes you back to the Home Assistant dashboard), an **offline notice** on the right when the connection is missing, the **bell** (with a small number when something is waiting for you) and your **avatar**. The avatar opens the settings. It shows your picture (from Home Assistant or uploaded by you) or your initial in your colour.
 
-Two colours: your **accent** (orange unless you pick one) belongs to people and actions; **teal** belongs to everything that comes from the house (watcher cards, Home). That is why green and teal are missing from the colour wheel.
+**On a computer (from 1024 px wide)** a fixed sidebar replaces the bottom bar (tabs, boards, your card). The header has search (**Ctrl/Cmd + K**), **New task**, Home and the bell. Tasks open in a detail column on the right, Boards are a Kanban across the full width, Watchers a table, and windows open as a centred dialog. Phones and the Companion App look as before; tablets show the phone view centred.
 
-### Today
+Two colours: your **accent** (orange unless you pick one) belongs to people and actions; **teal** belongs to everything that comes from the house (watcher cards, Watchers). That is why green and teal are missing from the colour wheel.
 
-Today shows at a glance what is on for you:
+### Tasks
 
+Tasks is the start page and shows at a glance what is on for you, from top to bottom:
+
+- **Your numbers:** due today, overdue, done today. Tap one to open a sheet (overdue offers "Tomorrow" and "Move all", done today offers "Undo").
+- **This week:** a strip of the week with dots; the calendar button opens the calendar (see below).
+- **Nudge banner**, only when somebody nudged you and it is still open.
+- **Chips:** *Mine* (the app always starts here), *All*, each person, and **Filter**.
 - **From the house** (only when there is something): open cards from watchers that are assigned to you or to nobody yet. Each shows what triggered it and when ("Washing machine done · 4 min ago") and why you are up ("in turn among everyone who is home"). Buttons: **Done**, **Pass on** (to the next person in the rotation, without counting as done) and, with "Suggest first", **Take it**.
-- **For you:** your open cards with a due date until the end of tomorrow, overdue and today first. The time is red when overdue and in the accent colour when due today.
-- **With the others:** one line with the avatars and the number of open cards. It leads to **This week**.
+- **Your cards,** grouped as **Overdue**, **Today**, **This week** and **Later**. The time is red when overdue and in the accent colour when due today.
+- **Fairness this week** and **With the others:** one line with the avatars and the number of open cards. It leads to **This week**.
 
-A child only sees "From the house" (its own cards) and "For you". When nothing is open, a friendly sentence appears.
+A child only sees "From the house" (its own cards) and its own cards. When nothing is open, a friendly sentence appears.
 
 ### This week: who does how much?
 
-Through "With the others" on Today you reach **This week** (or this month). It shows how many cards each person completed, as bars for the *effort*. There is **no ranking**: no places, no medals, no percentages, the order is that of the people list, all bars have the same colour. The point is to see the load, not to compete.
+Through "With the others" on Tasks you reach **This week** (or this month). It shows how many cards each person completed, as bars for the *effort*. There is **no ranking**: no places, no medals, no percentages, the order is that of the people list, all bars have the same colour. The point is to see the load, not to compete.
 
 - **Effort:** every card has an optional *effort* (small = 1, medium = 2, large = 3). Without a choice it counts as medium. A large task weighs more than a small one.
 - Below the bar, when there are any: cards created, nudges answered and watcher cards completed. One line tells how many cards **came from the house** this week. If somebody has **little time**, it says so.
@@ -111,18 +117,21 @@ Through "With the others" on Today you reach **This week** (or this month). It s
 
 ### Calendar
 
-The third tab at the bottom shows the cards with a due date in a calendar, as **Day**, **Week**, **Month** or **List**. The arrows page through, "Today" jumps back.
+The calendar is a page under Tasks (open it with the calendar button on the week strip or "Month view"; "‹ Tasks" takes you back). It shows the cards with a due date as **Day**, **Week** or **Month**; the **list** is the Tasks page itself. The arrows page through, "Today" jumps back.
 
 - **Day and week** show a time grid. A card sits at the time of its due date in the colour of its board; cards at the same time sit side by side. A tap opens the card, a tap on the day number in the week view opens the day.
 - **Month:** dots (on a large screen the titles) show where something is due. A tap on a day opens the day view.
 - **Creating a card:** tap a free time in the grid. A short form opens with the due date: choose title, board and assignees, "Create". If exactly one board or person is chosen in the filter, they are preset. "All fields …" opens the full form.
-- **List:** the former agenda. All cards with a due date from all boards, sorted by day: **Overdue** first, then Today, Tomorrow and every further day. Tap the circle on the left to complete a card, tap the card to open it. It loads the next 60 days; if nothing is due in that time it looks a year ahead, and **"Load 60 more days"** fetches cards further away.
+- **List (the Tasks page):** all cards with a due date from all boards, sorted by day: **Overdue** first, then Today, Tomorrow and every further day. Tap the circle on the left to complete a card, tap the card to open it. It loads the next 60 days; if nothing is due in that time it looks a year ahead, and **"Load 60 more days"** fetches cards further away.
 - **Filter:** the "Filter" button at the top right (in the list: the chips above it) filters by **people** (yourself, every other person, "Nobody" for cards without an assignee) and **boards**; **Done** shows the ones completed in the last seven days, "Reset" clears all filters. The filter is remembered on the device.
 
 ### Recurring tasks
 
 - **Fixed rhythm** (e.g. every Saturday): the next due date follows the plan, not the completion. Whoever completes on Monday what was due on Saturday gets the next Saturday.
 - **After completion** (e.g. filter every 3 months): the next due date is the completion date plus the interval.
+- **Hourly** (optionally only within a time window, e.g. 8:00 to 20:00) is available for tasks that repeat several times a day.
+- **A small delay is okay:** weekly and monthly rules can tolerate a few days of lateness before the plan starts over (choose "A small delay is okay" and set the tolerance in days). Every option shows a live example.
+- **Without a due date:** the repeat row is always tappable; the first due date is then set automatically.
 - **On completion** (in the app, by swiping, by dragging to "Done" or from the push message) the card stays **in "Done"** and no longer repeats. It shows when it was completed and keeps everything: comments, photos, checklist and history. At the same time a **new card** with the next due date is created, at the top of "Open" or, for a due date after today, in "Planned". The history of the new card says "Created from a repeat".
 - **What the new card carries over:** title, assignees, categories, priority, repeat and reminders always. Description, checklist (all items open again), links, cost, photos and PDFs, and comments can be switched on or off per card in the **Repeat** field under "Carry over to the next card". Without your own choice, description, checklist, links and cost are carried over, photos and comments are not. Photos carried over share the file with the completed card.
 - **"Undo"** (shortly after completing) reverses both: the card is open again, the new one disappears. This is no longer possible once the new card itself has been completed.
@@ -137,6 +146,10 @@ Recipients are always the **assigned** people. Cards without assignment or witho
 - on the iPhone the **"Done"** button appears when you expand the message (swipe left and "View", pull down, or long-press)
 - after a restart, missed reminders up to 12 hours back are caught up, without duplicates
 - Messages arrive **in the language of the person**: the language their device last reported (or their choice in Settings). Until a device has reported one, push stays in German.
+
+### Nudging yourself
+
+On a task you can switch on **"Remind me again if not done"**: after X, repeating every X, at most N times. It is only for you. Watchers can nudge the people responsible in the same way, after a time, repeating, with a maximum.
 
 ### Nudging
 
@@ -188,13 +201,17 @@ Good to know:
 
 Administrators can turn a person into a **child** under *Settings › Household › People and children › Child role*. A child gets a reduced app, and the server enforces it (not just the screen):
 
-- A child **sees** all boards or only the **boards with their own cards** (your choice per child) and can **tick off** their own cards, tick checklist items, **comment**, and attach **photos and links**. Nothing else: no creating, moving, deleting, no board management, no watchers, no fairness, no settings except language and colour.
+- A child **sees** all boards it is allowed to see or only the **boards with their own cards** (your choice per child) and can **tick off** their own cards, tick checklist items, **comment**, and attach **photos and links**. Besides that a child may create **"Only me" boards** for itself. Nothing else: no creating of cards on shared boards, no moving, deleting, no managing of shared boards, no watchers, no fairness, no settings except language and colour.
 - **Confirmation:** per child you can switch on *"Done" needs confirmation*, and per card you can override it (*Confirmation*: person's default, always, never). When the child ticks a card, it stays open and shows **"Waiting for confirmation"**. The **confirmers** get a push message with **Confirm** and **Again**:
   - *Confirm* completes the card. It counts for the **child** (recurrence, fairness, watcher counters).
   - *Again* withdraws the request. The child gets "Again, please" (on the phone and, if a house channel is set up, spoken in the house, except in quiet time).
   - Who answers first decides; the others see that it is already answered. Unanswered requests remind the confirmers after two hours, at most once a day.
 - **Who confirms:** administrators always; besides them the people you choose per child. If nobody is chosen, all adults may.
 - Whoever completes a waiting card another way (an adult in the app) ends the request.
+
+### Permissions and feedback
+
+An administrator can give individual people specific rights without making them administrators: watchers, announcements and lamps, app settings, people, confirming for children and reading feedback (*Settings › People and children › open a person › Permissions*). **Feedback** (report a bug, suggest an improvement, praise or criticise, up to 1000 characters, optional picture) is sent from inside the app and read by administrators under *Settings › Help and data*; it stays on your installation.
 
 ### Settings
 
@@ -211,7 +228,7 @@ At the bottom are the version and the link to the diagnostics page. Members do n
 
 ### Board templates
 
-When you create a board (board switcher), you can start **empty** or from a **template**, with a preview of columns, categories and cards. Built in: *Household, Moving house, Renovation, Packing for a trip, Baby on the way, Ideas and outings*, in the language of your app. Under *Board settings › Templates* you can **save a board as a template** (columns, categories and open cards, without assignees, attachments and comments) and delete your own templates.
+When you create a board (Boards tab › New board), you can start **empty** or from a **template**, with a preview of columns, categories and cards. Built in: *Household, Moving house, Renovation, Packing for a trip, Baby on the way, Ideas and outings*, in the language of your app. Under *Board settings › Templates* you can **save a board as a template** (columns, categories and open cards, without assignees, attachments and comments) and delete your own templates.
 
 ### Watchers: cards created automatically from Home Assistant
 
@@ -219,18 +236,18 @@ A watcher observes an entity in Home Assistant and **creates a card and assigns 
 
 ![The Watchers tab](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/waechter-liste-dunkel.png)
 
-**Home shows the state, not the rules.** The **Home** tab (fourth tab, for all adults) sorts the watchers by what is going on: **Waiting for someone** (a card is open: who is up, since when, **Nudge** button), **Running now** (the machine is running: since when, which card comes next), **Coming up** (the counter is at "2 of 3", or a calendar appointment is due) and a **Quiet** line with the watchers that report nothing. Without a connection to Home Assistant it says "No connection to Home Assistant since …" (boards and cards keep working). Administrators also see "Stups has found N more devices". **Tapping a watcher opens it:** administrators edit it right there (sentence, More rules, Test, Pause, Delete), everyone else sees settings and history read-only. At the bottom is the **recent activity** of all watchers; inside a watcher the history of its latest runs.
+**The Watchers tab shows the state, not the rules.** The **Watchers** tab (third tab, for all adults) sorts the watchers by what is going on: **Waiting for someone** (a card is open: who is up, since when, **Nudge** button), **Running now** (the machine is running: since when, which card comes next), **Coming up** (the counter is at "2 of 3", or a calendar appointment is due) and a **Quiet** line with the watchers that report nothing. Without a connection to Home Assistant it says "No connection to Home Assistant since …" (boards and cards keep working). Administrators also see "Stups has found N more devices". **Tapping a watcher opens it:** administrators edit it right there (sentence, More rules, Test, Pause, Delete), everyone else sees settings and history read-only. At the bottom is the **recent activity** of all watchers; inside a watcher the history of its latest runs.
 
 **Managing** (list, on/off, edit, delete, recent activity): *Settings › Household › Watchers*. All adults see the list, **administrators** change it.
 
-**Setting up, easiest via "Found":** *Settings › Household › Watchers › Watchers from templates* (or the hint on Home). Stups looks in Home Assistant and shows what a watcher fits, with a reason ("Socket dryer measures the power"): washing machine, dryer, dishwasher (power sensor or the appliance's programme status), put the bins out (waste calendar), laundry in it is raining (weather), battery low, robot vacuum bin. **Set up** fills in the sentence; entities that a watcher already observes are left out. **If a suggestion does not fit** (you do not have that device), tap **Hide**: Stups never suggests it again. Under **Hidden** you bring it back with "Show again". Below, **Also without a device**: cards that repeat by themselves (descale, test smoke detectors, change the filter, change the bedding), no watcher needed. "View all templates" also shows the ones nothing was found for.
+**Setting up, easiest via "Found":** *Settings › Household › Watchers › Watchers from templates* (or the hint on the Watchers tab). Stups looks in Home Assistant and shows what a watcher fits, with a reason ("Socket dryer measures the power"): washing machine, dryer, dishwasher (power sensor or the appliance's programme status), put the bins out (waste calendar), laundry in it is raining (weather), battery low, robot vacuum bin. **Set up** fills in the sentence; entities that a watcher already observes are left out. **If a suggestion does not fit** (you do not have that device), tap **Hide**: Stups never suggests it again. Under **Hidden** you bring it back with "Show again". Below, **Also without a device**: cards that repeat by themselves (descale, test smoke detectors, change the filter, change the bedding), no watcher needed. "View all templates" also shows the ones nothing was found for.
 
 ![Edit a watcher](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-bearbeiten-dunkel.png)
 
 **The form is a sentence:** "When [entity] stays below [5 W] for more than [3 min], [whoever is home, in turn] gets the card [title]." You tap every field in square brackets and change it. Below:
 
 - **Trial run:** Stups fetches the history of the entity for the last 7 days (at most 20,000 states) from Home Assistant and applies the rule to it without saving anything. You see a small chart of when the watcher would have fired and a sentence: "3 triggers detected, no false alarm" or "Fired 5 times, 4 of them within 10 minutes: increase the minimum duration?". Without history (recorder off, new entity) a notice replaces the chart.
-- **Suggest first:** the card appears without an assignee, every adult who is home gets the question "Who takes it?" with a **Take it** button (push) and on Today. Whoever taps first gets the card; the others learn who was faster. If nobody answers within **30 minutes**, the watcher's fallback applies. If nobody is home, it applies at once.
+- **Suggest first:** the card appears without an assignee, every adult who is home gets the question "Who takes it?" with a **Take it** button (push) and on Tasks. Whoever taps first gets the card; the others learn who was faster. If nobody answers within **30 minutes**, the watcher's fallback applies. If nobody is home, it applies at once.
 - **Honest about self-completing:** a power sensor cannot prove that someone emptied the appliance. For templates where that is so, "Completes itself" is off, with the reason next to it. With the battery template the card completes itself when the sensor rises above 50 % again.
 - **More rules** opens everything else: name, board, column, description, categories, priority, due date, who exactly is in the circle, the fallbacks, "Completes itself when …", counter, lockout, duplicate cards, reminder.
 - **Calendar and weather:** two more kinds of triggers that Stups queries itself **every 30 minutes**. *Appointment in a calendar* with a lead time (for example 12 hours before the collection; every appointment gets exactly one card, all-day appointments start at midnight) and *rain in the forecast* of a weather entity (within the next 1 to 48 hours; after the rain the watcher is armed again). There is no trial run for them.
@@ -331,7 +348,7 @@ Database and attachments live in the add-on directory `/data` and are part of th
 
 ## Updating
 
-New versions appear in the app store as soon as they are on GitHub. The Docker image is then still built for a few minutes. Only update when the last run under "Actions" of the repository is green, otherwise Home Assistant reports "manifest unknown 404". Update, **do not** uninstall: uninstalling deletes all data of the app.
+New versions appear in the app store only when their Docker image is finished (the build publishes the release last), so an update shown is an update you can install: "Check for updates" › Update. Update, **do not** uninstall: uninstalling deletes all data of the app.
 
 ## Troubleshooting
 

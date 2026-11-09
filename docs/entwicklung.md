@@ -18,8 +18,8 @@ Stups ist ein Kanban-Board mit Agenda und Kalender als Home-Assistant-App. Es l�
 
 ### Aktualisieren
 
-1. Eine neue Version erscheint in Home Assistant, sobald sie auf GitHub in `main` liegt. Das Docker-Image wird danach noch einige Minuten gebaut.
-2. **Erst aktualisieren, wenn der letzte CI-Lauf auf GitHub (Actions) grün ist.** Sonst meldet Home Assistant „manifest unknown 404".
+1. Eine neue Version erscheint in Home Assistant erst, wenn ihre Images fertig sind: Die CI baut sie auf dem Branch `release` und zieht `main` erst danach nach (siehe „Neue Version veröffentlichen"). Das Update ist dann sofort installierbar.
+2. Wer die Version vorher sieht (zum Beispiel nach einem direkten Push auf `main`), wartet, bis der CI-Lauf auf GitHub (Actions) grün ist. Sonst meldet Home Assistant „manifest unknown 404".
 3. HA › Einstellungen › Apps › App-Store › ⋮ › Nach Updates suchen › Stups › **Aktualisieren**. Danach die Companion App einmal komplett schließen und neu öffnen.
 4. **Nie deinstallieren und neu installieren**: Das löscht alle Aufgaben.
 
@@ -272,7 +272,7 @@ Seit 1.9.0 gibt es neben der normalen App eine zweite App im selben Repository: 
 | | normale App | Beta |
 |---|---|---|
 | Ordner, Slug | `stups/`, `stups` | `stups-beta/`, `stups_beta` |
-| Branch, aus dem die CI baut | `main` | `beta` |
+| Branch, aus dem die CI baut | `release` (danach zieht die CI `main` nach) | `beta` |
 | Bilder | `ghcr.io/arrestedops/ha-stups-{arch}` (und `stups` als Manifest) | `ghcr.io/arrestedops/ha-stups-beta-{arch}` |
 | Version | `X.Y.Z` in `stups/config.yaml` | `X.Y.Z-beta.N` in `stups-beta/config.yaml` |
 | Home-Assistant-Adresse | `https://github.com/ArrestedOps/ha-stups` | `https://github.com/ArrestedOps/ha-stups#beta` |
@@ -284,10 +284,10 @@ Home Assistant liest die Liste der Apps aus dem Branch der Repository-Adresse. D
 1. Auf Branch `beta` arbeiten, `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e` laufen lassen.
 2. `version` in `stups-beta/config.yaml` erhöhen (`X.Y.Z-beta.N`), Eintrag in `stups-beta/CHANGELOG.md`, nach `beta` pushen. Die CI läuft dieselben Prüfungen und baut danach nur die Beta-Images.
 3. Wenn die CI grün ist: in Home Assistant (Adresse mit `#beta`) „Nach Updates suchen", **Stups (Beta)** aktualisieren und testen (Testliste).
-4. **Nach der Freigabe:** auf `beta` die Version in `stups/config.yaml` auf `X.Y.Z` erhöhen und den Changelog `stups/CHANGELOG.md` schreiben, dann nach `main` mergen (schneller Vorlauf, keine neuen Änderungen). Die CI baut die normalen Images und das Manifest. Zuvor, wenn es eine Migration gibt: Sicherung der normalen App.
-5. Wenn die CI grün ist: in HA aktualisieren (Abschnitt 2). Danach `main` zurück nach `beta` mergen, falls dazwischen etwas auf `main` landete.
+4. **Nach der Freigabe:** auf `beta` die Version in `stups/config.yaml` auf `X.Y.Z` erhöhen und den Changelog `stups/CHANGELOG.md` schreiben, dann **nach `release`** pushen: `git push origin beta:release` (schneller Vorlauf, keine neuen Änderungen). Die CI prüft, baut die normalen Images und das Manifest und **setzt erst danach `main` auf diesen Stand** (Job `promote`). Home Assistant zeigt das Update also erst, wenn es installierbar ist. Zuvor, wenn es eine Migration gibt: Sicherung der normalen App.
+5. Wenn die CI grün ist (auch `promote`): in HA „Nach Updates suchen" und aktualisieren (Abschnitt 2). Ist `main` dazwischen woanders weitergelaufen, schlägt `promote` fehl (nur Vorlauf, nichts wird überschrieben): `main` nach `beta` mergen und erneut nach `release` pushen.
 
-Die CI bricht ab, wenn die Version nicht zum Branch passt (eine Beta-Version ohne `-beta.N` auf `beta`, ein Suffix in der Version der normalen App auf `main`): So landet kein falsches Bild unter einem falschen Namen.
+Die CI bricht ab, wenn die Version nicht zum Branch passt (eine Beta-Version ohne `-beta.N` auf `beta`, ein Suffix in der Version der normalen App auf `release`): So landet kein falsches Bild unter einem falschen Namen.
 
 **Was die Beta anders macht** (damit sie neben der normalen App laufen kann; das Image bringt `STUPS_CHANNEL=beta` mit, `channel.ts`)
 
@@ -297,7 +297,7 @@ Die CI bricht ab, wenn die Version nicht zum Branch passt (eine Beta-Version ohn
 - **Echte Daten zum Testen:** in der normalen App Einstellungen › Umzug › Export, **danach** die Beta zum ersten Mal starten (sie übernimmt den Export nur, wenn sie noch keine Daten hat). Neue Kopie: die Beta (nur die!) deinstallieren, neu exportieren, neu installieren.
 - Das Symbol mit „BETA"-Band erzeugt `node e2e/make-beta-icon.mjs` aus den Bildern der normalen App.
 
-**Direkt nach `main` (ohne Beta)** geht nur ein Hotfix für einen dringenden Fehler in der normalen App. Danach `main` nach `beta` mergen.
+**Ohne Beta** geht nur ein Hotfix für einen dringenden Fehler in der normalen App: Änderung auf `release` pushen (nicht direkt auf `main`, sonst gibt es kein Image), danach `main` nach `beta` mergen. Ein Push direkt auf `main` führt die Tests aus, baut aber **keine** Images.
 
 ### Gut zu wissen
 

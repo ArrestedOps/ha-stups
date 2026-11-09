@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, beta]
+    branches: [main, beta, release]
   pull_request:
 
 permissions:
@@ -36,10 +36,12 @@ jobs:
           path: e2e/test-results
           retention-days: 7
 
-  # main baut die normale App (ha-stups-{arch}), beta baut die Beta-App (ha-stups-beta-{arch}): nie die Bilder der jeweils anderen
+  # release baut die normale App (ha-stups-{arch}), beta baut die Beta-App (ha-stups-beta-{arch}): nie die Bilder der jeweils anderen.
+  # Wichtig: Home Assistant sieht eine neue Version, sobald sie in `main` liegt. Darum wird `main` erst am Ende von
+  # `release` (Job `promote`) nachgezogen, wenn die Bilder fertig sind. So gibt es kein „manifest unknown“ mehr.
   image:
     needs: test
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/release' || github.ref == 'refs/heads/beta')
     strategy:
       matrix:
         include:
@@ -100,7 +102,7 @@ jobs:
   # ghcr.io/<owner>/stups:<version> und :latest. Das Add-on nutzt weiter die Bilder mit Architektur im Namen.
   manifest:
     needs: image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/release'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -130,3 +132,18 @@ jobs:
             -t "ghcr.io/${OWNER}/stups:latest" \
             "ghcr.io/${OWNER}/ha-stups-amd64:${VERSION}" \
             "ghcr.io/${OWNER}/ha-stups-aarch64:${VERSION}"
+
+  # Erst jetzt sind beide Bilder und das Manifest da: `main` auf diesen Stand setzen, damit Home Assistant das Update anzeigt.
+  # Nur vorwärts (fast-forward); schlägt es fehl, ist `main` weitergelaufen und es wird nichts überschrieben.
+  promote:
+    needs: manifest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: main nachziehen
+        run: git push origin "${GITHUB_SHA}:refs/heads/main"

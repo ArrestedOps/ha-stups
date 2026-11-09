@@ -1,19 +1,62 @@
 <p align="center"><img src="docs/images/stups-logo.png" alt="Stups" width="420"></p>
 
-# Stups
+<h3 align="center">The household runs itself. Nobody has to nag.</h3>
 
-> 🇩🇪 [Deutsche Fassung](README.de.md). This English version is the authoritative one.
-
-A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your household, family or flat share: tasks on boards, recurring due dates, photos and links, push reminders with a "Done" button through the Companion App, and a friendly **nudge** for the person who forgot. Built for the iPhone, with dark and light mode, in English and German.
+<p align="center">
+  Tasks, calendar and a friendly nudge, built right into Home Assistant.<br>
+  The washing machine finishes and the right person gets the card, with a <b>Done</b> button on their lock screen.
+</p>
 
 <p align="center">
   <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FArrestedOps%2Fha-stups"><img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Add to Home Assistant"></a>
   <br><sub>Opens the dialog in your Home Assistant with the repository address filled in. You confirm adding and installing there yourself.</sub>
 </p>
 
+<p align="center"><sub>🇩🇪 <a href="README.de.md">Deutsche Fassung</a> · This English version is the authoritative one.</sub></p>
+
 <p align="center">
   <img src="docs/images/demo.en.gif" alt="Stups in action: quick entry, completing a card, agenda" width="30%">
 </p>
+
+---
+
+## Sound familiar?
+
+- 🧺 *"Who is emptying the washing machine?"* The machine has been done for three hours.
+- 🗑️ Everyone assumed someone else would take out the trash.
+- 😤 You hate being the one who reminds everybody. Again.
+- 📱 Your family's to-do list is a chat that nobody scrolls back through.
+- 🔋 The battery in the door lock died. Nobody noticed until it was too late.
+
+**Stups fixes the part that actually goes wrong: not the list, but the remembering and the asking.**
+
+## Why Stups
+
+### 🏠 It knows what your house is doing
+Home Assistant already knows that the washing machine is done, the bin is going out tomorrow and the lock battery is at 8 %. **Watchers** turn that into cards by themselves, and hand them to whoever is at home, in turns, fairly. Stups **finds the matching devices itself** (washing machine, dryer, waste calendar, rain, batteries, robot vacuum). You set one up in four taps, see the entity's last three hours, and do a **trial run on the last 7 days** before it goes live. No YAML, no automations to maintain.
+
+### 👉 A nudge instead of a nag
+Someone forgot their task? Send a **Stups**: a friendly "Are you on it?" with **Done**, **On it** and **Later** buttons right in the notification. Lock times and quiet hours per person mean nobody gets annoyed. You can also **nudge yourself** ("remind me again in 2 hours, at most 3 times").
+
+### ✅ Done in one tap, from the lock screen
+Push reminders through the Home Assistant Companion App: when due, in advance, as a follow-up while overdue and as a morning summary. **"Done" works right in the message.** Repeating tasks create the next card by themselves.
+
+### ⚡ Quick entry that reads your mind
+Type `Take out trash tomorrow 7pm @Ben #Home every week !!` and get a finished card with due date, assignee, category, repeat and priority. German and English, understood as you write.
+
+### ⚖️ Fair, without a scoreboard
+**This week** shows who did how much, weighted by effort (small, medium, large). No ranking, no medals, no percentages: the point is to *see the load*, not to compete. Rotations skip anyone who has "little time" this week.
+
+### 🔒 Yours. Really.
+Everything lives in your Home Assistant (SQLite in the add-on storage, part of the normal backup). No account, no cloud, no tracking. **Private boards** are visible only to you, not even to administrators. No fonts or scripts are loaded from the internet.
+
+### 👨‍👩‍👧 Made for a whole family
+- **Child role:** children see and tick off only their own cards. With confirmation, the card waits until a parent says "Confirm" or "Again".
+- **House channels:** a nudge can also be an announcement on a speaker or a lamp that lights up in your colour, for children without a phone.
+- **Permissions** for individuals (watchers, settings, people …) without making them administrators.
+
+### 📱 Feels like a native app
+Built for the iPhone: dark and light mode, swipe to move cards, live sync between all devices, English and German (push messages included). On a desktop you get a **sidebar layout** with search (Ctrl/Cmd + K), a Kanban over the full width and a detail column.
 
 <p align="center">
   <img src="docs/images/en/board-dunkel.png" alt="Board, dark" width="23%">
@@ -27,7 +70,6 @@ A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your h
   <img src="docs/images/en/kalender-woche-hell.png" alt="Calendar, week, light" width="23%">
   <img src="docs/images/en/stupsen-hell.png" alt="Nudging, light" width="23%">
 </p>
-
 <p align="center">
   <img src="docs/images/en/waechter-dunkel.png" alt="Watchers, dark" width="23%">
   <img src="docs/images/en/gefunden-dunkel.png" alt="Found, dark" width="23%">
@@ -35,31 +77,29 @@ A Kanban board, agenda and calendar as a Home Assistant app (add-on). For your h
   <img src="docs/images/en/einstellungen-dunkel.png" alt="Settings, dark" width="23%">
 </p>
 
-## What can it do?
+## What you get
 
-- **Boards** with their own columns and categories; cards with assignees, due date, priority, cost, description, checklist, links, photos/PDFs and comments. Swiping moves cards; every card is one row with a coloured tile.
-- **Quick entry:** a line like `Take out trash tomorrow 7pm @Ben #Home every week !!` becomes a finished card with due date, assignee, category, repeat and priority.
-- **Tasks** (the start page, three tabs: Tasks, Boards, Watchers): what is on for you. Cards from the house (from watchers) on top, your numbers (due today, overdue, done today), the week with dots, a banner when someone nudged you, and your cards grouped as Overdue, Today, This week and Later. Chips switch between Mine, All and each person. A switch above the list shows **Day, Week or Month** instead (the former calendar); tapping a free slot creates a card with that due date. At the end: fairness for this week, without a ranking.
-- **Recurring tasks:** a fixed rhythm or counted from completion; the completed card stays with its history, the next one is created.
-- **Watchers:** Stups observes entities in Home Assistant and creates cards by itself: "The washing machine is done, so whoever is at home gets the card 'empty it'." Stups **finds suitable devices itself** (washing machine, dryer, waste calendar, rain, batteries, robot vacuum), you set one up as a **four-step assistant** (When, Then, Who, Fine-tuning) with the **history of the entity** for the last 3 hours, and edit it as a **flow of cards** with a **trial run** on the last 7 days; the sentence stays as the summary. Also "pass on", "suggest first" (whoever taps first takes it) and "little time" for busy weeks. **Home** shows what the house is doing right now. Set up without YAML.
-- **Push through the Companion App:** when due, in advance, as a follow-up, and a daily summary. "Done" right in the message.
-- **Nudging:** send another person a nudge for their card ("Are you on it?"). With lock time and quiet time per person so nobody gets annoyed.
-- **House channels:** a nudge can also arrive in the house: an announcement on a speaker or a lamp that lights up in your colour, for children without a phone. Per channel you choose which messages arrive and what happens when someone is not at home.
-- **This week (fairness):** who completes how much this week or month, as a bar for the effort (small, medium, large). No ranking, no medals. Optional: a Sunday-evening summary.
-- **Child role:** children see and tick off only their own cards. With confirmation: the card waits until a parent says "Confirm" or "Again", then it counts for the child.
-- **Board templates:** start a board from Household, Moving house, Renovation and more, or save your own board as a template.
-- **Several people:** you control access under Settings › Household › People & access. Everyone gets a picture (from Home Assistant or uploaded). Home Assistant administrators set things up; all approved people may create boards, cards and categories. An administrator can give individual people extra **permissions** (watchers, announcement and lamp, app settings, approving people, confirming for children, reading feedback) without making them administrators: Settings › People & access › open a person › Permissions.
-- **English and German:** the app follows your device language; Settings › Language switches it for you on all your devices, push messages included.
-- **Sensors** for Home Assistant: overdue and due-today cards, in total and per person, open nudges.
-- Everything stays with you: SQLite in the add-on storage, part of the normal HA backup.
+| | |
+|---|---|
+| **Tasks (start page)** | What is on for you: cards from the house on top, your numbers (due today, overdue, done today), the week, a banner when someone nudged you, and your cards grouped as Overdue, Today, This week, Later. Chips switch between Mine, All and each person. |
+| **Boards** | Several boards with their own columns and categories. Cards with assignees, due date, priority, cost, effort, description, checklist, links, photos/PDFs and comments. Swipe to move. Archive, duplicate, or save as a template (Household, Moving house, Renovation and more). |
+| **Private & shared boards** | Visible to "Only me", "Everyone in Stups" or "Selected people". Children can create their own private boards. |
+| **Calendar** | Day, week, month or list. Tap a free slot to create a card for that time. Filter by person and board. |
+| **Recurring tasks** | Fixed rhythm or counted from completion, also hourly (optionally within a time window), with "a small delay is okay". Every option shows a live example. The finished card keeps its history; the next one is created. |
+| **Watchers** | Cards from Home Assistant entities: suggested devices, four-step assistant, flow editor, trial run on the last 7 days, "pass on", "suggest first" (whoever taps first takes it), nudging after a while. |
+| **Push and nudging** | Companion App notifications with action buttons, daily summary, follow-ups, nudges with lock and quiet time. |
+| **Fairness** | Effort per person for this week or month, optional Sunday-evening summary, per-board switch. |
+| **People and access** | Everyone gets a picture (from Home Assistant or uploaded). Control who may open the app. Roles: administrator, member, child. |
+| **Sensors for Home Assistant** | Overdue and due-today cards, in total and per person, and open nudges. Use them on dashboards and in automations. |
+| **Feedback** | Report bugs or ideas from inside the app; it stays on your installation. |
 
-## Installation
+## Install in 3 minutes
 
-The easiest way is the button above ("Add to Home Assistant"). By hand:
+The easiest way is the button at the top ("Add to Home Assistant"). By hand:
 
 1. In Home Assistant: **Settings → Apps → App Store → ⋮ → Repositories**
 2. Add `https://github.com/ArrestedOps/ha-stups`
-3. Install **Stups**, enter people and notify services in the options, start it.
+3. Install and start **Stups**, open it from the sidebar. You pick the people in the app (or in the options); done.
 
 Usage and options: [stups/DOCS.md](stups/DOCS.md). Changes: [stups/CHANGELOG.md](stups/CHANGELOG.md).
 

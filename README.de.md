@@ -1,15 +1,62 @@
 <p align="center"><img src="docs/images/stups-logo.png" alt="Stups" width="420"></p>
 
-# Stups
+<h3 align="center">Der Haushalt läuft von selbst. Niemand muss hinterherfragen.</h3>
 
-> Deutsche Fassung. Die englische Fassung ([README.md](README.md)) ist maßgeblich.
-
-Kanban-Board, Aufgabenliste und Kalender als Home-Assistant-App (Add-on). Für den Haushalt, die Familie oder die WG: Aufgaben auf Boards, wiederkehrende Termine, Fotos und Links, Push-Erinnerungen mit „Erledigt"-Knopf über die Companion App und ein freundlicher **Stups** an die, die etwas vergessen haben. Fürs iPhone gebaut, mit Dunkel- und Hellmodus.
+<p align="center">
+  Aufgaben, Kalender und ein freundlicher Stups, direkt in Home Assistant.<br>
+  Die Waschmaschine ist fertig, die richtige Person bekommt die Karte, mit „Erledigt“-Knopf auf dem Sperrbildschirm.
+</p>
 
 <p align="center">
   <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FArrestedOps%2Fha-stups"><img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Zu Home Assistant hinzufügen"></a>
   <br><sub>Öffnet in deinem Home Assistant den Dialog mit vorausgefüllter Repository-Adresse. Das Hinzufügen und die Installation bestätigst du dort selbst.</sub>
 </p>
+
+<p align="center"><sub>Deutsche Fassung. Die englische Fassung (<a href="README.md">README.md</a>) ist maßgeblich.</sub></p>
+
+<p align="center">
+  <img src="docs/images/demo.de.gif" alt="Stups in Aktion: Schnell-Eingabe, Karte erledigen, Aufgaben" width="30%">
+</p>
+
+---
+
+## Kommt dir das bekannt vor?
+
+- 🧺 *„Wer räumt die Waschmaschine aus?“* Sie ist seit drei Stunden fertig.
+- 🗑️ Alle dachten, jemand anderes bringt den Müll raus.
+- 😤 Du hast keine Lust mehr, immer die Erinnerungs-Person zu sein.
+- 📱 Die To-do-Liste der Familie ist ein Chat, in dem keiner zurückscrollt.
+- 🔋 Die Batterie im Türschloss war leer. Aufgefallen ist es zu spät.
+
+**Stups löst den Teil, der wirklich schiefgeht: nicht die Liste, sondern das Erinnern und das Nachfragen.**
+
+## Warum Stups
+
+### 🏠 Es weiß, was dein Haus gerade macht
+Home Assistant weiß längst, dass die Waschmaschine fertig ist, morgen die Tonne rausmuss und die Batterie am Türschloss bei 8 % ist. **Wächter** machen daraus von selbst Karten und geben sie reihum und fair an die, die zu Hause sind. Stups **findet passende Geräte selbst** (Waschmaschine, Trockner, Müllkalender, Regen, Batterien, Saugroboter). Einrichten in vier Schritten, mit dem Verlauf der Entität der letzten drei Stunden und einem **Probelauf über die letzten 7 Tage**, bevor es live geht. Ohne YAML, ohne Automationen, die du pflegen musst.
+
+### 👉 Ein Stups statt Nörgeln
+Jemand hat seine Aufgabe vergessen? Schick einen **Stups**: ein freundliches „Denkst du dran?“ mit den Knöpfen **Erledigt**, **Mach ich** und **Später** direkt in der Nachricht. Sperrzeiten und Ruhezeit pro Person sorgen dafür, dass sich keiner genervt fühlt. Du kannst dich auch **selbst stupsen** („erinnere mich in 2 Stunden nochmal, höchstens 3 ×“).
+
+### ✅ Erledigt mit einem Tipp, vom Sperrbildschirm
+Push-Erinnerungen über die Home-Assistant-Companion-App: zur Fälligkeit, vorab, nachhakend bei Überfälligkeit und als Morgen-Zusammenfassung. **„Erledigt“ geht direkt in der Nachricht.** Wiederkehrende Aufgaben legen die nächste Karte von selbst an.
+
+### ⚡ Schnell-Eingabe, die mitdenkt
+Tippe `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` und bekomm eine fertige Karte mit Termin, Zuständigem, Kategorie, Wiederholung und Priorität. Deutsch und Englisch, verstanden schon beim Tippen.
+
+### ⚖️ Fair, ohne Rangliste
+**Diese Woche** zeigt, wer wie viel getan hat, gewichtet nach Aufwand (klein, mittel, groß). Keine Plätze, keine Medaillen, keine Prozente: Es geht darum, die Last zu *sehen*, nicht um einen Wettbewerb. Rotationen überspringen, wer diese Woche „wenig Zeit“ hat.
+
+### 🔒 Deins. Wirklich.
+Alles liegt in deinem Home Assistant (SQLite im Add-on-Speicher, Teil des normalen Backups). Kein Konto, keine Cloud, kein Tracking. **Private Boards** sieht nur du, auch kein Administrator. Es werden keine Schriften oder Skripte aus dem Internet geladen.
+
+### 👨‍👩‍👧 Gebaut für eine ganze Familie
+- **Rolle Kind:** Kinder sehen und haken nur ihre eigenen Karten ab. Mit Bestätigung wartet die Karte, bis ein Elternteil „Passt“ oder „Nochmal“ sagt.
+- **Haus-Kanäle:** Ein Stups kann auch eine Ansage auf einem Lautsprecher sein oder eine Lampe, die in deiner Farbe leuchtet, für Kinder ohne Handy.
+- **Berechtigungen** für einzelne Personen (Wächter, Einstellungen, Personen …), ohne sie zu Administratoren zu machen.
+
+### 📱 Fühlt sich an wie eine echte App
+Fürs iPhone gebaut: Dunkel- und Hellmodus, Wischen verschiebt Karten, Live-Sync zwischen allen Geräten, Deutsch und English (auch die Push-Nachrichten). Am Desktop gibt es eine **Seitenleiste** mit Suche (Strg/Cmd + K), ein Kanban über die volle Breite und eine Detailspalte.
 
 <p align="center">
   <img src="docs/images/board-dunkel.png" alt="Board, dunkel" width="23%">
@@ -23,7 +70,6 @@ Kanban-Board, Aufgabenliste und Kalender als Home-Assistant-App (Add-on). Für d
   <img src="docs/images/kalender-woche-hell.png" alt="Kalender, Woche, hell" width="23%">
   <img src="docs/images/stupsen-hell.png" alt="Stupsen, hell" width="23%">
 </p>
-
 <p align="center">
   <img src="docs/images/waechter-dunkel.png" alt="Wächter, dunkel" width="23%">
   <img src="docs/images/gefunden-dunkel.png" alt="Gefunden, dunkel" width="23%">
@@ -31,30 +77,29 @@ Kanban-Board, Aufgabenliste und Kalender als Home-Assistant-App (Add-on). Für d
   <img src="docs/images/einstellungen-dunkel.png" alt="Einstellungen, dunkel" width="23%">
 </p>
 
-## Was kann es?
+## Was du bekommst
 
-- **Boards** mit eigenen Spalten und Kategorien, Karten mit Zuständigen, Termin, Priorität, Kosten, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt Karten; jede Karte ist eine Zeile mit farbiger Kachel.
-- **Schnell-Eingabe:** Eine Zeile wie `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` wird zur fertigen Karte mit Termin, Zuständigem, Kategorie, Wiederholung und Priorität.
-- **Aufgaben** (Startseite, drei Reiter: Aufgaben, Boards, Wächter): was für dich dran ist. Oben Karten vom Haus (von Wächtern), deine Zahlen (heute fällig, überfällig, heute erledigt), die Woche mit Punkten, ein Banner, wenn dich jemand gestupst hat, und deine Karten in den Gruppen Überfällig, Heute, Diese Woche und Später. Chips wechseln zwischen Meine, Alle und jeder Person. Ein Umschalter darüber zeigt stattdessen **Tag, Woche oder Monat** (der frühere Kalender); auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an. Am Ende die Fairness dieser Woche, ohne Rangliste.
-- **Wiederkehrende Aufgaben:** fester Rhythmus oder ab Erledigung; die erledigte Karte bleibt samt Verlauf erhalten, die nächste entsteht neu.
-- **Wächter:** Stups beobachtet Entitäten in Home Assistant und legt von selbst Karten an: „Die Waschmaschine ist fertig, also bekommt eine Person, die zu Hause ist, die Karte ‚ausräumen'." Stups **findet passende Geräte selbst** (Waschmaschine, Trockner, Abfallkalender, Regen, Batterien, Saugroboter), du richtest einen Wächter im **Assistenten in vier Schritten** ein (Wenn, Dann, Wer, Feinschliff), mit dem **Verlauf der Entität** der letzten 3 Stunden, und bearbeitest ihn als **Ablauf aus Karten** mit **Probelauf** auf den letzten 7 Tagen; der Satz bleibt als Zusammenfassung. Dazu „Weitergeben", „Erst vorschlagen" (wer zuerst tippt, übernimmt) und „Wenig Zeit" für stressige Wochen. **Zuhause** zeigt, was das Haus gerade tut. Einrichtung ohne YAML.
-- **Push über die Companion App:** zur Fälligkeit, vorab, nachhaken, Tageszusammenfassung. „Erledigt" direkt in der Nachricht.
-- **Stupsen:** einer anderen Person zu ihrer Karte einen Stups schicken („Denkst du dran?"). Mit Sperrzeit und Ruhezeit pro Person, damit niemand genervt wird.
-- **Haus-Kanäle:** Ein Stups kann auch im Haus ankommen: als Ansage über einen Lautsprecher oder als Lampe, die in deiner Farbe aufleuchtet, für Kinder ohne Handy. Je Kanal wählst du, welche Nachrichten ankommen und was geschieht, wenn jemand nicht zu Hause ist.
-- **Diese Woche (Fairness):** Wer diese Woche oder diesen Monat wie viel erledigt hat, als Balken für den Aufwand (klein, mittel, groß). Keine Rangliste, keine Medaillen. Auf Wunsch eine Zusammenfassung am Sonntagabend.
-- **Rolle Kind:** Kinder sehen und haken nur ihre eigenen Karten ab. Mit Bestätigung: Die Karte wartet, bis ein Elternteil „Bestätigen“ oder „Nochmal“ sagt, und zählt dann für das Kind.
-- **Board-Vorlagen:** Ein Board aus Haushalt, Umzug, Renovierung und mehr starten oder ein eigenes Board als Vorlage speichern.
-- **Mehrere Personen:** Zugriff steuerst du unter Einstellungen › Haushalt › Personen & Zugriff. Jede Person bekommt ein Bild (aus Home Assistant oder hochgeladen). Wer Administrator in Home Assistant ist, stellt ein; alle freigegebenen Personen dürfen Boards, Karten und Kategorien anlegen. Ein Administrator kann einzelnen Personen zusätzlich **Berechtigungen** geben (Wächter, Ansage und Lampe, App-Einstellungen, Personen freigeben, Bestätigen für Kinder, Feedback lesen), ohne sie zu Administratoren zu machen: Einstellungen › Personen & Zugriff › Person aufklappen › Berechtigungen.
-- **Sensoren** für Home Assistant: überfällige und heute fällige Karten, gesamt und je Person, offene Stupse.
-- Alles bleibt bei dir: SQLite im Add-on-Speicher, Teil des normalen HA-Backups.
+| | |
+|---|---|
+| **Aufgaben (Startseite)** | Was für dich dran ist: Karten vom Haus oben, deine Zahlen (heute fällig, überfällig, heute erledigt), die Woche, ein Banner, wenn dich jemand gestupst hat, und deine Karten gruppiert nach Überfällig, Heute, Diese Woche, Später. Chips schalten zwischen Meine, Alle und jeder Person um. |
+| **Boards** | Mehrere Boards mit eigenen Spalten und Kategorien. Karten mit Zuständigen, Termin, Priorität, Kosten, Aufwand, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt. Archivieren, duplizieren oder als Vorlage speichern (Haushalt, Umzug, Renovierung und mehr). |
+| **Private und geteilte Boards** | Sichtbar für „Nur ich“, „Alle in Stups“ oder „Ausgewählte Personen“. Kinder können eigene private Boards anlegen. |
+| **Kalender** | Tag, Woche, Monat oder Liste. Auf einen freien Zeitpunkt tippen legt eine Karte dafür an. Filter nach Person und Board. |
+| **Wiederkehrende Aufgaben** | Fester Rhythmus oder ab Erledigung, auch stündlich (auf Wunsch nur im Zeitfenster), mit „kleine Verspätung ist okay“. Jede Option zeigt ein Beispiel live. Die erledigte Karte behält ihren Verlauf, die nächste entsteht. |
+| **Wächter** | Karten aus Entitäten von Home Assistant: vorgeschlagene Geräte, Assistent in vier Schritten, Ablauf-Editor, Probelauf über 7 Tage, „Weitergeben“, „Erst vorschlagen“ (wer zuerst tippt, übernimmt), Stupsen nach einer Weile. |
+| **Push und Stupsen** | Companion-App-Nachrichten mit Aktionsknöpfen, Tageszusammenfassung, Nachhaken, Stupse mit Sperr- und Ruhezeit. |
+| **Fairness** | Aufwand pro Person für diese Woche oder diesen Monat, optionale Zusammenfassung am Sonntagabend, Schalter je Board. |
+| **Personen und Zugriff** | Jeder bekommt ein Bild (aus Home Assistant oder hochgeladen). Du bestimmst, wer die App öffnen darf. Rollen: Administrator, Mitglied, Kind. |
+| **Sensoren für Home Assistant** | Überfällige und heute fällige Karten, gesamt und pro Person, und offene Stupse. Für Dashboards und Automationen. |
+| **Feedback** | Fehler melden oder Ideen schicken, direkt in der App; es bleibt auf deiner Installation. |
 
-## Installation
+## In 3 Minuten installiert
 
-Am einfachsten über den Knopf oben („Zu Home Assistant hinzufügen"). Von Hand:
+Am einfachsten geht es mit dem Knopf oben („Zu Home Assistant hinzufügen“). Von Hand:
 
 1. In Home Assistant: **Einstellungen → Apps → App-Store → ⋮ → Repositories**
 2. `https://github.com/ArrestedOps/ha-stups` hinzufügen
-3. **Stups** installieren, Personen und Notify-Dienste in den Optionen eintragen, starten.
+3. **Stups** installieren und starten, in der Seitenleiste öffnen. Personen wählst du in der App (oder in den Optionen); fertig.
 
 Bedienung und Optionen: [stups/DOCS.md](stups/DOCS.md). Änderungen: [stups/CHANGELOG.md](stups/CHANGELOG.md).
 

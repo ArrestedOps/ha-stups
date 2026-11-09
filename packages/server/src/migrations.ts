@@ -662,4 +662,15 @@ export const migrations: Migration[] = [
       alter table boards add column archived_at text;
     `,
   },
+  {
+    version: 30,
+    // Onboarding: onboarding = 'done' | 'skipped' (null = noch nicht durchlaufen), onboarding_progress = Schritt und Auswahl als JSON,
+    // damit ein Abbruch auf einem Gerät auf einem anderen weitergeführt werden kann. Wer schon da ist, kennt Stups und sieht die
+    // Einrichtung nicht von selbst (nur Personen; sie lässt sich in den Einstellungen nochmal aufrufen).
+    sql: `
+      alter table users add column onboarding text;
+      alter table users add column onboarding_progress text;
+      update users set onboarding = 'done' where is_person = 1;
+    `,
+  },
 ];

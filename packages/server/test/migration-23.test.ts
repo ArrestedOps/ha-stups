@@ -82,7 +82,7 @@ describe('Migration 23 (Posteingang und Dashboard je Person)', () => {
       expect(seen).toBeLessThanOrEqual(t1 + 1000);
       expect(u.inbox_seen_at).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/);
       expect(u.dashboard_path).toBeNull();
-      const { inbox_seen_at: _a, dashboard_path: _b, ...rest } = u;
+      const { inbox_seen_at: _a, dashboard_path: _b, onboarding: _c, onboarding_progress: _d, ...rest } = u;
       expect(rest).toEqual(usersBefore[i]);
     }
 

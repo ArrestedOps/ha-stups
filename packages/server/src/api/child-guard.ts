@@ -50,6 +50,9 @@ const ALLOWED: Record<string, Own> = {
   'POST /api/cards/:id/restore-archived': 'boardcard',
   'PUT /api/me/language': 'none',
   'PUT /api/me/accent': 'none',
+  'PUT /api/me/onboarding': 'none',
+  'DELETE /api/me/onboarding': 'none',
+  'PUT /api/me/onboarding/progress': 'none',
   // Lesen (gefiltert in den Abfragen)
   'GET /api/attachments/:id': 'none',
   'GET /api/attachments/:id/thumb': 'none',

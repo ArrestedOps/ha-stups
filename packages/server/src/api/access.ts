@@ -14,6 +14,7 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
   // ----- identity -----
   app.get('/api/me', async (req) => {
     const allowed = req.access?.allowed ?? false;
+    const onboarding = req.user && allowed ? store.onboardingOf(req.user.id) : null;
     return {
       user: req.user,
       people: allowed ? store.people() : [],
@@ -23,6 +24,10 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
       permissions: req.access?.permissions ?? [],
       allowed,
       accessMode: store.getAccessMode(),
+      /** Einrichtung beim ersten Start: Status der Person, gemerkter Schritt und die eine Regel, ob sie jetzt erscheint (store.needsOnboarding) */
+      onboarding: onboarding?.status ?? null,
+      onboardingProgress: onboarding?.progress ?? null,
+      needsOnboarding: req.user && allowed ? store.needsOnboarding(req.user.id, { isAdmin: req.access?.isAdmin ?? false }) : false,
     };
   });
   // Sprache der Person: die Wahl und die Sprache, die ihr Gerät zeigt (für Push, wenn kein Browser dabei ist)
@@ -46,6 +51,25 @@ export function registerAccessRoutes(app: FastifyInstance, k: ApiKit): void {
     const b = body(req);
     if (!req.user) throw new ForbiddenError();
     store.setDashboardPath(req.user.id, checkDashboardPath(b.path === undefined ? Number.NaN : b.path));
+    return noContent(reply);
+  });
+  // Einrichtung beim ersten Start: nur der eigene Status. „fertig"/„übersprungen" setzen, löschen = nochmal durchgehen, Fortschritt merken
+  app.put('/api/me/onboarding', async (req, reply) => {
+    const b = body(req);
+    if (!req.user) throw new ForbiddenError();
+    if (b.status !== 'done' && b.status !== 'skipped') throw new ValidationError(t('Der Status muss „done" oder „skipped" sein'));
+    store.setOnboardingStatus(req.user.id, b.status);
+    return noContent(reply);
+  });
+  app.delete('/api/me/onboarding', async (req, reply) => {
+    if (!req.user) throw new ForbiddenError();
+    store.resetOnboarding(req.user.id);
+    return noContent(reply);
+  });
+  app.put('/api/me/onboarding/progress', async (req, reply) => {
+    const b = body(req);
+    if (!req.user) throw new ForbiddenError();
+    store.setOnboardingProgress(req.user.id, b);
     return noContent(reply);
   });
   app.get('/api/people', async () => store.people());

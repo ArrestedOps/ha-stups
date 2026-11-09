@@ -24,6 +24,9 @@ const ALLOWED_WRITES = [
   'PUT /api/me/language',
   'PUT /api/me/accent',
   'PUT /api/me/inbox-seen',
+  'PUT /api/me/onboarding',
+  'DELETE /api/me/onboarding',
+  'PUT /api/me/onboarding/progress',
 ];
 const ALLOWED_READS = [
   'GET /api/attachments/:id',

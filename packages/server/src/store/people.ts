@@ -353,6 +353,67 @@ export function createPeople(c: Ctx, late: unknown) {
     run('update users set dashboard_path = ? where id = ?', path, id);
   }
 
+  // ----- Onboarding -----
+
+  /** Gespeicherter Stand der Einrichtung: der Schritt und, was die Person dort schon gewählt hat (frei, aber klein) */
+  type OnboardingProgress = { step: string; selection?: Record<string, unknown> };
+
+  function readProgress(raw: unknown): OnboardingProgress | null {
+    if (typeof raw !== 'string' || raw === '') return null;
+    try {
+      const v = JSON.parse(raw) as OnboardingProgress;
+      return typeof v?.step === 'string' ? v : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function onboardingOf(id: string): { status: 'done' | 'skipped' | null; progress: OnboardingProgress | null } {
+    const r = userRow(id);
+    return { status: r.onboarding === 'done' || r.onboarding === 'skipped' ? r.onboarding : null, progress: readProgress(r.onboarding_progress) };
+  }
+
+  /** „Fertig" oder „übersprungen"; die gemerkte Auswahl wird dabei nicht mehr gebraucht */
+  function setOnboardingStatus(id: string, status: 'done' | 'skipped'): void {
+    if (status !== 'done' && status !== 'skipped') throw new ValidationError(t('Der Status muss „done" oder „skipped" sein'));
+    userRow(id);
+    run('update users set onboarding = ?, onboarding_progress = null where id = ?', status, id);
+  }
+
+  function setOnboardingProgress(id: string, input: { step?: unknown; selection?: unknown }): void {
+    if (typeof input.step !== 'string' || !/^[a-z]{2,20}$/.test(input.step)) throw new ValidationError(t('Der Schritt der Einrichtung fehlt'));
+    const sel = input.selection;
+    if (sel !== undefined && (typeof sel !== 'object' || sel === null || Array.isArray(sel))) throw new ValidationError(t('Die Auswahl der Einrichtung ist ungültig'));
+    const json = JSON.stringify(sel === undefined ? { step: input.step } : { step: input.step, selection: sel });
+    if (json.length > 4000) throw new ValidationError(t('Die Auswahl der Einrichtung ist zu groß'));
+    userRow(id);
+    run('update users set onboarding_progress = ? where id = ?', json, id);
+  }
+
+  /** „Einrichtung nochmal durchgehen": Status weg, Fortschritt auf den Anfang (damit sie auch in einer Bestandsinstallation aufgeht) */
+  function resetOnboarding(id: string): void {
+    userRow(id);
+    run('update users set onboarding = null, onboarding_progress = ? where id = ?', JSON.stringify({ step: 'welcome' }), id);
+  }
+
+  /**
+   * Zeigt Stups dieser Person die Einrichtung? Die eine Regel für Oberfläche und Tests (Abschnitt 3.0 der Übergabe):
+   * - Nie, wenn schon „fertig" oder „übersprungen" gespeichert ist.
+   * - Mitglieder und Kinder (Personen): beim ersten Start, auch in einer vollen Installation (Kurzfassung). Wer vor Migration 30 da war, gilt als fertig.
+   * - Administratoren: auf einer neuen Installation (keine Karten, keine Wächter, keine anderen Personen) oder mitten in der Einrichtung
+   *   (gespeicherter Fortschritt, sonst wäre sie nach dem Anlegen der Personen nicht mehr „neu"; auch „nochmal durchgehen" setzt ihn).
+   */
+  function needsOnboarding(id: string, who: { isAdmin: boolean }): boolean {
+    const r = userRow(id);
+    if (r.onboarding === 'done' || r.onboarding === 'skipped') return false;
+    if (!who.isAdmin) return r.is_person === 1;
+    if (readProgress(r.onboarding_progress)) return true;
+    const others = (one('select count(*) as n from users where is_person = 1 and id <> ?', id)!.n as number) > 0;
+    const cards = (one('select count(*) as n from cards')!.n as number) > 0;
+    const watchers = (one('select count(*) as n from watchers')!.n as number) > 0;
+    return !others && !cards && !watchers;
+  }
+
   const getSetting = (key: string): string | null =>
     (one('select value from settings where key = ?', key)?.value as string | undefined) ?? null;
 
@@ -510,6 +571,11 @@ export function createPeople(c: Ctx, late: unknown) {
     setLanguage,
     setAccentHue,
     setDashboardPath,
+    onboardingOf,
+    setOnboardingStatus,
+    setOnboardingProgress,
+    resetOnboarding,
+    needsOnboarding,
     setWeeklySummary,
     setBusyUntil,
     setChild,

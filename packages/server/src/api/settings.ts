@@ -1,10 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import { isDashboardPath } from '../dashboard-path.js';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../errors.js';
-import { TEST_ACTION } from '../push.js';
+import { ONBOARDING_ACTION_DONE, ONBOARDING_ACTION_LATER, TEST_ACTION, type PushMessage } from '../push.js';
+import { pushLanguage } from '../notifications.js';
 import { type Capabilities } from '../runtime.js';
 import { type ApiKit } from './kit.js';
-import { t } from '../i18n/index.js';
+import { t, withLanguage } from '../i18n/index.js';
 import { requirePermission } from '../permissions.js';
 
 /** Einstellungen, Beta, Push-Übersicht, Fähigkeiten, Dashboards und Umzug */
@@ -99,19 +100,44 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
       nudges: store.recentNudges(10, me),
     };
   });
-  // Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (mit ntfy zusätzlich ein Knopf, der den Rückweg prüft)
+  // Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (mit ntfy zusätzlich ein Knopf, der den Rückweg prüft).
+  // Mit { kind: 'onboarding', title?, body? } die Vorschau der Einrichtung: so wie eine Wächter-Nachricht, mit Erledigt und Später
+  // (ohne Texte die Vorgabe, in der Sprache der Person; die Knöpfe tun nichts, der Notifier ignoriert die Aktion).
   app.post('/api/push/test', async (req) => {
+    const b = body(req);
+    const onboarding = b.kind === 'onboarding';
+    if (b.kind !== undefined && !onboarding) throw new ValidationError(t('Die Art der Test-Nachricht ist unbekannt'));
+    const text = (v: unknown, max: number): string | undefined => {
+      if (v === undefined) return undefined;
+      if (typeof v !== 'string' || v.trim() === '' || v.length > max) throw new ValidationError(t('Der Text der Test-Nachricht ist ungültig'));
+      return v.trim();
+    };
+    const custom = onboarding ? { title: text(b.title, 100), body: text(b.body, 200) } : null;
     const me = req.user;
     if (!me || !deps.push) throw new ForbiddenError(t('Push ist hier nicht eingerichtet'));
     if (!deps.push.canReach(me.id)) throw new ConflictError(t('Für dich ist noch kein Push-Weg eingetragen (Einstellungen › Personen & Zugriff)'));
-    const sent = await deps.push.send(me.id, {
-      title: 'Stups: Test',
-      body: deps.ntfy ? 'Das Handy ist erreichbar. Tippe auf den Knopf, um den Rückweg zu prüfen.' : 'Das Handy ist erreichbar.',
-      tag: 'stups-test',
-      group: 'stups',
-      open: {},
-      actions: deps.ntfy ? [{ id: TEST_ACTION, title: 'Rückweg prüfen' }] : undefined,
-    });
+    const message: PushMessage = custom
+      ? withLanguage(pushLanguage(store, me.id), () => ({
+          title: custom.title ?? t('Waschmaschine fertig'),
+          body: custom.body ?? t('{name}, die Waschmaschine ist fertig. Ausräumen?', { name: me.displayName.trim().split(/\s+/)[0] ?? me.displayName }),
+          tag: 'stups-test',
+          group: 'stups',
+          open: {},
+          level: 'active',
+          actions: [
+            { id: ONBOARDING_ACTION_DONE, title: t('Erledigt') },
+            { id: ONBOARDING_ACTION_LATER, title: t('Später') },
+          ],
+        }))
+      : {
+          title: 'Stups: Test',
+          body: deps.ntfy ? 'Das Handy ist erreichbar. Tippe auf den Knopf, um den Rückweg zu prüfen.' : 'Das Handy ist erreichbar.',
+          tag: 'stups-test',
+          group: 'stups',
+          open: {},
+          actions: deps.ntfy ? [{ id: TEST_ACTION, title: 'Rückweg prüfen' }] : undefined,
+        };
+    const sent = await deps.push.send(me.id, message);
     if (!sent) throw new ConflictError(t('Die Nachricht ist nicht angekommen. Mehr steht im Protokoll.'));
     return { sent: true };
   });

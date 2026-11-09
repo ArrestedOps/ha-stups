@@ -47,6 +47,10 @@ export const PUSH_ACTION_PATH = '/api/push/action';
 /** Aktion, mit der die Test-Nachricht prüft, ob Knöpfe Stups erreichen */
 export const TEST_ACTION = 'STUPS_TEST';
 
+/** Knöpfe der Vorschau-Nachricht aus der Einrichtung (Erledigt, Später): gibt es nur dort, der Notifier ignoriert sie */
+export const ONBOARDING_ACTION_DONE = 'STUPS_ONBOARDING_DONE';
+export const ONBOARDING_ACTION_LATER = 'STUPS_ONBOARDING_LATER';
+
 /** Kein Weg eingerichtet: niemand ist erreichbar */
 export function createNoPush(): PushGateway {
   return { canReach: () => false, send: async () => false, clear: async () => undefined };

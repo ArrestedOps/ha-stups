@@ -12,6 +12,7 @@
   "DELETE /api/feedback/:id",
   "DELETE /api/house/channels/:id",
   "DELETE /api/links/:id",
+  "DELETE /api/me/onboarding",
   "DELETE /api/passkeys/:id",
   "DELETE /api/people/:id/avatar",
   "DELETE /api/templates/:id",
@@ -180,6 +181,8 @@
   "PUT /api/me/dashboard",
   "PUT /api/me/inbox-seen",
   "PUT /api/me/language",
+  "PUT /api/me/onboarding",
+  "PUT /api/me/onboarding/progress",
   "PUT /api/people/:id/avatar",
   "PUT /api/settings"
 ]

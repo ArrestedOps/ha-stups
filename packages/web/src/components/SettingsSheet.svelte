@@ -28,6 +28,7 @@
   import SectionHeader from './ui/SectionHeader.svelte';
   import Tile, { type TileColor } from './ui/Tile.svelte';
   import Toggle from './ui/Toggle.svelte';
+  import { restart as restartOnboarding } from '../lib/onboarding.svelte';
   import BubblePage from './settings/BubblePage.svelte';
   import SummaryPage from './settings/SummaryPage.svelte';
 
@@ -156,6 +157,13 @@
               {/snippet}
             </ListRow>
           {/each}
+          {#if g.actions?.includes('onboarding')}
+            <ListRow title={t('Einrichtung nochmal durchgehen')} label={t('Einrichtung nochmal durchgehen')} onclick={() => void restartOnboarding()}>
+              {#snippet tile()}<Tile color="gray"><Icon name="spark" size={22} stroke={1.8} /></Tile>{/snippet}
+              {#snippet meta()}{t('Personen, Wächter und Testnachricht')}{/snippet}
+              {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
+            </ListRow>
+          {/if}
         </div>
       {/each}
 

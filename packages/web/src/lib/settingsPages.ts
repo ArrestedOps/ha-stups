@@ -45,8 +45,8 @@ export interface SettingsGroup {
   id: 'me' | 'household' | 'ha' | 'help';
   title: string;
   pages: { id: SettingsPageId; title: string; icon: string }[];
-  /** Zeilen, die gleich etwas tun statt eine Unterseite zu öffnen (nur „Home Assistant"): HA-Kopfzeile ausblenden */
-  actions?: 'header'[];
+  /** Zeilen, die gleich etwas tun statt eine Unterseite zu öffnen: HA-Kopfzeile ausblenden (Home Assistant), Einrichtung nochmal durchgehen (Hilfe und Daten) */
+  actions?: ('header' | 'onboarding')[];
 }
 
 /**
@@ -112,14 +112,16 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
  */
 export function settingsOverview(ctx: SettingsCtx): SettingsGroup[] {
   // Die Zeile „Wächter" entfällt hier (Reiter Wächter, dort „Alle Wächter verwalten"); die Seite selbst bleibt
-  const groups = settingsGroups(ctx)
+  const base = settingsGroups(ctx)
     .map((g) => ({ ...g, pages: g.pages.filter((p) => p.id !== 'watchers') }))
-    .filter((g) => g.pages.length > 0);
-  if (!ctx.haUi) return groups;
-  const actions: 'header'[] = ['header'];
-  const have = groups.find((g) => g.id === 'ha');
-  if (have) return groups.map((g) => (g === have ? { ...g, actions } : g));
-  const ha: SettingsGroup = { id: 'ha', title: t('Home Assistant'), pages: [], actions };
-  const at = groups.findIndex((g) => g.id === 'help');
-  return at < 0 ? [...groups, ha] : [...groups.slice(0, at), ha, ...groups.slice(at)];
+    .filter((g) => g.pages.length > 0)
+    // „Einrichtung nochmal durchgehen" steht in „Hilfe und Daten" (für jeden, der die Gruppe sieht; ein Kind sieht sie nicht)
+    .map((g): SettingsGroup => (g.id === 'help' ? { ...g, actions: [...(g.actions ?? []), 'onboarding'] } : g));
+  if (!ctx.haUi) return base;
+  const header: SettingsGroup['actions'] = ['header'];
+  const have = base.find((g) => g.id === 'ha');
+  if (have) return base.map((g) => (g === have ? { ...g, actions: [...(g.actions ?? []), ...header!] } : g));
+  const ha: SettingsGroup = { id: 'ha', title: t('Home Assistant'), pages: [], actions: header };
+  const at = base.findIndex((g) => g.id === 'help');
+  return at < 0 ? [...base, ha] : [...base.slice(0, at), ha, ...base.slice(at)];
 }

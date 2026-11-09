@@ -63,6 +63,15 @@ export interface Me {
   /** false: Home Assistant kennt den Benutzer, Stups lässt ihn aber (noch) nicht hinein */
   allowed: boolean;
   accessMode: AccessMode;
+  /** Einrichtung beim ersten Start: Status dieser Person, der gemerkte Schritt mit Auswahl, und ob sie jetzt erscheint (der Server entscheidet) */
+  onboarding: 'done' | 'skipped' | null;
+  onboardingProgress: OnboardingProgress | null;
+  needsOnboarding: boolean;
+}
+
+export interface OnboardingProgress {
+  step: string;
+  selection?: Record<string, unknown>;
 }
 
 export interface AccessInfo {
@@ -820,7 +829,11 @@ export const api = {
   saveDashboard: (path: string | null) => put<void>('me/dashboard', { path }),
   testPush: (person: string) => post<{ sent: string[] }>('spike/test-push', { person }),
   /** Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (Container) */
-  testPushOwn: () => post<{ sent: boolean }>('push/test'),
+  testPushOwn: (b?: { kind: 'onboarding'; title?: string; body?: string }) => post<{ sent: boolean }>('push/test', b),
+  /** Einrichtung beim ersten Start: „fertig" oder „übersprungen" setzen, nochmal durchgehen (löschen), Schritt und Auswahl merken */
+  setOnboarding: (status: 'done' | 'skipped') => put<void>('me/onboarding', { status }),
+  resetOnboarding: () => del('me/onboarding'),
+  saveOnboardingProgress: (step: string, selection?: Record<string, unknown>) => put<void>('me/onboarding/progress', { step, ...(selection ? { selection } : {}) }),
   pushStatus: () => get<PushStatus>('notifications/status'),
 
   schedule: (q: { from?: string; to?: string; boards?: string[]; done?: boolean; undated?: boolean }) => {

@@ -162,7 +162,7 @@ describe('Einstellungen › Home Assistant: „HA-Kopfzeile ausblenden" für all
 
   it('im Add-on steht die Gruppe für jede Rolle da, auch für Mitglied und Kind (der Home-Knopf oben ersetzt die Zeile „Zurück zum Dashboard")', () => {
     const member = { ...addon, isAdmin: false };
-    expect(overview(member)).toEqual([['me', []], ['ha', ['header']], ['help', []]]);
+    expect(overview(member)).toEqual([['me', []], ['ha', ['header']], ['help', ['onboarding']]]);
     expect(overview({ ...member, isChild: true })).toEqual([['me', []], ['ha', ['header']]]);
     expect(settingsOverview({ ...member, isChild: true }).find((g) => g.id === 'ha')!.pages).toEqual([]);
   });
@@ -174,10 +174,17 @@ describe('Einstellungen › Home Assistant: „HA-Kopfzeile ausblenden" für all
     expect(g.pages.map((p) => p.id)).toEqual(['dashboard', 'bubble', 'voice']);
   });
 
-  it('im eigenen Container (kein Home-Assistant-Panel) gibt es die Aktionen nicht', () => {
+  it('im eigenen Container (kein Home-Assistant-Panel) gibt es die Kopfzeilen-Aktion nicht', () => {
     const docker = { ...addon, standalone: true, haUi: false };
-    expect(settingsOverview(docker).flatMap((g) => g.actions ?? [])).toEqual([]);
+    expect(settingsOverview(docker).flatMap((g) => g.actions ?? [])).toEqual(['onboarding']);
     expect(settingsOverview({ ...docker, isAdmin: false }).map((g) => g.id)).not.toContain('ha');
+  });
+
+  it('„Einrichtung nochmal durchgehen" steht in Hilfe und Daten, für jeden, der die Gruppe sieht; ein Kind sieht sie nicht', () => {
+    expect(settingsOverview(addon).find((g) => g.id === 'help')!.actions).toEqual(['onboarding']);
+    expect(settingsOverview({ ...addon, isAdmin: false }).find((g) => g.id === 'help')!.actions).toEqual(['onboarding']);
+    expect(settingsOverview({ ...addon, isAdmin: false, isChild: true }).find((g) => g.id === 'help')).toBeUndefined();
+    expect(settingsOverview(addon).filter((g) => g.id !== 'help').flatMap((g) => g.actions ?? [])).not.toContain('onboarding');
   });
 
   it('die Gruppe heißt Home Assistant, auch wo sie nur aus den Aktionen besteht', () => {

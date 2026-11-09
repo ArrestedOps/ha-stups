@@ -7,6 +7,7 @@ import {
   type BoardView,
   type Capabilities,
   type Card,
+  type OnboardingProgress,
   type Settings,
   type User,
   type WatcherItem,
@@ -133,6 +134,8 @@ export const ui = $state({
   toasts: [] as Toast[],
   /** Rückfrage vor einer Aktion, die sich nicht von selbst zurücknehmen lässt */
   confirm: null as null | ConfirmRequest,
+  /** Einrichtung beim ersten Start: läuft sie gerade (Antwort des Servers, siehe onboarding.svelte.ts) und der gemerkte Stand dazu */
+  onboarding: { needs: false, progress: null as OnboardingProgress | null },
   /** Desktop: „Neuer Wächter“ soll im Reiter Wächter aufklappen (aus „Gefunden“ oder den Einstellungen); die Ansicht liest und löscht es */
   newWatcher: null as null | NewWatcherRequest,
 });
@@ -463,6 +466,7 @@ export async function init(): Promise<void> {
     applyAccentHue(me.user.accentHue ?? null);
     if (me.allowed && me.user.language !== i18n.lang) void api.setLanguage(me.user.languageChoice, i18n.lang).catch(() => undefined);
     applyRole(me);
+    ui.onboarding = { needs: me.allowed && me.needsOnboarding, progress: me.onboardingProgress ?? null };
     if (!me.allowed) {
       // Home Assistant kennt den Benutzer, Stups lässt ihn nicht hinein: nur die Erklärung zeigen
       ui.allowed = false;

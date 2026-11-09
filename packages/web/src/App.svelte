@@ -24,6 +24,7 @@
   import NewCardSheet from './components/NewCardSheet.svelte';
   import NudgeSheet from './components/NudgeSheet.svelte';
   import NoAccess from './components/NoAccess.svelte';
+  import Onboarding from './components/Onboarding.svelte';
   import PeopleSheet from './components/PeopleSheet.svelte';
   import SettingsSheet from './components/SettingsSheet.svelte';
   import Toasts from './components/Toasts.svelte';
@@ -121,6 +122,10 @@
 {:else if !ui.allowed}
   <NoAccess />
 {:else}
+  {#if ui.onboarding.needs}
+    <!-- Einrichtung beim ersten Start: statt der Reiter, solange der Server sie verlangt; Fenster (Einstellungen, Prüfen) öffnen darüber -->
+    <Onboarding />
+  {:else}
   <div class="header-glow" aria-hidden="true"></div>
   {#snippet pages()}
     {#if tab === 'boards'}
@@ -156,6 +161,7 @@
     {/if}
 
     <TabBar />
+  {/if}
   {/if}
 
   {#if ui.sheet?.type === 'card'}

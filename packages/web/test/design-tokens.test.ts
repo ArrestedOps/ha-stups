@@ -149,7 +149,13 @@ describe('Schrift kommt von der App, nicht von einem Schriftserver', () => {
   });
 
   it('Inter ist die Schrift (lokal eingebunden)', () => {
-    expect(readFileSync(join(SRC, 'main.ts'), 'utf8')).toContain("@fontsource-variable/inter");
+    expect(readFileSync(join(SRC, 'main.ts'), 'utf8')).toContain("./fonts.css");
+    const fonts = readFileSync(join(SRC, 'fonts.css'), 'utf8');
+    expect(fonts).toContain("@fontsource-variable/inter");
+    // nur die lateinischen Teilmengen (Kyrillisch, Griechisch, Vietnamesisch machten das Image größer, ohne dass jemand sie braucht)
+    expect(fonts).toMatch(/inter-latin-wght-normal/);
+    expect(fonts).toMatch(/inter-latin-ext-wght-normal/);
+    expect(fonts).not.toMatch(/cyrillic|greek|vietnamese/);
     expect(css).toContain("'Inter Variable'");
     expect(css).not.toMatch(/bricolage/i);
   });

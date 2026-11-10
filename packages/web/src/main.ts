@@ -1,5 +1,5 @@
 import { mount } from 'svelte';
-import '@fontsource-variable/inter';
+import './fonts.css';
 import './app.css';
 import App from './App.svelte';
 import { browserSafeAreaEnv, startSafeArea } from './lib/haSafeArea';

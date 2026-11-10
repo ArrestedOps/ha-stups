@@ -336,6 +336,8 @@ export interface Settings {
   defaultDueTime: string;
   /** Uhrzeit (HH:MM) der Tageszusammenfassung, in der App eingestellt; null = die Add-on-Option gilt */
   dailySummaryTime: string | null;
+  /** Uhrzeit (HH:MM) des Nachhakens in Tagen oder Wochen ohne eigene Uhrzeit, in der App eingestellt; null = die Vorgabe gilt (18:00) */
+  overdueNagTime: string | null;
 }
 
 export const DEFAULT_DUE_TIME = '09:00';

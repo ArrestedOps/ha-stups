@@ -299,7 +299,7 @@ await app.register(apiRoutes, {
   access,
   defaultDashboardPath: options.dashboardPath,
   defaultDailySummaryTime: options.dailySummaryTime,
-  overdueNagTime: options.overdueNagTime,
+  defaultOverdueNagTime: options.overdueNagTime,
   accounts,
   passkeys,
   betaGate,

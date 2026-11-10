@@ -18,24 +18,26 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
     const s = store.getSettings();
     const fallback = deps.defaultDashboardPath ?? '/';
     const summary = deps.defaultDailySummaryTime ?? '08:00';
+    const nag = deps.defaultOverdueNagTime ?? '18:00';
     return {
       ...s,
       defaultDashboardPath: fallback,
       effectiveDashboardPath: s.dashboardPath ?? fallback,
       defaultDailySummaryTime: summary,
       effectiveDailySummaryTime: s.dailySummaryTime ?? summary,
-      /** Uhrzeit, zu der ein Nachhaken in Tagen oder Wochen kommt, wenn nichts anderes gewählt ist (Add-on-Option) */
-      overdueNagTime: deps.overdueNagTime ?? '18:00',
+      /** Uhrzeit, zu der ein Nachhaken in Tagen oder Wochen kommt, wenn nichts anderes gewählt ist: die der App, sonst die Vorgabe */
+      defaultOverdueNagTime: nag,
+      effectiveOverdueNagTime: s.overdueNagTime ?? nag,
     };
   };
   app.get('/api/settings', async () => effectiveSettings());
   app.put('/api/settings', async (req) => {
     const b = body(req);
     // Dashboard und Panel-Pfad gelten für alle (der Panel-Pfad steckt in jeder Push-Adresse): nur Administratoren, nie delegierbar.
-    // Die Zeiten (Fälligkeit, Tageszusammenfassung) ändert auch, wer das Recht „settings“ hat. Ein verbotenes Feld macht die ganze Anfrage unzulässig.
+    // Die Zeiten (Fälligkeit, Tageszusammenfassung, Nachhaken) ändert auch, wer das Recht „settings“ hat. Ein verbotenes Feld macht die ganze Anfrage unzulässig.
     if (b.dashboardPath !== undefined || b.panelPath !== undefined) requireAdmin(req);
-    if (b.defaultDueTime !== undefined || b.dailySummaryTime !== undefined) requirePermission(req, 'settings');
-    store.setSettings({ dashboardPath: b.dashboardPath, panelPath: b.panelPath, defaultDueTime: b.defaultDueTime, dailySummaryTime: b.dailySummaryTime });
+    if (b.defaultDueTime !== undefined || b.dailySummaryTime !== undefined || b.overdueNagTime !== undefined) requirePermission(req, 'settings');
+    store.setSettings({ dashboardPath: b.dashboardPath, panelPath: b.panelPath, defaultDueTime: b.defaultDueTime, dailySummaryTime: b.dailySummaryTime, overdueNagTime: b.overdueNagTime });
     return effectiveSettings();
   });
   // Beta: Push und Wächter sind zunächst aus (siehe beta-gate.ts). Jeder sieht den Stand, Administratoren ändern ihn.

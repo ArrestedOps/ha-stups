@@ -109,6 +109,22 @@ beforeEach(() => {
 });
 
 describe('Nachhaken: Planer', () => {
+  it('Tage ohne eigene Uhrzeit kommen zur Uhrzeit aus den Einstellungen der App, sonst zur Standard-Uhrzeit (18:00)', async () => {
+    const first = () => {
+      const c = card({ dueAt: '2026-11-04T09:00:00Z' });
+      store.setReminder(c.id, rene.id, spec({ afterMin: 1440, everyMin: null, max: 1, atTime: null }));
+      return c;
+    };
+    first();
+    await makeNotifier().tick();
+    expect(rows()[0].next_at).toBe('2026-11-05T17:00:00.000Z'); // 18:00 Berlin
+    store.setSettings({ overdueNagTime: '20:00' });
+    db.prepare('delete from card_reminders').run();
+    first();
+    await makeNotifier().tick();
+    expect(rows()[0].next_at).toBe('2026-11-05T19:00:00.000Z'); // 20:00 Berlin
+  });
+
   it('einmal: kommt nach der Zeit, danach nie wieder', async () => {
     const c = card({ dueAt: '2026-11-04T09:00:00Z' });
     store.setReminder(c.id, rene.id, spec({ afterMin: 60 }));

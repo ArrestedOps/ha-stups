@@ -51,7 +51,7 @@
 
   const REMINDERS = [15, 30, 60, 120, 1440, 2880];
   const tz = deviceTz();
-  const defaultTime = $derived(ui.settings?.overdueNagTime ?? '18:00');
+  const defaultTime = $derived(ui.settings?.effectiveOverdueNagTime ?? '18:00');
   const anchor = $derived<'due' | 'created'>(dueAt ? 'due' : 'created');
 
   // Die eigene Wahl gilt sofort; vom Server zurückkommende Werte gleichen sie nur an, wenn sie anders sind
@@ -76,7 +76,7 @@
   let everyText = $state(String(startEvery.n));
   let everyUnit = $state<Unit>(startEvery.unit);
   let maxText = $state(String(untrack(() => spec?.max ?? DEFAULT_MAX)));
-  let timeText = $state(untrack(() => spec?.atTime ?? ui.settings?.overdueNagTime ?? '18:00'));
+  let timeText = $state(untrack(() => spec?.atTime ?? ui.settings?.effectiveOverdueNagTime ?? '18:00'));
 
   const maxN = () => validMax(maxText) ?? DEFAULT_MAX;
 

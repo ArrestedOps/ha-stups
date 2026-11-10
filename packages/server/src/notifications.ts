@@ -12,6 +12,7 @@ import type { DueReminder } from './store/reminders.js';
 export interface NotifierDeps {
   store: Store;
   push: PushGateway;
+  /** Rückfälle: gelten, solange die App keine eigene Uhrzeit für Tageszusammenfassung und Nachhaken hat */
   options: Pick<Options, 'dailySummaryTime' | 'overdueNagTime'>;
   now: () => Date;
   timeZone: () => string;
@@ -473,7 +474,7 @@ export function createNotifier(deps: NotifierDeps) {
    */
   async function deliverReminders(nowMs: number, tz: string): Promise<number> {
     let sent = 0;
-    const defaultTime = options.overdueNagTime;
+    const defaultTime = store.getSettings().overdueNagTime ?? options.overdueNagTime;
     for (const r of store.dueReminders(new Date(nowMs).toISOString())) {
       const at = r.nextAt === null ? firstAt(r.spec, r.baseMs, tz, defaultTime) : Date.parse(r.nextAt);
       if (r.nextAt === null) store.planReminder(r.id, new Date(at).toISOString());

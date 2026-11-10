@@ -79,8 +79,8 @@ export interface ApiDeps {
   dashboardsTimeoutMs?: number;
   /** Uhrzeit der Tageszusammenfassung aus den Add-on-Optionen (gilt, solange die App keine eigene hat) */
   defaultDailySummaryTime?: string;
-  /** Add-on-Option overdue_nag_time: die Uhrzeit für Nachhaken in Tagen und Wochen ohne eigene Uhrzeit */
-  overdueNagTime?: string;
+  /** Rückfall für die Uhrzeit des Nachhakens in Tagen und Wochen ohne eigene Uhrzeit, solange die App keine eigene hat (Docker: STUPS_OVERDUE_NAG_TIME, sonst 18:00) */
+  defaultOverdueNagTime?: string;
   /** Eigene Konten mit Passwort (Betrieb ohne Home Assistant); ohne sie gibt es keine Routen für die Benutzerverwaltung */
   accounts?: Accounts;
   passkeys?: Passkeys;

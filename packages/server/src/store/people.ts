@@ -493,10 +493,18 @@ export function createPeople(c: Ctx, late: unknown) {
 
   function getSettings(): Settings {
     const get = (k: string) => (one('select value from settings where key = ?', k)?.value as string | undefined) ?? null;
-    return { dashboardPath: get('dashboardPath'), panelPath: get('panelPath'), defaultDueTime: get('defaultDueTime') ?? DEFAULT_DUE_TIME, dailySummaryTime: get('dailySummaryTime') };
+    return { dashboardPath: get('dashboardPath'), panelPath: get('panelPath'), defaultDueTime: get('defaultDueTime') ?? DEFAULT_DUE_TIME, dailySummaryTime: get('dailySummaryTime'), overdueNagTime: get('overdueNagTime') };
   }
 
-  function setSettings(patch: { dashboardPath?: string | null; panelPath?: string | null; defaultDueTime?: string | null; dailySummaryTime?: string | null }): Settings {
+  /** Eine Uhrzeit-Einstellung (HH:MM): undefined lässt sie, null löscht sie, alles andere muss die Form haben */
+  function putTimeSetting(key: string, time: string | null | undefined): void {
+    if (time === undefined) return;
+    if (time === null) run('delete from settings where key = ?', key);
+    else if (typeof time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)) putSetting(key, time);
+    else throw new ValidationError(t('Die Uhrzeit muss die Form HH:MM haben, zum Beispiel 09:00'));
+  }
+
+  function setSettings(patch: { dashboardPath?: string | null; panelPath?: string | null; defaultDueTime?: string | null; dailySummaryTime?: string | null; overdueNagTime?: string | null }): Settings {
     for (const key of ['dashboardPath', 'panelPath'] as const) {
       const value = patch[key];
       if (value === undefined) continue;
@@ -513,12 +521,8 @@ export function createPeople(c: Ctx, late: unknown) {
       else if (typeof time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)) putSetting('defaultDueTime', time);
       else throw new ValidationError(t('Die Uhrzeit muss die Form HH:MM haben, zum Beispiel 09:00'));
     }
-    if (patch.dailySummaryTime !== undefined) {
-      const time = patch.dailySummaryTime;
-      if (time === null) run('delete from settings where key = ?', 'dailySummaryTime');
-      else if (typeof time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)) putSetting('dailySummaryTime', time);
-      else throw new ValidationError(t('Die Uhrzeit muss die Form HH:MM haben, zum Beispiel 09:00'));
-    }
+    putTimeSetting('dailySummaryTime', patch.dailySummaryTime);
+    putTimeSetting('overdueNagTime', patch.overdueNagTime);
     return getSettings();
   }
 

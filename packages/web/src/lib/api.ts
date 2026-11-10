@@ -302,8 +302,10 @@ export interface Settings {
   dailySummaryTime: string | null;
   defaultDailySummaryTime: string;
   effectiveDailySummaryTime: string;
-  /** Uhrzeit, zu der ein Nachhaken in Tagen oder Wochen kommt, wenn nichts anderes gewählt ist */
-  overdueNagTime?: string;
+  /** Uhrzeit des Nachhakens in Tagen oder Wochen ohne eigene Uhrzeit, in der App eingestellt; null: die Standard-Uhrzeit gilt */
+  overdueNagTime: string | null;
+  defaultOverdueNagTime: string;
+  effectiveOverdueNagTime: string;
 }
 export interface TrashItem {
   type: 'board' | 'column' | 'category' | 'card';
@@ -824,7 +826,7 @@ export const api = {
   restore: (type: TrashItem['type'], id: string) => post<void>(`trash/${type}/${id}/restore`),
 
   settings: () => get<Settings>('settings'),
-  saveSettings: (b: Partial<{ dashboardPath: string | null; panelPath: string | null; defaultDueTime: string | null; dailySummaryTime: string | null }>) => put<Settings>('settings', b),
+  saveSettings: (b: Partial<{ dashboardPath: string | null; panelPath: string | null; defaultDueTime: string | null; dailySummaryTime: string | null; overdueNagTime: string | null }>) => put<Settings>('settings', b),
   haDashboards: () => get<HaDashboards>('ha/dashboards'),
   saveDashboard: (path: string | null) => put<void>('me/dashboard', { path }),
   testPush: (person: string) => post<{ sent: string[] }>('spike/test-push', { person }),

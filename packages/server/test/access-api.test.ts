@@ -187,7 +187,7 @@ describe('Einstellungen mit Wirkung auf alle', () => {
     expect(store.getSettings().panelPath).toBeNull();
     expect((await call(chef, 'PUT', '/api/settings', { panelPath: '/abc_stups' })).status).toBe(200);
     expect((await call(chef, 'PUT', '/api/settings', { dashboardPath: '/dashboard-handy' })).status).toBe(200);
-    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy', panelPath: '/abc_stups', defaultDueTime: '09:00', dailySummaryTime: null });
+    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy', panelPath: '/abc_stups', defaultDueTime: '09:00', dailySummaryTime: null, overdueNagTime: null });
   });
 
   it.each(['/\\evil.example', '//evil.example', 'https://evil.example', 'javascript:alert(1)', 'evil', '/a\\b', '/mit leerzeichen', '/x'.padEnd(201, 'a'), '/a://b'])(

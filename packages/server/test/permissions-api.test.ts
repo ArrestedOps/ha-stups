@@ -143,6 +143,7 @@ const ROUTES: Route[] = [
   // Einstellungen
   { name: 'Standard-Fälligkeitszeit', perm: 'settings', method: 'PUT', url: () => '/api/settings', payload: () => ({ defaultDueTime: '09:30' }), ok: 200 },
   { name: 'Tageszusammenfassung', perm: 'settings', method: 'PUT', url: () => '/api/settings', payload: () => ({ dailySummaryTime: '07:15' }), ok: 200 },
+  { name: 'Uhrzeit des Nachhakens', perm: 'settings', method: 'PUT', url: () => '/api/settings', payload: () => ({ overdueNagTime: '19:00' }), ok: 200 },
   { name: 'Symbole: Kandidaten', perm: 'settings', method: 'GET', url: () => '/api/icons/candidates', ok: 200 },
   { name: 'Symbole: anwenden', perm: 'settings', method: 'POST', url: () => '/api/icons/apply', payload: () => ({ items: [{ id: cardId, icon: 'dog' }] }), ok: 200 },
   { name: 'Fremde Vorlage löschen', perm: 'settings', method: 'DELETE', url: () => `/api/templates/${templateId}`, ok: 204 },

@@ -90,9 +90,9 @@ describe('Kommentare', () => {
 
 describe('Einstellungen', () => {
   it('speichert und liest Werte, mit Vorgaben', () => {
-    expect(store.getSettings()).toEqual({ dashboardPath: null, panelPath: null, defaultDueTime: '09:00', dailySummaryTime: null });
+    expect(store.getSettings()).toEqual({ dashboardPath: null, panelPath: null, defaultDueTime: '09:00', dailySummaryTime: null, overdueNagTime: null });
     store.setSettings({ dashboardPath: '/dashboard-handy/start', panelPath: '/c552c524_stups' });
-    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy/start', panelPath: '/c552c524_stups', defaultDueTime: '09:00', dailySummaryTime: null });
+    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy/start', panelPath: '/c552c524_stups', defaultDueTime: '09:00', dailySummaryTime: null, overdueNagTime: null });
     store.setSettings({ dashboardPath: null });
     expect(store.getSettings().dashboardPath).toBeNull();
     expect(store.getSettings().panelPath).toBe('/c552c524_stups');
@@ -106,6 +106,14 @@ describe('Einstellungen', () => {
     expect(store.getSettings().defaultDueTime).toBe('07:30');
     store.setSettings({ defaultDueTime: null });
     expect(store.getSettings().defaultDueTime).toBe('09:00');
+  });
+
+  it('Uhrzeit des Nachhakens: eigene Uhrzeit, nur HH:MM, null stellt den Standard wieder her', () => {
+    expect(store.getSettings().overdueNagTime).toBeNull();
+    expect(store.setSettings({ overdueNagTime: '20:15' }).overdueNagTime).toBe('20:15');
+    for (const bad of ['25:00', '9:00', 'abc', '']) expect(() => store.setSettings({ overdueNagTime: bad }), bad).toThrow(ValidationError);
+    expect(store.getSettings().overdueNagTime).toBe('20:15');
+    expect(store.setSettings({ overdueNagTime: null }).overdueNagTime).toBeNull();
   });
 
   it('verlangt Pfade, die mit / beginnen', () => {

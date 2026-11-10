@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { WatcherEditor } from '../lib/watcher-editor.svelte';
+  import type { SavedWatcher } from '../lib/watcher-types';
   import type { TemplateDraft } from '../lib/watcher-types';
   import WatcherFlow from './WatcherFlow.svelte';
   import WatcherWizard from './WatcherWizard.svelte';
@@ -8,17 +9,28 @@
   /**
    * Der Wächter-Editor. Ein vorhandener Wächter (`id`) öffnet als Ablauf (WaechterC), ein neuer als Assistent in vier Schritten (WaechterB bis B4).
    * `template`: Kennung einer Vorlage, die gleich angewendet wird; `hit`: der Treffer aus „Gefunden“ (Entität schon gewählt).
+   * `personIds`, `onsaved`, `onback`: nur die Einrichtung beim ersten Start (Personen vorgewählt, was nach dem Speichern und beim Schließen geschieht).
    * Hier laufen die Abfragen, die sich nach dem Formular richten (Board, Verlauf der Entität, Reihenfolge); die Bilder stehen in den Kindern.
    */
   let {
     id,
     template = undefined,
     hit = undefined,
-  }: { id: string | null; template?: string; hit?: { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft } } = $props();
+    personIds = undefined,
+    onsaved = undefined,
+    onback = undefined,
+  }: {
+    id: string | null;
+    template?: string;
+    hit?: { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft };
+    personIds?: string[];
+    onsaved?: (saved: SavedWatcher) => void;
+    onback?: () => void;
+  } = $props();
 
   // svelte-ignore state_referenced_locally
-  const ed = new WatcherEditor(id);
-  onMount(() => void ed.load(template, hit));
+  const ed = new WatcherEditor(id, { onsaved, onback });
+  onMount(() => void ed.load(template, hit, personIds));
 
   // Spalten und Kategorien des gewählten Boards
   $effect(() => {

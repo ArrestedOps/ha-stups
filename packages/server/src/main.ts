@@ -134,6 +134,8 @@ const gateways = [
   house,
 ].filter((g): g is PushGateway => g !== null);
 const push = withChannel(betaGate.gatePush(combinePush(gateways)), names);
+// Für die Testnachricht der Einrichtung: derselbe Weg, aber ohne das Tor der Beta
+const testPush = withChannel(combinePush(gateways), names);
 const notifier = createNotifier({
   store,
   push,
@@ -286,6 +288,8 @@ await app.register(spikeRoutes, { options: liveOptions, ha, now: () => new Date(
 await app.register(apiRoutes, {
   store,
   noOnboarding: runtime.identity.devNoOnboarding,
+  testPush,
+  timeZone: () => timeZone,
   bus,
   notifier,
   // Ohne Verbindung zu Home Assistant gibt es keinen Client: sonst wartet jede Anfrage, die ihn fragt (Personen & Zugriff,

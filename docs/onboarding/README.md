@@ -1,6 +1,6 @@
 # Onboarding für Stups: Übergabe
 
-Diese Datei ist die vollständige Aufgabenbeschreibung für einen Agenten, der das Onboarding baut. Lies sie ganz, bevor du etwas änderst. Sprache von Texten in der App: Deutsch ist die Quelle, Englisch kommt über die Übersetzungsdateien (siehe „Texte“).
+**Stand: Abschnitt 11 geht den Abschnitten 3.2 bis 3.5 vor (Änderungen nach dem ersten Test).** Diese Datei ist die vollständige Aufgabenbeschreibung für einen Agenten, der das Onboarding baut. Lies sie ganz, bevor du etwas änderst. Sprache von Texten in der App: Deutsch ist die Quelle, Englisch kommt über die Übersetzungsdateien (siehe „Texte“).
 
 ## 1. Ziel
 
@@ -156,10 +156,14 @@ Fertig, wenn: (1) alle Leitregeln aus Abschnitt 1 nachweisbar erfüllt sind, (2)
 
 Weitere Fragen, die beim Bauen auftauchen: kurz beim Projektinhaber nachfragen, nicht raten.
 
-## 11. Umsetzung: Abweichungen vom Text (1.40.1-beta.6)
+## 11. Umsetzung und Änderungen nach dem ersten Test (ab 1.40.1-beta.7)
 
-- **Gemeinsame Funktion statt Auslagerung aus `FoundSheet`:** „Einrichten“ in `FoundSheet` legt nichts an, es öffnet den Assistenten. Die gemeinsame Vorbelegung steckt in `applyTemplate` (`lib/watchers.ts`); `lib/watcherFromHit.ts` baut darauf den fertigen Wächter fürs Onboarding. `FoundSheet` blieb unverändert.
-- **Testnachricht, Hinweis:** Auf dem iPhone erscheinen die Knöpfe, wenn man die Nachricht **gedrückt hält** (Rückmeldung des Projektinhabers). Der Text lautet deshalb „Auf dem iPhone die Nachricht gedrückt halten, dann erscheint Erledigt. Bei Android ziehst du sie nach unten auf.“ statt „nach links wischen und Ansicht“; die Vorschau sagt, dass sie den gedrückten Zustand zeigt.
-- **Wann sie erscheint, Mitglieder:** Mitglieder und Kinder sehen die Kurzfassung (3.6) beim ersten Start auch in einer vollen Installation, nur der Administrator braucht dafür eine neue Installation (oder gespeicherten Fortschritt). Sonst gäbe es die Kurzfassung für die Personen, die der Administrator im Onboarding anlegt, nie.
-- **Probelauf:** eine Zeile mit dem Satz des Servers (`DryRunResult.sentence`), nur mit Verlauf; `DryRunPanel` selbst ist nicht eingebunden (er braucht ein Formular und zeigt Fehler, hier soll die Zeile dann fehlen).
-- **Pegel-Wächter und `metNow`:** der Server legt Pegel-Wächter (Batterie …) bei erfüllter Bedingung schon selbst sofort an und meldet `metNow` nur für den Rest; das Onboarding fragt nie nach.
+Die Rückmeldungen des Projektinhabers zur ersten Fassung gehen den Abschnitten 3.2 bis 3.5 vor. Das Mockup dazu steht als Canvas „Stups Onboarding 2“ auf claude.ai (privat). Stand:
+
+- **Administrator ist keine Person.** Er steht nicht in der Liste, nicht bei den Zuständigen und nicht im Dashboard. „Mich auch hinzufügen" (Schalter) macht ihn zur Person. Ist er schon eine Person, steht er als „Du" in der Liste.
+- **Personen:** kompakte Zeilen mit Schalter und Handy-Stand. „Wer ist ein Kind?" ist ein eigener Abschnitt mit Chips (wächst mit der Zahl der Personen); ab sieben Personen drei Spalten am Desktop. Kein „Gast": das war nur ein Platzhalter für eine abgeschaltete Person aus Home Assistant.
+- **Wächter 1:1 wie in der App:** `FoundList.svelte` (der Inhalt von „Gefunden", auch im Fenster `FoundSheet`) und danach derselbe Assistent `WatcherSheet` (Handy) bzw. derselbe Editor `WatcherDesk` (Desktop, als großes Fenster über der Einrichtung). Anders sind nur: „Wer kommt infrage?" ist mit den Personen aus dem ersten Schritt ohne Kinder vorgewählt (`personIds`), und nach „Wächter anlegen" geht es mit dem Test weiter (`onsaved`/`onback` am `WatcherEditor`). Dazu gehört auch die Rückfrage der App, wenn die Bedingung schon gilt. Nichts wird mehr automatisch angelegt; `lib/watcherFromHit.ts` und die Rangfolge der Treffer entfielen.
+- **Testnachricht:** genau die Nachricht, die eine neue Karte eines Wächters auf dem Handy zeigt: Kartentitel (mit Gerätenamen), „Neue Karte für dich · fällig …", **nur der Knopf Erledigt** (er erscheint auf dem iPhone beim Gedrückthalten; „Später" gibt es nur bei einem Stups, die frühere Angabe in 3.4 war falsch). Das Symbol ist das von Home Assistant (Companion App). Der Administrator wählt, an wessen Handy sie geht (`POST /api/push/test` mit `personId`, nur für Administratoren); sie geht am Tor der Beta vorbei.
+- **Fertig:** ohne erste Aufgabe und ohne Dashboard-Knopf (der braucht die Bubble Card und YAML von Hand und bleibt in den Einstellungen).
+- **Mitglieder** sehen die Kurzfassung (3.6) beim ersten Start auch in einer vollen Installation, nur der Administrator braucht dafür eine neue Installation (oder gespeicherten Fortschritt).
+- **Pegel-Wächter und `metNow`:** Der Server legt Pegel-Wächter (Batterie …) bei erfüllter Bedingung schon selbst sofort an; für den Rest fragt der Editor der App wie sonst auch.

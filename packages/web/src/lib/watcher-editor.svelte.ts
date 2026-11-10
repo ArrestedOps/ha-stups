@@ -62,16 +62,20 @@ export class WatcherEditor {
   private orderSeq = 0;
   private viewSeq = 0;
 
-  /** Desktop (Formular über der Liste): Was nach dem Speichern geschieht, statt das Fenster zu schließen (`back`) */
+  /** Desktop (Formular über der Liste) und Einrichtung: Was nach dem Speichern geschieht, statt das Fenster zu schließen (`back`) */
   private readonly onsaved: ((saved: SavedWatcher) => void) | undefined;
+  /** Einrichtung beim ersten Start: wohin „Schließen" und „Zurück" am Anfang führen (sonst Reiter, Einstellungen oder „Gefunden") */
+  private readonly onback: (() => void) | undefined;
 
-  constructor(id: string | null, opts: { onsaved?: (saved: SavedWatcher) => void } = {}) {
+  constructor(id: string | null, opts: { onsaved?: (saved: SavedWatcher) => void; onback?: () => void } = {}) {
     this.id = id;
     this.onsaved = opts.onsaved;
+    this.onback = opts.onback;
   }
 
   /** Aus Einstellungen › Wächter geht es dorthin zurück; aus dem Reiter Wächter schließt es das Fenster, von anderswo geht es in die Einstellungen */
   back = (): void => {
+    if (this.onback) return this.onback();
     const fromSettings = ui.sheet?.type === 'watcher' && ui.sheet.from === 'settings';
     if (!fromSettings && ui.tab === 'watchers') closeSheet();
     else openSettings('watchers');
@@ -79,7 +83,8 @@ export class WatcherEditor {
 
   personName = (pid: string): string => ui.people.find((p) => p.id === pid)?.displayName ?? '?';
 
-  async load(template: string | undefined, hit: Hit | undefined): Promise<void> {
+  /** `personIds`: wer bei „Wer kommt infrage?" schon gewählt ist (die Einrichtung wählt die Personen vor, die im ersten Schritt dabei sind) */
+  async load(template: string | undefined, hit: Hit | undefined, personIds?: string[]): Promise<void> {
     try {
       if (this.id) {
         const res = await api.watchers();
@@ -105,6 +110,7 @@ export class WatcherEditor {
     this.loading = false;
     const wanted = !this.id && template ? this.templates.find((x) => x.id === template) : undefined;
     if (wanted) this.applyTemplate(wanted, hit);
+    if (!this.id && personIds && personIds.length > 0) this.form.personIds = personIds;
   }
 
   // ---------- Vom Server nachladen (die Oberfläche ruft sie aus ihren Effekten auf) ----------
@@ -240,6 +246,7 @@ export class WatcherEditor {
 
   /** Den Assistenten am Anfang verlassen: aus „Gefunden" dorthin zurück, sonst wie Schließen */
   leave(): void {
+    if (this.onback) return this.onback();
     if (ui.sheet?.type === 'watcher' && ui.sheet.from === 'found') openSheet({ type: 'found' });
     else this.back();
   }

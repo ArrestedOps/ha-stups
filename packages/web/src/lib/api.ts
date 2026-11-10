@@ -829,7 +829,7 @@ export const api = {
   saveDashboard: (path: string | null) => put<void>('me/dashboard', { path }),
   testPush: (person: string) => post<{ sent: string[] }>('spike/test-push', { person }),
   /** Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (Container) */
-  testPushOwn: (b?: { kind: 'onboarding'; title?: string; body?: string }) => post<{ sent: boolean }>('push/test', b),
+  testPushOwn: (b?: { kind: 'onboarding'; cardTitle?: string; personId?: string }) => post<{ sent: boolean }>('push/test', b),
   /** Einrichtung beim ersten Start: „fertig" oder „übersprungen" setzen, nochmal durchgehen (löschen), Schritt und Auswahl merken */
   setOnboarding: (status: 'done' | 'skipped') => put<void>('me/onboarding', { status }),
   resetOnboarding: () => del('me/onboarding'),

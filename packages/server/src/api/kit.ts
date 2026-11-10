@@ -32,6 +32,10 @@ export interface ApiDeps {
   store: Store;
   /** Nur für Browser-Tests (DEV_NO_ONBOARDING): die Einrichtung erscheint nie */
   noOnboarding?: boolean;
+  /** Push-Weg ohne das Tor der Beta, nur für die Testnachricht der Einrichtung (eine Nachricht an eine Person) */
+  testPush?: PushGateway;
+  /** Zeitzone für Zeiten in Nachrichten (Add-on: die von Home Assistant) */
+  timeZone?: () => string;
   /** Looks up the <title> of a page. Injected so tests need no network. */
   fetchTitle?: (url: string) => Promise<string | null>;
   /** Löst Google-Kurzlinks auf; null = nichts zu tun */

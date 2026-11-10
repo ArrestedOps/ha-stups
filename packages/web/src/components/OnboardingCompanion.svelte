@@ -10,8 +10,8 @@
   const label = (store: string) => (name ? t('{store}: Companion App für {name}', { store, name }) : t('{store}: Companion App installieren', { store }));
 </script>
 
-<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13.5px]" data-testid="companion-links">
-  <span class="font-semibold text-fg2">{t('Companion App installieren')}:</span>
-  <a class="inline-flex min-h-11 items-center font-semibold text-accent-text underline underline-offset-2" href={COMPANION_APP_LINKS.ios} target="_blank" rel="noopener noreferrer" aria-label={label('App Store')}>{t('iPhone (App Store)')}</a>
-  <a class="inline-flex min-h-11 items-center font-semibold text-accent-text underline underline-offset-2" href={COMPANION_APP_LINKS.android} target="_blank" rel="noopener noreferrer" aria-label={label('Google Play')}>{t('Android (Google Play)')}</a>
+<p class="flex flex-wrap items-center gap-x-3 text-[13px]" data-testid="companion-links">
+  <span class="text-fg2">{t('Companion App installieren')}:</span>
+  <a class="inline-flex min-h-8 items-center font-semibold text-accent-text underline underline-offset-2" href={COMPANION_APP_LINKS.ios} target="_blank" rel="noopener noreferrer" aria-label={label('App Store')}>{t('iPhone (App Store)')}</a>
+  <a class="inline-flex min-h-8 items-center font-semibold text-accent-text underline underline-offset-2" href={COMPANION_APP_LINKS.android} target="_blank" rel="noopener noreferrer" aria-label={label('Google Play')}>{t('Android (Google Play)')}</a>
 </p>

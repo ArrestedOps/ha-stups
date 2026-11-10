@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest';
 import {
   assigneeIds,
   buildCandidates,
+  childChoices,
   COMPANION_APP_LINKS,
   defaultSelection,
   matchDevices,
   nextOpenStep,
   progressOf,
-  rankHits,
   stepsFor,
   toggleSelection,
+  visibleCandidates,
 } from '../src/lib/onboarding';
-import type { WatcherSuggestion } from '../src/lib/watcher-types';
 
 describe('Onboarding: Schritte je Rolle', () => {
   it('Administrator mit allem: Willkommen, Personen, Wächter, Test, Fertig', () => {
@@ -68,18 +68,21 @@ describe('Onboarding: Handys den Personen zuordnen', () => {
 describe('Onboarding: Personen im Schritt „Wer wohnt hier?"', () => {
   const me = { id: 'u-me', haUserId: 'ha-me', displayName: 'Rene', name: 'rene', isPerson: false, isChild: false, color: null, notifyServices: [], ntfy: false } as never;
   const anna = { id: 'p-anna', haUserId: 'ha-anna', displayName: 'Anna', name: 'anna', isPerson: true, isChild: false, color: '#f90', notifyServices: ['mobile_app_annas_iphone'], ntfy: false } as never;
-  const haPersons = [{ name: 'Ben', userId: 'ha-ben' }, { name: 'Gast', userId: null }];
+  const haPersons = [{ name: 'Ben', userId: 'ha-ben' }, { name: 'Tom', userId: null }];
   const services = ['mobile_app_rene_iphone', 'mobile_app_ben_pixel', 'mobile_app_ben_tablet'];
 
-  it('Du steht oben; bestehende Personen, dann die aus Home Assistant; alle vorgewählt', () => {
+  it('bestehende Personen, dann die aus Home Assistant; der Administrator ist keine Person und steht nur auf Wunsch dabei', () => {
     const c = buildCandidates({ me, people: [anna], haPersons, services });
     expect(c.map((x) => [x.key, x.name, x.self])).toEqual([
       ['self', 'Rene', true],
       ['p:p-anna', 'Anna', false],
       ['ha:ha-ben', 'Ben', false],
-      ['ha:Gast', 'Gast', false],
+      ['ha:Tom', 'Tom', false],
     ]);
-    expect(defaultSelection(c)).toEqual(['self', 'p:p-anna', 'ha:ha-ben', 'ha:Gast']);
+    expect(visibleCandidates(c, false).map((x) => x.key)).toEqual(['p:p-anna', 'ha:ha-ben', 'ha:Tom']);
+    expect(visibleCandidates(c, true).map((x) => x.key)).toEqual(['self', 'p:p-anna', 'ha:ha-ben', 'ha:Tom']);
+    expect(defaultSelection(c, false)).toEqual(['p:p-anna', 'ha:ha-ben', 'ha:Tom']);
+    expect(defaultSelection(c, true)).toEqual(['self', 'p:p-anna', 'ha:ha-ben', 'ha:Tom']);
   });
 
   it('Du steht nicht noch einmal als Person aus Home Assistant da (gleiche Benutzer-Id oder gleicher Name)', () => {
@@ -100,45 +103,29 @@ describe('Onboarding: Personen im Schritt „Wer wohnt hier?"', () => {
     expect(by['self']).toMatchObject({ phone: 'found', device: 'mobile_app_rene_iphone' });
     expect(by['p:p-anna']).toMatchObject({ phone: 'found', device: 'mobile_app_annas_iphone', deviceNew: false });
     expect(by['ha:ha-ben']).toMatchObject({ phone: 'missing', device: null, choices: ['mobile_app_ben_pixel', 'mobile_app_ben_tablet'] });
-    expect(by['ha:Gast']).toMatchObject({ phone: 'missing', device: null, choices: [] });
+    expect(by['ha:Tom']).toMatchObject({ phone: 'missing', device: null, choices: [] });
     expect(by['self']!.deviceNew).toBe(true);
   });
 
-  it('Du kann nicht abgewählt werden; die anderen schon', () => {
+  it('antippen wählt an oder ab, die Reihenfolge der Liste bleibt', () => {
     const c = buildCandidates({ me, people: [anna], haPersons, services });
-    const all = defaultSelection(c);
-    expect(toggleSelection(all, 'self', c)).toEqual(all);
-    expect(toggleSelection(all, 'ha:Gast', c)).toEqual(['self', 'p:p-anna', 'ha:ha-ben']);
-    expect(toggleSelection(['self'], 'ha:Gast', c)).toEqual(['self', 'ha:Gast']);
+    const all = defaultSelection(c, false);
+    expect(toggleSelection(all, 'ha:Tom', c)).toEqual(['p:p-anna', 'ha:ha-ben']);
+    expect(toggleSelection(['p:p-anna'], 'ha:Tom', c)).toEqual(['p:p-anna', 'ha:Tom']);
+    expect(toggleSelection(['ha:Tom'], 'p:p-anna', c)).toEqual(['p:p-anna', 'ha:Tom']);
   });
 
-  it('Zuständige des Wächters: die gewählten Personen ohne Kinder; gibt es nur Kinder, dann diese', () => {
-    const ids = { self: 'u-me', 'p:p-anna': 'p-anna', 'ha:ha-ben': 'p-ben' };
-    expect(assigneeIds(['self', 'p:p-anna', 'ha:ha-ben'], ids, new Set(['ha:ha-ben']))).toEqual(['u-me', 'p-anna']);
-    expect(assigneeIds(['self', 'p:p-anna'], ids, new Set(['self', 'p:p-anna']))).toEqual(['u-me', 'p-anna']);
-    expect(assigneeIds(['self'], ids, new Set())).toEqual(['u-me']);
-    // wer noch nicht angelegt wurde (keine Id), fehlt
-    expect(assigneeIds(['self', 'ha:Gast'], ids, new Set())).toEqual(['u-me']);
-  });
-});
-
-describe('Onboarding: der beste Treffer', () => {
-  const hit = (templateId: string, n: number): WatcherSuggestion => ({ templateId, entityId: `sensor.${templateId}_${n}`, name: `${templateId} ${n}`, reason: '', variant: 'default' });
-
-  it('Reihenfolge: Waschmaschine, Trockner, Spülmaschine, Müll, Batterie, Rest', () => {
-    const items = [hit('battery', 1), hit('vacuum', 1), hit('bins', 1), hit('dryer', 1), hit('dishwasher', 1), hit('washer', 1)];
-    const { best, others } = rankHits(items);
-    expect(best?.templateId).toBe('washer');
-    expect(others.map((x) => x.templateId)).toEqual(['dryer', 'dishwasher']);
+  it('„Wer ist ein Kind?": die gewählten Personen, nie der Administrator', () => {
+    const c = buildCandidates({ me, people: [anna], haPersons, services });
+    expect(childChoices(c, ['self', 'p:p-anna', 'ha:Tom']).map((x) => x.key)).toEqual(['p:p-anna', 'ha:Tom']);
+    expect(childChoices(c, [])).toEqual([]);
   });
 
-  it('höchstens zwei weitere; gleiche Rangzahl bleibt in der Reihenfolge des Servers', () => {
-    const { best, others } = rankHits([hit('battery', 1), hit('battery', 2), hit('battery', 3), hit('battery', 4)]);
-    expect([best?.entityId, ...others.map((x) => x.entityId)]).toEqual(['sensor.battery_1', 'sensor.battery_2', 'sensor.battery_3']);
-  });
-
-  it('ohne Treffer: nichts', () => {
-    expect(rankHits([])).toEqual({ best: null, others: [] });
+  it('Wer im Assistenten infrage kommt: die gewählten Personen ohne Kinder; gibt es nur Kinder, dann diese', () => {
+    expect(assigneeIds(['a', 'b', 'c'], ['c'])).toEqual(['a', 'b']);
+    expect(assigneeIds(['a', 'b'], ['a', 'b'])).toEqual(['a', 'b']);
+    expect(assigneeIds(['a'], [])).toEqual(['a']);
+    expect(assigneeIds([], [])).toEqual([]);
   });
 });
 

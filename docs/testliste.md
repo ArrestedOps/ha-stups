@@ -584,17 +584,20 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 - [ ] Wächter-Namen: kein „Namen mit Gerät ergänzen“ mehr; neue Wächter heißen wie die Vorlage, die Karte „Titel: Entität“; alte Gerätenamen sind einmalig weg
 - [ ] Datenbank: Migration 27 (vorher Sicherung); Bestandsboards bleiben für alle sichtbar
 
-## 40 · Einrichtung beim ersten Start (seit 1.40.1-beta.6)
+## 40 · Einrichtung beim ersten Start (seit 1.40.1-beta.6, überarbeitet in beta.7)
 
-Nur auf einer **frischen** Installation (oder über Einstellungen › Hilfe und Daten › „Einrichtung nochmal durchgehen“). Eine Bestandsinstallation zeigt sie nicht von selbst.
+Nur auf einer **frischen** Installation (oder über Einstellungen › Hilfe und Daten › „Einrichtung nochmal durchgehen“). Eine Bestandsinstallation zeigt sie nicht von selbst. Achtung bei der Beta: Sie muss aus dem Repository `…/ha-stups#beta` kommen (nicht aus `main`, dort liegt eine ältere Beta).
 
-- [ ] **Testnachricht kommt an:** Im Schritt „Probier es gleich aus“ auf „Testnachricht senden“ tippen. Die Nachricht erscheint auf dem iPhone mit dem Titel des Wächters (oder „Waschmaschine fertig“) und deinem Vornamen im Text
-- [ ] **Erledigt-Knopf:** Die Nachricht gedrückt halten: Die Knöpfe **Erledigt** und **Später** erscheinen. Ein Tipp darauf ändert nichts (es ist nur der Test); die Nachricht verschwindet
-- [ ] **Ohne Handy:** Bei einer Person ohne Companion App steht „Kein Handy gefunden“ mit den Links zum App Store und zu Google Play; beide öffnen **außerhalb** von Stups (neuer Tab bzw. Browser)
+- [ ] **Administrator ist keine Person:** In „Wer wohnt hier?“ steht er nicht in der Liste und später nirgends bei Personen oder im Dashboard. Mit „Mich auch hinzufügen“ erscheint er als „Du“
+- [ ] **Kinder:** Unter „Wer ist ein Kind?“ lassen sich die Kinder antippen; ein Kind sieht danach nur die ihm zugewiesenen Aufgaben
+- [ ] **Wächter wie in der App:** Der Schritt zeigt dieselbe „Gefunden“-Liste. „Einrichten“ öffnet denselben Assistenten (am Desktop denselben Editor) wie unter Wächter; „Wer kommt infrage?“ ist mit den gewählten Personen (ohne Kinder) vorbelegt; nach „Wächter anlegen“ geht es weiter
+- [ ] **Testnachricht kommt an:** Empfänger wählen, „Testnachricht an … senden“. Sie erscheint auf dem iPhone mit dem Symbol von Home Assistant, dem Kartentitel und „Neue Karte für dich · fällig …“. Das gilt auch in der Beta mit ausgeschaltetem Push
+- [ ] **Erledigt-Knopf:** Die Nachricht gedrückt halten: Es gibt nur **Erledigt** (kein „Später“). Ein Tipp darauf ändert nichts (es ist nur der Test)
+- [ ] **Ohne Handy:** Bei einer Person ohne Companion App steht „Kein Handy gefunden“ mit den Links zum App Store und zu Google Play; beide öffnen **außerhalb** von Stups
 - [ ] **Abbruch und Wiederaufnahme:** Mitten in der Einrichtung die App schließen und neu öffnen (oder am Desktop öffnen): Sie macht beim selben Schritt weiter, die Personen stehen nicht doppelt in der Liste
-- [ ] **Überspringen:** „Überspringen“ im ersten Schritt öffnet die App normal; sie erscheint danach nicht wieder
+- [ ] **Überspringen:** „Überspringen“ im ersten Schritt, „Ohne Wächter weiter“ und „Ohne Test weiter“ funktionieren; die Einrichtung erscheint danach nicht wieder
 - [ ] **Mitglied:** Wer als Person ohne Administrator zum ersten Mal öffnet, sieht nur „Handy verbinden“ und „Farbe wählen“, ein Kind nur „Handy verbinden“
-- [ ] **Dunkel und hell, Handy und Desktop:** alle Texte gut lesbar, Knöpfe lassen sich mit dem Daumen treffen, am Desktop steht die Vorschau der Nachricht rechts
+- [ ] **Dunkel und hell, Handy und Desktop:** alle Texte gut lesbar; am Desktop passt jeder Schritt in den Dialog (der Wächter-Editor öffnet größer darüber)
 
 ## Bekannte Lücken
 

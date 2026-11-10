@@ -1,27 +1,29 @@
 import { api, ApiError, type AccessInfo, type User } from './api';
+import { cardTitleWithEntity } from './cardTitle';
+import { formatDue } from './datetime';
 import { t } from './i18n/index.svelte';
 import {
+  assigneeIds,
   buildCandidates,
   defaultSelection,
   matchDevices,
   nextOpenStep,
-  rankHits,
   stepsFor,
   toggleSelection,
   type Candidate,
   type Step,
 } from './onboarding';
 import { can, feat, refresh, toast, ui } from './store.svelte';
-import type { DryRunResult, WatcherSuggestion, WatcherTemplate } from './watcher-types';
-import { defaultColumnId, watcherFormFromHit, watcherInputFromHit } from './watcherFromHit';
+import type { SavedWatcher } from './watcher-types';
 
 /**
  * Einrichtung beim ersten Start (docs/onboarding/README.md): der Zustand und die Aufrufe hinter Onboarding.svelte.
  * Alles, was sich ohne Oberfläche entscheiden lässt, steht in onboarding.ts (mit Tests). Der Fortschritt (Schritt und Auswahl) liegt auf dem
- * Server, pro Person: Ein Abbruch auf dem Handy lässt sich am Desktop weiterführen.
+ * Server, pro Person: Ein Abbruch auf dem Handy lässt sich am Desktop weiterführen. Der Wächter selbst entsteht im Assistenten (Handy) bzw.
+ * im Editor (Desktop) der App, unverändert (OnboardingWatcher.svelte); hier steht nur, was danach zählt.
  */
 
-export type TestState = 'idle' | 'sending' | 'sent' | 'nopath' | 'failed';
+export type TestState = 'idle' | 'sending' | 'sent' | 'failed';
 
 export const ob = $state({
   step: 'welcome' as Step,
@@ -35,35 +37,27 @@ export const ob = $state({
   selected: [] as string[],
   /** Schlüssel der Personen mit der Rolle Kind */
   children: [] as string[],
-  /** Ids der Personen in Stups, nachdem sie gespeichert sind (für den Wächter und für Wiederaufnahme) */
+  /** „Mich auch hinzufügen": der Administrator ist sonst keine Person und kommt nirgends vor */
+  includeSelf: false,
+  /** Ids der Personen in Stups, nachdem sie gespeichert sind (für den Assistenten und für Wiederaufnahme) */
   personIds: [] as string[],
   childIds: [] as string[],
   peopleNames: [] as string[],
   peopleDone: false,
   // --- Wächter ---
-  loadingHits: false,
-  hits: null as WatcherSuggestion[] | null,
-  hitsError: false,
-  templates: [] as WatcherTemplate[],
-  /** Kennungen der Entitäten, deren Wächter eingeschaltet werden */
-  on: [] as string[],
-  dry: null as DryRunResult | null,
   watcherNames: [] as string[],
   watcherCards: [] as string[],
-  created: [] as string[],
   watchersDone: false,
   // --- Test ---
+  /** Die Person, an deren Handy die Testnachricht geht (der Administrator ist keine Person und wählt) */
+  testTo: null as string | null,
   test: 'idle' as TestState,
   testDone: false,
-  // --- Fertig ---
-  quickTitle: '',
 });
 
 /** Welche Schritte es für diese Person gibt */
 export const stepsNow = (): Step[] =>
   stepsFor({ isAdmin: ui.isAdmin && !ui.isChild, isChild: ui.isChild }, { people: feat.ha, watcher: feat.watchers && feat.ha && can('watchers') });
-
-const firstName = (u: { displayName: string } | null): string => u?.displayName.trim().split(/\s+/)[0] ?? '';
 
 // ---------- Anfang, Weiter, Zurück ----------
 
@@ -72,30 +66,27 @@ export function begin(): void {
   const progress = ui.onboarding.progress;
   const sel = (progress?.selection ?? {}) as Record<string, unknown>;
   const list = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+  Object.assign(ob, { busy: false, info: null, candidates: [], selected: [], children: [], testTo: null });
+  ob.includeSelf = sel.includeSelf === true || ui.me?.isPerson === true;
   ob.personIds = list(sel.personIds);
   ob.childIds = list(sel.childIds);
   ob.peopleNames = list(sel.peopleNames);
   ob.peopleDone = sel.peopleDone === true;
-  ob.on = list(sel.on);
-  ob.created = list(sel.created);
   ob.watcherNames = list(sel.watcherNames);
   ob.watcherCards = list(sel.watcherCards);
   ob.watchersDone = sel.watchersDone === true;
   ob.testDone = sel.testDone === true;
   ob.test = ob.testDone ? 'sent' : 'idle';
-  // Eine frühere Runde (Einstellungen › „Einrichtung nochmal durchgehen") hinterlässt nichts
-  Object.assign(ob, { busy: false, info: null, candidates: [], selected: [], children: [], hits: null, hitsError: false, dry: null, quickTitle: '' });
   ob.step = nextOpenStep(stepsNow(), progress?.step);
 }
 
 function snapshot(): Record<string, unknown> {
   return {
+    includeSelf: ob.includeSelf,
     personIds: ob.personIds,
     childIds: ob.childIds,
     peopleNames: ob.peopleNames,
     peopleDone: ob.peopleDone,
-    on: ob.on,
-    created: ob.created,
     watcherNames: ob.watcherNames,
     watcherCards: ob.watcherCards,
     watchersDone: ob.watchersDone,
@@ -112,8 +103,7 @@ export function go(step: Step): void {
 
 export function next(): void {
   const steps = stepsNow();
-  const i = steps.indexOf(ob.step);
-  const to = steps[i + 1];
+  const to = steps[steps.indexOf(ob.step) + 1];
   if (to) go(to);
 }
 
@@ -172,11 +162,11 @@ export async function loadPeople(): Promise<void> {
     ob.candidates = buildCandidates({ me, people: info.people, haPersons: info.haPersons, services: info.services ?? [] });
     if (ob.personIds.length > 0) {
       const chosen = new Set(ob.personIds);
-      ob.selected = ob.candidates.filter((c) => c.self || (c.personId && chosen.has(c.personId))).map((c) => c.key);
+      ob.selected = ob.candidates.filter((c) => c.personId && chosen.has(c.personId)).map((c) => c.key);
       ob.children = ob.candidates.filter((c) => c.personId && ob.childIds.includes(c.personId)).map((c) => c.key);
     } else {
-      ob.selected = defaultSelection(ob.candidates);
-      ob.children = ob.candidates.filter((c) => c.isChild).map((c) => c.key);
+      ob.selected = defaultSelection(ob.candidates, ob.includeSelf);
+      ob.children = ob.candidates.filter((c) => !c.self && c.isChild).map((c) => c.key);
     }
   } catch (e) {
     toast(e instanceof ApiError ? e.message : t('Keine Verbindung zu Home Assistant'), { tone: 'error' });
@@ -186,10 +176,18 @@ export async function loadPeople(): Promise<void> {
 
 export const togglePerson = (key: string): void => {
   ob.selected = toggleSelection(ob.selected, key, ob.candidates);
+  ob.children = ob.children.filter((k) => ob.selected.includes(k));
 };
 
 export function toggleChild(key: string): void {
   ob.children = ob.children.includes(key) ? ob.children.filter((k) => k !== key) : [...ob.children, key];
+}
+
+/** „Mich auch hinzufügen": der Administrator wird eine Person und steht dann in der Liste und bei den Zuständigen */
+export function toggleSelf(on: boolean): void {
+  ob.includeSelf = on;
+  const rest = ob.selected.filter((k) => k !== 'self');
+  ob.selected = on ? ob.candidates.map((c) => c.key).filter((k) => k === 'self' || rest.includes(k)) : rest;
 }
 
 /** Gespeichert wird erst beim Weiter: ein Aufruf je neue Person, ein weiterer für Handy und Rolle (bestehende Personen werden nicht doppelt angelegt) */
@@ -227,86 +225,18 @@ export async function savePeople(): Promise<boolean> {
 
 // ---------- Wächter ----------
 
-const householdBoard = () => ui.boards.find((b) => b.visibility === 'all') ?? ui.boards[0] ?? null;
-
-/** Die Treffer laden und den Probelauf für den besten rechnen */
-export async function loadHits(): Promise<void> {
-  if (ob.loadingHits) return;
-  ob.loadingHits = true;
-  ob.hitsError = false;
-  try {
-    ob.templates = (await api.watcherTemplates().catch(() => [])).filter((x) => x.kind === 'watcher');
-    const r = await api.watcherSuggestions();
-    ob.hits = r.items;
-    const { best, others } = rankHits(r.items);
-    if (best && ob.on.length === 0) ob.on = [best, ...others].map((h) => h.entityId);
-    ob.dry = null;
-    if (best) void dryRunFor(best);
-  } catch {
-    // Keine Verbindung zu Home Assistant oder nichts gefunden: freundlicher Leerzustand, Weiter bleibt möglich
-    ob.hits = [];
-    ob.hitsError = true;
-  }
-  ob.loadingHits = false;
-}
-
-const templateOf = (h: WatcherSuggestion): WatcherTemplate | undefined => ob.templates.find((x) => x.id === h.templateId);
-
-async function dryRunFor(h: WatcherSuggestion): Promise<void> {
-  const board = householdBoard();
-  const template = templateOf(h);
-  if (!board || !template) return;
-  try {
-    // Für den Probelauf zählt nur die Regel (Auslöser und Wartezeit); die Spalte der Karte spielt dabei keine Rolle
-    const input = watcherInputFromHit({ template, hit: h, boardId: board.id, columnId: 'probelauf', personIds: [] });
-    if (!['state', 'above', 'below'].includes(input.trigger.kind)) return;
-    const res = await api.dryRun({ trigger: input.trigger, cooldownMin: input.cooldownMin });
-    // Nur mit Verlauf; ohne Verlauf bleibt die Zeile weg (nie eine Zahl behaupten, die es nicht gibt)
-    ob.dry = res.noHistory ? null : res;
-  } catch {
-    ob.dry = null;
-  }
-}
-
-export function toggleHit(entityId: string): void {
-  ob.on = ob.on.includes(entityId) ? ob.on.filter((x) => x !== entityId) : [...ob.on, entityId];
-}
-
-/** Wer die Wächter bekommt: die gewählten Personen, ohne Kinder (gibt es nur Kinder, dann diese) */
+/** Wer im Assistenten bei „Wer kommt infrage?" vorgewählt ist: die Personen aus dem ersten Schritt, ohne Kinder */
 export function assignees(): string[] {
   const pool = ob.personIds.length > 0 ? ob.personIds : ui.people.filter((p) => p.isPerson).map((p) => p.id);
-  const adults = pool.filter((id) => !ob.childIds.includes(id));
-  return adults.length > 0 ? adults : pool;
+  return assigneeIds(pool, ob.childIds);
 }
 
-/** Die gewählten Wächter anlegen. Ein Tipp: Vorlagen-Voreinstellungen, keine Rückfrage (auch nicht bei „Bedingung schon erfüllt"). */
-export async function enableWatchers(): Promise<boolean> {
-  if (ob.busy) return false;
-  const board = householdBoard();
-  if (!board || !ob.hits) return false;
-  ob.busy = true;
-  try {
-    const { best, others } = rankHits(ob.hits);
-    const wanted = [best, ...others].filter((h): h is WatcherSuggestion => !!h && ob.on.includes(h.entityId) && !ob.created.includes(h.entityId));
-    const view = await api.board(board.id);
-    const columnId = defaultColumnId(view.columns);
-    for (const h of wanted) {
-      const template = templateOf(h);
-      if (!template) continue;
-      const saved = await api.createWatcher(watcherInputFromHit({ template, hit: h, boardId: board.id, columnId, personIds: assignees() }));
-      ob.created = [...ob.created, h.entityId];
-      ob.watcherNames = [...ob.watcherNames, saved.name];
-      ob.watcherCards = [...ob.watcherCards, saved.card.title];
-    }
-    ob.watchersDone = ob.created.length > 0;
-    ui.watchers = await api.watchers().catch(() => ui.watchers);
-    ob.busy = false;
-    return true;
-  } catch (e) {
-    toast(e instanceof ApiError ? e.message : e instanceof Error ? e.message : t('Speichern fehlgeschlagen'), { tone: 'error' });
-    ob.busy = false;
-    return false;
-  }
+/** Der Wächter ist im Assistenten bzw. Editor der App gespeichert: merken, was danach zählt (Test, Fertig) */
+export function watcherSaved(saved: SavedWatcher): void {
+  ob.watcherNames = [...ob.watcherNames, saved.name];
+  // der Titel, den die echte Karte (und ihre Nachricht) bekommt: mit dem Namen des Geräts, wie die Vorschau im Editor ihn zeigt
+  ob.watcherCards = [...ob.watcherCards, cardTitleWithEntity(saved.card.title, saved.trigger.kind, saved.entityName ?? saved.trigger.entityId)];
+  ob.watchersDone = true;
 }
 
 // ---------- Testnachricht ----------
@@ -314,35 +244,29 @@ export async function enableWatchers(): Promise<boolean> {
 /** Hat die Person ein Handy (Gerät der Companion App oder ntfy-Thema)? */
 export const hasPhone = (u: Pick<User, 'notifyServices' | 'ntfy'> | null = ui.me): boolean => !!u && (u.notifyServices.length > 0 || u.ntfy);
 
-/** Der Wächter, der gerade den Ton angibt: der erste angelegte, sonst der beste Treffer, solange er eingeschaltet ist */
-function leadingWatcher(): { title: string; card: string } | null {
-  if (ob.watcherNames[0] && ob.watcherCards[0]) return { title: ob.watcherNames[0], card: ob.watcherCards[0] };
-  const best = rankHits(ob.hits ?? []).best;
-  const board = householdBoard();
-  const template = best ? templateOf(best) : undefined;
-  if (!best || !template || !board || !ob.on.includes(best.entityId)) return null;
-  const form = watcherFormFromHit({ template, hit: best, boardId: board.id, columnId: 'vorschau', personIds: [] });
-  return { title: form.name, card: form.title };
+/** Wer eine Testnachricht bekommen kann: Personen mit Handy */
+export const testRecipients = (): User[] => ui.people.filter((p) => p.isPerson && hasPhone(p));
+
+/** Die Person, an die es geht: die gewählte, sonst die erste mit Handy */
+export function testTarget(): User | null {
+  const list = testRecipients();
+  return list.find((p) => p.id === ob.testTo) ?? list[0] ?? null;
 }
 
-/** Titel und Text der Vorschau (und der gesendeten Nachricht): der gewählte Wächter, sonst das Beispiel Waschmaschine */
+/** Titel und Text der Testnachricht: genau, was eine neue Karte eines Wächters auf dem Handy zeigt (der Server baut dieselbe Nachricht) */
 export function previewTexts(): { title: string; body: string } {
-  const name = firstName(ui.me);
-  const w = leadingWatcher();
-  if (w) return { title: w.title, body: `${name}, ${w.card}` };
-  return { title: t('Waschmaschine fertig'), body: t('{name}, die Waschmaschine ist fertig. Ausräumen?', { name }) };
+  const due = formatDue(new Date(Date.now() + 30 * 60_000).toISOString());
+  return { title: ob.watcherCards[0] ?? t('Waschmaschine ausräumen'), body: t('Neue Karte für dich · fällig {due}', { due }) };
 }
 
-export async function sendTest(): Promise<void> {
+/** Für Mitglieder (Kurzfassung) geht sie an sie selbst, für den Administrator an die gewählte Person */
+export async function sendTest(own = false): Promise<void> {
   if (ob.test === 'sending') return;
-  if (!hasPhone()) {
-    ob.test = 'nopath';
-    return;
-  }
+  const target = own ? ui.me : testTarget();
+  if (!target) return;
   ob.test = 'sending';
   try {
-    const m = previewTexts();
-    await api.testPushOwn({ kind: 'onboarding', title: m.title, body: m.body });
+    await api.testPushOwn({ kind: 'onboarding', ...(ob.watcherCards[0] ? { cardTitle: ob.watcherCards[0] } : {}), ...(own || target.id === ui.me?.id ? {} : { personId: target.id }) });
     ob.test = 'sent';
     ob.testDone = true;
   } catch {
@@ -365,3 +289,4 @@ export async function connectOwnPhone(): Promise<void> {
     // ohne Eintrag bleibt es bei der Anleitung
   }
 }
+

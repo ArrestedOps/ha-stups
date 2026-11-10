@@ -1,5 +1,4 @@
 import type { User } from './api';
-import type { WatcherSuggestion } from './watcher-types';
 
 /**
  * Einrichtung beim ersten Start (docs/onboarding/README.md): reine Funktionen für Schritte, Personen und Treffer.
@@ -122,37 +121,25 @@ export function buildCandidates(input: {
   return out;
 }
 
-/** Alle sind vorgewählt */
-export const defaultSelection = (candidates: Candidate[]): string[] => candidates.map((c) => c.key);
+/** Wer in der Liste steht: der Administrator nur, wenn er selbst schon eine Person ist oder „Mich auch hinzufügen" gewählt hat */
+export const visibleCandidates = (candidates: Candidate[], includeSelf: boolean): Candidate[] => candidates.filter((c) => !c.self || includeSelf);
 
-/** Antippen: an- oder abwählen. Du bleibt gewählt. */
+/** Alle, die in der Liste stehen, sind vorgewählt */
+export const defaultSelection = (candidates: Candidate[], includeSelf: boolean): string[] => visibleCandidates(candidates, includeSelf).map((c) => c.key);
+
+/** Antippen: an- oder abwählen; die Reihenfolge der Liste bleibt */
 export function toggleSelection(selected: string[], key: string, candidates: Candidate[]): string[] {
-  if (candidates.find((c) => c.key === key)?.self) return selected;
-  return selected.includes(key) ? selected.filter((k) => k !== key) : candidates.map((c) => c.key).filter((k) => k === key || selected.includes(k));
+  return candidates.map((c) => c.key).filter((k) => (k === key ? !selected.includes(k) : selected.includes(k)));
 }
+
+/** „Wer ist ein Kind?": zur Wahl stehen die gewählten Personen, nie der Administrator (ein Administrator ist nie ein Kind) */
+export const childChoices = (candidates: Candidate[], selected: string[]): Candidate[] => candidates.filter((c) => !c.self && selected.includes(c.key));
 
 /**
- * Wer die Wächter bekommt: die gewählten Personen ohne Kinder (gibt es nur Kinder, dann diese). `ids` ordnet Schlüssel den Ids in Stups zu;
- * wer noch keine Id hat, fehlt.
+ * Wer im Assistenten bei „Wer kommt infrage?" vorausgewählt ist: die gewählten Personen ohne Kinder (gibt es nur Kinder, dann diese).
+ * Alles andere am Wächter bleibt, wie die Vorlage und der Assistent es vorgeben.
  */
-export function assigneeIds(selected: string[], ids: Record<string, string>, children: Set<string>): string[] {
-  const all = selected.filter((k) => ids[k]);
-  const adults = all.filter((k) => !children.has(k));
-  return (adults.length > 0 ? adults : all).map((k) => ids[k]!);
-}
-
-// ---------- Wächter ----------
-
-/** Rangfolge der Vorlagen für den besten Treffer; alles andere folgt in der Reihenfolge des Servers */
-const HIT_ORDER = ['washer', 'dryer', 'dishwasher', 'bins', 'battery'];
-/** Beste Treffer im Onboarding: einer groß, bis zu zwei als Zeilen */
-export const OTHER_HITS = 2;
-
-export function rankHits(items: WatcherSuggestion[]): { best: WatcherSuggestion | null; others: WatcherSuggestion[] } {
-  const rank = (h: WatcherSuggestion) => {
-    const i = HIT_ORDER.indexOf(h.templateId);
-    return i < 0 ? HIT_ORDER.length : i;
-  };
-  const sorted = items.map((h, i) => ({ h, i })).sort((a, b) => rank(a.h) - rank(b.h) || a.i - b.i).map((x) => x.h);
-  return { best: sorted[0] ?? null, others: sorted.slice(1, 1 + OTHER_HITS) };
+export function assigneeIds(personIds: string[], childIds: string[]): string[] {
+  const adults = personIds.filter((id) => !childIds.includes(id));
+  return adults.length > 0 ? adults : personIds;
 }

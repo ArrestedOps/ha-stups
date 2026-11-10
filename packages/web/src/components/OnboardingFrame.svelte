@@ -18,6 +18,6 @@
     <div class="mt-5">{@render children()}</div>
   </div>
   {#if footer}
-    <div class="flex shrink-0 flex-col gap-2 px-5 pt-3 pb-[max(16px,env(safe-area-inset-bottom))] lg:px-10 lg:pb-8">{@render footer()}</div>
+    <div class="flex shrink-0 flex-col gap-2 px-5 pt-3 pb-[max(16px,env(safe-area-inset-bottom))] lg:ml-auto lg:w-[360px] lg:max-w-full lg:px-10 lg:pb-7 lg:box-content">{@render footer()}</div>
   {/if}
 </div>

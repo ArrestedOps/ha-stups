@@ -2,20 +2,18 @@
   import { onMount } from 'svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { begin, back, finish, next, ob, skipAll, stepsNow } from '../lib/onboarding.svelte';
-  import { ui } from '../lib/store.svelte';
   import type { Step } from '../lib/onboarding';
   import Icon from './Icon.svelte';
   import OnboardingColor from './OnboardingColor.svelte';
   import OnboardingDone from './OnboardingDone.svelte';
   import OnboardingPeople from './OnboardingPeople.svelte';
-  import OnboardingPreview from './OnboardingPreview.svelte';
   import OnboardingTest from './OnboardingTest.svelte';
   import OnboardingWatcher from './OnboardingWatcher.svelte';
   import OnboardingWelcome from './OnboardingWelcome.svelte';
 
   /**
    * Die Einrichtung beim ersten Start (docs/onboarding/README.md): Vollbild auf dem Handy, ab 1024 px ein zentrierter Dialog mit dem
-   * Fortschritt links und der Vorschau der Nachricht rechts. Liegt unter den Fenstern (z-30), damit „Prüfen" und die Einstellungen darüber aufgehen.
+   * Fortschritt links. Liegt unter den Fenstern (z-30), damit „Prüfen" und die Einstellungen darüber aufgehen.
    * Administratoren: Willkommen, Personen, Wächter, Test, Fertig. Mitglieder: Handy, Farbe. Kinder: Handy.
    */
   onMount(begin);
@@ -34,11 +32,10 @@
     if (ob.step === 'phone') return { text: t('Später'), run: () => (steps.length > 1 ? next() : void finish()) };
     return null;
   });
-  const showPreview = $derived(ui.desktop && (ob.step === 'watcher' || ob.step === 'test'));
 </script>
 
 <div class="fixed inset-0 z-30 flex items-stretch justify-center bg-bg lg:items-center lg:bg-bg-dim lg:p-8" role="dialog" aria-modal="true" aria-label={t('Einrichtung')} data-testid="onboarding">
-  <div class="flex min-h-0 w-full max-w-[720px] flex-col bg-bg lg:h-[min(720px,100%)] lg:max-w-[1040px] lg:flex-row lg:overflow-hidden lg:rounded-[28px] lg:border lg:border-line">
+  <div class="flex min-h-0 w-full max-w-[720px] flex-col bg-bg lg:h-[min(640px,100%)] lg:max-w-[1040px] lg:flex-row lg:overflow-hidden lg:rounded-[28px] lg:border lg:border-line">
     <!-- Desktop: Fortschritt links -->
     <aside class="hidden w-[250px] shrink-0 flex-col border-r border-line bg-surface px-6 py-8 lg:flex" aria-label={t('Fortschritt')}>
       <p class="text-[24px] font-extrabold">stups<span class="text-accent">.</span></p>
@@ -94,12 +91,5 @@
       {/key}
     </div>
 
-    <!-- Desktop: Vorschau der Nachricht rechts, wo sie zu dem Schritt gehört -->
-    {#if showPreview}
-      <aside class="hidden w-[330px] shrink-0 flex-col justify-center border-l border-line bg-surface2 px-5 lg:flex" aria-label={t('Vorschau')}>
-        <p class="mb-3 text-[12px] font-bold tracking-wide text-hint uppercase">{t('So kommt es bei dir an')}</p>
-        <OnboardingPreview />
-      </aside>
-    {/if}
   </div>
 </div>

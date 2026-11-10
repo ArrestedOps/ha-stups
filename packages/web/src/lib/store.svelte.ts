@@ -80,6 +80,8 @@ export interface ConfirmRequest {
 export interface NewWatcherRequest {
   template?: string;
   hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft };
+  /** Wer bei „Wer kommt infrage?" vorgewählt ist (die Einrichtung) */
+  personIds?: string[];
 }
 
 export const ui = $state({

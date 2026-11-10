@@ -1,7 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { isDashboardPath } from '../dashboard-path.js';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../errors.js';
-import { ONBOARDING_ACTION_DONE, ONBOARDING_ACTION_LATER, TEST_ACTION, type PushMessage } from '../push.js';
+import { ONBOARDING_ACTION_DONE, TEST_ACTION, type PushMessage } from '../push.js';
+import { formatDue } from '../time.js';
 import { pushLanguage } from '../notifications.js';
 import { type Capabilities } from '../runtime.js';
 import { type ApiKit } from './kit.js';
@@ -101,33 +102,47 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
     };
   });
   // Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (mit ntfy zusätzlich ein Knopf, der den Rückweg prüft).
-  // Mit { kind: 'onboarding', title?, body? } die Vorschau der Einrichtung: so wie eine Wächter-Nachricht, mit Erledigt und Später
-  // (ohne Texte die Vorgabe, in der Sprache der Person; die Knöpfe tun nichts, der Notifier ignoriert die Aktion).
+  // Mit { kind: 'onboarding', cardTitle?, personId? } die Testnachricht der Einrichtung: so wie die Nachricht zu einer neuen Karte eines Wächters
+  // (Kartentitel, „Neue Karte für dich · fällig …", nur der Knopf Erledigt), in der Sprache der Person, die sie bekommt. `personId`: ein Administrator,
+  // der selbst keine Person ist, wählt, an wessen Handy sie geht. Sie geht am Tor der Beta vorbei: eine einzelne Test-Nachricht an eine Person
+  // verdoppelt keine Erinnerungen an die Familie. Der Knopf tut nichts, der Notifier ignoriert die Aktion.
   app.post('/api/push/test', async (req) => {
     const b = body(req);
     const onboarding = b.kind === 'onboarding';
     if (b.kind !== undefined && !onboarding) throw new ValidationError(t('Die Art der Test-Nachricht ist unbekannt'));
-    const text = (v: unknown, max: number): string | undefined => {
-      if (v === undefined) return undefined;
-      if (typeof v !== 'string' || v.trim() === '' || v.length > max) throw new ValidationError(t('Der Text der Test-Nachricht ist ungültig'));
-      return v.trim();
-    };
-    const custom = onboarding ? { title: text(b.title, 100), body: text(b.body, 200) } : null;
+    let cardTitle: string | undefined;
+    if (onboarding && b.cardTitle !== undefined) {
+      if (typeof b.cardTitle !== 'string' || b.cardTitle.trim() === '' || b.cardTitle.length > 100) throw new ValidationError(t('Der Text der Test-Nachricht ist ungültig'));
+      cardTitle = b.cardTitle.trim();
+    }
+    if (onboarding && b.personId !== undefined && typeof b.personId !== 'string') throw new ValidationError(t('Der Empfänger der Test-Nachricht ist ungültig'));
     const me = req.user;
-    if (!me || !deps.push) throw new ForbiddenError(t('Push ist hier nicht eingerichtet'));
-    if (!deps.push.canReach(me.id)) throw new ConflictError(t('Für dich ist noch kein Push-Weg eingetragen (Einstellungen › Personen & Zugriff)'));
-    const message: PushMessage = custom
-      ? withLanguage(pushLanguage(store, me.id), () => ({
-          title: custom.title ?? t('Waschmaschine fertig'),
-          body: custom.body ?? t('{name}, die Waschmaschine ist fertig. Ausräumen?', { name: me.displayName.trim().split(/\s+/)[0] ?? me.displayName }),
+    const gateway = onboarding ? (deps.testPush ?? deps.push) : deps.push;
+    if (!me || !gateway) throw new ForbiddenError(t('Push ist hier nicht eingerichtet'));
+    let target = me;
+    if (onboarding && typeof b.personId === 'string' && b.personId !== me.id) {
+      if (!req.access?.isAdmin) throw new ForbiddenError(t('Nur Administratoren schicken eine Test-Nachricht an andere Personen'));
+      const other = store.userById(b.personId);
+      if (!other?.isPerson) throw new NotFoundError(t('Person nicht gefunden'));
+      target = other;
+    }
+    if (!gateway.canReach(target.id)) {
+      throw new ConflictError(
+        target.id === me.id
+          ? t('Für dich ist noch kein Push-Weg eingetragen (Einstellungen › Personen & Zugriff)')
+          : t('Für {name} ist noch kein Push-Weg eingetragen (Einstellungen › Personen & Zugriff)', { name: target.displayName }),
+      );
+    }
+    const nowMs = (deps.now?.() ?? new Date()).getTime();
+    const message: PushMessage = onboarding
+      ? withLanguage(pushLanguage(store, target.id), () => ({
+          title: cardTitle ?? t('Waschmaschine ausräumen'),
+          body: t('Neue Karte für dich · fällig {due}', { due: formatDue(nowMs + 30 * 60_000, nowMs, deps.timeZone?.() ?? 'Europe/Berlin') }),
           tag: 'stups-test',
           group: 'stups',
           open: {},
-          level: 'active',
-          actions: [
-            { id: ONBOARDING_ACTION_DONE, title: t('Erledigt') },
-            { id: ONBOARDING_ACTION_LATER, title: t('Später') },
-          ],
+          level: 'time-sensitive',
+          actions: [{ id: ONBOARDING_ACTION_DONE, title: t('Erledigt') }],
         }))
       : {
           title: 'Stups: Test',
@@ -137,8 +152,8 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
           open: {},
           actions: deps.ntfy ? [{ id: TEST_ACTION, title: 'Rückweg prüfen' }] : undefined,
         };
-    const sent = await deps.push.send(me.id, message);
-    if (!sent) throw new ConflictError(t('Die Nachricht ist nicht angekommen. Mehr steht im Protokoll.'));
+    const sentOk = await gateway.send(target.id, message);
+    if (!sentOk) throw new ConflictError(t('Die Nachricht ist nicht angekommen. Mehr steht im Protokoll.'));
     return { sent: true };
   });
   app.get('/api/capabilities', async (): Promise<Capabilities> => {

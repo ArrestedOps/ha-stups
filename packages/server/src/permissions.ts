@@ -7,7 +7,7 @@ import { t } from './i18n/index.js';
  * Berechtigungen, die ein Administrator einzelnen Mitgliedern geben kann. Das ist die EINE Stelle dafür: Die Liste, die Prüfung
  * (`hasPermission`, `requirePermission`) und die Rechte-Regeln stehen hier; Routen fragen nie selbst nach Listen oder Rollen.
  *
- * Regeln (siehe docs/entwicklung.md, „Berechtigungen"):
+ * Regeln (siehe dev/entwicklung.md, „Berechtigungen"):
  * - Ein Administrator hat immer alles; ein Kind hat nie etwas (feste Einschränkung); niemand außer Administratoren vergibt Rechte.
  * - Was Sicherheit oder Rechte betrifft, ist nicht delegierbar und bleibt bei `requireAdmin`: Administratorrechte, Rolle Kind,
  *   Berechtigungen selbst, Zugänge und Konten, Zugriffsmodus, Personen entfernen, Panel- und Dashboard-Pfad, Beta-Schalter,

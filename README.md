@@ -135,8 +135,8 @@ On first start the log (`docker logs stups`) shows a code for setting up the fir
 |---|---|
 | [stups/DOCS.md](stups/DOCS.md) | Usage and options (also shown in Home Assistant under "Documentation") |
 | [docs/docker.md](docs/docker.md) | Stups without Home Assistant: Docker, Synology, sign-in, settings |
-| [docs/entwicklung.md](docs/entwicklung.md) | Operation, troubleshooting and development (German) |
-| [docs/testliste.md](docs/testliste.md) | What to check on the iPhone (German) |
+| [dev/entwicklung.md](dev/entwicklung.md) | Operation, troubleshooting and development (German) |
+| [dev/testliste.md](dev/testliste.md) | What to check on the iPhone (German) |
 
 Every document with a German counterpart links to it at the top (`*.de.md`).
 
@@ -151,7 +151,7 @@ node e2e/screenshots.mjs              # screenshots for this page (docs/images),
 node e2e/screenshots.mjs --lang en    # the same in English (docs/images/en)
 ```
 
-Details and the procedure for new versions are in [docs/entwicklung.md](docs/entwicklung.md) (German).
+Details and the procedure for new versions are in [dev/entwicklung.md](dev/entwicklung.md) (German).
 
 ## License
 

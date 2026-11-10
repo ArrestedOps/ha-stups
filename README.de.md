@@ -137,8 +137,8 @@ Beim ersten Start zeigt das Protokoll (`docker logs stups`) einen Code für die 
 |---|---|
 | [stups/DOCS.md](stups/DOCS.md) | Bedienung und Optionen (steht auch in Home Assistant unter „Dokumentation") |
 | [docs/docker.md](docs/docker.md) | Stups ohne Home Assistant: Docker, Synology, Anmeldung, Einstellungen |
-| [docs/entwicklung.md](docs/entwicklung.md) | Betrieb, Fehlersuche und Entwicklung |
-| [docs/testliste.md](docs/testliste.md) | Was am iPhone zu prüfen ist |
+| [dev/entwicklung.md](dev/entwicklung.md) | Betrieb, Fehlersuche und Entwicklung |
+| [dev/testliste.md](dev/testliste.md) | Was am iPhone zu prüfen ist |
 
 ## Entwicklung
 
@@ -150,7 +150,7 @@ pnpm e2e                              # Browser-Tests (WebKit, iPhone-Ansicht)
 node e2e/screenshots.mjs              # Screenshots für diese Seite (docs/images)
 ```
 
-Details und der Ablauf für neue Versionen stehen in [docs/entwicklung.md](docs/entwicklung.md).
+Details und der Ablauf für neue Versionen stehen in [dev/entwicklung.md](dev/entwicklung.md).
 
 ## Lizenz
 

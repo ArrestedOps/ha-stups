@@ -12,7 +12,7 @@
   import OnboardingWelcome from './OnboardingWelcome.svelte';
 
   /**
-   * Die Einrichtung beim ersten Start (docs/onboarding/README.md): Vollbild auf dem Handy, ab 1024 px ein zentrierter Dialog mit dem
+   * Die Einrichtung beim ersten Start (dev/onboarding/README.md): Vollbild auf dem Handy, ab 1024 px ein zentrierter Dialog mit dem
    * Fortschritt links. Liegt unter den Fenstern (z-30), damit „Prüfen" und die Einstellungen darüber aufgehen.
    * Administratoren: Willkommen, Personen, Wächter, Test, Fertig. Mitglieder: Handy, Farbe. Kinder: Handy.
    */

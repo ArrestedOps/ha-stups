@@ -19,7 +19,7 @@ import { can, feat, refresh, toast, ui } from './store.svelte';
 import type { SavedWatcher } from './watcher-types';
 
 /**
- * Einrichtung beim ersten Start (docs/onboarding/README.md): der Zustand und die Aufrufe hinter Onboarding.svelte.
+ * Einrichtung beim ersten Start (dev/onboarding/README.md): der Zustand und die Aufrufe hinter Onboarding.svelte.
  * Alles, was sich ohne Oberfläche entscheiden lässt, steht in onboarding.ts (mit Tests). Der Fortschritt (Schritt und Auswahl) liegt auf dem
  * Server, pro Person: Ein Abbruch auf dem Handy lässt sich am Desktop weiterführen. Der Wächter selbst entsteht im Assistenten (Handy) bzw.
  * im Editor (Desktop) der App, unverändert (OnboardingWatcher.svelte); hier steht nur, was danach zählt.

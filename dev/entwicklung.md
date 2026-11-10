@@ -10,9 +10,9 @@ Stups ist ein Haushaltsassistent als Home-Assistant-App: Wächter erzeugen Aufga
 | Docker-Images | `ghcr.io/arrestedops/ha-stups-amd64` und `-aarch64`, Tag = Version |
 | App in HA | Seitenleisten-Panel `/<Kennung>_stups`. Die Kennung entsteht aus der Repository-Adresse und steht in der Adresse der App-Seite in Home Assistant |
 | Daten | im Add-on unter `/data` (SQLite `stups.sqlite`, Anhänge in `files/`, Sicherungen vor Datenbank-Änderungen in `backups/`). Teil des normalen HA-Backups |
-| Optionen | HA › Apps › Stups › Konfiguration (Uhrzeiten, Dashboard, Protokollstufe) |
+| Optionen | HA › Apps › Stups › Konfiguration: seit 1.41 gilt dort nur noch das Log-Level; Personen, Zugriff, Dashboard und Uhrzeiten stehen in der App (die alten Optionen übernimmt der erste Start einmal, siehe `addon-options.ts`) |
 | Dashboard-Button | in der App unter Einstellungen (YAML zum Kopieren) |
-| Dokumente | [../stups/DOCS.md](../stups/DOCS.md) (Bedienung, erscheint auch in Home Assistant), [../stups/CHANGELOG.md](../stups/CHANGELOG.md), [testliste.md](testliste.md) (Prüfliste fürs Handy) |
+| Dokumente | [../stups/DOCS.md](../stups/DOCS.md) (Bedienung, erscheint auch in Home Assistant), [../stups/CHANGELOG.md](../stups/CHANGELOG.md) und [../stups/CHANGELOG.de.md](../stups/CHANGELOG.de.md), [testliste.md](testliste.md) (Prüfliste fürs Handy) |
 
 ## 2. Betrieb
 
@@ -106,10 +106,10 @@ Stups spricht Deutsch und Englisch. **Der deutsche Text steht im Quelltext und i
 
 ### Dokumentation, Screenshots, Demo-GIF (seit 1.15.0)
 
-- **Zwei Sprachen:** `README.md`, `stups/DOCS.md`, `stups-beta/DOCS.md` und `docs/docker.md` sind **englisch und maßgeblich**; die deutschen Fassungen stehen daneben (`*.de.md`). Beide verweisen oben aufeinander (ein Test in `addon-files.test.ts` prüft das und dass die englischen Dateien nicht deutsch geblieben sind). Wer eine Datei ändert, ändert beide. `docs/entwicklung.md`, `docs/testliste.md` und die Spec-Dokumente bleiben deutsch (nur für die Entwicklung).
+- **Zwei Sprachen:** `README.md`, `stups/DOCS.md`, `stups-beta/DOCS.md` und `docs/docker.md` sind **englisch und maßgeblich**; die deutschen Fassungen stehen daneben (`*.de.md`). Beide verweisen oben aufeinander (ein Test in `addon-files.test.ts` prüft das und dass die englischen Dateien nicht deutsch geblieben sind). Wer eine Datei ändert, ändert beide. Der Changelog der normalen App hat dasselbe Paar: `stups/CHANGELOG.md` (englisch, das zeigt der Update-Dialog von Home Assistant) und `stups/CHANGELOG.de.md` (deutsch, mit allen älteren Versionen); jede neue Version steht in beiden. Der Changelog der Beta bleibt deutsch. `dev/entwicklung.md`, `dev/testliste.md` und die Spec-Dokumente bleiben deutsch (nur für die Entwicklung). **Ablage:** Alles für die Entwicklung liegt in `dev/`, `docs/` nur das, was Nutzer lesen (`docker.md`, Bilder; ein Test in `addon-files.test.ts` hält das fest). Specs und Pläne kommen nach `dev/superpowers/specs` und `dev/superpowers/plans` (die Skills schlagen `docs/superpowers` vor).
 - **Screenshots:** `node e2e/screenshots.mjs` (deutsch, `docs/images`) und `node e2e/screenshots.mjs --lang en` (englisch, `docs/images/en`). Beide nach `pnpm build`. Das README zeigt die englischen, `README.de.md` die deutschen.
 - **Demo-GIF:** `node e2e/demo.mjs --lang en` und `--lang de` schreiben `docs/images/demo.<sprache>.gif` (iPhone-Ansicht, erfundene Daten, Einzelbilder per Screenshot, zusammengesetzt mit `gifenc`). Ein Test (`demo-gif.test.ts`) hält Größe (unter 3 MB) und Format fest.
-- **Ankündigungen:** Entwürfe in `docs/announcements/` (nicht veröffentlicht; den Text prüft und postet der Mensch).
+- **Ankündigungen:** Entwürfe in `dev/announcements/` (nicht veröffentlicht; den Text prüft und postet der Mensch).
 
 ### Haus-Kanäle (seit 1.16.0)
 
@@ -340,7 +340,7 @@ Diese Regeln gelten für jede Änderung; zu jeder gibt es Tests.
 
 ### Einrichtung beim ersten Start (seit 1.40.1-beta.6)
 
-Die Übergabe mit Entscheidungen und Mockups steht in `docs/onboarding/`. Hier nur, wie es zusammenhängt:
+Die Übergabe mit Entscheidungen und Mockups steht in `dev/onboarding/`. Hier nur, wie es zusammenhängt:
 
 - **Wann sie erscheint (`needsOnboarding`)** entscheidet allein der Server (`store.needsOnboarding` in `store/people.ts`) und liefert es in `GET /api/me` zusammen mit `onboarding` (`done`, `skipped`, `null`) und `onboardingProgress`. Regel: Ist `done` oder `skipped` gespeichert, nie. **Mitglieder und Kinder** (Personen): sonst immer (Kurzfassung). **Administratoren:** auf einer neuen Installation (keine Karten, keine Wächter, keine anderen Personen) **oder** mitten in der Einrichtung (es ist ein Fortschritt gespeichert; sonst wäre die Installation nach dem Anlegen der Personen nicht mehr „neu“). Wer vor Migration 30 eine Person war, steht auf `done`.
 - **Speicher:** Spalten `users.onboarding` und `users.onboarding_progress` (JSON: Schritt und eine kleine Auswahl, höchstens 4000 Zeichen). `PUT /api/me/onboarding` (`done`/`skipped`, löscht den Fortschritt), `DELETE` (nochmal durchgehen: Status weg, Fortschritt `welcome`, damit sie auch in einer Bestandsinstallation aufgeht), `PUT /api/me/onboarding/progress`. Jede Person ändert nur den eigenen Stand, auch ein Kind.

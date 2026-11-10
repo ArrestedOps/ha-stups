@@ -18,7 +18,7 @@ Leitregeln (verbindlich, an ihnen wird abgenommen):
 
 ## 2. Das Mockup
 
-Die Quelle liegt in `docs/onboarding/mockup/` als `.dc.html`-Dateien (HTML mit Inline-Stilen, gut lesbar). Eine Live-Ansicht (privat, nur für den Besitzer) hat die Leinwand „Stups Onboarding“ auf claude.ai; wer sie nicht öffnen kann, liest die Dateien. Das Mockup ist die **Vorgabe für Inhalt und Aufbau**, nicht für den Code: Farben und Größen kommen aus dem bestehenden Design (Tokens in `packages/web/src/app.css`, Komponenten in `packages/web/src/components/ui/`), nicht aus den Inline-Stilen.
+Die Quelle liegt in `dev/onboarding/mockup/` als `.dc.html`-Dateien (HTML mit Inline-Stilen, gut lesbar). Eine Live-Ansicht (privat, nur für den Besitzer) hat die Leinwand „Stups Onboarding“ auf claude.ai; wer sie nicht öffnen kann, liest die Dateien. Das Mockup ist die **Vorgabe für Inhalt und Aufbau**, nicht für den Code: Farben und Größen kommen aus dem bestehenden Design (Tokens in `packages/web/src/app.css`, Komponenten in `packages/web/src/components/ui/`), nicht aus den Inline-Stilen.
 
 | Datei | Bildschirm |
 |---|---|
@@ -144,8 +144,8 @@ Fertig, wenn: (1) alle Leitregeln aus Abschnitt 1 nachweisbar erfüllt sind, (2)
 
 - `stups/DOCS.md` (Englisch, maßgeblich) und `stups/DOCS.de.md`: Abschnitt „Setup“ um das Onboarding ergänzen, Abschnitt „Settings › Help and data“ um „Einrichtung nochmal durchgehen“.
 - `README.md` / `README.de.md`: Installationsabschnitt um einen Satz erweitern („Beim ersten Start führt dich Stups in drei Minuten durch die Einrichtung“).
-- `docs/testliste.md`: Prüfpunkte fürs Handy (Testnachricht kommt an, Erledigt-Knopf, Abbruch und Wiederaufnahme).
-- `docs/entwicklung.md`: kurzer Abschnitt, wie `needsOnboarding` berechnet wird.
+- `dev/testliste.md`: Prüfpunkte fürs Handy (Testnachricht kommt an, Erledigt-Knopf, Abbruch und Wiederaufnahme).
+- `dev/entwicklung.md`: kurzer Abschnitt, wie `needsOnboarding` berechnet wird.
 
 ## 10. Entschieden (vom Projektinhaber)
 

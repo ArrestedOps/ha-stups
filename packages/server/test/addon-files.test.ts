@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -91,6 +91,7 @@ describe('Dokumentation auf Englisch und Deutsch', () => {
     ['README.md', 'README.de.md'],
     ['stups/DOCS.md', 'stups/DOCS.de.md'],
     ['stups-beta/DOCS.md', 'stups-beta/DOCS.de.md'],
+    ['stups/CHANGELOG.md', 'stups/CHANGELOG.de.md'],
     ['docs/docker.md', 'docs/docker.de.md'],
   ];
   const head = (f: string) => readFileSync(join(root, f), 'utf8').split('\n').slice(0, 12).join('\n');
@@ -110,6 +111,33 @@ describe('Dokumentation auf Englisch und Deutsch', () => {
       const text = readFileSync(join(root, en), 'utf8').replace(/```[\s\S]*?```/g, '');
       const german = text.match(/\b(und|oder|nicht|für|werden|wird|eine|einen|dein|deine|ist)\b/g) ?? [];
       expect(german.length, `${en}: ${german.slice(0, 5).join(',')}`).toBeLessThan(8);
+    }
+  });
+});
+
+describe('Aufbau des Repositorys', () => {
+  it('docs/ enthält nur, was Nutzer lesen (Docker-Anleitung, Bilder); Unterlagen für die Entwicklung liegen in dev/', () => {
+    expect(readdirSync(join(root, 'docs')).sort()).toEqual(['docker.de.md', 'docker.md', 'images']);
+    for (const f of ['entwicklung.md', 'testliste.md', 'superpowers', 'onboarding', 'announcements', 'spike-ha-integration.md', 'logo.mjs']) {
+      expect(existsSync(join(root, 'dev', f)), f).toBe(true);
+    }
+  });
+});
+
+describe('Changelog der normalen App', () => {
+  const versions = (f: string) => [...readFileSync(join(root, f), 'utf8').matchAll(/^## (\d+\.\d+\.\d+)\s*$/gm)].map((m) => m[1]!);
+
+  it('die englische Datei (der Update-Dialog zeigt sie) hat keine Version, die der deutschen fehlt, und beide beginnen mit derselben', () => {
+    const en = versions('stups/CHANGELOG.md');
+    const de = versions('stups/CHANGELOG.de.md');
+    expect(en.length).toBeGreaterThan(5);
+    for (const v of en) expect(de, v).toContain(v);
+    expect(en[0]).toBe(de[0]);
+  });
+
+  it('jede Version steht nur noch in einer Sprache pro Datei (kein „English first, German version below“ mehr)', () => {
+    for (const f of ['stups/CHANGELOG.md', 'stups/CHANGELOG.de.md']) {
+      expect(readFileSync(join(root, f), 'utf8'), f).not.toMatch(/English first, German version below|^\*\*Deutsch\*\*$/m);
     }
   });
 });

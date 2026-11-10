@@ -2,7 +2,7 @@ import type { User } from './api';
 import { deviceName } from './pushStand';
 
 /**
- * Einrichtung beim ersten Start (docs/onboarding/README.md): reine Funktionen für Schritte, Personen und Treffer.
+ * Einrichtung beim ersten Start (dev/onboarding/README.md): reine Funktionen für Schritte, Personen und Treffer.
  * Die Oberfläche (Onboarding.svelte, lib/onboarding.svelte.ts) hält nur Zustand und Aufrufe.
  */
 

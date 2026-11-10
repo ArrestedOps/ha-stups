@@ -1,5 +1,5 @@
 // Baut das Stups-Logo (Zeichen + Schriftzug auf dunkler Fläche, damit der Text auf hellem und dunklem Grund lesbar ist).
-// Aufruf im Repository-Ordner: node docs/logo.mjs
+// Aufruf im Repository-Ordner: node dev/logo.mjs
 // Das Zeichen (Kachel mit Häkchen und Sprungbahn) kommt aus docs/images/stups-icon.png.
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

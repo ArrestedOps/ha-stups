@@ -10,7 +10,7 @@ import type { HouseChannel, HousePending, Store } from './store.js';
 /**
  * Der dritte Push-Weg neben der Companion App und ntfy: Stups, Erinnerungen und Wächter-Karten kommen im Haus an, als Ansage
  * über einen Lautsprecher oder als aufleuchtende Lampe. Je Kanal wählbar: welche Arten, und was geschieht, wenn die Person nicht
- * zu Hause ist (verwerfen oder warten bis zur Heimkehr). Siehe docs/superpowers/specs/2026-11-03-stufe-3-1-haus-kanaele-design.md.
+ * zu Hause ist (verwerfen oder warten bis zur Heimkehr). Siehe dev/superpowers/specs/2026-11-03-stufe-3-1-haus-kanaele-design.md.
  */
 
 export type HouseResultKind = 'delivered' | 'queued' | 'skipped_away' | 'skipped_quiet' | 'error';

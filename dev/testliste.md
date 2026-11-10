@@ -303,7 +303,7 @@ Nur am echten Haus: Home Assistant mit einem Lautsprecher (`media_player`), eine
 
 - [ ] **README auf GitHub** (englisch): Das Demo-GIF läuft, die Bilder sind englisch, die Knöpfe „Zu Home Assistant hinzufügen“ und die Beta-Adresse stimmen. Oben der Link zur deutschen Fassung; `README.de.md` zeigt deutsche Bilder
 - [ ] **Home Assistant › Stups › Dokumentation** (englisch, mit Link zur deutschen Fassung) liest sich verständlich; die Menüwege in der Anleitung („Settings › People & Access“) gibt es genau so in der englischen Oberfläche
-- [ ] **Ankündigungsentwürfe** in `docs/announcements/` gegenlesen (HA-Forum, Reddit, GitHub-Release, deutsches Forum): stimmen Versionsnummer und Links, ist die Aussage zur Lizenz so gewollt? Nichts wird von selbst veröffentlicht
+- [ ] **Ankündigungsentwürfe** in `dev/announcements/` gegenlesen (HA-Forum, Reddit, GitHub-Release, deutsches Forum): stimmen Versionsnummer und Links, ist die Aussage zur Lizenz so gewollt? Nichts wird von selbst veröffentlicht
 
 ## 26 · Fairness und Sonntags-Zusammenfassung (seit 1.17.0)
 

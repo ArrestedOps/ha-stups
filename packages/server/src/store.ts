@@ -145,6 +145,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     getAccessMode: s.getAccessMode,
     setAccessMode: s.setAccessMode,
     importLegacyPeople: s.importLegacyPeople,
+    importAddonOptions: s.importAddonOptions,
     transaction: c.tx,
     takeChanges: c.takeChanges,
     markAllChanged: c.markAllChanged,

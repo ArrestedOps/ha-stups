@@ -3,7 +3,7 @@ import { ConflictError, NotFoundError, ValidationError } from '../errors.js';
 import { cleanPermissions, PERMISSIONS, type Permission } from '../permissions.js';
 import { lastBusyDay, localDateKey, validDateKey } from '../busy.js';
 import { DEFAULT_QUIET, type QuietWindow } from '../quiet.js';
-import { type User, type AccessMode, type Settings, DEFAULT_DUE_TIME, type Row } from './types.js';
+import { type User, type AccessMode, type Settings, type AddonImportResult, type AddonOptionsDefaults, type AddonOptionsImport, DEFAULT_DUE_TIME, type Row } from './types.js';
 import { PERSON_COLORS, NTFY_TOPIC_RE } from './constants.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
@@ -483,6 +483,43 @@ export function createPeople(c: Ctx, late: unknown) {
     });
   }
 
+  /**
+   * Einmalig beim ersten Start des Add-ons nach dem Update: Die Optionen users, access_mode, dashboard_path, daily_summary_time und
+   * overdue_nag_time kommen in die Datenbank, danach gilt die App (auch wenn die Konfiguration bisher alles gesperrt hat).
+   * Niemand wird entfernt. Ein Wert, der dem Standard entspricht, ungültig ist oder in der App schon gesetzt wurde, wird nicht übernommen.
+   * Gibt null zurück, wenn es schon geschehen ist.
+   */
+  function importAddonOptions(o: AddonOptionsImport, defaults: AddonOptionsDefaults): AddonImportResult | null {
+    if (getSetting('addonOptionsImported') !== null) return null;
+    return tx(() => {
+      const listed = o.users.filter((u) => u.name.trim() !== '');
+      let accessMode: AccessMode | null = null;
+      if (listed.length > 0) {
+        syncPeople(listed);
+        putSetting('accessMode', o.accessMode);
+        if (getSetting('legacyPeopleImported') === null) putSetting('legacyPeopleImported', iso());
+        accessMode = o.accessMode;
+      } else {
+        importLegacyPeople([]);
+      }
+      clearManaged();
+      const settings: string[] = [];
+      const skipped: string[] = [];
+      for (const key of ['dashboardPath', 'dailySummaryTime', 'overdueNagTime'] as const) {
+        if (o[key] === defaults[key] || getSettings()[key] !== null) continue;
+        try {
+          setSettings({ [key]: o[key] });
+          settings.push(key);
+        } catch (err) {
+          if (!(err instanceof ValidationError)) throw err;
+          skipped.push(key);
+        }
+      }
+      putSetting('addonOptionsImported', iso());
+      return { people: listed.length, accessMode, settings, skipped };
+    });
+  }
+
   /** Personen und Zugriff werden in der Add-on-Konfiguration verwaltet (nicht in der App) */
   const isManaged = (): boolean => getSetting('managedByOptions') === '1';
 
@@ -597,6 +634,7 @@ export function createPeople(c: Ctx, late: unknown) {
     getAccessMode,
     setAccessMode,
     importLegacyPeople,
+    importAddonOptions,
     applyManagedPeople,
     isManaged,
     clearManaged,

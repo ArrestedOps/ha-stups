@@ -506,3 +506,30 @@ export interface StoreOptions {
 }
 
 export type Row = Record<string, any>;
+
+/** Die Add-on-Optionen, die der erste Start in die Datenbank übernimmt (siehe importAddonOptions) */
+export interface AddonOptionsImport {
+  users: { name: string; notify: string[] }[];
+  accessMode: AccessMode;
+  dashboardPath: string;
+  dailySummaryTime: string;
+  overdueNagTime: string;
+}
+
+/** Die Standardwerte des Add-ons: Eine Option, die davon abweicht, wird übernommen, die übrigen nicht */
+export interface AddonOptionsDefaults {
+  dashboardPath: string;
+  dailySummaryTime: string;
+  overdueNagTime: string;
+}
+
+export interface AddonImportResult {
+  /** Wie viele Personen in `users` standen */
+  people: number;
+  /** Der übernommene Zugriff (null: `users` war leer, es gilt die bisherige Regel für frische und bestehende Installationen) */
+  accessMode: AccessMode | null;
+  /** Die übernommenen Einstellungen (Schlüssel) */
+  settings: string[];
+  /** Die Einstellungen, deren Wert ungültig war und übersprungen wurde */
+  skipped: string[];
+}

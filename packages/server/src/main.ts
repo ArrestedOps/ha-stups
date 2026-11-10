@@ -36,11 +36,14 @@ import { createHouseDrivers } from './house-drivers.js';
 import { createPresence } from './presence.js';
 import { createSensors } from './sensors.js';
 import { spikeGuard, spikeRoutes } from './spike.js';
+import { addonFallbackOptions, applyStartupOptions } from './addon-options.js';
 import { createStore, type ClosedNudge } from './store.js';
 import { ensureWebsocket } from './ws.js';
 
 const runtime = resolveRuntime(process.env);
-const { dataDir, shareDir, port, options } = runtime;
+const { dataDir, shareDir, port } = runtime;
+// Im Add-on gelten nach der Übernahme beim ersten Start nur noch Standardwerte (und das Log-Level), siehe addon-options.ts
+const options = runtime.mode === 'addon' ? addonFallbackOptions(runtime.options) : runtime.options;
 
 const app = Fastify({ logger: { level: options.logLevel }, trustProxy: runtime.trustProxy as boolean });
 // Sprache der Meldungen: je Anfrage aus den Kopfzeilen (die App sendet X-Stups-Language), sonst Englisch
@@ -61,16 +64,9 @@ let nudgesClosed: ((list: ClosedNudge[]) => void) | null = null;
 const store = createStore(db, { timeZone: () => timeZone, onNudgesClosed: (list) => nudgesClosed?.(list) });
 // Eigene Konten mit Passwort, wenn Stups nicht als Add-on hinter Ingress läuft
 const accounts = runtime.identity.kind === 'session' ? createAccounts(db, store) : undefined;
-// Personen und Push-Geräte stehen seit 0.11 in der Datenbank und werden in der App gepflegt.
-// Die Add-on-Optionen werden nur einmal übernommen.
-if (options.users.some((u) => u.name !== '')) {
-  // Ist in der Konfiguration von Home Assistant eine Personenliste eingetragen, gilt sie (Personen, Push-Geräte, Zugriff)
-  store.applyManagedPeople(options.users, options.accessMode);
-  app.log.info(`Personen und Zugriff aus der Konfiguration übernommen (${options.users.length}), Zugriff: ${options.accessMode}`);
-} else {
-  store.clearManaged();
-  if (store.importLegacyPeople(options.users)) app.log.info(`Zugriff: ${store.getAccessMode()}`);
-}
+// Personen, Push-Geräte, Zugriff und Zeiten stehen in der Datenbank und werden in der App gepflegt.
+// Im Add-on werden die Optionen einmal übernommen; in Docker gilt die Konfiguration wie bisher (siehe addon-options.ts)
+applyStartupOptions(store, { mode: runtime.mode, options: runtime.options }, app.log);
 // Das erste Board entsteht mit der ersten Anfrage der App, in der Sprache dieser Person (der Haken läuft nach dem Sprachhaken von oben)
 app.addHook('onRequest', (req, _reply, done) => {
   if (req.method === 'GET' && (req.url.startsWith('/api/boards') || req.url.startsWith('/api/me'))) store.ensureDefaultBoard();

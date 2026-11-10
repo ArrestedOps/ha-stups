@@ -53,6 +53,26 @@ describe('Add-on-Dateien für Home Assistant', () => {
   });
 });
 
+describe('Dockerfile', () => {
+  const docker = readFileSync(join(root, 'stups/Dockerfile'), 'utf8');
+  const runtime = docker.slice(docker.lastIndexOf('FROM '));
+
+  it('das Laufzeit-Image bekommt die fertig installierten Pakete aus der Build-Stufe (pnpm deploy), ohne pnpm und ohne zweite Installation', () => {
+    expect(docker).toContain('pnpm --filter @stups/server deploy --prod /prod');
+    expect(runtime).toContain('COPY --from=build /prod/node_modules');
+    expect(runtime).not.toMatch(/pnpm|npm install/);
+  });
+
+  it('der Aufbau im Image entspricht dem im Repository: web und public liegen neben dist', () => {
+    const targets = runtime
+      .split('\n')
+      .filter((l) => l.startsWith('COPY '))
+      .map((l) => l.trim().split(/\s+/).pop());
+    for (const dir of ['dist', 'web', 'public', 'node_modules']) expect(targets, dir).toContain(dir);
+    expect(runtime).toContain('CMD ["node", "dist/main.js"]');
+  });
+});
+
 describe('Dokumentation auf Englisch und Deutsch', () => {
   const pairs: [string, string][] = [
     ['README.md', 'README.de.md'],

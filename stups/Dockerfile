@@ -10,9 +10,10 @@ RUN pnpm install --frozen-lockfile
 COPY packages packages
 # baut den Server nach packages/server/dist und die Oberfläche nach packages/server/web
 RUN pnpm -r build
+# nur die Laufzeit-Pakete des Servers, fertig installiert: das Laufzeit-Image braucht weder pnpm noch eine zweite Installation
+RUN pnpm --filter @stups/server deploy --prod /prod
 
 FROM node:24-alpine
-RUN npm install -g pnpm@12.16.1
 WORKDIR /app
 # Normale App oder Beta: das Image trägt den Kanal (siehe packages/server/src/channel.ts); die CI setzt ihn je Branch
 ARG STUPS_CHANNEL=stable
@@ -22,14 +23,13 @@ ENV STUPS_CHANNEL=$STUPS_CHANNEL \
     STUPS_VERSION=$STUPS_VERSION \
     NODE_ENV=production \
     PORT=8099
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY packages/server/package.json packages/server/
-COPY packages/web/package.json packages/web/
-RUN pnpm install --frozen-lockfile --prod --filter @stups/server
-COPY --from=build /app/packages/server/dist packages/server/dist
-COPY --from=build /app/packages/server/web packages/server/web
-COPY packages/server/public packages/server/public
-WORKDIR /app/packages/server
+# Aufbau wie im Repository (der Server sucht web und public neben dist): /app/{dist,web,public,node_modules}
+# package.json bleibt, weil sie den Modultyp (ESM) für dist/main.js festlegt
+COPY --from=build /prod/package.json package.json
+COPY --from=build /prod/node_modules node_modules
+COPY --from=build /app/packages/server/dist dist
+COPY --from=build /app/packages/server/web web
+COPY packages/server/public public
 EXPOSE 8099
 # /healthz ist ohne Anmeldung erreichbar; der Port kann mit STUPS_PORT geändert sein
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

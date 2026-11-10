@@ -16,7 +16,7 @@ import { deviceTz, formatDue } from './datetime';
 import { readHaDefaultPanel, resolveDashboardPath, type DashboardSource } from './dashboard';
 import { applyHeaderHiding } from './hideHaHeader';
 import { applyAccent, hueFromStorage, type Scheme } from './accent';
-import { i18n, type LanguageChoice, languageFromStorage, resolveLanguage, setLanguage, t, tn } from './i18n/index.svelte';
+import { i18n, type LanguageChoice, languageFromStorage, loadCatalog, resolveLanguage, setLanguage, t, tn } from './i18n/index.svelte';
 import { passkeysSupported } from './passkeys';
 import { mayDo, type Permission } from './permissions';
 import { hiddenByPerson } from './filters';
@@ -224,6 +224,13 @@ const memo = {
 // ---------- Sprache ----------
 
 const LANGUAGE_KEY = 'stups.language';
+
+/** Vor dem ersten Bild: Wer Englisch nutzt, bekommt den englischen Katalog schon geladen (sonst blitzte kurz Deutsch auf); wer Deutsch nutzt, lädt ihn nie */
+export async function preloadLanguage(): Promise<void> {
+  const choice = languageFromStorage(memo.get(LANGUAGE_KEY));
+  const lang = resolveLanguage(choice, navigator.languages?.length ? navigator.languages : [navigator.language ?? '']);
+  if (lang === 'en') await loadCatalog().catch(() => undefined);
+}
 
 /** Wendet die Wahl an (Automatisch: Sprache des Geräts) und merkt sie sich, damit schon die Anmeldeseite stimmt */
 export function applyLanguage(choice: LanguageChoice): void {

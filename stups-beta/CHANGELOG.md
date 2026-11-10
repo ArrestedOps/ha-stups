@@ -4,6 +4,10 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.41.0-beta.2
+
+**Schnellerer Start, besonders unterwegs.** Die Oberfläche kommt nicht mehr als ein einziges großes Paket: Beim Start werden jetzt rund 198 kB (komprimiert) geladen statt 369 kB. Selten gebrauchte Teile laden erst beim ersten Öffnen: Einrichtung, Einstellungen, Personen, Wächter-Reiter und Wächter-Editor, „Gefunden“, Statistik, Papierkorb, Archiv, Board-Verwaltung, Mitteilungen, Feedback. Der englische Text (36 kB) wird nur geladen, wenn die Oberfläche Englisch spricht, die Namen und Suchwörter der Symbole (20 kB) erst, wenn ein Symbol gesucht oder erkannt wird. Beim ersten Öffnen eines Fensters erscheint es einen Augenblick später, danach liegt es im Zwischenspeicher. **Schrift:** Inter wird nur noch mit den lateinischen Zeichen ausgeliefert (85 kB weniger im Image); kyrillische, griechische und vietnamesische Zeichen erscheinen in der Systemschrift. **Docker-Image:** Die fertig installierten Pakete kommen aus der Build-Stufe (`pnpm deploy`); das Laufzeit-Image installiert weder pnpm noch alle Pakete ein zweites Mal und soll dadurch kleiner werden (die Größe ist noch nicht gemessen). An der Bedienung ändert sich nichts.
+
 ## 1.41.0-beta.1
 
 **Die Beta erscheint nur noch im erweiterten Modus.** Wer im App-Store nur das normale Repository einträgt, sieht „Stups (Beta)“ nicht mehr (`stage: experimental`). Beta-Tester schalten dafür in Home Assistant unter Profil den **erweiterten Modus** ein. **Neue Nummerierung:** Die Beta kündigt jetzt die nächste normale Version an (diese ist `1.41.0-beta.1`, die nächste normale App wird `1.41.0`). Die Nummer ist höher als bisher, das Update wird also wie gewohnt angeboten. Sonst ändert sich an der App nichts.

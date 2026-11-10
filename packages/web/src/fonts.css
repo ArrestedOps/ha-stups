@@ -1,6 +1,6 @@
 /*
  * Inter (variable), nur die lateinischen Teilmengen: Deutsch, Englisch und die meisten europäischen Sprachen.
- * Das Paket @fontsource-variable/inter bringt auch Kyrillisch, Griechisch und Vietnamesisch mit (zusammen rund 63 kB im Image);
+ * Das Paket @fontsource-variable/inter bringt auch Kyrillisch, Griechisch und Vietnamesisch mit (zusammen rund 85 kB im Image);
  * wer solche Zeichen schreibt, sieht sie in der Systemschrift. Die Bereiche (unicode-range) stammen unverändert aus dem Paket.
  */
 @font-face {

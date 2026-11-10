@@ -154,6 +154,7 @@
   /* Vorschau der Testnachricht in der Einrichtung: so sieht ein iPhone-Sperrbildschirm aus (feste Farben, hell und dunkel gleich) */
   --ios-lock: linear-gradient(165deg, #44305a 0%, #1f3257 55%, #0f2f3d 100%);
   --ios-glass: rgba(58, 58, 64, 0.78);
+  --ios-glass-held: rgba(28, 28, 30, 0.94);
   --ha-blue: #18bcf2;
   --on-avatar: #0e0d0d;
   --on-danger: #2a0a0e; /* auf dem hellen Rot des Dunkelmodus */

@@ -1765,6 +1765,7 @@ export const en: Catalog = {
   'Neue Karte für dich · fällig {due}': 'New card for you · due {due}',
   'Bei keiner der eingerichteten Personen ist ein Handy eingetragen. Trage eines ein oder installiere die Companion App auf dem Handy.': 'No phone is set up for any of the people yet. Add one or install the companion app on the phone.',
   'Handys eintragen': 'Add phones',
+  'Zeitkritisch': 'Time sensitive',
   'Mein Handy dazunehmen': 'Add my phone',
   'Mein Handy verbinden': 'Connect my phone',
   'Du bist keine Person in Stups. Dein Handy trägst du hier trotzdem ein, damit die Nachricht auch zu dir kommen kann.': 'You are not a person in Stups. You can still add your phone here so the message can reach you too.',

@@ -300,7 +300,8 @@ export function testTarget(): User | null {
 /** Titel und Text der Testnachricht: genau, was eine neue Karte eines Wächters auf dem Handy zeigt (der Server baut dieselbe Nachricht) */
 export function previewTexts(): { title: string; body: string } {
   const due = formatDue(new Date(Date.now() + 30 * 60_000).toISOString());
-  return { title: ob.watcherCards[0] ?? t('Waschmaschine ausräumen'), body: t('Neue Karte für dich · fällig {due}', { due }) };
+  // in der Beta setzt der Server den Kanalnamen davor (Beta ·), die Vorschau zeigt es ebenso
+  return { title: (feat.beta ? 'Beta · ' : '') + (ob.watcherCards[0] ?? t('Waschmaschine ausräumen')), body: t('Neue Karte für dich · fällig {due}', { due }) };
 }
 
 /** Für Mitglieder (Kurzfassung) geht sie an sie selbst, für den Administrator an die gewählte Person */

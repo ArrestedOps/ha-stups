@@ -15,7 +15,7 @@ const cap = (n) => n[0].toUpperCase() + n.slice(1);
  * first ist die erste Person (der angemeldete Administrator), second die zweite.
  * token: Long-Lived-Token, den das nachgebaute Home Assistant verlangt (ohne Angabe jeder).
  */
-export async function startMockHa({ port, first, second, token, extraPersons = [] }) {
+export async function startMockHa({ port, first, second, token, extraPersons = [], duplicateDevice = false }) {
   const iso = () => new Date().toISOString();
   const states = new Map();
   const subs = new Set(); // { ws, id, entities: string[], to?: string }
@@ -96,7 +96,7 @@ export async function startMockHa({ port, first, second, token, extraPersons = [
     }
     if (req.method === 'GET' && url.pathname === '/api/config') return send({ time_zone: 'Europe/Berlin' });
     if (req.method === 'GET' && url.pathname === '/api/services') {
-      return send([{ domain: 'notify', services: { [`mobile_app_${first}_e2e`]: {}, [`mobile_app_${second}_e2e`]: {} } }]);
+      return send([{ domain: 'notify', services: { [`mobile_app_${first}_e2e`]: {}, [`mobile_app_${second}_e2e`]: {}, ...(duplicateDevice ? { [`mobile_app_${second}_e2e_2`]: {} } : {}) } }]);
     }
     if (req.method === 'POST' && url.pathname.startsWith('/api/states/')) {
       const b = await body(req);
@@ -215,7 +215,15 @@ export async function startMockHa({ port, first, second, token, extraPersons = [
         case 'config/auth/list':
           return ok([{ id: `dev-${first}`, is_owner: true, is_active: true, system_generated: false, group_ids: ['system-admin'] }]);
         case 'person/list':
-          return ok({ storage: [{ name: cap(first), user_id: `dev-${first}` }, { name: cap(second), user_id: `ha-${second}-e2e` }, ...extraPersons.map((n) => ({ name: cap(n), user_id: `ha-${n}-e2e` }))], config: [] });
+          // Wie in Home Assistant: die Person kennt ihre Geräte (device_trackers); mit duplicateDevice hat die zweite Person zwei Anmeldungen (…_e2e_2 ist die neuere)
+          return ok({
+            storage: [
+              { name: cap(first), user_id: `dev-${first}`, device_trackers: [] },
+              { name: cap(second), user_id: `ha-${second}-e2e`, device_trackers: duplicateDevice ? [`device_tracker.${second}_e2e_2`, `device_tracker.${second}_e2e`] : [`device_tracker.${second}_e2e`] },
+              ...extraPersons.map((n) => ({ name: cap(n), user_id: `ha-${n}-e2e`, device_trackers: [] })),
+            ],
+            config: [],
+          });
         case 'lovelace/dashboards/list':
           return ok([]);
         case 'history/history_during_period': {

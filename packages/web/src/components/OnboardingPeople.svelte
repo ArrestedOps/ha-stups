@@ -34,7 +34,7 @@
   }
 
   const status = (c: (typeof ob.candidates)[number]): string => {
-    if (c.phone === 'found') return c.device ? t('Handy erkannt · {device}', { device: deviceName(c.device) }) : t('Handy eingetragen');
+    if (c.phone === 'found') return c.devices.length > 0 ? t('Handy erkannt · {device}', { device: c.devices.map(deviceName).join(', ') }) : t('Handy eingetragen');
     if (c.choices.length > 1) return t('{n} Handys gefunden, wähle später in den Einstellungen', { n: c.choices.length });
     return t('Kein Handy gefunden');
   };

@@ -2,6 +2,8 @@ export interface DirectoryPerson {
   name: string;
   /** Benutzer dieser Person (in Home Assistant), falls sie einen hat */
   userId: string | null;
+  /** Geräte (Entitäten `device_tracker.…`), die Home Assistant dieser Person zuordnet: daran erkennt die Einrichtung ihre Handys */
+  deviceTrackers?: string[];
 }
 
 /** Port: Personen und Administratoren. Adapter: Home Assistant (unten), feste Liste (Entwicklung und Tests). */
@@ -105,6 +107,7 @@ export function createDirectory(deps: DirectoryDeps): Directory {
     return [...asArray(res?.storage), ...asArray(res?.config)].map((p) => ({
       name: String(p.name ?? ''),
       userId: typeof p.user_id === 'string' && p.user_id ? p.user_id : null,
+      deviceTrackers: Array.isArray(p.device_trackers) ? (p.device_trackers as unknown[]).filter((x): x is string => typeof x === 'string') : [],
     }));
   });
 

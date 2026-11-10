@@ -203,7 +203,7 @@ export async function savePeople(): Promise<boolean> {
       ids[c.key] = id;
       names.push(c.name);
       const patch: Parameters<typeof api.updatePerson>[1] = {};
-      if (c.deviceNew && c.device) patch.notifyServices = [c.device];
+      if (c.deviceNew && c.devices.length > 0) patch.notifyServices = c.devices;
       const child = !c.self && ob.children.includes(c.key);
       if (child !== c.isChild) patch.isChild = child;
       if (Object.keys(patch).length > 0) await api.updatePerson(id, patch);

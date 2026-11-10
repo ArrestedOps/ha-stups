@@ -81,42 +81,57 @@ export interface Candidate {
   isChild: boolean;
   /** `found`: es gibt ein Handy (Gerät oder ntfy), `missing`: keins gefunden */
   phone: 'found' | 'missing';
-  /** Das Gerät dieser Person (Push-Dienst); null, wenn keins gewählt ist */
-  device: string | null;
-  /** Das Gerät muss noch eingetragen werden (automatisch gewählt, nicht schon bei der Person gespeichert) */
+  /** Die Geräte dieser Person (Push-Dienste der Companion App); leer, wenn keins gefunden ist */
+  devices: string[];
+  /** Die Geräte müssen noch eingetragen werden (erkannt, aber nicht schon bei der Person gespeichert) */
   deviceNew: boolean;
-  /** Passende Geräte zur Auswahl, wenn nicht eindeutig */
+  /** Passende Geräte zum Namen, wenn sich keins eindeutig zuordnen ließ (nur zur Anzeige) */
   choices: string[];
 }
 
-/** Du zuerst, dann die Personen, die schon in Stups stehen, dann die aus Home Assistant, die noch fehlen */
+/** `device_tracker.connys_iphone` → `mobile_app_connys_iphone`: der Push-Dienst zu einem Gerät, das Home Assistant einer Person zuordnet */
+const serviceOfTracker = (tracker: string): string => `mobile_app_${tracker.replace(/^device_tracker\./, '')}`;
+
+/**
+ * Die Geräte einer Person nach Home Assistant: alles, was in `device_trackers` steht und als Push-Dienst der Companion App existiert, in der
+ * Reihenfolge von Home Assistant. Das ist genauer als jeder Name (auch bei doppelten Anmeldungen wie `connys_iphone` und `connys_iphone_2`).
+ */
+export function devicesOfTrackers(trackers: string[] | undefined, services: string[]): string[] {
+  return [...new Set((trackers ?? []).map(serviceOfTracker))].filter((s) => services.includes(s));
+}
+
+/** Du zuerst (nur auf Wunsch sichtbar), dann die Personen, die schon in Stups stehen, dann die aus Home Assistant, die noch fehlen */
 export function buildCandidates(input: {
   me: User;
   people: User[];
-  haPersons: { name: string; userId: string | null }[];
+  haPersons: { name: string; userId: string | null; deviceTrackers?: string[] }[];
   services: string[];
 }): Candidate[] {
   const { me, people, haPersons, services } = input;
-  const make = (base: Pick<Candidate, 'key' | 'name' | 'haUserId' | 'personId' | 'self' | 'isChild'>, existing: User | null): Candidate => {
+  const isMe = (h: { name: string; userId: string | null }) =>
+    (h.userId !== null && h.userId === me.haUserId) || [me.displayName, me.name].some((n) => fold(n) === fold(h.name));
+  const make = (base: Pick<Candidate, 'key' | 'name' | 'haUserId' | 'personId' | 'self' | 'isChild'>, existing: User | null, trackers?: string[]): Candidate => {
     const own = existing?.notifyServices ?? [];
-    if (own.length > 0) return { ...base, phone: 'found', device: own[0]!, deviceNew: false, choices: own };
+    if (own.length > 0) return { ...base, phone: 'found', devices: own, deviceNew: false, choices: own };
+    // 1. was Home Assistant der Person zuordnet, 2. sonst ein Gerät, dessen Name zum Namen passt (nur wenn es genau eins ist)
+    const assigned = devicesOfTrackers(trackers, services);
+    if (assigned.length > 0) return { ...base, phone: 'found', devices: assigned, deviceNew: true, choices: assigned };
     const found = matchDevices(base.name, services);
-    if (found.length === 1) return { ...base, phone: 'found', device: found[0]!, deviceNew: true, choices: found };
-    return { ...base, phone: existing?.ntfy ? 'found' : 'missing', device: null, deviceNew: false, choices: found };
+    if (found.length === 1) return { ...base, phone: 'found', devices: found, deviceNew: true, choices: found };
+    return { ...base, phone: existing?.ntfy ? 'found' : 'missing', devices: [], deviceNew: false, choices: found };
   };
   const mine = people.find((p) => p.id === me.id) ?? (me.isPerson ? me : null);
+  const myHa = haPersons.find(isMe);
   const out: Candidate[] = [
-    make({ key: 'self', name: me.displayName, haUserId: me.haUserId, personId: mine ? mine.id : null, self: true, isChild: false }, mine),
+    make({ key: 'self', name: me.displayName, haUserId: me.haUserId, personId: mine ? mine.id : null, self: true, isChild: false }, mine, myHa?.deviceTrackers),
   ];
   for (const p of people) {
     if (p.id === me.id) continue;
     out.push(make({ key: `p:${p.id}`, name: p.displayName, haUserId: p.haUserId, personId: p.id, self: false, isChild: p.isChild }, p));
   }
   // Du steht oben und nicht noch einmal als Person aus Home Assistant (die Administratorin ist dort eine Person, in Stups noch nicht)
-  const isMe = (h: { name: string; userId: string | null }) =>
-    (h.userId !== null && h.userId === me.haUserId) || [me.displayName, me.name].some((n) => fold(n) === fold(h.name));
   for (const h of haPersons.filter((x) => !isMe(x))) {
-    out.push(make({ key: `ha:${h.userId ?? h.name}`, name: h.name, haUserId: h.userId, personId: null, self: false, isChild: false }, null));
+    out.push(make({ key: `ha:${h.userId ?? h.name}`, name: h.name, haUserId: h.userId, personId: null, self: false, isChild: false }, null, h.deviceTrackers));
   }
   return out;
 }

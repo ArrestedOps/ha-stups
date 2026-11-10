@@ -101,6 +101,8 @@ test('Administrator: alles durchlaufen bis „Zu den Aufgaben"', async ({ page, 
   const pushes = (await (await request.get(`${MOCK}/mock/pushes`)).json()) as { service: string; title: string; message: string; data: { actions?: { title: string }[] } }[];
   const toConny = pushes.find((p) => p.service === 'mobile_app_conny_e2e' && /Waschmaschine/.test(p.title));
   expect(toConny, JSON.stringify(pushes)).toBeTruthy();
+  // Conny hat zwei Anmeldungen der Companion App: Home Assistant ordnet beide ihr zu, die Nachricht geht an beide
+  expect(pushes.filter((p) => /Waschmaschine/.test(p.title)).map((p) => p.service).sort()).toEqual(['mobile_app_conny_e2e', 'mobile_app_conny_e2e_2']);
   expect(toConny!.message).toMatch(/^Neue Karte für dich · fällig /);
   // nur Erledigt: „Später" gibt es bei Wächter-Karten nicht
   expect(toConny!.data.actions?.map((a) => a.title)).toEqual(['Erledigt']);
@@ -121,7 +123,7 @@ test('Administrator: alles durchlaufen bis „Zu den Aufgaben"', async ({ page, 
   // Der Administrator ist keine Person; Conny hat ihr Handy, Mia ist ein Kind ohne Gerät
   const people = (await (await request.get('/api/people')).json()) as { id: string; displayName: string; notifyServices: string[]; isChild: boolean }[];
   expect(people.map((p) => p.displayName).sort()).toEqual(['Conny', 'Mia']);
-  expect(people.find((p) => p.displayName === 'Conny')!.notifyServices).toEqual(['mobile_app_conny_e2e']);
+  expect(people.find((p) => p.displayName === 'Conny')!.notifyServices).toEqual(['mobile_app_conny_e2e_2', 'mobile_app_conny_e2e']);
   expect(people.find((p) => p.displayName === 'Mia')).toMatchObject({ notifyServices: [], isChild: true });
   // Der Wächter ist da, „Wer kommt infrage?" waren die Personen aus dem ersten Schritt ohne das Kind
   const watchers = (await (await request.get('/api/watchers')).json()) as { items: { assign: { personIds: string[] } }[] };

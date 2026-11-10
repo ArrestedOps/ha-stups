@@ -100,11 +100,38 @@ describe('Onboarding: Personen im Schritt „Wer wohnt hier?"', () => {
   it('Handy-Status: eingetragenes Gerät, genau ein passendes Gerät wird gewählt, mehrere oder keins nicht', () => {
     const c = buildCandidates({ me, people: [anna], haPersons, services });
     const by = Object.fromEntries(c.map((x) => [x.key, x]));
-    expect(by['self']).toMatchObject({ phone: 'found', device: 'mobile_app_rene_iphone' });
-    expect(by['p:p-anna']).toMatchObject({ phone: 'found', device: 'mobile_app_annas_iphone', deviceNew: false });
-    expect(by['ha:ha-ben']).toMatchObject({ phone: 'missing', device: null, choices: ['mobile_app_ben_pixel', 'mobile_app_ben_tablet'] });
-    expect(by['ha:Tom']).toMatchObject({ phone: 'missing', device: null, choices: [] });
+    expect(by['self']).toMatchObject({ phone: 'found', devices: ['mobile_app_rene_iphone'] });
+    expect(by['p:p-anna']).toMatchObject({ phone: 'found', devices: ['mobile_app_annas_iphone'], deviceNew: false });
+    expect(by['ha:ha-ben']).toMatchObject({ phone: 'missing', devices: [], choices: ['mobile_app_ben_pixel', 'mobile_app_ben_tablet'] });
+    expect(by['ha:Tom']).toMatchObject({ phone: 'missing', devices: [], choices: [] });
     expect(by['self']!.deviceNew).toBe(true);
+  });
+
+  it('Home Assistant sagt, welche Geräte zu einer Person gehören (device_trackers): alle, die es als Push-Dienst gibt, in dieser Reihenfolge', () => {
+    const c = buildCandidates({
+      me,
+      people: [],
+      haPersons: [{ name: 'Conny', userId: 'ha-c', deviceTrackers: ['device_tracker.connys_iphone_2', 'device_tracker.connys_iphone', 'device_tracker.connys_auto'] }],
+      services: ['mobile_app_connys_iphone', 'mobile_app_connys_iphone_2', 'mobile_app_ipad_von_rene'],
+    });
+    const conny = c.find((x) => x.key === 'ha:ha-c')!;
+    expect(conny).toMatchObject({ phone: 'found', devices: ['mobile_app_connys_iphone_2', 'mobile_app_connys_iphone'], deviceNew: true });
+  });
+
+  it('die Zuordnung von Home Assistant gilt auch, wenn der Name des Geräts nichts mit dem der Person zu tun hat; ohne Zuordnung bleibt der Name', () => {
+    const c = buildCandidates({
+      me,
+      people: [],
+      haPersons: [{ name: 'Tom', userId: 'ha-t', deviceTrackers: ['device_tracker.pixel_8'] }, { name: 'Ben', userId: 'ha-b', deviceTrackers: [] }],
+      services: ['mobile_app_pixel_8', 'mobile_app_ben_pixel'],
+    });
+    expect(c.find((x) => x.key === 'ha:ha-t')).toMatchObject({ phone: 'found', devices: ['mobile_app_pixel_8'] });
+    expect(c.find((x) => x.key === 'ha:ha-b')).toMatchObject({ phone: 'found', devices: ['mobile_app_ben_pixel'] });
+  });
+
+  it('Du bekommst die Geräte deiner Person in Home Assistant, auch wenn du keine Person in Stups bist', () => {
+    const c = buildCandidates({ me, people: [], haPersons: [{ name: 'Rene', userId: 'ha-me', deviceTrackers: ['device_tracker.iphone_von_rene'] }], services: ['mobile_app_iphone_von_rene', 'mobile_app_ipad_von_rene'] });
+    expect(c[0]).toMatchObject({ key: 'self', phone: 'found', devices: ['mobile_app_iphone_von_rene'] });
   });
 
   it('antippen wählt an oder ab, die Reihenfolge der Liste bleibt', () => {

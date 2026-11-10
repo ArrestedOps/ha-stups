@@ -86,7 +86,7 @@ export interface AccessInfo {
   /** Benutzer, die die App geöffnet haben, aber keine Person sind (nur für Administratoren) */
   pending: User[];
   /** Personen aus Home Assistant, die noch nicht dabei sind (nur für Administratoren) */
-  haPersons: { name: string; userId: string | null }[];
+  haPersons: { name: string; userId: string | null; /** Geräte (`device_tracker.…`), die Home Assistant der Person zuordnet */ deviceTrackers?: string[] }[];
   /** vorhandene Push-Dienste der Companion App, null wenn Home Assistant sie nicht liefert */
   services: string[] | null;
   directoryAvailable: boolean | null;

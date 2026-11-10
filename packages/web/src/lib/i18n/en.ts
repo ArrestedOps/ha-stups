@@ -1764,4 +1764,6 @@ export const en: Catalog = {
   'Es ist dieselbe Liste und derselbe Assistent wie später unter Wächter › Gefunden.': 'It is the same list and the same assistant as later under Watchers › Found.',
   'Ohne Wächter weiter': 'Continue without a watcher',
   'Neue Karte für dich · fällig {due}': 'New card for you · due {due}',
+  'Bei keiner der eingerichteten Personen ist ein Handy eingetragen. Trage eines ein oder installiere die Companion App auf dem Handy.': 'No phone is set up for any of the people yet. Add one or install the companion app on the phone.',
+  'Handys eintragen': 'Add phones',
 };

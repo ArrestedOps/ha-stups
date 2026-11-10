@@ -1,6 +1,6 @@
 // Startet den echten Server (gebaut) zusammen mit einem nachgebauten Home Assistant (e2e/mock-ha.mjs) für die Einrichtung beim ersten Start:
 // leere Datenbank und OHNE DEV_NO_ONBOARDING, wie ein frisch installiertes Stups im Add-on (Supervisor-Token, Ingress-Kopfzeilen vom
-// Entwicklungs-Benutzer). Home Assistant kennt Rene (Administrator), Conny und Mia; Mia hat kein Handy.
+// Entwicklungs-Benutzer). Home Assistant kennt Rene (Administrator), Conny und Mia; Conny hat zwei Anmeldungen der Companion App (doppeltes Gerät wie in echten Installationen), Mia hat kein Handy.
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -11,7 +11,7 @@ const PORT = Number(process.env.PORT ?? 18460);
 const [FIRST, SECOND] = ['rene', 'conny'];
 const HA_PORT = PORT + 1;
 
-await startMockHa({ port: HA_PORT, first: FIRST, second: SECOND, extraPersons: ['mia'] });
+await startMockHa({ port: HA_PORT, first: FIRST, second: SECOND, extraPersons: ['mia'], duplicateDevice: true });
 // ---------- Stups ----------
 
 const dir = mkdtempSync(join(tmpdir(), 'stups-e2e-onb-'));

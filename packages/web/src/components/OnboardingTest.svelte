@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { connectOwnPhone, hasPhone, next, ob, sendTest, testRecipients, testTarget } from '../lib/onboarding.svelte';
-  import { openSettings, ui } from '../lib/store.svelte';
+  import { openSettings, openSheet, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import OnboardingCompanion from './OnboardingCompanion.svelte';
   import OnboardingFrame from './OnboardingFrame.svelte';
@@ -23,6 +23,8 @@
   const phone = $derived(member ? hasPhone(ui.me) : recipients.length > 0);
   const leave = () => (onnext ?? next)();
   const nameOf = $derived(target?.displayName.trim().split(/\s+/)[0] ?? '');
+  /** Es gibt Personen, aber bei keiner ist ein Handy eingetragen (dann hilft „Personen öffnen", nicht die Companion App allein) */
+  const peopleWithoutPhone = $derived(!member && ui.people.some((p) => p.isPerson));
   const colorOf = (id: string) => ui.people.find((p) => p.id === id)?.color ?? null;
 </script>
 
@@ -62,8 +64,15 @@
     <div class="mt-4 rounded-row border border-line bg-surface px-4 py-3.5" data-testid="test-nopath" role="status">
       <p class="text-[15px] font-bold">{t('Noch kein Handy verbunden')}</p>
       <p class="mt-1 text-[14px] leading-[1.45] text-fg2">
-        {member ? t('Öffne Home Assistant auf deinem Handy und melde dich in der Companion App an. Danach erscheint dein Handy hier von selbst.') : t('Bei keiner Person ist ein Handy eingetragen. Öffne Home Assistant auf dem Handy und melde dich in der Companion App an, dann erscheint es hier von selbst.')}
+        {member
+          ? t('Öffne Home Assistant auf deinem Handy und melde dich in der Companion App an. Danach erscheint dein Handy hier von selbst.')
+          : peopleWithoutPhone
+            ? t('Bei keiner der eingerichteten Personen ist ein Handy eingetragen. Trage eines ein oder installiere die Companion App auf dem Handy.')
+            : t('Bei keiner Person ist ein Handy eingetragen. Öffne Home Assistant auf dem Handy und melde dich in der Companion App an, dann erscheint es hier von selbst.')}
       </p>
+      {#if peopleWithoutPhone}
+        <button type="button" class="mt-2 min-h-11 rounded-xl bg-surface2 px-4 text-[14px] font-bold" onclick={() => openSheet({ type: 'people' })}>{t('Handys eintragen')}</button>
+      {/if}
       <div class="mt-2"><OnboardingCompanion /></div>
     </div>
   {/if}

@@ -593,6 +593,7 @@ Nur auf einer **frischen** Installation (oder über Einstellungen › Hilfe und 
 - [ ] **Wächter wie in der App:** Der Schritt zeigt dieselbe „Gefunden“-Liste. „Einrichten“ öffnet denselben Assistenten (am Desktop denselben Editor) wie unter Wächter; „Wer kommt infrage?“ ist mit den gewählten Personen (ohne Kinder) vorbelegt; nach „Wächter anlegen“ geht es weiter
 - [ ] **Testnachricht kommt an:** Empfänger wählen, „Testnachricht an … senden“. Sie erscheint auf dem iPhone mit dem Symbol von Home Assistant, dem Kartentitel und „Neue Karte für dich · fällig …“. Das gilt auch in der Beta mit ausgeschaltetem Push
 - [ ] **Erledigt-Knopf:** Die Nachricht gedrückt halten: Es gibt nur **Erledigt** (kein „Später“). Ein Tipp darauf ändert nichts (es ist nur der Test)
+- [ ] **Handys erkannt:** In „Wer wohnt hier?“ steht bei jeder Person mit Companion App „Handy erkannt“ und der Gerätename (auch bei zwei Anmeldungen derselben Person: beide stehen da)
 - [ ] **Ohne Handy:** Bei einer Person ohne Companion App steht „Kein Handy gefunden“ mit den Links zum App Store und zu Google Play; beide öffnen **außerhalb** von Stups
 - [ ] **Abbruch und Wiederaufnahme:** Mitten in der Einrichtung die App schließen und neu öffnen (oder am Desktop öffnen): Sie macht beim selben Schritt weiter, die Personen stehen nicht doppelt in der Liste
 - [ ] **Überspringen:** „Überspringen“ im ersten Schritt, „Ohne Wächter weiter“ und „Ohne Test weiter“ funktionieren; die Einrichtung erscheint danach nicht wieder

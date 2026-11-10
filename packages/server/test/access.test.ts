@@ -13,7 +13,7 @@ describe('Verzeichnis (Personen und Administratoren aus Home Assistant)', () => 
   ];
   const personList = {
     storage: [
-      { id: 'p1', name: 'Anna', user_id: 'u-admin' },
+      { id: 'p1', name: 'Anna', user_id: 'u-admin', device_trackers: ['device_tracker.annas_iphone_2', 'device_tracker.annas_iphone', 7] },
       { id: 'p2', name: 'Gast', user_id: null },
     ],
     config: [{ id: 'p3', name: 'Ben', user_id: 'u-user' }],
@@ -42,12 +42,12 @@ describe('Verzeichnis (Personen und Administratoren aus Home Assistant)', () => 
     expect(await dir.isAdmin('unbekannt')).toBe(false);
   });
 
-  it('listet die Personen mit verknüpftem Benutzer', async () => {
+  it('listet die Personen mit verknüpftem Benutzer und den Geräten, die Home Assistant ihnen zuordnet (device_trackers)', async () => {
     const dir = createDirectory({ ha: fakeWs({ 'config/auth/list': () => authList, 'person/list': () => personList }) });
     expect(await dir.persons()).toEqual([
-      { name: 'Anna', userId: 'u-admin' },
-      { name: 'Gast', userId: null },
-      { name: 'Ben', userId: 'u-user' },
+      { name: 'Anna', userId: 'u-admin', deviceTrackers: ['device_tracker.annas_iphone_2', 'device_tracker.annas_iphone'] },
+      { name: 'Gast', userId: null, deviceTrackers: [] },
+      { name: 'Ben', userId: 'u-user', deviceTrackers: [] },
     ]);
   });
 

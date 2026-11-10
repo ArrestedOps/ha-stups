@@ -2,6 +2,10 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.40.1-beta.8
+
+**Handys werden richtig erkannt.** Die Einrichtung ordnet Handys jetzt so zu, wie Home Assistant es selbst weiß: Die Geräte, die einer Person dort zugeordnet sind (`device_trackers`), werden als ihre Handys eingetragen, auch wenn ein Gerät doppelt angemeldet ist (zum Beispiel `connys_iphone` und `connys_iphone_2`). Vorher gab es bei mehreren Treffern zum Namen keines, und die Testnachricht fand niemanden. Nur ohne Zuordnung gilt weiter der Name (bei genau einem Treffer). Gibt es Personen, aber keine mit Handy, sagt der Test-Schritt das und führt zu „Handys eintragen“.
+
 ## 1.40.1-beta.7
 
 **Einrichtung überarbeitet.** Der Administrator ist keine Person mehr und kommt nicht in der Liste vor („Mich auch hinzufügen“ schaltet es ein). Personen stehen in kompakten Zeilen mit Schalter, „Wer ist ein Kind?“ ist ein eigener Abschnitt und wächst mit der Zahl der Personen. **Der Wächter-Schritt ist jetzt genau die App:** dieselbe „Gefunden“-Liste, danach derselbe Assistent (Handy) bzw. derselbe Editor (Desktop), mit den gewählten Personen schon bei „Wer kommt infrage?“. **Testnachricht:** zeigt und sendet die echte Nachricht zu einer neuen Karte (Kartentitel, „Neue Karte für dich · fällig …“, Symbol von Home Assistant, nur der Knopf Erledigt; „Später“ gibt es dort nicht), an die Person, die du wählst, auch in der Beta mit ausgeschaltetem Push. „Fertig“ ohne erste Aufgabe und ohne Dashboard-Knopf. Am Desktop passt jeder Schritt in den Dialog. Wichtig: Die Beta muss aus dem Repository `https://github.com/ArrestedOps/ha-stups#beta` kommen; im Repository `main` liegt eine ältere Beta.

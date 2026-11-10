@@ -14,6 +14,7 @@ export type SettingsPageId =
   | 'dashboard'
   | 'bubble'
   | 'summary'
+  | 'nag'
   | 'voice'
   | 'report'
   | 'data'
@@ -79,6 +80,7 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
         ...page('icons', t('Symbole'), 'spark', may('settings')),
         ...page('dates', t('Termine'), 'clock', may('settings')),
         ...page('summary', t('Tageszusammenfassung'), 'bell', may('settings') && ctx.push),
+        ...page('nag', t('Nachhaken um …'), 'bell', may('settings') && ctx.push),
       ],
     },
     {

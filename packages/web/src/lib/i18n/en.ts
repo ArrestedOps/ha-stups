@@ -203,6 +203,12 @@ export const en: Catalog = {
   // App, Navigation und kleine Komponenten
   'Stups konnte nicht geladen werden': 'Stups could not be loaded',
   'Neu laden': 'Reload',
+  'Nachhaken um …': 'Follow up at …',
+  'Wenn ein Nachhaken in Tagen oder Wochen keine eigene Uhrzeit hat, kommt es zu dieser Uhrzeit. Die Uhrzeit gilt für alle; das ändern Administratoren und wer die Berechtigung „App-Einstellungen“ hat.': 'If a follow-up in days or weeks has no time of its own, it arrives at this time. The time applies to everyone; administrators and anyone with the “App settings” permission can change it.',
+  'Uhrzeit des Nachhakens': 'Time of the follow-up',
+  'Wieder die Standard-Uhrzeit nehmen ({time})': 'Use the default time again ({time})',
+  'Gerade gilt die Standard-Uhrzeit ({time}).': 'The default time ({time}) applies right now.',
+  'Uhrzeit für Nachhaken in Tagen und Wochen': 'Time for follow-ups in days and weeks',
   'Konnte nicht geladen werden. Bitte neu laden.': 'Could not be loaded. Please reload.',
   'Lädt …': 'Loading …',
   'Board wechseln': 'Switch board',

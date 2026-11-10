@@ -30,6 +30,7 @@
   import Toggle from './ui/Toggle.svelte';
   import { restart as restartOnboarding } from '../lib/onboarding.svelte';
   import BubblePage from './settings/BubblePage.svelte';
+  import NagPage from './settings/NagPage.svelte';
   import SummaryPage from './settings/SummaryPage.svelte';
 
   /**
@@ -70,6 +71,7 @@
     icons: { color: 'orange', meta: () => t('Symbole aus Titeln erkennen') },
     dates: { color: 'teal', meta: () => t('Standard-Uhrzeit für Termine') },
     summary: { color: 'gray', meta: () => t('morgens, wenn etwas ansteht') },
+    nag: { color: 'gray', meta: () => t('Uhrzeit für Nachhaken in Tagen und Wochen') },
     dashboard: { color: 'teal', meta: () => t('Ziel des Home-Knopfs') },
     bubble: { color: 'purple', meta: () => t('YAML für die Bubble Card') },
     voice: { color: 'blue', meta: () => t('Ansage und Lampe im Haus') },
@@ -78,7 +80,7 @@
     data: { color: 'green', meta: () => (ui.isAdmin && feat.migration ? t('Papierkorb, Archiv, Umzug') : t('Papierkorb und Archiv')) },
     beta: { color: 'gray', meta: () => t('Beta-Einstellungen') },
   };
-  const valueOf = (id: string): string | undefined => (id === 'summary' ? (ui.settings?.effectiveDailySummaryTime ?? undefined) : undefined);
+  const valueOf = (id: string): string | undefined => (id === 'summary' ? (ui.settings?.effectiveDailySummaryTime ?? undefined) : id === 'nag' ? (ui.settings?.effectiveOverdueNagTime ?? undefined) : undefined);
 </script>
 
 {#if page === 'look'}
@@ -105,6 +107,8 @@
   <BubblePage />
 {:else if page === 'summary'}
   <SummaryPage />
+{:else if page === 'nag'}
+  <NagPage />
 {:else if page === 'voice'}
   <VoicePage />
 {:else if page === 'data'}

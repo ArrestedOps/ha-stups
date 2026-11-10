@@ -11,7 +11,7 @@ beforeEach(() => setLanguage('de'));
 describe('Einstellungen nach Rolle und Betriebsart', () => {
   it('Administrator im Add-on: alle vier Gruppen, keine Konto-Seite', () => {
     expect(groupIds(addon)).toEqual(['me', 'household', 'ha', 'help']);
-    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'summary', 'dashboard', 'bubble', 'voice', 'report', 'data', 'feedback']);
+    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'summary', 'nag', 'dashboard', 'bubble', 'voice', 'report', 'data', 'feedback']);
   });
 
   it('Mitglied: „Für mich", „Home Assistant" (nur die eigene Dashboard-Wahl) und „Hilfe und Daten"', () => {
@@ -26,6 +26,13 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
     expect(ids({ ...addon, isAdmin: false, isChild: true })).not.toContain('dashboard');
     expect(ids({ ...addon, isChild: true })).not.toContain('dashboard'); // auch ein Administrator, der als Kind eingetragen ist
     expect(ids({ ...addon, standalone: true, haUi: false })).not.toContain('dashboard');
+  });
+
+  it('„Nachhaken um …" steht hinter der Tageszusammenfassung, nur mit Recht „settings" und Push', () => {
+    expect(ids(addon).indexOf('nag')).toBe(ids(addon).indexOf('summary') + 1);
+    expect(ids({ ...addon, push: false })).not.toContain('nag');
+    expect(ids({ ...addon, isAdmin: false })).not.toContain('nag');
+    expect(ids({ ...addon, isAdmin: false, permissions: ['settings'] })).toContain('nag');
   });
 
   it('Kind im Add-on: nur Sprache und Farbe', () => {

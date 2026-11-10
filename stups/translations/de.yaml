@@ -1,26 +1,30 @@
 configuration:
   users:
-    name: Personen und Push-Geräte
+    name: Personen und Push-Geräte (veraltet)
     description: >-
-      Wer Stups nutzen darf und auf welchen Geräten die Push-Nachrichten ankommen. Pro Eintrag der Name der Person
-      (wie in Home Assistant, unter Einstellungen › Personen) und die Notify-Dienste der Companion App ohne "notify."
-      (z. B. mobile_app_annas_iphone). Ist hier mindestens eine Person eingetragen, gilt diese Liste, und Personen,
-      Geräte und Zugriff sind in der App gesperrt. Bleibt die Liste leer, pflegst du alles in der App unter
-      Einstellungen › Personen & Zugriff.
+      Gilt nur beim ersten Start nach dem Update: Dann übernimmt Stups die Personen und ihre Notify-Dienste (ohne
+      "notify.") in die App. Danach pflegst du das in der App unter Einstellungen › Personen & Zugriff; Änderungen
+      hier haben keine Wirkung mehr.
   access_mode:
-    name: Zugriff
+    name: Zugriff (veraltet)
     description: >-
-      Gilt nur, wenn oben Personen eingetragen sind. "selected" = nur diese Personen und Administratoren von Home
-      Assistant dürfen Stups öffnen, "everyone" = jeder Home-Assistant-Benutzer.
+      Gilt nur beim ersten Start nach dem Update (und nur, wenn oben Personen eingetragen sind). Danach stellst du
+      den Zugriff in der App unter Einstellungen › Personen & Zugriff ein.
   dashboard_path:
-    name: Dashboard-Pfad
-    description: Ziel des Zurück-Buttons, z. B. /lovelace/0 oder /dashboard-handy/start.
+    name: Dashboard-Pfad (veraltet)
+    description: >-
+      Gilt nur beim ersten Start nach dem Update. Danach wählst du das Ziel des Zurück-Buttons in der App unter
+      Einstellungen › Dashboard.
   daily_summary_time:
-    name: Uhrzeit der täglichen Zusammenfassung
-    description: Format HH:MM.
+    name: Uhrzeit der täglichen Zusammenfassung (veraltet)
+    description: >-
+      Gilt nur beim ersten Start nach dem Update. Danach stellst du die Uhrzeit in der App unter Einstellungen ›
+      Tageszusammenfassung ein (Format HH:MM).
   overdue_nag_time:
-    name: Uhrzeit für das Nachhaken bei Überfälligkeit
-    description: Format HH:MM.
+    name: Uhrzeit für das Nachhaken bei Überfälligkeit (veraltet)
+    description: >-
+      Gilt nur beim ersten Start nach dem Update. Danach stellst du die Uhrzeit in der App unter Einstellungen ›
+      Nachhaken um … ein (Format HH:MM).
   log_level:
     name: Log-Level
     description: Detailgrad der Protokolle im Add-on-Log.

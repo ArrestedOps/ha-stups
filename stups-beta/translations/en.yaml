@@ -1,26 +1,30 @@
 configuration:
   users:
-    name: People and push devices
+    name: People and push devices (deprecated)
     description: >-
-      Who may use Stups and on which devices the push messages arrive. One entry per person: the person's name (as in
-      Home Assistant, under Settings › People) and the notify services of the Companion App without "notify."
-      (e.g. mobile_app_annas_iphone). If at least one person is entered here, this list applies, and people, devices
-      and access are locked in the app. If the list stays empty, you manage everything in the app under
-      Settings › People & Access.
+      Only applies at the first start after the update: Stups then copies the people and their notify services
+      (without "notify.") into the app. After that you manage them in the app under Settings › People & access;
+      changes here no longer have any effect.
   access_mode:
-    name: Access
+    name: Access (deprecated)
     description: >-
-      Only applies if people are entered above. "selected" = only these people and Home Assistant administrators may
-      open Stups, "everyone" = every Home Assistant user.
+      Only applies at the first start after the update (and only if people are entered above). After that you set
+      access in the app under Settings › People & access.
   dashboard_path:
-    name: Dashboard path
-    description: Target of the back button, e.g. /lovelace/0 or /dashboard-mobile/start.
+    name: Dashboard path (deprecated)
+    description: >-
+      Only applies at the first start after the update. After that you choose the target of the back button in the
+      app under Settings › Dashboard.
   daily_summary_time:
-    name: Time of the daily summary
-    description: Format HH:MM.
+    name: Time of the daily summary (deprecated)
+    description: >-
+      Only applies at the first start after the update. After that you set the time in the app under Settings ›
+      Daily summary (format HH:MM).
   overdue_nag_time:
-    name: Time for the overdue follow-up
-    description: Format HH:MM.
+    name: Time for the overdue follow-up (deprecated)
+    description: >-
+      Only applies at the first start after the update. After that you set the time in the app under Settings ›
+      Follow up at … (format HH:MM).
   log_level:
     name: Log level
     description: Level of detail of the logs in the add-on log.

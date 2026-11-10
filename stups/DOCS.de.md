@@ -26,7 +26,7 @@ Dein Zuhause merkt, was zu tun ist, ihr entscheidet, wer es macht. Stups läuft 
 
 ### Optionen des Add-ons (Konfiguration in Home Assistant)
 
-Alles lässt sich auch in Home Assistant einstellen, unter **Einstellungen › Apps › Stups › Konfiguration**:
+Bis Version 1.40 ließ sich alles in Home Assistant einstellen, unter **Einstellungen › Apps › Stups › Konfiguration**. So waren diese Optionen gemeint (sie sind veraltet, siehe unten):
 
 ```yaml
 users:                       # Wer Stups nutzt und wohin die Push-Nachrichten gehen
@@ -45,7 +45,7 @@ overdue_nag_time: "18:00"    # Nachhaken bei Überfälligkeit
 
 Die Namen der Geräte findest du in Home Assistant unter Entwicklerwerkzeuge › Aktionen (Dienste `notify.mobile_app_…`); in der App zeigt Einstellungen › Haushalt › Personen und Kinder, welche Geräte Home Assistant kennt.
 
-**Zwei Wege, ein Ergebnis:** Ist unter `users` mindestens eine Person eingetragen, **gilt diese Liste** (bei jedem Start der App): Die genannten Personen werden angelegt und bekommen ihre Geräte, wer nicht in der Liste steht, ist keine Person mehr (seine Karten behalten die Zuweisung), der Zugriff folgt `access_mode`. In der App sind Personen, Geräte und Zugriff dann gesperrt und nur zu sehen; Anzeigename und Ruhezeit lassen sich weiter ändern. Nach einer Änderung der Konfiguration die App neu starten. Bleibt `users` leer, pflegst du alles in der App unter Einstellungen › Haushalt › Personen und Kinder, und ohne Auswahl gilt „Alle in Home Assistant".
+**Nur der erste Start liest diese Optionen.** Ab Version 1.41 übernimmt Stups Personen, Geräte, Zugriff, Dashboard und Uhrzeiten von hier einmal in die App, beim ersten Start nach dem Update, und entfernt niemanden. Danach ist die App der einzige Ort: Änderungen in dieser Konfiguration wirken nicht mehr, und Personen, Geräte und Zugriff sind in der App nicht mehr gesperrt. Pflege sie unter Einstellungen › Personen & Zugriff, Einstellungen › Dashboard, Einstellungen › Tageszusammenfassung und Einstellungen › Nachhaken um …. In einer späteren Version verschwinden die Optionen aus der Konfiguration.
 
 ## Benutzung
 

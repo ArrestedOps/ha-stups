@@ -46,6 +46,19 @@ describe('Add-on-Dateien für Home Assistant', () => {
     }
   });
 
+  // Seit 1.41 übernimmt der erste Start diese Werte in die App; danach wirken sie nicht mehr (siehe addon-options.ts). Wer die Konfiguration öffnet, soll das sehen.
+  it('die Optionen, die der erste Start in die App übernimmt, heißen „veraltet", log_level nicht', () => {
+    for (const app of ['stups', 'stups-beta']) {
+      for (const [lang, mark] of [['de', '(veraltet)'], ['en', '(deprecated)']] as const) {
+        const cfg = (load(`${app}/translations/${lang}.yaml`).configuration ?? {}) as Record<string, { name: string; description: string }>;
+        for (const key of ['users', 'access_mode', 'dashboard_path', 'daily_summary_time', 'overdue_nag_time']) {
+          expect(cfg[key]!.name, `${app} ${lang} ${key}`).toContain(mark);
+        }
+        expect(cfg.log_level!.name, `${app} ${lang} log_level`).not.toContain(mark);
+      }
+    }
+  });
+
   it('die normale App zeigt auf ihre eigenen Bilder, nie auf die der Beta', () => {
     const image = load('stups/config.yaml').image as string;
     expect(image).toBe('ghcr.io/arrestedops/ha-stups-{arch}');

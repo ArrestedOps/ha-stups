@@ -80,7 +80,7 @@ Alle Einstellungen sind Umgebungsvariablen. Ohne Angabe gelten die Vorgaben.
 | `STUPS_NTFY_TOKEN` | – | Zugriffstoken (`tk_…`) für einen Server mit Anmeldung |
 | `STUPS_NTFY_USER`, `STUPS_NTFY_PASSWORD` | – | statt des Tokens: Benutzer und Passwort, nur beide zusammen |
 | `STUPS_DAILY_SUMMARY_TIME` | `08:00` | Uhrzeit der Tageszusammenfassung (HH:MM); in der App unter Einstellungen › Tageszusammenfassung lässt sie sich ändern und hat dann Vorrang |
-| `STUPS_OVERDUE_NAG_TIME` | `18:00` | ab wann an Überfälliges erinnert wird (HH:MM) |
+| `STUPS_OVERDUE_NAG_TIME` | `18:00` | ab wann an Überfälliges erinnert wird (HH:MM); in der App unter Einstellungen › Nachhaken um … lässt sie sich ändern und hat dann Vorrang |
 | `STUPS_LOG_LEVEL` | `info` | `error`, `warn`, `info`, `debug` |
 | `STUPS_CONFIG` | `<Datenordner>/options.json` | JSON-Datei mit denselben Einstellungen wie die Add-on-Optionen, falls du lieber eine Datei nimmst |
 | `TZ` | `Europe/Berlin` | Zeitzone |

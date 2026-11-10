@@ -6,6 +6,7 @@ const STANDALONE_PORT = 18430;
 const STANDALONE_HA_PORT = 18440;
 const BETA_PORT = 18450;
 const ONBOARDING_PORT = 18460;
+const OPTIONS_PORT = 18470;
 
 /**
  * Die App startet immer auf „Aufgaben“ (auch nach dem Neuladen). Tests, die auf den Boards arbeiten, wechseln den Reiter selbst
@@ -37,8 +38,8 @@ export default defineConfig({
   },
   // Die Companion App folgt dem Hell/Dunkel des iPhones, beide Themes werden geprüft
   projects: [
-    { name: 'dunkel', testIgnore: [/waechter|haus|standalone|beta|english|onboarding/, DESKTOP_SPECS], use: { colorScheme: 'dark' } },
-    { name: 'hell', testIgnore: [/waechter|haus|standalone|beta|english|onboarding/, DESKTOP_SPECS], use: { colorScheme: 'light' } },
+    { name: 'dunkel', testIgnore: [/waechter|haus|standalone|beta|english|onboarding|optionen/, DESKTOP_SPECS], use: { colorScheme: 'dark' } },
+    { name: 'hell', testIgnore: [/waechter|haus|standalone|beta|english|onboarding|optionen/, DESKTOP_SPECS], use: { colorScheme: 'light' } },
     // Desktop (ab 1024 px, hier 1440 × 900): Seitenleiste, Detailspalte, Dialoge; dasselbe in Dunkel und Hell. Das Handy bleibt in den Projekten oben.
     { name: 'desktop-dunkel', testMatch: /\/35-desktop\.spec\.ts$/, use: { ...DESKTOP, colorScheme: 'dark' } },
     { name: 'desktop-hell', testMatch: /\/35-desktop\.spec\.ts$/, use: { ...DESKTOP, colorScheme: 'light' } },
@@ -52,6 +53,8 @@ export default defineConfig({
     { name: 'standalone', testMatch: /standalone\.spec\.ts$/, use: { colorScheme: 'dark', baseURL: `http://127.0.0.1:${STANDALONE_PORT}` } },
     // Eigener Container mit Verbindung zu einem nachgebauten Home Assistant (e2e/server-standalone-ha.mjs)
     { name: 'standalone-ha', testMatch: /standalone-ha\.spec\.ts$/, use: { colorScheme: 'dark', baseURL: `http://127.0.0.1:${STANDALONE_HA_PORT}` } },
+    // Add-on mit options.json aus der Zeit vor 1.41: der erste Start übernimmt die Optionen in die App (e2e/server-options.mjs)
+    { name: 'optionen', testMatch: /47-optionen-uebernahme.spec.ts$/, use: { colorScheme: 'dark', baseURL: `http://127.0.0.1:${OPTIONS_PORT}` } },
     // Einrichtung beim ersten Start: frischer Server mit nachgebautem Home Assistant, ohne den Schalter DEV_NO_ONBOARDING (e2e/server-onboarding.mjs);
     // Handy und Desktop, hell und dunkel. Jeder Durchlauf setzt den Stand selbst zurück (46-onboarding.spec.ts), damit die Projekte hintereinander laufen.
     ...(['dark', 'light'] as const).flatMap((colorScheme) => [
@@ -99,6 +102,14 @@ export default defineConfig({
       cwd: '..',
       url: `http://127.0.0.1:${BETA_PORT}/healthz`,
       env: { PORT: String(BETA_PORT) },
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      command: 'node e2e/server-options.mjs',
+      cwd: '..',
+      url: `http://127.0.0.1:${OPTIONS_PORT}/healthz`,
+      env: { PORT: String(OPTIONS_PORT) },
       reuseExistingServer: false,
       timeout: 60_000,
     },

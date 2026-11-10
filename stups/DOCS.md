@@ -26,7 +26,7 @@ Your home notices what needs doing, you decide who does it. Stups runs right ins
 
 ### Add-on options (configuration in Home Assistant)
 
-You can also set everything in Home Assistant, under **Settings › Apps › Stups › Configuration**:
+Until version 1.40 you could set everything in Home Assistant, under **Settings › Apps › Stups › Configuration**. Here is what these options mean (they are deprecated, see below):
 
 ```yaml
 users:                       # Who uses Stups and where the push messages go
@@ -45,7 +45,7 @@ overdue_nag_time: "18:00"    # Follow-up for overdue cards
 
 You find the device names in Home Assistant under Developer tools › Actions (services `notify.mobile_app_…`); in the app, Settings › Household › People and children shows which devices Home Assistant knows.
 
-**Two ways, one result:** if at least one person is entered under `users`, **this list applies** (at every start of the app): the people named are created and get their devices, whoever is not on the list is no longer a person (their cards keep the assignment), and access follows `access_mode`. In the app, people, devices and access are then locked and can only be viewed; display name and quiet time can still be changed. Restart the app after changing the configuration. If `users` stays empty, you manage everything in the app under Settings › Household › People and children, and without a choice "Everyone in Home Assistant" applies.
+**Only the first start reads these options.** From version 1.41, Stups copies the people, devices, access, dashboard and times from here into the app once, at the first start after the update, and removes nobody. From then on the app is the only place: changes in this configuration have no effect any more, and people, devices and access are no longer locked in the app. Manage them under Settings › People & access, Settings › Dashboard, Settings › Daily summary and Settings › Follow up at …. The options will disappear from the configuration in a later version.
 
 ## Usage
 

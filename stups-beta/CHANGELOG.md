@@ -4,6 +4,10 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.41.0-beta.4
+
+**Dokumentation aufgeräumt, an der App ändert sich nichts.** Die Anleitung (`DOCS.md`) beginnt mit „Erste Schritte“ und „Wenn etwas nicht klappt“; die veralteten Optionen des Add-ons stehen weiter unten. Der Changelog der normalen App gibt es jetzt getrennt: `CHANGELOG.md` ist englisch (das zeigt Home Assistant beim Update), `CHANGELOG.de.md` deutsch, mit allen älteren Versionen. Im Repository liegen die Unterlagen für die Entwicklung unter `dev/`, in `docs/` nur noch die Docker-Anleitung und die Bilder.
+
 ## 1.41.0-beta.3
 
 **Optionen in der App.** Beim ersten Start nach dem Update übernimmt Stups Personen, Push-Geräte, Zugriff, Dashboard und die Uhrzeiten aus der Add-on-Konfiguration in die App, einmal, und entfernt niemanden. Danach sind sie in der App änderbar, auch wenn die Konfiguration bisher alles gesperrt hat; spätere Änderungen in der Konfiguration wirken nicht mehr. Neu: **Einstellungen › Nachhaken um …** (Standard 18:00), die Uhrzeit für Nachhaken in Tagen und Wochen ohne eigene Uhrzeit; sie war bisher nur als Option einstellbar. Die Optionen in der Konfiguration sind als „veraltet“ gekennzeichnet und verschwinden in einer späteren Version. Wer die Konfiguration bisher als Quelle der Wahrheit genutzt hat, pflegt künftig die App. In Docker ändert sich nichts außer der neuen Einstellung, die dort Vorrang vor `STUPS_OVERDUE_NAG_TIME` hat.

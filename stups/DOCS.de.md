@@ -4,6 +4,19 @@
 
 Dein Zuhause merkt, was zu tun ist, ihr entscheidet, wer es macht. Stups läuft direkt in Home Assistant (Ingress, kein eigener Login): Wächter machen aus dem, was dein Smart Home weiß, Aufgaben; Boards, wiederkehrende Aufgaben, Push-Erinnerungen mit „Erledigt"-Button, Stupse und Live-Sync zwischen allen Geräten übernehmen den Rest.
 
+## Erste Schritte
+
+1. **Stups** im App-Store installieren, starten und in der Seitenleiste öffnen.
+2. Auf einer neuen Installation führt die Einrichtung Administratoren in etwa drei Minuten durch: Wer wohnt hier, ein erster Wächter, eine Testnachricht. Jeder Schritt lässt sich überspringen und später nachholen.
+3. Personen, Handys und Zugriff pflegst du in der App unter **Einstellungen › Haushalt › Personen & Zugriff**; das Dashboard für den Knopf „‹ Dashboard“ unter **Einstellungen › Home Assistant › Dashboard**.
+4. Karten legst du auf dem Reiter **Boards** mit dem **+** an, oder ein Wächter legt sie aus dem an, was dein Smart Home weiß.
+
+## Wenn etwas nicht klappt
+
+- **Keine Push-Nachricht:** **Einstellungen › Hilfe und Daten › Warum kommt nichts an?** öffnen und unter **Einstellungen › Haushalt › Personen & Zugriff** ein Gerät für die Person ankreuzen.
+- **„Kein Zugriff“:** Ein Administrator gibt dich unter **Einstellungen › Haushalt › Personen & Zugriff** frei.
+- **Alles andere:** Die Diagnose-Seite (Einstellungen › Diagnose-Seite) zeigt den erkannten Benutzer und die Verbindung zu Home Assistant. Mehr unter „Fehlersuche“ weiter unten.
+
 ## Einrichtung
 
 **Erster Start:** Auf einer neuen Installation führt Stups Administratoren zuerst durch eine kurze Einrichtung, etwa drei Minuten: **Wer wohnt hier?** (die Personen aus Home Assistant sind vorgewählt, Handys erkennt Stups selbst, wer kein Handy hat, bekommt einen Link zur Companion App im App Store oder bei Google Play, und du legst fest, wer ein Kind ist; ein Administrator ist keine Person und steht nur dabei, wenn er „Mich auch hinzufügen“ einschaltet), **Dein erster Wächter** (genau dieselbe Liste und derselbe Assistent wie unter Wächter › Gefunden, mit den eben gewählten Personen schon ausgewählt), **Testnachricht** (ein echtes Beispiel der Nachricht zu einer neuen Karte, an das Handy einer Person deiner Wahl; auf dem iPhone die Nachricht gedrückt halten, dann erscheint der Knopf *Erledigt*) und **Fertig**. Jeder Schritt lässt sich überspringen und später in den Einstellungen nachholen. Wo du aufgehört hast, merkt sich der Server: Du kannst auf einem anderen Gerät weitermachen. Mitglieder und Kinder sehen eine Kurzfassung (**Handy verbinden**, **Farbe wählen**). Bestehende Installationen zeigen sie nicht von selbst; *Einstellungen › Hilfe und Daten › Einrichtung nochmal durchgehen* öffnet sie jederzeit. Die Liste unten ist das, was die Einrichtung tut, so findest du es in den Einstellungen.
@@ -23,29 +36,6 @@ Dein Zuhause merkt, was zu tun ist, ihr entscheidet, wer es macht. Stups läuft 
 - **Mitglieder** benutzen die App und wählen ihre eigenen Push-Geräte.
 - **Kinder** sind Personen mit eingeschränkten Rechten (siehe „Rolle Kind und Bestätigung“). Ein Administrator ist nie ein Kind.
 - Wer aus der Liste entfernt wird, verliert Zuweisungen und Nachrichten, die Karten bleiben unverändert. Kommt die Person zurück, gilt alles wieder.
-
-### Optionen des Add-ons (Konfiguration in Home Assistant)
-
-Bis Version 1.40 ließ sich alles in Home Assistant einstellen, unter **Einstellungen › Apps › Stups › Konfiguration**. So waren diese Optionen gemeint (sie sind veraltet, siehe unten):
-
-```yaml
-users:                       # Wer Stups nutzt und wohin die Push-Nachrichten gehen
-  - name: Anna               # Name wie in Home Assistant (Einstellungen › Personen)
-    notify:                  # Notify-Dienste der Companion App, ohne "notify."
-      - mobile_app_annas_iphone
-  - name: Ben
-    notify:
-      - mobile_app_bens_iphone
-      - mobile_app_bens_ipad
-access_mode: selected        # selected = nur diese Personen und Administratoren, everyone = alle Home-Assistant-Benutzer
-dashboard_path: /            # Vorgabe für den Zurück-Button, später in der App änderbar
-daily_summary_time: "08:00"  # Tageszusammenfassung
-overdue_nag_time: "18:00"    # Nachhaken bei Überfälligkeit
-```
-
-Die Namen der Geräte findest du in Home Assistant unter Entwicklerwerkzeuge › Aktionen (Dienste `notify.mobile_app_…`); in der App zeigt Einstellungen › Haushalt › Personen und Kinder, welche Geräte Home Assistant kennt.
-
-**Nur der erste Start liest diese Optionen.** Ab Version 1.41 übernimmt Stups Personen, Geräte, Zugriff, Dashboard und Uhrzeiten von hier einmal in die App, beim ersten Start nach dem Update, und entfernt niemanden. Danach ist die App der einzige Ort: Änderungen in dieser Konfiguration wirken nicht mehr, und Personen, Geräte und Zugriff sind in der App nicht mehr gesperrt. Pflege sie unter Einstellungen › Personen & Zugriff, Einstellungen › Dashboard, Einstellungen › Tageszusammenfassung und Einstellungen › Nachhaken um …. In einer späteren Version verschwinden die Optionen aus der Konfiguration.
 
 ## Benutzung
 
@@ -346,6 +336,29 @@ Zieht Stups in Home Assistant auf eine andere Adresse um (anderes Repository = a
 ## Datensicherung
 
 Datenbank und Anhänge liegen im Add-on-Verzeichnis `/data` und sind Teil des normalen Home-Assistant-Backups. Vor jeder Datenbank-Aktualisierung legt die App eine Kopie unter `/data/backups` an (die letzten 5 bleiben).
+
+## Optionen des Add-ons (veraltet)
+
+Bis Version 1.40 ließ sich alles in Home Assistant einstellen, unter **Einstellungen › Apps › Stups › Konfiguration**. So waren diese Optionen gemeint (sie sind veraltet, siehe unten):
+
+```yaml
+users:                       # Wer Stups nutzt und wohin die Push-Nachrichten gehen
+  - name: Anna               # Name wie in Home Assistant (Einstellungen › Personen)
+    notify:                  # Notify-Dienste der Companion App, ohne "notify."
+      - mobile_app_annas_iphone
+  - name: Ben
+    notify:
+      - mobile_app_bens_iphone
+      - mobile_app_bens_ipad
+access_mode: selected        # selected = nur diese Personen und Administratoren, everyone = alle Home-Assistant-Benutzer
+dashboard_path: /            # Vorgabe für den Zurück-Button, später in der App änderbar
+daily_summary_time: "08:00"  # Tageszusammenfassung
+overdue_nag_time: "18:00"    # Nachhaken bei Überfälligkeit
+```
+
+Die Namen der Geräte findest du in Home Assistant unter Entwicklerwerkzeuge › Aktionen (Dienste `notify.mobile_app_…`); in der App zeigt Einstellungen › Haushalt › Personen und Kinder, welche Geräte Home Assistant kennt.
+
+**Nur der erste Start liest diese Optionen.** Ab Version 1.41 übernimmt Stups Personen, Geräte, Zugriff, Dashboard und Uhrzeiten von hier einmal in die App, beim ersten Start nach dem Update, und entfernt niemanden. Danach ist die App der einzige Ort: Änderungen in dieser Konfiguration wirken nicht mehr, und Personen, Geräte und Zugriff sind in der App nicht mehr gesperrt. Pflege sie unter Einstellungen › Personen & Zugriff, Einstellungen › Dashboard, Einstellungen › Tageszusammenfassung und Einstellungen › Nachhaken um …. In einer späteren Version verschwinden die Optionen aus der Konfiguration.
 
 ## Aktualisieren
 

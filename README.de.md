@@ -19,8 +19,6 @@
   <br><sub>Öffnet in deinem Home Assistant den Dialog mit vorausgefüllter Repository-Adresse. Das Hinzufügen und die Installation bestätigst du dort selbst.</sub>
 </p>
 
-<p align="center"><sub>Deutsche Fassung. Die englische Fassung (<a href="README.md">README.md</a>) ist maßgeblich.</sub></p>
-
 ---
 
 ## Kommt dir das bekannt vor?

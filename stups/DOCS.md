@@ -4,6 +4,19 @@
 
 Your home notices what needs doing, you decide who does it. Stups runs right inside Home Assistant (Ingress, no separate login): watchers turn what your smart home knows into tasks, and boards, recurring tasks, push reminders with a "Done" button, nudges and live sync between all devices take it from there.
 
+## Getting started
+
+1. Install **Stups** from the app store, start it and open it from the sidebar.
+2. On a new installation, administrators are guided through a short setup (about three minutes): who lives here, a first watcher, a test message. Every step can be skipped and done later.
+3. People, phones and access are managed in the app under **Settings › Household › People & access**; the dashboard for the "‹ Dashboard" button under **Settings › Home Assistant › Dashboard**.
+4. Add cards on the **Boards** tab with the **+** button, or let a watcher create them from what your smart home knows.
+
+## If something does not work
+
+- **No push message:** open **Settings › Help and data › Why does nothing arrive?** and tick a device for the person under **Settings › Household › People & access**.
+- **"No access":** an administrator approves you under **Settings › Household › People & access**.
+- **Anything else:** the diagnostics page (Settings › Diagnostics page) shows the detected user and the connection to Home Assistant. More in "Troubleshooting" below.
+
 ## Setup
 
 **First start:** on a new installation Stups first guides administrators through a short setup, about three minutes: **Who lives here?** (the people from Home Assistant are preselected, phones are detected by themselves, anyone without a phone gets a link to the Companion App in the App Store or Google Play, and you mark the children; an administrator is not a person and only appears if they switch on “Add me too”), **Your first watcher** (exactly the same list and assistant as under Watchers › Found, with the people you just chose already selected), **Test message** (a real example of the message a new card sends, to the phone of a person you choose; on an iPhone press and hold it to see the *Done* button) and **Done**. Every step can be skipped and done later in the settings. Where you stopped is saved on the server, so you can carry on on another device. Members and children see a short version (**Connect phone**, **Choose a colour**). Installations that already existed do not show it by themselves; *Settings › Help and data › Go through the setup again* opens it any time. The list below is what the setup does, found in the settings.
@@ -23,29 +36,6 @@ Your home notices what needs doing, you decide who does it. Stups runs right ins
 - **Members** use the app and choose their own push devices.
 - **Children** are people with limited rights (see "Child role and confirmation"). An administrator is never a child.
 - Whoever is removed from the list loses assignments and messages; the cards stay unchanged. If the person comes back, everything applies again.
-
-### Add-on options (configuration in Home Assistant)
-
-Until version 1.40 you could set everything in Home Assistant, under **Settings › Apps › Stups › Configuration**. Here is what these options mean (they are deprecated, see below):
-
-```yaml
-users:                       # Who uses Stups and where the push messages go
-  - name: Anna               # Name as in Home Assistant (Settings › People)
-    notify:                  # Notify services of the Companion App, without "notify."
-      - mobile_app_annas_iphone
-  - name: Ben
-    notify:
-      - mobile_app_bens_iphone
-      - mobile_app_bens_ipad
-access_mode: selected        # selected = only these people and administrators, everyone = all Home Assistant users
-dashboard_path: /            # Default for the back button, can be changed later in the app
-daily_summary_time: "08:00"  # Daily summary
-overdue_nag_time: "18:00"    # Follow-up for overdue cards
-```
-
-You find the device names in Home Assistant under Developer tools › Actions (services `notify.mobile_app_…`); in the app, Settings › Household › People and children shows which devices Home Assistant knows.
-
-**Only the first start reads these options.** From version 1.41, Stups copies the people, devices, access, dashboard and times from here into the app once, at the first start after the update, and removes nobody. From then on the app is the only place: changes in this configuration have no effect any more, and people, devices and access are no longer locked in the app. Manage them under Settings › People & access, Settings › Dashboard, Settings › Daily summary and Settings › Follow up at …. The options will disappear from the configuration in a later version.
 
 ## Usage
 
@@ -347,6 +337,29 @@ If Stups moves to another address in Home Assistant (another repository = anothe
 ## Backup
 
 Database and attachments live in the add-on directory `/data` and are part of the normal Home Assistant backup. Before every database update the app makes a copy under `/data/backups` (the last 5 are kept).
+
+## Add-on options (deprecated)
+
+Until version 1.40 you could set everything in Home Assistant, under **Settings › Apps › Stups › Configuration**. Here is what these options mean (they are deprecated, see below):
+
+```yaml
+users:                       # Who uses Stups and where the push messages go
+  - name: Anna               # Name as in Home Assistant (Settings › People)
+    notify:                  # Notify services of the Companion App, without "notify."
+      - mobile_app_annas_iphone
+  - name: Ben
+    notify:
+      - mobile_app_bens_iphone
+      - mobile_app_bens_ipad
+access_mode: selected        # selected = only these people and administrators, everyone = all Home Assistant users
+dashboard_path: /            # Default for the back button, can be changed later in the app
+daily_summary_time: "08:00"  # Daily summary
+overdue_nag_time: "18:00"    # Follow-up for overdue cards
+```
+
+You find the device names in Home Assistant under Developer tools › Actions (services `notify.mobile_app_…`); in the app, Settings › Household › People and children shows which devices Home Assistant knows.
+
+**Only the first start reads these options.** From version 1.41, Stups copies the people, devices, access, dashboard and times from here into the app once, at the first start after the update, and removes nobody. From then on the app is the only place: changes in this configuration have no effect any more, and people, devices and access are no longer locked in the app. Manage them under Settings › People & access, Settings › Dashboard, Settings › Daily summary and Settings › Follow up at …. The options will disappear from the configuration in a later version.
 
 ## Updating
 

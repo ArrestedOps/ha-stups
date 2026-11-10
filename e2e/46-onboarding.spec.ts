@@ -24,8 +24,16 @@ const me = async (request: APIRequestContext, headers?: Record<string, string>):
 async function reset(request: APIRequestContext) {
   const watchers = (await (await request.get('/api/watchers')).json()) as { items: { id: string }[] };
   for (const w of watchers.items) await request.delete(`/api/watchers/${w.id}`);
-  const people = (await (await request.get('/api/people')).json()) as { id: string }[];
-  for (const p of people) await request.delete(`/api/access/people/${p.id}`);
+  const people = (await (await request.get('/api/people')).json()) as { id: string; displayName: string }[];
+  for (const p of people) {
+    // die Handys gehören zur Benutzerzeile und überleben das Entfernen der Person
+    // (Connys Handy bleibt: der Mitglieds-Test erkennt es am Namen)
+    if (p.displayName !== 'Conny') await request.patch(`/api/access/people/${p.id}`, { data: { notifyServices: [] } });
+    await request.delete(`/api/access/people/${p.id}`);
+  }
+  // das eigene Handy des Administrators (Testschritt) steht in seiner Zeile
+  const self = (await (await request.get('/api/me')).json()) as { user: { id: string } };
+  await request.patch(`/api/access/people/${self.user.id}`, { data: { notifyServices: [] } });
   await request.post(`${MOCK}/mock/pushes/clear`);
   expect((await request.delete('/api/me/onboarding')).status()).toBe(204);
 }
@@ -73,7 +81,7 @@ test('Administrator: alles durchlaufen bis „Zu den Aufgaben"', async ({ page, 
   await expect(rows).toHaveCount(2);
   await expect(page.getByTestId('person-self')).toHaveCount(0);
   await expect(page.getByTestId('admin-note')).toContainText('Du bist Administrator');
-  await expect(page.locator('[data-testid^="person-"]', { hasText: 'Conny' })).toContainText('Handy erkannt');
+  await expect(page.getByTestId('person-ha:ha-conny-e2e')).toContainText('Handy erkannt');
   await expect(page.locator('[data-testid^="person-"]', { hasText: 'Mia' })).toContainText('Kein Handy gefunden');
   const links = page.getByTestId('companion-links');
   await expect(links).toHaveCount(1);
@@ -146,6 +154,56 @@ test('„Mich auch hinzufügen": der Administrator wird eine Person; Wächter un
   await expect(tabs(page)).toBeVisible();
   const people = (await (await request.get('/api/people')).json()) as { displayName: string }[];
   expect(people.map((p) => p.displayName.toLowerCase()).sort()).toEqual(['conny', 'mia', 'rene']);
+});
+
+test('Testschritt: der Administrator trägt sein eigenes Handy ein und schickt die Nachricht an sich', async ({ page, request }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Los geht/ }).click();
+  await page.getByRole('button', { name: /Weiter mit 2 Personen/ }).click();
+  await dialog(page).getByRole('button', { name: 'Ohne Wächter weiter' }).click();
+  await expect(heading(page, 'Testnachricht')).toBeVisible();
+  // Conny ist Empfängerin; das Handy des Administrators fehlt, er ist keine Person
+  const recipients = page.getByTestId('test-recipients');
+  await expect(recipients.getByRole('radio')).toHaveCount(1);
+  await page.getByTestId('own-phone').getByRole('button', { name: 'Mein Handy dazunehmen' }).click();
+  const own = page.getByTestId('own-phone');
+  // Home Assistant ordnet das Gerät dem Administrator zu: es ist vorgewählt
+  await expect(own.getByRole('checkbox', { name: /rene e2e/i })).toHaveAttribute('aria-checked', 'true');
+  await own.getByRole('button', { name: 'Mein Handy verbinden' }).click();
+  await expect(recipients.getByRole('radio')).toHaveCount(2);
+  await expect(recipients.getByRole('radio', { name: /Rene/i })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('own-phone')).toHaveCount(0);
+  await dialog(page).getByRole('button', { name: /Testnachricht an Rene/i }).click();
+  await expect(page.getByTestId('test-sent')).toBeVisible();
+  const pushes = (await (await request.get(`${MOCK}/mock/pushes`)).json()) as { service: string }[];
+  expect(pushes.map((p) => p.service)).toEqual(['mobile_app_rene_e2e']);
+  // er bleibt keine Person
+  const people = (await (await request.get('/api/people')).json()) as { displayName: string }[];
+  expect(people.map((p) => p.displayName.toLowerCase()).sort()).toEqual(['conny', 'mia']);
+});
+
+test('Handy von Hand wählen: Mia bekommt ein Gerät aus der Liste, die Zuordnung von Home Assistant steht oben', async ({ page, request }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Los geht/ }).click();
+  const mia = page.locator('[data-testid^="person-"]', { hasText: 'Mia' });
+  await expect(mia).toContainText('Kein Handy gefunden');
+  await mia.getByRole('button', { name: 'Handy wählen' }).click();
+  const list = mia.locator('[data-testid^="devices-"]');
+  const boxes = list.getByRole('checkbox');
+  // alle Geräte der Companion App stehen zur Auswahl; wer ein Gerät schon hat, steht dabei
+  await expect(boxes).toHaveCount(3);
+  await expect(list.getByRole('checkbox', { name: /Conny e2e 2/ })).toContainText('bei Conny');
+  await list.getByRole('checkbox', { name: /^Rene e2e/ }).click();
+  await expect(mia).toContainText('Handy gewählt · Rene e2e');
+  // Conny behält ihre erkannten Geräte, auch nach dem Aufklappen und Ändern bei Mia
+  await expect(page.getByTestId('person-ha:ha-conny-e2e')).toContainText('Handy erkannt');
+  await page.getByRole('button', { name: 'Weiter mit 2 Personen' }).click();
+  await dialog(page).getByRole('button', { name: 'Ohne Wächter weiter' }).click();
+  await dialog(page).getByRole('button', { name: 'Ohne Test weiter' }).click();
+  await dialog(page).getByRole('button', { name: 'Zu den Aufgaben' }).click();
+  const people = (await (await request.get('/api/people')).json()) as { displayName: string; notifyServices: string[] }[];
+  expect(people.find((p) => p.displayName === 'Mia')!.notifyServices).toEqual(['mobile_app_rene_e2e']);
+  expect(people.find((p) => p.displayName === 'Conny')!.notifyServices).toEqual(['mobile_app_conny_e2e_2', 'mobile_app_conny_e2e']);
 });
 
 test('überspringen im ersten Schritt öffnet die App normal und erscheint nicht wieder', async ({ page, request }) => {

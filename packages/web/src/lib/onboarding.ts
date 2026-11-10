@@ -1,4 +1,5 @@
 import type { User } from './api';
+import { deviceName } from './pushStand';
 
 /**
  * Einrichtung beim ersten Start (docs/onboarding/README.md): reine Funktionen für Schritte, Personen und Treffer.
@@ -89,15 +90,21 @@ export interface Candidate {
   choices: string[];
 }
 
-/** `device_tracker.connys_iphone` → `mobile_app_connys_iphone`: der Push-Dienst zu einem Gerät, das Home Assistant einer Person zuordnet */
-const serviceOfTracker = (tracker: string): string => `mobile_app_${tracker.replace(/^device_tracker\./, '')}`;
-
 /**
- * Die Geräte einer Person nach Home Assistant: alles, was in `device_trackers` steht und als Push-Dienst der Companion App existiert, in der
- * Reihenfolge von Home Assistant. Das ist genauer als jeder Name (auch bei doppelten Anmeldungen wie `connys_iphone` und `connys_iphone_2`).
+ * Die Geräte einer Person nach Home Assistant: zu jedem Eintrag in `device_trackers` (`device_tracker.connys_iphone`) der Push-Dienst der
+ * Companion App (`mobile_app_connys_iphone`), in der Reihenfolge von Home Assistant. Das ist genauer als jeder Name (auch bei doppelten
+ * Anmeldungen wie `connys_iphone` und `connys_iphone_2`). Gibt es keinen Dienst mit genau diesem Namen, gilt einer mit Zähler
+ * (`mobile_app_iphone_von_rene_2` zu `device_tracker.iphone_von_rene`): so benennt Home Assistant Geräte, die neu angemeldet wurden.
  */
 export function devicesOfTrackers(trackers: string[] | undefined, services: string[]): string[] {
-  return [...new Set((trackers ?? []).map(serviceOfTracker))].filter((s) => services.includes(s));
+  const out: string[] = [];
+  for (const tracker of trackers ?? []) {
+    const base = `mobile_app_${tracker.replace(/^device_tracker\./, '')}`;
+    const exact = services.filter((s) => s === base);
+    const counted = services.filter((s) => s.startsWith(`${base}_`) && /^\d+$/.test(s.slice(base.length + 1)));
+    for (const s of exact.length > 0 ? exact : counted) if (!out.includes(s)) out.push(s);
+  }
+  return out;
 }
 
 /** Du zuerst (nur auf Wunsch sichtbar), dann die Personen, die schon in Stups stehen, dann die aus Home Assistant, die noch fehlen */
@@ -157,4 +164,38 @@ export const childChoices = (candidates: Candidate[], selected: string[]): Candi
 export function assigneeIds(personIds: string[], childIds: string[]): string[] {
   const adults = personIds.filter((id) => !childIds.includes(id));
   return adults.length > 0 ? adults : personIds;
+}
+
+// ---------- Handy von Hand wählen ----------
+
+/** Die Geräte, die für diese Person gelten: die Wahl von Hand (auch eine leere) geht vor, sonst was erkannt wurde */
+export const effectiveDevices = (c: Candidate, overrides: Record<string, string[]>): string[] => overrides[c.key] ?? c.devices;
+
+/** Antippen: ein Gerät an- oder abwählen (eine Person kann mehrere Handys und ein Tablet haben) */
+export const toggleDevice = (current: string[], service: string): string[] => (current.includes(service) ? current.filter((s) => s !== service) : [...current, service]);
+
+export interface DeviceOption {
+  service: string;
+  /** Home Assistant oder der Name ordnet es dieser Person zu */
+  assigned: boolean;
+  /** Der Name der anderen Person, die dieses Gerät schon gewählt hat (sonst null) */
+  takenBy: string | null;
+}
+
+/**
+ * Alle Geräte der Companion App zur Auswahl für eine Person: zuerst die, die zu ihr passen (in der Reihenfolge der Erkennung), dann alle
+ * anderen nach Gerätename. `query` sucht im Gerätenamen. „takenBy" zeigt, wer ein Gerät schon hat, damit man nicht zwei Personen dasselbe Handy gibt.
+ */
+export function deviceOptions(candidate: Candidate, candidates: Candidate[], services: string[], overrides: Record<string, string[]>, query = ''): DeviceOption[] {
+  const q = fold(query).trim();
+  const label = (s: string) => fold(`${deviceName(s)} ${s}`);
+  const owner = (service: string): string | null => candidates.find((o) => o.key !== candidate.key && effectiveDevices(o, overrides).includes(service))?.name ?? null;
+  const rank = (s: string) => {
+    const i = candidate.choices.indexOf(s);
+    return i < 0 ? Number.MAX_SAFE_INTEGER : i;
+  };
+  return services
+    .filter((s) => q === '' || label(s).includes(q))
+    .map((s) => ({ service: s, assigned: candidate.choices.includes(s), takenBy: owner(s) }))
+    .sort((a, b) => rank(a.service) - rank(b.service) || deviceName(a.service).localeCompare(deviceName(b.service)));
 }

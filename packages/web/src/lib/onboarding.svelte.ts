@@ -6,9 +6,11 @@ import {
   assigneeIds,
   buildCandidates,
   defaultSelection,
+  effectiveDevices,
   matchDevices,
   nextOpenStep,
   stepsFor,
+  toggleDevice,
   toggleSelection,
   type Candidate,
   type Step,
@@ -37,6 +39,8 @@ export const ob = $state({
   selected: [] as string[],
   /** Schlüssel der Personen mit der Rolle Kind */
   children: [] as string[],
+  /** Handys von Hand gewählt, je Person (Schlüssel wie bei `selected`); fehlt ein Eintrag, gilt, was erkannt wurde */
+  devices: {} as Record<string, string[]>,
   /** „Mich auch hinzufügen": der Administrator ist sonst keine Person und kommt nirgends vor */
   includeSelf: false,
   /** Ids der Personen in Stups, nachdem sie gespeichert sind (für den Assistenten und für Wiederaufnahme) */
@@ -66,7 +70,7 @@ export function begin(): void {
   const progress = ui.onboarding.progress;
   const sel = (progress?.selection ?? {}) as Record<string, unknown>;
   const list = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
-  Object.assign(ob, { busy: false, info: null, candidates: [], selected: [], children: [], testTo: null });
+  Object.assign(ob, { busy: false, info: null, candidates: [], selected: [], children: [], devices: {}, testTo: null });
   ob.includeSelf = sel.includeSelf === true || ui.me?.isPerson === true;
   ob.personIds = list(sel.personIds);
   ob.childIds = list(sel.childIds);
@@ -179,6 +183,11 @@ export const togglePerson = (key: string): void => {
   ob.children = ob.children.filter((k) => ob.selected.includes(k));
 };
 
+/** Ein Gerät für eine Person an- oder abwählen (Handy von Hand wählen) */
+export function toggleCandidateDevice(c: Candidate, service: string): void {
+  ob.devices = { ...ob.devices, [c.key]: toggleDevice(effectiveDevices(c, ob.devices), service) };
+}
+
 export function toggleChild(key: string): void {
   ob.children = ob.children.includes(key) ? ob.children.filter((k) => k !== key) : [...ob.children, key];
 }
@@ -203,7 +212,10 @@ export async function savePeople(): Promise<boolean> {
       ids[c.key] = id;
       names.push(c.name);
       const patch: Parameters<typeof api.updatePerson>[1] = {};
-      if (c.deviceNew && c.devices.length > 0) patch.notifyServices = c.devices;
+      // Neue Geräte (erkannt oder gewählt) eintragen; bei einer bestehenden Person nur, wenn sie von Hand geändert wurden
+      const devices = effectiveDevices(c, ob.devices);
+      const changed = c.deviceNew || (ob.devices[c.key] !== undefined && (devices.length !== c.devices.length || devices.some((d) => !c.devices.includes(d))));
+      if (changed && devices.length > 0) patch.notifyServices = devices;
       const child = !c.self && ob.children.includes(c.key);
       if (child !== c.isChild) patch.isChild = child;
       if (Object.keys(patch).length > 0) await api.updatePerson(id, patch);
@@ -244,8 +256,40 @@ export function watcherSaved(saved: SavedWatcher): void {
 /** Hat die Person ein Handy (Gerät der Companion App oder ntfy-Thema)? */
 export const hasPhone = (u: Pick<User, 'notifyServices' | 'ntfy'> | null = ui.me): boolean => !!u && (u.notifyServices.length > 0 || u.ntfy);
 
-/** Wer eine Testnachricht bekommen kann: Personen mit Handy */
-export const testRecipients = (): User[] => ui.people.filter((p) => p.isPerson && hasPhone(p));
+/** Wer eine Testnachricht bekommen kann: Personen mit Handy, dazu der Administrator selbst, wenn er sein Handy eingetragen hat (er ist keine Person) */
+export const testRecipients = (): User[] => {
+  const list = ui.people.filter((p) => p.isPerson && hasPhone(p));
+  const me = ui.me;
+  return me && !me.isPerson && hasPhone(me) && !list.some((p) => p.id === me.id) ? [...list, me] : list;
+};
+
+/** Der Eintrag des Administrators in der Liste der Erkannten (seine Geräte nach der Zuordnung von Home Assistant), auch bei Wiederaufnahme im Testschritt */
+export async function ownCandidate(): Promise<Candidate | null> {
+  if (ob.candidates.length === 0) await loadPeople();
+  return ob.candidates.find((c) => c.self) ?? null;
+}
+
+/** Das eigene Handy des Administrators eintragen (seine Zeile, ohne dass er eine Person wird) und als Empfänger wählen */
+export async function connectAdminPhone(c: Candidate): Promise<boolean> {
+  const me = ui.me;
+  const services = effectiveDevices(c, ob.devices);
+  if (!me || services.length === 0 || ob.busy) return false;
+  ob.busy = true;
+  try {
+    const saved = await api.updatePerson(me.id, { notifyServices: services });
+    // der Administrator steht nicht in der Liste der Personen: seine Zeile kommt aus der Antwort
+    ui.me = { ...me, notifyServices: saved.notifyServices };
+    await refresh();
+    ob.testTo = me.id;
+    ob.test = 'idle';
+    return true;
+  } catch (e) {
+    toast(e instanceof ApiError ? e.message : t('Keine Verbindung zu Home Assistant'), { tone: 'error' });
+    return false;
+  } finally {
+    ob.busy = false;
+  }
+}
 
 /** Die Person, an die es geht: die gewählte, sonst die erste mit Handy */
 export function testTarget(): User | null {

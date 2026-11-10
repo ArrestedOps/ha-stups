@@ -1,10 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { t } from '../lib/i18n/index.svelte';
-  import { connectOwnPhone, hasPhone, next, ob, sendTest, testRecipients, testTarget } from '../lib/onboarding.svelte';
+  import { connectAdminPhone, connectOwnPhone, hasPhone, next, ob, ownCandidate, sendTest, testRecipients, testTarget } from '../lib/onboarding.svelte';
   import { openSettings, openSheet, ui } from '../lib/store.svelte';
+  import type { Candidate } from '../lib/onboarding';
   import Avatar from './Avatar.svelte';
   import OnboardingCompanion from './OnboardingCompanion.svelte';
+  import OnboardingDevices from './OnboardingDevices.svelte';
   import OnboardingFrame from './OnboardingFrame.svelte';
   import OnboardingPreview from './OnboardingPreview.svelte';
   import CtaButton from './ui/CtaButton.svelte';
@@ -16,7 +18,13 @@
    * zum Ende).
    */
   let { member = false, onnext }: { member?: boolean; onnext?: () => void } = $props();
-  onMount(() => member && void connectOwnPhone());
+  /** Der Administrator ist keine Person und hat meist kein Handy eingetragen: er trägt sein eigenes ein, um die Nachricht selbst zu bekommen */
+  let own = $state<Candidate | null>(null);
+  let ownOpen = $state(false);
+  onMount(() => {
+    if (member) void connectOwnPhone();
+    else if (ui.me && !ui.me.isPerson && !hasPhone(ui.me)) void ownCandidate().then((c) => (own = c));
+  });
 
   const recipients = $derived(testRecipients());
   const target = $derived(member ? ui.me : testTarget());
@@ -74,6 +82,18 @@
         <button type="button" class="mt-2 min-h-11 rounded-xl bg-surface2 px-4 text-[14px] font-bold" onclick={() => openSheet({ type: 'people' })}>{t('Handys eintragen')}</button>
       {/if}
       <div class="mt-2"><OnboardingCompanion /></div>
+    </div>
+  {/if}
+
+  {#if !member && own && !hasPhone(ui.me)}
+    <div class="mt-4" data-testid="own-phone">
+      {#if phone && !ownOpen}
+        <button type="button" class="min-h-11 text-[15px] font-semibold text-accent-text underline underline-offset-2" onclick={() => (ownOpen = true)}>{t('Mein Handy dazunehmen')}</button>
+      {:else}
+        <p class="text-[14px] leading-[1.45] text-fg2">{t('Du bist keine Person in Stups. Dein Handy trägst du hier trotzdem ein, damit die Nachricht auch zu dir kommen kann.')}</p>
+        <OnboardingDevices c={own} services={ob.info?.services ?? []} />
+        <button type="button" class="mt-2 min-h-11 rounded-xl bg-surface2 px-4 text-[14px] font-bold disabled:opacity-50" disabled={ob.busy} onclick={() => connectAdminPhone(own!)}>{t('Mein Handy verbinden')}</button>
+      {/if}
     </div>
   {/if}
 

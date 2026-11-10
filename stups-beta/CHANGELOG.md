@@ -2,6 +2,10 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+## 1.40.1-beta.9
+
+**Handys in der Einrichtung selbst wählen.** Bei jeder Person in „Wer wohnt hier?“ gibt es „Handy wählen“ bzw. „Ändern“: eine Liste aller Geräte der Companion App mit den passenden oben („passt“), Geräten anderer Personen mit deren Namen und einer Suche bei vielen Geräten. Die Zuordnung von Home Assistant erkennt jetzt auch ein Gerät, das einen Zähler im Namen hat (`iphone_von_rene` und `mobile_app_iphone_von_rene_2`). **Eigenes Handy des Administrators:** Im Schritt „Testnachricht“ trägt er sein Handy mit „Mein Handy dazunehmen“ ein und schickt sich die Nachricht selbst; er bleibt dabei keine Person.
+
 ## 1.40.1-beta.8
 
 **Handys werden richtig erkannt.** Die Einrichtung ordnet Handys jetzt so zu, wie Home Assistant es selbst weiß: Die Geräte, die einer Person dort zugeordnet sind (`device_trackers`), werden als ihre Handys eingetragen, auch wenn ein Gerät doppelt angemeldet ist (zum Beispiel `connys_iphone` und `connys_iphone_2`). Vorher gab es bei mehreren Treffern zum Namen keines, und die Testnachricht fand niemanden. Nur ohne Zuordnung gilt weiter der Name (bei genau einem Treffer). Gibt es Personen, aber keine mit Handy, sagt der Test-Schritt das und führt zu „Handys eintragen“.

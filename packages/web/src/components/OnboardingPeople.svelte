@@ -1,13 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { childChoices, visibleCandidates } from '../lib/onboarding';
+  import { childChoices, effectiveDevices, visibleCandidates, type Candidate } from '../lib/onboarding';
   import { deviceName } from '../lib/pushStand';
   import { loadPeople, next, ob, savePeople, toggleChild, togglePerson, toggleSelf } from '../lib/onboarding.svelte';
   import { ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
   import OnboardingCompanion from './OnboardingCompanion.svelte';
+  import OnboardingDevices from './OnboardingDevices.svelte';
   import OnboardingFrame from './OnboardingFrame.svelte';
   import Chip from './ui/Chip.svelte';
   import CtaButton from './ui/CtaButton.svelte';
@@ -33,11 +34,23 @@
     if (managed || (await savePeople())) next();
   }
 
-  const status = (c: (typeof ob.candidates)[number]): string => {
-    if (c.phone === 'found') return c.devices.length > 0 ? t('Handy erkannt · {device}', { device: c.devices.map(deviceName).join(', ') }) : t('Handy eingetragen');
-    if (c.choices.length > 1) return t('{n} Handys gefunden, wähle später in den Einstellungen', { n: c.choices.length });
+  /** Alle Geräte der Companion App aus Home Assistant (leer, wenn Home Assistant sie nicht liefert) */
+  const services = $derived(ob.info?.services ?? []);
+  /** Welche Person gerade ihr Handy wählt */
+  let picking = $state<string | null>(null);
+
+  /** Der Stand ihres Handys: die gewählten oder erkannten Geräte; ohne Gerät ein Hinweis, wie viele zum Namen passen */
+  const status = (c: Candidate): string => {
+    const devices = effectiveDevices(c, ob.devices);
+    if (devices.length > 0) {
+      const device = devices.map(deviceName).join(', ');
+      return ob.devices[c.key] !== undefined ? t('Handy gewählt · {device}', { device }) : t('Handy erkannt · {device}', { device });
+    }
+    if (c.phone === 'found') return t('Handy eingetragen');
+    if (c.choices.length > 1) return t('{n} Geräte passen, wähle eins', { n: c.choices.length });
     return t('Kein Handy gefunden');
   };
+  const hasPhone = (c: Candidate): boolean => effectiveDevices(c, ob.devices).length > 0 || c.phone === 'found';
 </script>
 
 <OnboardingFrame
@@ -66,8 +79,14 @@
               <span class="truncate">{c.name}</span>
               {#if c.self}<span class="rounded-md bg-surface2 px-1.5 py-0.5 text-[11px] font-bold text-fg2">{t('Du')}</span>{/if}
             </div>
-            <div class="mt-0.5 text-[13px] leading-snug {!on ? 'text-hint' : c.phone === 'found' ? 'text-ok' : 'text-fg2'}">{on ? status(c) : t('Nicht dabei')}</div>
-            {#if on && c.phone === 'missing' && c.choices.length === 0}<div class="mt-0.5"><OnboardingCompanion name={c.name} /></div>{/if}
+            <div class="mt-0.5 text-[13px] leading-snug {!on ? 'text-hint' : hasPhone(c) ? 'text-ok' : 'text-fg2'}">{on ? status(c) : t('Nicht dabei')}</div>
+            {#if on && services.length > 0}
+              <button type="button" class="-ml-1 inline-flex min-h-9 items-center px-1 text-[13px] font-semibold text-accent-text underline underline-offset-2" aria-expanded={picking === c.key} onclick={() => (picking = picking === c.key ? null : c.key)}>
+                {picking === c.key ? t('Fertig') : hasPhone(c) ? t('Ändern') : t('Handy wählen')}
+              </button>
+            {/if}
+            {#if on && !hasPhone(c) && (services.length === 0 || c.choices.length === 0)}<div class="mt-0.5"><OnboardingCompanion name={c.name} /></div>{/if}
+            {#if on && picking === c.key}<OnboardingDevices {c} {services} />{/if}
           </div>
           <Toggle checked={on} label={t('{name} ist dabei', { name: c.name })} disabled={ob.busy} onchange={() => togglePerson(c.key)} />
         </li>

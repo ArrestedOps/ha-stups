@@ -5,10 +5,14 @@ import {
   childChoices,
   COMPANION_APP_LINKS,
   defaultSelection,
+  deviceOptions,
+  devicesOfTrackers,
+  effectiveDevices,
   matchDevices,
   nextOpenStep,
   progressOf,
   stepsFor,
+  toggleDevice,
   toggleSelection,
   visibleCandidates,
 } from '../src/lib/onboarding';
@@ -153,6 +157,58 @@ describe('Onboarding: Personen im Schritt „Wer wohnt hier?"', () => {
     expect(assigneeIds(['a', 'b'], ['a', 'b'])).toEqual(['a', 'b']);
     expect(assigneeIds(['a'], [])).toEqual(['a']);
     expect(assigneeIds([], [])).toEqual([]);
+  });
+});
+
+describe('Onboarding: Geräte nach der Zuordnung von Home Assistant', () => {
+  it('der Push-Dienst heißt wie das Gerät; hat er einen Zähler (…_2), findet ihn der Tracker ohne Zähler, wenn es keinen genauen Treffer gibt', () => {
+    const services = ['mobile_app_iphone_von_rene_2', 'mobile_app_ipad_von_rene'];
+    expect(devicesOfTrackers(['device_tracker.iphone_von_rene'], services)).toEqual(['mobile_app_iphone_von_rene_2']);
+  });
+
+  it('ein genauer Treffer geht vor: der Zähler-Dienst gehört dann einem anderen Gerät', () => {
+    const services = ['mobile_app_connys_iphone', 'mobile_app_connys_iphone_2'];
+    expect(devicesOfTrackers(['device_tracker.connys_iphone'], services)).toEqual(['mobile_app_connys_iphone']);
+    expect(devicesOfTrackers(['device_tracker.connys_iphone_2', 'device_tracker.connys_iphone'], services)).toEqual(['mobile_app_connys_iphone_2', 'mobile_app_connys_iphone']);
+  });
+
+  it('kein Tracker, kein Treffer', () => {
+    expect(devicesOfTrackers([], ['mobile_app_x'])).toEqual([]);
+    expect(devicesOfTrackers(['device_tracker.unbekannt'], ['mobile_app_x'])).toEqual([]);
+  });
+});
+
+describe('Onboarding: Handy von Hand wählen', () => {
+  const me = { id: 'u-me', haUserId: 'ha-me', displayName: 'Rene', name: 'rene', isPerson: false, isChild: false, color: null, notifyServices: [], ntfy: false } as never;
+  const services = ['mobile_app_zebra', 'mobile_app_ben_pixel', 'mobile_app_annas_iphone', 'mobile_app_ben_tablet'];
+  const c = buildCandidates({ me, people: [], haPersons: [{ name: 'Ben', userId: 'ha-ben' }, { name: 'Anna', userId: 'ha-anna', deviceTrackers: ['device_tracker.annas_iphone'] }], services });
+  const ben = c.find((x) => x.key === 'ha:ha-ben')!;
+  const anna = c.find((x) => x.key === 'ha:ha-anna')!;
+
+  it('die Wahl von Hand geht vor, auch eine leere', () => {
+    expect(effectiveDevices(anna, {})).toEqual(['mobile_app_annas_iphone']);
+    expect(effectiveDevices(anna, { 'ha:ha-anna': ['mobile_app_zebra'] })).toEqual(['mobile_app_zebra']);
+    expect(effectiveDevices(anna, { 'ha:ha-anna': [] })).toEqual([]);
+  });
+
+  it('antippen wählt ein Gerät an oder ab', () => {
+    expect(toggleDevice(['a'], 'b')).toEqual(['a', 'b']);
+    expect(toggleDevice(['a', 'b'], 'a')).toEqual(['b']);
+  });
+
+  it('Auswahl: erst die Geräte, die zur Person passen (Home Assistant, Name), dann alle anderen nach Gerätename; „bei …“ zeigt, wer ein Gerät schon hat', () => {
+    const options = deviceOptions(ben, c, services, {});
+    expect(options.map((o) => o.service)).toEqual(['mobile_app_ben_pixel', 'mobile_app_ben_tablet', 'mobile_app_annas_iphone', 'mobile_app_zebra']);
+    expect(options.map((o) => o.assigned)).toEqual([true, true, false, false]);
+    expect(options.find((o) => o.service === 'mobile_app_annas_iphone')!.takenBy).toBe('Anna');
+    expect(options.find((o) => o.service === 'mobile_app_zebra')!.takenBy).toBeNull();
+    // was ich selbst gewählt habe, ist nicht „bei jemand anderem"
+    expect(deviceOptions(anna, c, services, {}).find((o) => o.service === 'mobile_app_annas_iphone')!.takenBy).toBeNull();
+  });
+
+  it('Suche: nach Gerätename, ohne Groß-/Kleinschreibung', () => {
+    expect(deviceOptions(ben, c, services, {}, 'PIXEL').map((o) => o.service)).toEqual(['mobile_app_ben_pixel']);
+    expect(deviceOptions(ben, c, services, {}, 'nichts')).toEqual([]);
   });
 });
 

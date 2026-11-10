@@ -203,6 +203,7 @@ export const en: Catalog = {
   // App, Navigation und kleine Komponenten
   'Stups konnte nicht geladen werden': 'Stups could not be loaded',
   'Neu laden': 'Reload',
+  'Konnte nicht geladen werden. Bitte neu laden.': 'Could not be loaded. Please reload.',
   'Lädt …': 'Loading …',
   'Board wechseln': 'Switch board',
   'Suchen': 'Search',

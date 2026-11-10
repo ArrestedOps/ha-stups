@@ -1,20 +1,13 @@
 <script lang="ts">
   import { t } from './lib/i18n/index.svelte';
   import { onMount } from 'svelte';
-  import ArchiveSheet from './components/ArchiveSheet.svelte';
-  import StatsSheet from './components/StatsSheet.svelte';
   import AuthView from './components/AuthView.svelte';
   import SlotSheet from './components/SlotSheet.svelte';
   import TabBar from './components/TabBar.svelte';
   import Sidebar from './components/Sidebar.svelte';
   import DesktopHeader from './components/DesktopHeader.svelte';
   import TasksView from './components/TasksView.svelte';
-  import WeekSheet from './components/WeekSheet.svelte';
   import BoardsView from './components/BoardsView.svelte';
-  import ArchivedBoards from './components/ArchivedBoards.svelte';
-  import BoardCreate from './components/BoardCreate.svelte';
-  import BoardOrder from './components/BoardOrder.svelte';
-  import BoardSettings from './components/BoardSettings.svelte';
   import BoardSwitcher from './components/BoardSwitcher.svelte';
   import CardMenu from './components/CardMenu.svelte';
   import CardSheet from './components/CardSheet.svelte';
@@ -22,18 +15,8 @@
   import Icon from './components/Icon.svelte';
   import Lightbox from './components/Lightbox.svelte';
   import NewCardSheet from './components/NewCardSheet.svelte';
-  import NudgeSheet from './components/NudgeSheet.svelte';
   import NoAccess from './components/NoAccess.svelte';
-  import Onboarding from './components/Onboarding.svelte';
-  import PeopleSheet from './components/PeopleSheet.svelte';
-  import SettingsSheet from './components/SettingsSheet.svelte';
   import Toasts from './components/Toasts.svelte';
-  import TrashSheet from './components/TrashSheet.svelte';
-  import WatcherSheet from './components/WatcherSheet.svelte';
-  import FoundSheet from './components/FoundSheet.svelte';
-  import WatchersView from './components/WatchersView.svelte';
-  import NotificationsSheet from './components/NotificationsSheet.svelte';
-  import FeedbackSheet from './components/FeedbackSheet.svelte';
   import FilterSheet from './components/FilterSheet.svelte';
   import { loadAgenda } from './lib/agenda.svelte';
   import { loadInbox } from './lib/inbox.svelte';
@@ -42,6 +25,26 @@
   import { feedbackSheet } from './lib/feedbackSheet.svelte';
   import { closeDetail, init, openSheet, setDesktop, ui } from './lib/store.svelte';
   import { watchDesktop } from './lib/viewport';
+  import Lazy from './components/Lazy.svelte';
+
+  // Selten gebrauchte Fenster und Reiter: je ein eigenes Paket, geladen beim ersten Öffnen (das Hauptpaket wird kleiner, der Start schneller)
+  const loadOnboarding = () => import('./components/Onboarding.svelte');
+  const loadBoardCreate = () => import('./components/BoardCreate.svelte');
+  const loadBoardOrder = () => import('./components/BoardOrder.svelte');
+  const loadArchivedBoards = () => import('./components/ArchivedBoards.svelte');
+  const loadBoardSettings = () => import('./components/BoardSettings.svelte');
+  const loadSettingsSheet = () => import('./components/SettingsSheet.svelte');
+  const loadPeopleSheet = () => import('./components/PeopleSheet.svelte');
+  const loadWatcherSheet = () => import('./components/WatcherSheet.svelte');
+  const loadFoundSheet = () => import('./components/FoundSheet.svelte');
+  const loadNudgeSheet = () => import('./components/NudgeSheet.svelte');
+  const loadTrashSheet = () => import('./components/TrashSheet.svelte');
+  const loadArchiveSheet = () => import('./components/ArchiveSheet.svelte');
+  const loadStatsSheet = () => import('./components/StatsSheet.svelte');
+  const loadWeekSheet = () => import('./components/WeekSheet.svelte');
+  const loadNotificationsSheet = () => import('./components/NotificationsSheet.svelte');
+  const loadFeedbackSheet = () => import('./components/FeedbackSheet.svelte');
+  const loadWatchersView = () => import('./components/WatchersView.svelte');
 
   onMount(init);
 
@@ -124,7 +127,7 @@
 {:else}
   {#if ui.onboarding.needs}
     <!-- Einrichtung beim ersten Start: statt der Reiter, solange der Server sie verlangt; Fenster (Einstellungen, Prüfen) öffnen darüber -->
-    <Onboarding />
+    <Lazy load={loadOnboarding} />
   {:else}
   <div class="header-glow" aria-hidden="true"></div>
   {#snippet pages()}
@@ -133,7 +136,7 @@
     {:else if tab === 'tasks'}
       <TasksView />
     {:else}
-      <WatchersView />
+      <Lazy load={loadWatchersView} />
     {/if}
   {/snippet}
 
@@ -175,39 +178,39 @@
   {:else if ui.sheet?.type === 'boards'}
     <BoardSwitcher />
   {:else if ui.sheet?.type === 'newBoard'}
-    <BoardCreate />
+    <Lazy load={loadBoardCreate} />
   {:else if ui.sheet?.type === 'boardOrder'}
-    <BoardOrder />
+    <Lazy load={loadBoardOrder} />
   {:else if ui.sheet?.type === 'archivedBoards'}
-    <ArchivedBoards />
+    <Lazy load={loadArchivedBoards} />
   {:else if ui.sheet?.type === 'boardSettings'}
-    <BoardSettings />
+    <Lazy load={loadBoardSettings} />
   {:else if ui.sheet?.type === 'settings'}
-    <SettingsSheet />
+    <Lazy load={loadSettingsSheet} />
   {:else if ui.sheet?.type === 'people'}
-    <PeopleSheet />
+    <Lazy load={loadPeopleSheet} />
   {:else if ui.sheet?.type === 'watcher'}
-    {#key ui.sheet.id ?? 'neu'}<WatcherSheet id={ui.sheet.id} template={ui.sheet.template} hit={ui.sheet.hit} />{/key}
+    {#key ui.sheet.id ?? 'neu'}<Lazy load={loadWatcherSheet} props={{ id: ui.sheet.id, template: ui.sheet.template, hit: ui.sheet.hit }} />{/key}
   {:else if ui.sheet?.type === 'found'}
-    <FoundSheet />
+    <Lazy load={loadFoundSheet} />
   {:else if ui.sheet?.type === 'nudge'}
-    {#key ui.sheet.id}<NudgeSheet id={ui.sheet.id} />{/key}
+    {#key ui.sheet.id}<Lazy load={loadNudgeSheet} props={{ id: ui.sheet.id }} />{/key}
   {:else if ui.sheet?.type === 'trash'}
-    <TrashSheet />
+    <Lazy load={loadTrashSheet} />
   {:else if ui.sheet?.type === 'archive'}
-    <ArchiveSheet />
+    <Lazy load={loadArchiveSheet} />
   {:else if ui.sheet?.type === 'stats'}
-    <StatsSheet kind={ui.sheet.kind} />
+    <Lazy load={loadStatsSheet} props={{ kind: ui.sheet.kind }} />
   {:else if ui.sheet?.type === 'week'}
-    <WeekSheet />
+    <Lazy load={loadWeekSheet} />
   {:else if ui.sheet?.type === 'notifications'}
-    <NotificationsSheet />
+    <Lazy load={loadNotificationsSheet} />
   {:else if ui.sheet?.type === 'filter'}
     <FilterSheet />
   {/if}
 
   <!-- Feedback liegt über allem, was offen ist (Einstellungen, Aufgaben …), und schließt zurück dorthin -->
-  {#if feedbackSheet.open && !ui.isChild}<FeedbackSheet />{/if}
+  {#if feedbackSheet.open && !ui.isChild}<Lazy load={loadFeedbackSheet} />{/if}
 
   <Lightbox />
   <ConfirmDialog />

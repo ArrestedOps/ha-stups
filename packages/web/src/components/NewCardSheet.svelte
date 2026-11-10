@@ -8,6 +8,7 @@
   import { deviceTz, formatLead, fromInputValue, isFuture } from '../lib/datetime';
   import { summaryTitle } from '../lib/dateSheet';
   import { i18n, t } from '../lib/i18n/index.svelte';
+  import { loadKeywords } from '../lib/symbols/words.svelte';
   import { dayOfMonth, names } from '../lib/i18n/names';
   import { formatBytes, prepareUpload, uploadProblem } from '../lib/image';
   import { parseQuickAdd, type QuickToken } from '../lib/quickadd';
@@ -113,6 +114,8 @@
   };
 
   // ---------- Symbol: aus dem Titel erkannt (Funken), von Hand gewählt, oder zurückgenommen (dann Standard „Aufgabe") ----------
+  // Die Suchwörter der Symbole sind ein eigenes Paket: schon beim Öffnen anstoßen, damit sie da sind, bevor der Titel fertig getippt ist
+  void loadKeywords().catch(() => undefined);
   let pickedSymbol = $state<{ icon: string; color: TileColor | null } | null>(null);
   let symbolOff = $state(false);
   const detected = $derived(pickedSymbol || symbolOff ? null : detectSymbol(parsed.title, i18n.lang));
@@ -244,6 +247,7 @@
     followDue();
     fields.columnId = columnForDue(columns, fields.columnId, isFuture(fields.dueAt));
     busy = true;
+    await loadKeywords().catch(() => undefined); // ein sehr schnelles Speichern wartet auf die Suchwörter, damit das erkannte Symbol nicht fehlt
     const newCategoryIds = confirmedCategories ? await createCategories() : [];
     if (newCategoryIds === null) {
       busy = false;

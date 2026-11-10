@@ -110,7 +110,7 @@ Neue Versionen erscheinen zuerst als **Stups (Beta)**, einer zweiten App mit eig
 https://github.com/ArrestedOps/ha-stups#beta
 ```
 
-Dort erscheint **Stups (Beta)** (mit „BETA"-Symbol). Aus dieser Adresse erscheint auch ein zweites „Stups": das nicht installieren. In der Beta sind Push und Wächter zunächst aus, damit niemand Nachrichten doppelt bekommt; über **Einstellungen › Hilfe und Daten › Papierkorb, Archiv, Umzug** lassen sich echte Daten einmal hineinkopieren. Alles dazu: [stups-beta/DOCS.md](stups-beta/DOCS.md).
+Dort erscheint **Stups (Beta)** (mit „BETA"-Symbol). Sie ist als experimentell markiert, Home Assistant zeigt sie also nur bei eingeschaltetem **erweitertem Modus** (dein Profil, unten links). Aus dieser Adresse erscheint auch ein zweites „Stups": das nicht installieren. In der Beta sind Push und Wächter zunächst aus, damit niemand Nachrichten doppelt bekommt; über **Einstellungen › Hilfe und Daten › Papierkorb, Archiv, Umzug** lassen sich echte Daten einmal hineinkopieren. Alles dazu: [stups-beta/DOCS.md](stups-beta/DOCS.md).
 
 ### Ohne Home Assistant (Docker, Beta)
 

@@ -1,6 +1,7 @@
 name: "Stups (Beta)"
-version: "1.40.1-beta.10"
+version: "1.41.0-beta.1"
 slug: stups_beta
+stage: experimental
 description: "Beta-Version von Stups mit eigenen Daten, zum Testen neuer Versionen vor der Veröffentlichung"
 url: https://github.com/ArrestedOps/ha-stups
 arch:

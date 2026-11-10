@@ -8,6 +8,8 @@ This is the **beta version** of Stups: the same app as "Stups", but with **its o
 
 - **Its own data.** The beta has its own storage. Boards and cards of the normal app are not in it, unless you copy them in once (see below).
 - **Push and watchers are off at first.** Otherwise the family would get reminders twice. Under **Settings › Help and data › Beta** an administrator switches both on selectively, for example push only for themselves.
+- **Only visible in Advanced mode.** The beta is marked experimental; the App Store shows it once Advanced mode is on in your profile.
+- **Version number.** `X-beta.N` is the Nth test version of the next normal version `X`.
 - **Its own names.** Push titles begin with "Beta ·", sensors are called `sensor.stups_beta_…`, the event for automations is called `stups_beta_create_card`, and the buttons in messages belong to the beta only.
 - **Its own icon** ("BETA") and its own entry in the sidebar ("Stups Beta").
 

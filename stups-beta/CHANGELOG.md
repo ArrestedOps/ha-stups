@@ -2,6 +2,12 @@
 
 Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht im Changelog der normalen App: [stups/CHANGELOG.md](https://github.com/ArrestedOps/ha-stups/blob/main/stups/CHANGELOG.md). Hier nur, was die Beta selbst betrifft.
 
+**Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
+
+## 1.41.0-beta.1
+
+**Die Beta erscheint nur noch im erweiterten Modus.** Wer im App-Store nur das normale Repository einträgt, sieht „Stups (Beta)“ nicht mehr (`stage: experimental`). Beta-Tester schalten dafür in Home Assistant unter Profil den **erweiterten Modus** ein. **Neue Nummerierung:** Die Beta kündigt jetzt die nächste normale Version an (diese ist `1.41.0-beta.1`, die nächste normale App wird `1.41.0`). Die Nummer ist höher als bisher, das Update wird also wie gewohnt angeboten. Sonst ändert sich an der App nichts.
+
 ## 1.40.1-beta.10
 
 **Vorschau der Testnachricht wie auf dem iPhone.** Sie startet mit „Normal“ (auch am Desktop), zeigt wie die echte Mitteilung „ZEITKRITISCH“ und den Titel auf eine Zeile gekürzt; in der Beta steht „Beta · “ davor. „Gedrückt halten“ zeigt die dunklere Mitteilung mit vollem Titel und den Knopf **Erledigt** als eigenen Streifen darunter, die Uhr bleibt stehen. Das Symbol ist das echte Home-Assistant-Logo in dessen Blau.

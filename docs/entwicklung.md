@@ -274,7 +274,8 @@ Seit 1.9.0 gibt es neben der normalen App eine zweite App im selben Repository: 
 | Ordner, Slug | `stups/`, `stups` | `stups-beta/`, `stups_beta` |
 | Branch, aus dem die CI baut | `release` (danach zieht die CI `main` nach) | `beta` |
 | Bilder | `ghcr.io/arrestedops/ha-stups-{arch}` (und `stups` als Manifest) | `ghcr.io/arrestedops/ha-stups-beta-{arch}` |
-| Version | `X.Y.Z` in `stups/config.yaml` | `X.Y.Z-beta.N` in `stups-beta/config.yaml` |
+| Version | `X.Y.Z` in `stups/config.yaml` | `X.Y.Z-beta.N` in `stups-beta/config.yaml` (`X.Y.Z` = die **nächste** normale Version) |
+| Sichtbarkeit im Store | immer | `stage: experimental`: nur im erweiterten Modus |
 | Home-Assistant-Adresse | `https://github.com/ArrestedOps/ha-stups` | `https://github.com/ArrestedOps/ha-stups#beta` |
 
 Home Assistant liest die Liste der Apps aus dem Branch der Repository-Adresse. Darum steht die Beta-Version nur dann rechtzeitig im Store, wenn die zweite Adresse mit `#beta` eingetragen ist. Aus ihr erscheint auch ein zweites „Stups" (anderer Hash, leere Daten): nicht installieren.
@@ -282,7 +283,7 @@ Home Assistant liest die Liste der Apps aus dem Branch der Repository-Adresse. D
 **Ablauf**
 
 1. Auf Branch `beta` arbeiten, `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e` laufen lassen.
-2. `version` in `stups-beta/config.yaml` erhöhen (`X.Y.Z-beta.N`), Eintrag in `stups-beta/CHANGELOG.md`, nach `beta` pushen. Die CI läuft dieselben Prüfungen und baut danach nur die Beta-Images.
+2. `version` in `stups-beta/config.yaml` erhöhen (`X.Y.Z-beta.N`; `X.Y.Z` ist die nächste normale Version, nach deren Veröffentlichung beginnt die Beta mit der darauf folgenden bei `-beta.1`; die Nummer darf nie sinken, sonst bietet Home Assistant das Update nicht an), Eintrag in `stups-beta/CHANGELOG.md`, nach `beta` pushen. Die CI läuft dieselben Prüfungen und baut danach nur die Beta-Images.
 3. Wenn die CI grün ist: in Home Assistant (Adresse mit `#beta`) „Nach Updates suchen", **Stups (Beta)** aktualisieren und testen (Testliste).
 4. **Nach der Freigabe:** auf `beta` die Version in `stups/config.yaml` auf `X.Y.Z` erhöhen und den Changelog `stups/CHANGELOG.md` schreiben, dann **nach `release`** pushen: `git push origin beta:release` (schneller Vorlauf, keine neuen Änderungen). Die CI prüft, baut die normalen Images und das Manifest und **setzt erst danach `main` auf diesen Stand** (Job `promote`). Home Assistant zeigt das Update also erst, wenn es installierbar ist. Zuvor, wenn es eine Migration gibt: Sicherung der normalen App.
 5. Wenn die CI grün ist (auch `promote`): in HA „Nach Updates suchen" und aktualisieren (Abschnitt 2). Ist `main` dazwischen woanders weitergelaufen, schlägt `promote` fehl (nur Vorlauf, nichts wird überschrieben): `main` nach `beta` mergen und erneut nach `release` pushen.

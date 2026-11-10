@@ -10,6 +10,8 @@ Das ist die **Beta-Version** von Stups: dieselbe App wie „Stups", aber mit **e
 - **Push und Wächter sind zunächst aus.** Sonst bekäme die Familie Erinnerungen doppelt. Unter **Einstellungen › Hilfe und Daten › Beta** schaltet ein Administrator beides gezielt ein, zum Beispiel Push nur für sich.
 - **Eigene Namen.** Push-Titel beginnen mit „Beta ·", Sensoren heißen `sensor.stups_beta_…`, das Ereignis für Automationen heißt `stups_beta_create_card`, die Knöpfe in Nachrichten gehören nur der Beta.
 - **Eigenes Symbol** („BETA") und eigener Eintrag in der Seitenleiste („Stups Beta").
+- **Nur im erweiterten Modus sichtbar.** Die Beta ist als experimentell markiert; im App-Store erscheint sie erst, wenn der erweiterte Modus in deinem Profil an ist.
+- **Versionsnummer.** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`.
 
 ## Echte Daten zum Testen kopieren
 

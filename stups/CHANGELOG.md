@@ -4,8 +4,6 @@
 
 *English first, German version below.*
 
-This version is the beta app's 1.40.1-beta.4.
-
 **Links open in the phone's browser.** A link on a card now opens in a new tab / the default browser instead of a black window inside the app.
 
 **Links öffnen im Handy-Browser.** Ein Link an einer Karte öffnet jetzt in einem neuen Tab bzw. im Standardbrowser des Handys, statt in einem schwarzen Fenster innerhalb der App.
@@ -13,8 +11,6 @@ This version is the beta app's 1.40.1-beta.4.
 ## 1.27.0
 
 *English first, German version below.*
-
-This version is the beta app's 1.40.1-beta.2 and contains everything since 1.26.0.
 
 - **Private and shared boards.** Each board is visible to "Only me", "Everyone in Stups" or "Selected people". Nobody else sees a private board, not even administrators; the server hides it everywhere (cards, Today, calendar, notifications, attachments, sensors, live sync). Existing boards stay visible to everyone. Children can create "Only me" boards.
 - **Fairness per board.** A switch decides whether a board counts towards the weekly fairness (private boards never do; retroactive). Watchers have their own switch.
@@ -46,8 +42,6 @@ Diese Version ist die 1.40.1-beta.2 der Beta-App und enthält alles seit 1.26.0.
 
 *English first, German version below.*
 
-This version is the beta app's 1.36.0-beta.1 and contains everything since 1.25.1.
-
 - **Desktop layout (from 1024 px wide).** A fixed sidebar replaces the bottom bar (tabs, boards, user card), the header has search (Ctrl/Cmd + K), "New task", Home and the bell. Tasks open in a detail column on the right, Boards are a full-width Kanban, Watchers a table. Windows open as a centred dialog. Phones and the Companion App look exactly as before; tablets show the phone view centred.
 - **Watchers: all watchers always visible**, sorted by **category** (suggested when you create one, or your own), collapsible, each with an **on/off switch**. Running ones stay on top. On the desktop it is a table with condition, current value, status, last trigger, next card and who. Creating a watcher on the desktop is **one form that unfolds above the list**; on the phone the assistant stays, now with a "Back" button in every step.
 - **Watchers: the device is in the name** ("Battery low: iPhone Rene"), existing ones show the entity's friendly name below the title and the current value at the top right; one button adds the device to old names (only with your consent).
@@ -77,8 +71,6 @@ Diese Version ist die 1.36.0-beta.1 der Beta-App und enthält alles seit 1.25.1.
 ## 1.25.1
 
 *English first, German version below.*
-
-This version is the beta app's 1.25.1-beta.1 and contains everything since 1.18.2.
 
 - **New design.** Three tabs: **Tasks, Boards, Watchers**. The app always opens on Tasks. Tasks has stats, a week strip, the stups banner, person chips with their pictures, a filter sheet and groups (Overdue, Today, This week, Later). The header has **Home** (back to Home Assistant), **Notifications**, **Settings** and your picture. Every list uses one row: round tick, **icon tile**, title, date • category • priority, and the people on the right
 - **Icon per card.** About 300 icons with German and English search words; Stups picks one from the title (sparkle badge). Choose it in a sheet with search, suggestions, recently used and colour. A new date and time sheet. In Settings › Icons you can let Stups detect icons for existing cards
@@ -110,8 +102,6 @@ Diese Version ist die 1.25.1-beta.1 der Beta-App und enthält alles seit 1.18.2.
 
 *English first, German version below.*
 
-This version is the beta app's 1.18.2-beta.1.
-
 - **Found: hide suggestions.** Every suggestion (washing machine, waste calendar, battery …) now has a **Hide** button. Whatever you do not have, Stups never suggests again, not even after a restart. Under **Hidden (n)** it is listed with **Show again**, in case you need it after all. It applies to all administrators; the next suggestion of the same kind moves up
 - Database: migration 21 (a small table for the hidden ones, with a backup beforehand as always)
 
@@ -125,8 +115,6 @@ Diese Version ist die 1.18.2-beta.1 der Beta-App.
 ## 1.18.1
 
 *English first, German version below.*
-
-This version is the beta app's 1.18.1-beta.1.
 
 - **Always opens on "Today".** Anyone who was last on Home used to land there again on the next start. Now the app always opens on Today; only Boards and Calendar are remembered
 - **Home: open a watcher directly.** Tapping a watcher opens it. **Administrators edit it right there** (sentence, More rules, Test, Pause, Delete). **Everyone else sees it read-only:** settings and history, without saving and without changes (the server refuses them anyway)
@@ -145,8 +133,6 @@ Diese Version ist die 1.18.1-beta.1 der Beta-App.
 ## 1.18.0
 
 *English first, German version below.*
-
-This version is the beta app's 1.18.0-beta.1. The desktop layout is not part of it and follows later.
 
 - **A new start page, "Today".** The bar at the bottom is now **Today · Boards · Calendar · Home**. Today shows what is on for you: **From the house** (cards from watchers, with what triggered them, when, and why you are up; buttons **Done**, **Pass on** and, with "Suggest first", **Take it**), **For you** (your cards due until tomorrow) and a line **With the others** that leads to **This week** (the former fairness view, now with "Waiting for you" for confirmations and the number of cards that came from the house). The agenda is now the fourth calendar view, **List**
 - **One header on every tab.** "‹ Dashboard" on the left (in the app), an offline notice and your **avatar** on the right, which opens the settings (the gear is gone). **Pictures of people:** from Home Assistant (always fetched through Stups, never directly by the browser) or uploaded by you; administrators can change them for others

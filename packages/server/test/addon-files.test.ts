@@ -98,6 +98,20 @@ describe('Add-on-Dateien der Beta', () => {
     expect(c.ingress_port).toBe(stable().ingress_port);
   });
 
+  // Beide Ordner liegen in beiden Branches; ohne stage zeigt der Store die Beta jedem, der das normale Repository einträgt.
+  it('die Beta ist experimentell (nur im erweiterten Modus sichtbar), die normale App nicht', () => {
+    expect(beta().stage).toBe('experimental');
+    expect(stable().stage).toBeUndefined();
+  });
+
+  it('die Beta-Version kündigt die nächste normale Version an: gleiche oder höhere Version als die normale App', () => {
+    const num = (v: string) => v.split('-')[0]!.split('.').map(Number) as [number, number, number];
+    const [bMaj, bMin, bPat] = num(String(beta().version));
+    const [sMaj, sMin, sPat] = num(String(stable().version));
+    // Basis der Beta >= normale Version (nach der Veröffentlichung sind sie gleich, bis die nächste Beta beginnt)
+    expect(bMaj * 1e6 + bMin * 1e3 + bPat).toBeGreaterThanOrEqual(sMaj * 1e6 + sMin * 1e3 + sPat);
+  });
+
   it('eigene Bilder: ha-stups-beta-{arch}, nie die der normalen App', () => {
     expect(beta().image).toBe('ghcr.io/arrestedops/ha-stups-beta-{arch}');
     expect(beta().image).not.toBe(stable().image);

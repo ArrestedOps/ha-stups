@@ -3,6 +3,7 @@
   import { i18n, t, tn } from '../../lib/i18n/index.svelte';
   import { act, can, toast, ui } from '../../lib/store.svelte';
   import { chunk, detectForCards } from '../../lib/symbols/bulk';
+  import { loadKeywords } from '../../lib/symbols/words.svelte';
   import Group from '../Group.svelte';
   import Icon from '../Icon.svelte';
   import Page from './Page.svelte';
@@ -39,6 +40,7 @@
 
   async function run(cards: { id: string; title: string }[]) {
     busy = true;
+    await loadKeywords().catch(() => undefined);
     const found = detectForCards(cards, i18n.lang);
     let updated = 0;
     for (const part of chunk(found.items, 500)) {

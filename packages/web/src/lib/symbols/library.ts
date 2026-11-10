@@ -1,9 +1,8 @@
 import type { TileColor } from '../../components/ui/Tile.svelte';
 import { i18n, t } from '../i18n/index.svelte';
 import catalog from './catalog.json';
-import { DE } from './keywords.de';
-import { EN } from './keywords.en';
 import { PATHS } from './paths';
+import { keywords } from './words.svelte';
 
 /** Die Symbol-Bibliothek: rund 300 mdi-Symbole, fest eingebaut (Pfade aus @mdi/js über scripts/build-symbols.mjs, Namen und Suchwörter von Hand) */
 export type SymbolSection = 'haus' | 'kueche' | 'garten' | 'familie' | 'technik' | 'weg';
@@ -54,7 +53,9 @@ export function symbolColor(card: { icon: string | null; iconColor: string | nul
 /** Name des Symbols in der Sprache der Oberfläche (für aria-label und Anzeige) */
 export function symbolName(id: string | null | undefined, lang = i18n.lang): string {
   const key = id && byId.has(id) ? id : DEFAULT_SYMBOL;
-  return (lang === 'de' ? DE : EN)[key]![0]!;
+  // Die Namen kommen als eigenes Paket; bis es da ist, steht die Kennung da (nur ein Augenblick, und nur in Fenstern, die Namen zeigen)
+  const k = keywords();
+  return k ? (lang === 'de' ? k.DE : k.EN)[key]![0]! : key;
 }
 
 /** Überschrift eines Bereichs */

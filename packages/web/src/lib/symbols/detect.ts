@@ -1,8 +1,7 @@
 import { i18n } from '../i18n/index.svelte';
-import { DE } from './keywords.de';
-import { EN } from './keywords.en';
 import { SYMBOLS } from './library';
 import { fold, variants } from './text';
+import { keywords } from './words.svelte';
 
 type Lang = 'de' | 'en';
 
@@ -16,7 +15,9 @@ interface Entry {
 const index: Record<Lang, Entry[]> = { de: [], en: [] };
 function build(lang: Lang): Entry[] {
   if (index[lang].length) return index[lang];
-  const table = lang === 'de' ? DE : EN;
+  const k = keywords();
+  if (!k) return []; // Suchwörter noch nicht geladen: nichts vorschlagen, nicht merken
+  const table = lang === 'de' ? k.DE : k.EN;
   index[lang] = SYMBOLS.map((s) => {
     const [name, ...words] = table[s.id]!;
     const own = fold(name!);

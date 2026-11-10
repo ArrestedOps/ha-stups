@@ -1,8 +1,7 @@
 import { i18n } from '../i18n/index.svelte';
-import { DE } from './keywords.de';
-import { EN } from './keywords.en';
 import { SYMBOLS, type SymbolInfo } from './library';
 import { distance, fold, variants } from './text';
+import { keywords } from './words.svelte';
 
 type Lang = 'de' | 'en';
 
@@ -17,9 +16,11 @@ interface Entry {
 let entries: Entry[] | null = null;
 function build(): Entry[] {
   if (entries) return entries;
+  const k = keywords();
+  if (!k) return []; // noch nicht geladen: keine Treffer, nicht merken
   entries = SYMBOLS.map((info) => {
-    const de = DE[info.id]!;
-    const en = EN[info.id]!;
+    const de = k.DE[info.id]!;
+    const en = k.EN[info.id]!;
     const all = [...de, ...en, info.id].flatMap((p) => fold(p).split(' ')).filter(Boolean);
     return { info, names: { de: fold(de[0]!), en: fold(en[0]!) }, words: [...new Set(all)] };
   });

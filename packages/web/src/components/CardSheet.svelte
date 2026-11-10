@@ -32,6 +32,7 @@
   import SubmitPill from './SubmitPill.svelte';
   import CardProps from './CardProps.svelte';
   import { detectSymbol } from '../lib/symbols/detect';
+  import { loadKeywords } from '../lib/symbols/words.svelte';
   import { i18n } from '../lib/i18n/index.svelte';
   import { symbolName } from '../lib/symbols/library';
   import CardTile from './CardTile.svelte';
@@ -272,8 +273,12 @@
             editing = null;
             const t = titleDraft.trim();
             // Ein erkanntes Symbol (Funken) folgt dem Titel; ein von Hand gewähltes bleibt, wie es ist
-            if (!child && t && t !== card!.title) void save({ title: t, ...(card!.iconSource === 'auto' ? retag(t) : {}) });
-            else titleDraft = card!.title;
+            if (!child && t && t !== card!.title) {
+              // Die Suchwörter der Symbole sind ein eigenes Paket: erst sicherstellen, dass sie da sind, dann das Symbol zum neuen Titel wählen
+              void loadKeywords()
+                .catch(() => undefined)
+                .then(() => save({ title: t, ...(card!.iconSource === 'auto' ? retag(t) : {}) }));
+            } else titleDraft = card!.title;
           }}
         ></textarea>
       </div>

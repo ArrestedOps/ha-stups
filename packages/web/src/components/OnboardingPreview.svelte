@@ -1,7 +1,6 @@
 <script lang="ts">
   import { i18n, t } from '../lib/i18n/index.svelte';
   import { previewTexts } from '../lib/onboarding.svelte';
-  import { ui } from '../lib/store.svelte';
   import Segmented from './ui/Segmented.svelte';
 
   /**
@@ -9,7 +8,7 @@
    * Stups, so kommt sie an), Kartentitel und „Neue Karte für dich · fällig …" wie bei einem echten Wächter. Den Knopf Erledigt gibt es dort erst,
    * wenn man die Mitteilung gedrückt hält: „Normal" und „Gedrückt halten" zeigen beides. Die Uhr ist nur Dekoration.
    */
-  let held = $state(ui.desktop);
+  let held = $state(false);
   const m = $derived(previewTexts());
   const locale = $derived(i18n.lang === 'en' ? 'en-GB' : 'de-DE');
   const when = $derived(new Date().toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }));
@@ -40,9 +39,9 @@
     {/if}
     <div class="flex w-full items-start gap-[11px] rounded-[22px] px-[13px] py-3 backdrop-blur-md" style="background: var(--ios-glass)">
       <svg class="h-[38px] w-[38px] shrink-0" viewBox="0 0 40 40" aria-hidden="true">
-        <rect width="40" height="40" rx="9" fill="var(--ha-blue)" />
-        <path d="M9 21 20 11l11 10v9H9z" fill="none" stroke="var(--on-media)" stroke-width="2.6" stroke-linejoin="round" />
-        <circle cx="20" cy="22" r="2.2" fill="var(--on-media)" />
+        <rect width="40" height="40" rx="9" style="fill: var(--ha-blue)" />
+        <path d="M9 21 20 11l11 10v9H9z" style="fill: none; stroke: var(--on-media)" stroke-width="2.6" stroke-linejoin="round" />
+        <circle cx="20" cy="22" r="2.2" style="fill: var(--on-media)" />
       </svg>
       <div class="min-w-0 flex-1">
         <div class="flex justify-between gap-2 text-[15px] leading-tight font-bold"><span data-testid="preview-title">{m.title}</span><span class="shrink-0 text-[12.5px] font-medium opacity-70">{t('jetzt')}</span></div>

@@ -19,9 +19,14 @@ export interface Options {
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-function time(raw: unknown, fallback: string, key: string): string {
+/** Mit `invalid` (Add-on) fällt eine ungültige Uhrzeit auf den Standard zurück und der Schlüssel wird vermerkt, statt den Start abzubrechen */
+function time(raw: unknown, fallback: string, key: string, invalid?: string[]): string {
   if (raw === undefined || raw === null || raw === '') return fallback;
   if (typeof raw !== 'string' || !TIME_RE.test(raw)) {
+    if (invalid) {
+      invalid.push(key);
+      return fallback;
+    }
     throw new Error(`Option ${key} muss die Form HH:MM haben, ist aber ${JSON.stringify(raw)}`);
   }
   return raw;
@@ -31,7 +36,7 @@ function str(raw: unknown, fallback: string): string {
   return typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : fallback;
 }
 
-export function parseOptions(raw: unknown): Options {
+export function parseOptions(raw: unknown, invalid?: string[]): Options {
   const o = (raw ?? {}) as Record<string, unknown>;
   const users = Array.isArray(o.users) ? o.users : [];
   const dashboard = str(o.dashboard_path, '/lovelace/0');
@@ -48,8 +53,8 @@ export function parseOptions(raw: unknown): Options {
     }),
     accessMode: o.access_mode === 'everyone' ? 'everyone' : 'selected',
     dashboardPath: dashboard.startsWith('/') ? dashboard : `/${dashboard}`,
-    dailySummaryTime: time(o.daily_summary_time, '08:00', 'daily_summary_time'),
-    overdueNagTime: time(o.overdue_nag_time, '18:00', 'overdue_nag_time'),
+    dailySummaryTime: time(o.daily_summary_time, '08:00', 'daily_summary_time', invalid),
+    overdueNagTime: time(o.overdue_nag_time, '18:00', 'overdue_nag_time', invalid),
     logLevel: str(o.log_level, 'info'),
   };
 }

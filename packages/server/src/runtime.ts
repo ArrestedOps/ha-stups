@@ -37,6 +37,8 @@ export interface Runtime {
   /** Adresse, unter der Handys Stups erreichen (für Push-Aktionen ohne Home Assistant) */
   publicUrl: string | null;
   options: Options;
+  /** Add-on: Optionen mit ungültiger Uhrzeit (sie fielen auf den Standard zurück); sonst leer. In Docker bricht eine ungültige Uhrzeit den Start ab. */
+  invalidOptions: string[];
   ha: HaConnection | null;
   /** Push über ntfy; im Add-on immer null (dort läuft Push über die Companion App) */
   ntfy: NtfyConfig | null;
@@ -154,7 +156,8 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
   const dataDir = own('DATA_DIR') ?? set(env.DATA_DIR) ?? '/data';
   const optionsPath = own('CONFIG') ?? set(env.OPTIONS_PATH) ?? (mode === 'addon' ? '/data/options.json' : `${dataDir}/options.json`);
   const fileRaw = readFile(optionsPath);
-  const options = parseOptions(mode === 'addon' ? fileRaw : { ...fileRaw, ...optionsFromEnv(env) });
+  const invalidOptions: string[] = [];
+  const options = mode === 'addon' ? parseOptions(fileRaw, invalidOptions) : parseOptions({ ...fileRaw, ...optionsFromEnv(env) });
 
   const port = Number(own('PORT') ?? set(env.PORT) ?? 8099);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(`Ungültiger Port: ${own('PORT') ?? env.PORT}`);
@@ -188,6 +191,7 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
     timeZone: set(env.TZ) ?? 'Europe/Berlin',
     publicUrl,
     options,
+    invalidOptions,
     ha,
     ntfy: ntfyFromEnv(own),
     trustProxy: parseTrustProxy(own('TRUST_PROXY')),

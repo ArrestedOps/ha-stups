@@ -1328,8 +1328,6 @@ export const en: Catalog = {
   'an': 'to',
   'Ab dieser Uhrzeit bekommt jede Person morgens eine Nachricht, was heute fällig und überfällig ist. Ist nichts offen, bleibt Stups still. Die Uhrzeit gilt für alle; das ändern Administratoren und wer die Berechtigung „App-Einstellungen“ hat.': 'From this time on, everyone gets a message in the morning with what is due today and overdue. If nothing is open, Stups stays quiet. The time applies to everyone; administrators and people with the “App settings” permission change it.',
   'Uhrzeit der Tageszusammenfassung': 'Time of the daily summary',
-  'Wieder die Uhrzeit aus der Konfiguration der App nehmen ({time})': 'Use the time from the app configuration again ({time})',
-  'Gerade gilt die Uhrzeit aus der Konfiguration der App ({time}).': 'The time from the app configuration currently applies ({time}).',
   'erledigte Karten dieses Boards': 'done cards of this board',
   'Umzug: Daten exportieren': 'Move: export data',
   'nach /share/stups-umzug': 'to /share/stups-umzug',

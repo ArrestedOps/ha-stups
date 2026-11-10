@@ -63,6 +63,13 @@ describe('Einstellungen', () => {
     expect(r.options).toMatchObject({ dailySummaryTime: '07:30', accessMode: 'everyone', users: [{ name: 'Rene', notify: ['mobile_app_x'] }] });
   });
 
+  it('Add-on: eine ungültige Uhrzeit bricht den Start nicht ab, sie fällt auf den Standard zurück und wird gemeldet', () => {
+    const r = resolveRuntime({ SUPERVISOR_TOKEN: 'abc' }, files({ '/data/options.json': { daily_summary_time: '07:30', overdue_nag_time: '25:00' } }));
+    expect(r.options).toMatchObject({ dailySummaryTime: '07:30', overdueNagTime: '18:00' });
+    expect(r.invalidOptions).toEqual(['overdue_nag_time']);
+    expect(resolveRuntime({ SUPERVISOR_TOKEN: 'abc' }, files()).invalidOptions).toEqual([]);
+  });
+
   it('OPTIONS_PATH wählt die Datei', () => {
     const r = resolveRuntime({ OPTIONS_PATH: '/etc/o.json' }, files({ '/etc/o.json': { log_level: 'debug' } }));
     expect(r.options.logLevel).toBe('debug');

@@ -1,6 +1,7 @@
 import { render } from 'svelte/server';
 import { beforeEach, describe, expect, it } from 'vitest';
 import NagPage from '../src/components/settings/NagPage.svelte';
+import SummaryPage from '../src/components/settings/SummaryPage.svelte';
 import type { Settings } from '../src/lib/api';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
 import { ui } from '../src/lib/store.svelte';
@@ -42,5 +43,19 @@ describe('Seite „Nachhaken um …"', () => {
     const out = html();
     expect(out).toMatch(/<input[^>]*id="nag-time"[^>]*disabled/);
     expect(out).not.toContain('Zurücksetzen');
+  });
+});
+
+describe('Seite „Tageszusammenfassung" im Add-on', () => {
+  it('nennt die Standard-Uhrzeit, nicht die Konfiguration (die Option gilt seit der Übernahme beim ersten Start nicht mehr)', () => {
+    ui.isAdmin = true;
+    ui.settings = { dailySummaryTime: null, defaultDailySummaryTime: '08:00', effectiveDailySummaryTime: '08:00' } as Settings;
+    const out = render(SummaryPage, { props: {} }).body;
+    expect(out).toContain('Gerade gilt die Standard-Uhrzeit (08:00).');
+    expect(out).not.toContain('Konfiguration');
+    ui.settings = { dailySummaryTime: '06:30', defaultDailySummaryTime: '08:00', effectiveDailySummaryTime: '06:30' } as Settings;
+    const own = render(SummaryPage, { props: {} }).body;
+    expect(own).toContain('Wieder die Standard-Uhrzeit nehmen (08:00)');
+    expect(own).not.toContain('Konfiguration der App');
   });
 });

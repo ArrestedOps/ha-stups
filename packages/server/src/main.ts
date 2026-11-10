@@ -66,7 +66,7 @@ const store = createStore(db, { timeZone: () => timeZone, onNudgesClosed: (list)
 const accounts = runtime.identity.kind === 'session' ? createAccounts(db, store) : undefined;
 // Personen, Push-Geräte, Zugriff und Zeiten stehen in der Datenbank und werden in der App gepflegt.
 // Im Add-on werden die Optionen einmal übernommen; in Docker gilt die Konfiguration wie bisher (siehe addon-options.ts)
-applyStartupOptions(store, { mode: runtime.mode, options: runtime.options }, app.log);
+applyStartupOptions(store, { mode: runtime.mode, options: runtime.options, invalidOptions: runtime.invalidOptions }, app.log);
 // Das erste Board entsteht mit der ersten Anfrage der App, in der Sprache dieser Person (der Haken läuft nach dem Sprachhaken von oben)
 app.addHook('onRequest', (req, _reply, done) => {
   if (req.method === 'GET' && (req.url.startsWith('/api/boards') || req.url.startsWith('/api/me'))) store.ensureDefaultBoard();

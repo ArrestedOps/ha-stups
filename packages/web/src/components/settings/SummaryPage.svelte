@@ -9,7 +9,7 @@
 
   /**
    * Tageszusammenfassung: ab welcher Uhrzeit Stups morgens aufzählt, was heute und überfällig ist. Die Uhrzeit aus der App hat Vorrang vor der
-   * Option des Add-ons (`daily_summary_time`); „zurücksetzen" lässt wieder die Option gelten. Ändern dürfen Administratoren und wer die Berechtigung „App-Einstellungen“ hat.
+   * Standard-Uhrzeit (08:00; in Docker `STUPS_DAILY_SUMMARY_TIME`); „zurücksetzen" lässt wieder die Standard-Uhrzeit gelten. Ändern dürfen Administratoren und wer die Berechtigung „App-Einstellungen“ hat.
    */
   const effective = $derived(ui.settings?.effectiveDailySummaryTime ?? '08:00');
   const own = $derived(ui.settings?.dailySummaryTime ?? null);
@@ -41,10 +41,10 @@
     {#if own !== null && can('settings')}
       <ListRow title={t('Zurücksetzen')} onclick={() => void save(null)}>
         {#snippet tile()}<Tile color="gray"><Icon name="undo" size={22} stroke={1.8} /></Tile>{/snippet}
-        {#snippet meta()}{t('Wieder die Uhrzeit aus der Konfiguration der App nehmen ({time})', { time: fallback })}{/snippet}
+        {#snippet meta()}{t('Wieder die Standard-Uhrzeit nehmen ({time})', { time: fallback })}{/snippet}
       </ListRow>
     {:else}
-      <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Gerade gilt die Uhrzeit aus der Konfiguration der App ({time}).', { time: fallback })}</p>
+      <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Gerade gilt die Standard-Uhrzeit ({time}).', { time: fallback })}</p>
     {/if}
   </div>
 </Page>

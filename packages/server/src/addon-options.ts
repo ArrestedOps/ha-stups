@@ -22,18 +22,32 @@ export function addonFallbackOptions(raw: Options): Options {
  */
 export function applyStartupOptions(
   store: Store,
-  runtime: { mode: Mode; options: Options },
+  runtime: { mode: Mode; options: Options; invalidOptions?: string[] },
   log: { info(message: string): void; warn(message: string): void },
 ): void {
   const { options } = runtime;
   if (runtime.mode === 'addon') {
-    const result = store.importAddonOptions(addonImportOf(options), ADDON_DEFAULTS);
-    if (!result) return;
-    const parts = [`${result.people} Personen`];
-    if (result.accessMode) parts.push(`Zugriff ${result.accessMode}`);
-    if (result.settings.length > 0) parts.push(`Einstellungen: ${result.settings.join(', ')}`);
-    log.info(`Aus den Add-on-Optionen übernommen (gilt künftig nur noch in der App): ${parts.join(', ')}`);
-    if (result.skipped.length > 0) log.warn(`Ungültige Werte in den Add-on-Optionen wurden nicht übernommen: ${result.skipped.join(', ')}`);
+    const invalid = [...(runtime.invalidOptions ?? [])];
+    try {
+      const result = store.importAddonOptions(addonImportOf(options), ADDON_DEFAULTS);
+      if (result) {
+        const parts = [`${result.people} Personen`];
+        if (result.accessMode) parts.push(`Zugriff ${result.accessMode}`);
+        if (result.settings.length > 0) parts.push(`Einstellungen: ${result.settings.join(', ')}`);
+        log.info(`Aus den Add-on-Optionen übernommen (gilt künftig nur noch in der App): ${parts.join(', ')}`);
+        invalid.push(...result.skipped);
+      }
+    } catch (err) {
+      // Der Start gelingt trotzdem; die Übernahme ist zurückgerollt und der nächste Start versucht es erneut
+      log.warn(`Die Add-on-Optionen konnten nicht übernommen werden, der nächste Start versucht es erneut: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    // Im Add-on sperrt die Konfiguration nichts mehr, auch nicht in einer Datenbank, die aus einem Docker-Betrieb mit gefüllter Liste kommt
+    try {
+      store.clearManaged();
+    } catch (err) {
+      log.warn(`Die Sperre der Konfiguration konnte nicht gelöst werden: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    if (invalid.length > 0) log.warn(`Ungültige Werte in den Add-on-Optionen wurden nicht übernommen (es gilt der Standard): ${invalid.join(', ')}`);
     return;
   }
   if (options.users.some((u) => u.name !== '')) {

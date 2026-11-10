@@ -102,6 +102,25 @@ describe('Optionen im Add-on-Betrieb', () => {
     expect(log.warnings.join('\n')).toContain('dailySummaryTime');
   });
 
+  it('Add-on: ein Datenbankfehler im Import bricht den Start nicht ab, er wird gemeldet (der nächste Start versucht es erneut)', () => {
+    const broken = { importAddonOptions: () => { throw new Error('disk full'); }, clearManaged: () => undefined } as unknown as Store;
+    expect(() => applyStartupOptions(broken, { mode: 'addon', options: raw }, log)).not.toThrow();
+    expect(log.warnings.join('\n')).toContain('disk full');
+  });
+
+  it('Add-on: eine übrig gebliebene Sperre (Datenbank mit Marker und managedByOptions, etwa nach einem Umzug aus Docker) wird gelöst', () => {
+    store.applyManagedPeople([anna], 'selected');
+    store.putRawSetting('addonOptionsImported', '2026-11-10T00:00:00.000Z');
+    expect(store.isManaged()).toBe(true);
+    applyStartupOptions(store, { mode: 'addon', options: parseOptions({}) }, log);
+    expect(store.isManaged()).toBe(false);
+  });
+
+  it('Add-on: ungültige Uhrzeiten aus der Konfiguration (runtime.invalidOptions) werden als Warnung genannt', () => {
+    applyStartupOptions(store, { mode: 'addon', options: parseOptions({}), invalidOptions: ['overdue_nag_time'] }, log);
+    expect(log.warnings.join('\n')).toContain('overdue_nag_time');
+  });
+
   it('Docker: kein Import, gefülltes users sperrt die App wie bisher', () => {
     for (const mode of ['standalone', 'standalone-ha'] as const) {
       const s = createStore(openDb(':memory:'), { timeZone: () => 'Europe/Berlin' });

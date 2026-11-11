@@ -4,6 +4,18 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.41.1-beta.2
+
+Weitere Korrekturen nach der Durchsicht, dazu stabilere Tests. Keine neuen Funktionen.
+
+**Das Docker-Image läuft nicht mehr als root.** Ohne Home Assistant übergibt ein kleiner Einstiegspunkt den Datenordner an den Benutzer `node` (Benutzerkennung 1000) und startet Stups als diesen Benutzer. Bestehende Daten und ein neues Volume funktionieren beide; Ordner, die sich nicht übergeben lassen (Netzlaufwerk), laufen wie bisher als root, mit Hinweis im Protokoll. **Im Home-Assistant-Add-on ändert sich nichts**: Es bleibt root, wie jedes Add-on. Der Smoke-Test der CI legt den Datenordner root-eigen an und prüft, dass die App danach als `node` läuft und die alten Dateien übernommen wurden.
+
+**Überfällige verschieben ist gegen Gleichzeitigkeit geschützt.** „Alle auf heute/morgen/Wochenende“ und „Morgen“ schreiben mit der Version, die die Liste gesehen hat. Hat jemand die Karte inzwischen geändert, bleibt sie, wie sie ist, und die Meldung sagt, dass sie sich nicht verschieben ließ.
+
+**Tests.** Mehrere Browser-Tests hingen von der Uhrzeit ab (kurz vor und nach Mitternacht) oder klickten, bevor eine Liste vollständig geladen war; das ist behoben. Der Test zur Lesbarkeit mit langen Wörtern lädt wieder. Ein Test zum Pfeil in der Terminzeile wartet, bis das Blatt ruhig steht.
+
+**Bitte prüfen (Testliste):** (1) Docker: ein bestehendes Datenverzeichnis, das root gehört, startet und bleibt lesbar. (2) Add-on: startet wie bisher. (3) Zwei Geräte: Auf dem einen eine überfällige Karte ändern, auf dem anderen „Alle auf morgen“ — die geänderte Karte bleibt unverändert.
+
 ## 1.41.1-beta.1
 
 Korrekturen nach einer Durchsicht: Was Stups verspricht, wird jetzt an mehr Stellen auch wirklich durchgesetzt. Keine neuen Funktionen.

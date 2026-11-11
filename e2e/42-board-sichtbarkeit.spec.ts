@@ -143,6 +143,16 @@ test('Neue Aufgabe: ein Tipp auf den Pfeil der Zeile „Termin" öffnet die Term
   await dateRowArrow(page);
   const sheet = newTaskSheet(page);
   await expect(sheet).toBeVisible();
+  // das Blatt gleitet ein und wächst noch, wenn Daten nachladen: erst klicken, wenn es vier Messungen lang (je 100 ms) an derselben Stelle steht,
+  // sonst trifft der Klick auf einem langsamen Rechner daneben und schließt das Blatt
+  let last = '';
+  let same = 0;
+  for (let i = 0; i < 50 && same < 4; i += 1) {
+    const box = JSON.stringify(await sheet.boundingBox());
+    same = box === last ? same + 1 : 0;
+    last = box;
+    await page.waitForTimeout(100);
+  }
   // der Pfeil rechts in der Zeile „Termin": ein Tipp darauf macht dasselbe wie ein Tipp auf die Zeile
   const row = sheet.locator('div.rounded-row', { has: page.getByRole('button', { name: /^Termin wählen/ }) }).first();
   await row.locator('[data-icon="chevron-right"]').click();

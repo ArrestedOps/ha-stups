@@ -79,8 +79,17 @@ async function imageTarget(port, image) {
   return {
     start: async () => {
       docker('volume', 'create', volume);
+      // wie eine bestehende Installation: Datenordner und Dateien gehören root (so legten frühere Versionen sie an)
+      docker('run', '--rm', '-v', `${volume}:/data`, '--entrypoint', 'sh', image, '-c', 'mkdir -p /data/files && echo alt > /data/files/alt.txt && chown -R 0:0 /data');
       run();
     },
+    // unter welchem Benutzer läuft die App, und gehören die alten Dateien jetzt ihm; im Add-on (SUPERVISOR_TOKEN) bleibt es root
+    rights: async () => ({
+      appUid: docker('exec', name, 'sh', '-c', "awk '/^Uid/{print $2}' /proc/1/status"),
+      legacyOwner: docker('exec', name, 'stat', '-c', '%U', '/data/files/alt.txt'),
+      noTokenUid: docker('run', '--rm', image, 'id', '-u'),
+      addonUid: docker('run', '--rm', '-e', 'SUPERVISOR_TOKEN=x', image, 'id', '-u'),
+    }),
     // stop + start: das Volume bleibt, die Datenbank wird sauber geschlossen und neu geöffnet
     restart: async () => {
       docker('stop', '-t', '10', name);
@@ -190,6 +199,13 @@ try {
     const health = await target.health();
     if (health === 'unhealthy') throw new Error('Der HEALTHCHECK des Images meldet „unhealthy"');
     ok(`HEALTHCHECK des Images: ${health}`);
+
+    const r = await target.rights();
+    if (r.appUid === '0') throw new Error('Die App läuft im Container als root (erwartet: ein eigener Benutzer)');
+    if (r.legacyOwner !== 'node') throw new Error(`Alte, root-eigene Daten wurden nicht übernommen (Besitzer: ${r.legacyOwner})`);
+    if (r.noTokenUid === '0') throw new Error('Ohne Home Assistant startet der Container als root');
+    if (r.addonUid !== '0') throw new Error(`Im Add-on (SUPERVISOR_TOKEN) soll der Container root bleiben, ist aber ${r.addonUid}`);
+    ok(`App läuft als Benutzer ${r.appUid}, alte root-eigene Daten gehören jetzt node, im Add-on bleibt root`);
   }
 } catch (e) {
   failed = true;

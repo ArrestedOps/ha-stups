@@ -3,9 +3,9 @@ import type { Attachment, Card } from '../api';
 import { formatDue } from '../datetime';
 import { t, tn } from '../i18n/index.svelte';
 import { DEFAULT_FILTER } from '../schedule';
-import { shiftDue, type ShiftTarget } from '../statsSheets';
+import type { ShiftTarget } from '../statsSheets';
 import { swipeTarget } from '../swipe';
-import { undoShifts, type ShiftRecord } from '../undoShift';
+import { shiftBatch, undoShifts, type ShiftBatch, type ShiftRecord } from '../undoShift';
 import { closeDetail, closeSheet, personById, setScheduleFilter } from './navigation';
 import { ui } from './state.svelte';
 import { act, actResult, toast } from './toasts';
@@ -39,28 +39,17 @@ export function filterListFor(kind: 'today' | 'overdue'): void {
  * gewöhnliche Karten-Änderung; „Geplant" und zurück regelt der Server. Gemeldet wird nur, was wirklich verschoben wurde, mit „Rückgängig"
  * (stellt die alten Termine wieder her); schlägt es für alle fehl, gibt es nur die Fehlermeldung. Kinder ändern keine Karten.
  */
-export async function shiftCards(cards: { id: string; title: string; dueAt: string | null }[], target: ShiftTarget): Promise<void> {
+export async function shiftCards(cards: { id: string; title: string; dueAt: string | null; version?: number }[], target: ShiftTarget): Promise<void> {
   if (ui.isChild) return;
-  const items = cards.filter((c): c is { id: string; title: string; dueAt: string } => !!c.dueAt);
+  const items = cards.filter((c): c is { id: string; title: string; dueAt: string; version?: number } => !!c.dueAt);
   if (items.length === 0) return;
-  const nowMs = Date.now();
-  const moved: ShiftRecord[] = [];
-  let failed = 0;
+  let batch: ShiftBatch = { moved: [], failed: 0, first: null };
   const r = await actResult(async () => {
-    let first: unknown = null;
-    for (const c of items) {
-      try {
-        const to = shiftDue(c.dueAt, target, nowMs);
-        await api.updateCard(c.id, { dueAt: to });
-        moved.push({ id: c.id, title: c.title, from: c.dueAt, to });
-      } catch (e) {
-        failed += 1;
-        first ??= e;
-      }
-    }
-    if (moved.length === 0) throw first; // alles fehlgeschlagen: die Fehlermeldung kommt von actResult
+    batch = await shiftBatch(items, target, Date.now(), (id, patch) => api.updateCard(id, patch));
+    if (batch.moved.length === 0) throw batch.first; // alles fehlgeschlagen: die Fehlermeldung kommt von actResult
   });
   if (!r.ok) return;
+  const { moved, failed } = batch;
   const when = target === 'today' ? t('heute') : target === 'tomorrow' ? t('morgen') : t('Samstag');
   const text =
     moved.length === 1

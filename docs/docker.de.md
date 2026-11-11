@@ -46,6 +46,8 @@ docker compose up -d
 docker logs stups
 ```
 
+**Rechte.** Der Container startet nur so lange als root, bis er den Datenordner an den Benutzer `node` (Benutzerkennung 1000) übergeben hat, und führt Stups dann als diesen Benutzer aus. Bestehende Daten und ein neues, root-eigenes Volume funktionieren beide; auf dem Host gehört der Ordner `./stups-daten` danach der Benutzerkennung 1000. Lässt sich der Ordner nicht übergeben (zum Beispiel ein Netzlaufwerk, das keine Besitzer ändern lässt), startet Stups wie bisher als root und sagt das im Protokoll.
+
 Beim ersten Start steht im Protokoll eine Zeile wie
 
 ```

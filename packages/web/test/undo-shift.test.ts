@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { undoShifts, type ShiftRecord } from '../src/lib/undoShift';
+import { shiftBatch, undoShifts, type ShiftRecord } from '../src/lib/undoShift';
 
 /**
  * „Rückgängig" nach „Überfällige verschieben": zurückgesetzt wird nur, was noch so dasteht, wie die Aktion es hinterlassen hat.
@@ -68,5 +68,48 @@ describe('undoShifts', () => {
   it('eine Karte ohne Termin ist inzwischen geändert worden: Konflikt', async () => {
     const s = fake({ a: { dueAt: null, version: 2 } });
     expect(await undoShifts([A], s.io)).toEqual({ restored: [], conflicts: [A], failed: 0 });
+  });
+});
+
+describe('shiftBatch (Überfällige verschieben mit der gesehenen Version)', () => {
+  const NOW = Date.parse('2026-11-11T12:00:00.000Z');
+  const items = [
+    { id: 'a', title: 'A', dueAt: '2026-11-05T09:00:00.000Z', version: 3 },
+    { id: 'b', title: 'B', dueAt: '2026-11-06T09:00:00.000Z', version: 7 },
+  ];
+
+  it('schreibt jede Karte mit der Version, die die Liste gesehen hat, als Vorbedingung', async () => {
+    const calls: { id: string; patch: { dueAt: string; expectedVersion?: number } }[] = [];
+    const r = await shiftBatch(items, 'tomorrow', NOW, async (id, patch) => void calls.push({ id, patch }));
+    expect(r.failed).toBe(0);
+    expect(r.moved.map((m) => m.id)).toEqual(['a', 'b']);
+    expect(calls.map((c) => [c.id, c.patch.expectedVersion])).toEqual([
+      ['a', 3],
+      ['b', 7],
+    ]);
+  });
+
+  it('eine Karte, die inzwischen jemand geändert hat (409), bleibt, wie sie ist; die übrigen werden verschoben', async () => {
+    const r = await shiftBatch(items, 'tomorrow', NOW, async (id) => {
+      if (id === 'a') throw Object.assign(new Error('geändert'), { status: 409 });
+    });
+    expect(r.moved.map((m) => m.id)).toEqual(['b']);
+    expect(r.failed).toBe(1);
+    expect((r.first as { status: number }).status).toBe(409);
+  });
+
+  it('ohne bekannte Version wird ohne Vorbedingung geschrieben (wie bisher)', async () => {
+    const seen: unknown[] = [];
+    await shiftBatch([{ id: 'c', title: 'C', dueAt: '2026-11-05T09:00:00.000Z' }], 'today', NOW, async (_id, patch) => void seen.push(patch));
+    expect(Object.keys(seen[0] as object)).toEqual(['dueAt']);
+  });
+
+  it('schlägt alles fehl, steht nichts als verschoben da und der erste Fehler ist zur Hand', async () => {
+    const r = await shiftBatch(items, 'weekend', NOW, async () => {
+      throw new Error('kaputt');
+    });
+    expect(r.moved).toEqual([]);
+    expect(r.failed).toBe(2);
+    expect((r.first as Error).message).toBe('kaputt');
   });
 });

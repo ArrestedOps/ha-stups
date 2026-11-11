@@ -46,6 +46,8 @@ docker compose up -d
 docker logs stups
 ```
 
+**Permissions.** The container starts as root only long enough to hand the data folder to the user `node` (user ID 1000) and then runs Stups as that user. Existing data and a new, root-owned volume both work; on the host the folder `./stups-data` will belong to user ID 1000 afterwards. If the folder cannot be handed over (for example a network drive that does not allow changing the owner), Stups starts as root as before and says so in the log.
+
 On first start the log shows a line like
 
 ```

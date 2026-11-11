@@ -102,6 +102,21 @@ describe('Dockerfile', () => {
     for (const dir of ['dist', 'web', 'public', 'node_modules']) expect(targets, dir).toContain(dir);
     expect(runtime).toContain('CMD ["node", "dist/main.js"]');
   });
+
+  it('das Image gibt die Rechte im Einstiegspunkt ab: su-exec ist installiert, im Add-on (SUPERVISOR_TOKEN) bleibt es root, ohne Home Assistant läuft die App als node', () => {
+    expect(runtime).toContain('apk add --no-cache su-exec');
+    expect(runtime).toContain('ENTRYPOINT ["docker-entrypoint.sh"]');
+    expect(runtime).toContain('COPY --chmod=0755 stups/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh');
+    const script = readFileSync(join(root, 'stups/docker-entrypoint.sh'), 'utf8');
+    expect(script.startsWith('#!/bin/sh')).toBe(true);
+    expect(script).not.toContain('\r');
+    // Add-on und schon eingeschränkter Start: nichts umstellen
+    expect(script).toContain('[ "$(id -u)" != "0" ] || [ -n "${SUPERVISOR_TOKEN:-}" ]');
+    // vorhandene root-eigene Daten übernehmen, dann Rechte abgeben; geht das nicht, als root weiter statt gar nicht zu starten
+    expect(script).toContain('chown node:node');
+    expect(script).toContain('exec su-exec node "$@"');
+    expect(script.trimEnd().endsWith('exec "$@"')).toBe(true);
+  });
 });
 
 describe('Dokumentation auf Englisch und Deutsch', () => {

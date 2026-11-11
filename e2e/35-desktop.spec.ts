@@ -20,7 +20,7 @@ interface Seed {
   cards: { id: string; title: string }[];
 }
 
-/** Ein eigenes Board mit drei Karten von Rene (Termine in 5, 10 und 15 Minuten: bleiben auch kurz vor Mitternacht „heute“, sonst rückten sie nach „Geplant“), die erste mit Checkliste */
+/** Ein eigenes Board mit drei Karten von Rene (Termine in 5, 10 und 15 Minuten; in den letzten 20 Minuten vor Mitternacht in 1, 2 und 3, damit sie „heute“ bleiben und nicht nach „Geplant“ rücken), die erste mit Checkliste */
 async function seed(request: APIRequestContext, extra: { category?: string } = {}): Promise<Seed> {
   const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
   const rene = people.find((p) => p.name === 'Rene')!;
@@ -31,10 +31,12 @@ async function seed(request: APIRequestContext, extra: { category?: string } = {
   let categoryId: string | undefined;
   if (extra.category) categoryId = (await (await request.post(`/api/boards/${board.id}/categories`, { data: { name: extra.category, color: 'blue' } })).json()).id;
   const cards: Seed['cards'] = [];
+  const dayOf = (ms: number) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date(ms));
+  const step = dayOf(Date.now() + 20 * 60_000) === dayOf(Date.now()) ? 300_000 : 60_000;
   for (const [i, title] of [unique('Paket'), unique('Bad'), unique('Steuer')].entries()) {
     const c = await (
       await request.post(`/api/boards/${board.id}/cards`, {
-        data: { title, columnId: columns[0]!.id, assigneeIds: [rene.id], dueAt: new Date(Date.now() + (i + 1) * 300_000).toISOString(), ...(categoryId && i === 0 ? { categoryIds: [categoryId] } : {}) },
+        data: { title, columnId: columns[0]!.id, assigneeIds: [rene.id], dueAt: new Date(Date.now() + (i + 1) * step).toISOString(), ...(categoryId && i === 0 ? { categoryIds: [categoryId] } : {}) },
       })
     ).json();
     cards.push({ id: c.id, title });

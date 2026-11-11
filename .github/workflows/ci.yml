@@ -25,14 +25,54 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+
+  # Die Browser-Tests dauern am längsten und laufen in drei Gruppen gleichzeitig (jede mit eigenen Servern und Datenbanken):
+  # Handy dunkel, Handy hell und alle übrigen Projekte (Desktop, Wächter, Einrichtung …). Jede Gruppe braucht etwa fünf Minuten.
+  # Neue Projekte in e2e/playwright.config.ts gehören in „rest“, sonst laufen sie nirgends (das prüft der Schritt „Alle Projekte abgedeckt“).
+  e2e:
+    name: e2e (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: dunkel
+            projects: dunkel
+          - name: hell
+            projects: hell
+          - name: rest
+            projects: desktop-dunkel desktop-hell desktop-ha english waechter standalone standalone-ha optionen onboarding-dark onboarding-light onboarding-desktop-dark onboarding-desktop-light beta
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - name: Browser installieren (WebKit wie in der Companion App)
         run: pnpm exec playwright install --with-deps webkit
+      - name: Alle Projekte abgedeckt
+        if: matrix.name == 'rest'
+        run: |
+          # Jedes Projekt der Konfiguration muss in genau einer Gruppe stehen, sonst bliebe es unbemerkt ungetestet.
+          all=$(grep -oE "name: '[a-z-]+'" e2e/playwright.config.ts | sed -E "s/name: '(.*)'/\1/" | sort -u)
+          mine="dunkel hell ${{ matrix.projects }}"
+          missing=""
+          for p in $all; do case " $mine " in *" $p "*) ;; *) missing="$missing $p" ;; esac; done
+          if [ -n "$missing" ]; then echo "::error::Projekte ohne Gruppe in ci.yml:$missing"; exit 1; fi
       - name: Browser-Tests
-        run: pnpm e2e
+        run: |
+          args=""
+          for p in ${{ matrix.projects }}; do args="$args --project=$p"; done
+          pnpm e2e $args
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: e2e-ergebnisse
+          name: e2e-ergebnisse-${{ matrix.name }}
           path: e2e/test-results
           retention-days: 7
 
@@ -40,7 +80,7 @@ jobs:
   # Wichtig: Home Assistant sieht eine neue Version, sobald sie in `main` liegt. Darum wird `main` erst am Ende von
   # `release` (Job `promote`) nachgezogen, wenn die Bilder fertig sind. So gibt es kein „manifest unknown“ mehr.
   image:
-    needs: test
+    needs: [test, e2e]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/release' || github.ref == 'refs/heads/beta')
     strategy:
       matrix:

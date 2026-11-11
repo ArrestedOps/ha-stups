@@ -31,6 +31,12 @@ async function mk(request: APIRequestContext, title: string, extra: Record<strin
   expect(res.status(), await res.text()).toBe(201);
   return (await res.json()) as { id: string; dueAt: string | null };
 }
+/** Wie viele überfällige offene Karten „Ich“ laut Server hat: so viele muss das Blatt „Überfällig“ zeigen, wenn es vollständig geladen ist */
+const overdueCount = async (request: APIRequestContext) => {
+  const res = await request.get(`/api/schedule?to=${encodeURIComponent(new Date().toISOString())}&limit=2000`);
+  const list = (await res.json()) as { assigneeIds: string[]; completedAt: string | null; dueAt: string | null }[];
+  return list.filter((c) => c.assigneeIds.includes(meId) && !c.completedAt && !!c.dueAt && Date.parse(c.dueAt) < Date.now()).length;
+};
 const get = async (request: APIRequestContext, id: string) => (await (await request.get(`/api/cards/${id}`)).json()) as { dueAt: string | null; completedAt: string | null; columnId: string };
 
 test.beforeAll(async ({ request }) => {
@@ -172,6 +178,8 @@ test('Überfällig: „Alle auf heute“, „Alle auf morgen“, „Wochenende�
     await toast.getByRole('button', { name: 'Rückgängig' }).click();
     await expect.poll(async () => (await get(p.request, a.id)).dueAt).toBe(t1);
     await expect.poll(async () => (await get(p.request, b.id)).dueAt).toBe(t2);
+    // „Rückgängig“ setzt Karte für Karte zurück und die Liste lädt dazwischen: erst klicken, wenn das Blatt alle zeigt (sonst trifft „Wochenende“ nur die ersten)
+    await expect.poll(() => s.getByRole('listitem').count()).toBe(await overdueCount(p.request));
 
     // Wochenende: der nächste Samstag
     await s.getByRole('button', { name: 'Wochenende' }).click();
@@ -182,6 +190,8 @@ test('Überfällig: „Alle auf heute“, „Alle auf morgen“, „Wochenende�
     expect(sat <= addDay(dayKey(Date.now()), 7)).toBe(true);
     await toast.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect.poll(async () => (await get(p.request, a.id)).dueAt).toBe(t1);
+    await expect.poll(async () => (await get(p.request, b.id)).dueAt).toBe(t2);
+    await expect.poll(() => s.getByRole('listitem').count()).toBe(await overdueCount(p.request));
 
     // Alle auf heute: der Termin ist nicht mehr vorbei, die Karten sind nicht mehr überfällig
     await s.getByRole('button', { name: 'Alle auf heute' }).click();

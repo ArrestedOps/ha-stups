@@ -77,7 +77,9 @@ test.describe('Aufbau', () => {
   test('Einstellungen, Filter und Mitteilungen öffnen als Dialog in der Mitte (600 px), Escape schließt, der Fokus kehrt zurück', async ({ page }) => {
     await page.goto('/');
     for (const trigger of [page.getByRole('button', { name: 'Einstellungen öffnen' }), page.getByTestId('bell'), page.getByTestId('filter-button').getByRole('button')]) {
-      await trigger.click();
+      // WebKit gibt einem Knopf beim Klick nicht überall den Fokus (Safari, Windows), der Klick nimmt ihn sogar weg: mit der Tastatur öffnen
+      await trigger.focus();
+      await page.keyboard.press('Enter');
       const d = dialog(page);
       await expect(d).toBeVisible();
       // die Übergangsanimation abwarten, dann messen
@@ -217,7 +219,8 @@ test.describe('Aufgaben', () => {
   test('Neue Aufgabe: Knopf oben öffnet den Dialog (600 px, mittig), Anlegen zeigt die Karte in der Liste, Escape schließt, der Fokus kehrt zum Knopf zurück', async ({ page }) => {
     await page.goto('/');
     const button = page.getByTestId('new-task');
-    await button.click();
+    await button.focus(); // WebKit fokussiert Knöpfe beim Klick nicht überall: mit der Tastatur öffnen
+    await page.keyboard.press('Enter');
     const sheet = newTaskSheet(page);
     await expect(sheet).toBeVisible();
     await expect.poll(async () => Math.round((await sheet.boundingBox())!.width)).toBe(600);

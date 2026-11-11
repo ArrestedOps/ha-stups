@@ -93,8 +93,12 @@ test('Board-Einstellungen: oben die Wahl des Boards (ohne zu schließen), Name, 
   await expect.poll(async () => (await list(request)).find((b) => b.id === beta)!.color).toBe('purple');
   await expect(settings.getByRole('radiogroup', { name: 'Farbe des Boards' }).getByRole('radio', { name: 'purple' })).toHaveAttribute('aria-checked', 'true');
   // Name
-  await settings.getByLabel('Name des Boards').fill(`Beta neu ${tag}`);
-  await settings.getByLabel('Name des Boards').press('Tab');
+  // Kommt die Ansicht nach Symbol und Farbe gerade neu herein, setzt sie das Feld zurück: dann noch einmal eintippen
+  await expect(async () => {
+    await settings.getByLabel('Name des Boards').fill(`Beta neu ${tag}`);
+    await settings.getByLabel('Name des Boards').press('Tab');
+    await expect.poll(async () => (await list(request)).find((b) => b.id === beta)!.name, { timeout: 2000 }).toBe(`Beta neu ${tag}`);
+  }).toPass({ timeout: 15_000 });
   await expect.poll(async () => (await list(request)).find((b) => b.id === beta)!.name).toBe(`Beta neu ${tag}`);
   // Alpha ist unverändert
   expect((await list(request)).find((b) => b.id === alpha)).toMatchObject({ name: `Alpha ${tag}`, icon: null, color: null });

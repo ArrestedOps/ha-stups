@@ -102,7 +102,11 @@ test('der Administrator sieht je Person „Berechtigungen“ (Administrator: Hin
     await dialog.getByRole('button', { name: /^Termine/ }).click();
     const time = mem.getByLabel('Standard-Uhrzeit für Termine');
     await expect(time).toBeEnabled();
-    await time.fill('07:45');
+    // WebKit löst bei fill() an einem Zeitfeld kein „change“ aus: Ereignis von Hand
+    await time.evaluate((el: HTMLInputElement) => {
+      el.value = '07:45';
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     await expect.poll(async () => ((await (await page.request.get('/api/settings')).json()) as { defaultDueTime: string }).defaultDueTime).toBe('07:45');
     // Panel-Pfad: auch mit dem Recht verboten
     expect((await ctx.request.put('/api/settings', { data: { panelPath: '/stups' } })).status()).toBe(403);

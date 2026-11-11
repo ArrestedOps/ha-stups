@@ -1,9 +1,10 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { contrast } from '../src/lib/accent';
 
-const SRC = new URL('../src/', import.meta.url).pathname;
+const SRC = fileURLToPath(new URL('../src/', import.meta.url));
 const css = readFileSync(join(SRC, 'app.css'), 'utf8');
 
 /** Die Variablen eines Blocks aus app.css (nur die Werte, die als Farbe lesbar sind, werden später gebraucht) */

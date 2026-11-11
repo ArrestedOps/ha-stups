@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { effectiveInsets, insetsFromMessage, parseInset, startSafeArea, subscribeMessage, SUBSCRIBE_MESSAGE, UNSUBSCRIBE_MESSAGE, type SafeAreaEnv } from '../src/lib/haSafeArea';
 
 describe('parseInset', () => {
@@ -128,7 +129,7 @@ describe('Anmeldung bei Home Assistant (nur eine Form, immer mit handleSafeArea)
   });
 
   it('nirgendwo sonst im Quelltext wird eine Anmeldung von Hand gebaut', () => {
-    const SRC = new URL('../src/', import.meta.url).pathname;
+    const SRC = fileURLToPath(new URL('../src/', import.meta.url));
     const files: string[] = [];
     const walk = (dir: string) => {
       for (const f of readdirSync(dir)) {

@@ -33,7 +33,17 @@
   const columns = $derived(view?.columns ?? []);
   const categories = $derived(view?.categories ?? []);
 
-  let boardName = $derived(view?.board.name ?? '');
+  // Der Name im Feld folgt dem Board, nur nicht, solange man gerade darin tippt: eine neue Ansicht (nach Symbol oder Farbe) setzt sonst die Eingabe zurück
+  let boardName = $state('');
+  let nameOf = '';
+  $effect(() => {
+    const b = view?.board;
+    if (!b) return;
+    if (b.id !== nameOf || document.activeElement?.id !== 'board-title') {
+      nameOf = b.id;
+      boardName = b.name;
+    }
+  });
   let newColumn = $state('');
   let newCategory = $state('');
   let newColor = $state<string>('blue');

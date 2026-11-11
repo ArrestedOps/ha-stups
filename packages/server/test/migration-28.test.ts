@@ -69,5 +69,6 @@ describe('Migration 28 (Nachhaken als eigene Tabelle)', () => {
     expect(() => db.exec("insert into card_reminders (id, card_id, user_id, anchor, after_min, created_at) values ('y', 'k5', null, 'due', 5, 'x')")).toThrow();
     db.exec("delete from cards where id = 'k1'");
     expect(db.prepare("select count(*) as n from card_reminders where card_id = 'k1'").get()).toEqual({ n: 0 });
+    db.close(); // unter Windows lässt sich ein offenes Datenbank-Verzeichnis nicht löschen
   });
 });

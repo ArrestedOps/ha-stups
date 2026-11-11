@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { webkit } from '@playwright/test';
 
-const root = resolve(import.meta.dirname, '..', '..');
+const root = resolve(import.meta.dirname, '..');
 const icon = pathToFileURL(join(root, 'docs', 'images', 'stups-icon.png')).href;
 
 const html = `<!doctype html><meta charset="utf-8"><style>

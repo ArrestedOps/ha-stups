@@ -1,3 +1,6 @@
+// Die Tests rechnen mit UTC als Zeitzone des Geräts (wie in der CI); auf einem Rechner in einer anderen Zeitzone sonst Abweichungen
+process.env.TZ = 'UTC';
+
 import { beforeEach } from 'vitest';
 import { loadCatalog, setLanguage } from '../src/lib/i18n/index.svelte';
 import { loadKeywords } from '../src/lib/symbols/words.svelte';

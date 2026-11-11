@@ -207,7 +207,8 @@ describe('Umzug: Export ohne Geheimnisse, mit Ablaufdatum', () => {
     expect(rene.id).toBeTruthy();
   });
 
-  it('S7: Rechte 0700 für den Ordner und 0600 für Dateien, Ablaufdatum nach 24 Stunden', () => {
+  // Unter Windows gibt es keine Unix-Rechte
+  it.skipIf(process.platform === 'win32')('S7: Rechte 0700 für den Ordner und 0600 für Dateien, Ablaufdatum nach 24 Stunden', () => {
     const { dataDir, db } = withSecrets();
     mkdirSync(join(dataDir, 'files'));
     writeFileSync(join(dataDir, 'files', 'a.txt'), 'x');

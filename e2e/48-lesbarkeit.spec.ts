@@ -81,8 +81,8 @@ for (const width of [320, 260]) {
 
     // Boards
     await openBoards(page);
-    // schmal sind die Spalten Reiter; die Karte hat einen Termin und liegt unter „Geplant"
-    await page.getByRole('tab', { name: /^Geplant/ }).click();
+    // schmal sind die Spalten Reiter; die Karte liegt je nach Uhrzeit unter „Offen" (Termin heute) oder „Geplant" (Termin morgen): der Reiter mit der einen Karte
+    await page.getByRole('tab', { name: /· 1$/ }).click();
     await expect(page.getByText(LANG.slice(0, 30)).first()).toBeVisible();
     expect(await overflow(page), 'Boards').toEqual([]);
     expect(await reachable(page), 'Boards: Bedienelemente').toEqual([]);

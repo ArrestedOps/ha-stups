@@ -24,8 +24,9 @@ test('Die Optionen sind in der App angekommen: Personen ohne Sperre, Zugriff „
 test('Nachhaken um …: zeigt die übernommene Uhrzeit, Ändern bleibt, Zurücksetzen nimmt die Standard-Uhrzeit', async ({ page, request }) => {
   await page.goto('/');
   await openBoards(page);
-  await openSettingsPage(page, 'Nachhaken um …');
-  const field = dialog(page).getByLabel('Uhrzeit des Nachhakens');
+  await openSettingsPage(page, 'Erinnerungszeiten');
+  const section = dialog(page).getByRole('region', { name: 'Nachhaken um …' });
+  const field = section.getByLabel('Uhrzeit des Nachhakens');
   await expect(field).toHaveValue('19:30');
   // WebKit löst bei fill() an einem Zeitfeld kein „change“ aus (daran scheitern auch die Tests zur Tageszusammenfassung): Ereignis von Hand
   await field.evaluate((el: HTMLInputElement) => {
@@ -33,6 +34,6 @@ test('Nachhaken um …: zeigt die übernommene Uhrzeit, Ändern bleibt, Zurücks
     el.dispatchEvent(new Event('change', { bubbles: true }));
   });
   await expect.poll(async () => ((await (await request.get('/api/settings')).json()) as { overdueNagTime: string | null }).overdueNagTime).toBe('20:00');
-  await dialog(page).getByRole('button', { name: /Zurücksetzen/ }).click();
+  await section.getByRole('button', { name: /Zurücksetzen/ }).click();
   await expect.poll(async () => ((await (await request.get('/api/settings')).json()) as { effectiveOverdueNagTime: string }).effectiveOverdueNagTime).toBe('18:00');
 });

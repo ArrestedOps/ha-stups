@@ -19,12 +19,12 @@ configuration:
     name: Uhrzeit der täglichen Zusammenfassung (veraltet)
     description: >-
       Gilt nur beim ersten Start nach dem Update. Danach stellst du die Uhrzeit in der App unter Einstellungen ›
-      Tageszusammenfassung ein (Format HH:MM).
+      Erinnerungszeiten ein (Format HH:MM).
   overdue_nag_time:
     name: Uhrzeit für das Nachhaken bei Überfälligkeit (veraltet)
     description: >-
       Gilt nur beim ersten Start nach dem Update. Danach stellst du die Uhrzeit in der App unter Einstellungen ›
-      Nachhaken um … ein (Format HH:MM).
+      Erinnerungszeiten ein (Format HH:MM).
   log_level:
     name: Log-Level
     description: Detailgrad der Protokolle im Add-on-Log.

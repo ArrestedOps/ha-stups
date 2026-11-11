@@ -266,6 +266,8 @@ Am iPhone, in der Beta zuerst. Zum Ausprobieren: iPhone-Sprache auf Englisch ste
 - [ ] **Fehlermeldungen vom Server** (zum Beispiel eine zu lange Stups-Nachricht, ein leerer Titel über die Schnell-Eingabe) erscheinen in der Sprache der Oberfläche
 - [ ] **Neues Board** auf einem englischen Gerät: Spalten „Open“, „Planned“, „In progress“, „Done“. Auf einem deutschen Gerät wie bisher „Offen“ … „Erledigt“
 - [ ] Home Assistant: Einstellungen › Apps › Stups (Beta) › Konfiguration zeigt die Optionen auf Englisch, wenn Home Assistant auf Englisch steht
+- [ ] **Optionen optional (neue Installation):** Die Konfiguration zeigt nur das Log-Level; die übrigen Optionen stehen unter „Nicht verwendete optionale Optionen“ (ausklappbar). Nach dem Start steht im Log keine Warnung, und in der App ist das Ziel des Home-Knopfs der Standard (nicht „/lovelace/0“)
+- [ ] **Optionen optional (bestehende Installation, vor dem Update mit Personen, Dashboard und Uhrzeiten gefüllt):** Nach dem Update sind die Werte in der Konfiguration noch da, der Start übernimmt sie einmal („Aus den Add-on-Optionen übernommen“ im Log), Speichern der Konfiguration ohne Änderung gelingt
 - [ ] Bleibt deutsch (bekannt): Namen der Sensoren, Protokollzeilen im Add-on-Log, die Zeile „Wartet auf die erste Person …“ in der Beschreibung einer Wächter-Karte
 
 ## 23 · Eigene Farbe und Plus-Knopf (seit 1.15.0)
@@ -507,7 +509,7 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 **Einstellungen**
 
 - [ ] Zeilen mit Kachel, Titel, Erklärung und Pfeil in Gruppen; **keine Zeile „Wächter“** (die Verwaltung steht im Reiter Wächter unter „Alle Wächter verwalten“, „Zurück“ führt dorthin zurück)
-- [ ] Zeile **Tageszusammenfassung** (Administrator mit Push) zeigt die Uhrzeit, die Seite ändert sie und „Zurücksetzen“ stellt die Option der App wieder her. Die Zusammenfassung kommt zur neuen Uhrzeit
+- [ ] Zeile **Erinnerungszeiten** (Administrator mit Push) zeigt beide Uhrzeiten („08:00 · 18:00“); die Seite hat die Abschnitte **Tageszusammenfassung** und **Nachhaken um …**, jeder ändert seine Uhrzeit für sich, „Zurücksetzen“ erscheint nur beim geänderten und stellt den Standard wieder her. Die Zusammenfassung kommt zur neuen Uhrzeit
 - [ ] Home Assistant: „Dashboard“, „HA-Kopfzeile ausblenden“ als Schalter, „Dashboard-Button“ mit Vorschau („n heute fällig • m überfällig“), YAML (Beta: `sensor.stups_beta_heute_faellig`) und „YAML kopieren“
 - [ ] Daten: Papierkorb, Archiv, Umzug („Export“ nach /share/stups-umzug)
 - [ ] **Personen & Zugriff:** Zugriff als Umschalter, Personen mit Foto, Admin-Abzeichen, Geräten, Ruhezeit; Antippen klappt Name, Geräte (Schalter), Ruhezeit, Zusammenfassung, Haus, Rolle Kind (Schalter) auf. „Wartet auf Freigabe“ (gestrichelt) mit „Freigeben“, „Person hinzufügen“
@@ -559,8 +561,8 @@ Am iPhone, in der Beta zuerst. Ein Kind braucht einen eigenen Home-Assistant-Ben
 ## 38 · Berechtigungen je Person (seit 1.30.0)
 
 - [ ] Einstellungen › Personen & Zugriff › Person aufklappen: als Administrator der Bereich **Berechtigungen** mit sechs Schaltern (Wächter, Ansage und Lampe, App-Einstellungen, Personen, Bestätigen für Kinder, Feedback der Nutzer), jeder mit kurzer Erklärung; bei einem Administrator nur „Administratoren dürfen alles.“, bei einem Kind gar nichts
-- [ ] Als Mitglied (ohne Rechte): kein Bereich Berechtigungen, keine Seiten Wächter, Vorlagen, Symbole, Termine, Tageszusammenfassung, Ansage und Lampe, Personen & Zugriff (wie bisher)
-- [ ] „App-Einstellungen“ geben: das Mitglied sieht **ohne Neuladen** die Seiten Termine, Symbole, Vorlagen (und mit Push die Tageszusammenfassung) und kann die Standard-Uhrzeit ändern; **Dashboard-Button** und Panel-Pfad bleiben verborgen; wieder entziehen: Seiten weg, Eingaben gesperrt
+- [ ] Als Mitglied (ohne Rechte): kein Bereich Berechtigungen, keine Seiten Wächter, Vorlagen, Symbole, Termine, Erinnerungszeiten, Ansage und Lampe, Personen & Zugriff (wie bisher)
+- [ ] „App-Einstellungen“ geben: das Mitglied sieht **ohne Neuladen** die Seiten Termine, Symbole, Vorlagen (und mit Push die Erinnerungszeiten) und kann die Standard-Uhrzeit ändern; **Dashboard-Button** und Panel-Pfad bleiben verborgen; wieder entziehen: Seiten weg, Eingaben gesperrt
 - [ ] „Wächter“ geben: das Mitglied legt einen Wächter an und bearbeitet ihn (Reiter Wächter und Einstellungen › Wächter), ohne Recht nur ansehen
 - [ ] „Ansage und Lampe“ geben: Seite Ansage und Lampe und bei jeder Person die Kanäle (Lautsprecher, Lampe) einrichtbar
 - [ ] „Personen“ geben: Wartende freigeben, Personen hinzufügen, Anzeigenamen ändern; **nicht** sichtbar: Berechtigungen, Rolle Kind, Anmeldungen, Entfernen, Zugriff umstellen

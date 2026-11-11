@@ -19,12 +19,12 @@ configuration:
     name: Time of the daily summary (deprecated)
     description: >-
       Only applies at the first start after the update. After that you set the time in the app under Settings ›
-      Daily summary (format HH:MM).
+      Reminder times (format HH:MM).
   overdue_nag_time:
     name: Time for the overdue follow-up (deprecated)
     description: >-
       Only applies at the first start after the update. After that you set the time in the app under Settings ›
-      Follow up at … (format HH:MM).
+      Reminder times (format HH:MM).
   log_level:
     name: Log level
     description: Level of detail of the logs in the add-on log.

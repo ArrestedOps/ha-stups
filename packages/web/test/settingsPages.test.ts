@@ -11,7 +11,7 @@ beforeEach(() => setLanguage('de'));
 describe('Einstellungen nach Rolle und Betriebsart', () => {
   it('Administrator im Add-on: alle vier Gruppen, keine Konto-Seite', () => {
     expect(groupIds(addon)).toEqual(['me', 'household', 'ha', 'help']);
-    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'summary', 'nag', 'dashboard', 'bubble', 'voice', 'report', 'data', 'feedback']);
+    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'times', 'dashboard', 'bubble', 'voice', 'report', 'data', 'feedback']);
   });
 
   it('Mitglied: „Für mich", „Home Assistant" (nur die eigene Dashboard-Wahl) und „Hilfe und Daten"', () => {
@@ -28,11 +28,13 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
     expect(ids({ ...addon, standalone: true, haUi: false })).not.toContain('dashboard');
   });
 
-  it('„Nachhaken um …" steht hinter der Tageszusammenfassung, nur mit Recht „settings" und Push', () => {
-    expect(ids(addon).indexOf('nag')).toBe(ids(addon).indexOf('summary') + 1);
-    expect(ids({ ...addon, push: false })).not.toContain('nag');
-    expect(ids({ ...addon, isAdmin: false })).not.toContain('nag');
-    expect(ids({ ...addon, isAdmin: false, permissions: ['settings'] })).toContain('nag');
+  it('„Erinnerungszeiten" (Tageszusammenfassung und Nachhaken) nur mit Recht „settings" und Push, als eine Seite hinter „Termine"', () => {
+    expect(ids(addon).indexOf('times')).toBe(ids(addon).indexOf('dates') + 1);
+    expect(ids(addon)).not.toContain('summary');
+    expect(ids(addon)).not.toContain('nag');
+    expect(ids({ ...addon, push: false })).not.toContain('times');
+    expect(ids({ ...addon, isAdmin: false })).not.toContain('times');
+    expect(ids({ ...addon, isAdmin: false, permissions: ['settings'] })).toContain('times');
   });
 
   it('Kind im Add-on: nur Sprache und Farbe', () => {
@@ -56,10 +58,10 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
     expect(ids(dockerHa)).not.toContain('dashboard');
   });
 
-  it('Tageszusammenfassung nur für Administratoren und nur mit Push, Dashboard-Button nur im Add-on', () => {
-    expect(ids(addon)).toContain('summary');
-    expect(ids({ ...addon, isAdmin: false })).not.toContain('summary');
-    expect(ids({ ...addon, push: false })).not.toContain('summary');
+  it('Erinnerungszeiten nur für Administratoren und nur mit Push, Dashboard-Button nur im Add-on', () => {
+    expect(ids(addon)).toContain('times');
+    expect(ids({ ...addon, isAdmin: false })).not.toContain('times');
+    expect(ids({ ...addon, push: false })).not.toContain('times');
     expect(ids(addon)).toContain('bubble');
     expect(ids({ ...addon, standalone: true, haUi: false })).not.toContain('bubble');
     expect(ids({ ...addon, isAdmin: false })).not.toContain('bubble');
@@ -126,11 +128,11 @@ describe('Einstellungen mit Berechtigungen (Mitglied, dem ein Administrator Rech
     expect(ids(member(['house']))).not.toContain('watchers');
   });
 
-  it('„App-Einstellungen": Vorlagen, Symbole, Termine und (mit Push) die Tageszusammenfassung; nie der Dashboard-Button (Panel-Pfad)', () => {
+  it('„App-Einstellungen": Vorlagen, Symbole, Termine und (mit Push) die Erinnerungszeiten; nie der Dashboard-Button (Panel-Pfad)', () => {
     const got = ids(member(['settings']));
-    for (const id of ['templates', 'icons', 'dates', 'summary']) expect(got).toContain(id);
+    for (const id of ['templates', 'icons', 'dates', 'times']) expect(got).toContain(id);
     expect(got).not.toContain('bubble');
-    expect(ids(member(['settings'], { push: false }))).not.toContain('summary');
+    expect(ids(member(['settings'], { push: false }))).not.toContain('times');
   });
 
   it('„Personen": die Seite Personen & Zugriff', () => {

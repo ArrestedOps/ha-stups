@@ -552,12 +552,7 @@ export function createPeople(c: Ctx, late: unknown) {
       checkDashboardPath(value); // beginnt mit „/", kein „//", kein „\", kein Schema, keine Leerzeichen, höchstens 200 Zeichen
       run('insert into settings (key, value) values (?, ?) on conflict(key) do update set value = excluded.value', key, value);
     }
-    if (patch.defaultDueTime !== undefined) {
-      const time = patch.defaultDueTime;
-      if (time === null) run('delete from settings where key = ?', 'defaultDueTime');
-      else if (typeof time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)) putSetting('defaultDueTime', time);
-      else throw new ValidationError(t('Die Uhrzeit muss die Form HH:MM haben, zum Beispiel 09:00'));
-    }
+    putTimeSetting('defaultDueTime', patch.defaultDueTime);
     putTimeSetting('dailySummaryTime', patch.dailySummaryTime);
     putTimeSetting('overdueNagTime', patch.overdueNagTime);
     return getSettings();

@@ -19,19 +19,14 @@ homeassistant_api: true
 map:
   - share:rw
 options:
-  users: []
-  access_mode: selected
-  dashboard_path: /
-  daily_summary_time: "08:00"
-  overdue_nag_time: "18:00"
   log_level: info
 schema:
   users:
     - name: str
       notify:
         - str
-  access_mode: list(everyone|selected)
-  dashboard_path: str
-  daily_summary_time: match(^([01]\d|2[0-3]):[0-5]\d$)
-  overdue_nag_time: match(^([01]\d|2[0-3]):[0-5]\d$)
+  access_mode: list(everyone|selected)?
+  dashboard_path: str?
+  daily_summary_time: match(^([01]\d|2[0-3]):[0-5]\d$)?
+  overdue_nag_time: match(^([01]\d|2[0-3]):[0-5]\d$)?
   log_level: list(debug|info|warn|error)

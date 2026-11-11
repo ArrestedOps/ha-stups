@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { ADDON_DEFAULTS } from './addon-options.js';
 import { channelFromEnv, type Channel } from './channel.js';
 import { parseOptions, type Options } from './config.js';
 
@@ -157,7 +158,12 @@ export function resolveRuntime(env: Env, readFile: (path: string) => Record<stri
   const optionsPath = own('CONFIG') ?? set(env.OPTIONS_PATH) ?? (mode === 'addon' ? '/data/options.json' : `${dataDir}/options.json`);
   const fileRaw = readFile(optionsPath);
   const invalidOptions: string[] = [];
-  const options = mode === 'addon' ? parseOptions(fileRaw, invalidOptions) : parseOptions({ ...fileRaw, ...optionsFromEnv(env) });
+  // Im Add-on fehlt dashboard_path auf neuen Installationen (die Option ist optional und leer): dann gilt der Standard des Add-ons,
+  // damit die einmalige Übernahme darin keine Änderung sieht (Docker behält „/lovelace/0")
+  const options =
+    mode === 'addon'
+      ? parseOptions({ ...fileRaw, dashboard_path: fileRaw.dashboard_path ?? ADDON_DEFAULTS.dashboardPath }, invalidOptions)
+      : parseOptions({ ...fileRaw, ...optionsFromEnv(env) });
 
   const port = Number(own('PORT') ?? set(env.PORT) ?? 8099);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(`Ungültiger Port: ${own('PORT') ?? env.PORT}`);

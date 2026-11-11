@@ -211,3 +211,22 @@ describe('STUPS_TRUST_PROXY', () => {
     expect(resolveRuntime({ SUPERVISOR_TOKEN: 'x', STUPS_TRUST_PROXY: '1' }, () => ({})).trustProxy).toBe(false);
   });
 });
+
+describe('Optionen im Add-on ohne die Felder, die die App übernommen hat', () => {
+  // Neue Installationen sehen nur noch das Log-Level (die anderen Optionen sind optional und leer): Es darf nichts als „geändert“ gelten.
+  it('ohne dashboard_path gilt der Standard des Add-ons („/"), nicht der von Docker („/lovelace/0")', () => {
+    const r = resolveRuntime({ SUPERVISOR_TOKEN: 'abc' }, files({ '/data/options.json': { log_level: 'info' } }));
+    expect(r.options.dashboardPath).toBe('/');
+    expect(r.options.dailySummaryTime).toBe('08:00');
+    expect(r.options.overdueNagTime).toBe('18:00');
+  });
+
+  it('ein eingetragener dashboard_path bleibt', () => {
+    const r = resolveRuntime({ SUPERVISOR_TOKEN: 'abc' }, files({ '/data/options.json': { dashboard_path: '/lovelace/0' } }));
+    expect(r.options.dashboardPath).toBe('/lovelace/0');
+  });
+
+  it('in Docker bleibt „/lovelace/0" der Standard', () => {
+    expect(resolveRuntime({}, files()).options.dashboardPath).toBe('/lovelace/0');
+  });
+});

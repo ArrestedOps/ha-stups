@@ -8,7 +8,7 @@ Dein Zuhause merkt, was zu tun ist, ihr entscheidet, wer es macht. Stups läuft 
 
 1. **Stups** im App-Store installieren, starten und in der Seitenleiste öffnen.
 2. Auf einer neuen Installation führt die Einrichtung Administratoren in etwa drei Minuten durch: Wer wohnt hier, ein erster Wächter, eine Testnachricht. Jeder Schritt lässt sich überspringen und später nachholen.
-3. Personen, Handys und Zugriff pflegst du in der App unter **Einstellungen › Haushalt › Personen & Zugriff**; das Dashboard für den Knopf „‹ Dashboard“ unter **Einstellungen › Home Assistant › Dashboard**.
+3. Personen, Handys und Zugriff pflegst du in der App unter **Einstellungen › Haushalt › Personen & Zugriff**; das Ziel des Home-Knopfs oben unter **Einstellungen › Home Assistant › Dashboard**.
 4. Karten legst du auf dem Reiter **Boards** mit dem **+** an, oder ein Wächter legt sie aus dem an, was dein Smart Home weiß.
 
 ## Wenn etwas nicht klappt
@@ -19,20 +19,17 @@ Dein Zuhause merkt, was zu tun ist, ihr entscheidet, wer es macht. Stups läuft 
 
 ## Einrichtung
 
-**Erster Start:** Auf einer neuen Installation führt Stups Administratoren zuerst durch eine kurze Einrichtung, etwa drei Minuten: **Wer wohnt hier?** (die Personen aus Home Assistant sind vorgewählt, Handys erkennt Stups selbst, wer kein Handy hat, bekommt einen Link zur Companion App im App Store oder bei Google Play, und du legst fest, wer ein Kind ist; ein Administrator ist keine Person und steht nur dabei, wenn er „Mich auch hinzufügen“ einschaltet), **Dein erster Wächter** (genau dieselbe Liste und derselbe Assistent wie unter Wächter › Gefunden, mit den eben gewählten Personen schon ausgewählt), **Testnachricht** (ein echtes Beispiel der Nachricht zu einer neuen Karte, an das Handy einer Person deiner Wahl; auf dem iPhone die Nachricht gedrückt halten, dann erscheint der Knopf *Erledigt*) und **Fertig**. Jeder Schritt lässt sich überspringen und später in den Einstellungen nachholen. Wo du aufgehört hast, merkt sich der Server: Du kannst auf einem anderen Gerät weitermachen. Mitglieder und Kinder sehen eine Kurzfassung (**Handy verbinden**, **Farbe wählen**). Bestehende Installationen zeigen sie nicht von selbst; *Einstellungen › Hilfe und Daten › Einrichtung nochmal durchgehen* öffnet sie jederzeit. Die Liste unten ist das, was die Einrichtung tut, so findest du es in den Einstellungen.
+**Erster Start:** Auf einer neuen Installation führt Stups Administratoren zuerst durch eine kurze Einrichtung, etwa drei Minuten: **Wer wohnt hier?** (die Personen aus Home Assistant sind vorgewählt, Handys erkennt Stups selbst, wer kein Handy hat, bekommt einen Link zur Companion App im App Store oder bei Google Play, und du legst fest, wer ein Kind ist; ein Administrator ist keine Person und steht nur dabei, wenn er „Mich auch hinzufügen“ einschaltet), **Dein erster Wächter** (genau dieselbe Liste und derselbe Assistent wie unter Wächter › Gefunden, mit den eben gewählten Personen schon ausgewählt), **Testnachricht** (ein echtes Beispiel der Nachricht zu einer neuen Karte, an das Handy einer Person deiner Wahl; auf dem iPhone die Nachricht gedrückt halten, dann erscheint der Knopf *Erledigt*) und **Fertig**. Jeder Schritt lässt sich überspringen und später nachholen. Wo du aufgehört hast, merkt sich der Server: Du kannst auf einem anderen Gerät weitermachen. Mitglieder und Kinder sehen eine Kurzfassung (**Handy verbinden**, **Farbe wählen**). Bestehende Installationen zeigen sie nicht von selbst; *Einstellungen › Hilfe und Daten › Einrichtung nochmal durchgehen* öffnet sie jederzeit.
 
-1. App starten und in der Seitenleiste **Stups** öffnen.
-2. **Avatar oben rechts › Haushalt › Personen und Kinder** öffnen (Administratoren):
-   - **Personen hinzufügen:** Die Personen aus Home Assistant (Einstellungen › Personen) stehen zur Auswahl. Wer hinzugefügt ist, kann zugewiesen werden und bekommt Push-Nachrichten.
-   - **Push-Geräte wählen:** Pro Person die Geräte ankreuzen, auf denen die Nachrichten ankommen sollen. Es erscheinen die Geräte, auf denen die Home-Assistant-Companion-App angemeldet ist. Jede Person wählt ihre Geräte selbst, ein Administrator kann es auch für andere tun.
-   - **Zugriff festlegen:** *Alle in Home Assistant* (jeder Home-Assistant-Benutzer darf die App öffnen) oder *Nur diese Personen* (nur die Liste und Administratoren; wer sonst öffnet, sieht „Kein Zugriff" und steht für Administratoren unter „Wartet auf Freigabe").
-3. Unter **Einstellungen › Home Assistant › Dashboard und Kopfzeile** das Dashboard für den Knopf „‹ Dashboard" oben links wählen.
-4. **Einstellungen › Für mich › Sprache und Farbe:** Automatisch (folgt dem Gerät), Deutsch oder English. Die Wahl gilt für dich auf allen Geräten, auch für Push-Nachrichten.
-5. **Einstellungen › Für mich › Sprache und Farbe:** Auf dem Farbkreis den Lieblingsfarbton wählen (Grün und Türkis fehlen: Türkis gehört dem Haus, siehe „Aufgaben"). Knöpfe, aktiver Reiter und farbige Schrift folgen sofort, es gilt für dich auf allen Geräten. „Orange (Standard)“ stellt das ursprüngliche Aussehen wieder her.
+**Danach** findest du alles unter **Einstellungen** (Zahnrad oder Avatar oben rechts; die Tabelle unter „Einstellungen“ zeigt, wo was steht). Die wichtigsten Seiten:
+
+- **Personen & Zugriff** (Administratoren): Die Personen aus Home Assistant (Einstellungen › Personen) stehen zur Auswahl; wer hinzugefügt ist, kann zugewiesen werden und bekommt Push-Nachrichten. Pro Person die Geräte ankreuzen, auf denen die Nachrichten ankommen sollen (es erscheinen die Geräte mit angemeldeter Companion App; jede Person wählt ihre eigenen, ein Administrator auch für andere). Beim Zugriff gilt *Alle in Home Assistant* (jeder Home-Assistant-Benutzer darf die App öffnen) oder *Nur diese Personen* (nur die Liste und Administratoren; wer sonst öffnet, sieht „Kein Zugriff“ und steht für Administratoren unter „Wartet auf Freigabe“).
+- **Dashboard** (jede Person für sich): Ziel des Home-Knopfs oben rechts, der zurück zu Home Assistant führt.
+- **Sprache und Farbe** (jede Person für sich): Sprache automatisch (folgt dem Gerät), Deutsch oder English, auch für Push-Nachrichten; auf dem Farbkreis der Lieblingsfarbton (Grün und Türkis fehlen: Türkis gehört dem Haus, siehe „Aufgaben“). „Orange (Standard)“ stellt das ursprüngliche Aussehen wieder her.
 
 ### Rollen
 
-- **Administrator** ist, wer es in Home Assistant ist. Administratoren ändern Personen, Zugriff und Dashboard und kommen immer hinein.
+- **Administrator** ist, wer es in Home Assistant ist. Administratoren ändern Personen und Zugriff und kommen immer hinein.
 - **Mitglieder** benutzen die App und wählen ihre eigenen Push-Geräte.
 - **Kinder** sind Personen mit eingeschränkten Rechten (siehe „Rolle Kind und Bestätigung“). Ein Administrator ist nie ein Kind.
 - Wer aus der Liste entfernt wird, verliert Zuweisungen und Nachrichten, die Karten bleiben unverändert. Kommt die Person zurück, gilt alles wieder.
@@ -73,7 +70,7 @@ Dunkel und hell folgen dem iPhone (oder dem Gerät). Ein farbiger **Balken links
 
 ### Die Reiter und die Kopfzeile
 
-Die Leiste unten hat drei Reiter: **Aufgaben** (der Start: die App öffnet immer dort, nur Boards merkt sie sich), **Boards** und **Wächter**. Kinder und der Container ohne Home Assistant sehen Wächter nicht. Oben steht auf jedem Reiter dieselbe Kopfzeile: links **„‹ Dashboard"** (nur im Add-on; führt zurück zum Home-Assistant-Dashboard), rechts ein **Offline-Hinweis**, wenn die Verbindung fehlt, die **Glocke** (mit kleiner Zahl, wenn etwas auf dich wartet) und dein **Avatar**. Der Avatar öffnet die Einstellungen. Er zeigt dein Bild (aus Home Assistant oder selbst hochgeladen) oder sonst deine Initiale in deiner Farbe.
+Die Leiste unten hat drei Reiter: **Aufgaben** (der Start: die App öffnet immer dort, nur Boards merkt sie sich), **Boards** und **Wächter**. Kinder und der Container ohne Home Assistant sehen Wächter nicht. Oben steht auf jedem Reiter dieselbe Kopfzeile: rechts ein **Offline-Hinweis**, wenn die Verbindung fehlt, der **Home-Knopf** (nur im Add-on; führt zurück zum Home-Assistant-Dashboard, das Ziel wählst du unter Einstellungen › Dashboard), die **Glocke** (mit kleiner Zahl, wenn etwas auf dich wartet), das **Zahnrad** und dein **Avatar**. Zahnrad und Avatar öffnen die Einstellungen. Er zeigt dein Bild (aus Home Assistant oder selbst hochgeladen) oder sonst deine Initiale in deiner Farbe.
 
 **Am Computer (ab 1024 px Breite)** ersetzt eine feste Seitenleiste die Leiste unten (Reiter, Boards, deine Karte). Die Kopfzeile hat Suche (**Strg/Cmd + K**), **Neue Aufgabe**, Home und Glocke. Aufgaben öffnen in einer Detailspalte rechts, Boards sind ein Kanban über die volle Breite, Wächter eine Tabelle, Fenster öffnen als Dialog in der Mitte. Handy und Companion App sehen aus wie bisher; Tablets zeigen die Handy-Ansicht zentriert.
 
@@ -130,8 +127,8 @@ Der Kalender ist eine Seite unter Aufgaben (öffnen mit dem Kalender-Knopf der W
 
 Empfänger sind immer die **zugewiesenen** Personen. Karten ohne Zuweisung oder ohne Fälligkeit melden sich nicht. Beim Anlegen einer neuen Karte ist deshalb die anlegende Person vorausgewählt, und wer bei einer Karte ohne Zuständige einen Termin setzt, bekommt einen Hinweis mit „Mir zuweisen". Ob für eine Karte eine Nachricht kommt, zeigt Einstellungen › Hilfe und Daten › „Warum kommt nichts an?" › „Stand anzeigen".
 
-- zur Fälligkeit, optional vorab (15 Min. bis 2 Tage vorher) und täglich nachhaken, solange überfällig
-- jeden Morgen eine Zusammenfassung mit den eigenen Aufgaben
+- zur Fälligkeit, optional vorab (15 Min. bis 2 Tage vorher) und täglich nachhaken, solange überfällig (Uhrzeit für Nachhaken in Tagen oder Wochen: Einstellungen › Erinnerungszeiten)
+- jeden Morgen eine Zusammenfassung mit den eigenen Aufgaben (Uhrzeit: Einstellungen › Erinnerungszeiten)
 - Auf dem iPhone erscheint der Button **„Erledigt"**, wenn man die Nachricht aufklappt (nach links wischen und „Ansicht", herunterziehen oder lange drücken)
 - Nach einem Neustart werden verpasste Erinnerungen bis 12 Stunden zurück nachgeholt, ohne Doppelungen
 
@@ -141,7 +138,7 @@ An einer Aufgabe schaltest du **„Nochmal erinnern, wenn nicht erledigt"** ein:
 
 ### Stupsen
 
-Mit **Stupsen** gibst du einer anderen Person zu einer Karte einen freundlichen Stups („Denkst du dran?"). Der Knopf steht im Karten-Fenster und im Menü „⋯" jeder Karte. Das gilt für alle Personen, die unter Einstellungen › Haushalt › Personen und Kinder stehen.
+Mit **Stupsen** gibst du einer anderen Person zu einer Karte einen freundlichen Stups („Denkst du dran?"). Der Knopf steht im Karten-Fenster und im Menü „⋯" jeder Karte. Das gilt für alle Personen, die unter Einstellungen › Haushalt › Personen & Zugriff stehen.
 
 1. **An wen:** Zuständige der Karte (außer dir) sind vorausgewählt. Gibt es keine, wählst du selbst. Wer kein Push-Gerät hat, steht ausgegraut mit Hinweis.
 2. **Nachricht:** eine der vier Vorlagen oder ein eigener Text mit bis zu 120 Zeichen (er ersetzt die Vorlage).
@@ -168,7 +165,7 @@ An der Karte zeigt ein orangefarbenes Abzeichen „Conny stupst dich", wenn dich
 
 Ein Stups (und wenn du magst eine Fälligkeits-Erinnerung oder eine Wächter-Karte) kann **im Haus** ankommen statt auf dem Handy. Gedacht für Kinder ohne Handy und für alle, die zu Hause sind und nicht auf einen Bildschirm schauen. Es braucht die Verbindung zu Home Assistant.
 
-Administratoren richten es ein: Einmal unter **Einstellungen › Home Assistant › Ansage und Lampe** den Sprachdienst wählen, dann unter **Haushalt › Personen und Kinder** eine Person aufklappen und unter **Haus** Kanäle hinzufügen:
+Administratoren richten es ein: Einmal unter **Einstellungen › Home Assistant › Ansage und Lampe** den Sprachdienst wählen, dann unter **Haushalt › Personen & Zugriff** eine Person aufklappen und unter **Haus** Kanäle hinzufügen:
 
 - **Ansage:** ein Lautsprecher (`media_player`). Stups sagt zum Beispiel: „Ben, Anna stupst dich: Müll rausbringen. Denkst du dran?" Du kannst eine Lautstärke einstellen; danach geht der Lautsprecher auf die vorherige zurück.
 - **Lampe:** eine Lampe, die fünf Sekunden in der Akzentfarbe der Person leuchtet und dann wieder so ist wie vorher (auch wenn sie aus war).
@@ -187,7 +184,7 @@ Gut zu wissen:
 
 ### Rolle Kind und Bestätigung
 
-Administratoren machen eine Person unter *Einstellungen › Haushalt › Personen und Kinder › Rolle Kind* zum **Kind**. Ein Kind bekommt eine reduzierte App, und der Server setzt das durch (nicht nur der Bildschirm):
+Administratoren machen eine Person unter *Einstellungen › Haushalt › Personen & Zugriff › Rolle Kind* zum **Kind**. Ein Kind bekommt eine reduzierte App, und der Server setzt das durch (nicht nur der Bildschirm):
 
 - Ein Kind **sieht** alle Boards, die es sehen darf, oder nur die **Boards mit eigenen Karten** (Wahl je Kind) und kann eigene Karten **abhaken**, Checklistenpunkte abhaken, **kommentieren** und **Fotos und Links anhängen**. Außerdem darf ein Kind **„Nur ich"-Boards** für sich anlegen. Sonst nichts: kein Anlegen von Karten auf geteilten Boards, kein Verschieben, Löschen, keine Verwaltung geteilter Boards, keine Wächter, keine Fairness, keine Einstellungen außer Sprache und Farbe.
 - **Bestätigung:** Je Kind kannst du *„Erledigt“ braucht eine Bestätigung* einschalten, je Karte lässt es sich überschreiben (*Bestätigung*: Vorgabe der Person, immer, nie). Hakt das Kind eine Karte ab, bleibt sie offen und zeigt **„Wartet auf Bestätigung“**. Die **Bestätiger** bekommen eine Push-Nachricht mit **Bestätigen** und **Nochmal**:
@@ -199,7 +196,7 @@ Administratoren machen eine Person unter *Einstellungen › Haushalt › Persone
 
 ### Berechtigungen und Feedback
 
-Ein Administrator kann einzelnen Personen gezielt Rechte geben, ohne sie zu Administratoren zu machen: Wächter, Ansage und Lampe, App-Einstellungen, Personen, Bestätigen für Kinder und Feedback lesen (*Einstellungen › Personen und Kinder › Person öffnen › Berechtigungen*). **Feedback** (Fehler melden, Verbesserung vorschlagen, loben oder kritisieren, bis zu 1000 Zeichen, optional Bild) schickst du direkt aus der App; Administratoren lesen es unter *Einstellungen › Hilfe und Daten*. Es bleibt auf deiner Installation.
+Ein Administrator kann einzelnen Personen gezielt Rechte geben, ohne sie zu Administratoren zu machen: Wächter, Ansage und Lampe, App-Einstellungen, Personen, Bestätigen für Kinder und Feedback lesen (*Einstellungen › Haushalt › Personen & Zugriff › Person öffnen › Berechtigungen*). **Feedback** (Fehler melden, Verbesserung vorschlagen, loben oder kritisieren, bis zu 1000 Zeichen, optional Bild) schickst du direkt aus der App; Administratoren lesen es unter *Einstellungen › Hilfe und Daten*. Es bleibt auf deiner Installation.
 
 ### Einstellungen
 
@@ -208,11 +205,11 @@ Der Avatar oben rechts öffnet die Einstellungen als Übersicht mit Unterseiten.
 | Gruppe | Seiten |
 |---|---|
 | **Für mich** (alle) | Benachrichtigungen (Test an mich, meine Geräte oder ntfy-Thema, Ruhezeit, Sonntagsrückblick, Wenig Zeit) · Sprache und Farbe · Konto und Anmeldung (nur im Container) |
-| **Haushalt** (Administratoren) | Personen und Kinder · Wächter · Vorlagen (Board-Vorlagen) · Termine (Standard-Uhrzeit) |
-| **Home Assistant** (Administratoren) | Dashboard und Kopfzeile (Zurück-Dashboard, HA-Kopfzeile ausblenden, Bubble-Card-Knopf) · Ansage und Lampe (Sprachdienst) |
-| **Hilfe und Daten** | Warum kommt nichts an? · Papierkorb, Archiv, Umzug · Beta (nur in der Beta) · Einrichtung nochmal durchgehen |
+| **Haushalt** (Administratoren) | Personen & Zugriff (Personen, Handys, Zugriff, Kinder, Haus-Kanäle) · Wächter · Vorlagen (Board-Vorlagen) · Symbole (Symbole aus Titeln erkennen) · Termine (Standard-Uhrzeit) · Erinnerungszeiten (Tageszusammenfassung, Nachhaken um …) |
+| **Home Assistant** | Dashboard (Ziel des Home-Knopfs, jede Person für sich) · Dashboard-Button (Bubble Card, Administratoren) · Ansage und Lampe (Sprachdienst) · HA-Kopfzeile ausblenden (jede Person, nur dieses Gerät) |
+| **Hilfe und Daten** | Warum kommt nichts an? · Papierkorb, Archiv, Umzug · Feedback der Nutzer (mit der Berechtigung) · Beta (nur in der Beta) · Einrichtung nochmal durchgehen |
 
-Am Fuß stehen die Version und der Link zur Diagnose-Seite. Mitglieder sehen „Haushalt" und „Home Assistant" nicht; ein Kind sieht nur „Sprache und Farbe". Die Wahl „HA-Kopfzeile ausblenden" gilt nur für das Gerät; Mitglieder finden sie unter *Sprache und Farbe*.
+Am Fuß stehen die Version und der Link zur Diagnose-Seite. Oben steht für jede Person **Feedback & Ideen**. Mitglieder sehen „Haushalt" nur mit einer Berechtigung (siehe oben); ein Kind sieht nur „Sprache und Farbe".
 
 ### Board-Vorlagen
 
@@ -311,7 +308,7 @@ Fotos werden vor dem Hochladen auf höchstens 2048 Pixel verkleinert, als JPEG g
 
 ## Dashboard-Button (Bubble Card)
 
-Den Pfad zeigt die App unter Einstellungen. Beispiel:
+Den Pfad zeigt die App unter Einstellungen › Home Assistant › Dashboard-Button. Beispiel:
 
 ```yaml
 type: custom:bubble-card
@@ -339,7 +336,7 @@ Datenbank und Anhänge liegen im Add-on-Verzeichnis `/data` und sind Teil des no
 
 ## Optionen des Add-ons (veraltet)
 
-Bis Version 1.40 ließ sich alles in Home Assistant einstellen, unter **Einstellungen › Apps › Stups › Konfiguration**. So waren diese Optionen gemeint (sie sind veraltet, siehe unten):
+Bis Version 1.27 ließ sich alles in Home Assistant einstellen, unter **Einstellungen › Apps › Stups › Konfiguration**. So waren diese Optionen gemeint (sie sind veraltet, siehe unten):
 
 ```yaml
 users:                       # Wer Stups nutzt und wohin die Push-Nachrichten gehen
@@ -356,9 +353,9 @@ daily_summary_time: "08:00"  # Tageszusammenfassung
 overdue_nag_time: "18:00"    # Nachhaken bei Überfälligkeit
 ```
 
-Die Namen der Geräte findest du in Home Assistant unter Entwicklerwerkzeuge › Aktionen (Dienste `notify.mobile_app_…`); in der App zeigt Einstellungen › Haushalt › Personen und Kinder, welche Geräte Home Assistant kennt.
+Die Namen der Geräte findest du in Home Assistant unter Entwicklerwerkzeuge › Aktionen (Dienste `notify.mobile_app_…`); in der App zeigt Einstellungen › Haushalt › Personen & Zugriff, welche Geräte Home Assistant kennt.
 
-**Nur der erste Start liest diese Optionen.** Ab Version 1.41 übernimmt Stups Personen, Geräte, Zugriff, Dashboard und Uhrzeiten von hier einmal in die App, beim ersten Start nach dem Update, und entfernt niemanden. Danach ist die App der einzige Ort: Änderungen in dieser Konfiguration wirken nicht mehr, und Personen, Geräte und Zugriff sind in der App nicht mehr gesperrt. Pflege sie unter Einstellungen › Personen & Zugriff, Einstellungen › Dashboard, Einstellungen › Tageszusammenfassung und Einstellungen › Nachhaken um …. In einer späteren Version verschwinden die Optionen aus der Konfiguration.
+**Nur der erste Start liest diese Optionen.** Ab Version 1.41 übernimmt Stups Personen, Geräte, Zugriff, Dashboard und Uhrzeiten von hier einmal in die App, beim ersten Start nach dem Update, und entfernt niemanden. Danach ist die App der einzige Ort: Änderungen in dieser Konfiguration wirken nicht mehr, und Personen, Geräte und Zugriff sind in der App nicht mehr gesperrt. Pflege sie unter Einstellungen › Personen & Zugriff, Einstellungen › Dashboard und Einstellungen › Erinnerungszeiten. Auf neuen Installationen zeigt die Konfiguration nur noch das Log-Level; die übrigen Optionen sind „Nicht verwendete optionale Optionen“ und lassen sich ausklappen. Wer dort schon Werte eingetragen hatte, behält sie, damit die einmalige Übernahme sie lesen kann.
 
 ## Aktualisieren
 
@@ -367,6 +364,6 @@ Neue Versionen erscheinen im App-Store erst, wenn ihr Docker-Image fertig ist (d
 ## Fehlersuche
 
 - **Diagnose-Seite:** `…/diagnose.html` im Panel (Einstellungen › Diagnose-Seite) zeigt erkannten Nutzer, Verbindung zu Home Assistant und Test-Push.
-- **Push kommt nicht an:** Ist unter Einstellungen › Für mich › Benachrichtigungen (bei dir) oder Haushalt › Personen und Kinder (bei anderen) ein Gerät angekreuzt? „Warum kommt nichts an?" › „Stand anzeigen" zeigt, wer für welche Karte eine Nachricht bekommt. Die Diagnose-Seite markiert Dienste, die es nicht mehr gibt.
-- **„Kein Zugriff" beim Öffnen:** Der Zugriff steht auf „Nur diese Personen", und du bist nicht dabei. Ein Administrator gibt dich unter Einstellungen › Haushalt › Personen und Kinder frei.
+- **Push kommt nicht an:** Ist unter Einstellungen › Für mich › Benachrichtigungen (bei dir) oder Haushalt › Personen & Zugriff (bei anderen) ein Gerät angekreuzt? „Warum kommt nichts an?" › „Stand anzeigen" zeigt, wer für welche Karte eine Nachricht bekommt. Die Diagnose-Seite markiert Dienste, die es nicht mehr gibt.
+- **„Kein Zugriff" beim Öffnen:** Der Zugriff steht auf „Nur diese Personen", und du bist nicht dabei. Ein Administrator gibt dich unter Einstellungen › Haushalt › Personen & Zugriff frei.
 - **Panel öffnet auf dem Handy nichts:** Dann ist das Panel nur für Administratoren sichtbar. Stups gibt das Panel für alle Benutzer frei; fehlt es trotzdem, in Home Assistant bei der App „In der Seitenleiste anzeigen" prüfen.

@@ -25,7 +25,7 @@ test('Übersicht: Gruppen für den Administrator, jede Seite öffnet und führt 
   await expect(d.getByText(/Angemeldet als/)).toBeVisible();
   await expect(d.getByRole('link', { name: 'Diagnose-Seite' })).toBeVisible();
 
-  for (const page_ of ['Benachrichtigungen', 'Sprache und Farbe', 'Personen & Zugriff', 'Vorlagen', 'Termine', 'Dashboard', 'Dashboard-Button', 'Tageszusammenfassung', 'Nachhaken um …', 'Warum kommt nichts an?', 'Papierkorb, Archiv, Umzug']) {
+  for (const page_ of ['Benachrichtigungen', 'Sprache und Farbe', 'Personen & Zugriff', 'Vorlagen', 'Termine', 'Dashboard', 'Dashboard-Button', 'Erinnerungszeiten', 'Warum kommt nichts an?', 'Papierkorb, Archiv, Umzug']) {
     await d.getByRole('button', { name: page_, exact: true }).click();
     await expect(d.getByRole('button', { name: 'Zurück zu den Einstellungen' })).toBeVisible();
     await back(page);
@@ -110,7 +110,7 @@ test('Personenbild: hochladen zeigt das Bild im Avatar, entfernen kehrt zur Init
   await expect(page.getByRole('button', { name: 'Profil öffnen' }).locator('img')).toHaveCount(0);
 });
 
-test('Tageszusammenfassung: Uhrzeit in der App ändern gilt vor der Option, „Zurücksetzen" stellt die Option wieder her', async ({ page, request }) => {
+test('Erinnerungszeiten: Tageszusammenfassung, Uhrzeit in der App ändern gilt vor der Option, „Zurücksetzen" stellt die Option wieder her', async ({ page, request }) => {
   await page.goto('/');
   await openBoards(page);
   await openSettingsPage(page);
@@ -118,16 +118,21 @@ test('Tageszusammenfassung: Uhrzeit in der App ändern gilt vor der Option, „Z
   // die Übersicht hat keine Zeile „Wächter" mehr
   await expect(d.getByRole('button', { name: 'Wächter', exact: true })).toHaveCount(0);
 
-  await d.getByRole('button', { name: 'Tageszusammenfassung' }).click();
-  const field = d.getByLabel('Uhrzeit der Tageszusammenfassung');
-  await field.fill('06:45');
+  await d.getByRole('button', { name: 'Erinnerungszeiten' }).click();
+  const section = d.getByRole('region', { name: 'Tageszusammenfassung' });
+  const field = section.getByLabel('Uhrzeit der Tageszusammenfassung');
+  // WebKit löst bei fill() an einem Zeitfeld kein „change“ aus: Ereignis von Hand
+  await field.evaluate((el: HTMLInputElement) => {
+    el.value = '06:45';
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   await expect.poll(async () => ((await (await request.get('/api/settings')).json()) as { dailySummaryTime: string | null }).dailySummaryTime).toBe('06:45');
-  await expect(d.getByRole('button', { name: /Zurücksetzen/ })).toBeVisible();
-  await d.getByRole('button', { name: /Zurücksetzen/ }).click();
+  await expect(section.getByRole('button', { name: /Zurücksetzen/ })).toBeVisible();
+  await section.getByRole('button', { name: /Zurücksetzen/ }).click();
   await expect.poll(async () => ((await (await request.get('/api/settings')).json()) as { dailySummaryTime: string | null }).dailySummaryTime).toBeNull();
-  await expect(d.getByRole('button', { name: /Zurücksetzen/ })).toHaveCount(0);
+  await expect(section.getByRole('button', { name: /Zurücksetzen/ })).toHaveCount(0);
 
   // zurück in der Übersicht steht die Uhrzeit als Wert in der Zeile
   await back(page);
-  await expect(d.getByText(/^\d\d:\d\d$/).first()).toBeVisible();
+  await expect(d.getByText(/^\d\d:\d\d · \d\d:\d\d$/).first()).toBeVisible();
 });

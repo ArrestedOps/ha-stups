@@ -4,6 +4,14 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.41.0-beta.6
+
+**Weniger Optionen in der Konfiguration, eine Seite „Erinnerungszeiten“.** Neue Installationen sehen unter Einstellungen › Apps › Stups (Beta) › Konfiguration nur noch das Log-Level: Die übrigen Optionen (Personen, Zugriff, Dashboard, die zwei Uhrzeiten) sind jetzt optional und stehen nicht mehr in den Vorgaben. Wer dort schon Werte eingetragen hat, behält sie, damit die einmalige Übernahme beim ersten Start sie lesen kann. Ohne Eintrag gilt wie bisher das Dashboard „/“. In der App stehen Tageszusammenfassung und Nachhaken um … jetzt auf einer Seite, Einstellungen › Erinnerungszeiten, mit je einer Uhrzeit.
+
+**Bitte prüfen (Testliste):** auf einer bestehenden Installation die Konfiguration öffnen (die eingetragenen Werte sind noch da, der Rest steht unter „Nicht verwendete optionale Optionen“) und auf einer neuen Installation (nur das Log-Level sichtbar, Start ohne Warnung im Log).
+
+**Dokumentation:** die Seitennamen in der Anleitung stimmen wieder mit der App überein (Personen & Zugriff, Dashboard, Erinnerungszeiten), die Tabelle der Einstellungen ist vollständig, „Einrichtung“ wiederholt „Erste Schritte“ nicht mehr. „Bis Version 1.27“ statt „1.40“: Die normale App springt von 1.27.1 auf 1.41.0.
+
 ## 1.41.0-beta.5
 
 **Große Dateien aufgeteilt, an der App ändert sich nichts.** Die Wächter (`watchers.ts`), die API-Aufrufe und der Zustand der Oberfläche (`api/`, `store/`) und das Fenster „Neue Aufgabe“ bestehen jetzt aus kleineren Teilen mit je einer Aufgabe, wie schon der Store im Server. Verhalten und Texte sind unverändert; die vorhandenen Tests und die Browser-Tests zum Anlegen von Karten laufen wie vorher.

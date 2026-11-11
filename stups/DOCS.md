@@ -8,7 +8,7 @@ Your home notices what needs doing, you decide who does it. Stups runs right ins
 
 1. Install **Stups** from the app store, start it and open it from the sidebar.
 2. On a new installation, administrators are guided through a short setup (about three minutes): who lives here, a first watcher, a test message. Every step can be skipped and done later.
-3. People, phones and access are managed in the app under **Settings › Household › People & access**; the dashboard for the "‹ Dashboard" button under **Settings › Home Assistant › Dashboard**.
+3. People, phones and access are managed in the app under **Settings › Household › People & access**; the target of the Home button at the top under **Settings › Home Assistant › Dashboard**.
 4. Add cards on the **Boards** tab with the **+** button, or let a watcher create them from what your smart home knows.
 
 ## If something does not work
@@ -19,20 +19,17 @@ Your home notices what needs doing, you decide who does it. Stups runs right ins
 
 ## Setup
 
-**First start:** on a new installation Stups first guides administrators through a short setup, about three minutes: **Who lives here?** (the people from Home Assistant are preselected, phones are detected by themselves, anyone without a phone gets a link to the Companion App in the App Store or Google Play, and you mark the children; an administrator is not a person and only appears if they switch on “Add me too”), **Your first watcher** (exactly the same list and assistant as under Watchers › Found, with the people you just chose already selected), **Test message** (a real example of the message a new card sends, to the phone of a person you choose; on an iPhone press and hold it to see the *Done* button) and **Done**. Every step can be skipped and done later in the settings. Where you stopped is saved on the server, so you can carry on on another device. Members and children see a short version (**Connect phone**, **Choose a colour**). Installations that already existed do not show it by themselves; *Settings › Help and data › Go through the setup again* opens it any time. The list below is what the setup does, found in the settings.
+**First start:** on a new installation Stups first guides administrators through a short setup, about three minutes: **Who lives here?** (the people from Home Assistant are preselected, phones are detected by themselves, anyone without a phone gets a link to the Companion App in the App Store or Google Play, and you mark the children; an administrator is not a person and only appears if they switch on “Add me too”), **Your first watcher** (exactly the same list and assistant as under Watchers › Found, with the people you just chose already selected), **Test message** (a real example of the message a new card sends, to the phone of a person you choose; on an iPhone press and hold it to see the *Done* button) and **Done**. Every step can be skipped and done later. Where you stopped is saved on the server, so you can carry on on another device. Members and children see a short version (**Connect phone**, **Choose a colour**). Installations that already existed do not show it by themselves; *Settings › Help and data › Go through the setup again* opens it any time.
 
-1. Start the app and open **Stups** in the sidebar.
-2. Open **avatar at the top right › Household › People and children** (administrators):
-   - **Add people:** the people from Home Assistant (Settings › People) are offered. Whoever is added can be assigned cards and receives push messages.
-   - **Choose push devices:** tick, per person, the devices that should receive the messages. The devices where the Home Assistant Companion App is signed in appear. Everyone chooses their own devices; an administrator can also do it for others.
-   - **Set access:** *Everyone in Home Assistant* (every Home Assistant user may open the app) or *Only these people* (only the list and administrators; anyone else who opens it sees "No access" and appears for administrators under "Waiting for approval").
-3. Under **Settings › Home Assistant › Dashboard and header** choose the dashboard for the "‹ Dashboard" button at the top left.
-4. **Settings › For me › Language and colour:** Automatic (follows the device), German or English. The choice applies to you on all your devices, push messages included.
-5. **Settings › For me › Language and colour:** pick your favourite colour on the colour wheel (green and teal are missing: teal belongs to the house, see "Today"). Buttons, the active tab and coloured text follow at once; it applies to you on all your devices. "Orange (default)" restores the original look.
+**Afterwards** everything is under **Settings** (cog or avatar at the top right; the table under “Settings” shows where to find what). The most important pages:
+
+- **People & access** (administrators): the people from Home Assistant (Settings › People) are offered; whoever is added can be assigned cards and receives push messages. Tick, per person, the devices that should receive the messages (the devices where the Companion App is signed in appear; everyone chooses their own, an administrator can also do it for others). For access, choose *Everyone in Home Assistant* (every Home Assistant user may open the app) or *Only these people* (only the list and administrators; anyone else who opens it sees “No access” and appears for administrators under “Waiting for approval”).
+- **Dashboard** (each person for themselves): where the Home button at the top right leads, back to Home Assistant.
+- **Language and colour** (each person for themselves): language automatic (follows the device), German or English, push messages included; your favourite colour on the colour wheel (green and teal are missing: teal belongs to the house, see “Tasks”). “Orange (default)” restores the original look.
 
 ### Roles
 
-- **Administrator** is whoever is one in Home Assistant. Administrators change people, access and the dashboard and always get in.
+- **Administrator** is whoever is one in Home Assistant. Administrators change people and access and always get in.
 - **Members** use the app and choose their own push devices.
 - **Children** are people with limited rights (see "Child role and confirmation"). An administrator is never a child.
 - Whoever is removed from the list loses assignments and messages; the cards stay unchanged. If the person comes back, everything applies again.
@@ -76,7 +73,7 @@ Dark and light follow the iPhone (or the device). A coloured **bar on the left**
 
 ### The tabs and the header
 
-The bar at the bottom has three tabs: **Tasks** (the start: the app always opens there; only Boards is remembered), **Boards** and **Watchers**. Children and the container without Home Assistant do not see Watchers. The same header sits on every tab: **"‹ Dashboard"** on the left (add-on only; takes you back to the Home Assistant dashboard), an **offline notice** on the right when the connection is missing, the **bell** (with a small number when something is waiting for you) and your **avatar**. The avatar opens the settings. It shows your picture (from Home Assistant or uploaded by you) or your initial in your colour.
+The bar at the bottom has three tabs: **Tasks** (the start: the app always opens there; only Boards is remembered), **Boards** and **Watchers**. Children and the container without Home Assistant do not see Watchers. The same header sits on every tab: an **offline notice** on the right when the connection is missing, the **Home button** (add-on only; takes you back to the Home Assistant dashboard, you choose the target under Settings › Dashboard), the **bell** (with a small number when something is waiting for you), the **cog** and your **avatar**. Cog and avatar open the settings. It shows your picture (from Home Assistant or uploaded by you) or your initial in your colour.
 
 **On a computer (from 1024 px wide)** a fixed sidebar replaces the bottom bar (tabs, boards, your card). The header has search (**Ctrl/Cmd + K**), **New task**, Home and the bell. Tasks open in a detail column on the right, Boards are a Kanban across the full width, Watchers a table, and windows open as a centred dialog. Phones and the Companion App look as before; tablets show the phone view centred.
 
@@ -133,8 +130,8 @@ The calendar is a page under Tasks (open it with the calendar button on the week
 
 Recipients are always the **assigned** people. Cards without assignment or without a due date do not notify. When creating a new card, the creating person is therefore preselected, and whoever sets a due date on a card without assignees gets a hint with "Assign to me". Whether a message comes for a card is shown by Settings › Notifications › "Show status".
 
-- when due, optionally in advance (15 minutes to 2 days before) and a daily follow-up while overdue
-- a summary with your own tasks every morning
+- when due, optionally in advance (15 minutes to 2 days before) and a daily follow-up while overdue (time for follow-ups in days or weeks: Settings › Reminder times)
+- a summary with your own tasks every morning (time: Settings › Reminder times)
 - on the iPhone the **"Done"** button appears when you expand the message (swipe left and "View", pull down, or long-press)
 - after a restart, missed reminders up to 12 hours back are caught up, without duplicates
 - Messages arrive **in the language of the person**: the language their device last reported (or their choice in Settings). Until a device has reported one, push stays in German.
@@ -145,7 +142,7 @@ On a task you can switch on **"Remind me again if not done"**: after X, repeatin
 
 ### Nudging
 
-With **Nudge** you give another person a friendly nudge for a card ("Are you on it?"). The button is in the card window and in the "⋯" menu of every card. It applies to all people listed under Settings › Household › People and children.
+With **Nudge** you give another person a friendly nudge for a card ("Are you on it?"). The button is in the card window and in the "⋯" menu of every card. It applies to all people listed under Settings › Household › People & access.
 
 1. **To whom:** the card's assignees (except you) are preselected. If there are none, you choose. Whoever has no push device appears greyed out with a hint.
 2. **Message:** one of the four templates or your own text of up to 120 characters (it replaces the template).
@@ -172,7 +169,7 @@ On the card an orange badge "Conny nudges you" shows when someone nudged you, an
 
 A nudge (and, if you like, a due-date reminder or a watcher card) can arrive **in the house** instead of on a phone. That is meant for children without a phone, and for everybody who is at home and not looking at a screen. It needs the connection to Home Assistant.
 
-Administrators set it up: choose the speech service once under **Settings › Home Assistant › Announcements and lamp**, then open a person under **Household › People and children** and add channels under **House**:
+Administrators set it up: choose the speech service once under **Settings › Home Assistant › Announcements and lamp**, then open a person under **Household › People & access** and add channels under **House**:
 
 - **Announcement:** a speaker (`media_player`). Stups says, for example: "Ben, Anna nudges you: Take out the trash. Are you on it?" You can set a volume; afterwards the speaker goes back to its previous volume.
 - **Lamp:** a light that lights up for five seconds in the person's accent colour and then returns to what it was before (also when it was off).
@@ -191,7 +188,7 @@ Good to know:
 
 ### Child role and confirmation
 
-Administrators can turn a person into a **child** under *Settings › Household › People and children › Child role*. A child gets a reduced app, and the server enforces it (not just the screen):
+Administrators can turn a person into a **child** under *Settings › Household › People & access › Child role*. A child gets a reduced app, and the server enforces it (not just the screen):
 
 - A child **sees** all boards it is allowed to see or only the **boards with their own cards** (your choice per child) and can **tick off** their own cards, tick checklist items, **comment**, and attach **photos and links**. Besides that a child may create **"Only me" boards** for itself. Nothing else: no creating of cards on shared boards, no moving, deleting, no managing of shared boards, no watchers, no fairness, no settings except language and colour.
 - **Confirmation:** per child you can switch on *"Done" needs confirmation*, and per card you can override it (*Confirmation*: person's default, always, never). When the child ticks a card, it stays open and shows **"Waiting for confirmation"**. The **confirmers** get a push message with **Confirm** and **Again**:
@@ -203,7 +200,7 @@ Administrators can turn a person into a **child** under *Settings › Household 
 
 ### Permissions and feedback
 
-An administrator can give individual people specific rights without making them administrators: watchers, announcements and lamps, app settings, people, confirming for children and reading feedback (*Settings › People and children › open a person › Permissions*). **Feedback** (report a bug, suggest an improvement, praise or criticise, up to 1000 characters, optional picture) is sent from inside the app and read by administrators under *Settings › Help and data*; it stays on your installation.
+An administrator can give individual people specific rights without making them administrators: watchers, announcements and lamps, app settings, people, confirming for children and reading feedback (*Settings › Household › People & access › open a person › Permissions*). **Feedback** (report a bug, suggest an improvement, praise or criticise, up to 1000 characters, optional picture) is sent from inside the app and read by administrators under *Settings › Help and data*; it stays on your installation.
 
 ### Settings
 
@@ -212,11 +209,11 @@ The avatar at the top right opens the settings as an overview with sub-pages. At
 | Group | Pages |
 |---|---|
 | **For me** (everyone) | Notifications (test to me, my devices or ntfy topic, quiet time, Sunday recap, little time) · Language and colour · Account and sign-in (container only) |
-| **Household** (administrators) | People and children · Watchers · Templates (board templates) · Dates (default time) |
-| **Home Assistant** (administrators) | Dashboard and header (back dashboard, hide the HA header, Bubble Card button) · Announcements and lamp (speech service) |
-| **Help and data** | Why does nothing arrive? · Bin, archive, move · Beta (beta only) · Go through the setup again |
+| **Household** (administrators) | People & access (people, phones, access, children, house channels) · Watchers · Templates (board templates) · Icons (recognise icons from titles) · Dates (default time) · Reminder times (daily summary, follow-up at …) |
+| **Home Assistant** | Dashboard (target of the Home button, each person for themselves) · Dashboard button (Bubble Card, administrators) · Announcements and lamp (speech service) · Hide HA header (each person, this device only) |
+| **Help and data** | Why does nothing arrive? · Bin, archive, move · User feedback (with the permission) · Beta (beta only) · Go through the setup again |
 
-At the bottom are the version and the link to the diagnostics page. Members do not see "Household" and "Home Assistant"; a child only sees "Language and colour". The "hide the HA header" choice only applies to the device; members find it under *Language and colour*.
+At the bottom are the version and the link to the diagnostics page. At the top, everyone sees **Feedback & ideas**. Members only see "Household" with a permission (see above); a child only sees "Language and colour".
 
 ### Board templates
 
@@ -312,7 +309,7 @@ Photos are reduced to at most 2048 pixels before uploading, stored as JPEG and s
 
 ## Dashboard button (Bubble Card)
 
-The app shows the path under Settings. Example:
+The app shows the path under Settings › Home Assistant › Dashboard button. Example:
 
 ```yaml
 type: custom:bubble-card
@@ -340,7 +337,7 @@ Database and attachments live in the add-on directory `/data` and are part of th
 
 ## Add-on options (deprecated)
 
-Until version 1.40 you could set everything in Home Assistant, under **Settings › Apps › Stups › Configuration**. Here is what these options mean (they are deprecated, see below):
+Until version 1.27 you could set everything in Home Assistant, under **Settings › Apps › Stups › Configuration**. Here is what these options mean (they are deprecated, see below):
 
 ```yaml
 users:                       # Who uses Stups and where the push messages go
@@ -357,9 +354,9 @@ daily_summary_time: "08:00"  # Daily summary
 overdue_nag_time: "18:00"    # Follow-up for overdue cards
 ```
 
-You find the device names in Home Assistant under Developer tools › Actions (services `notify.mobile_app_…`); in the app, Settings › Household › People and children shows which devices Home Assistant knows.
+You find the device names in Home Assistant under Developer tools › Actions (services `notify.mobile_app_…`); in the app, Settings › Household › People & access shows which devices Home Assistant knows.
 
-**Only the first start reads these options.** From version 1.41, Stups copies the people, devices, access, dashboard and times from here into the app once, at the first start after the update, and removes nobody. From then on the app is the only place: changes in this configuration have no effect any more, and people, devices and access are no longer locked in the app. Manage them under Settings › People & access, Settings › Dashboard, Settings › Daily summary and Settings › Follow up at …. The options will disappear from the configuration in a later version.
+**Only the first start reads these options.** From version 1.41, Stups copies the people, devices, access, dashboard and times from here into the app once, at the first start after the update, and removes nobody. From then on the app is the only place: changes in this configuration have no effect any more, and people, devices and access are no longer locked in the app. Manage them under Settings › People & access, Settings › Dashboard and Settings › Reminder times. On new installations the configuration only shows the log level; the other options are “Unused optional options” and can be expanded. If you had already entered values there, they stay, so that the one-time takeover can read them.
 
 ## Updating
 
@@ -368,6 +365,6 @@ New versions appear in the app store only when their Docker image is finished (t
 ## Troubleshooting
 
 - **Diagnostics page:** `…/diagnose.html` in the panel (Settings › Diagnostics page) shows the detected user, the connection to Home Assistant and a test push.
-- **Push does not arrive:** is a device ticked under Settings › For me › Notifications (for you) or Household › People and children (for others)? "Why does nothing arrive?" › "Show status" shows who gets a message for which card. The diagnostics page marks services that no longer exist.
-- **"No access" when opening:** access is set to "Only these people" and you are not among them. An administrator approves you under Settings › Household › People and children.
+- **Push does not arrive:** is a device ticked under Settings › For me › Notifications (for you) or Household › People & access (for others)? "Why does nothing arrive?" › "Show status" shows who gets a message for which card. The diagnostics page marks services that no longer exist.
+- **"No access" when opening:** access is set to "Only these people" and you are not among them. An administrator approves you under Settings › Household › People & access.
 - **The panel opens nothing on the phone:** then the panel is only visible to administrators. Stups releases the panel to all users; if it is missing anyway, check "Show in sidebar" on the app in Home Assistant.

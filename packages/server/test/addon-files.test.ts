@@ -59,6 +59,23 @@ describe('Add-on-Dateien für Home Assistant', () => {
     }
   });
 
+  // Neue Nutzer sollen in der Konfiguration nur das Log-Level sehen: Die übernommenen Optionen sind optional und stehen nicht in options.
+  // Wer Werte eingetragen hatte, behält sie (sie gelten weiter für die einmalige Übernahme); nichts davon darf Pflicht sein.
+  it('die übernommenen Optionen sind optional und stehen nicht in options (neue Nutzer sehen nur das Log-Level)', () => {
+    for (const app of ['stups', 'stups-beta']) {
+      const c = load(`${app}/config.yaml`);
+      expect(c.options, app).toEqual({ log_level: 'info' });
+      const schema = c.schema as Record<string, unknown>;
+      for (const key of ['access_mode', 'dashboard_path', 'daily_summary_time', 'overdue_nag_time']) {
+        expect(String(schema[key]), `${app} ${key}`).toMatch(/\?$/);
+      }
+      for (const key of ['daily_summary_time', 'overdue_nag_time']) expect(schema[key], `${app} ${key}`).toBe(String.raw`match(^([01]\d|2[0-3]):[0-5]\d$)?`);
+      // Eine Liste darf fehlen, ohne dass der Supervisor sie verlangt
+      expect(Array.isArray(schema.users), app).toBe(true);
+      expect(String(schema.log_level), app).not.toMatch(/\?$/);
+    }
+  });
+
   it('die normale App zeigt auf ihre eigenen Bilder, nie auf die der Beta', () => {
     const image = load('stups/config.yaml').image as string;
     expect(image).toBe('ghcr.io/arrestedops/ha-stups-{arch}');

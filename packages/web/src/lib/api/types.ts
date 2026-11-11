@@ -1,10 +1,8 @@
 import type { LanguageChoice } from '../i18n/index.svelte';
-import type { FeedbackContext, FeedbackItem, FeedbackKind, FeedbackStatus } from '../feedback';
 import type { Recurrence } from '../recurrence';
 import type { ReminderSpec } from '../reminder';
 import type { Permission } from '../permissions';
-import type { EntityHistory } from '../history';
-import type { AssignMode, DryRunResult, HaEntity, OrderView, SavedWatcher, WatchTrigger, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from '../watcher-types';
+import type { AssignMode, WatchTrigger } from '../watcher-types';
 
 export type Priority = 'low' | 'medium' | 'high';
 /** Aufwand einer Karte für die Fairness-Ansicht; leer zählt wie mittel */

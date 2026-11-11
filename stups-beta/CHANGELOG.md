@@ -4,6 +4,10 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.41.0-beta.5
+
+**Große Dateien aufgeteilt, an der App ändert sich nichts.** Die Wächter (`watchers.ts`), die API-Aufrufe und der Zustand der Oberfläche (`api/`, `store/`) und das Fenster „Neue Aufgabe“ bestehen jetzt aus kleineren Teilen mit je einer Aufgabe, wie schon der Store im Server. Verhalten und Texte sind unverändert; die vorhandenen Tests und die Browser-Tests zum Anlegen von Karten laufen wie vorher.
+
 ## 1.41.0-beta.4
 
 **Dokumentation aufgeräumt, an der App ändert sich nichts.** Die Anleitung (`DOCS.md`) beginnt mit „Erste Schritte“ und „Wenn etwas nicht klappt“; die veralteten Optionen des Add-ons stehen weiter unten. Der Changelog der normalen App gibt es jetzt getrennt: `CHANGELOG.md` ist englisch (das zeigt Home Assistant beim Update), `CHANGELOG.de.md` deutsch, mit allen älteren Versionen. Im Repository liegen die Unterlagen für die Entwicklung unter `dev/`, in `docs/` nur noch die Docker-Anleitung und die Bilder.

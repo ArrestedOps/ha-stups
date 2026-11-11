@@ -14,7 +14,7 @@ const RAINY = new Set(['rainy', 'pouring', 'lightning-rainy', 'snowy-rainy', 'ha
 
 /** Kalender und Vorhersage: im Takt abgefragt (nicht über Zustandswechsel), die Antworten ausgewertet */
 export function createExternal(ctx: Ctx, calls: () => Parts) {
-  const { deps, store, data, ha, now, timeZone, mem } = ctx;
+  const { deps, store, data, ha, timeZone, mem } = ctx;
 
   /** Nur die Abfrage (Netz), ohne Zugriff auf die Warteschlange: ein langsames Home Assistant hält nichts anderes auf */
   const fetchCalendar = (w: Watcher, nowMs: number): Promise<CalendarEvents> | null =>

@@ -7,7 +7,9 @@ import { openBoards } from './helpers';
  * Handy) und 260 Pixeln Breite geprüft. Gemeint ist: nichts ragt seitlich heraus, nichts ist abgeschnitten, jeder Knopf bleibt erreichbar.
  * Farbe spielt keine Rolle: läuft nur im dunklen Projekt.
  */
-test.beforeEach((_fixtures, info) => {
+// Playwright verlangt hier ein Destructuring-Muster als erstes Argument, auch wenn keine Fixture gebraucht wird
+// eslint-disable-next-line no-empty-pattern
+test.beforeEach(({}, info) => {
   test.skip(info.project.name !== 'dunkel', 'Farbe spielt hier keine Rolle, einmal reicht');
 });
 
@@ -79,6 +81,8 @@ for (const width of [320, 260]) {
 
     // Boards
     await openBoards(page);
+    // schmal sind die Spalten Reiter; die Karte hat einen Termin und liegt unter „Geplant"
+    await page.getByRole('tab', { name: /^Geplant/ }).click();
     await expect(page.getByText(LANG.slice(0, 30)).first()).toBeVisible();
     expect(await overflow(page), 'Boards').toEqual([]);
     expect(await reachable(page), 'Boards: Bedienelemente').toEqual([]);

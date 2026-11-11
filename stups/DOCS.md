@@ -356,7 +356,7 @@ overdue_nag_time: "18:00"    # Follow-up for overdue cards
 
 You find the device names in Home Assistant under Developer tools › Actions (services `notify.mobile_app_…`); in the app, Settings › Household › People & access shows which devices Home Assistant knows.
 
-**Only the first start reads these options.** From version 1.41, Stups copies the people, devices, access, dashboard and times from here into the app once, at the first start after the update, and removes nobody. From then on the app is the only place: changes in this configuration have no effect any more, and people, devices and access are no longer locked in the app. Manage them under Settings › People & access, Settings › Dashboard and Settings › Reminder times. On new installations the configuration only shows the log level and the empty list of people; the other options are “Unused optional options” and can be expanded. If you had already entered values there, they stay, so that the one-time takeover can read them.
+**Only the first start reads these options.** From version 1.41, Stups copies the people, devices, access, dashboard and times from here into the app once, at the first start after the update, and removes nobody. From then on the app is the only place: changes in this configuration have no effect any more, and people, devices and access are no longer locked in the app. Manage them under Settings › People & access, Settings › Dashboard and Settings › Reminder times. On new installations the configuration only shows the log level and the empty list of people; the other options are hidden and appear with the switch “Show unused optional configuration options”. If you had already entered values there, they stay, so that the one-time takeover can read them.
 
 ## Updating
 

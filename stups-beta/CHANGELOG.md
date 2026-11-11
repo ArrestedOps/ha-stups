@@ -12,7 +12,7 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Weniger Optionen in der Konfiguration, eine Seite „Erinnerungszeiten“.** Neue Installationen sehen unter Einstellungen › Apps › Stups (Beta) › Konfiguration nur noch das Log-Level: Die übrigen Optionen (Personen, Zugriff, Dashboard, die zwei Uhrzeiten) sind jetzt optional und stehen nicht mehr in den Vorgaben. Wer dort schon Werte eingetragen hat, behält sie, damit die einmalige Übernahme beim ersten Start sie lesen kann. Ohne Eintrag gilt wie bisher das Dashboard „/“. In der App stehen Tageszusammenfassung und Nachhaken um … jetzt auf einer Seite, Einstellungen › Erinnerungszeiten, mit je einer Uhrzeit.
 
-**Bitte prüfen (Testliste):** auf einer bestehenden Installation die Konfiguration öffnen (die eingetragenen Werte sind noch da, der Rest steht unter „Nicht verwendete optionale Optionen“) und auf einer neuen Installation (nur das Log-Level sichtbar, Start ohne Warnung im Log).
+**Bitte prüfen (Testliste):** auf einer bestehenden Installation die Konfiguration öffnen (die eingetragenen Werte sind noch da, der Rest erscheint mit dem Schalter „Show unused optional configuration options“) und auf einer neuen Installation (nur Personenliste und Log-Level sichtbar, Start ohne Warnung im Log).
 
 **Dokumentation:** die Seitennamen in der Anleitung stimmen wieder mit der App überein (Personen & Zugriff, Dashboard, Erinnerungszeiten), die Tabelle der Einstellungen ist vollständig, „Einrichtung“ wiederholt „Erste Schritte“ nicht mehr. „Bis Version 1.27“ statt „1.40“: Die normale App springt von 1.27.1 auf 1.41.0.
 

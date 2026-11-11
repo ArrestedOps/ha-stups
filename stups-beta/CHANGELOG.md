@@ -4,6 +4,10 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.41.0-beta.7
+
+**Korrektur: „Missing option 'users'“.** Home Assistant verlangt die Liste `users`, auch wenn sie leer ist, und lehnte die Konfiguration von beta.6 ab. Sie steht wieder leer in den Vorgaben. Neue Installationen sehen damit das Log-Level und die leere Liste der Personen; die übrigen Optionen bleiben optional und ausgeblendet. Bestehende Werte bleiben.
+
 ## 1.41.0-beta.6
 
 **Weniger Optionen in der Konfiguration, eine Seite „Erinnerungszeiten“.** Neue Installationen sehen unter Einstellungen › Apps › Stups (Beta) › Konfiguration nur noch das Log-Level: Die übrigen Optionen (Personen, Zugriff, Dashboard, die zwei Uhrzeiten) sind jetzt optional und stehen nicht mehr in den Vorgaben. Wer dort schon Werte eingetragen hat, behält sie, damit die einmalige Übernahme beim ersten Start sie lesen kann. Ohne Eintrag gilt wie bisher das Dashboard „/“. In der App stehen Tageszusammenfassung und Nachhaken um … jetzt auf einer Seite, Einstellungen › Erinnerungszeiten, mit je einer Uhrzeit.

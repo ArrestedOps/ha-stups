@@ -1,5 +1,5 @@
 name: "Stups (Beta)"
-version: "1.41.0-beta.6"
+version: "1.41.0-beta.7"
 slug: stups_beta
 stage: experimental
 description: "Beta-Version von Stups mit eigenen Daten, zum Testen neuer Versionen vor der Veröffentlichung"
@@ -20,6 +20,7 @@ homeassistant_api: true
 map:
   - share:rw
 options:
+  users: []
   log_level: info
 schema:
   users:

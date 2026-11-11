@@ -59,18 +59,19 @@ describe('Add-on-Dateien für Home Assistant', () => {
     }
   });
 
-  // Neue Nutzer sollen in der Konfiguration nur das Log-Level sehen: Die übernommenen Optionen sind optional und stehen nicht in options.
-  // Wer Werte eingetragen hatte, behält sie (sie gelten weiter für die einmalige Übernahme); nichts davon darf Pflicht sein.
-  it('die übernommenen Optionen sind optional und stehen nicht in options (neue Nutzer sehen nur das Log-Level)', () => {
+  // Neue Nutzer sollen in der Konfiguration möglichst wenig sehen: Die übernommenen Optionen sind optional und stehen nicht in options.
+  // Wer Werte eingetragen hatte, behält sie (sie gelten weiter für die einmalige Übernahme). Ausnahme `users`: Der Supervisor verlangt eine Liste
+  // aus Einträgen, auch wenn sie leer sein darf („Missing option 'users'“, 1.41.0-beta.6), darum steht sie leer in options.
+  it('die übernommenen Optionen sind optional und stehen nicht in options, nur die leere Liste users und das Log-Level', () => {
     for (const app of ['stups', 'stups-beta']) {
       const c = load(`${app}/config.yaml`);
-      expect(c.options, app).toEqual({ log_level: 'info' });
+      expect(c.options, app).toEqual({ users: [], log_level: 'info' });
       const schema = c.schema as Record<string, unknown>;
       for (const key of ['access_mode', 'dashboard_path', 'daily_summary_time', 'overdue_nag_time']) {
         expect(String(schema[key]), `${app} ${key}`).toMatch(/\?$/);
       }
       for (const key of ['daily_summary_time', 'overdue_nag_time']) expect(schema[key], `${app} ${key}`).toBe(String.raw`match(^([01]\d|2[0-3]):[0-5]\d$)?`);
-      // Eine Liste darf fehlen, ohne dass der Supervisor sie verlangt
+      // Der Supervisor verlangt die Liste: sie darf leer sein, fehlen darf sie nicht
       expect(Array.isArray(schema.users), app).toBe(true);
       expect(String(schema.log_level), app).not.toMatch(/\?$/);
     }

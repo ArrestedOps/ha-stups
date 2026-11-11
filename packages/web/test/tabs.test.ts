@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { migrateTab, startTab, visibleTabs } from '../src/lib/tabs';
 
@@ -20,7 +20,9 @@ describe('startTab: die App startet immer auf Aufgaben', () => {
     expect(startTab()).toBe('tasks');
   });
   it('ein früher gemerkter Reiter (auch einer der alten Namen) ändert daran nichts: der Speicher wird nicht mehr gelesen', () => {
-    const store = readFileSync(new URL('../src/lib/store.svelte.ts', import.meta.url), 'utf8');
+    // der Store liegt in lib/store/ (store.svelte.ts führt nur zusammen)
+    const dir = new URL('../src/lib/store/', import.meta.url);
+    const store = readdirSync(dir).map((n) => readFileSync(new URL(n, dir), 'utf8')).join('\n');
     expect(store).not.toMatch(/stups\.tab/);
     expect(store).toMatch(/ui\.tab = startTab\(\)/);
   });

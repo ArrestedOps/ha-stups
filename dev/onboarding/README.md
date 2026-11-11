@@ -98,7 +98,7 @@ Beim ersten Start: nur zwei Bildschirme, **„Handy verbinden“** (zeigt, ob ei
 Orientierung (alles Pfade im Repo):
 
 - Server: Fastify in `packages/server/src`, Routen in `api/*.ts`, Datenschicht in `store/*.ts`, Migrationen in `migrations.ts` (die letzte ist **29**, die neue wird **30**; jede Migration läuft beim Start mit vorheriger Datenbanksicherung, Tests in `packages/server/test`).
-- Web: Svelte 5 + Tailwind 4 in `packages/web/src`, Komponenten in `components/` (Grundbausteine in `components/ui/`: `Sheet`, `ListRow`, `Tile`, `Segmented`, …), Zustand in `lib/store.svelte.ts`, API-Aufrufe in `lib/api.ts`, Reiter in `lib/tabs.ts`.
+- Web: Svelte 5 + Tailwind 4 in `packages/web/src`, Komponenten in `components/` (Grundbausteine in `components/ui/`: `Sheet`, `ListRow`, `Tile`, `Segmented`, …), Zustand in `lib/store/` (eingebunden über `lib/store.svelte.ts`), API-Aufrufe in `lib/api/`, Reiter in `lib/tabs.ts`.
 - Desktop-Layout ab 1024 px: `Sidebar.svelte`, `DesktopHeader.svelte`; Fenster öffnen dort als zentrierter Dialog (`Sheet.svelte` regelt das).
 - Wiederverwenden statt neu bauen: `FoundSheet.svelte` / `FoundHits.svelte` (Vorschläge), `DryRunPanel.svelte` (Probelauf), `WatcherSummary.svelte` (Regel als Satz), `AccentPicker.svelte`, `PeopleSheet.svelte` / `PersonDelivery.svelte` (Personen und Geräte), `NewCardSheet.svelte` (Schnell-Eingabe).
 

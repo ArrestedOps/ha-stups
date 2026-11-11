@@ -130,7 +130,7 @@ The calendar is a page under Tasks (open it with the calendar button on the week
 
 Recipients are always the **assigned** people. Cards without assignment or without a due date do not notify. When creating a new card, the creating person is therefore preselected, and whoever sets a due date on a card without assignees gets a hint with "Assign to me". Whether a message comes for a card is shown by Settings › Notifications › "Show status".
 
-- when due, optionally in advance (15 minutes to 2 days before) and a daily follow-up while overdue (time for follow-ups in days or weeks: Settings › Reminder times)
+- when due, optionally in advance (15 minutes to 2 days before) and a daily follow-up while overdue (the time of day for these follow-ups: Settings › Reminder times)
 - a summary with your own tasks every morning (time: Settings › Reminder times)
 - on the iPhone the **"Done"** button appears when you expand the message (swipe left and "View", pull down, or long-press)
 - after a restart, missed reminders up to 12 hours back are caught up, without duplicates

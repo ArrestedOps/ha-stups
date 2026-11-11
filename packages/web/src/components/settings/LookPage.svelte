@@ -22,6 +22,6 @@
   <Group title={t('Farbe')} hint={t('Die Farbe der Knöpfe und Reiter. Gilt auf allen deinen Geräten, jede Person wählt ihre eigene.')}>
     <AccentPicker />
   </Group>
-  <!-- Administratoren finden diese Wahl unter Home Assistant › Dashboard und Kopfzeile -->
+  <!-- Administratoren finden diese Wahl in der Übersicht der Einstellungen unter Home Assistant › HA-Kopfzeile ausblenden -->
   {#if feat.haUi && !ui.isAdmin}<HeaderToggle />{/if}
 </Page>

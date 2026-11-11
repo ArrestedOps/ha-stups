@@ -127,7 +127,7 @@ Der Kalender ist eine Seite unter Aufgaben (öffnen mit dem Kalender-Knopf der W
 
 Empfänger sind immer die **zugewiesenen** Personen. Karten ohne Zuweisung oder ohne Fälligkeit melden sich nicht. Beim Anlegen einer neuen Karte ist deshalb die anlegende Person vorausgewählt, und wer bei einer Karte ohne Zuständige einen Termin setzt, bekommt einen Hinweis mit „Mir zuweisen". Ob für eine Karte eine Nachricht kommt, zeigt Einstellungen › Hilfe und Daten › „Warum kommt nichts an?" › „Stand anzeigen".
 
-- zur Fälligkeit, optional vorab (15 Min. bis 2 Tage vorher) und täglich nachhaken, solange überfällig (Uhrzeit für Nachhaken in Tagen oder Wochen: Einstellungen › Erinnerungszeiten)
+- zur Fälligkeit, optional vorab (15 Min. bis 2 Tage vorher) und täglich nachhaken, solange überfällig (Uhrzeit, zu der nachgehakt wird: Einstellungen › Erinnerungszeiten)
 - jeden Morgen eine Zusammenfassung mit den eigenen Aufgaben (Uhrzeit: Einstellungen › Erinnerungszeiten)
 - Auf dem iPhone erscheint der Button **„Erledigt"**, wenn man die Nachricht aufklappt (nach links wischen und „Ansicht", herunterziehen oder lange drücken)
 - Nach einem Neustart werden verpasste Erinnerungen bis 12 Stunden zurück nachgeholt, ohne Doppelungen

@@ -53,6 +53,9 @@ const ALLOWED: Record<string, Own> = {
   'PUT /api/me/onboarding': 'none',
   'DELETE /api/me/onboarding': 'none',
   'PUT /api/me/onboarding/progress': 'none',
+  // Handy-Schritt der Einrichtung: die Testnachricht an das eigene Handy. Die Route lässt einen Nicht-Administrator nur sich selbst
+  // als Empfänger zu (api/settings.ts); das Handy verbinden (Geräte, Person ändern) bleibt Sache eines Erwachsenen.
+  'POST /api/push/test': 'none',
   // Lesen (gefiltert in den Abfragen)
   'GET /api/attachments/:id': 'none',
   'GET /api/attachments/:id/thumb': 'none',

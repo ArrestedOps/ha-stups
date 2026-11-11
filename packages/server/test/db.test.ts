@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { afterEach, describe, expect, it } from 'vitest';
-import { openDb, type Migration } from '../src/db.js';
+import { DatabaseTooNewError, openDb, type Migration } from '../src/db.js';
 import { migrations } from '../src/migrations.js';
 
 const dirs: string[] = [];
@@ -48,6 +48,32 @@ describe('openDb', () => {
   it('enables foreign keys', () => {
     const db = openDb(':memory:');
     expect((db.prepare('pragma foreign_keys').get() as { foreign_keys: number }).foreign_keys).toBe(1);
+  });
+
+  it('refuses a database newer than the app knows, without touching it (no migration, no backup, no write)', () => {
+    const dir = tmp();
+    const file = join(dir, 'k.sqlite');
+    const latest = migrations[migrations.length - 1]!.version;
+    openDb(file).close(); // Stand der aktuellen App
+    const older = migrations.filter((m) => m.version < latest); // eine ältere App kennt die letzte Migration nicht
+    const backupDir = join(dir, 'backups');
+    expect(() => openDb(file, { migrations: older, backupDir })).toThrow(DatabaseTooNewError);
+    expect(() => openDb(file, { migrations: older, backupDir })).toThrow(new RegExp(`Stand ${latest}.*bis ${latest - 1}`));
+    expect(existsSync(backupDir)).toBe(false);
+    const check = new DatabaseSync(file);
+    expect((check.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(latest);
+    check.close();
+    // die passende App öffnet sie weiter
+    openDb(file).close();
+  });
+
+  it('opens a database with exactly the version the app knows', () => {
+    const dir = tmp();
+    const file = join(dir, 'k.sqlite');
+    openDb(file).close();
+    const db = openDb(file, { backupDir: join(dir, 'backups') });
+    expect((db.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(migrations[migrations.length - 1]!.version);
+    db.close();
   });
 
   it('is idempotent when opened twice', () => {

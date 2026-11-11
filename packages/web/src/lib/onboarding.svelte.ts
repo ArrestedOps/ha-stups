@@ -6,8 +6,9 @@ import {
   assigneeIds,
   buildCandidates,
   defaultSelection,
+  deviceChange,
   effectiveDevices,
-  matchDevices,
+  uniqueDeviceByName,
   nextOpenStep,
   stepsFor,
   toggleDevice,
@@ -56,6 +57,8 @@ export const ob = $state({
   /** Die Person, an deren Handy die Testnachricht geht (der Administrator ist keine Person und wählt) */
   testTo: null as string | null,
   test: 'idle' as TestState,
+  /** Warum der Sendeversuch scheiterte (die Meldung des Servers; leer, wenn sie fehlt) */
+  testError: '',
   testDone: false,
 });
 
@@ -70,7 +73,7 @@ export function begin(): void {
   const progress = ui.onboarding.progress;
   const sel = (progress?.selection ?? {}) as Record<string, unknown>;
   const list = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
-  Object.assign(ob, { busy: false, info: null, candidates: [], selected: [], children: [], devices: {}, testTo: null });
+  Object.assign(ob, { busy: false, info: null, candidates: [], selected: [], children: [], devices: {}, testTo: null, testError: '' });
   ob.includeSelf = sel.includeSelf === true || ui.me?.isPerson === true;
   ob.personIds = list(sel.personIds);
   ob.childIds = list(sel.childIds);
@@ -213,9 +216,8 @@ export async function savePeople(): Promise<boolean> {
       names.push(c.name);
       const patch: Parameters<typeof api.updatePerson>[1] = {};
       // Neue Geräte (erkannt oder gewählt) eintragen; bei einer bestehenden Person nur, wenn sie von Hand geändert wurden
-      const devices = effectiveDevices(c, ob.devices);
-      const changed = c.deviceNew || (ob.devices[c.key] !== undefined && (devices.length !== c.devices.length || devices.some((d) => !c.devices.includes(d))));
-      if (changed && devices.length > 0) patch.notifyServices = devices;
+      const devices = deviceChange(c, ob.devices);
+      if (devices !== null) patch.notifyServices = devices;
       const child = !c.self && ob.children.includes(c.key);
       if (child !== c.isChild) patch.isChild = child;
       if (Object.keys(patch).length > 0) await api.updatePerson(id, patch);
@@ -282,6 +284,7 @@ export async function connectAdminPhone(c: Candidate): Promise<boolean> {
     await refresh();
     ob.testTo = me.id;
     ob.test = 'idle';
+    ob.testError = '';
     return true;
   } catch (e) {
     toast(e instanceof ApiError ? e.message : t('Keine Verbindung zu Home Assistant'), { tone: 'error' });
@@ -310,24 +313,31 @@ export async function sendTest(own = false): Promise<void> {
   const target = own ? ui.me : testTarget();
   if (!target) return;
   ob.test = 'sending';
+  ob.testError = '';
   try {
     await api.testPushOwn({ kind: 'onboarding', ...(ob.watcherCards[0] ? { cardTitle: ob.watcherCards[0] } : {}), ...(own || target.id === ui.me?.id ? {} : { personId: target.id }) });
     ob.test = 'sent';
     ob.testDone = true;
-  } catch {
+  } catch (e) {
+    // Der Sendeversuch ist gescheitert (kein Push-Weg, keine Berechtigung, Server nicht erreichbar): das ist kein Zustellproblem am Handy
+    ob.testError = e instanceof Error ? e.message : '';
     ob.test = 'failed';
   }
 }
 
-/** Das eigene Handy automatisch eintragen, wenn genau eins zum Namen passt (Kurzfassung für Mitglieder) */
+/**
+ * Das eigene Handy automatisch eintragen, wenn genau eins zum Namen passt und kein anderer Name auf dasselbe Gerät passt (Kurzfassung für
+ * Mitglieder). Ein Kind darf weder die Geräte der Companion App abfragen noch seine Person ändern: Sein Handy trägt ein Erwachsener ein.
+ */
 export async function connectOwnPhone(): Promise<void> {
   const me = ui.me;
-  if (!me || hasPhone(me)) return;
+  if (!me || me.isChild || hasPhone(me)) return;
   try {
     const info = await api.access();
-    const found = matchDevices(me.displayName, info.services ?? []);
-    if (found.length === 1) {
-      await api.updatePerson(me.id, { notifyServices: [found[0]!] });
+    const others = ui.people.filter((p) => p.id !== me.id).map((p) => p.displayName);
+    const found = uniqueDeviceByName(me.displayName, others, info.services ?? []);
+    if (found) {
+      await api.updatePerson(me.id, { notifyServices: [found] });
       await refresh();
     }
   } catch {

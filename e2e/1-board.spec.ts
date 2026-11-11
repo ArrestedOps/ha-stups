@@ -308,7 +308,7 @@ test('Überfälliges: der Termin ist rot (kein Balken mehr, der Kreis bleibt gra
 });
 test('Theme folgt dem System (hell/dunkel)', async ({ page }, info) => {
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(bg).toBe(info.project.name === 'dunkel' ? 'rgb(14, 13, 13)' : 'rgb(255, 246, 238)');
+  expect(bg).toBe(info.project.use.colorScheme === 'dark' ? 'rgb(14, 13, 13)' : 'rgb(255, 246, 238)');
 });
 
 test('Handy-Layout: nichts ragt seitlich heraus', async ({ page }) => {

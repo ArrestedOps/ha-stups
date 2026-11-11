@@ -5,6 +5,7 @@ import { t, tn } from '../i18n/index.svelte';
 import { DEFAULT_FILTER } from '../schedule';
 import { shiftDue, type ShiftTarget } from '../statsSheets';
 import { swipeTarget } from '../swipe';
+import { undoShifts, type ShiftRecord } from '../undoShift';
 import { closeDetail, closeSheet, personById, setScheduleFilter } from './navigation';
 import { ui } from './state.svelte';
 import { act, actResult, toast } from './toasts';
@@ -43,14 +44,15 @@ export async function shiftCards(cards: { id: string; title: string; dueAt: stri
   const items = cards.filter((c): c is { id: string; title: string; dueAt: string } => !!c.dueAt);
   if (items.length === 0) return;
   const nowMs = Date.now();
-  const moved: { id: string; title: string; from: string }[] = [];
+  const moved: ShiftRecord[] = [];
   let failed = 0;
   const r = await actResult(async () => {
     let first: unknown = null;
     for (const c of items) {
       try {
-        await api.updateCard(c.id, { dueAt: shiftDue(c.dueAt, target, nowMs) });
-        moved.push({ id: c.id, title: c.title, from: c.dueAt });
+        const to = shiftDue(c.dueAt, target, nowMs);
+        await api.updateCard(c.id, { dueAt: to });
+        moved.push({ id: c.id, title: c.title, from: c.dueAt, to });
       } catch (e) {
         failed += 1;
         first ??= e;
@@ -67,13 +69,27 @@ export async function shiftCards(cards: { id: string; title: string; dueAt: stri
   toast(text, {
     action: {
       label: t('Rückgängig'),
-      run: () =>
-        void actResult(async () => {
-          for (const m of moved) await api.updateCard(m.id, { dueAt: m.from });
-        }),
+      run: () => void undoShift(moved),
     },
   });
   if (failed > 0) toast(tn('{n} Aufgabe ließ sich nicht verschieben', '{n} Aufgaben ließen sich nicht verschieben', failed), { tone: 'error' });
+}
+
+/**
+ * „Rückgängig" des Verschiebens: setzt nur zurück, was noch so dasteht, wie das Verschieben es hinterlassen hat (siehe undoShift.ts).
+ * Was inzwischen jemand anderes geändert hat, bleibt; das wird gesagt, damit niemand einen verlorenen Termin vermutet.
+ */
+async function undoShift(moved: ShiftRecord[]): Promise<void> {
+  const res = await act(() => undoShifts(moved, { card: (id) => api.card(id), update: (id, p) => api.updateCard(id, p) }));
+  if (!res) return;
+  if (res.conflicts.length > 0) {
+    toast(
+      res.conflicts.length === 1
+        ? t('„{title}“ wurde inzwischen geändert und bleibt, wie sie ist', { title: res.conflicts[0]!.title })
+        : tn('{n} Aufgabe wurde inzwischen geändert und bleibt, wie sie ist', '{n} Aufgaben wurden inzwischen geändert und bleiben, wie sie sind', res.conflicts.length),
+    );
+  }
+  if (res.failed > 0) toast(tn('{n} Aufgabe ließ sich nicht zurücksetzen', '{n} Aufgaben ließen sich nicht zurücksetzen', res.failed), { tone: 'error' });
 }
 
 /** Eine heute erledigte Karte wieder öffnen (Blatt „Heute erledigt"): macht die letzte Erledigung rückgängig, wie „Rückgängig" nach dem Abhaken */

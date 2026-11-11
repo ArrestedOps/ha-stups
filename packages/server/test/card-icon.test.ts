@@ -159,7 +159,7 @@ describe('Symbole erkennen (Stapel, nur Karten ohne Symbol)', () => {
     store.deleteCard(c.id);
     const d = store.createCard(boardId, { columnId: openId, title: 'Erledigt' }, rene);
     store.completeCard(d.id, { by: rene, source: 'app' });
-    const list = store.cardsWithoutIcon();
+    const list = store.cardsWithoutIcon(rene);
     expect(list.map((x) => x.id).sort()).toEqual([a.id, d.id].sort());
     expect(list.find((x) => x.id === a.id)).toEqual({ id: a.id, title: 'Müll raus' });
     expect(list.some((x) => x.id === b.id)).toBe(false);
@@ -172,7 +172,7 @@ describe('Symbole erkennen (Stapel, nur Karten ohne Symbol)', () => {
       { id: a.id, icon: 'trash-can-outline' },
       { id: b.id, icon: 'dog' },
       { id: 'gibt-es-nicht', icon: 'dog' },
-    ]);
+    ], rene);
     expect(res).toEqual({ updated: 1, skipped: 2 });
     expect(store.getCard(a.id)).toMatchObject({ icon: 'trash-can-outline', iconSource: 'auto', iconColor: null });
     expect(store.getCard(b.id)).toMatchObject({ icon: 'leaf', iconSource: 'manual' });
@@ -181,7 +181,7 @@ describe('Symbole erkennen (Stapel, nur Karten ohne Symbol)', () => {
   it('lässt Änderungszeit und Fassung der Karten unverändert (kein Eingriff der Person)', () => {
     const a = store.createCard(boardId, { columnId: openId, title: 'Müll raus' }, rene);
     now = new Date('2026-11-05T08:00:00Z');
-    store.applyDetectedIcons([{ id: a.id, icon: 'trash-can-outline' }]);
+    store.applyDetectedIcons([{ id: a.id, icon: 'trash-can-outline' }], rene);
     const after = store.getCard(a.id);
     expect(after.version).toBe(a.version);
     expect(after.updatedAt).toBe(a.updatedAt);
@@ -189,9 +189,9 @@ describe('Symbole erkennen (Stapel, nur Karten ohne Symbol)', () => {
 
   it('lehnt ungültige Kennungen ab, ohne etwas zu ändern', () => {
     const a = store.createCard(boardId, { columnId: openId, title: 'Müll raus' }, rene);
-    expect(() => store.applyDetectedIcons([{ id: a.id, icon: 'Müll' }])).toThrow(ValidationError);
-    expect(() => store.applyDetectedIcons('x' as never)).toThrow(ValidationError);
-    expect(() => store.applyDetectedIcons(Array.from({ length: 2001 }, () => ({ id: a.id, icon: 'leaf' })))).toThrow(ValidationError);
+    expect(() => store.applyDetectedIcons([{ id: a.id, icon: 'Müll' }], rene)).toThrow(ValidationError);
+    expect(() => store.applyDetectedIcons('x' as never, rene)).toThrow(ValidationError);
+    expect(() => store.applyDetectedIcons(Array.from({ length: 2001 }, () => ({ id: a.id, icon: 'leaf' })), rene)).toThrow(ValidationError);
     expect(store.getCard(a.id).icon).toBeNull();
   });
 });

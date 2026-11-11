@@ -17,6 +17,13 @@ const OPTIONS_PORT = 18470;
 const DESKTOP_SPECS = /\/(3[56]|4[245])-desktop[^/]*\.spec\.ts$/;
 const DESKTOP = { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 } };
 
+/**
+ * Eine kleine Auswahl der Kernabläufe auch in Chromium (die Android-Companion-App ist ein Chromium-WebView) und Firefox: Karten anlegen,
+ * wischen, erledigen, Aufgaben und Kalender, Live-Sync. Bewusst nicht alle Specs in allen Browsern, sondern die, an denen sich Browser unterscheiden
+ * (Zeigerereignisse, Scrollen, Datumsfelder).
+ */
+const KERN_SPECS = /\/(1-board|7-agenda|16-agenda|8-calendar|2-live-sync|24-heute)\.spec\.ts$/;
+
 // Läuft gegen den gebauten Server (pnpm build zuerst), in WebKit mit iPhone-Ansicht wie die Companion App.
 export default defineConfig({
   testDir: '.',
@@ -45,6 +52,9 @@ export default defineConfig({
     { name: 'desktop-hell', testMatch: /\/35-desktop\.spec\.ts$/, use: { ...DESKTOP, colorScheme: 'light' } },
     // Wächter am Desktop brauchen Home Assistant: derselbe nachgebaute Server wie „waechter“
     { name: 'desktop-ha', testMatch: /\/(36-desktop-(ha|formular)|42-desktop-board|44-desktop-nachhaken|45-desktop-board)\.spec\.ts$/, use: { ...DESKTOP, colorScheme: 'dark', baseURL: `http://127.0.0.1:${HA_PORT}` } },
+    // Kernabläufe in anderen Browsern (gleicher Server wie dunkel und hell): Android-Handy (Chromium) und Firefox am Desktop
+    { name: 'chromium-handy', testMatch: KERN_SPECS, use: { ...devices['Pixel 7'], colorScheme: 'dark' } },
+    { name: 'firefox-desktop', testMatch: /\/35-desktop\.spec\.ts$/, use: { ...devices['Desktop Firefox'], viewport: { width: 1440, height: 900 }, isMobile: false, colorScheme: 'dark' } },
     // Ein Gerät, das Englisch meldet: Oberfläche, Schnell-Eingabe und Sprachwahl (gleicher Server wie dunkel und hell)
     { name: 'english', testMatch: /18-english\.spec\.ts$/, use: { colorScheme: 'dark', locale: 'en-GB', extraHTTPHeaders: { 'x-stups-language': 'en' } } },
     // Wächter brauchen Home Assistant: eigener Server mit nachgebautem Home Assistant (e2e/server-ha.mjs)

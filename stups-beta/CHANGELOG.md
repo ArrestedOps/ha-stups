@@ -4,6 +4,24 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.41.1-beta.1
+
+Korrekturen nach einer Durchsicht: Was Stups verspricht, wird jetzt an mehr Stellen auch wirklich durchgesetzt. Keine neuen Funktionen.
+
+**Datenschutz.** „Symbole aus Titeln erkennen“ zeigte Administratoren die Titel von Karten aus fremden privaten Boards und konnte dort Symbole setzen. Beides gilt jetzt nur noch für Boards, die man selbst sehen darf.
+
+**Zuletzt erledigt** zeigt heute Erledigtes auch dann, wenn die Karte vor Wochen fällig war oder nie einen Termin hatte. Gefragt wird nach dem Erledigungsdatum, nicht nach der Fälligkeit.
+
+**Handys in der Einrichtung.** Das letzte Handy lässt sich wieder abwählen und wird auch so gespeichert. „Ann“ findet kein Handy „Annas iPhone“ mehr, und ein Gerät, das zum Namen von zwei Personen passt, wird keiner von beiden vorgewählt. Ein Kind kann in der Einrichtung die Testnachricht an das eigene Handy senden; das Handy eintragen bleibt Sache eines Erwachsenen, und der Text sagt das. Der Fehlertext heißt „Die Testnachricht konnte nicht gesendet werden“ und nennt den Grund; die Abschlussseite verspricht „Ab jetzt meldet sich dein Zuhause von selbst“ nur, wenn ein Wächter eingerichtet wurde.
+
+**Gleichzeitig arbeiten.** „Rückgängig“ nach „Überfällige verschieben“ setzt nur Karten zurück, deren Termin noch so dasteht, wie das Verschieben ihn hinterlassen hat. Hat jemand inzwischen einen anderen Termin gesetzt, bleibt dessen Entscheidung, und Stups sagt es. Ein Fehler bei einer Karte bricht die übrigen nicht mehr ab.
+
+**Aufgaben laden schneller und vollständig.** Die Terminliste wurde bei 2000 Karten still abgeschnitten (bei einem Kind schon, bevor fremde Boards entfernt waren). Sie kommt jetzt seitenweise und vollständig; bei 6000 Karten braucht der Server dafür etwa ein Drittel der Zeit. Schnell aufeinander folgende Änderungen laden einmal statt mehrfach nach, und überholte Anfragen werden abgebrochen.
+
+**Datenbank.** Wird ein älteres Image auf Daten einer neueren Version gestartet, lehnt Stups das mit einer klaren Meldung ab und verändert nichts. Ein Test spielt eine Sicherung zurück und prüft, dass nichts fehlt.
+
+**Bitte prüfen (Testliste):** (1) als Administrator „Symbole erkennen“ mit einer privaten Karte eines anderen: sie taucht nicht auf. (2) Eine alte, heute erledigte Aufgabe erscheint unter „Heute erledigt“. (3) Einrichtung als Kind: mit zugeordnetem Handy die Testnachricht senden, ohne Handy den Hinweis lesen. (4) „Überfällige verschieben“, auf einem zweiten Gerät einen Termin ändern, dann „Rückgängig“: der neuere Termin bleibt.
+
 ## 1.41.0-beta.7
 
 **Korrektur: „Missing option 'users'“.** Home Assistant verlangt die Liste `users`, auch wenn sie leer ist, und lehnte die Konfiguration von beta.6 ab. Sie steht wieder leer in den Vorgaben. Neue Installationen sehen damit das Log-Level und die leere Liste der Personen; die übrigen Optionen bleiben optional und ausgeblendet. Bestehende Werte bleiben.

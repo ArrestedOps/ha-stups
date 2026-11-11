@@ -236,6 +236,37 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
     expect((await call(anna, 'POST', `/api/trash/card/${priv.card}/restore`)).status).toBe(204);
   });
 
+  it('Symbole erkennen: Kandidaten und Anwenden gelten nur für Karten sichtbarer Boards (auch für Administratoren)', async () => {
+    // Chef ist Administrator mit dem Recht „settings“, aber weder Besitzer noch Mitglied der Boards von Anna
+    const list = ((await call(chef, 'GET', '/api/icons/candidates')).body as { id: string; title: string }[]).map((c) => c.title);
+    expect(list).toContain('Müll raus');
+    expect(list).not.toContain('Geheimer Plan');
+    expect(list).not.toContain('Überraschung');
+    // Auch mit bekannter Kennung lässt sich bei fremden Karten kein Symbol setzen: sie zählen als übersprungen
+    const res = await call(chef, 'POST', '/api/icons/apply', {
+      items: [
+        { id: priv.card, icon: 'dog' },
+        { id: sel.card, icon: 'cat' },
+        { id: pub.card, icon: 'leaf' },
+      ],
+    });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ updated: 1, skipped: 2 });
+    expect(store.getCard(priv.card).icon).toBeNull();
+    expect(store.getCard(sel.card).icon).toBeNull();
+    expect(store.getCard(pub.card).icon).toBe('leaf');
+  });
+
+  it('Symbole erkennen im Store: die Besitzerin sieht ihre eigenen Karten, ein Hintergrunddienst (null) nur Boards für alle', () => {
+    const titles = (viewer: string | null) => store.cardsWithoutIcon(viewer).map((c) => c.title).sort();
+    expect(titles(ids.anna)).toEqual(['Geheimer Plan', 'Müll raus', 'Überraschung']);
+    expect(titles(ids.cleo)).toEqual(['Müll raus', 'Überraschung']);
+    expect(titles(ids.chef)).toEqual(['Müll raus']);
+    expect(titles(null)).toEqual(['Müll raus']);
+    expect(store.applyDetectedIcons([{ id: priv.card, icon: 'dog' }], ids.ben)).toEqual({ updated: 0, skipped: 1 });
+    expect(store.applyDetectedIcons([{ id: priv.card, icon: 'dog' }], ids.anna)).toEqual({ updated: 1, skipped: 0 });
+  });
+
   it('Stupse: wer das Board nicht sieht, steht nicht zur Auswahl und bekommt keinen', async () => {
     const targets = (await call(anna, 'GET', `/api/cards/${priv.card}/nudges`)).body.people as { id: string }[];
     expect(targets).toEqual([]);

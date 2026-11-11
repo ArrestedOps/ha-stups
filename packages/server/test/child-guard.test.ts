@@ -27,6 +27,8 @@ const ALLOWED_WRITES = [
   'PUT /api/me/onboarding',
   'DELETE /api/me/onboarding',
   'PUT /api/me/onboarding/progress',
+  // Handy-Schritt der Einrichtung: die Testnachricht an das eigene Handy (an andere schickt nur ein Administrator, das prüft die Route)
+  'POST /api/push/test',
 ];
 const ALLOWED_READS = [
   'GET /api/attachments/:id',

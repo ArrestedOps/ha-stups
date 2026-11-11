@@ -27,6 +27,11 @@ export const REQUEST_TIMEOUT_MS = 30_000;
 export const UPLOAD_TIMEOUT_MS = 120_000;
 
 export async function send<T>(path: string, init: RequestInit, timeoutMs = init.body instanceof FormData || init.body instanceof Blob ? UPLOAD_TIMEOUT_MS : REQUEST_TIMEOUT_MS): Promise<T> {
+  return (await sendRaw<T>(path, init, timeoutMs)).data;
+}
+
+/** Wie `send`, dazu die Kopfzeilen der Antwort (für Listen mit Gesamtzahl) */
+async function sendRaw<T>(path: string, init: RequestInit, timeoutMs: number): Promise<{ data: T; headers: Headers }> {
   // Ohne Zeitlimit bliebe eine hängende Anfrage ewig „lädt": nach 30 Sekunden Fehler statt endlosem Warten
   const controller = new AbortController();
   let timedOut = false;
@@ -42,7 +47,7 @@ export async function send<T>(path: string, init: RequestInit, timeoutMs = init.
     } catch {
       throw timedOut ? new ApiError(t('Zeitüberschreitung: der Server antwortet nicht'), 0) : new ApiError(t('Keine Verbindung zum Server'), 0);
     }
-    return await readResponse<T>(path, res, () => timedOut);
+    return { data: await readResponse<T>(path, res, () => timedOut), headers: res.headers };
   } finally {
     clearTimeout(timer);
   }
@@ -67,6 +72,13 @@ function req<T>(method: string, path: string, body?: unknown, signal?: AbortSign
 }
 
 export const get = <T>(p: string, signal?: AbortSignal) => req<T>('GET', p, undefined, signal);
+
+/** Eine Liste samt Gesamtzahl aus `x-total-count` (NaN, wenn der Server sie nicht nennt) */
+export async function getList<T>(p: string, signal?: AbortSignal): Promise<{ items: T[]; total: number }> {
+  const { data, headers } = await sendRaw<T[]>(p, { method: 'GET', headers: clientHeaders(), signal }, REQUEST_TIMEOUT_MS);
+  const total = Number(headers.get('x-total-count') ?? Number.NaN);
+  return { items: data, total };
+}
 export const post = <T>(p: string, b: unknown = {}, signal?: AbortSignal) => req<T>('POST', p, b, signal);
 export const patch = <T>(p: string, b: unknown) => req<T>('PATCH', p, b);
 export const put = <T>(p: string, b: unknown) => req<T>('PUT', p, b);

@@ -20,25 +20,31 @@ export const agenda = $state({
 });
 
 let request = 0;
+let running: AbortController | null = null;
 
-/** Lädt alles neu (die letzte Anfrage gewinnt) */
+/**
+ * Lädt alles neu (die letzte Anfrage gewinnt). Eine überholte Runde wird abgebrochen: Sie überträgt nichts mehr zu Ende, und ihr Abbruch
+ * zählt nicht als Fehler, denn eine neuere Runde ist schon unterwegs.
+ */
 export async function loadAgenda(): Promise<void> {
   const mine = ++request;
+  running?.abort();
+  const { signal } = (running = new AbortController());
   const to = new Date(Date.now() + HORIZON_DAYS * DAY).toISOString();
   try {
     const [td, o, d, u] = await Promise.all([
-      api.today(),
-      api.schedule({ to }),
-      // zuletzt Erledigtes (für „erledigt heute" und auf Wunsch die Gruppe Erledigt)
-      api.schedule({ from: new Date(Date.now() - 14 * DAY).toISOString(), to, done: true }),
-      api.schedule({ undated: true }),
+      api.today(signal),
+      api.schedule({ to }, signal),
+      // zuletzt Erledigtes (für „erledigt heute" und auf Wunsch die Gruppe Erledigt): nach dem Datum der Erledigung gefragt,
+      // nicht nach der Fälligkeit (sonst fehlten Karten, die vor Wochen fällig oder ohne Termin waren)
+      api.schedule({ completedSince: new Date(Date.now() - 7 * DAY).toISOString() }, signal),
+      api.schedule({ undated: true }, signal),
     ]);
     if (mine !== request) return;
     agenda.today = td;
     agenda.open = o;
     agenda.undated = u;
-    const weekAgo = Date.now() - 7 * DAY;
-    agenda.recentDone = d.filter((c) => c.completedAt && Date.parse(c.completedAt) >= weekAgo);
+    agenda.recentDone = d;
     agenda.failed = false;
     agenda.loaded = true;
   } catch {

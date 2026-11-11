@@ -104,6 +104,18 @@ describe('Testnachricht der Einrichtung', () => {
     expect((await post(chef, { kind: 'onboarding' })).statusCode).toBe(409);
   });
 
+  it('ein Kind schickt die Testnachricht an das eigene Handy (der Handy-Schritt der Einrichtung), an niemand anderen', async () => {
+    store.setChild(annaId, { isChild: true });
+    store.setNotifyServices(benId, ['mobile_app_ben']);
+    const own = await post(anna, { kind: 'onboarding' });
+    expect(own.statusCode, own.body).toBe(200);
+    expect(sent.map((s) => s.to)).toEqual([annaId]);
+    const other = await post(anna, { kind: 'onboarding', personId: benId });
+    expect(other.statusCode).toBe(403);
+    expect(other.json().error).toMatch(/Administratoren/); // die Route verweigert, nicht erst die Rolle
+    expect(sent).toHaveLength(1);
+  });
+
   it('ein Mitglied schickt nur an sich selbst', async () => {
     expect((await post(ben, { kind: 'onboarding', personId: annaId })).statusCode).toBe(403);
     expect((await post(anna, { kind: 'onboarding', personId: annaId })).statusCode).toBe(200);

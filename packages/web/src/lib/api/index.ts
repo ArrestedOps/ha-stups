@@ -1,5 +1,9 @@
 import type { LanguageChoice } from '../i18n/index.svelte';
-import { clientHeaders, del, get, patch, post, put, send } from './http';
+import { clientHeaders, del, get, getList, patch, post, put, send } from './http';
+import { fetchAllPages } from '../paging';
+
+/** So viele Karten holt eine Seite von `GET /api/schedule` höchstens (der Höchstwert des Servers) */
+const SCHEDULE_PAGE = 2000;
 import type { FeedbackContext, FeedbackItem, FeedbackKind, FeedbackStatus } from '../feedback';
 import type { Permission } from '../permissions';
 import type { EntityHistory } from '../history';
@@ -33,8 +37,8 @@ export const api = {
   people: () => get<User[]>('people'),
   access: () => get<AccessInfo>('access'),
   fairness: (period: 'week' | 'month') => get<Fairness>(`fairness?period=${period}`),
-  today: () => get<Today>('today'),
-  inbox: (before?: string) => get<InboxPage>(`inbox${before ? `?before=${encodeURIComponent(before)}` : ''}`),
+  today: (signal?: AbortSignal) => get<Today>('today', signal),
+  inbox: (before?: string, signal?: AbortSignal) => get<InboxPage>(`inbox${before ? `?before=${encodeURIComponent(before)}` : ''}`, signal),
   markInboxSeen: () => put<{ seenAt: string }>('me/inbox-seen', {}),
   /** Weitergeben: `to` ist die neue Person, null wenn gerade niemand sonst dran ist */
   passCard: (id: string) => post<{ to: string | null }>(`cards/${id}/pass`),
@@ -194,7 +198,11 @@ export const api = {
   saveOnboardingProgress: (step: string, selection?: Record<string, unknown>) => put<void>('me/onboarding/progress', { step, ...(selection ? { selection } : {}) }),
   pushStatus: () => get<PushStatus>('notifications/status'),
 
-  schedule: (q: { from?: string; to?: string; boards?: string[]; done?: boolean; undated?: boolean }) => {
+  /**
+   * Alle passenden Karten: Der Server liefert höchstens SCHEDULE_PAGE je Antwort und nennt die Gesamtzahl, hier wird weitergeblättert,
+   * bis alles da ist (ein Fehler bei einer Seite ist ein Fehler für das Ganze, nie eine stillschweigend unvollständige Liste).
+   */
+  schedule: (q: { from?: string; to?: string; boards?: string[]; done?: boolean; undated?: boolean; completedSince?: string }, signal?: AbortSignal) => {
     const p = new URLSearchParams();
     if (q.from) p.set('from', q.from);
     if (q.to) p.set('to', q.to);
@@ -202,7 +210,14 @@ export const api = {
     if (q.done) p.set('done', '1');
     /** nur offene Karten ohne Termin (Filter „Ohne Termin") */
     if (q.undated) p.set('undated', '1');
-    return get<ScheduleCard[]>(`schedule${p.size ? `?${p}` : ''}`);
+    /** nur Karten, die seit diesem Zeitpunkt erledigt wurden („Zuletzt erledigt"), unabhängig von ihrer Fälligkeit */
+    if (q.completedSince) p.set('completedSince', q.completedSince);
+    p.set('limit', String(SCHEDULE_PAGE));
+    return fetchAllPages<ScheduleCard>(async (offset) => {
+      const pp = new URLSearchParams(p);
+      pp.set('offset', String(offset));
+      return getList<ScheduleCard>(`schedule?${pp}`, signal);
+    }, SCHEDULE_PAGE);
   },
 
   watchers: () => get<{ available: boolean; items: WatcherItem[] }>('watchers'),

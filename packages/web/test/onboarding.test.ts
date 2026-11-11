@@ -7,8 +7,10 @@ import {
   defaultSelection,
   deviceOptions,
   devicesOfTrackers,
+  deviceChange,
   effectiveDevices,
   matchDevices,
+  uniqueDeviceByName,
   nextOpenStep,
   progressOf,
   stepsFor,
@@ -66,6 +68,36 @@ describe('Onboarding: Handys den Personen zuordnen', () => {
 
   it('zu kurze Namen raten nicht', () => {
     expect(matchDevices('Al', ['mobile_app_alexa_handy'])).toEqual([]);
+  });
+
+  it('ähnliche Namen treffen nicht: Ann findet kein annas_iphone, Jan kein jannik_pixel (nur ganze Wörter und „…s")', () => {
+    expect(matchDevices('Ann', ['mobile_app_annas_iphone', 'mobile_app_anna_pixel'])).toEqual([]);
+    expect(matchDevices('Jan', ['mobile_app_jannik_pixel', 'mobile_app_janine_ipad'])).toEqual([]);
+    expect(matchDevices('Ann', ['mobile_app_anns_iphone', 'mobile_app_iphone_ann'])).toEqual(['mobile_app_anns_iphone', 'mobile_app_iphone_ann']);
+    expect(matchDevices('Anna', ['mobile_app_anna_iphone', 'mobile_app_iphone_anna', 'mobile_app_annas_ipad'])).toHaveLength(3);
+  });
+
+  it('uniqueDeviceByName (das eigene Handy eines Mitglieds): nur ein einziges Gerät, das zu keinem anderen Namen passt', () => {
+    const services = ['mobile_app_annas_iphone', 'mobile_app_ben_pixel'];
+    expect(uniqueDeviceByName('Anna', ['Ben'], services)).toBe('mobile_app_annas_iphone');
+    expect(uniqueDeviceByName('Anna', ['Anna Lena', 'Ben'], services)).toBeNull(); // gleicher Vorname: nur ein Verdacht
+    expect(uniqueDeviceByName('Anna', [], ['mobile_app_annas_iphone', 'mobile_app_annas_ipad'])).toBeNull(); // mehrere Geräte
+    expect(uniqueDeviceByName('Eva', ['Ben'], services)).toBeNull(); // keins
+    expect(uniqueDeviceByName('Ann', [], services)).toBeNull(); // ähnlich, aber nicht der Name
+  });
+
+  it('ein Gerät, das zum Namen von zwei Personen passt, wird keiner von beiden vorgewählt (Wahl bleibt offen, Vorschlag bleibt in den Auswahlen)', () => {
+    const me = { id: 'u-me', haUserId: 'ha-me', displayName: 'Rene', name: 'rene', isPerson: false, isChild: false, color: null, notifyServices: [], ntfy: false } as never;
+    const c = buildCandidates({
+      me,
+      people: [],
+      haPersons: [{ name: 'Anna', userId: 'ha-anna' }, { name: 'Anna Lena', userId: 'ha-lena' }, { name: 'Ben', userId: 'ha-ben' }],
+      services: ['mobile_app_annas_iphone', 'mobile_app_ben_pixel'],
+    });
+    const by = Object.fromEntries(c.map((x) => [x.key, x]));
+    expect(by['ha:ha-anna']).toMatchObject({ phone: 'missing', devices: [], deviceNew: false, choices: ['mobile_app_annas_iphone'] });
+    expect(by['ha:ha-lena']).toMatchObject({ phone: 'missing', devices: [], deviceNew: false, choices: ['mobile_app_annas_iphone'] });
+    expect(by['ha:ha-ben']).toMatchObject({ phone: 'found', devices: ['mobile_app_ben_pixel'] });
   });
 });
 
@@ -189,6 +221,25 @@ describe('Onboarding: Handy von Hand wählen', () => {
     expect(effectiveDevices(anna, {})).toEqual(['mobile_app_annas_iphone']);
     expect(effectiveDevices(anna, { 'ha:ha-anna': ['mobile_app_zebra'] })).toEqual(['mobile_app_zebra']);
     expect(effectiveDevices(anna, { 'ha:ha-anna': [] })).toEqual([]);
+  });
+
+  it('deviceChange: was an die Person übertragen wird; das bewusst abgewählte letzte Gerät ist eine leere Liste, nicht „keine Änderung"', () => {
+    const own = { id: 'p-anna', haUserId: 'ha-anna', displayName: 'Anna', name: 'anna', isPerson: true, isChild: false, color: null, notifyServices: ['mobile_app_annas_iphone'], ntfy: false } as never;
+    const stored = buildCandidates({ me, people: [own], haPersons: [], services }).find((x) => x.key === 'p:p-anna')!;
+    // gespeichertes Gerät, nicht angefasst: nichts zu übertragen
+    expect(deviceChange(stored, {})).toBeNull();
+    expect(deviceChange(stored, { 'p:p-anna': ['mobile_app_annas_iphone'] })).toBeNull();
+    // das letzte Gerät abgewählt: die leere Liste wird übertragen
+    expect(deviceChange(stored, { 'p:p-anna': [] })).toEqual([]);
+    // ein anderes Gerät gewählt
+    expect(deviceChange(stored, { 'p:p-anna': ['mobile_app_zebra'] })).toEqual(['mobile_app_zebra']);
+    // neu erkannt (bei Home Assistant zugeordnet) wird eingetragen, auch ohne Eingriff
+    expect(deviceChange(anna, {})).toEqual(['mobile_app_annas_iphone']);
+    // neu erkannt, dann bewusst abgewählt: nichts eintragen (es war nie gespeichert), aber auch keine Änderung am Bestand
+    expect(deviceChange(anna, { 'ha:ha-anna': [] })).toBeNull();
+    // nichts erkannt, nichts gewählt, auch nicht bewusst leer gelassen: nichts zu übertragen
+    expect(deviceChange(ben, {})).toBeNull();
+    expect(deviceChange(ben, { 'ha:ha-ben': [] })).toBeNull();
   });
 
   it('antippen wählt ein Gerät an oder ab', () => {

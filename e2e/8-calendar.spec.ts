@@ -67,7 +67,8 @@ test('Kalender: Monatsansicht, Tipp auf einen Tag zeigt seine Karten, „Tagesan
 
 test('Kalender: auf einen freien Zeitpunkt tippen legt eine Karte mit diesem Termin an', async ({ page, request }, info) => {
   // Die angelegte Karte bleibt in der Datenbank: jeder Lauf (Theme, Wiederholung) nimmt eine eigene Stunde
-  const hour = 5 + info.repeatEachIndex * 2 + (info.project.name === 'hell' ? 1 : 0);
+  // jedes Projekt eine eigene Stunde: Sie teilen sich den Server und seine Daten
+  const hour = 5 + info.repeatEachIndex * 2 + (({ hell: 1, 'chromium-handy': 7 } as Record<string, number>)[info.project.name] ?? 0);
   const s = await seed(request);
   const title = `Elektriker ${Date.now().toString(36)}`;
   await page.goto('/');

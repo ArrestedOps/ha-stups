@@ -217,6 +217,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     setArchived: s.setArchived,
     listArchived: s.listArchived,
     listSchedule: s.listSchedule,
+    countSchedule: s.countSchedule,
     addChecklistItem: s.addChecklistItem,
     updateChecklistItem: s.updateChecklistItem,
     deleteChecklistItem: s.deleteChecklistItem,

@@ -263,16 +263,46 @@ test('Mitglied sieht nur „Handy verbinden" und „Farbe wählen"', async ({ br
   await ctx.close();
 });
 
-test('Kind sieht nur „Handy verbinden"', async ({ browser, request }, info) => {
+const connyPhone = async (request: APIRequestContext) => {
+  const people = (await (await request.get('/api/people')).json()) as { displayName: string; notifyServices: string[] }[];
+  return people.find((p) => p.displayName === 'Conny')!.notifyServices;
+};
+
+test('Kind ohne Handy: sieht nur „Handy verbinden", wird nicht still verbunden, der Text sagt, wer es einträgt', async ({ browser, request }, info) => {
   const conny = (await (await request.post('/api/access/people', { data: { name: 'Conny', haUserId: 'ha-conny-e2e' } })).json()) as { id: string };
-  await request.patch(`/api/access/people/${conny.id}`, { data: { isChild: true } });
+  // Connys Handy aus dem Mitglieds-Test bleibt sonst erhalten: ein Kind ohne zugeordnetes Handy
+  await request.patch(`/api/access/people/${conny.id}`, { data: { isChild: true, notifyServices: [] } });
   await resetConny(request);
   const ctx = await asConny(browser, String(info.project.use.baseURL), info.project.use.colorScheme === 'light' ? 'light' : 'dark', info.project.use.viewport ?? null);
   const page = await ctx.newPage();
   await page.goto('/');
   await expect(heading(page, 'Handy verbinden')).toBeVisible();
+  // ehrlich: kein „erscheint von selbst", sondern „ein Erwachsener trägt es ein"; ohne Handy gibt es keine Testnachricht
+  await expect(page.getByTestId('test-nopath')).toContainText('Dann trägt ein Erwachsener dein Handy in Stups ein.');
+  await expect(dialog(page).getByRole('button', { name: 'Testnachricht senden' })).toBeDisabled();
+  // das Kind darf seine Person nicht ändern: es wurde nichts eingetragen, obwohl das Gerät zum Namen passt
+  expect(await connyPhone(request)).toEqual([]);
   await dialog(page).getByRole('button', { name: 'Ohne Test weiter' }).click();
   await expect(dialog(page)).toHaveCount(0); // kein zweiter Schritt
+  expect(await me(ctx.request)).toMatchObject({ onboarding: 'done' });
+  await ctx.close();
+});
+
+test('Kind mit zugeordnetem Handy: die Testnachricht an das eigene Handy funktioniert, danach geht es weiter', async ({ browser, request }, info) => {
+  const conny = (await (await request.post('/api/access/people', { data: { name: 'Conny', haUserId: 'ha-conny-e2e' } })).json()) as { id: string };
+  // Ein Erwachsener hat das Handy zugeordnet
+  await request.patch(`/api/access/people/${conny.id}`, { data: { isChild: true, notifyServices: ['mobile_app_conny_e2e'] } });
+  await resetConny(request);
+  const ctx = await asConny(browser, String(info.project.use.baseURL), info.project.use.colorScheme === 'light' ? 'light' : 'dark', info.project.use.viewport ?? null);
+  const page = await ctx.newPage();
+  await page.goto('/');
+  await expect(heading(page, 'Handy verbinden')).toBeVisible();
+  await expect(page.getByTestId('phone-state')).toContainText('Dein Handy ist verbunden.');
+  await dialog(page).getByRole('button', { name: 'Testnachricht senden' }).click();
+  await expect(page.getByTestId('test-sent')).toBeVisible();
+  await expect(page.getByTestId('test-failed')).toHaveCount(0);
+  await dialog(page).getByRole('button', { name: 'Ja, weiter' }).click();
+  await expect(dialog(page)).toHaveCount(0);
   expect(await me(ctx.request)).toMatchObject({ onboarding: 'done' });
   await ctx.close();
 });

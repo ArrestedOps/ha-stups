@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { generateKeyBetween } from 'fractional-indexing';
-import { NotFoundError, ValidationError } from '../errors.js';
+import { ConflictError, NotFoundError, ValidationError } from '../errors.js';
 import { type Recurrence } from '../recurrence.js';
 import { parseReminder } from '../reminders.js';
 import { type OpenNudge, type Card, type ScheduleCard, type ChecklistItem, type CardLink, type ActivityEntry, type CardDetail, type CardInput, type CardPatch, type Row } from './types.js';
@@ -266,16 +266,23 @@ export function createCards(c: Ctx, late: unknown) {
     return { icon, iconColor, iconSource };
   }
 
-  /** Karten ohne Symbol (offen, erledigt, archiviert; nicht im Papierkorb) für „Symbole aus Titeln erkennen“ */
-  function cardsWithoutIcon(): { id: string; title: string }[] {
-    return all('select id, title from cards where icon is null and deleted_at is null order by created_at, id').map((r) => ({ id: r.id as string, title: r.title as string }));
+  /**
+   * Karten ohne Symbol (offen, erledigt, archiviert; nicht im Papierkorb) für „Symbole aus Titeln erkennen“, nur aus Boards,
+   * die `viewer` sieht: Auch ein Administrator bekommt keine Titel aus fremden privaten oder ausgewählten Boards.
+   */
+  function cardsWithoutIcon(viewer: Viewer): { id: string; title: string }[] {
+    const v = visibleBoardsSql(viewer);
+    return all(`select id, title from cards where icon is null and deleted_at is null and board_id in (${v.sql}) order by created_at, id`, ...v.args).map((r) => ({
+      id: r.id as string,
+      title: r.title as string,
+    }));
   }
 
   /**
    * Setzt erkannte Symbole (Quelle „auto“), aber nur bei Karten, die noch keins haben: Was jemand zwischendurch von Hand
    * gewählt hat, bleibt. Ändert weder Fassung noch Änderungszeit, denn es ist kein Eingriff der Person in die Karte.
    */
-  function applyDetectedIcons(items: unknown): { updated: number; skipped: number } {
+  function applyDetectedIcons(items: unknown, viewer: Viewer): { updated: number; skipped: number } {
     if (!Array.isArray(items)) throw new ValidationError(t('Die Liste der Symbole fehlt'));
     if (items.length > 2000) throw new ValidationError(t('Höchstens {max} Karten auf einmal', { max: 2000 }));
     const clean = items.map((it) => {
@@ -286,9 +293,16 @@ export function createCards(c: Ctx, late: unknown) {
       return { id: o.id, icon };
     });
     let updated = 0;
+    // Die Berechtigung wird hier unabhängig vom Lesen geprüft: Karten fremder Boards zählen als übersprungen, auch mit bekannter Kennung
+    const v = visibleBoardsSql(viewer);
     tx(() => {
       for (const it of clean) {
-        const res = run(`update cards set icon = ?, icon_source = 'auto' where id = ? and icon is null and deleted_at is null`, it.icon, it.id);
+        const res = run(
+          `update cards set icon = ?, icon_source = 'auto' where id = ? and icon is null and deleted_at is null and board_id in (${v.sql})`,
+          it.icon,
+          it.id,
+          ...v.args,
+        );
         if (res.changes > 0) updated += 1;
       }
     });
@@ -375,6 +389,11 @@ export function createCards(c: Ctx, late: unknown) {
   function updateCard(id: string, patch: CardPatch, by: string | null = null): CardDetail {
     const card = visibleCardRow(id);
     return tx(() => {
+      if (patch.expectedVersion !== undefined) {
+        const expected = patch.expectedVersion;
+        if (typeof expected !== 'number' || !Number.isInteger(expected) || expected < 0) throw new ValidationError(t('Die erwartete Fassung der Karte ist ungültig'));
+        if (expected !== card.version) throw new ConflictError(t('Die Karte wurde zwischenzeitlich geändert'), { version: card.version });
+      }
       const sets: string[] = [];
       const params: unknown[] = [];
       if (patch.title !== undefined) {
@@ -624,21 +643,41 @@ export function createCards(c: Ctx, late: unknown) {
     );
   }
 
+  type ScheduleOpts = {
+    viewer: Viewer;
+    boardIds?: string[];
+    from?: string;
+    to?: string;
+    includeDone?: boolean;
+    undated?: boolean;
+    completedSince?: string;
+    /** Seite aus der Datenbank: höchstens so viele Karten, ab `offset` (ohne `limit` kommen alle) */
+    limit?: number;
+    offset?: number;
+  };
+
   /**
-   * Alle Karten mit Termin über alle Boards (für Agenda und Kalender), nach Termin sortiert.
-   * `from` ist eingeschlossen, `to` ausgeschlossen; ohne `from` kommt auch alles Überfällige.
+   * Bedingung und Reihenfolge der Terminliste, an einer Stelle für Liste und Zählung.
+   * `undated`: nur offene Karten ohne Termin (Filter „Ohne Termin"); Zeitraum und Erledigte gibt es dort nicht.
+   * `completedSince`: nur Karten, die seit diesem Zeitpunkt erledigt wurden („Zuletzt erledigt"); es zählt allein das Datum der
+   * Erledigung, Fälligkeit und Zeitraum spielen keine Rolle (eine Karte ohne Termin oder vor Wochen fällig gehört ebenso dazu).
    */
-  function listSchedule(opts: { viewer: Viewer; boardIds?: string[]; from?: string; to?: string; includeDone?: boolean; undated?: boolean }): ScheduleCard[] {
-    // `undated`: nur offene Karten ohne Termin (Filter „Ohne Termin"); Zeitraum und Erledigte gibt es dort nicht
+  function scheduleQuery(opts: ScheduleOpts): { where: string; params: unknown[]; order: string } {
     const seen = visibleBoardsSql(opts.viewer);
-    const where = [opts.undated ? 'due_at is null' : 'due_at is not null', 'deleted_at is null', 'archived_at is null', `board_id in (${seen.sql})`];
-    const params: unknown[] = [...seen.args];
-    if (!opts.includeDone || opts.undated) where.push('completed_at is null');
-    if (opts.from && !opts.undated) {
+    const recent = opts.completedSince && !opts.undated;
+    const where = [
+      recent ? 'completed_at >= ?' : opts.undated ? 'due_at is null' : 'due_at is not null',
+      'deleted_at is null',
+      'archived_at is null',
+      `board_id in (${seen.sql})`,
+    ];
+    const params: unknown[] = recent ? [new Date(opts.completedSince!).toISOString(), ...seen.args] : [...seen.args];
+    if (!recent && (!opts.includeDone || opts.undated)) where.push('completed_at is null');
+    if (opts.from && !opts.undated && !recent) {
       where.push('due_at >= ?');
       params.push(new Date(opts.from).toISOString());
     }
-    if (opts.to && !opts.undated) {
+    if (opts.to && !opts.undated && !recent) {
       where.push('due_at < ?');
       params.push(new Date(opts.to).toISOString());
     }
@@ -646,19 +685,47 @@ export function createCards(c: Ctx, late: unknown) {
       where.push(`board_id in (${opts.boardIds.map(() => '?').join(', ')})`);
       params.push(...opts.boardIds);
     }
+    // Zeitangaben sind ISO-Zeichenketten gleicher Form: die Sortierung der Datenbank ist die der Zeit. „Zuletzt erledigt": die zuletzt
+    // erledigte Karte zuerst. Sonst Termin, dann Anlage, dann Kennung (ohne Termin sind alle gleich, es zählen Anlage und Kennung).
+    const order = recent ? 'completed_at desc, id' : 'due_at, created_at, id';
+    return { where: where.join(' and '), params, order };
+  }
+
+  /** Wie viele Karten die Terminliste insgesamt hat (ohne `limit` und `offset`), für die Gesamtzahl beim seitenweisen Laden */
+  function countSchedule(opts: ScheduleOpts): number {
+    const q = scheduleQuery(opts);
+    return Number(one(`select count(*) as n from cards where ${q.where}`, ...q.params)?.n ?? 0);
+  }
+
+  /**
+   * Alle Karten mit Termin über alle Boards (für Agenda und Kalender), nach Termin sortiert.
+   * `from` ist eingeschlossen, `to` ausgeschlossen; ohne `from` kommt auch alles Überfällige.
+   * Mit `limit` und `offset` kommt nur eine Seite, ausgewählt und sortiert in der Datenbank: Geladen werden nur die Karten der Seite.
+   */
+  function listSchedule(opts: ScheduleOpts): ScheduleCard[] {
+    const q = scheduleQuery(opts);
+    const paged = opts.limit !== undefined;
+    const ids = all(
+      `select id from cards where ${q.where} order by ${q.order}${paged ? ' limit ? offset ?' : ''}`,
+      ...q.params,
+      ...(paged ? [opts.limit, opts.offset ?? 0] : []),
+    ).map((r) => r.id as string);
+    if (ids.length === 0) return [];
     const sees = boardVisibleSql('b', opts.viewer);
     const boards = new Map(all(`select id, name, color from boards b where b.deleted_at is null and ${sees.sql}`, ...sees.args).map((b) => [b.id as string, b]));
     const cats = new Map(all('select id, name, color from categories where deleted_at is null').map((c) => [c.id as string, { id: c.id as string, name: c.name as string, color: c.color as string }]));
-    return loadCards(where.join(' and '), ...params)
+    // Eine Seite lädt nur ihre Karten (höchstens eine Seite voll Parameter); ohne `limit` über die Bedingung, wie die Menge auch wächst
+    const loaded = paged ? loadCards(`id in (${ids.map(() => '?').join(', ')})`, ...ids) : loadCards(q.where, ...q.params);
+    const byId = new Map(loaded.map((c) => [c.id, c]));
+    return ids
+      .map((id) => byId.get(id))
+      .filter((c): c is Card => c !== undefined)
       .map((c) => ({
         ...c,
         boardName: boards.get(c.boardId)?.name ?? '',
         boardColor: (boards.get(c.boardId)?.color as string | null) ?? null,
         categories: c.categoryIds.map((id) => cats.get(id)).filter((x): x is { id: string; name: string; color: string } => x !== undefined),
-      }))
-      .sort((a, b) =>
-        a.dueAt === b.dueAt ? (a.createdAt === b.createdAt ? (a.id < b.id ? -1 : 1) : a.createdAt < b.createdAt ? -1 : 1) : a.dueAt! < b.dueAt! ? -1 : 1,
-      );
+      }));
   }
 
   function listArchived(boardId: string): Card[] {
@@ -692,6 +759,7 @@ export function createCards(c: Ctx, late: unknown) {
     deleteCard,
     setArchived,
     listSchedule,
+    countSchedule,
     listArchived,
   };
 }

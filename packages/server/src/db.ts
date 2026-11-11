@@ -15,6 +15,24 @@ export interface OpenOptions {
   now?: () => Date;
 }
 
+/**
+ * Die Datenbank wurde von einer neueren Version von Stups angelegt, als diese hier kennt (zum Beispiel nach dem Wechsel auf ein älteres
+ * Image). Sie wird nicht angefasst: weder migriert noch gesichert noch beschrieben.
+ */
+export class DatabaseTooNewError extends Error {
+  constructor(
+    readonly found: number,
+    readonly known: number,
+  ) {
+    super(
+      `Die Datenbank hat den Stand ${found}, diese Version von Stups kennt nur Stände bis ${known}. ` +
+        `Starte die Version, mit der die Daten zuletzt benutzt wurden (oder eine neuere), ` +
+        `oder stelle eine Sicherung aus dem Ordner „backups“ wieder her. Die Datenbank wurde nicht verändert.`,
+    );
+    this.name = 'DatabaseTooNewError';
+  }
+}
+
 const KEEP_BACKUPS = 5;
 const BACKUP_RE = /^stups-v(\d+)-(.+)\.sqlite$/;
 
@@ -47,6 +65,12 @@ export function openDb(path: string, opts: OpenOptions = {}): DatabaseSync {
   if (!inMemory) db.exec('pragma journal_mode = wal');
 
   const current = userVersion(db);
+  // Eine Datenbank aus der Zukunft nicht im normalen Betrieb benutzen: diese Version kennt ihr Schema nicht
+  const known = migrations.reduce((max, m) => Math.max(max, m.version), 0);
+  if (current > known) {
+    db.close();
+    throw new DatabaseTooNewError(current, known);
+  }
   const pending = migrations.filter((m) => m.version > current);
   if (pending.length > 0 && existed && current > 0 && opts.backupDir) {
     backup(db, path, opts.backupDir, current, now());

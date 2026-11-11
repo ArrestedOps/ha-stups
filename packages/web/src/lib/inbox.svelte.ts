@@ -16,12 +16,15 @@ export const inbox = $state({
 });
 
 let request = 0;
+let running: AbortController | null = null;
 
-/** Lädt den neuesten Stand (die letzte Anfrage gewinnt) */
+/** Lädt den neuesten Stand (die letzte Anfrage gewinnt; eine überholte wird abgebrochen und meldet keinen Fehler) */
 export async function loadInbox(): Promise<void> {
   const mine = ++request;
+  running?.abort();
+  const { signal } = (running = new AbortController());
   try {
-    const r = await api.inbox();
+    const r = await api.inbox(undefined, signal);
     if (mine !== request) return;
     inbox.items = r.items;
     inbox.seenAt = r.seenAt;

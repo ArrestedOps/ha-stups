@@ -48,6 +48,7 @@
     }
     if (c.phone === 'found') return t('Handy eingetragen');
     if (c.choices.length > 1) return t('{n} Geräte passen, wähle eins', { n: c.choices.length });
+    if (c.choices.length === 1) return t('Ein Gerät könnte passen, bitte auswählen');
     return t('Kein Handy gefunden');
   };
   const hasPhone = (c: Candidate): boolean => effectiveDevices(c, ob.devices).length > 0 || c.phone === 'found';

@@ -57,7 +57,8 @@ const fold = (s: string): string =>
 
 /**
  * Push-Dienste der Companion App (`mobile_app_…`), die zu einem Namen passen: „Anna" findet `mobile_app_annas_iphone` und
- * `mobile_app_iphone_anna`. Zu kurze Namen (unter drei Buchstaben) raten nicht.
+ * `mobile_app_iphone_anna`. Zu kurze Namen (unter drei Buchstaben) raten nicht. Es zählen nur ganze Wörter des Gerätenamens (mit
+ * Genitiv-s): „Ann" findet kein `annas_iphone`, „Jan" kein `jannik_pixel`.
  */
 export function matchDevices(name: string, services: string[]): string[] {
   const first = fold(name).trim().split(/[^a-z0-9]+/)[0] ?? '';
@@ -66,8 +67,18 @@ export function matchDevices(name: string, services: string[]): string[] {
     fold(s)
       .replace(/^mobile_app_/, '')
       .split('_')
-      .some((token) => token === first || token === `${first}s` || token.startsWith(first)),
+      .some((token) => token === first || token === `${first}s`),
   );
+}
+
+/**
+ * Das eine Gerät, das nach dem Namen zu dieser Person gehört: genau ein Treffer, und keine andere Person (`otherNames`) passt auf
+ * dasselbe Gerät. Sonst null: ein Namensverdacht ist keine bestätigte Zugehörigkeit, die Person wählt dann selbst.
+ */
+export function uniqueDeviceByName(name: string, otherNames: string[], services: string[]): string | null {
+  const found = matchDevices(name, services);
+  if (found.length !== 1) return null;
+  return otherNames.some((other) => matchDevices(other, found).length > 0) ? null : found[0]!;
 }
 
 export interface Candidate {
@@ -117,14 +128,19 @@ export function buildCandidates(input: {
   const { me, people, haPersons, services } = input;
   const isMe = (h: { name: string; userId: string | null }) =>
     (h.userId !== null && h.userId === me.haUserId) || [me.displayName, me.name].some((n) => fold(n) === fold(h.name));
+  // Alle Namen der Liste: ein Gerät, das zum Namen von mehr als einer Person passt, gehört keiner sicher (nur ein Verdacht)
+  const names = [me.displayName, ...people.filter((p) => p.id !== me.id).map((p) => p.displayName), ...haPersons.filter((x) => !isMe(x)).map((x) => x.name)];
   const make = (base: Pick<Candidate, 'key' | 'name' | 'haUserId' | 'personId' | 'self' | 'isChild'>, existing: User | null, trackers?: string[]): Candidate => {
     const own = existing?.notifyServices ?? [];
     if (own.length > 0) return { ...base, phone: 'found', devices: own, deviceNew: false, choices: own };
-    // 1. was Home Assistant der Person zuordnet, 2. sonst ein Gerät, dessen Name zum Namen passt (nur wenn es genau eins ist)
+    // 1. was Home Assistant der Person zuordnet, 2. sonst ein Gerät, dessen Name zum Namen passt (nur wenn es genau eins ist und
+    // zu keiner anderen Person passt; sonst bleibt die Wahl offen und das Gerät steht nur als Vorschlag in der Auswahl)
     const assigned = devicesOfTrackers(trackers, services);
     if (assigned.length > 0) return { ...base, phone: 'found', devices: assigned, deviceNew: true, choices: assigned };
     const found = matchDevices(base.name, services);
-    if (found.length === 1) return { ...base, phone: 'found', devices: found, deviceNew: true, choices: found };
+    const others = names.filter((_, i) => i !== names.indexOf(base.name));
+    const sure = uniqueDeviceByName(base.name, others, services);
+    if (sure) return { ...base, phone: 'found', devices: [sure], deviceNew: true, choices: found };
     return { ...base, phone: existing?.ntfy ? 'found' : 'missing', devices: [], deviceNew: false, choices: found };
   };
   const mine = people.find((p) => p.id === me.id) ?? (me.isPerson ? me : null);
@@ -170,6 +186,18 @@ export function assigneeIds(personIds: string[], childIds: string[]): string[] {
 
 /** Die Geräte, die für diese Person gelten: die Wahl von Hand (auch eine leere) geht vor, sonst was erkannt wurde */
 export const effectiveDevices = (c: Candidate, overrides: Record<string, string[]>): string[] => overrides[c.key] ?? c.devices;
+
+/**
+ * Die Geräteliste, die für diese Person gespeichert werden muss (null: der gespeicherte Stand bleibt). Verglichen wird mit dem, was in
+ * Stups schon steht: bei neu erkannten Geräten (`deviceNew`) steht noch nichts. Eine bewusst geleerte Liste ist eine Änderung und wird
+ * übertragen (sonst bliebe das letzte abgewählte Handy zugeordnet).
+ */
+export function deviceChange(c: Candidate, overrides: Record<string, string[]>): string[] | null {
+  const devices = effectiveDevices(c, overrides);
+  const stored = c.deviceNew ? [] : c.devices;
+  const same = devices.length === stored.length && devices.every((d) => stored.includes(d));
+  return same ? null : devices;
+}
 
 /** Antippen: ein Gerät an- oder abwählen (eine Person kann mehrere Handys und ein Tablet haben) */
 export const toggleDevice = (current: string[], service: string): string[] => (current.includes(service) ? current.filter((s) => s !== service) : [...current, service]);

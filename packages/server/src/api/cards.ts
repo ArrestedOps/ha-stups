@@ -5,6 +5,8 @@ import { hasPermission, requirePermission } from '../permissions.js';
 import { type ApiKit, type Params } from './kit.js';
 
 const MAX_IDS = 50;
+/** So viele Karten höchstens in einer Antwort von `/api/schedule` (mehr kommt seitenweise) */
+const SCHEDULE_PAGE = 2000;
 
 /** Karten, Termine über alle Boards, Erledigen und Archiv */
 export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
@@ -66,6 +68,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
       'carryOver',
       'assigneeIds',
       'categoryIds',
+      'expectedVersion',
     ]) {
       if (key in b) patch[key] = b[key];
     }
@@ -86,17 +89,36 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     return after;
   });
   // ----- Termine über alle Boards (Agenda, Kalender) -----
-  app.get<{ Querystring: { from?: string; to?: string; boards?: string; done?: string; undated?: string } }>('/api/schedule', async (req) => {
+  // Eine Antwort hat höchstens `limit` Karten (Vorgabe und Höchstwert 2000). Wie viele es insgesamt gibt, steht in `x-total-count` (vor
+  // dem Abschneiden und vor dem Filter für Kinder); wer mehr braucht, blättert mit `offset` weiter, bis `offset + limit >= total`.
+  app.get<{ Querystring: { from?: string; to?: string; boards?: string; done?: string; undated?: string; completedSince?: string; limit?: string; offset?: string } }>('/api/schedule', async (req, reply) => {
     const q = req.query;
+    const whole = (v: string | undefined, what: string, min: number, max: number, fallback: number): number => {
+      if (v === undefined || v === '') return fallback;
+      const n = Number(v);
+      if (!/^\d+$/.test(v) || !Number.isInteger(n) || n < min || n > max) throw new ValidationError(t('„{what}" muss eine ganze Zahl zwischen {min} und {max} sein', { what, min, max }));
+      return n;
+    };
+    const limit = whole(q.limit, 'limit', 1, SCHEDULE_PAGE, SCHEDULE_PAGE);
+    const offset = whole(q.offset, 'offset', 0, Number.MAX_SAFE_INTEGER, 0);
     const time = (v: string | undefined, what: string): string | undefined => {
       if (v === undefined || v === '') return undefined;
       if (!/^\d{4}-\d{2}-\d{2}T/.test(v) || Number.isNaN(Date.parse(v))) throw new ValidationError(t('„{what}" braucht Datum und Uhrzeit', { what }));
       return new Date(v).toISOString();
     };
     const boardIds = q.boards ? q.boards.split(',').filter(Boolean) : undefined;
-    return store
-      .listSchedule({ viewer: req.user?.id ?? null, from: time(q.from, 'from'), to: time(q.to, 'to'), boardIds, includeDone: q.done === '1', undated: q.undated === '1' })
-      .slice(0, 2000);
+    const opts = {
+      viewer: req.user?.id ?? null,
+      from: time(q.from, 'from'),
+      to: time(q.to, 'to'),
+      boardIds,
+      includeDone: q.done === '1',
+      undated: q.undated === '1',
+      completedSince: time(q.completedSince, 'completedSince'),
+    };
+    // Auswahl und Abschneiden macht die Datenbank; geladen werden nur die Karten dieser Seite
+    reply.header('x-total-count', String(store.countSchedule(opts)));
+    return store.listSchedule({ ...opts, limit, offset });
   });
   app.post<{ Params: Params }>('/api/cards/:id/complete', async (req) => {
     const by = req.user?.id ?? null;
@@ -146,11 +168,11 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
   // Oberfläche (die Bibliothek und die Suchwörter liegen dort): Der Server liefert die Karten ohne Symbol und nimmt das Ergebnis an.
   app.get('/api/icons/candidates', async (req) => {
     requirePermission(req, 'settings');
-    return store.cardsWithoutIcon();
+    return store.cardsWithoutIcon(req.user?.id ?? null);
   });
   app.post('/api/icons/apply', async (req) => {
     requirePermission(req, 'settings');
-    const result = store.applyDetectedIcons(body(req).items);
+    const result = store.applyDetectedIcons(body(req).items, req.user?.id ?? null);
     if (result.updated > 50) store.markAllChanged(); // viele Karten auf einmal: die Geräte laden alles neu
     return result;
   });

@@ -72,11 +72,13 @@
     <div class="mt-4 rounded-row border border-line bg-surface px-4 py-3.5" data-testid="test-nopath" role="status">
       <p class="text-[15px] font-bold">{t('Noch kein Handy verbunden')}</p>
       <p class="mt-1 text-[14px] leading-[1.45] text-fg2">
-        {member
-          ? t('Öffne Home Assistant auf deinem Handy und melde dich in der Companion App an. Danach erscheint dein Handy hier von selbst.')
-          : peopleWithoutPhone
-            ? t('Bei keiner der eingerichteten Personen ist ein Handy eingetragen. Trage eines ein oder installiere die Companion App auf dem Handy.')
-            : t('Bei keiner Person ist ein Handy eingetragen. Öffne Home Assistant auf dem Handy und melde dich in der Companion App an, dann erscheint es hier von selbst.')}
+        {ui.me?.isChild
+          ? t('Öffne Home Assistant auf deinem Handy und melde dich in der Companion App an. Dann trägt ein Erwachsener dein Handy in Stups ein.')
+          : member
+            ? t('Öffne Home Assistant auf deinem Handy und melde dich in der Companion App an. Danach erscheint dein Handy hier von selbst.')
+            : peopleWithoutPhone
+              ? t('Bei keiner der eingerichteten Personen ist ein Handy eingetragen. Trage eines ein oder installiere die Companion App auf dem Handy.')
+              : t('Bei keiner Person ist ein Handy eingetragen. Öffne Home Assistant auf dem Handy und melde dich in der Companion App an, dann erscheint es hier von selbst.')}
       </p>
       {#if peopleWithoutPhone}
         <button type="button" class="mt-2 min-h-11 rounded-xl bg-surface2 px-4 text-[14px] font-bold" onclick={() => openSheet({ type: 'people' })}>{t('Handys eintragen')}</button>
@@ -101,10 +103,12 @@
     <p class="mt-4 rounded-row border border-line bg-ok-bg px-4 py-3 text-[15px] font-semibold text-ok" role="status" data-testid="test-sent">
       {member ? t('Gesendet. Schau auf dein Handy: Hast du die Nachricht bekommen?') : t('Gesendet. Schau auf das Handy von {name}: Ist die Nachricht angekommen?', { name: nameOf })}
     </p>
+    <!-- Gesendet, aber nichts zu sehen: das ist ein anderer Fall als ein gescheiterter Sendeversuch und braucht andere Hilfe -->
+    <p class="mt-2 px-1 text-[13px] leading-[1.4] text-fg2" data-testid="test-sent-help">{t('Nichts zu sehen? Prüfe, ob die Companion App auf dem Handy angemeldet ist und Mitteilungen erlaubt sind.')}</p>
   {:else if ob.test === 'failed'}
     <div class="mt-4 rounded-row bg-danger-bg px-4 py-3" role="alert" data-testid="test-failed">
-      <p class="text-[15px] font-semibold text-danger">{t('Die Nachricht ist nicht angekommen.')}</p>
-      <p class="mt-1 text-[14px] text-fg2">{t('Prüfe, ob die Companion App auf dem Handy angemeldet ist und Mitteilungen erlaubt sind.')}</p>
+      <p class="text-[15px] font-semibold text-danger">{t('Die Testnachricht konnte nicht gesendet werden.')}</p>
+      <p class="mt-1 text-[14px] text-fg2">{ob.testError || t('Prüfe die Verbindung zu Home Assistant.')}</p>
       <button type="button" class="mt-1 min-h-11 text-[15px] font-semibold text-accent-text underline underline-offset-2" onclick={() => openSettings('report')}>{t('Prüfen')}</button>
     </div>
   {/if}

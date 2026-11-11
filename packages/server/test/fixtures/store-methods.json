@@ -38,6 +38,7 @@
   "clearManaged",
   "completeCard",
   "confirmerIds",
+  "countSchedule",
   "createBoard",
   "createBoardFromTemplate",
   "createCard",

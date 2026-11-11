@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -130,6 +130,52 @@ describe('Echte Migrationen mit befüllter alter Datenbank', () => {
     expect(backups[0]).toMatch(new RegExp(`^stups-v${version}-`));
     expect(existsSync(join(dir, 'backups', backups[0]!))).toBe(true);
     db.close();
+  });
+
+  it('Sicherung zurückspielen: der alte Stand kommt vollständig zurück, die ältere App öffnet ihn, die neue hebt ihn erneut', () => {
+    const dir = tmp();
+    const path = join(dir, 'stups.sqlite');
+    const old = openDb(path, { migrations: migrations.filter((m) => m.version <= 19) });
+    seed9(old);
+    seed19Prepared(old);
+    // Anhänge liegen als Datei im Ordner files/; die Datenbank hält nur die Zeile (Beziehung zur Karte, Dateiname, Größe)
+    old.exec(`insert into attachments (id, card_id, filename, mime, size, file, created_by, created_at)
+      values ('a1', 'card1', 'bad.jpg', 'image/jpeg', 1234, 'files/a1.jpg', 'u-rene', '${T}')`);
+    const before = dump(old);
+    old.close();
+
+    // 1. Die neue App hebt den Stand und sichert vorher
+    const backupDir = join(dir, 'backups');
+    const upgraded = openDb(path, { backupDir, now: () => new Date('2026-11-05T12:00:00Z') });
+    const backup = readdirSync(backupDir)[0]!;
+    expect(backup).toMatch(/^stups-v19-/);
+    // 2. Danach geht etwas schief (hier: alle Karten sind weg)
+    upgraded.exec('delete from cards');
+    expect((upgraded.prepare('select count(*) as n from cards').get() as { n: number }).n).toBe(0);
+    expect((upgraded.prepare('select count(*) as n from attachments').get() as { n: number }).n).toBe(0); // die Anhangzeile ging mit der Karte
+    upgraded.close();
+
+    // 3. Zurückspielen: die Sicherung ersetzt die Datenbank (ohne Reste des Schreibprotokolls)
+    for (const suffix of ['-wal', '-shm']) rmSync(`${path}${suffix}`, { force: true });
+    copyFileSync(join(backupDir, backup), path);
+
+    // 4. Die ältere App (Stand 19) öffnet sie unverändert: jede Zeile, Beziehungen und Anhangzeile sind wieder da
+    const restored = openDb(path, { migrations: migrations.filter((m) => m.version <= 19) });
+    expect((restored.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(19);
+    expectUnchanged(before, restored);
+    expect(restored.prepare('pragma foreign_key_check').all()).toEqual([]);
+    expect(restored.prepare("select filename from attachments where card_id = 'card1'").all()).toEqual([{ filename: 'bad.jpg' }]);
+    restored.close();
+
+    // 5. Die neue App hebt ihn erneut, mit einer neuen Sicherung, und alles ist wieder an seinem Platz
+    const again = openDb(path, { backupDir, now: () => new Date('2026-11-06T12:00:00Z') });
+    expect((again.prepare('pragma user_version').get() as { user_version: number }).user_version).toBe(latest);
+    expectUnchanged(before, again);
+    expect(again.prepare('pragma foreign_key_check').all()).toEqual([]);
+    expect(readdirSync(backupDir)).toHaveLength(2);
+    const store = createStore(again, { now: () => new Date('2026-11-06T12:00:00Z'), timeZone: () => 'Europe/Berlin' });
+    expect(store.getCard('card1')).toMatchObject({ title: 'Bad putzen', assigneeIds: ['u-mia'] });
+    again.close();
   });
 
   it('die gehobene Datenbank lässt sich wie gewohnt benutzen (Karten, Wächter, Stupse, Kind)', () => {

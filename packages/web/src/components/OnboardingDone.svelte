@@ -27,7 +27,11 @@
   ]);
 </script>
 
-<OnboardingFrame title={t('Stups läuft.')} lead={t('Ab jetzt meldet sich dein Zuhause von selbst.')}>
+<!-- Das Versprechen „meldet sich von selbst" gilt nur, wenn ein Wächter eingerichtet wurde; sonst ist Stups bereit und die Person legt los -->
+<OnboardingFrame
+  title={t('Stups läuft.')}
+  lead={ob.watchersDone ? t('Ab jetzt meldet sich dein Zuhause von selbst.') : t('Stups ist bereit. Du kannst jetzt mit deinen Aufgaben starten.')}
+>
   <ul class="flex max-w-[560px] flex-col gap-2.5" data-testid="done-list">
     {#each rows as r (r?.title)}
       {#if r}

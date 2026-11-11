@@ -342,7 +342,11 @@ export interface CardInput {
   assigneeIds?: string[];
   categoryIds?: string[];
 }
-export type CardPatch = Partial<Omit<CardInput, 'columnId'>> & { confirm?: 'on' | 'off' | null };
+export type CardPatch = Partial<Omit<CardInput, 'columnId'>> & {
+  confirm?: 'on' | 'off' | null;
+  /** nur ändern, wenn die Karte noch in dieser Fassung vorliegt (sonst 409: jemand war schneller) */
+  expectedVersion?: number;
+};
 
 /** Was die Betriebsart bietet (GET api/capabilities) */
 /** Eine Board-Vorlage (eingebaut oder eigen) mit Zahlen für die Vorschau */

@@ -8,6 +8,13 @@ on:
 permissions:
   contents: read
 
+# Pro Branch läuft nur ein Durchlauf: Zwei Veröffentlichungen desselben Kanals schreiben dieselben Tags (:latest, die Version) und dürften sich nie
+# überholen. Auf Branches wird nichts abgebrochen (ein laufendes Veröffentlichen wird zu Ende geführt, ein weiterer Push wartet); nur bei
+# Pull Requests verdrängt ein neuer Stand den alten.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -25,10 +32,15 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      # Das Gebaute starten, nicht nur den Quellcode prüfen: Gesundheit, Anmeldung, schreiben, neu starten, Daten noch da
+      - name: Smoke-Test des gebauten Servers
+        run: node e2e/smoke.mjs --local
 
-  # Die Browser-Tests dauern am längsten und laufen in drei Gruppen gleichzeitig (jede mit eigenen Servern und Datenbanken):
-  # Handy dunkel, Handy hell und alle übrigen Projekte (Desktop, Wächter, Einrichtung …). Jede Gruppe braucht etwa fünf Minuten.
-  # Neue Projekte in e2e/playwright.config.ts gehören in „rest“, sonst laufen sie nirgends (das prüft der Schritt „Alle Projekte abgedeckt“).
+  # Die Browser-Tests dauern am längsten und laufen in vier Gruppen gleichzeitig (jede mit eigenen Servern und Datenbanken):
+  # Handy dunkel, Handy hell, Kernabläufe in Chromium und Firefox und alle übrigen Projekte (Desktop, Wächter, Einrichtung …).
+  # Jede Gruppe braucht einige Minuten. Neue Projekte in e2e/playwright.config.ts gehören in eine der Gruppen („projects“) und ihr Browser
+  # in „browsers“, sonst laufen sie nirgends (das prüft der Schritt „Alle Projekte abgedeckt“). Die Gruppe „browser“ hat einen eigenen Server,
+  # weil die Specs nicht für zwei Projekte auf demselben Bestand gebaut sind.
   e2e:
     name: e2e (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -38,10 +50,16 @@ jobs:
         include:
           - name: dunkel
             projects: dunkel
+            browsers: webkit
           - name: hell
             projects: hell
+            browsers: webkit
+          - name: browser
+            projects: chromium-handy firefox-desktop
+            browsers: chromium firefox
           - name: rest
             projects: desktop-dunkel desktop-hell desktop-ha english waechter standalone standalone-ha optionen onboarding-dark onboarding-light onboarding-desktop-dark onboarding-desktop-light beta
+            browsers: webkit
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -53,14 +71,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - name: Browser installieren (WebKit wie in der Companion App)
-        run: pnpm exec playwright install --with-deps webkit
+      - name: Browser installieren (WebKit wie die iPhone-Companion-App, Chromium wie die Android-App, dazu Firefox)
+        run: pnpm exec playwright install --with-deps ${{ matrix.browsers }}
       - name: Alle Projekte abgedeckt
         if: matrix.name == 'rest'
         run: |
-          # Jedes Projekt der Konfiguration muss in genau einer Gruppe stehen, sonst bliebe es unbemerkt ungetestet.
+          # Jedes Projekt der Konfiguration muss in einer Gruppe dieser Datei stehen, sonst bliebe es unbemerkt ungetestet.
           all=$(grep -oE "name: '[a-z-]+'" e2e/playwright.config.ts | sed -E "s/name: '(.*)'/\1/" | sort -u)
-          mine="dunkel hell ${{ matrix.projects }}"
+          mine=$(grep -E '^[[:space:]]+projects:' .github/workflows/ci.yml | sed -E 's/^[[:space:]]+projects:[[:space:]]*//' | tr '\n' ' ')
           missing=""
           for p in $all; do case " $mine " in *" $p "*) ;; *) missing="$missing $p" ;; esac; done
           if [ -n "$missing" ]; then echo "::error::Projekte ohne Gruppe in ci.yml:$missing"; exit 1; fi
@@ -123,6 +141,26 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # Erst bauen und ins lokale Docker laden, das fertige Image starten und prüfen (je Architektur auf einem Runner dieser Architektur),
+      # dann erst veröffentlichen. Der Cache sorgt dafür, dass das Veröffentlichen nicht noch einmal von vorn baut.
+      - name: Image bauen (lokal, zum Prüfen)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: stups/Dockerfile
+          build-args: |
+            STUPS_CHANNEL=${{ steps.version.outputs.channel }}
+            STUPS_VERSION=${{ steps.version.outputs.value }}
+          load: true
+          push: false
+          tags: stups-smoke:ci
+          cache-from: type=gha,scope=image-${{ steps.version.outputs.image }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=image-${{ steps.version.outputs.image }}-${{ matrix.arch }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Smoke-Test des Images (starten, anmelden, schreiben, neu starten, Daten noch da)
+        run: node e2e/smoke.mjs --image stups-smoke:ci
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -130,6 +168,7 @@ jobs:
           build-args: |
             STUPS_CHANNEL=${{ steps.version.outputs.channel }}
             STUPS_VERSION=${{ steps.version.outputs.value }}
+          cache-from: type=gha,scope=image-${{ steps.version.outputs.image }}-${{ matrix.arch }}
           push: true
           # verknüpft das Paket mit dem Repository (Sichtbarkeit und Rechte kommen von dort)
           labels: |

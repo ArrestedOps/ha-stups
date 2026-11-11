@@ -445,6 +445,11 @@ export interface CardInput {
 export type CardPatch = Partial<Omit<CardInput, 'columnId'>> & {
   /** Bestätigung beim Erledigen durch ein Kind: 'on', 'off' oder leer (Vorgabe der zuständigen Person) */
   confirm?: unknown;
+  /**
+   * Vorbedingung gegen veraltete Schreibzugriffe: Nur wenn die Karte noch in dieser Fassung (`version`) vorliegt, wird geändert, sonst
+   * ConflictError. Fehlt sie, gewinnt die letzte Änderung.
+   */
+  expectedVersion?: unknown;
 };
 
 export type TrashType = 'board' | 'column' | 'category' | 'card';

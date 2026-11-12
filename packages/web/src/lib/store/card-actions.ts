@@ -6,9 +6,10 @@ import { DEFAULT_FILTER } from '../schedule';
 import type { ShiftTarget } from '../statsSheets';
 import { swipeTarget } from '../swipe';
 import { shiftBatch, undoShifts, type ShiftBatch, type ShiftRecord } from '../undoShift';
+import { act, actResult } from './load';
 import { closeDetail, closeSheet, personById, setScheduleFilter } from './navigation';
 import { ui } from './state.svelte';
-import { act, actResult, toast } from './toasts';
+import { toast } from './toasts';
 
 // ---------- Aktionen auf Karten ----------
 

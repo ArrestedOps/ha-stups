@@ -186,6 +186,29 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .toast.on { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
 .toast button { color: var(--tint); font-weight: 600; min-height: 32px; }
 
+/* ---------- Auftakt (ein orchestrierter Moment beim Öffnen) ---------- */
+body.intro .tile { animation: tilein calc(.75s * var(--dur)) var(--spring) backwards; animation-delay: calc(var(--i, 0) * 80ms + 160ms); }
+@keyframes tilein { from { opacity: 0; transform: translateY(28px) scale(.88); } }
+body.intro .sec { animation: secin calc(.8s * var(--dur)) var(--spring) backwards; animation-delay: calc(var(--i, 0) * 120ms + 520ms); }
+@keyframes secin { from { opacity: 0; transform: translateY(40px); } }
+body.intro .large h1 { animation: titlein calc(.9s * var(--dur)) var(--spring) backwards; transform-origin: 0 100%; }
+@keyframes titlein { from { opacity: 0; transform: translateY(18px) scale(.94); } }
+body.intro .large .sub, body.intro .search { animation: titlein calc(.9s * var(--dur)) var(--spring) calc(.1s * var(--dur)) backwards; }
+body.intro .fab { animation: fabin calc(.9s * var(--dur)) cubic-bezier(.2, 1.5, .4, 1) calc(1.1s * var(--dur)) backwards; }
+@keyframes fabin { from { opacity: 0; transform: translateY(130px) scale(.8); } }
+body.intro .tabbar { animation: tabin calc(.7s * var(--dur)) var(--spring) calc(.15s * var(--dur)) backwards; }
+@keyframes tabin { from { transform: translateY(100%); } }
+body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur)) var(--spring) calc(.3s * var(--dur)) backwards; }
+.tile.wig .ic { animation: wig calc(.8s * var(--dur)) ease-in-out; }
+@keyframes wig { 20% { transform: rotate(-16deg) scale(1.1); } 40% { transform: rotate(13deg) scale(1.1); } 60% { transform: rotate(-8deg); } 80% { transform: rotate(4deg); } }
+.demo { display: inline-flex; align-items: center; gap: 6px; height: 34px; margin: 5px 4px; padding: 0 12px 0 10px; border-radius: 17px; background: var(--tint-soft); color: var(--tint); font: 600 15px/1 var(--font); }
+.demo svg { width: 15px; height: 15px; fill: currentColor; stroke: none; }
+.demo.on { background: var(--tint-fill); color: #fff; } .demo.on svg { animation: pulse calc(1s * var(--dur)) ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(1.25); opacity: .7; } }
+.rm { position: absolute; z-index: 120; left: 12px; right: 12px; top: calc(var(--sat) + 52px); display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); font-size: 15px; line-height: 1.3; }
+.rm button { flex: none; min-height: 40px; padding: 0 14px; border-radius: 20px; background: var(--tint-fill); color: #fff; font-weight: 600; }
+.rm[hidden] { display: none; }
+
 /* ---------- Desktop: Split-Ansicht ---------- */
 .side, .pane { display: none; }
 @media (min-width: 900px) {
@@ -255,13 +278,15 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   <div class="menu" id="menu" role="menu" aria-label="Personen"></div>
   <div class="banner" id="banner" role="alert"></div>
   <div class="toast" id="toast" role="status"></div>
+  <div class="rm" id="rm" hidden><span>Dein Gerät hat „Bewegung reduzieren“ an. Die Animationen sind deshalb aus.</span><button type="button" id="rmOn">Animationen zeigen</button></div>
 </div></div>
 
 <script>
 (function () {
   var q = new URLSearchParams(location.search);
   var th = q.get('theme'); if (th === 'dark' || th === 'light') document.documentElement.dataset.theme = th;
-  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches, forced = q.get('motion') === '1', calm = reduced && !forced;
+  if (forced) document.documentElement.style.setProperty('--dur', '1');
   var desk = function () { return innerWidth >= 900; };
   var $ = function (id) { return document.getElementById(id); };
   var I = function (n, cls) { return '<svg' + (cls ? ' class="' + cls + '"' : '') + ' viewBox="0 0 24 24"><use href="#i-' + n + '"/></svg>'; };
@@ -313,12 +338,13 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
       '<div class="rc" tabindex="0" role="button" aria-label="' + t.t + ', ' + t.when + '. Details öffnen"><button class="cb" aria-label="' + t.t + ' erledigen"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>' +
       '<div><div class="t">' + t.t + '</div><div class="m">' + meta(t) + '</div></div>' + (onlyMe() && t.who === 'A' ? '<span></span>' : avatars(t.who)) + '</div></div>';
   }
+  var secIdx = 0;
   function section(title, list, cls) {
     if (!list.length) return '';
-    return '<section class="sec ' + (cls || '') + '"><h2>' + title + '<span class="num">' + list.length + '</span></h2><div class="group" role="list">' + list.map(rowHtml).join('') + '</div></section>';
+    return '<section class="sec ' + (cls || '') + '" style="--i:' + (secIdx++) + '"><h2>' + title + '<span class="num">' + list.length + '</span></h2><div class="group" role="list">' + list.map(rowHtml).join('') + '</div></section>';
   }
   function listHtml(v) {
-    var L = tasks.filter(vis), out = '';
+    var L = tasks.filter(vis), out = ''; secIdx = 0;
     if (v === 'all' || v === 'late') out += section('Überfällig', L.filter(function (t) { return !t.done && t.due === 'late'; }), 'late');
     if (v === 'all' || v === 'today') out += section('Heute', L.filter(function (t) { return !t.done && t.due === 'today'; }));
     if (v === 'all' || v === 'week') out += section('Diese Woche', L.filter(function (t) { return !t.done && t.due === 'week'; }));
@@ -330,11 +356,11 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   // ---------- Bildschirme ----------
   var screens = $('screens'), stack = [];
   function navHtml(title, back, big) {
-    return '<header class="nav"><div class="l">' + (back ? '<button class="nbtn back" data-back>' + I('back') + back + '</button>' : '') + '</div><div class="it">' + title + '</div><div class="r">' +
+    return '<header class="nav"><div class="l">' + (back ? '<button class="nbtn back" data-back>' + I('back') + back + '</button>' : (big ? '<button class="demo" data-demo aria-label="Vorführung abspielen"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>Vorführen</button>' : '')) + '</div><div class="it">' + title + '</div><div class="r">' +
       (big ? '<button class="nbtn circ" data-menu aria-label="Personen filtern" aria-haspopup="menu">' + I('people') + '</button>' : '') + '</div></header>';
   }
   function tilesHtml() {
-    return '<div class="tiles">' + TILES.map(function (T) { return '<button class="tile" data-view="' + T[0] + '" style="--c:' + T[3] + '"><span class="ic">' + I(T[2]) + '</span><span class="n num"><span class="roll" data-k="' + T[0] + '">' + count[T[0]]() + '</span></span><span class="l">' + T[1] + '</span></button>'; }).join('') + '</div>';
+    return '<div class="tiles">' + TILES.map(function (T) { return '<button class="tile" data-view="' + T[0] + '" style="--c:' + T[3] + ';--i:' + TILES.indexOf(T) + '"><span class="ic">' + I(T[2]) + '</span><span class="n num"><span class="roll" data-k="' + T[0] + '">' + count[T[0]]() + '</span></span><span class="l">' + T[1] + '</span></button>'; }).join('') + '</div>';
   }
   function makeScreen(v, back) {
     var s = document.createElement('section'); s.className = 'screen'; s.dataset.view = v;
@@ -505,9 +531,53 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
     refresh(); menu.innerHTML = menuHtml(); wait(180, closeMenu);
   });
 
+  // ---------- Auftakt und Vorführung ----------
+  var touched = false, demoRun = 0, banner, bTimer;
+  document.addEventListener('pointerdown', function (e) { if (!e.target.closest('[data-demo]')) { touched = true; if (demoRun) endDemo(); } }, true);
+  function countUp(el, n) { var t0 = performance.now(), d = 1000; el.textContent = '0'; (function f(t) { var k = Math.min(1, (t - t0) / d); el.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); })(t0); }
+  function peekRow(id) {
+    var row = document.querySelector('.screen:last-child .row[data-id="' + id + '"]'); if (!row) return; var rc = row.querySelector('.rc');
+    row.classList.add('sw'); rc.classList.add('snap'); rc.style.transform = 'translateX(-164px)';
+    setTimeout(function () { if (openRow === rc) return; rc.style.transform = ''; setTimeout(function () { if (openRow !== rc) row.classList.remove('sw'); }, 450); }, 1200);
+  }
+  function intro() {
+    document.body.classList.add('intro'); setTimeout(function () { document.body.classList.remove('intro'); }, 3000);
+    document.querySelectorAll('.screen:first-child .roll').forEach(function (el, i) { var n = +el.textContent; setTimeout(function () { countUp(el, n); }, 360 + i * 90); });
+    setTimeout(function () { var t = document.querySelector('.tile[data-view="late"]'); if (t && !touched) { t.classList.add('wig'); } }, 1500);
+    setTimeout(function () { if (!touched) peekRow(2); }, 2600);
+  }
+  function endDemo() { demoRun = 0; var d = document.querySelector('.demo'); if (d) d.classList.remove('on'); }
+  function demo() {
+    var id = ++demoRun, d = document.querySelector('.demo'); if (d) d.classList.add('on');
+    closeSheet(); closeMenu(); hideBanner(); tasks = tasks.filter(function (t) { return t.id < 10; }); while (stack.length > 1) pop(); who = { A: 1 }; tasks.forEach(function (t) { if (t.id === 1 || t.id === 2) { t.done = 0; t.due = 'late'; t.when = t.id === 1 ? 'heute 16:17' : 'heute 16:30'; } }); refresh();
+    var sc = stack[0].querySelector('.scroll'); sc.scrollTo({ top: 0, behavior: 'smooth' });
+    var steps = [
+      [500, function () { peekRow(2); }],
+      [2400, function () { var r = document.querySelector('.row[data-id="1"]'); if (r) finish(1, r); }],
+      [5000, function () { openTask(byId(3)); }],
+      [8000, function () { closeSheet(); }],
+      [8900, function () { toggleMenu(); }],
+      [10400, function () { who = { B: 1 }; refresh(); menu.innerHTML = menuHtml(); }],
+      [11500, function () { closeMenu(); }],
+      [13200, function () { who = { A: 1 }; refresh(); }],
+      [13700, function () { showBanner(true); }],
+      [15600, function () { banner.classList.add('open'); clearTimeout(bTimer); }],
+      [18000, function () { hideBanner(); }],
+      [18900, function () { openNew(); }],
+      [23600, function () { var a = $('add'); if (a && !a.disabled) addTask(); }],
+      [26500, function () { toast('Das war die Vorführung'); endDemo(); }]
+    ];
+    steps.forEach(function (st) { setTimeout(function () { if (demoRun === id) st[1](); }, st[0]); });
+  }
+  document.addEventListener('click', function (e) { if (e.target.closest('[data-demo]')) { if (demoRun) { endDemo(); } else demo(); } });
+  var rm = $('rm');
+  if (calm) { rm.hidden = false; $('rmOn').addEventListener('click', function () { calm = false; document.documentElement.style.setProperty('--dur', '1'); rm.hidden = true; document.body.classList.remove('intro'); void document.body.offsetWidth; intro(); setTimeout(showBanner, 3000); }); }
+  else intro();
+
   // ---------- Banner (Stups) ----------
-  var banner = $('banner'), bTimer = 0;
-  function showBanner() {
+  banner = $('banner'); bTimer = 0;
+  function showBanner(force) {
+    if (force !== true && demoRun) return;
     if (sheet.classList.contains('on')) { wait(3000, showBanner); return; }
     banner.innerHTML = '<div class="bh"><span class="bicon">S</span><div class="btxt"><b>Ben stupst dich</b><span>Fenster putzen: „Heute noch?“</span></div><span class="bts">jetzt</span></div>' +
       '<div class="bact"><button data-b="done">Erledigt</button><button data-b="mine">Bin dran</button><button data-b="later">Später</button></div>';
@@ -522,7 +592,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
     else if (k === 'mine') toast('Ben weiß: du bist dran'); else toast('Du wirst später erinnert');
   });
   (function () { var sy = null; banner.addEventListener('pointerdown', function (e) { sy = e.clientY; }); banner.addEventListener('pointermove', function (e) { if (sy == null) return; var d = e.clientY - sy; if (d < 0) banner.style.transform = 'translateY(' + d + 'px)'; }); banner.addEventListener('pointerup', function (e) { if (sy != null && e.clientY - sy < -30) hideBanner(); else banner.style.transform = ''; sy = null; }); })();
-  wait(4800, showBanner);
+  wait(5200, showBanner);
 
   // ---------- Hinweis ----------
   var toastEl = $('toast'), tt = 0;

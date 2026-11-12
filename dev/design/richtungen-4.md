@@ -19,3 +19,10 @@ Datei: `dev/design/mockups/ios/aufgaben.html` (eine bedienbare Seite; Handy, ab 
 
 Systemschrift (SF auf Apple-Geräten, sonst Inter), Systemfarben, ein Tönungsorange, 44-Punkte-Ziele, Federkurve `cubic-bezier(.32,.72,0,1)`, alle Bewegungen mit Bedeutung, „Bewegung reduzieren“ respektiert, Dunkelthema aus echten iOS-Grautönen.
 Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
+
+## Änderungen nach Rückmeldung (Tab-Leiste und Kopf)
+
+- **Tab-Leiste** von links nach rechts: Aufgaben, Boards, + (neue Aufgabe), Kalender, Wächter. Schwebend, als Glas (wie iOS 26); die Markierung wandert mit einer kleinen Dehnung zum neuen Tab, das + dreht sich beim Öffnen des Blatts.
+- **Kopfzeile:** Stups-Logo (das echte Symbol aus `packages/web/src/assets`), Home-Assistant-Symbol (zurück zum Dashboard), Mitteilungen mit Zähler, Einstellungen. Die Personenauswahl sitzt als Pille unter dem Titel („Meine Aufgaben“).
+- **Mitteilungen** und **Einstellungen** öffnen als Blätter; Kalender, Boards und Wächter sind als einfache Seiten da (Kalender mit Tagesleiste, Wächter mit Schaltern), noch nicht ausgearbeitet.
+- **Neu zum Ausprobieren:** Karte „Das Zuhause meldet“ (Wächter: Waschmaschine läuft, wird fertig, ein Tipp legt die Aufgabe an).

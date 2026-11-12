@@ -1,6 +1,7 @@
+import { dayKeyOf } from './calendar';
 import { deviceTz } from './datetime';
 import { t } from './i18n/index.svelte';
-import { dayKeyOf, sortCards, type ScheduleCard, type SortKey, whenBounds } from './schedule';
+import { sortCards, type ScheduleCard, type SortKey, whenBounds } from './schedule';
 
 /** Die Ansichten in Aufgaben: die gruppierte Liste und die Kalenderansichten Tag, Woche, Monat */
 export type TasksView = 'list' | 'day' | 'week' | 'month';

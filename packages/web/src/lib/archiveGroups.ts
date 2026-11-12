@@ -1,5 +1,4 @@
-import { addDays, mondayOf } from './calendar';
-import { dayKeyOf } from './schedule';
+import { addDays, dayKeyOf, mondayOf } from './calendar';
 import { deviceTz } from './datetime';
 
 export interface ArchiveGroup<T> {

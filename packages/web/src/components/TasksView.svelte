@@ -2,11 +2,11 @@
   import { clock } from '../lib/clock.svelte';
   import { agenda } from '../lib/agenda.svelte';
   import { type TodayCard } from '../lib/api';
-  import type { CalMode } from '../lib/calendar';
+  import { dayKeyOf, type CalMode } from '../lib/calendar';
   import { deviceTz } from '../lib/datetime';
   import { names as monthNames } from '../lib/i18n/names';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { activeFilterCount, DEFAULT_FILTER, dayKeyOf, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId } from '../lib/schedule';
+  import { activeFilterCount, DEFAULT_FILTER, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId } from '../lib/schedule';
   import { matchesQuery } from '../lib/search';
   import { scrollStrip } from '../lib/scrollStrip';
   import type { StatsKind } from '../lib/statsSheets';

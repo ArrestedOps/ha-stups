@@ -5,6 +5,7 @@
   import { api } from '../lib/api';
   import {
     cardsByDay,
+    dayKeyOf,
     dayNumber,
     inMonth,
     layoutDay,
@@ -18,7 +19,7 @@
     weekdayShort,
     type CalMode,
   } from '../lib/calendar';
-  import { boardColorKey, dayKeyOf, filterSchedule, type ScheduleCard } from '../lib/schedule';
+  import { boardColorKey, filterSchedule, type ScheduleCard } from '../lib/schedule';
   import { activeScheduleFilter, filterContext, openCardAnywhere, openSheet, ui } from '../lib/store.svelte';
   import { tileColorOf } from '../lib/cardTile';
   import Icon from './Icon.svelte';

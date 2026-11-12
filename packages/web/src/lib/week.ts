@@ -1,7 +1,7 @@
-import { dayNumber, weekDays } from './calendar';
+import { dayKeyOf, dayNumber, weekDays } from './calendar';
 import { names } from './i18n/names';
 import { deviceTz } from './datetime';
-import { dayKeyOf, type ScheduleCard } from './schedule';
+import type { ScheduleCard } from './schedule';
 
 /** Die Farbe eines Punktes unter dem Tag: wie dringend die Karte ist (die Oberfläche ordnet jeder Art ein Farbtoken zu) */
 export type DotKind = 'overdue' | 'today' | 'upcoming' | 'done';

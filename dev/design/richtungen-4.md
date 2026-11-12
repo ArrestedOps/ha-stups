@@ -73,3 +73,13 @@ Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
 - In der Boardansicht und beim Gruppieren nach Board entfällt der Name, weil der Kopf das Board schon nennt.
 - Neu: Schaltfläche „Gruppieren“ neben dem Personen-Filter. „Nach Fälligkeit“ (Standard) oder „Nach Board“ mit Farbpunkt und Boardname als Überschrift.
 - Die Texte der Stups-Schnellantworten sind mittig.
+
+## Optimierungsrunde: Bedienbarkeit und Lesbarkeit
+
+- **Kontrast:** Orange- und Rottöne, Grautexte und Badges so angepasst, dass Text mindestens 4,5 zu 1 erreicht (per Skript geprüft). Im Dunkelmodus ein hellerer Orangeton für Flächen mit dunkler Schrift, die Stups-Karte mit dunklerem Verlauf für weiße Schrift.
+- **Trefferflächen:** Tippziele sind mindestens 44 mal 44 Punkte groß (zum Teil unsichtbar vergrößert): Kalender-Pfeile, Stepper, Segmente, Chips, Schalter, Plus in der Leiste.
+- **Kopfzeile aufgeräumt:** „Demo“ und „Seiten“ sind aus der Aufgabenliste verschwunden. Sie stehen unter Einstellungen in der Gruppe „Entwurf“ und am Computer unten links.
+- **Stups-Karte kompakter:** Der Zähler („+1“) sitzt im Kopf der Karte statt in einer eigenen Zeile.
+- **Suche** in Aufgaben funktioniert: Titel, Board, Person, mit Leeren-Knopf. Stups-Karte und Kacheln weichen währenddessen.
+- **Wächter:** „Neuer Wächter“ steht als Zeile unter den Kategorien (wie „Neues Board“), nicht mehr als große Taste über der Liste.
+- Kleinere Texte mindestens 13 Punkt, Platzhalter besser lesbar, Kalender-Wochentage lesbarer.

@@ -1,0 +1,13 @@
+{
+  "enabledPlugins": {
+    "stups-lsp@stups": true
+  },
+  "extraKnownMarketplaces": {
+    "stups": {
+      "source": {
+        "source": "directory",
+        "path": "./dev/claude-plugins"
+      }
+    }
+  }
+}

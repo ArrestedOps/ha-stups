@@ -70,6 +70,27 @@ pnpm e2e           # Browser-Tests (einmal: pnpm exec playwright install webkit)
 node e2e/screenshots.mjs   # Screenshots nach docs/images (nach pnpm build)
 ```
 
+### Claude Code: Svelte-MCP und Sprachserver
+
+Das Repository bringt für Claude Code zwei Dinge mit:
+
+- **Svelte-MCP** (`.mcp.json`): der offizielle Server `https://mcp.svelte.dev/mcp`. Claude Code fragt beim ersten Öffnen einmal nach der Freigabe.
+- **Sprachserver** (Plugin `stups-lsp` unter `dev/claude-plugins/`): TypeScript und Svelte, für Definition, Referenzen und Typ-Info. Die Server kommen als devDependencies mit `pnpm install`; global muss nichts installiert sein.
+
+Das Plugin installiert Claude Code nicht von selbst. Einmal je Klon, nach `pnpm install`:
+
+```bash
+claude plugin install stups-lsp --marketplace ./dev/claude-plugins --scope project
+```
+
+Danach Claude Code neu starten. Was man dazu wissen muss:
+
+- **Plugin ändern:** Nach Änderungen unter `dev/claude-plugins/stups-lsp/` die `version` in `plugin.json` und `marketplace.json` erhöhen, sonst bleibt die alte Fassung im Cache. Dann `claude plugin marketplace update stups` und `claude plugin update stups-lsp@stups --scope project`.
+- **TypeScript 6 im Wurzelverzeichnis:** Der TypeScript-Sprachserver braucht `tsserver.js`, das TypeScript 7 nicht mehr enthält. Er läuft deshalb mit `typescript` 6 aus dem Wurzelverzeichnis; `tsc` im Server-Paket bleibt TypeScript 7.
+- **Zwei Einstellungen in `.lsp.json` sind Absicht:** Ohne `useSyntaxServer: never` meldet der Server direkt nach dem Start nur die Fundstellen der geöffneten Datei. Ohne `typescript-svelte-plugin` fehlen bei Referenzen die `.svelte`-Dateien.
+- **`svelte` im Wurzelverzeichnis:** `svelte-language-server` bringt intern Svelte 4 mit. Die eigene devDependency sorgt dafür, dass `eslint-plugin-svelte` weiter Svelte 5 sieht.
+- **Deinstallieren:** `claude plugin uninstall stups-lsp@stups --scope project` leert `.claude/settings.json`; `git checkout .claude/settings.json` stellt sie wieder her.
+
 ### Store und API in Teilen (seit 1.12.0)
 
 **`src/store/`** (der Store, alle Daten in SQLite). `createStore` in `store.ts` baut aus dem Kontext (`context.ts`: Datenbank, Uhr, Zeitzone, Abfragen, Transaktion) die Teile zusammen und bietet nach außen **dieselben Methoden wie vorher**:

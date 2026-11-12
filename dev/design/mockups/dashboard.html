@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stups · Mockup Dashboard (Aufgaben)</title>
+<!--
+  Mockup, kein Produktcode. Ein Dokument, zwei Layouts: unter 900 px Handy, darüber Desktop.
+  Thema: folgt dem System; ?theme=dark oder ?theme=light erzwingt eines.
+  Gefühl: ruhig wie bedrucktes Papier. Eine Schrift mit Serifen für Überschriften und Zahlen, eine Groteske für den Rest.
+  Farben: Papier, Tinte, ein Orange. Keine Verläufe, kein Leuchten, keine Schatten, keine Kästen um jede Zeile.
+-->
+<style>
+@font-face { font-family: "Newsreader"; src: url("fonts/newsreader-latin-wght-normal.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Instrument Sans"; src: url("fonts/instrument-sans-latin-wght-normal.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+
+:root {
+  --paper: #f4f0e8;
+  --ink: #1d1b17;
+  --mute: #6b665c;
+  --line: #d9d3c6;
+  --accent: #b83e06;        /* Schrift in Orange: 4,9 : 1 auf Papier */
+  --accent-fill: #c94608;   /* Flächen (Knopf), Weiß darauf mindestens 3 : 1 für große Schrift und Symbole */
+  --on-accent: #ffffff;
+  --tint: rgba(184, 62, 6, 0.07);
+  --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Abstandsraster: 4 · 8 · 12 · 20 · 32 · 48 */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 20px; --s5: 32px; --s6: 48px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #151412; --ink: #eee9df; --mute: #a39d90; --line: #2e2b26;
+    --accent: #ff8248; --accent-fill: #ff7a3d; --on-accent: #1a0f08; --tint: rgba(255, 130, 72, 0.09);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #151412; --ink: #eee9df; --mute: #a39d90; --line: #2e2b26;
+  --accent: #ff8248; --accent-fill: #ff7a3d; --on-accent: #1a0f08; --tint: rgba(255, 130, 72, 0.09);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--paper); }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 400 16px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.serif { font-family: var(--serif); }
+.mute { color: var(--mute); }
+.num { font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.wordmark { font: 600 24px/1 var(--serif); letter-spacing: -0.01em; }
+.wordmark i { font-style: normal; color: var(--accent); }
+
+.avatar { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  font: 600 11px/1 var(--sans); border: 1.5px solid var(--ink); color: var(--ink); background: var(--paper); }
+.avatar.me { background: var(--ink); color: var(--paper); }
+.avatars { display: inline-flex; }
+.avatars .avatar + .avatar { margin-left: -6px; }
+.avatar.lg { width: 32px; height: 32px; font-size: 13px; }
+
+/* ---------- gemeinsame Bausteine ---------- */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid var(--line); }
+.stats button { padding: var(--s3) var(--s4); display: grid; gap: 2px; }
+.stats button + button { border-left: 1px solid var(--line); }
+.stats .n { font: 500 36px/1.05 var(--serif); font-variant-numeric: tabular-nums lining-nums; }
+.stats .l { font-size: 13px; color: var(--mute); }
+.stats .over .n { color: var(--accent); }
+
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); }
+.sec-head h2 { font: 500 22px/1.2 var(--serif); }
+.link { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: var(--mute); }
+.link svg { width: 16px; height: 16px; }
+
+.week { display: grid; grid-template-columns: repeat(7, 1fr); }
+.week button { display: grid; justify-items: center; gap: 2px; padding: var(--s2) 0 var(--s1); }
+.week .wd { font-size: 12px; color: var(--mute); }
+.week .d { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; font: 500 17px/1 var(--serif); font-variant-numeric: lining-nums; }
+.week .on .d { background: var(--ink); color: var(--paper); }
+.week .dots { display: flex; gap: 3px; height: 5px; }
+.week .dots b { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+.week .dots b.q { background: var(--mute); }
+
+.note { display: flex; align-items: center; gap: var(--s3); width: 100%; padding: var(--s3) var(--s4); border-left: 3px solid var(--accent); background: var(--tint); }
+.note .t { flex: 1; display: grid; }
+.note b { font-weight: 600; }
+.note .mute { font-size: 14px; }
+
+.tabs { display: flex; align-items: center; gap: var(--s4); border-bottom: 1px solid var(--line); }
+.tabs .t { padding: var(--s3) 0; font-size: 15px; color: var(--mute); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs .t[aria-selected="true"] { color: var(--ink); font-weight: 600; border-color: var(--ink); }
+.tabs .push { margin-left: auto; }
+
+.group { margin-top: var(--s5); }
+.group h3 { display: flex; align-items: baseline; gap: var(--s2); font: 500 22px/1.2 var(--serif); padding-bottom: var(--s2); }
+.group h3 .c { font: 400 14px/1 var(--sans); color: var(--mute); font-variant-numeric: tabular-nums; }
+.group.over h3 { color: var(--accent); }
+.group.over h3 .c { color: var(--accent); }
+
+.rows { list-style: none; padding: 0; border-top: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; column-gap: var(--s3); padding: var(--s3) 0; border-bottom: 1px solid var(--line); min-height: 64px; }
+.row { position: relative; isolation: isolate; }
+.row.sel::before { content: ""; position: absolute; inset: 0 calc(var(--s3) * -1); background: var(--tint); border-radius: 10px; z-index: -1; }
+.box { display: grid; place-items: center; width: 24px; height: 24px; border: 1.5px solid var(--mute); border-radius: 50%; }
+.row .title { font-weight: 600; font-size: 16px; line-height: 1.3; }
+.row .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--s3); font-size: 14px; color: var(--mute); margin-top: 2px; }
+.row .meta span { display: inline-flex; align-items: center; gap: 4px; }
+.row .meta svg { width: 14px; height: 14px; }
+.row .meta .hi { color: var(--accent); font-weight: 600; }
+.row .end { display: flex; align-items: center; gap: var(--s2); }
+.more { display: grid; place-items: center; width: 32px; height: 32px; color: var(--mute); }
+
+.primary { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); background: var(--accent-fill); color: var(--on-accent); font-weight: 600; border-radius: 999px; }
+.ghost { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); border: 1px solid var(--line); border-radius: 999px; font-weight: 500; }
+
+/* ---------- Handy ---------- */
+.dsk { display: none; }
+.m { display: block; max-width: 520px; margin-inline: auto; padding: 0 var(--s4) 120px; }
+.m .top { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+.m .top .right { display: flex; align-items: center; gap: var(--s2); }
+.m .iconbtn { position: relative; display: grid; place-items: center; width: 40px; height: 40px; }
+.m .iconbtn .pip { position: absolute; top: 9px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); border: 2px solid var(--paper); box-sizing: content-box; }
+.m .headline { padding: var(--s3) 0 var(--s4); }
+.m .eyebrow { font-size: 14px; color: var(--mute); }
+.m h1 { font: 500 44px/1.05 var(--serif); letter-spacing: -0.015em; margin-top: 2px; }
+.m .date { font-size: 17px; color: var(--mute); margin-top: 2px; }
+.m .stats { margin-inline: calc(var(--s4) * -1); }
+.m .stats button { padding-inline: var(--s4); }
+.m .block { margin-top: var(--s5); }
+.m .week-wrap { margin-top: var(--s2); border-top: 1px solid var(--line); }
+.m .block.note-wrap { margin-top: var(--s4); }
+.m .tabs { margin-top: var(--s4); }
+.m .tabbar { position: fixed; inset: auto 0 0 0; display: grid; grid-template-columns: repeat(3, 1fr); background: var(--paper); border-top: 1px solid var(--line); padding: var(--s2) 0 max(var(--s2), env(safe-area-inset-bottom)); }
+.m .tabbar button { display: grid; justify-items: center; gap: 2px; padding: var(--s2) 0; font-size: 12px; color: var(--mute); position: relative; }
+.m .tabbar button[aria-current="page"] { color: var(--ink); font-weight: 600; }
+.m .tabbar button[aria-current="page"]::before { content: ""; position: absolute; top: -9px; left: 50%; margin-left: -14px; width: 28px; height: 2px; background: var(--accent); }
+.m .fab { position: fixed; right: var(--s4); bottom: 88px; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-fill); color: var(--on-accent); }
+.m .fab svg { width: 26px; height: 26px; stroke-width: 2; }
+
+/* ---------- Desktop ---------- */
+@media (min-width: 900px) {
+  .m { display: none; }
+  .dsk { display: grid; grid-template-columns: 248px minmax(0, 1fr) 400px; min-height: 100vh; }
+
+  .side { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: var(--s5); padding: var(--s5) var(--s4); border-right: 1px solid var(--line); }
+  .side .search { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s3); border: 1px solid var(--line); border-radius: 10px; color: var(--mute); font-size: 14px; }
+  .side .search kbd { margin-left: auto; font: 500 12px var(--sans); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+  .side nav { display: grid; gap: 2px; }
+  .side nav button { display: flex; align-items: center; gap: var(--s3); padding: 10px var(--s3); border-radius: 10px; color: var(--mute); font-size: 15px; }
+  .side nav button[aria-current="page"] { color: var(--ink); font-weight: 600; background: var(--tint); box-shadow: inset 2px 0 0 var(--accent); border-radius: 2px 10px 10px 2px; }
+  .side nav .cnt { margin-left: auto; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .side .label { font-size: 13px; color: var(--mute); padding: 0 var(--s3) var(--s2); }
+  .side .people { display: grid; gap: 2px; }
+  .side .people button { display: flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s3); font-size: 15px; color: var(--mute); }
+  .side .people button[aria-current="true"] { color: var(--ink); font-weight: 600; }
+  .side .foot { margin-top: auto; display: flex; align-items: center; gap: var(--s3); padding: var(--s3); border-top: 1px solid var(--line); font-size: 14px; }
+  .side .foot .who { display: grid; line-height: 1.25; }
+
+  .main { padding: var(--s6) var(--s6) var(--s6); min-width: 0; }
+  .main > * { max-width: 720px; }
+  .main .head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s5); }
+  .main .eyebrow { font-size: 14px; color: var(--mute); }
+  .main h1 { font: 500 56px/1.02 var(--serif); letter-spacing: -0.02em; margin-top: var(--s1); }
+  .main .date { font-size: 18px; color: var(--mute); margin-top: var(--s1); }
+  .main .actions { display: flex; align-items: center; gap: var(--s3); padding-bottom: var(--s2); }
+  .main .actions .primary { height: 44px; padding: 0 var(--s4); font-size: 15px; white-space: nowrap; }
+  .main .actions .iconbtn { position: relative; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; }
+  .main .actions .pip { position: absolute; top: 10px; right: 11px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .main .stats { margin-top: var(--s5); }
+  .main .stats .n { font-size: 44px; }
+  .main .stats button { padding: var(--s4) var(--s4); }
+  .main .stats button:first-child { padding-left: 0; }
+  .main .cols { margin-top: var(--s5); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
+  .main .week button { padding: var(--s3) 0 var(--s2); }
+  .main .week-wrap { margin-top: var(--s3); }
+  .main .tabs { margin-top: var(--s5); }
+  .main .group:first-of-type { margin-top: var(--s5); }
+
+  .detail { border-left: 1px solid var(--line); padding: var(--s6) var(--s5) var(--s5); display: flex; flex-direction: column; gap: var(--s5); position: sticky; top: 0; height: 100vh; overflow: hidden; }
+  .detail .kicker { font-size: 14px; color: var(--accent); font-weight: 600; }
+  .detail h2 { font: 500 34px/1.1 var(--serif); letter-spacing: -0.01em; margin-top: var(--s1); }
+  .detail dl { display: grid; grid-template-columns: 112px 1fr; row-gap: 0; border-top: 1px solid var(--line); }
+  .detail dt, .detail dd { padding: var(--s3) 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .detail dt { color: var(--mute); }
+  .detail dd { display: flex; align-items: center; gap: var(--s2); }
+  .detail .btns { display: flex; gap: var(--s2); }
+  .detail .btns .primary, .detail .btns .ghost { height: 44px; padding: 0 var(--s4); font-size: 15px; }
+  .detail .btns .primary { flex: 1; }
+  .detail h3 { font: 500 18px/1.2 var(--serif); margin-bottom: var(--s2); }
+  .detail .log { list-style: none; padding: 0; display: grid; gap: var(--s3); font-size: 14px; }
+  .detail .log li { display: grid; grid-template-columns: 8px 1fr; gap: var(--s3); align-items: baseline; }
+  .detail .log li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--line); transform: translateY(-1px); }
+  .detail .log li:first-child::before { background: var(--accent); }
+}
+@media (min-width: 900px) and (max-width: 1239px) {
+  .dsk { grid-template-columns: 220px minmax(0, 1fr); }
+  .detail { display: none; }
+  .main { padding: var(--s5); }
+}
+</style>
+</head>
+<body>
+
+<!-- Symbole (Linie 1,6, ein Satz) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 8.5 4.7L12 13 3.5 8.2 12 3.5Z"/><path d="m3.5 12.6 8.5 4.8 8.5-4.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19.5 6.5v5.6c0 4.2-3 7.4-7.5 8.4-4.5-1-7.5-4.2-7.5-8.4V6.5L12 3.5Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.4-4.4"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H18l-3-3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H6l3 3"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5.5 21V4h11l-2.2 4 2.2 4h-11"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="3"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></symbol>
+  </defs>
+</svg>
+
+<!-- ================= HANDY ================= -->
+<div class="m">
+  <header class="top">
+    <span class="wordmark">stups<i>.</i></span>
+    <div class="right">
+      <button class="iconbtn" aria-label="Mitteilungen, 1 neue"><svg><use href="#i-bell"/></svg><span class="pip"></span></button>
+      <button class="avatar lg me" aria-label="Konto und Einstellungen: Anna">A</button>
+    </div>
+  </header>
+
+  <div class="headline">
+    <div class="eyebrow">Aufgaben</div>
+    <h1>Donnerstag</h1>
+    <div class="date">5. November 2026</div>
+  </div>
+
+  <div class="stats" role="group" aria-label="Überblick">
+    <button><span class="n">0</span><span class="l">Heute fällig</span></button>
+    <button class="over"><span class="n">2</span><span class="l">Überfällig</span></button>
+    <button><span class="n">1</span><span class="l">Erledigt</span></button>
+  </div>
+
+  <section class="block" aria-labelledby="m-week">
+    <div class="sec-head">
+      <h2 id="m-week">Diese Woche</h2>
+      <button class="link"><svg><use href="#i-cal"/></svg>Monat<svg><use href="#i-down"/></svg></button>
+    </div>
+    <div class="week-wrap">
+      <div class="week" role="group" aria-label="Tage dieser Woche">
+        <button><span class="wd">Mo</span><span class="d">2</span><span class="dots"></span></button>
+        <button><span class="wd">Di</span><span class="d">3</span><span class="dots"></span></button>
+        <button><span class="wd">Mi</span><span class="d">4</span><span class="dots"></span></button>
+        <button class="on" aria-pressed="true"><span class="wd">Do</span><span class="d">5</span><span class="dots"><b></b><b></b></span></button>
+        <button><span class="wd">Fr</span><span class="d">6</span><span class="dots"><b class="q"></b></span></button>
+        <button><span class="wd">Sa</span><span class="d">7</span><span class="dots"></span></button>
+        <button><span class="wd">So</span><span class="d">8</span><span class="dots"></span></button>
+      </div>
+    </div>
+  </section>
+
+  <div class="block note-wrap">
+    <button class="note"><span class="t"><b>Ben hat dich gestupst</b><span class="mute">Fenster putzen</span></span><svg><use href="#i-chev"/></svg></button>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Wessen Aufgaben">
+    <button class="t" role="tab" aria-selected="true">Meine</button>
+    <button class="t" role="tab" aria-selected="false">Alle</button>
+    <button class="t" role="tab" aria-selected="false">Ben</button>
+    <button class="link push"><svg><use href="#i-sliders"/></svg>Filter</button>
+  </div>
+
+  <section class="group over">
+    <h3>Überfällig <span class="c">2</span></h3>
+    <ul class="rows">
+      <li class="row">
+        <button class="box" aria-label="Müll rausbringen erledigen"></button>
+        <div><div class="title">Müll rausbringen</div>
+          <div class="meta"><span class="num">heute 16:17</span><span role="img" aria-label="wiederholt sich wöchentlich" title="wöchentlich"><svg><use href="#i-repeat"/></svg></span><span class="hi"><svg><use href="#i-flag"/></svg>Hoch</span></div></div>
+        <div class="end"><span class="avatar me">A</span><button class="more" aria-label="Mehr"><svg><use href="#i-more"/></svg></button></div>
+      </li>
+      <li class="row">
+        <button class="box" aria-label="Paket abholen erledigen"></button>
+        <div><div class="title">Paket abholen</div>
+          <div class="meta"><span class="num">heute 16:30</span></div></div>
+        <div class="end"><span class="avatar me">A</span><button class="more" aria-label="Mehr"><svg><use href="#i-more"/></svg></button></div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="group">
+    <h3>Diese Woche <span class="c">1</span></h3>
+    <ul class="rows">
+      <li class="row">
+        <button class="box" aria-label="Fenster putzen erledigen"></button>
+        <div><div class="title">Fenster putzen</div>
+          <div class="meta"><span class="num">morgen 10:00</span><span>mit Ben</span></div></div>
+        <div class="end"><span class="avatars"><span class="avatar me">A</span><span class="avatar">B</span></span><button class="more" aria-label="Mehr"><svg><use href="#i-more"/></svg></button></div>
+      </li>
+    </ul>
+  </section>
+
+  <button class="fab" aria-label="Neue Aufgabe"><svg><use href="#i-plus"/></svg></button>
+  <nav class="tabbar" aria-label="Hauptbereiche">
+    <button aria-current="page"><svg><use href="#i-tasks"/></svg>Aufgaben</button>
+    <button><svg><use href="#i-layers"/></svg>Boards</button>
+    <button><svg><use href="#i-shield"/></svg>Wächter</button>
+  </nav>
+</div>
+
+<!-- ================= DESKTOP ================= -->
+<div class="dsk">
+  <aside class="side">
+    <span class="wordmark">stups<i>.</i></span>
+    <button class="search"><svg><use href="#i-search"/></svg>Suchen<kbd>Strg K</kbd></button>
+    <nav aria-label="Hauptbereiche">
+      <button aria-current="page"><svg><use href="#i-tasks"/></svg>Aufgaben<span class="cnt">3</span></button>
+      <button><svg><use href="#i-layers"/></svg>Boards</button>
+      <button><svg><use href="#i-shield"/></svg>Wächter</button>
+    </nav>
+    <div>
+      <div class="label">Personen</div>
+      <div class="people">
+        <button aria-current="true"><span class="avatar me">A</span>Meine</button>
+        <button><span class="avatar">B</span>Ben</button>
+      </div>
+    </div>
+    <div class="foot"><span class="avatar lg me">A</span><span class="who"><b>Anna</b><span class="mute">Einstellungen</span></span></div>
+  </aside>
+
+  <main class="main">
+    <div class="head">
+      <div>
+        <div class="eyebrow">Aufgaben</div>
+        <h1>Donnerstag</h1>
+        <div class="date">5. November 2026</div>
+      </div>
+      <div class="actions">
+        <button class="iconbtn" aria-label="Mitteilungen, 1 neue"><svg><use href="#i-bell"/></svg><span class="pip"></span></button>
+        <button class="primary"><svg><use href="#i-plus"/></svg>Neue Aufgabe</button>
+      </div>
+    </div>
+
+    <div class="stats" role="group" aria-label="Überblick">
+      <button><span class="n">0</span><span class="l">Heute fällig</span></button>
+      <button class="over"><span class="n">2</span><span class="l">Überfällig</span></button>
+      <button><span class="n">1</span><span class="l">Erledigt</span></button>
+    </div>
+
+    <div class="cols">
+      <section aria-labelledby="d-week">
+        <div class="sec-head">
+          <h2 id="d-week">Diese Woche</h2>
+          <button class="link"><svg><use href="#i-cal"/></svg>Monat<svg><use href="#i-down"/></svg></button>
+        </div>
+        <div class="week-wrap">
+          <div class="week" role="group" aria-label="Tage dieser Woche">
+            <button><span class="wd">Mo</span><span class="d">2</span><span class="dots"></span></button>
+            <button><span class="wd">Di</span><span class="d">3</span><span class="dots"></span></button>
+            <button><span class="wd">Mi</span><span class="d">4</span><span class="dots"></span></button>
+            <button class="on" aria-pressed="true"><span class="wd">Do</span><span class="d">5</span><span class="dots"><b></b><b></b></span></button>
+            <button><span class="wd">Fr</span><span class="d">6</span><span class="dots"><b class="q"></b></span></button>
+            <button><span class="wd">Sa</span><span class="d">7</span><span class="dots"></span></button>
+            <button><span class="wd">So</span><span class="d">8</span><span class="dots"></span></button>
+          </div>
+        </div>
+      </section>
+
+      <button class="note"><span class="t"><b>Ben hat dich gestupst</b><span class="mute">Fenster putzen</span></span><svg><use href="#i-chev"/></svg></button>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Wessen Aufgaben">
+      <button class="t" role="tab" aria-selected="true">Meine</button>
+      <button class="t" role="tab" aria-selected="false">Alle</button>
+      <button class="t" role="tab" aria-selected="false">Ben</button>
+      <button class="link push"><svg><use href="#i-sliders"/></svg>Filter</button>
+    </div>
+
+    <section class="group over">
+      <h3>Überfällig <span class="c">2</span></h3>
+      <ul class="rows">
+        <li class="row sel">
+          <button class="box" aria-label="Müll rausbringen erledigen"></button>
+          <div><div class="title">Müll rausbringen</div>
+            <div class="meta"><span class="num">heute 16:17</span><span role="img" aria-label="wiederholt sich wöchentlich" title="wöchentlich"><svg><use href="#i-repeat"/></svg></span><span class="hi"><svg><use href="#i-flag"/></svg>Hoch</span></div></div>
+          <div class="end"><span class="avatar me">A</span><button class="more" aria-label="Mehr"><svg><use href="#i-more"/></svg></button></div>
+        </li>
+        <li class="row">
+          <button class="box" aria-label="Paket abholen erledigen"></button>
+          <div><div class="title">Paket abholen</div>
+            <div class="meta"><span class="num">heute 16:30</span></div></div>
+          <div class="end"><span class="avatar me">A</span><button class="more" aria-label="Mehr"><svg><use href="#i-more"/></svg></button></div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="group">
+      <h3>Diese Woche <span class="c">1</span></h3>
+      <ul class="rows">
+        <li class="row">
+          <button class="box" aria-label="Fenster putzen erledigen"></button>
+          <div><div class="title">Fenster putzen</div>
+            <div class="meta"><span class="num">morgen 10:00</span><span>mit Ben</span></div></div>
+          <div class="end"><span class="avatars"><span class="avatar me">A</span><span class="avatar">B</span></span><button class="more" aria-label="Mehr"><svg><use href="#i-more"/></svg></button></div>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <aside class="detail" aria-label="Details zur gewählten Aufgabe">
+    <div>
+      <div class="kicker">Überfällig</div>
+      <h2>Müll rausbringen</h2>
+    </div>
+    <dl>
+      <dt>Fällig</dt><dd class="num">heute, 16:17</dd>
+      <dt>Zuständig</dt><dd><span class="avatar me">A</span>Anna</dd>
+      <dt>Wiederholung</dt><dd>jede Woche, donnerstags</dd>
+      <dt>Priorität</dt><dd style="color:var(--accent);font-weight:600"><svg style="width:16px;height:16px"><use href="#i-flag"/></svg>Hoch</dd>
+      <dt>Board</dt><dd>Haushalt</dd>
+    </dl>
+    <div class="btns">
+      <button class="primary">Erledigt</button>
+      <button class="ghost">Später</button>
+    </div>
+    <div>
+      <h3>Verlauf</h3>
+      <ul class="log">
+        <li><span>Wurde überfällig <span class="mute">· heute 16:18</span></span></li>
+        <li><span>Anna hat die Aufgabe erledigt <span class="mute">· letzten Donnerstag</span></span></li>
+        <li><span>Neue Karte aus Wiederholung <span class="mute">· letzten Freitag</span></span></li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  try {
+    var t = new URLSearchParams(location.search).get('theme');
+    if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
+</body>
+</html>

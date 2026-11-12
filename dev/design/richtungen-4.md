@@ -26,3 +26,10 @@ Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
 - **Kopfzeile:** Stups-Logo (das echte Symbol aus `packages/web/src/assets`), Home-Assistant-Symbol (zurück zum Dashboard), Mitteilungen mit Zähler, Einstellungen. Die Personenauswahl sitzt als Pille unter dem Titel („Meine Aufgaben“).
 - **Mitteilungen** und **Einstellungen** öffnen als Blätter; Kalender, Boards und Wächter sind als einfache Seiten da (Kalender mit Tagesleiste, Wächter mit Schaltern), noch nicht ausgearbeitet.
 - **Neu zum Ausprobieren:** Karte „Das Zuhause meldet“ (Wächter: Waschmaschine läuft, wird fertig, ein Tipp legt die Aufgabe an).
+
+## Änderungen nach Rückmeldung (Plus, Zahnrad, Wächter, Live-Aufgabe)
+
+- „+“ ist jetzt eine flache orange Pille in der Glas-Tab-Leiste (kein erhöhter Kreis mehr).
+- Einstellungen: echtes Zahnrad (8 Zähne), vorher sah das Symbol wie eine Sonne aus.
+- Keine Wächter-Vorschläge mehr unter „Aufgaben“. Die Wächter-Seite bleibt, mit Schaltern.
+- **Live-Aufgabe:** Eine laufende Aufgabe erscheint oben als dunkle Karte wie eine iOS Live Activity (Laufzeit tickt, Ring zeigt den Anteil an der geschätzten Dauer, Pause/Weiter, Fertig). In der Liste trägt die Zeile die laufende Zeit. Starten aus den Details („Jetzt starten, die Zeit läuft mit“).

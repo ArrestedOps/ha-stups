@@ -118,7 +118,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .empty b { display: block; margin-bottom: 4px; color: var(--label); font: 600 17px/1.2 var(--font); }
 
 /* ---------- Tab-Leiste (schwebend, Glas) ---------- */
-.tabbar { position: absolute; left: 14px; right: 14px; bottom: calc(10px + var(--sab)); z-index: 30; display: grid; grid-template-columns: 1fr 1fr 78px 1fr 1fr; align-items: center; height: 64px; padding: 0 6px; border-radius: 32px; background: var(--mat); backdrop-filter: blur(28px) saturate(1.9); -webkit-backdrop-filter: blur(28px) saturate(1.9); box-shadow: 0 10px 34px rgba(0, 0, 0, .2), 0 0 0 .5px rgba(60, 60, 67, .22); }
+.tabbar { position: absolute; left: 14px; right: 14px; bottom: calc(10px + var(--sab)); z-index: 30; display: grid; grid-template-columns: 1fr 1fr 70px 1fr 1fr; align-items: center; height: 64px; padding: 0 6px; border-radius: 32px; background: var(--mat); backdrop-filter: blur(28px) saturate(1.9); -webkit-backdrop-filter: blur(28px) saturate(1.9); box-shadow: 0 10px 34px rgba(0, 0, 0, .2), 0 0 0 .5px rgba(60, 60, 67, .22); }
 .tbbub { position: absolute; z-index: 1; top: 6px; left: 0; height: 52px; width: 70px; transition: transform calc(.55s * var(--dur)) var(--spring), width calc(.55s * var(--dur)) var(--spring); pointer-events: none; }
 .tbbub i { display: block; width: 100%; height: 100%; border-radius: 26px; background: rgba(120, 120, 128, .18); }
 .tbbub.go i { animation: stretch calc(.6s * var(--dur)) var(--spring); }
@@ -127,9 +127,9 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .tb[aria-current="page"] { color: var(--tint); }
 .tb svg { width: 25px; height: 25px; transition: transform calc(.45s * var(--dur)) var(--spring); }
 .tb[aria-current="page"] svg { transform: scale(1.08); }
-.tbplus { position: relative; z-index: 3; justify-self: center; display: grid; place-items: center; width: 58px; height: 58px; margin-top: -18px; border-radius: 50%; background: var(--tint-fill); color: #fff; box-shadow: 0 8px 22px rgba(240, 84, 0, .42), 0 0 0 4px var(--bg); transition: transform calc(.5s * var(--dur)) var(--spring); }
-.tbplus svg { width: 28px; height: 28px; stroke-width: 2.8; transition: transform calc(.55s * var(--dur)) var(--spring); }
-.tbplus:active { transform: scale(.92); } .tbplus.open svg { transform: rotate(135deg); } .tbplus.open { transform: scale(1.06); }
+.tbplus { position: relative; z-index: 3; justify-self: center; display: grid; place-items: center; width: 54px; height: 36px; border-radius: 18px; background: var(--tint-fill); color: #fff; transition: transform calc(.5s * var(--dur)) var(--spring); }
+.tbplus svg { width: 22px; height: 22px; stroke-width: 2.9; transition: transform calc(.55s * var(--dur)) var(--spring); }
+.tbplus:active { transform: scale(.92); } .tbplus.open svg { transform: rotate(135deg); }
 :root[data-theme="dark"] .tbplus { color: #1a0b02; } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tbplus { color: #1a0b02; } }
 .fab { display: none; position: absolute; z-index: 29; right: 16px; bottom: calc(66px + var(--sab)); align-items: center; gap: 8px; height: 52px; padding: 0 20px 0 16px; border-radius: 26px; background: var(--tint-fill); color: #fff; font: 600 17px/1 var(--font); box-shadow: 0 8px 24px rgba(240, 84, 0, .38); transition: transform calc(.3s * var(--dur)) var(--spring); }
 .fab:active { transform: scale(.95); } .fab svg { width: 24px; height: 24px; stroke-width: 2.6; }
@@ -155,6 +155,33 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .sw.on { background: var(--green-fill); } .sw.on::after { transform: translateX(20px); }
 .nlist .li { align-items: flex-start; } .nlist .li .k b { display: block; font-weight: 600; } .nlist .li .k span { display: block; color: var(--label2); font-size: 15px; } .nlist .li time { color: var(--label2); font-size: 13px; }
 .nlist .li.unread::after { content: ""; position: absolute; left: 4px; top: 22px; width: 8px; height: 8px; border-radius: 50%; background: var(--tint-fill); }
+
+/* ---------- Live-Aufgabe (läuft gerade) ---------- */
+.livec { display: grid; gap: 12px; margin: 14px 16px 0; padding: 14px 16px 16px; border-radius: 22px; background: #1c1c1e; color: #fff; overflow: hidden; animation: livein calc(.8s * var(--dur)) var(--spring) backwards; transition: height calc(.45s * var(--dur)) var(--spring), margin calc(.45s * var(--dur)) var(--spring), padding calc(.45s * var(--dur)) var(--spring), opacity calc(.3s * var(--dur)); }
+@keyframes livein { from { opacity: 0; transform: translateY(-18px) scale(.94); } }
+.livec.gone { height: 0 !important; margin-top: 0; padding-block: 0; opacity: 0; }
+.livec .lh { display: flex; align-items: center; gap: 8px; font: 600 13px/1 var(--font); color: rgba(255, 255, 255, .64); letter-spacing: 0; }
+.livec .lh .who { margin-left: auto; }
+.dotp { width: 9px; height: 9px; border-radius: 50%; background: var(--tint-fill); animation: dotp calc(1.4s * var(--dur)) ease-in-out infinite; flex: none; }
+@keyframes dotp { 50% { transform: scale(.55); opacity: .45; } }
+.livec.paused .dotp { animation: none; background: #8e8e93; }
+.livec .lt { font: 600 20px/1.2 var(--font); letter-spacing: -0.015em; }
+.livec .lm { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.livec .tm { font: 700 42px/1 var(--round); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.livec .tm small { display: block; margin-top: 6px; font: 500 14px/1 var(--font); color: rgba(255, 255, 255, .6); letter-spacing: -0.01em; }
+.livec .ring { position: relative; width: 62px; height: 62px; flex: none; }
+.livec .ring svg { width: 62px; height: 62px; stroke-width: 5.5; transform: rotate(-90deg); }
+.livec .ring .trk { stroke: rgba(255, 255, 255, .16); } .livec .ring .prg { stroke: var(--tint-fill); stroke-linecap: round; stroke-dasharray: 163.4; transition: stroke-dashoffset calc(.9s * var(--dur)) linear; }
+.livec .ring b { position: absolute; inset: 0; display: grid; place-items: center; font: 700 15px/1 var(--round); letter-spacing: 0; }
+.livec .lb { display: flex; gap: 8px; }
+.livec .lb button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 44px; border-radius: 22px; background: rgba(255, 255, 255, .15); color: #fff; font: 600 16px/1 var(--font); transition: transform calc(.3s * var(--dur)) var(--spring); }
+.livec .lb button:active { transform: scale(.96); } .livec .lb button svg { width: 15px; height: 15px; }
+.livec .lb .ok { background: var(--tint-fill); }
+:root[data-theme="dark"] .livec { background: #2c2c2e; } :root[data-theme="dark"] .livec .lb .ok { color: #1a0b02; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .livec { background: #2c2c2e; } :root:not([data-theme="light"]) .livec .lb .ok { color: #1a0b02; } }
+.lvb { display: inline-flex; align-items: center; gap: 5px; color: var(--tint); font-weight: 600; }
+.lvb i { width: 7px; height: 7px; border-radius: 50%; background: var(--tint-fill); animation: dotp calc(1.4s * var(--dur)) ease-in-out infinite; }
+body.intro .livec { animation-delay: calc(.35s * var(--dur)); }
 
 /* ---------- Karte: Das Zuhause meldet ---------- */
 .house { display: flex; align-items: center; gap: 14px; margin: 14px 16px 0; padding: 12px 14px; border-radius: 14px; background: var(--card); overflow: hidden; transition: height calc(.45s * var(--dur)) var(--spring), margin calc(.45s * var(--dur)) var(--spring), padding calc(.45s * var(--dur)) var(--spring), opacity calc(.3s * var(--dur)); }
@@ -316,8 +343,10 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5.5 21V4h11l-2.2 4 2.2 4h-11"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V4.5h4V7M7 7l.8 12.5h8.4L17 7M10.5 11v5M13.5 11v5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8.5 5.5v13M15.5 5.5v13" stroke-width="3.2"/></symbol>
     <symbol id="i-house" viewBox="0 0 24 24"><path d="M4 11.2 12 4l8 7.2V20H4Z"/><path d="M10 20v-5.5h4V20"/></symbol>
-    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2.3M12 18.2v2.3M3.5 12h2.3M18.2 12h2.3M6 6l1.6 1.6M16.4 16.4 18 18M18 6l-1.6 1.6M7.6 16.4 6 18"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="M10.26 5.01 L10.66 2.49 L13.34 2.49 L13.74 5.01 L15.71 5.83 L17.78 4.33 L19.67 6.22 L18.17 8.29 L18.99 10.26 L21.51 10.66 L21.51 13.34 L18.99 13.74 L18.17 15.71 L19.67 17.78 L17.78 19.67 L15.71 18.17 L13.74 18.99 L13.34 21.51 L10.66 21.51 L10.26 18.99 L8.29 18.17 L6.22 19.67 L4.33 17.78 L5.83 15.71 L5.01 13.74 L2.49 13.34 L2.49 10.66 L5.01 10.26 L5.83 8.29 L4.33 6.22 L6.22 4.33 L8.29 5.83Z"/><circle cx="12" cy="12" r="3.1"/></symbol>
     <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></symbol>
     <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
   </defs>
@@ -368,9 +397,10 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     { id: 6, t: 'Rauchmelder testen', due: 'week', when: 'So 11:00', who: 'M', board: 'Haushalt' },
     { id: 7, t: 'Heizung entlüften', due: 'week', when: 'Mo 18:00', who: 'N', board: 'Technik' },
     { id: 8, t: 'Steuererklärung abgeben', due: 'week', when: 'Di 23:00', who: 'A', board: 'Finanzen' },
-    { id: 9, t: 'Spülmaschine ausräumen', due: 'today', when: 'heute 08:05', who: 'A', board: 'Haushalt', done: 1 }
+    { id: 9, t: 'Spülmaschine ausräumen', due: 'today', when: 'heute 08:05', who: 'A', board: 'Haushalt', done: 1 },
+    { id: 10, t: 'Wäsche aufhängen', due: 'today', when: 'heute 18:30', who: 'A', board: 'Haushalt', est: 20 }
   ];
-  var nextId = 10, who = { A: 1 };   // wer angezeigt wird; null = alle
+  var nextId = 20, who = { A: 1 };   // wer angezeigt wird; null = alle
   var view = 'all';                  // all | late | today | week | done
 
   function mine(t) { if (!who) return true; return t.who.split('').some(function (c) { return who[c]; }); }
@@ -394,6 +424,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     if (t.rep) s += '<span aria-label="wiederholt sich">' + I('repeat') + '</span>';
     if (t.hi) s += '<span class="hi">' + I('flag') + 'Hoch</span>';
     if (t.wacht) s += '<span class="badge">' + I('eye') + 'Wächter</span>';
+    if (isLive(t.id) && !t.done) s += '<span class="lvb"><i></i><span data-lv="' + t.id + '" class="num">' + fmt(elapsed(liveOf(t.id))) + '</span></span>';
     return s;
   }
   function rowHtml(t) {
@@ -434,7 +465,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   function makeScreen(v, back) {
     var s = document.createElement('section'); s.className = 'screen'; s.dataset.view = v;
     s.innerHTML = navHtml(VIEWS[v][0], back, v === 'all') + '<div class="scroll"><div class="large"><h1>' + VIEWS[v][0] + '</h1>' + (v === 'all' ? '<div class="subrow"><button class="whop" data-menu aria-haspopup="menu" aria-label="Personen filtern"><span data-whotext>' + whoText() + '</span>' + I('chev') + '</button><button class="demo" data-demo aria-label="Vorführung abspielen"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>Vorführen</button></div>' : '<div class="sub" data-whotext>' + whoText() + '</div>') + '</div>' +
-      (v === 'all' ? '<div class="search" role="search">' + I('search') + 'Suchen</div>' + tilesHtml() + houseHtml() : '') + '<div class="lists" data-lists>' + listHtml(v) + '</div></div>';
+      (v === 'all' ? '<div class="search" role="search">' + I('search') + 'Suchen</div>' + '<div id="liveWrap">' + liveHtml() + '</div>' + tilesHtml() : '') + '<div class="lists" data-lists>' + listHtml(v) + '</div></div>';
     var sc = s.querySelector('.scroll'), nav = s.querySelector('.nav'), h1 = s.querySelector('h1');
     sc.addEventListener('scroll', function () { var p = Math.max(0, Math.min(1, (sc.scrollTop - 30) / 22)); nav.style.setProperty('--p', p); h1.style.opacity = 1 - Math.min(1, sc.scrollTop / 40); });
     return s;
@@ -540,7 +571,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
       '<div class="li"><span class="k">Board</span><span class="v">' + t.board + '</span></div></div>' +
       (t.done ? '<button class="bigbtn soft" data-reopen>Wieder öffnen</button>' : '<button class="bigbtn" data-done>Erledigt</button>') +
       '<div class="list"><button class="li link" data-later>' + I('clock') + '<span class="k">Auf morgen verschieben</span></button>' +
-      (t.who.indexOf('A') < 0 ? '<button class="li link" data-poke>' + I('bell') + '<span class="k">' + P[t.who[0]].n + ' stupsen</span></button>' : '') + '</div>' +
+      (t.done ? '' : (isLive(t.id) ? '<button class="li link" data-stop>' + I('pause') + '<span class="k">Zeit anhalten</span></button>' : '<button class="li link" data-start>' + I('play') + '<span class="k">Jetzt starten, die Zeit läuft mit</span></button>')) + (t.who.indexOf('A') < 0 ? '<button class="li link" data-poke>' + I('bell') + '<span class="k">' + P[t.who[0]].n + ' stupsen</span></button>' : '') + '</div>' +
       '<div class="hist">Verlauf</div><div class="list"><div class="li"><span class="k">' + (late ? 'Wurde überfällig' : 'Angelegt von Anna') + '</span><span class="v num">' + (late ? 'heute ' + t.when.split(' ')[1] : 'gestern') + '</span></div></div></div>';
   }
   function openTask(t) {
@@ -555,6 +586,8 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     if (e.target.closest('[data-reopen]')) { t.done = 0; t.due = t.prev || 'week'; closeSheet(); refresh(); }
     if (e.target.closest('[data-later]')) { t.when = 'morgen ' + (t.when.split(' ')[1] || '09:00'); t.due = 'week'; closeSheet(); refresh(); toast('Auf morgen verschoben'); }
     if (e.target.closest('[data-poke]')) { closeSheet(); toast(P[t.who[0]].n + ' wurde gestupst'); }
+    if (e.target.closest('[data-start]')) { closeSheet(); wait(450, function () { startLive(t.id); }); }
+    if (e.target.closest('[data-stop]')) { closeSheet(); stopLive(t.id); }
   });
 
   // ---------- Neue Aufgabe ----------
@@ -699,6 +732,44 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     return '<div class="sidehead"><span class="logo"><img src="' + LOGO + '" alt=""><b>stups<i>.</i></b></span><span class="sicons"><button class="nbtn ic ha" data-ha aria-label="Zurück zu Home Assistant">' + I('house') + '</button><button class="nbtn ic" data-bell aria-label="Mitteilungen">' + I('bell') + '<span class="cnt" style="animation:none">3</span></button><button class="nbtn ic" data-set aria-label="Einstellungen">' + I('gear') + '</button></span></div><div class="snav">' + nav + '</div>';
   }
 
+  // ---------- Live-Aufgabe ----------
+  var live = [{ id: 10, acc: 432, t0: Date.now(), paused: false }];
+  function liveOf(id) { return (live || []).filter(function (l) { return l.id === id; })[0]; }
+  function isLive(id) { return !!liveOf(id); }
+  function elapsed(l) { return l.acc + (l.paused ? 0 : (Date.now() - l.t0) / 1000); }
+  function fmt(sec) { sec = Math.max(0, Math.floor(sec)); var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60, two = function (n) { return (n < 10 ? '0' : '') + n; }; return (h ? h + ':' + two(m) : two(m)) + ':' + two(s); }
+  function liveHtml() {
+    return (live || []).map(function (l) {
+      var t = byId(l.id); if (!t || t.done) return ''; var e = elapsed(l), pr = t.est ? Math.min(1, e / (t.est * 60)) : 0;
+      return '<div class="livec' + (l.paused ? ' paused' : '') + '" data-live="' + l.id + '" role="group" aria-label="Läuft gerade: ' + t.t + '"><div class="lh"><i class="dotp"></i><span data-lstate>' + (l.paused ? 'Pausiert' : 'Läuft gerade') + '</span><span class="who">' + avatars(t.who) + '</span></div>' +
+        '<div class="lt">' + t.t + '</div><div class="lm"><div class="tm" data-lt="' + l.id + '">' + fmt(e) + '<small>' + (t.est ? 'von etwa ' + t.est + ' Min.' : 'Laufzeit') + '</small></div>' +
+        (t.est ? '<div class="ring" role="img" aria-label="' + Math.round(pr * 100) + ' Prozent"><svg viewBox="0 0 62 62"><circle class="trk" cx="31" cy="31" r="26" fill="none"/><circle class="prg" data-lr="' + l.id + '" cx="31" cy="31" r="26" fill="none" style="stroke-dashoffset:' + (163.4 * (1 - pr)).toFixed(1) + '"/></svg><b data-lp="' + l.id + '">' + Math.round(pr * 100) + '%</b></div>' : '') + '</div>' +
+        '<div class="lb"><button data-lpause="' + l.id + '">' + I(l.paused ? 'play' : 'pause') + (l.paused ? 'Weiter' : 'Pause') + '</button><button class="ok" data-ldone="' + l.id + '">Fertig</button></div></div>';
+    }).join('');
+  }
+  function renderLive() { var w = $('liveWrap'); if (w) w.innerHTML = liveHtml(); }
+  function tickLive() {
+    live.forEach(function (l) {
+      var t = byId(l.id); if (!t) return; var e = elapsed(l), pr = t.est ? Math.min(1, e / (t.est * 60)) : 0;
+      var tm = document.querySelector('[data-lt="' + l.id + '"]'); if (tm && tm.firstChild) tm.firstChild.nodeValue = fmt(e);
+      var r = document.querySelector('[data-lr="' + l.id + '"]'); if (r) r.style.strokeDashoffset = (163.4 * (1 - pr)).toFixed(1);
+      var pc = document.querySelector('[data-lp="' + l.id + '"]'); if (pc) pc.textContent = Math.round(pr * 100) + '%';
+      document.querySelectorAll('[data-lv="' + l.id + '"]').forEach(function (n) { n.textContent = fmt(e); });
+    });
+  }
+  setInterval(tickLive, 1000); renderLive(); refresh();
+  function startLive(id) { if (isLive(id)) return; var t = byId(id); live.push({ id: id, acc: 0, t0: Date.now(), paused: false }); renderLive(); refresh(); toast('Zeit läuft: ' + t.t); }
+  function stopLive(id) { live = live.filter(function (l) { return l.id !== id; }); renderLive(); refresh(); }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-lpause]'), d = e.target.closest('[data-ldone]');
+    if (b) { var l = liveOf(+b.dataset.lpause); if (!l) return; if (l.paused) { l.paused = false; l.t0 = Date.now(); } else { l.acc = elapsed(l); l.paused = true; } renderLive(); refresh(); }
+    if (d) {
+      var id = +d.dataset.ldone, card = d.closest('.livec'), row = document.querySelector('.screen:last-child .row[data-id="' + id + '"]'); if (!byId(id)) return;
+      card.style.height = card.offsetHeight + 'px'; void card.offsetHeight; card.classList.add('gone');
+      setTimeout(function () { live = live.filter(function (l) { return l.id !== id; }); finish(id, row); }, calm ? 0 : 420);
+    }
+  });
+
   // ---------- Auftakt und Vorführung ----------
   var touched = false, demoRun = 0, banner, bTimer;
   document.addEventListener('pointerdown', function (e) { if (!e.target.closest('[data-demo]')) { touched = true; if (demoRun) endDemo(); } }, true);
@@ -713,15 +784,16 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     document.querySelectorAll('.screen:first-child .roll').forEach(function (el, i) { var n = +el.textContent; setTimeout(function () { countUp(el, n); }, 360 + i * 90); });
     setTimeout(function () { var t = document.querySelector('.tile[data-view="late"]'); if (t && !touched) { t.classList.add('wig'); } }, 1500);
     setTimeout(function () { if (!touched) peekRow(2); }, 2600);
-    setTimeout(startHouse, 1400);
   }
   function endDemo() { demoRun = 0; var d = document.querySelector('.demo'); if (d) d.classList.remove('on'); }
   function demo() {
     var id = ++demoRun, d = document.querySelector('.demo'); if (d) d.classList.add('on');
-    closeSheet(); closeMenu(); hideBanner(); tasks = tasks.filter(function (t) { return t.id < 10; }); while (stack.length > 1) pop(); who = { A: 1 }; tasks.forEach(function (t) { if (t.id === 1 || t.id === 2) { t.done = 0; t.due = 'late'; t.when = t.id === 1 ? 'heute 16:17' : 'heute 16:30'; } }); refresh();
+    closeSheet(); closeMenu(); hideBanner(); tasks = tasks.filter(function (t) { return t.id < 20; }); live.length = 0; live.push({ id: 10, acc: 432, t0: Date.now(), paused: false }); renderLive(); while (stack.length > 1) pop(); who = { A: 1 }; tasks.forEach(function (t) { if (t.id === 1 || t.id === 2) { t.done = 0; t.due = 'late'; t.when = t.id === 1 ? 'heute 16:17' : 'heute 16:30'; } }); refresh();
     var sc = stack[0].querySelector('.scroll'); sc.scrollTo({ top: 0, behavior: 'smooth' });
     var steps = [
       [500, function () { peekRow(2); }],
+      [1300, function () { var b = document.querySelector('[data-lpause]'); if (b) b.click(); }],
+      [1900, function () { var b = document.querySelector('[data-lpause]'); if (b) b.click(); }],
       [2400, function () { var r = document.querySelector('.row[data-id="1"]'); if (r) finish(1, r); }],
       [5000, function () { openTask(byId(3)); }],
       [8000, function () { closeSheet(); }],
@@ -790,6 +862,8 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     if (e.target.closest('[data-later]')) { t.when = 'morgen ' + (t.when.split(' ')[1] || '09:00'); t.due = 'week'; refresh(); openTask(t); }
     if (e.target.closest('[data-reopen]')) { t.done = 0; t.due = t.prev || 'week'; refresh(); openTask(t); }
     if (e.target.closest('[data-poke]')) toast(P[t.who[0]].n + ' wurde gestupst');
+    if (e.target.closest('[data-start]')) { startLive(t.id); openTask(t); }
+    if (e.target.closest('[data-stop]')) { stopLive(t.id); openTask(t); }
   });
   if (desk()) { var f0 = tasks[0]; wait(300, function () { openTask(f0); }); }
 })();

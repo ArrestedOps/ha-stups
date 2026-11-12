@@ -69,7 +69,7 @@ Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
 
 ## Board-Zuordnung in der Aufgabenliste
 
-- Jede Zeile nennt ihr Board als schlichten Text am Ende der Meta-Zeile (grau, ohne Punkt und ohne farbigen Haken-Kreis; Farbkreise wirkten zu verspielt).
+- Jede Zeile nennt ihr Board am Ende der Meta-Zeile: Farbpunkt plus Boardname in Grau. Der Haken-Kreis links bleibt neutral (ein farbiger Kreis wirkte zu verspielt).
 - In der Boardansicht und beim Gruppieren nach Board entfällt der Name, weil der Kopf das Board schon nennt.
-- Neu: Schaltfläche „Gruppieren“ neben dem Personen-Filter. „Nach Fälligkeit“ (Standard) oder „Nach Board“ mit Boardnamen als Überschrift.
+- Neu: Schaltfläche „Gruppieren“ neben dem Personen-Filter. „Nach Fälligkeit“ (Standard) oder „Nach Board“ mit Farbpunkt und Boardname als Überschrift.
 - Die Texte der Stups-Schnellantworten sind mittig.

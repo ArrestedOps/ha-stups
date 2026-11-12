@@ -596,7 +596,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     if (t.rep) s += '<span aria-label="wiederholt sich">' + I('repeat') + '</span>';
     if (t.hi) s += '<span class="hi">' + I('flag') + 'Hoch</span>';
     if (nudgedToMe(t)) s += '<span class="stp">' + I('hand') + t.nudges.map(function (n) { return P[n.from].n; }).join(' und ') + ' stupst dich</span>'; else if (t.sent && t.sent.length && !t.done) s += '<span class="stpm">' + I('hand') + 'Du hast ' + t.sent.map(function (n) { return P[n.to].n; }).join(' und ') + ' gestupst</span>';
-    if (t.board) s += '<span class="bchip">' + t.board + '</span>';
+    if (t.board) s += '<span class="bchip"><i style="background:' + (BCOL[t.board] || '#8e8e93') + '"></i>' + t.board + '</span>';
     if (t.wacht) s += '<span class="badge">' + I('eye') + 'Wächter</span>';
     if (isLive(t.id) && !t.done) s += '<span class="lvb"><i></i><span data-lv="' + t.id + '" class="num">' + fmt(elapsed(liveOf(t.id))) + '</span></span>';
     return s;
@@ -611,7 +611,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   var secIdx = 0;
   function section(title, list, cls, col) {
     if (!list.length) return '';
-    return '<section class="sec ' + (cls || '') + '" style="--i:' + (secIdx++) + '"><h2><em class="ttl">' + title + '</em><span class="num">' + list.length + '</span></h2><div class="group" role="list">' + list.map(rowHtml).join('') + '</div></section>';
+    return '<section class="sec ' + (cls || '') + '" style="--i:' + (secIdx++) + '"><h2><em class="ttl">' + (col ? '<i class="gdot" style="background:' + col + '"></i>' : '') + title + '</em><span class="num">' + list.length + '</span></h2><div class="group" role="list">' + list.map(rowHtml).join('') + '</div></section>';
   }
   function listHtml(v) {
     var L = tasks.filter(vis), out = ''; secIdx = 0;

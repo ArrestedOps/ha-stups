@@ -4,8 +4,9 @@ import { fileURLToPath } from 'node:url';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { apiRoutes } from '../src/api.js';
-import { visibleChanges, boardOfRoute } from '../src/api/board-guard.js';
+import { visibleChanges, boardOfRoute, registerBoardGuard } from '../src/api/board-guard.js';
 import { openDb } from '../src/db.js';
+import { AppError } from '../src/errors.js';
 import { createEventBus } from '../src/events.js';
 import { ingressAuth } from '../src/ingress.js';
 import { createSensors } from '../src/sensors.js';
@@ -75,6 +76,13 @@ describe('canSeeBoard: die eine Regel', () => {
     expect([ids.anna, ids.ben, ids.chef, ids.cleo, null].map((w) => store.canSeeBoard(w, priv.board))).toEqual([true, false, false, false, false]);
     expect([ids.anna, ids.ben, ids.chef, ids.cleo, null].map((w) => store.canSeeBoard(w, sel.board))).toEqual([true, false, false, true, false]);
     expect(store.canSeeBoard(ids.anna, 'gibt-es-nicht')).toBe(false);
+  });
+
+  it('wer ein Board sieht: Besitzer und Mitglieder in Reihenfolge der Personenliste, ein unbekanntes Board sieht niemand', () => {
+    expect(store.boardPeopleIds(pub.board)).toEqual([ids.anna, ids.ben, ids.chef, ids.cleo]);
+    expect(store.boardPeopleIds(priv.board)).toEqual([ids.anna]);
+    expect(store.boardPeopleIds(sel.board)).toEqual([ids.anna, ids.cleo]);
+    expect(store.boardPeopleIds('gibt-es-nicht')).toEqual([]);
   });
 
   it('wer aus der Liste der Personen entfernt ist, sieht nur noch Boards für alle', () => {
@@ -346,7 +354,9 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
     expect((await call(chef, 'GET', `/api/boards/${priv.board}`)).status).toBe(404); // auch jetzt kein Blick hinein
     expect((await call(ben, 'DELETE', `/api/admin/orphan-boards/${priv.board}`)).status).toBe(403);
     expect((await call(chef, 'DELETE', `/api/admin/orphan-boards/${priv.board}`)).status).toBe(204);
-    expect((await call(chef, 'DELETE', `/api/admin/orphan-boards/${pub.board}`)).status).toBe(404); // nur Boards ohne Besitzer
+    const notOrphan = await call(chef, 'DELETE', `/api/admin/orphan-boards/${pub.board}`);
+    expect(notOrphan.status).toBe(404); // nur Boards ohne Besitzer
+    expect(notOrphan.body.error).toBe('Board nicht gefunden');
     expect(((await call(chef, 'GET', '/api/admin/orphan-boards')).body as unknown[]).length).toBe(1);
   });
 });
@@ -423,5 +433,91 @@ describe('Die Tür kennt jede Route mit Kennung', () => {
       const target = boardOfRoute(store, { routeOptions: { url }, params: { id: 'x', type: 'card' } } as never);
       expect(target, r).not.toBeNull();
     }
+  });
+});
+
+describe('Die Tür im Einzelnen: Ziel und Meldung je Route', () => {
+  const route = (url: string, params: Record<string, string> = { id: 'x' }) => boardOfRoute(store, { routeOptions: { url }, params } as never);
+
+  it('jede Art von Route führt zum Board dahinter und nennt im 404, was fehlt', () => {
+    const checklist = store.addChecklistItem(priv.card, 'eins').id;
+    const link = store.addLink(priv.card, { url: 'https://example.org' } as never).id;
+    const comment = store.addComment(priv.card, ids.anna, 'Hallo').id;
+    const completion = store.completeCard(store.createCard(priv.board, { columnId: priv.col, title: 'Fertig' }, ids.anna).id, { by: ids.anna, source: 'app' });
+    const category = store.addCategory(priv.board, { name: 'Küche', color: '#ff0000' }).id;
+    store.addAttachment(priv.card, { id: 'att-1', filename: 'a.png', mime: 'image/png', size: 3, file: 'f.png', thumb: 'f-t.png' }, ids.anna);
+    store.deleteCard(sel.card);
+    const card = 'Karte nicht gefunden';
+    expect(route('/api/boards/:id', { id: priv.board })).toEqual({ board: priv.board, what: 'Board nicht gefunden', archived: false });
+    expect(route('/api/boards/:id/cards', { id: priv.board })).toEqual({ board: priv.board, what: 'Board nicht gefunden', archived: false });
+    expect(route('/api/boards/:id/unarchive', { id: priv.board })).toEqual({ board: priv.board, what: 'Board nicht gefunden', archived: true });
+    expect(route('/api/columns/:id', { id: priv.col })).toEqual({ board: priv.board, what: 'Spalte nicht gefunden' });
+    expect(route('/api/categories/:id', { id: category })).toEqual({ board: priv.board, what: 'Kategorie nicht gefunden' });
+    expect(route('/api/cards/:id/move', { id: priv.card })).toEqual({ board: priv.board, what: card });
+    expect(route('/api/checklist/:id', { id: checklist })).toEqual({ board: priv.board, what: card });
+    expect(route('/api/links/:id', { id: link })).toEqual({ board: priv.board, what: card });
+    expect(route('/api/comments/:id', { id: comment })).toEqual({ board: priv.board, what: card });
+    expect(route('/api/completions/:id/undo', { id: completion.completionId! })).toEqual({ board: priv.board, what: card });
+    expect(route('/api/attachments/:id/thumb', { id: 'att-1' })).toEqual({ board: priv.board, what: 'Anhang nicht gefunden' });
+    expect(route('/api/trash/:type/:id/restore', { type: 'card', id: sel.card })).toEqual({ board: sel.board, what: 'Nicht im Papierkorb' });
+  });
+
+  it('was es nicht gibt, hat kein Board (die Route antwortet selbst); eine Route ohne Kennung gehört keinem Board', () => {
+    expect(route('/api/cards/:id', { id: 'gibt-es-nicht' })).toMatchObject({ board: null });
+    expect(route('/api/columns/:id', { id: 'gibt-es-nicht' })).toMatchObject({ board: null });
+    expect(route('/api/attachments/:id', { id: 'gibt-es-nicht' })).toMatchObject({ board: null, what: 'Anhang nicht gefunden' });
+    expect(route('/api/trash/:type/:id', { type: 'unbekannt', id: priv.card })).toMatchObject({ board: null });
+    expect(route('/api/trash/:type/:id', { id: priv.card })).toMatchObject({ board: null });
+    expect(route('/api/inbox', {})).toBeNull();
+    expect(boardOfRoute(store, { routeOptions: {}, params: {} } as never)).toBeNull();
+    expect(boardOfRoute(store, { routeOptions: { url: '/api/boards/:id' }, params: {} } as never)).toEqual({ board: '', what: 'Board nicht gefunden', archived: false });
+  });
+
+  it('der 404 an der Tür trägt die Meldung des Ziels', async () => {
+    const res = await call(ben, 'GET', `/api/boards/${priv.board}`);
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Board nicht gefunden');
+    expect((await call(ben, 'GET', `/api/cards/${priv.card}`)).body.error).toBe('Karte nicht gefunden');
+    expect((await call(ben, 'PATCH', `/api/columns/${priv.col}`)).body.error).toBe('Spalte nicht gefunden');
+  });
+
+  it('Wiederherstellen aus dem Archiv: es zählt nur die Sichtbarkeit; ein archiviertes Board ist sonst für alle verborgen', async () => {
+    store.archiveBoard(priv.board, ids.anna);
+    expect((await call(ben, 'POST', `/api/boards/${priv.board}/unarchive`)).status).toBe(404);
+    expect((await call(chef, 'POST', `/api/boards/${priv.board}/unarchive`)).status).toBe(404);
+    // die Besitzerin darf es zurückholen, obwohl das Archiv es sonst verbirgt
+    expect((await call(anna, 'POST', `/api/boards/${priv.board}/unarchive`)).status).toBe(200);
+    expect((await call(anna, 'GET', `/api/boards/${priv.board}`)).status).toBe(200);
+    // alle anderen Routen des Boards zählen das Archiv mit: Die Tür weist ab, bevor die Route antwortet
+    store.archiveBoard(sel.board, ids.anna);
+    const behind = await call(anna, 'GET', `/api/boards/${sel.board}`);
+    expect(behind.status).toBe(404);
+    expect(behind.body.error).toBe('Board nicht gefunden');
+  });
+
+  it('ohne bekannte Person (kein Nutzer an der Anfrage) gilt „niemand Bestimmtes": nur Boards für alle', async () => {
+    store.archiveBoard(pub.board, ids.anna);
+    const mini = Fastify();
+    mini.setErrorHandler((err: Error, _req, reply) => reply.code(err instanceof AppError ? err.status : 500).send({ error: err.message }));
+    await mini.register(ingressAuth, { enforceIp: false });
+    registerBoardGuard(mini, store);
+    mini.get('/api/boards/:id', async () => ({ ok: true }));
+    mini.post('/api/boards/:id/unarchive', async () => ({ ok: true }));
+    await mini.ready();
+    const ask = async (method: 'GET' | 'POST', url: string) => {
+      const res = await mini.inject({ method, url, headers: ben as Record<string, string> });
+      return { status: res.statusCode, body: res.json() as { error?: string } };
+    };
+    expect((await ask('GET', `/api/boards/${sel.board}`)).status).toBe(404);
+    expect((await ask('GET', `/api/boards/${priv.board}`)).body.error).toBe('Board nicht gefunden');
+    expect((await ask('GET', `/api/boards/${priv.board}`)).status).toBe(404);
+    expect((await ask('POST', `/api/boards/${priv.board}/unarchive`)).status).toBe(404);
+    // Boards für alle: der Zugriff geht durch (das archivierte nur zum Wiederherstellen)
+    store.unarchiveBoard(pub.board);
+    expect((await ask('GET', `/api/boards/${pub.board}`)).status).toBe(200);
+    store.archiveBoard(pub.board, ids.anna);
+    expect((await ask('GET', `/api/boards/${pub.board}`)).status).toBe(404);
+    expect((await ask('POST', `/api/boards/${pub.board}/unarchive`)).status).toBe(200);
+    await mini.close();
   });
 });

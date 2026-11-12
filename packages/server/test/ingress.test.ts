@@ -47,12 +47,14 @@ describe('ingressAuth', () => {
     const app = await build();
     const res = await app.inject({ url: '/whoami', headers, remoteAddress: '192.168.1.50' });
     expect(res.statusCode).toBe(403);
+    expect(res.json().error).toBe('Nur über Home Assistant Ingress erreichbar');
   });
 
   it('rejects requests without a user id with 401', async () => {
     const app = await build();
     const res = await app.inject({ url: '/whoami', remoteAddress: '172.30.32.2' });
     expect(res.statusCode).toBe(401);
+    expect(res.json().error).toBe('Kein Home-Assistant-Nutzer erkannt');
   });
 
   it('can skip the IP check for local development', async () => {
@@ -70,7 +72,7 @@ describe('ingressAuth', () => {
     dev.get('/whoami', async (req) => req.principal);
     const res = await dev.inject({ url: '/whoami', remoteAddress: '127.0.0.1' });
     expect(res.statusCode).toBe(200);
-    expect(res.json().name).toBe('rene');
+    expect(res.json()).toEqual({ id: 'dev-rene', name: 'rene', displayName: 'René', ingressPath: '' });
   });
 
   it('der Entwicklungsnutzer gilt nie, wenn die IP-Prüfung aktiv ist', async () => {

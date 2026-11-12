@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { apiRoutes } from '../src/api.js';
 import { parseOptions } from '../src/config.js';
 import { openDb } from '../src/db.js';
+import { ConflictError } from '../src/errors.js';
 import { ingressAuth } from '../src/ingress.js';
 import { createNotifier, type Notifier } from '../src/notifications.js';
 import type { PushGateway, PushMessage } from '../src/push.js';
@@ -17,6 +18,7 @@ const oma = as('ha-oma', 'Oma'); // Mitglied, aber nicht gewählt
 const admin = as('ha-admin', 'Admin');
 
 let now: Date;
+let db: ReturnType<typeof openDb>;
 let store: Store;
 let app: FastifyInstance;
 let notifier: Notifier;
@@ -47,7 +49,8 @@ beforeEach(async () => {
   at('2026-11-04T09:00:00Z');
   sent = [];
   cleared = [];
-  store = createStore(openDb(':memory:'), { now: () => now, timeZone: () => TZ });
+  db = openDb(':memory:');
+  store = createStore(db, { now: () => now, timeZone: () => TZ });
   miaId = store.addPerson({ haUserId: 'ha-mia', name: 'Mia' }).id;
   benId = store.addPerson({ haUserId: 'ha-ben', name: 'Ben' }).id;
   omaId = store.addPerson({ haUserId: 'ha-oma', name: 'Oma' }).id;
@@ -86,6 +89,25 @@ describe('Wann braucht „Erledigt" eine Bestätigung', () => {
     expect(store.needsConfirmation(cardId, miaId)).toBe(false);
   });
 
+  it('unbekannte Karte, gelöschte Karte oder unbekannte Person: nie', () => {
+    expect(store.needsConfirmation('gibt-es-nicht', miaId)).toBe(false);
+    expect(store.needsConfirmation(cardId, 'gibt-es-nicht')).toBe(false);
+    db.prepare('update cards set deleted_at = ? where id = ?').run(now.toISOString(), cardId);
+    expect(store.needsConfirmation(cardId, miaId)).toBe(false);
+  });
+
+  it('ein Erwachsener braucht auch bei ausdrücklich eingeschalteter Karte keine Bestätigung', () => {
+    store.updateCard(cardId, { confirm: 'on', assigneeIds: [benId] });
+    expect(store.needsConfirmation(cardId, benId)).toBe(false);
+  });
+
+  it('wer kein Eintrag der Personenliste mehr ist, braucht keine Bestätigung', () => {
+    store.updateCard(cardId, { confirm: 'on' });
+    expect(store.needsConfirmation(cardId, miaId)).toBe(true);
+    db.prepare('update users set is_person = 0 where id = ?').run(miaId);
+    expect(store.needsConfirmation(cardId, miaId)).toBe(false);
+  });
+
   it('eine schon erledigte Karte braucht nichts mehr', () => {
     store.completeCard(cardId, { by: benId, source: 'app' });
     expect(store.needsConfirmation(cardId, miaId)).toBe(false);
@@ -117,6 +139,19 @@ describe('Wer bestätigen darf', () => {
     const lena = store.addPerson({ haUserId: 'ha-lena', name: 'Lena' }).id;
     store.setChild(lena, { isChild: true });
     expect(store.confirmerIds(miaId)).not.toContain(lena);
+  });
+
+  it('das Kind steht nie unter den gewählten Bestätigern, auch nicht als Altlast in der Datenbank', () => {
+    db.prepare('insert into child_confirmers (child_id, user_id) values (?, ?)').run(miaId, miaId);
+    expect(store.confirmerIds(miaId)).toEqual([benId]);
+    db.prepare('delete from child_confirmers where child_id = ? and user_id = ?').run(miaId, benId);
+    // nur das Kind gewählt: gilt als Auswahl, es bleibt niemand übrig
+    expect(store.confirmerIds(miaId)).toEqual([]);
+  });
+
+  it('mayConfirm: ohne bekanntes Kind nur mit Administratorrecht', () => {
+    expect(store.mayConfirm(benId, null, false)).toBe(false);
+    expect(store.mayConfirm(benId, null, true)).toBe(true);
   });
 });
 
@@ -231,6 +266,25 @@ describe('Bestätigen und „Nochmal" (Schnittstelle)', () => {
     const res = await post(ben, `/api/cards/${rec}/confirm`);
     expect(res.json().nextCardId).toEqual(expect.any(String));
     expect(store.getCard(res.json().nextCardId).confirmRequestedAt).toBeNull();
+  });
+});
+
+describe('Antwort direkt im Store', () => {
+  it('ohne Anfrage: Konflikt mit Meldung, nichts wird erledigt', () => {
+    expect(() => store.answerConfirmation(cardId, 'confirm', 'app')).toThrow(ConflictError);
+    expect(() => store.answerConfirmation(cardId, 'reject', 'app')).toThrow('Es wartet nichts auf Bestätigung');
+    expect(state().completedAt).toBeNull();
+    expect(store.listCompletions(cardId)).toEqual([]);
+  });
+
+  it('„Nochmal“ zählt die Karte als geändert (Version steigt, Anfrage weg)', () => {
+    store.requestConfirmation(cardId, miaId);
+    const before = state().version;
+    const res = store.answerConfirmation(cardId, 'reject', 'app');
+    expect(res.childId).toBe(miaId);
+    expect(res.result).toBeNull();
+    expect(res.card.confirmRequestedAt).toBeNull();
+    expect(state().version).toBeGreaterThan(before);
   });
 });
 

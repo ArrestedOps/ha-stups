@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
-import { identityAuth, type Identity } from '../src/identity.js';
+import { identityAuth, requestPath, type Identity } from '../src/identity.js';
 import { createStaticDirectory } from '../src/directory.js';
 
 async function build(identity: Identity) {
@@ -42,6 +42,27 @@ describe('identityAuth (Port)', () => {
     });
     expect((await app.inject({ url: '/healthz' })).statusCode).toBe(200);
     expect(asked).toBe(0);
+  });
+});
+
+describe('requestPath', () => {
+  const encode = (s: string, times: number) => Array.from({ length: times }).reduce<string>((acc) => encodeURIComponent(acc), s);
+
+  it('schneidet die Abfrage ab und decodiert den Pfad', () => {
+    expect(requestPath('/api/boards?x=1&y=%2F')).toBe('/api/boards');
+    expect(requestPath('/%61pi/boards')).toBe('/api/boards');
+    expect(requestPath('/healthz')).toBe('/healthz');
+  });
+
+  it('decodiert mehrfach codierte Pfade bis zum festen Stand, höchstens vier Stufen', () => {
+    expect(requestPath(`/${encode('a b', 4)}`)).toBe('/a b');
+    // fünf Stufen: nach vier Durchgängen bleibt eine Stufe übrig
+    expect(requestPath(`/${encode('a b', 5)}`)).toBe(`/${encode('a b', 1)}`);
+  });
+
+  it('eine ungültige Codierung ergibt null', () => {
+    expect(requestPath('/api/%E0%A4%A')).toBeNull();
+    expect(requestPath('/%25E0%25A4%25A')).toBeNull();
   });
 });
 

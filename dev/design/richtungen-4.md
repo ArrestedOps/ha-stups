@@ -52,3 +52,10 @@ Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
 - **Kalender:** Tag, Woche (Standard), Monat, Liste. Woche und Tag als Zeitleiste mit Jetzt-Linie, überlappende Einträge nebeneinander, Antippen einer freien Zeit legt eine Aufgabe mit dieser Zeit an. Am Computer volle Breite.
 - **Wächter:** Suche, Bereiche wie in der echten App (Mit Problem, Wartet auf jemanden, Läuft gerade, Kommt bald), danach Kategorien. Große Kategorien (über 8) öffnen eine eigene Seite: Zusammenfassung (niedrig, bald leer, in Ordnung), Suche, Umschalter Kritisch, Räume, Alle. Kleine klappen inline auf. „Gefunden“ als Blatt mit Mehrfachauswahl und „Alle einrichten“.
 - **Wächter anlegen** wie in der echten App: Vorlage, dann Wenn (Entität suchen, Bedingung Unter/Über/Zustand, länger als, Verlauf, Probelauf), Dann (Titel, Symbol, Board, Spalte, Priorität, Fälligkeit, Kategorien, Vorschau), Wer (Zuweisung, wer kommt infrage, nur wer zu Hause ist, Rückfall), Feinschliff (erledigt sich selbst, Stupsen, N-tes Mal, Sperrzeit, keine zweite Karte, Fairness, Name, Kategorie, Beschreibung).
+
+## Feinschliff nach Rückmeldung
+
+- Kein „+“ oben rechts mehr bei Boards, Kalender und Wächter: Das „+“ in der Leiste ist die einzige Stelle für „Neu“. Boards haben am Listenende die Zeile „Neues Board“, Wächter die Schaltfläche „Neuen Wächter anlegen“.
+- Wächter: Jede Kategorie öffnet eine eigene Seite, einheitlich wie bei Batterien (große Kategorien mit Kritisch/Räume/Alle, kleine mit Zusammenfassung und Liste). Keine aufklappenden Gruppen mehr. Bei einer Suche kommt eine flache Trefferliste.
+- Sprache: „Karte“ heißt überall „Aufgabe“.
+- Priorität: Eigene Segmentreihe mit größerer Höhe, Flagge und Text in einer Zeile, Farbe je Stufe (grau, orange, rot).

@@ -69,7 +69,7 @@ Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
 
 ## Board-Zuordnung in der Aufgabenliste
 
-- Jede Zeile trägt die Boardfarbe: der Haken-Kreis ist in der Farbe des Boards umrandet (wie bei den Listen in iOS Erinnerungen), in der Zeile steht zusätzlich ein Farbpunkt mit dem Boardnamen. Die Farben sind dieselben wie in der Boards-Liste, im Kalender und in den Zeitleisten.
-- In der Boardansicht und beim Gruppieren nach Board entfällt der Chip, weil der Kopf das Board schon nennt.
-- Neu: Schaltfläche „Gruppieren“ neben dem Personen-Filter. „Nach Fälligkeit“ (Standard) oder „Nach Board“ mit farbigen Überschriften.
+- Jede Zeile nennt ihr Board als schlichten Text am Ende der Meta-Zeile (grau, ohne Punkt und ohne farbigen Haken-Kreis; Farbkreise wirkten zu verspielt).
+- In der Boardansicht und beim Gruppieren nach Board entfällt der Name, weil der Kopf das Board schon nennt.
+- Neu: Schaltfläche „Gruppieren“ neben dem Personen-Filter. „Nach Fälligkeit“ (Standard) oder „Nach Board“ mit Boardnamen als Überschrift.
 - Die Texte der Stups-Schnellantworten sind mittig.

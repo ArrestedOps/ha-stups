@@ -1,0 +1,13 @@
+{
+  "name": "stups",
+  "description": "Claude-Code-Plugins dieses Repositorys",
+  "owner": { "name": "ha-stups" },
+  "plugins": [
+    {
+      "name": "stups-lsp",
+      "source": "./stups-lsp",
+      "description": "Sprachserver für TypeScript und Svelte aus den devDependencies des Repos",
+      "version": "1.0.0"
+    }
+  ]
+}

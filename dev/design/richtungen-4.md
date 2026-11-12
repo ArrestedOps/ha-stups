@@ -83,3 +83,8 @@ Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
 - **Suche** in Aufgaben funktioniert: Titel, Board, Person, mit Leeren-Knopf. Stups-Karte und Kacheln weichen währenddessen.
 - **Wächter:** „Neuer Wächter“ steht als Zeile unter den Kategorien (wie „Neues Board“), nicht mehr als große Taste über der Liste.
 - Kleinere Texte mindestens 13 Punkt, Platzhalter besser lesbar, Kalender-Wochentage lesbarer.
+
+## Kalender am Handy, Spur nach dem Stups
+
+- **Kalender:** Neue Ansicht „3 Tage“ ist am Handy der Standard (am Computer bleibt die Woche). Segmente: Tag, 3 Tage, Woche, Monat, Liste. In Tag, 3 Tage, Woche und Monat wischt man nach links und rechts zum Weiterblättern, „Heute“ springt zurück. Antippen eines Tages öffnet die Tagesansicht.
+- **Stups beantworten:** Die Karte verschwindet nach der Antwort, damit die Liste ruhig bleibt. Die Aufgabe behält eine leise Spur („Mach ich · Mia weiß Bescheid“ oder „Stups verschoben · Erinnerung in 1 Std.“), und die Rückmeldung bietet „Rückgängig“ an.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { toLocal } from '../src/recurrence.js';
-import { DEFAULT_QUIET, quietEnd, type QuietWindow } from '../src/quiet.js';
+import { DEFAULT_QUIET, isHm, quietEnd, type QuietWindow } from '../src/quiet.js';
 
 const TZ = 'Europe/Berlin';
 const night: QuietWindow = { start: '22:00', end: '07:00', off: false };
@@ -8,6 +8,14 @@ const hm = (ms: number) => {
   const l = toLocal(ms, TZ);
   return `${String(l.d).padStart(2, '0')}.${String(l.m).padStart(2, '0')}. ${String(l.h).padStart(2, '0')}:${String(l.mi).padStart(2, '0')}`;
 };
+
+describe('isHm', () => {
+  it('nimmt nur Uhrzeiten HH:MM als Text', () => {
+    for (const ok of ['00:00', '09:30', '19:59', '23:59']) expect(isHm(ok), ok).toBe(true);
+    for (const bad of ['24:00', '7:00', '12:60', '12:5', '1200', ' 12:00', '12:00 ']) expect(isHm(bad), bad).toBe(false);
+    for (const bad of [null, undefined, 1200, ['09:00'], { toString: () => '09:00' }]) expect(isHm(bad), String(bad)).toBe(false);
+  });
+});
 
 describe('quietEnd (Ende der Ruhezeit, wenn jetzt Ruhezeit ist)', () => {
   it('Vorgabe ist 22:00 bis 07:00, eingeschaltet', () => {
@@ -28,6 +36,15 @@ describe('quietEnd (Ende der Ruhezeit, wenn jetzt Ruhezeit ist)', () => {
     expect(quietEnd(Date.parse('2026-11-04T21:00:00Z'), TZ, night)).not.toBeNull(); // 22:00
     expect(quietEnd(Date.parse('2026-11-05T05:59:00Z'), TZ, night)).not.toBeNull(); // 06:59
     expect(quietEnd(Date.parse('2026-11-05T06:00:00Z'), TZ, night)).toBeNull(); // 07:00
+  });
+
+  it('genau zu Beginn: Ende ist morgen, nicht schon heute', () => {
+    expect(hm(quietEnd(Date.parse('2026-11-04T21:00:00Z'), TZ, night)!)).toBe('05.11. 07:00'); // 22:00
+  });
+
+  it('Fenster innerhalb eines Tages: genau zu Beginn gilt Ruhezeit', () => {
+    const lunch: QuietWindow = { start: '13:00', end: '14:30', off: false };
+    expect(hm(quietEnd(Date.parse('2026-11-04T12:00:00Z'), TZ, lunch)!)).toBe('04.11. 14:30'); // 13:00
   });
 
   it('tagsüber keine Ruhezeit', () => {

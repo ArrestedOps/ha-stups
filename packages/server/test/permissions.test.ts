@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createAccess } from '../src/access.js';
 import { openDb } from '../src/db.js';
-import { ConflictError, NotFoundError, ValidationError } from '../src/errors.js';
-import { cleanPermissions, hasPermission, PERMISSIONS } from '../src/permissions.js';
+import type { FastifyRequest } from 'fastify';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../src/errors.js';
+import { cleanPermissions, hasPermission, isPermission, PERMISSIONS, requirePermission } from '../src/permissions.js';
 import { createStore, type Store } from '../src/store.js';
 
 describe('Liste der Berechtigungen', () => {
@@ -22,6 +23,27 @@ describe('Liste der Berechtigungen', () => {
     expect(() => cleanPermissions('watchers')).toThrow(ValidationError);
     expect(() => cleanPermissions(null)).toThrow(ValidationError);
     expect(() => cleanPermissions({ watchers: true })).toThrow(ValidationError);
+  });
+
+  it('cleanPermissions: die Meldungen sagen, was falsch ist', () => {
+    expect(() => cleanPermissions('watchers')).toThrow('Die Berechtigungen müssen eine Liste sein');
+    expect(() => cleanPermissions(['watchers', 'panelPath'])).toThrow('Unbekannte Berechtigung: panelPath');
+    expect(() => cleanPermissions([1])).toThrow('Unbekannte Berechtigung: 1');
+  });
+
+  it('isPermission: nur die bekannten Schlüssel', () => {
+    expect(isPermission('watchers')).toBe(true);
+    expect(isPermission('admin')).toBe(false);
+    expect(isPermission(1)).toBe(false);
+    expect(isPermission(null)).toBe(false);
+  });
+
+  it('requirePermission: 403 mit Meldung ohne das Recht, sonst still', () => {
+    const req = (permissions: string[]) => ({ access: { permissions } }) as unknown as FastifyRequest;
+    expect(() => requirePermission(req(['house']), 'watchers')).toThrow(ForbiddenError);
+    expect(() => requirePermission(req([]), 'watchers')).toThrow('Dafür fehlt dir die Berechtigung');
+    expect(() => requirePermission({} as FastifyRequest, 'watchers')).toThrow(ForbiddenError);
+    expect(() => requirePermission(req(['watchers']), 'watchers')).not.toThrow();
   });
 
   it('hasPermission: ohne Zugriffsangabe nie', () => {

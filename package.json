@@ -10,6 +10,7 @@
   },
   "scripts": {
     "test": "pnpm -r test",
+    "mutation": "pnpm --filter @stups/server mutation",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "e2e": "playwright test -c e2e/playwright.config.ts",

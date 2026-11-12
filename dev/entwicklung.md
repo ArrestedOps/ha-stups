@@ -71,6 +71,7 @@ pnpm typecheck     # TypeScript und svelte-check
 pnpm test          # Server- und Oberflächen-Tests
 pnpm build         # baut die Oberfläche nach packages/server/web
 pnpm e2e           # Browser-Tests (einmal: pnpm exec playwright install webkit)
+pnpm mutation      # Mutationstests des Servers (dauert, Bericht: packages/server/reports/mutation/mutation.html)
 node e2e/screenshots.mjs   # Screenshots nach docs/images (nach pnpm build)
 ```
 
@@ -119,6 +120,8 @@ Die Teile sind Funktionen `createX(c: Ctx, late)`. Rufen sie Funktionen anderer 
 **Absicherung:** `test/shape.test.ts` vergleicht die Namen aller Store-Methoden und alle Routen (mit allen Teilen, die nur mit bestimmten Abhängigkeiten existieren) mit `test/fixtures/*.json`. Eine Methode oder Route verschwindet oder kommt dazu, ohne dass jemand es merkt, geht damit nicht mehr. Bewusst ändern: `UPDATE_SHAPE=1 pnpm test` und die Dateien mitcommitten.
 
 **Importzyklen:** `test/import-cycles.test.ts` (Server-Tests) liest die Importe unter `packages/server/src` und `packages/web/src` und verbietet Zyklen zur Laufzeit. Typ-Importe (`import type`) und ein spätes `import()` zählen nicht: Die Typ-Zyklen über `store/internals.ts` und `watchers/parts.ts` sind gewollt. Meldet der Test einen Zyklus, zieht die Funktion um, die die Rückkante braucht (Beispiele: `act` liegt bei `refresh` in `lib/store/load.ts`, `dayKeyOf` bei der Tagesrechnung in `lib/calendar.ts`); ein Wieder-Export versteckt ihn nur.
+
+**Mutationstests:** `pnpm mutation` (Stryker, `packages/server/stryker.config.mjs`) verändert den Quelltext an je einer Stelle und lässt die Tests laufen, die diese Stelle berühren. Bleiben sie grün, prüft kein Test die Stelle („überlebt“). Geprüft werden die Module unter `mutate` (Rechte, Sichtbarkeit, Anmeldung, Netzgrenze, Zeitrechnung); der Bericht `packages/server/reports/mutation/mutation.html` zeigt jede überlebende Stelle im Quelltext. Ein zweiter Lauf prüft nur Geändertes (`incremental.json` daneben). Der Lauf gehört nicht zur CI (er dauert rund eine halbe Stunde) und sperrt nichts; auf GitHub startet ihn der Workflow „Mutationstests“ von Hand. Ein überlebender Mutant ist ein Auftrag für einen Test mit echter Prüfung, kein Ziel von 100 %: Gleichwertige Mutanten (die das Verhalten nicht ändern) bleiben stehen.
 
 ### Sprachen (seit 1.14.0)
 

@@ -3,7 +3,7 @@ import { openDb } from '../src/db.js';
 import { createNotifier } from '../src/notifications.js';
 import { createHaNotifyPush } from '../src/push.js';
 import { parseOptions } from '../src/config.js';
-import { firstAt, nextAfter, parseReminder, schedule, usesClock, type ReminderSpec } from '../src/reminders.js';
+import { firstAt, firstUsesClock, nextAfter, parseReminder, repeatUsesClock, schedule, usesClock, type ReminderSpec } from '../src/reminders.js';
 import { createStore, type Store } from '../src/store.js';
 import { createWatcherData } from '../src/watcher-data.js';
 import { parseWatcher } from '../src/watcher-types.js';
@@ -52,6 +52,47 @@ describe('Zeitpunkte des Nachhakens', () => {
     for (const bad of [null, [], { afterMin: 4 }, { afterMin: 60, everyMin: 2 }, { afterMin: 60, everyMin: 60, max: 0 }, { afterMin: 60, everyMin: 60, max: 100 }, { afterMin: 1440, atTime: '25:00' }, { afterMin: 60, anchor: 'x' }, { afterMin: 600000 }]) {
       expect(() => parseReminder(bad), JSON.stringify(bad)).toThrow();
     }
+  });
+
+  it('Uhrzeit nur bei ganzen Tagen: erster Zeitpunkt', () => {
+    for (const afterMin of [1440, 2880, 10080]) expect(firstUsesClock({ afterMin }), String(afterMin)).toBe(true);
+    for (const afterMin of [0, 60, 1439, 1500]) expect(firstUsesClock({ afterMin }), String(afterMin)).toBe(false);
+  });
+
+  it('Uhrzeit nur bei ganzen Tagen: Wiederholungen', () => {
+    for (const everyMin of [1440, 2880, 10080]) expect(repeatUsesClock({ everyMin }), String(everyMin)).toBe(true);
+    for (const everyMin of [null, 0, 60, 1439, 1500]) expect(repeatUsesClock({ everyMin }), String(everyMin)).toBe(false);
+  });
+
+  it('usesClock: eine krumme Zeit bei sonst ganzen Tagen gibt der Uhrzeit keine Bedeutung', () => {
+    expect(usesClock({ afterMin: 1500, everyMin: 1500 })).toBe(false);
+    expect(usesClock({ afterMin: 60, everyMin: null })).toBe(false);
+  });
+
+  it('Eingabe: Obergrenze gilt einschließlich, mit und ohne eigene Grenze', () => {
+    expect(parseReminder({ afterMin: 525_600 }).afterMin).toBe(525_600);
+    expect(() => parseReminder({ afterMin: 525_601 })).toThrow('Die Zeit bis zum Nachhaken muss eine ganze Zahl von 5 bis 525600 sein');
+    expect(parseReminder({ afterMin: 1440 }, { maxMin: 1440 }).afterMin).toBe(1440);
+    expect(() => parseReminder({ afterMin: 1441 }, { maxMin: 1440 })).toThrow('von 5 bis 1440 sein');
+    expect(parseReminder({ afterMin: 60, everyMin: 60, max: 99 }).max).toBe(99);
+  });
+
+  it('Eingabe: Zahlen müssen ganz und vom Typ Zahl sein', () => {
+    expect(() => parseReminder({ afterMin: 60.5 })).toThrow('Die Zeit bis zum Nachhaken muss eine ganze Zahl');
+    expect(() => parseReminder({ afterMin: '60' })).toThrow('Die Zeit bis zum Nachhaken muss eine ganze Zahl');
+    expect(() => parseReminder({ afterMin: 60, everyMin: '60' })).toThrow('Der Abstand beim Nachhaken muss eine ganze Zahl von 5 bis 525600 sein');
+  });
+
+  it('Eingabe: „null“ bei Höchstzahl und Abstand heißt Standard bzw. nur einmal', () => {
+    expect(parseReminder({ afterMin: 60, everyMin: 60, max: null }).max).toBe(5);
+    expect(parseReminder({ afterMin: 60, everyMin: null, max: 7 })).toMatchObject({ everyMin: null, max: 1 });
+  });
+
+  it('Eingabe: Fehlermeldungen', () => {
+    for (const bad of [null, [], 'text', 5]) expect(() => parseReminder(bad), JSON.stringify(bad)).toThrow('Das Nachhaken ist ungültig');
+    expect(() => parseReminder({ afterMin: 60, anchor: 'x' })).toThrow('Das Nachhaken zählt ab Termin oder ab Anlegen');
+    expect(() => parseReminder({ afterMin: 60, everyMin: 60, max: 0 })).toThrow('Die Höchstzahl beim Nachhaken muss eine ganze Zahl von 1 bis 99 sein');
+    expect(() => parseReminder({ afterMin: 1440, atTime: '25:00' })).toThrow('Die Uhrzeit beim Nachhaken muss HH:MM sein');
   });
 });
 

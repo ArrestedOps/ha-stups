@@ -433,6 +433,22 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
 .fkb { position: absolute; left: 0; right: 0; bottom: 0; z-index: 100; height: 290px; padding: 10px 4px calc(8px + var(--sab)); display: grid; grid-template-rows: repeat(4, 1fr); gap: 10px; background: color-mix(in srgb, var(--label3) 38%, var(--bg)); backdrop-filter: blur(24px); transform: translateY(100%); transition: transform calc(.5s * var(--dur)) var(--spring); pointer-events: none; } .fkb.on { transform: none; } .fkb div { display: flex; justify-content: center; gap: 6px; } .fkb i { flex: 1; max-width: 34px; display: grid; place-items: center; border-radius: 6px; background: var(--card); font: 400 22px/1 var(--font); font-style: normal; box-shadow: 0 1px 0 rgba(0, 0, 0, .3); } .fkb i.w { max-width: 90px; font-size: 16px; background: color-mix(in srgb, var(--label3) 55%, var(--bg)); } .fkb i.sp { max-width: none; font-size: 16px; }
 .sfoot .bigbtn.soft2 { color: var(--tint) !important; }
 
+/* ---------- Stupse ---------- */
+.stups { position: relative; margin: 14px 16px 0; padding: 14px 14px 12px; border-radius: 22px; color: #fff; background: linear-gradient(140deg, #ff8a2b 0%, #f05400 55%, #d93f00 100%); box-shadow: 0 10px 28px rgba(240, 84, 0, .32); overflow: hidden; animation: stin calc(.9s * var(--dur)) var(--spring) backwards; transition: transform calc(.4s * var(--dur)) var(--spring), opacity calc(.3s * var(--dur)), height calc(.4s * var(--dur)) var(--spring), margin calc(.4s * var(--dur)), padding calc(.4s * var(--dur)); }
+.stups::before { content: ""; position: absolute; right: -40px; top: -50px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, .28), transparent 70%); pointer-events: none; }
+@keyframes stin { from { opacity: 0; transform: translateY(-14px) scale(.94); } }
+.stups.out { opacity: 0; transform: translateX(40px) scale(.96); } .stups.gone { height: 0 !important; margin-top: 0; padding-block: 0; opacity: 0; }
+.stups .sh { position: relative; display: flex; align-items: center; gap: 10px; } .stups .hand { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .22); flex: none; } .stups .hand svg { width: 22px; height: 22px; stroke-width: 2; transform-origin: 60% 90%; animation: wave calc(1.6s * var(--dur)) ease-in-out 3 calc(.6s * var(--dur)); }
+@keyframes wave { 0%, 60%, 100% { transform: rotate(0); } 10% { transform: rotate(-16deg); } 20% { transform: rotate(18deg); } 30% { transform: rotate(-14deg); } 40% { transform: rotate(14deg); } 50% { transform: rotate(-6deg); } }
+.stups .sh b { display: block; font: 700 18px/1.2 var(--font); letter-spacing: -0.01em; } .stups .sh span.when { font-size: 13px; opacity: .85; } .stups .sh .cnt2 { margin-left: auto; height: 24px; padding: 0 9px; border-radius: 12px; background: rgba(255, 255, 255, .24); font: 700 13px/24px var(--font); }
+.stups .sbub { position: relative; display: flex; align-items: flex-start; gap: 10px; width: 100%; margin-top: 12px; padding: 10px 12px; text-align: left; border-radius: 16px; background: rgba(255, 255, 255, .17); } .stups .sbub .av { box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); flex: none; width: 30px; height: 30px; font-size: 13px; } .stups .sbub b { display: block; font: 600 16px/1.25 var(--font); } .stups .sbub span.m { display: block; margin-top: 2px; font-size: 15px; opacity: .92; }
+.stups .sbtn { position: relative; display: flex; gap: 8px; margin-top: 10px; } .stups .sbtn button { flex: 1; height: 42px; border-radius: 21px; background: rgba(255, 255, 255, .2); color: #fff; font: 600 16px/1 var(--font); transition: transform calc(.3s * var(--dur)) var(--spring), background-color .2s; } .stups .sbtn button:active { transform: scale(.95); } .stups .sbtn .ok { background: #fff; color: #d14a00; }
+.stups .smore { position: relative; display: flex; align-items: center; gap: 4px; margin: 10px auto -2px; padding: 4px 10px; font: 600 14px/1 var(--font); opacity: .95; } .stups .smore svg { width: 9px; height: 14px; stroke-width: 2.6; transition: transform calc(.35s * var(--dur)) var(--spring); } .stups .smore[aria-expanded="true"] svg { transform: rotate(90deg); }
+.stups + .stups { margin-top: 8px; } .stups, .sheet .stups, .pane .stups { display: block; }
+.stups.mini { margin: 12px 16px 0; padding: 12px; border-radius: 18px; box-shadow: none; animation: none; } .stups.mini .hand { width: 30px; height: 30px; } .stups.mini .hand svg { width: 18px; height: 18px; } .stups.mini .sh b { font-size: 16px; }
+.row.nudged .rc { background: color-mix(in srgb, var(--tint-fill) 10%, var(--card)); box-shadow: inset 3px 0 0 var(--tint-fill); }
+.stp, .stpm { display: inline-flex; align-items: center; gap: 4px; } .stp { color: var(--tint); font-weight: 700; } .stp svg, .stpm svg { width: 13px; height: 13px; stroke-width: 2; flex: none; }
+.tbn { position: absolute; top: 3px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--red-fill); color: #fff; font: 700 11px/18px var(--round); text-align: center; box-shadow: 0 0 0 2px var(--mat, var(--bg)); animation: cnt calc(.6s * var(--dur)) var(--spring) backwards; } .tbn[hidden] { display: none; } .tb { position: relative; }
 /* ---------- Desktop: Split-Ansicht ---------- */
 .side, .pane { display: none; }
 @media (min-width: 900px) {
@@ -490,6 +506,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8.5 5.5v13M15.5 5.5v13" stroke-width="3.2"/></symbol>
     <symbol id="i-house" viewBox="0 0 24 24"><path d="M4 11.2 12 4l8 7.2V20H4Z"/><path d="M10 20v-5.5h4V20"/></symbol>
     <symbol id="i-gear" viewBox="0 0 24 24"><path d="M10.26 5.01 L10.66 2.49 L13.34 2.49 L13.74 5.01 L15.71 5.83 L17.78 4.33 L19.67 6.22 L18.17 8.29 L18.99 10.26 L21.51 10.66 L21.51 13.34 L18.99 13.74 L18.17 15.71 L19.67 17.78 L17.78 19.67 L15.71 18.17 L13.74 18.99 L13.34 21.51 L10.66 21.51 L10.26 18.99 L8.29 18.17 L6.22 19.67 L4.33 17.78 L5.83 15.71 L5.01 13.74 L2.49 13.34 L2.49 10.66 L5.01 10.26 L5.83 8.29 L4.33 6.22 L6.22 4.33 L8.29 5.83Z"/><circle cx="12" cy="12" r="3.1"/></symbol>
+    <symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></symbol>
     <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></symbol>
     <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
   </defs>
@@ -501,7 +518,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     <div class="screens" id="screens"></div>
     <section class="pane" id="pane" aria-label="Details"><div class="ph"><b>Keine Aufgabe gewählt</b>Wähle links eine Aufgabe, dann stehen hier ihre Einzelheiten.</div></section>
     <nav class="tabbar" id="tabbar" aria-label="Hauptbereiche"><span class="tbbub" id="tbbub"><i></i></span>
-      <button class="tb" data-tab="tasks" aria-current="page"><svg viewBox="0 0 24 24"><use href="#i-tasks"/></svg>Aufgaben</button>
+      <button class="tb" data-tab="tasks" aria-current="page"><svg viewBox="0 0 24 24"><use href="#i-tasks"/></svg>Aufgaben<span class="tbn" id="tbn" hidden></span></button>
       <button class="tb" data-tab="boards"><svg viewBox="0 0 24 24"><use href="#i-layers"/></svg>Boards</button>
       <button class="tbplus" id="tbplus" aria-label="Neue Aufgabe anlegen"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></button>
       <button class="tb" data-tab="cal"><svg viewBox="0 0 24 24"><use href="#i-cal"/></svg>Kalender</button>
@@ -571,12 +588,13 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     var s = '<span class="' + (t.due === 'late' && !t.done ? 'od' : '') + ' num">' + I('clock') + (t.done ? 'erledigt ' + t.when.replace('heute ', '') : t.when) + '</span>';
     if (t.rep) s += '<span aria-label="wiederholt sich">' + I('repeat') + '</span>';
     if (t.hi) s += '<span class="hi">' + I('flag') + 'Hoch</span>';
+    if (nudgedToMe(t)) s += '<span class="stp">' + I('hand') + t.nudges.map(function (n) { return P[n.from].n; }).join(' und ') + ' stupst dich</span>'; else if (t.sent && t.sent.length && !t.done) s += '<span class="stpm">' + I('hand') + 'Du hast ' + t.sent.map(function (n) { return P[n.to].n; }).join(' und ') + ' gestupst</span>';
     if (t.wacht) s += '<span class="badge">' + I('eye') + 'Wächter</span>';
     if (isLive(t.id) && !t.done) s += '<span class="lvb"><i></i><span data-lv="' + t.id + '" class="num">' + fmt(elapsed(liveOf(t.id))) + '</span></span>';
     return s;
   }
   function rowHtml(t) {
-    return '<div class="row' + (t.done ? ' doing' : '') + '" data-id="' + t.id + '" role="listitem">' +
+    return '<div class="row' + (t.done ? ' doing' : '') + (nudgedToMe(t) ? ' nudged' : '') + '" data-id="' + t.id + '" role="listitem">' +
       '<div class="act lead"><button tabindex="-1" aria-hidden="true">' + I('check') + 'Erledigt</button></div>' +
       '<div class="act trail"><button class="later" tabindex="-1">' + I('clock') + 'Später</button><button class="del" tabindex="-1">' + I('trash') + 'Löschen</button></div>' +
       '<div class="rc" tabindex="0" role="button" aria-label="' + t.t + ', ' + t.when + '. Details öffnen"><button class="cb" aria-label="' + t.t + ' erledigen"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>' +
@@ -592,6 +610,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     if (v === 'all' || v === 'late') out += section('Überfällig', L.filter(function (t) { return !t.done && t.due === 'late'; }), 'late');
     if (v === 'all' || v === 'today') out += section('Heute', L.filter(function (t) { return !t.done && t.due === 'today'; }));
     if (v === 'all' || v === 'week') out += section('Diese Woche', L.filter(function (t) { return !t.done && t.due === 'week'; }));
+    if (v === 'all') out += section('Später', L.filter(function (t) { return !t.done && t.due === 'later'; }));
     if (v === 'done') out += section('Erledigt', L.filter(function (t) { return t.done; }));
     if (!out) out = '<div class="empty"><b>Hier ist nichts offen.</b>Gute Arbeit. Neue Aufgaben legst du mit „Neue Aufgabe“ an.</div>';
     return out;
@@ -613,7 +632,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   function makeScreen(v, back) {
     var s = document.createElement('section'); s.className = 'screen'; s.dataset.view = v;
     s.innerHTML = navHtml(VIEWS[v][0], back, v === 'all') + '<div class="scroll"><div class="large"><h1>' + VIEWS[v][0] + '</h1>' + (v === 'all' ? '<div class="subrow"><button class="whop" data-menu aria-haspopup="menu" aria-label="Personen filtern"><span data-whotext>' + whoText() + '</span>' + I('chev') + '</button><button class="demo" data-demo aria-label="Vorführung abspielen"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>Demo</button><button class="demo" data-index aria-label="Alle Seiten ansehen" style="margin-left:0"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.2"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>Seiten</button></div>' : '<div class="sub" data-whotext>' + whoText() + '</div>') + '</div>' +
-      (v === 'all' ? '<div class="search" role="search">' + I('search') + 'Suchen</div>' + '<div id="liveWrap">' + liveHtml() + '</div>' + tilesHtml() : '') + '<div class="lists" data-lists>' + listHtml(v) + '</div></div>';
+      (v === 'all' ? '<div class="search" role="search">' + I('search') + 'Suchen</div>' + '<div id="stupsWrap">' + stupsHtml() + '</div><div id="liveWrap">' + liveHtml() + '</div>' + tilesHtml() : '') + '<div class="lists" data-lists>' + listHtml(v) + '</div></div>';
     var sc = s.querySelector('.scroll'), nav = s.querySelector('.nav'), h1 = s.querySelector('h1');
     sc.addEventListener('scroll', function () { var p = Math.max(0, Math.min(1, (sc.scrollTop - 30) / 22)); nav.style.setProperty('--p', p); h1.style.opacity = 1 - Math.min(1, sc.scrollTop / 40); });
     return s;
@@ -712,7 +731,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     var late = t.due === 'late' && !t.done;
     return (forPane ? '' : '<div class="shead"><span></span><span class="ti">Aufgabe</span><button class="r" data-close>Fertig</button></div>') +
       '<div class="sbody"><div class="dtitle">' + t.t + '</div><div class="dsub">' + (late ? '<span class="od">Überfällig ' + (t.ago || '') + '</span>' : t.done ? 'Erledigt' : t.when) + '</div>' +
-      '<div class="list">' +
+      (nudgedToMe(t) ? t.nudges.map(function (n, i) { return stupsCard(t, n, i, true); }).join('') : '') + '<div class="list">' +
       '<div class="li"><span class="k">Fällig</span><span class="v num">' + t.when + '</span></div>' +
       '<div class="li"><span class="k">Zuständig</span><span class="v">' + avatars(t.who) + '</span></div>' +
       '<div class="li"><span class="k">Wiederholung</span><span class="v">' + (t.rep || 'Nie') + '</span></div>' +
@@ -720,7 +739,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
       '<div class="li"><span class="k">Board</span><span class="v">' + t.board + '</span></div></div>' +
       (t.done ? '<button class="bigbtn soft" data-reopen>Wieder öffnen</button>' : '<button class="bigbtn" data-done>Erledigt</button>') +
       '<div class="list"><button class="li link" data-later>' + I('clock') + '<span class="k">Auf morgen verschieben</span></button>' +
-      (t.done ? '' : (isLive(t.id) ? '<button class="li link" data-stop>' + I('pause') + '<span class="k">Zeit anhalten</span></button>' : '<button class="li link" data-start>' + I('play') + '<span class="k">Jetzt starten, die Zeit läuft mit</span></button>')) + (t.who.indexOf('A') < 0 ? '<button class="li link" data-poke>' + I('bell') + '<span class="k">' + P[t.who[0]].n + ' stupsen</span></button>' : '') + '</div>' +
+      (t.who.indexOf('A') < 0 ? '<button class="li link" data-poke>' + I('bell') + '<span class="k">' + P[t.who[0]].n + ' stupsen</span></button>' : '') + '</div>' +
       '<div class="hist">Verlauf</div><div class="list"><div class="li"><span class="k">' + (late ? 'Wurde überfällig' : 'Angelegt von Anna') + '</span><span class="v num">' + (late ? 'heute ' + t.when.split(' ')[1] : 'gestern') + '</span></div></div></div>';
   }
   function openTask(t) {
@@ -734,7 +753,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     if (e.target.closest('[data-done]')) { closeSheet(); wait(300, function () { var row = document.querySelector('.screen:last-child .row[data-id="' + t.id + '"]'); finish(t.id, row); }); if (desk()) { var r2 = document.querySelector('.row[data-id="' + t.id + '"]'); finish(t.id, r2); } }
     if (e.target.closest('[data-reopen]')) { t.done = 0; t.due = t.prev || 'week'; closeSheet(); refresh(); }
     if (e.target.closest('[data-later]')) { t.when = 'morgen ' + (t.when.split(' ')[1] || '09:00'); t.due = 'week'; closeSheet(); refresh(); toast('Auf morgen verschoben'); }
-    if (e.target.closest('[data-poke]')) { closeSheet(); wait(520, idxPoke); }
+    if (e.target.closest('[data-poke]')) { pokeFor = t; closeSheet(); wait(520, idxPoke); }
     if (e.target.closest('[data-start]')) { closeSheet(); wait(450, function () { startLive(t.id); }); }
     if (e.target.closest('[data-stop]')) { closeSheet(); stopLive(t.id); }
   });
@@ -832,7 +851,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   }
 
   // ---------- Live-Aufgabe ----------
-  var live = [{ id: 10, acc: 432, t0: Date.now(), paused: false }];
+  var live = [];
   function liveOf(id) { return (live || []).filter(function (l) { return l.id === id; })[0]; }
   function isLive(id) { return !!liveOf(id); }
   function elapsed(l) { return l.acc + (l.paused ? 0 : (Date.now() - l.t0) / 1000); }
@@ -960,7 +979,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   // ---------- Seitenübersicht ----------
   var INDEX = [
     ['Start', [['Anmelden', 'Passkey oder Passwort', 'openLogin'], ['Noch kein Zugriff', 'Warten auf Freigabe', 'openNoAccess'], ['Einrichtung', 'Willkommen, Personen, Wächter, fertig', 'openOnboarding']]],
-    ['Aufgaben', [['Aufgabe öffnen', 'Details als Blatt', 'idxTask'], ['Neue Aufgabe', 'Alle Felder, Schnelleingabe', 'openNew'], ['Neue Aufgabe mit Tastatur', 'Blatt bleibt über der Tastatur', 'idxKb'], ['Termin wählen', 'Kalender und Uhrzeit', 'idxDate'], ['Wiederholung', 'Plan, Wochentage, Toleranz', 'idxRepeat'], ['Erinnerung', 'Vorab und Nachhaken', 'idxRemind'], ['Stupsen', 'Nachricht und Vorschau', 'idxPoke'], ['Aufgabenmenü', 'Aktionsblatt', 'idxMenu'], ['Mitteilungen', 'Liste', 'openNotifs'], ['Diese Woche', 'Verteilung ohne Rangliste', 'openWeek']]],
+    ['Aufgaben', [['Stups empfangen', 'Karte oben mit Schnellantworten', 'idxStups'], ['Aufgabe öffnen', 'Details als Blatt', 'idxTask'], ['Neue Aufgabe', 'Alle Felder, Schnelleingabe', 'openNew'], ['Neue Aufgabe mit Tastatur', 'Blatt bleibt über der Tastatur', 'idxKb'], ['Termin wählen', 'Kalender und Uhrzeit', 'idxDate'], ['Wiederholung', 'Plan, Wochentage, Toleranz', 'idxRepeat'], ['Erinnerung', 'Vorab und Nachhaken', 'idxRemind'], ['Stupsen', 'Nachricht und Vorschau', 'idxPoke'], ['Aufgabenmenü', 'Aktionsblatt', 'idxMenu'], ['Mitteilungen', 'Liste', 'openNotifs'], ['Diese Woche', 'Verteilung ohne Rangliste', 'openWeek']]],
     ['Boards', [['Boards', 'Liste', 'idxBoards'], ['Board', 'Spalten als Segment', 'idxBoard'], ['Board-Einstellungen', 'Spalten, Kategorien, Archiv', 'idxBoardSet'], ['Board löschen', 'Warnung', 'idxBoardDel']]],
     ['Kalender', [['Woche', 'Standardansicht', 'idxCalWeek'], ['Tag', 'Zeitleiste', 'idxCalDay'], ['Monat', 'Raster mit Tagesliste', 'idxCalMonth'], ['Liste', 'Die nächsten 14 Tage', 'idxCalList']]],
     ['Wächter', [['Wächter', 'Nach Kategorien, mit Suche', 'idxWatch'], ['Kategorie mit 100 Batterien', 'Kritisch, Räume, Alle', 'idxCat'], ['Gefunden', 'Vorschläge einrichten', 'openFound'], ['Wächter-Detail', 'Verlauf, Regeln, Läufe', 'idxWatchDetail'], ['Neuer Wächter', 'Vorlage und vier Schritte', 'openWizard']]],
@@ -1038,14 +1057,15 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
 
   // ================= Dialoge =================
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  var pokeFor = null;
   function idxPoke() {
-    var who = 'B', msg = 0, MS = ['Heute noch?', 'Kannst du das übernehmen?', 'Danke dir!', 'Brauchst du Hilfe?'];
-    showSheet('<div class="shead"><button data-close>Abbrechen</button><span class="ti">Stupsen</span><button class="r" id="pk">Senden</button></div><div class="sbody"><div class="hist" style="padding-top:12px">An</div><div class="chips" id="pw" style="padding-top:10px">' + people.slice(0, 5).map(function (p) { return '<button class="chip" style="animation:none;' + (p[0] === who ? '' : 'background:var(--fill);color:var(--label)') + '" data-w="' + p[0] + '"><span class="av" style="--c:' + p[2] + ';width:20px;height:20px;font-size:10px">' + p[0] + '</span>' + p[1] + '</button>'; }).join('') + '</div>' +
-      '<div class="hist" style="padding-top:20px">Nachricht</div><div class="list" id="pm" style="margin-top:8px">' + radioRows('pm', MS.map(function (m) { return [m]; }), 0) + '</div><div class="hist" style="padding-top:20px">So kommt es an</div><div class="pvw" id="pv"></div></div>', { label: 'Stupsen' });
-    function pv() { $('pv').innerHTML = '<span class="ai" style="background-image:url(' + LOGO + ')"></span><span><b>Anna stupst dich an</b><span>Fenster putzen: „' + MS[msg] + '“</span></span><small>jetzt</small>'; var a = $('pv'); a.animate && a.animate([{ transform: 'translateY(-8px) scale(.97)', opacity: .5 }, { transform: 'none', opacity: 1 }], { duration: calm ? 0 : 420, easing: 'cubic-bezier(.32,.72,0,1)' }); } pv();
+    var tgt = pokeFor || byId(4) || tasks[0], MS = ['Heute noch?', 'Kannst du das übernehmen?', 'Danke dir!', 'Brauchst du Hilfe?'], cands = people.filter(function (p) { return p[0] !== 'A'; }), who = tgt.who.split('').filter(function (c) { return c !== 'A'; })[0] || 'B', msg = 0; pokeFor = null;
+    showSheet('<div class="shead"><button data-close>Abbrechen</button><span class="ti">Stupsen</span><button class="r" id="pk">Senden</button></div><div class="sbody"><div class="dsub" style="padding:10px 20px 0">' + tgt.t + '</div><div class="hist" style="padding-top:12px">An</div><div class="chips" id="pw" style="padding-top:10px">' + cands.slice(0, 5).map(function (p) { return '<button class="chip" style="animation:none;' + (p[0] === who ? '' : 'background:var(--fill);color:var(--label)') + '" data-w="' + p[0] + '"><span class="av" style="--c:' + p[2] + ';width:20px;height:20px;font-size:10px">' + p[0] + '</span>' + p[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="hist" style="padding-top:20px">Nachricht</div><div class="list" id="pm" style="margin-top:8px">' + radioRows('pm', MS.map(function (m) { return [m]; }), 0) + '</div><div class="hist" style="padding-top:20px">So kommt es an</div><div class="pvw" id="pv"></div><p class="hint" style="padding-top:8px">Pro Aufgabe und Person geht höchstens ein Stups alle 30 Minuten. In der Ruhezeit kommt er erst am Morgen an.</p></div>', { label: 'Stupsen' });
+    function pv() { $('pv').innerHTML = '<span class="ai" style="background-image:url(' + LOGO + ')"></span><span><b>Anna stupst dich an</b><span>' + tgt.t + ': „' + MS[msg] + '“</span></span><small>jetzt</small>'; var a = $('pv'); a.animate && a.animate([{ transform: 'translateY(-8px) scale(.97)', opacity: .5 }, { transform: 'none', opacity: 1 }], { duration: calm ? 0 : 420, easing: 'cubic-bezier(.32,.72,0,1)' }); } pv();
     wireRadio($('pm'), function (n, i) { msg = i; pv(); });
     sheet.querySelectorAll('[data-w]').forEach(function (b) { b.addEventListener('click', function () { who = b.dataset.w; sheet.querySelectorAll('[data-w]').forEach(function (x) { var on = x === b; x.style.background = on ? '' : 'var(--fill)'; x.style.color = on ? '' : 'var(--label)'; }); }); });
-    $('pk').addEventListener('click', function () { closeSheet(); wait(450, function () { toast(P[who].n + ' wurde angestupst'); }); });
+    $('pk').addEventListener('click', function () { closeSheet(); wait(450, function () { tgt.sent = [{ to: who, at: 'jetzt' }]; refresh(); var r = document.querySelector('.row[data-id="' + tgt.id + '"]'); if (r) r.classList.add('fresh'); toast(P[who].n + ' wurde angestupst'); }); });
   }
   function idxMenu() {
     actionSheet({ title: 'Fenster putzen', items: [{ t: 'Bearbeiten', icon: 'gear', fn: function () { openTask(byId(3)); } }, { t: 'Stupsen', icon: 'bell', fn: idxPoke }, { t: 'Zeit messen', icon: 'clock', fn: function () { startLive(3); } }, { t: 'Verschieben', icon: 'cal', fn: idxDate }, { t: 'Löschen', icon: 'trash', dest: true, fn: function () { runFn('idxAlert'); } }] });
@@ -1754,6 +1774,42 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   FN.idxWatchDetail = function () { setTab('watch'); wait(520, function () { pushPage(watchPage(WATCH[0])); }); };
   refresh();
 
+  // ================= Stupse =================
+  function nudgedToMe(t) { return !t.done && t.nudges && t.nudges.length; }
+  function allNudges() { var L = []; tasks.forEach(function (t) { if (nudgedToMe(t)) t.nudges.forEach(function (n, i) { L.push({ t: t, n: n, i: i }); }); }); return L; }
+  function stupsCard(t, n, i, mini) {
+    return '<section class="stups' + (mini ? ' mini' : '') + '" data-stups="' + t.id + ':' + i + '" aria-label="' + P[n.from].n + ' stupst dich"><div class="sh"><span class="hand">' + I('hand') + '</span><div><b>' + P[n.from].n + ' stupst dich! 👋</b><span class="when">' + n.at + '</span></div></div>' +
+      (mini ? '' : '<button type="button" class="sbub" data-sopen="' + t.id + '"><span class="av" style="--c:' + P[n.from].c + '">' + n.from + '</span><span><b>' + t.t + '</b><span class="m">„' + n.msg + '“</span></span></button>') + (mini ? '<p style="position:relative;margin-top:8px;font-size:15px;opacity:.95">„' + n.msg + '“</p>' : '') +
+      '<div class="sbtn"><button type="button" class="ok" data-sr="done">Erledigt</button><button type="button" data-sr="mine">Mach ich</button><button type="button" data-sr="later">Später</button></div></section>';
+  }
+  var stupsOpen = false;
+  function stupsHtml() {
+    var L = allNudges(); if (!L.length) return '';
+    var h = stupsCard(L[0].t, L[0].n, L[0].i);
+    if (L.length > 1) h += '<button type="button" class="smore" data-smore aria-expanded="' + stupsOpen + '" style="color:var(--tint)">' + (stupsOpen ? 'Weniger anzeigen' : (L.length - 1) + (L.length === 2 ? ' weiterer Stups' : ' weitere Stupse')) + I('chev') + '</button>' + (stupsOpen ? L.slice(1).map(function (x) { return stupsCard(x.t, x.n, x.i); }).join('') : '');
+    return h;
+  }
+  function renderStups() {
+    var w = $('stupsWrap'); if (w) w.innerHTML = stupsHtml();
+    var n = allNudges().length, b = $('tbn'); if (b) { var was = b.textContent; b.hidden = !n; b.textContent = n; if (n && was !== String(n)) { b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; } }
+  }
+  var _ref = refresh; refresh = function () { _ref.apply(null, arguments); renderStups(); };
+  document.addEventListener('click', function (e) {
+    var b;
+    if ((b = e.target.closest('[data-smore]'))) { stupsOpen = !stupsOpen; renderStups(); return; }
+    if ((b = e.target.closest('[data-sopen]'))) { openTask(byId(+b.dataset.sopen)); return; }
+    if ((b = e.target.closest('[data-sr]'))) {
+      var card = b.closest('[data-stups]'), ids = card.dataset.stups.split(':'), t = byId(+ids[0]), n = t.nudges[+ids[1]], k = b.dataset.sr, nm = P[n.from].n;
+      if (card.classList.contains('mini')) closeSheet();
+      function drop() { t.nudges.splice(+ids[1], 1); if (!t.nudges.length) delete t.nudges; if (!allNudges().length) stupsOpen = false; }
+      var msgs = { done: nm + ' weiß Bescheid: erledigt', mine: nm + ' weiß Bescheid: Du übernimmst', later: 'Ich stupse dich in 1 Std. nochmal' };
+      card.classList.add('out'); card.style.height = card.offsetHeight + 'px';
+      wait(260, function () { card.classList.add('gone'); wait(380, function () { drop(); if (k === 'done') { var row = document.querySelector('.row[data-id="' + t.id + '"]'); if (row) { who = who || { A: 1 }; finish(t.id, row); } else { t.done = 1; } } refresh(); toast(msgs[k]); }); });
+    }
+  });
+  (function () { var t3 = byId(3), t1 = byId(1), t4 = byId(4); t3.nudges = [{ from: 'B', msg: 'Heute noch?', at: 'vor 4 Min.' }]; t1.nudges = [{ from: 'M', msg: 'Brauchst du Hilfe?', at: 'vor 12 Min.' }]; t4.sent = [{ to: 'B', at: 'vor 1 Std.' }]; })();
+  FN.idxStups = function () { setTab('tasks'); stupsOpen = false; renderStups(); var sc = document.querySelector('.screen:last-child .scroll'); if (sc) sc.scrollTo({ top: 0, behavior: 'smooth' }); };
+  refresh();
   // ---------- Auftakt und Vorführung ----------
   var touched = false, demoRun = 0, banner, bTimer;
   document.addEventListener('pointerdown', function (e) { if (!e.target.closest('[data-demo]')) { touched = true; if (demoRun) endDemo(); } }, true);
@@ -1807,7 +1863,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     if (force !== true && demoRun) return;
     if (sheet.classList.contains('on')) { wait(3000, showBanner); return; }
     banner.innerHTML = '<div class="bh"><span class="bicon">S</span><div class="btxt"><b>Ben stupst dich</b><span>Fenster putzen: „Heute noch?“</span></div><span class="bts">jetzt</span></div>' +
-      '<div class="bact"><button data-b="done">Erledigt</button><button data-b="mine">Bin dran</button><button data-b="later">Später</button></div>';
+      '<div class="bact"><button data-b="done">Erledigt</button><button data-b="mine">Mach ich</button><button data-b="later">Später</button></div>';
     void banner.offsetWidth; banner.classList.add('on'); bTimer = setTimeout(hideBanner, 9000);
   }
   function hideBanner() { clearTimeout(bTimer); banner.classList.remove('on', 'open'); banner.style.transform = ''; }
@@ -1845,7 +1901,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     if (e.target.closest('[data-done]')) { var r = document.querySelector('.row[data-id="' + t.id + '"]'); finish(t.id, r); $('pane').innerHTML = '<div class="ph"><b>Erledigt</b>Wähle die nächste Aufgabe.</div>'; }
     if (e.target.closest('[data-later]')) { t.when = 'morgen ' + (t.when.split(' ')[1] || '09:00'); t.due = 'week'; refresh(); openTask(t); }
     if (e.target.closest('[data-reopen]')) { t.done = 0; t.due = t.prev || 'week'; refresh(); openTask(t); }
-    if (e.target.closest('[data-poke]')) idxPoke();
+    if (e.target.closest('[data-poke]')) { pokeFor = t; idxPoke(); }
     if (e.target.closest('[data-start]')) { startLive(t.id); openTask(t); }
     if (e.target.closest('[data-stop]')) { stopLive(t.id); openTask(t); }
   });

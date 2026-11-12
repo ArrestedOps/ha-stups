@@ -59,3 +59,10 @@ Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
 - Wächter: Jede Kategorie öffnet eine eigene Seite, einheitlich wie bei Batterien (große Kategorien mit Kritisch/Räume/Alle, kleine mit Zusammenfassung und Liste). Keine aufklappenden Gruppen mehr. Bei einer Suche kommt eine flache Trefferliste.
 - Sprache: „Karte“ heißt überall „Aufgabe“.
 - Priorität: Eigene Segmentreihe mit größerer Höhe, Flagge und Text in einer Zeile, Farbe je Stufe (grau, orange, rot).
+
+## Stupse sind wieder da, „Läuft gerade“ ist raus
+
+- Stupsen ist das Herz der App und steht oben in Aufgaben: eine orange Stups-Karte mit winkender Hand, Absender, Aufgabe, Nachricht und den Schnellantworten Erledigt, Mach ich, Später (wie in der Push-Mitteilung). Mehrere Stupse: „1 weiterer Stups“ klappt die nächsten auf.
+- Betroffene Zeilen sind getönt und tragen „Mia stupst dich“; selbst Gestupstes steht als „Du hast Ben gestupst“. Am Tab Aufgaben zeigt ein Zähler die offenen Stupse. In den Details steht der Stups mit denselben Antworten.
+- Stupsen sendet jetzt für die gewählte Aufgabe: Person, Nachricht, Vorschau, danach „Du hast … gestupst“ in der Zeile.
+- Entfernt: die Live-Aufgabe „Läuft gerade“ samt „Jetzt starten, die Zeit läuft mit“. Das bleibt erstmal draußen.

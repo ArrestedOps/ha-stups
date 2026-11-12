@@ -97,7 +97,7 @@ Die Teile sind Funktionen `createX(c: Ctx, late)`. Rufen sie Funktionen anderer 
 
 **Absicherung:** `test/shape.test.ts` vergleicht die Namen aller Store-Methoden und alle Routen (mit allen Teilen, die nur mit bestimmten Abhängigkeiten existieren) mit `test/fixtures/*.json`. Eine Methode oder Route verschwindet oder kommt dazu, ohne dass jemand es merkt, geht damit nicht mehr. Bewusst ändern: `UPDATE_SHAPE=1 pnpm test` und die Dateien mitcommitten.
 
-**Importzyklen:** `test/import-cycles.test.ts` (Server-Tests) liest die Importe unter `packages/server/src` und `packages/web/src` und verbietet Zyklen zur Laufzeit. Typ-Importe (`import type`, `import { type X }`) zählen nicht: Die Typ-Zyklen über `store/internals.ts` und `watchers/parts.ts` sind gewollt. Meldet der Test einen Zyklus, zieht die Funktion um, die die Rückkante braucht (Beispiele: `act` liegt bei `refresh` in `lib/store/load.ts`, `dayKeyOf` bei der Tagesrechnung in `lib/calendar.ts`); ein Wieder-Export oder ein später `import()` versteckt ihn nur.
+**Importzyklen:** `test/import-cycles.test.ts` (Server-Tests) liest die Importe unter `packages/server/src` und `packages/web/src` und verbietet Zyklen zur Laufzeit. Typ-Importe (`import type`) und ein spätes `import()` zählen nicht: Die Typ-Zyklen über `store/internals.ts` und `watchers/parts.ts` sind gewollt. Meldet der Test einen Zyklus, zieht die Funktion um, die die Rückkante braucht (Beispiele: `act` liegt bei `refresh` in `lib/store/load.ts`, `dayKeyOf` bei der Tagesrechnung in `lib/calendar.ts`); ein Wieder-Export versteckt ihn nur.
 
 ### Sprachen (seit 1.14.0)
 

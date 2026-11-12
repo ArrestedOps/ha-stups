@@ -13,23 +13,12 @@ function listFiles(dir: string): string[] {
   );
 }
 
-// Ein Import zählt nur zur Laufzeit, wenn er nicht komplett als Typ markiert ist
-function isTypeOnly(clause: string): boolean {
-  const c = clause.trim();
-  if (c.startsWith('type ')) return true;
-  const named = /^\{([^}]*)\}$/.exec(c);
-  const specs = named ? named[1]!.split(',').map((s) => s.trim()).filter(Boolean) : [];
-  return specs.length > 0 && specs.every((s) => s.startsWith('type '));
-}
-
+// Nur Anweisungen am Zeilenanfang (Kommentare und Zeichenketten zählen so nicht). Typ-Import ist allein `import type`:
+// `import { type X }` bleibt mit verbatimModuleSyntax (Oberfläche) als Import stehen. Ein `import()` lädt erst beim Aufruf.
 function specifiers(source: string): string[] {
-  const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   const found: string[] = [];
-  for (const m of code.matchAll(/\b(?:import|export)\s+([^'";]*?)\s*from\s*['"](\.[^'"]+)['"]/g)) {
-    if (!isTypeOnly(m[1]!)) found.push(m[2]!);
-  }
-  for (const m of code.matchAll(/\bimport\s*['"](\.[^'"]+)['"]/g)) found.push(m[1]!);
-  for (const m of code.matchAll(/\bimport\(\s*['"](\.[^'"]+)['"]\s*\)/g)) found.push(m[1]!);
+  for (const m of source.matchAll(/^[ \t]*(?:import|export)\s+(?!type\s)[^'";]*?\s*from\s*['"](\.[^'"]+)['"]/gm)) found.push(m[1]!);
+  for (const m of source.matchAll(/^[ \t]*import\s*['"](\.[^'"]+)['"]/gm)) found.push(m[1]!);
   return found;
 }
 

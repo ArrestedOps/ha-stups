@@ -1,4 +1,3 @@
-
 export interface UserOption {
   name: string;
   notify: string[];

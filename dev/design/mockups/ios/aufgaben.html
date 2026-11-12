@@ -105,7 +105,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .av { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--c, #8e8e93); color: #fff; font: 600 12px/1 var(--font); letter-spacing: 0; box-shadow: 0 0 0 2px var(--card); }
 .avs { display: inline-flex; } .avs .av + .av { margin-left: -8px; }
 .act { position: absolute; top: 0; bottom: 0; display: flex; z-index: 1; visibility: hidden; }
-.row.sw .act { visibility: visible; }
+.row.swiping .act { visibility: visible; }
 .act.lead { left: 0; width: 0; overflow: hidden; background: var(--green-fill); } .act.trail { right: 0; }
 .act button { display: grid; place-items: center; align-content: center; gap: 3px; width: 82px; color: #fff; font: 500 13px/1 var(--font); letter-spacing: 0; }
 .act.lead button { width: 100%; justify-items: start; padding-left: 26px; }
@@ -701,7 +701,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
 
   // ---------- Zeilen: Haken, Wischen, Öffnen ----------
   var openRow = null;
-  function closeSwipe(rc) { if (!rc) return; rc.classList.add('snap'); rc.style.transform = ''; if (openRow === rc) openRow = null; setTimeout(function () { if (openRow !== rc && rc.parentNode) rc.parentNode.classList.remove('sw'); }, 420); }
+  function closeSwipe(rc) { if (!rc) return; rc.classList.add('snap'); rc.style.transform = ''; if (openRow === rc) openRow = null; setTimeout(function () { if (openRow !== rc && rc.parentNode) rc.parentNode.classList.remove('swiping'); }, 420); }
   document.addEventListener('pointerdown', function (e) {
     var rc = e.target.closest('.rc'); if (openRow && openRow !== rc) closeSwipe(openRow);
     if (!rc || e.target.closest('.cb')) return;
@@ -713,14 +713,14 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
       if (st.lock !== 'x') return;
       var x = st.base + dx; if (x > 0) x = Math.pow(x, .88); if (x < -190) x = -190 - Math.pow(-190 - x, .8);
       st.dx = x; rc.style.transform = 'translateX(' + x + 'px)';
-      row.querySelector('.act.lead').style.width = Math.max(0, x) + 'px'; rc.dataset.moved = '1'; row.classList.add('sw');
+      row.querySelector('.act.lead').style.width = Math.max(0, x) + 'px'; rc.dataset.moved = '1'; row.classList.add('swiping');
     }
     function up() {
       document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
       if (st.lock !== 'x') return;
       rc.classList.add('snap'); setTimeout(function () { delete rc.dataset.moved; }, 60);
       if (st.dx > 110) { rc.style.transform = 'translateX(' + W + 'px)'; finish(+row.dataset.id, row); }
-      else if (st.dx < -70) { rc.style.transform = 'translateX(-164px)'; openRow = rc; } else { rc.style.transform = ''; if (openRow === rc) openRow = null; setTimeout(function () { if (openRow !== rc) row.classList.remove('sw'); }, 420); }
+      else if (st.dx < -70) { rc.style.transform = 'translateX(-164px)'; openRow = rc; } else { rc.style.transform = ''; if (openRow === rc) openRow = null; setTimeout(function () { if (openRow !== rc) row.classList.remove('swiping'); }, 420); }
     }
     document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
   });
@@ -1869,8 +1869,8 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   function countUp(el, n) { var t0 = performance.now(), d = 1000; el.textContent = '0'; (function f(t) { var k = Math.min(1, (t - t0) / d); el.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); })(t0); }
   function peekRow(id) {
     var row = document.querySelector('.screen:last-child .row[data-id="' + id + '"]'); if (!row) return; var rc = row.querySelector('.rc');
-    row.classList.add('sw'); rc.classList.add('snap'); rc.style.transform = 'translateX(-164px)';
-    setTimeout(function () { if (openRow === rc) return; rc.style.transform = ''; setTimeout(function () { if (openRow !== rc) row.classList.remove('sw'); }, 450); }, 1200);
+    row.classList.add('swiping'); rc.classList.add('snap'); rc.style.transform = 'translateX(-164px)';
+    setTimeout(function () { if (openRow === rc) return; rc.style.transform = ''; setTimeout(function () { if (openRow !== rc) row.classList.remove('swiping'); }, 450); }, 1200);
   }
   function intro() {
     document.body.classList.add('intro'); setTimeout(function () { document.body.classList.remove('intro'); }, 3000);

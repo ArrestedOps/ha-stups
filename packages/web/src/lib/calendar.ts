@@ -1,6 +1,6 @@
 import { fromInputValue, deviceTz } from './datetime';
 import { dayOfMonth, names } from './i18n/names';
-import { dayKeyOf, type ScheduleCard } from './schedule';
+import type { ScheduleCard } from './schedule';
 
 export type CalMode = 'day' | 'week' | 'month';
 
@@ -20,6 +20,9 @@ const utc = (key: string): Date => {
   const [y, m, d] = parts(key);
   return new Date(Date.UTC(y, m - 1, d));
 };
+/** Kalendertag in Ortszeit als YYYY-MM-DD */
+export const dayKeyOf = (ms: number, tz = deviceTz()): string => new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date(ms));
+
 const keyOf = (d: Date): string => d.toISOString().slice(0, 10);
 
 export const addDays = (key: string, n: number): string => keyOf(new Date(utc(key).getTime() + n * 86_400_000));

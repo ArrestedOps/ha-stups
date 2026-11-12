@@ -1,5 +1,5 @@
 import type { Card, Priority, ScheduleCard } from './api';
-import { addDays, mondayOf } from './calendar';
+import { addDays, dayKeyOf, mondayOf } from './calendar';
 import { CATEGORY_COLORS } from './colors';
 import { deviceTz, fromInputValue } from './datetime';
 import { t, tn } from './i18n/index.svelte';
@@ -257,9 +257,6 @@ export interface DaySection {
   today: boolean;
   cards: ScheduleCard[];
 }
-
-/** Kalendertag in Ortszeit als YYYY-MM-DD */
-export const dayKeyOf = (ms: number, tz = deviceTz()): string => new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date(ms));
 
 const dayNumber = (key: string): number => {
   const [y, m, d] = key.split('-').map(Number);

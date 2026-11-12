@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-
 export interface UserOption {
   name: string;
   notify: string[];
@@ -57,13 +55,4 @@ export function parseOptions(raw: unknown, invalid?: string[]): Options {
     overdueNagTime: time(o.overdue_nag_time, '18:00', 'overdue_nag_time', invalid),
     logLevel: str(o.log_level, 'info'),
   };
-}
-
-export function loadOptions(path: string): Options {
-  try {
-    return parseOptions(JSON.parse(readFileSync(path, 'utf8')));
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return parseOptions({});
-    throw err;
-  }
 }

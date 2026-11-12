@@ -1,7 +1,7 @@
-import { addDays, weekdayIndex } from './calendar';
+import { addDays, dayKeyOf, weekdayIndex } from './calendar';
 import { deviceTz, fromInputValue, toInputValue } from './datetime';
 import { t } from './i18n/index.svelte';
-import { dayKeyOf, type ScheduleCard } from './schedule';
+import type { ScheduleCard } from './schedule';
 import type { TaskStats } from './tasks';
 
 /**

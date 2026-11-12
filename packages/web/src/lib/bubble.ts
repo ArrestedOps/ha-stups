@@ -1,5 +1,5 @@
+import { dayKeyOf } from './calendar';
 import { deviceTz } from './datetime';
-import { dayKeyOf } from './schedule';
 
 /** Name des Sensors „heute fällig" (gleich wie in packages/server/src/channel.ts: die Beta hat eigene Namen) */
 export const todaySensor = (channel: 'stable' | 'beta' | undefined): string => (channel === 'beta' ? 'sensor.stups_beta_heute_faellig' : 'sensor.stups_heute_faellig');

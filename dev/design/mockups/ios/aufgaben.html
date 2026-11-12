@@ -578,7 +578,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   function mine(t) { if (!who) return true; return t.who.split('').some(function (c) { return who[c]; }); }
   function vis(t) { return mine(t); }
   function open_(t) { return !t.done; }
-  var BCOL = { Haushalt: '#ff9500', Einkauf: '#34c759', Umbau: '#0a84ff', Technik: '#af52de', Finanzen: '#ff3b30' }, grp = 'due';
+  var BCOL = { Haushalt: '#ff9500', Einkauf: '#34c759', Umbau: '#0a84ff', Technik: '#af52de', Finanzen: '#ff3b30' }, groupBy = 'due';
   var count = {
     today: function () { return tasks.filter(function (t) { return vis(t) && !t.done && t.due === 'today'; }).length; },
     late: function () { return tasks.filter(function (t) { return vis(t) && !t.done && t.due === 'late'; }).length; },
@@ -616,7 +616,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   }
   function listHtml(v) {
     var L = tasks.filter(vis), out = ''; secIdx = 0;
-    if (grp === 'board' && v === 'all') {
+    if (groupBy === 'board' && v === 'all') {
       var rank = { late: 0, today: 1, week: 2, later: 3 };
       BOARDS.forEach(function (b) { out += section(b[0], L.filter(function (t) { return !t.done && t.board === b[0]; }).sort(function (x, y) { return (rank[x.due] - rank[y.due]) || ((x.d - y.d) || ((x.m || 0) - (y.m || 0))); }), '', BCOL[b[0]]); });
       return out ? '<div class="bygrp">' + out + '</div>' : '<div class="empty"><b>Hier ist nichts offen.</b>Gute Arbeit.</div>';
@@ -1809,7 +1809,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   }
   var _ref = refresh; refresh = function () { _ref.apply(null, arguments); renderStups(); };
   document.addEventListener('click', function (e) {
-    var gb = e.target.closest('[data-grp]'); if (gb) { actionSheet({ title: 'Aufgaben gruppieren', items: [{ t: (grp === 'due' ? '✓ ' : '') + 'Nach Fälligkeit', icon: 'clock', fn: function () { grp = 'due'; refresh(); } }, { t: (grp === 'board' ? '✓ ' : '') + 'Nach Board', icon: 'layers', fn: function () { grp = 'board'; refresh(); } }] }); }
+    var gb = e.target.closest('[data-grp]'); if (gb) { actionSheet({ title: 'Aufgaben gruppieren', items: [{ t: (groupBy === 'due' ? '✓ ' : '') + 'Nach Fälligkeit', icon: 'clock', fn: function () { groupBy = 'due'; refresh(); } }, { t: (groupBy === 'board' ? '✓ ' : '') + 'Nach Board', icon: 'layers', fn: function () { groupBy = 'board'; refresh(); } }] }); }
   });
   document.addEventListener('click', function (e) {
     var b;

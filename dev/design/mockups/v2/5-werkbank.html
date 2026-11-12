@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stups · Idee 5 · Werkbank</title>
+<!--
+  Mockup, kein Produktcode. Dicht, präzise, nüchtern: ein Werkzeug für Leute, die schnell durch ihre Liste wollen.
+  Kleine, klare Schrift, feine Linien, eine einzige Signalfarbe (nur für Überfälliges und den Fokus).
+  Parameter: ?theme=light|dark. Nur Handy.
+-->
+<style>
+@font-face { font-family: "Hanken Grotesk"; src: url("../fonts/hanken-grotesk-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+:root {
+  --bg: #ffffff; --ink: #000000; --mute: #666b75; --faint: #8c919a; --line: #e6e8ec; --hover: #f4f5f7; --field: #f1f2f4;
+  --accent: #c2410c; --accent-soft: rgba(194,65,12,.09); --on-accent: #fff;
+  --font: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #000; --ink: #f2f3f5; --mute: #9ea3ad; --faint: #6f7480; --line: #232428; --hover: #131416; --field: #17181b; --accent: #ff8a50; --accent-soft: rgba(255,138,80,.12); --on-accent: #1a0b02; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #000; --ink: #f2f3f5; --mute: #9ea3ad; --faint: #6f7480; --line: #232428; --hover: #131416; --field: #17181b; --accent: #ff8a50; --accent-soft: rgba(255,138,80,.12); --on-accent: #1a0b02; color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.3 var(--font); -webkit-font-smoothing: antialiased; max-width: 430px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 6px; }
+svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.num { font-variant-numeric: tabular-nums; }
+
+.bar { display: flex; align-items: center; gap: var(--s2); padding: var(--s3) var(--s3) var(--s2); }
+.mark { font: 800 18px/1 var(--font); letter-spacing: -0.03em; padding-right: 2px; }
+.mark i { font-style: normal; color: var(--accent); }
+.cmd { flex: 1; display: flex; align-items: center; gap: var(--s2); height: 36px; padding: 0 var(--s3); border-radius: 8px; background: var(--field); color: var(--mute); font-size: 15px; }
+.cmd kbd { margin-left: auto; font: 500 12px var(--font); color: var(--faint); border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; }
+.ib { position: relative; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; }
+.ib .pip { position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.av { width: 20px; height: 20px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--ink); color: var(--bg); font: 700 10px/1 var(--font); flex: none; }
+
+.filters { display: flex; align-items: center; gap: 6px; padding: 0 var(--s3) var(--s2); font-size: 13px; overflow: hidden; white-space: nowrap; }
+.tok { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 var(--s2); border-radius: 6px; border: 1px solid var(--line); font-weight: 500; }
+.tok svg { width: 12px; height: 12px; color: var(--faint); stroke-width: 2.2; }
+.tok.add { color: var(--mute); border-style: dashed; }
+.sort { margin-left: auto; color: var(--mute); }
+
+.stups { display: flex; align-items: center; gap: var(--s2); margin: 0 var(--s3) var(--s2); padding: 6px var(--s2); border-radius: 8px; background: var(--accent-soft); font-size: 13.5px; }
+.stups .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stups b { font-weight: 600; }
+.stups button { font-weight: 600; color: var(--accent); padding: 2px 6px; border-radius: 5px; }
+
+.list { flex: 1; min-height: 0; overflow: hidden; }
+.gh { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 var(--s3); font: 600 13px/1 var(--font); color: var(--mute); background: var(--bg); border-top: 1px solid var(--line); position: sticky; top: 0; }
+.gh svg { width: 14px; height: 14px; stroke-width: 2.2; }
+.gh .c { font-weight: 500; color: var(--faint); }
+.gh.over { color: var(--accent); } .gh.over .c { color: var(--accent); }
+.gh .add { margin-left: auto; color: var(--faint); }
+.row { position: relative; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 var(--s3); border-top: 1px solid var(--line); }
+.row .cb { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--faint); flex: none; }
+.row .t { flex: 1; min-width: 0; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .t svg { width: 13px; height: 13px; color: var(--accent); vertical-align: -2px; margin-left: 4px; }
+.row .brd { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--mute); }
+.row .brd i { width: 7px; height: 7px; border-radius: 2px; }
+.row .due { width: 86px; text-align: right; font-size: 12px; color: var(--mute); white-space: nowrap; }
+.row .due.late { color: var(--accent); font-weight: 600; }
+.row.cur { background: var(--hover); box-shadow: inset 2px 0 0 var(--accent); }
+.empty { height: 34px; display: flex; align-items: center; padding: 0 36px; font-size: 13px; color: var(--faint); border-top: 1px solid var(--line); }
+
+.tabbar { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); padding: var(--s1) 0 max(var(--s2), env(safe-area-inset-bottom)); }
+.tabbar button { display: grid; justify-items: center; gap: 1px; padding: 6px 0 2px; font: 500 11px/1.2 var(--font); color: var(--mute); }
+.tabbar button[aria-current="page"] { color: var(--ink); font-weight: 700; }
+.tabbar button[aria-current="page"] svg { color: var(--accent); }
+.tabbar svg { width: 22px; height: 22px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.4-4.4"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 8.5 4.7L12 13 3.5 8.2 12 3.5Z"/><path d="m3.5 12.6 8.5 4.8 8.5-4.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19.5 6.5v5.6c0 4.2-3 7.4-7.5 8.4-4.5-1-7.5-4.2-7.5-8.4V6.5L12 3.5Z"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H18l-3-3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H6l3 3"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5.5 21V4h11l-2.2 4 2.2 4h-11"/></symbol>
+  </defs>
+</svg>
+
+<header class="bar">
+  <span class="mark">stups<i>.</i></span>
+  <button class="cmd"><svg><use href="#i-search"/></svg>Suchen oder anlegen<kbd>Strg K</kbd></button>
+  <button class="ib" aria-label="Mitteilungen, 1 neue"><svg><use href="#i-bell"/></svg><span class="pip"></span></button>
+</header>
+
+<div class="filters" role="group" aria-label="Filter">
+  <span class="tok">Meine<svg><use href="#i-x"/></svg></span>
+  <span class="tok">Diese Woche<svg><use href="#i-x"/></svg></span>
+  <span class="tok add"><svg><use href="#i-plus"/></svg>Filter</span>
+  <span class="sort">Fällig</span>
+</div>
+
+<div class="stups"><span class="av" style="background:#2563eb;color:#fff">B</span><span class="t"><b>Ben</b> stupst: Fenster putzen</span><button>Antworten</button></div>
+
+<main class="list">
+  <div class="gh over"><svg><use href="#i-down"/></svg>Überfällig <span class="c num">2</span></div>
+  <div class="row cur"><span class="cb"></span><span class="t">Müll rausbringen<svg><use href="#i-flag"/></svg><svg style="color:var(--faint)"><use href="#i-repeat"/></svg></span><span class="brd" role="img" aria-label="Board Haushalt" title="Haushalt"><i style="background:#f59e0b"></i></span><span class="due late num">vor 1 Std.</span><span class="av">A</span></div>
+  <div class="row"><span class="cb"></span><span class="t">Paket abholen</span><span class="brd" role="img" aria-label="Board Einkauf" title="Einkauf"><i style="background:#10b981"></i></span><span class="due late num">vor 1 Std.</span><span class="av">A</span></div>
+
+  <div class="gh"><svg><use href="#i-right"/></svg>Heute <span class="c num">0</span><span class="add num">1 erledigt</span></div>
+
+  <div class="gh"><svg><use href="#i-down"/></svg>Diese Woche <span class="c num">6</span></div>
+  <div class="row"><span class="cb"></span><span class="t">Fenster putzen</span><span class="brd" role="img" aria-label="Board Haushalt" title="Haushalt"><i style="background:#f59e0b"></i></span><span class="due num">morgen 10:00</span><span class="av">A</span></div>
+  <div class="row"><span class="cb"></span><span class="t">Geschenkpapier kaufen</span><span class="brd" role="img" aria-label="Board Einkauf" title="Einkauf"><i style="background:#10b981"></i></span><span class="due num">morgen 18:00</span><span class="av">A</span></div>
+  <div class="row"><span class="cb"></span><span class="t">Elektriker Termin</span><span class="brd" role="img" aria-label="Board Umbau" title="Umbau"><i style="background:#3b82f6"></i></span><span class="due num">Sa 09:00</span><span class="av">A</span></div>
+  <div class="row"><span class="cb"></span><span class="t">Rauchmelder testen</span><span class="brd" role="img" aria-label="Board Haushalt" title="Haushalt"><i style="background:#f59e0b"></i></span><span class="due num">So 11:00</span><span class="av">A</span></div>
+  <div class="row"><span class="cb"></span><span class="t">Heizung entlüften</span><span class="brd" role="img" aria-label="Board Technik" title="Technik"><i style="background:#8b5cf6"></i></span><span class="due num">Mo 18:00</span><span class="av">A</span></div>
+  <div class="row"><span class="cb"></span><span class="t">Steuererklärung abgeben</span><span class="brd" role="img" aria-label="Board Finanzen" title="Finanzen"><i style="background:#ef4444"></i></span><span class="due num">Di 23:00</span><span class="av">A</span></div>
+  <div class="gh"><svg><use href="#i-down"/></svg>Später <span class="c num">3</span></div>
+  <div class="row"><span class="cb"></span><span class="t">Reifenwechsel</span><span class="brd" role="img" aria-label="Board Technik"><i style="background:#8b5cf6"></i></span><span class="due num">20. Nov.</span><span class="av">A</span></div>
+  <div class="row"><span class="cb"></span><span class="t">Weihnachtsbaum bestellen</span><span class="brd" role="img" aria-label="Board Einkauf"><i style="background:#10b981"></i></span><span class="due num">28. Nov.</span><span class="av">A</span></div>
+  <div class="row"><span class="cb"></span><span class="t">Versicherung prüfen</span><span class="brd" role="img" aria-label="Board Finanzen"><i style="background:#ef4444"></i></span><span class="due num">1. Dez.</span><span class="av">A</span></div>
+  <div class="gh"><svg><use href="#i-right"/></svg>Erledigt heute <span class="c num">1</span></div>
+</main>
+
+<nav class="tabbar" aria-label="Hauptbereiche">
+  <button aria-current="page"><svg><use href="#i-tasks"/></svg>Aufgaben</button>
+  <button><svg><use href="#i-layers"/></svg>Boards</button>
+  <button><svg><use href="#i-shield"/></svg>Wächter</button>
+</nav>
+<script>try { var t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; } catch (e) {}</script>
+</body>
+</html>

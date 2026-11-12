@@ -77,9 +77,9 @@ function findCycles(graph: Map<string, string[]>): string[][] {
 // Typ-Zyklen sind gewollt (store/internals.ts); Laufzeit-Zyklen machen Importreihenfolge und Initialisierung brüchig
 describe('Laufzeit-Importzyklen', () => {
   for (const pkg of ['server', 'web']) {
-    it(`${pkg}: keine Zyklen unter src`, () => {
-      const srcDir = join(packages, pkg, 'src');
-      expect(existsSync(srcDir)).toBe(true);
+    const srcDir = join(packages, pkg, 'src');
+    // Liegt nur das Server-Paket im Baum, entfällt die Prüfung der Oberfläche
+    it.skipIf(pkg === 'web' && !existsSync(srcDir))(`${pkg}: keine Zyklen unter src`, () => {
       const graph = buildGraph(srcDir);
       const edges = [...graph.values()].reduce((n, t) => n + t.length, 0);
       // Leerlauf-Schutz: ein kaputter Parser findet sonst keine Zyklen, weil er nichts findet

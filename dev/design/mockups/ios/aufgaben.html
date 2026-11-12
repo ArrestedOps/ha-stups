@@ -359,12 +359,87 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
 .swatch { display: flex; gap: 14px; padding: 12px 16px; } .swatch button { width: 34px; height: 34px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px var(--card), 0 0 0 4px transparent; transition: box-shadow calc(.3s * var(--dur)), transform calc(.4s * var(--dur)) var(--spring); } .swatch button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--c); transform: scale(1.08); }
 .ghost { color: var(--label2); } .redtxt { color: var(--red); justify-content: center; }
 
+/* ---------- Zweites Blatt, Tastatur, Neue Aufgabe ---------- */
+.app { --kb: 0px; }
+.sheet { bottom: var(--kb, 0px); } .sheet:not(.med) { height: calc(100% - var(--sat) - 12px - var(--kb, 0px)); } .sheet.med { max-height: calc(100% - var(--kb, 0px) - var(--sat) - 12px); }
+.sheet.s2 { z-index: 81; } .scrim2 { position: absolute; inset: 0; z-index: 80; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity calc(.4s * var(--dur)); } .scrim2.on { opacity: 1; pointer-events: auto; }
+.sfoot { flex: none; padding: 8px 16px calc(10px + var(--sab)); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: .5px solid var(--sep); }
+.sfoot .bigbtn { margin: 0; width: 100%; }
+.kbar { display: none; align-items: center; gap: 8px; margin: -2px -16px 8px; padding: 0 16px 8px; overflow-x: auto; scrollbar-width: none; } .kbar::-webkit-scrollbar { display: none; } .sheet.typing .kbar { display: flex; }
+.kbar button { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 18px; background: var(--card); color: var(--label); font: 600 15px/1 var(--font); box-shadow: 0 0 0 .5px var(--sep); } .kbar button:active { background: var(--fill); } .kbar .done { margin-left: auto; color: var(--tint); background: none; box-shadow: none; } .kbar button .av { width: 22px; height: 22px; font-size: 11px; box-shadow: none; }
+.qcard { margin: 8px 16px 0; padding: 14px 14px 12px; border-radius: 14px; background: var(--card); display: grid; gap: 10px; }
+.qrow { display: flex; align-items: flex-start; gap: 12px; } .qf { flex: 1; min-width: 0; display: grid; gap: 4px; } .qf .lab { font: 700 11.5px/1 var(--font); letter-spacing: .06em; text-transform: uppercase; color: var(--label2); }
+.qf textarea { display: block; width: 100%; min-height: 52px; padding: 0; border: 0; background: none; color: var(--label); font: 600 19px/1.3 var(--font); letter-spacing: -0.01em; resize: none; outline: none; } .qf textarea::placeholder { color: var(--label3); font-weight: 500; }
+.symtile { position: relative; flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 13px; background: var(--c, var(--tint-soft)); color: var(--cf, var(--tint)); transition: transform calc(.4s * var(--dur)) var(--spring), background-color calc(.3s * var(--dur)); } .symtile:active { transform: scale(.94); } .symtile svg { width: 28px; height: 28px; stroke-width: 2; }
+.symtile .spk { position: absolute; right: -5px; bottom: -5px; width: 21px; height: 21px; border-radius: 50%; display: grid; place-items: center; background: var(--tint-fill); border: 2px solid var(--card); } .symtile .spk svg { width: 10px; height: 10px; stroke: none; fill: #fff; }
+.qhint { display: flex; gap: 6px; align-items: center; font-size: 12.5px; line-height: 1.3; color: var(--label2); } .qhint svg { width: 14px; height: 14px; flex: none; color: var(--tint); fill: currentColor; stroke: none; }
+.qerr { padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, var(--red-fill) 14%, transparent); color: var(--red); font-size: 14px; }
+.tok { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 4px 0 12px; border-radius: 17px; background: var(--tint-soft); color: var(--tint); font: 600 15px/1 var(--font); animation: chipin calc(.45s * var(--dur)) var(--spring) backwards; } .tok svg.ic { width: 15px; height: 15px; } .tok .x { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: color-mix(in srgb, currentColor 14%, transparent); } .tok .x svg { width: 11px; height: 11px; stroke-width: 3; } .tok .av { width: 22px; height: 22px; margin-left: -8px; font-size: 10px; box-shadow: none; } .tok.warn { background: color-mix(in srgb, var(--red-fill) 14%, transparent); color: var(--red); }
+.hist2 { display: flex; align-items: center; gap: 8px; padding: 22px 20px 0; font: 700 17px/1 var(--font); letter-spacing: -0.01em; }
+.scrollx { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; } .scrollx::-webkit-scrollbar { display: none; }
+.pc { flex: none; display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px 0 6px; border-radius: 22px; background: var(--card); font: 600 15px/1 var(--font); box-shadow: 0 0 0 1.5px transparent; transition: box-shadow calc(.3s * var(--dur)), background-color calc(.3s * var(--dur)), transform calc(.4s * var(--dur)) var(--spring); } .pc:active { transform: scale(.95); } .pc[aria-pressed="true"] { background: var(--tint-soft); box-shadow: 0 0 0 1.5px var(--tint-fill); color: var(--tint); } .pc .av { width: 32px; height: 32px; font-size: 14px; box-shadow: none; } .pc.nop { padding-left: 14px; } .pc i.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+.li.dis { opacity: .45; } .li.tap .tile2, .tile2 { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: #fff; background: var(--c); flex: none; } .tile2 svg { width: 19px; height: 19px; stroke-width: 2.1; }
+.li .k b { display: block; font-weight: 600; } .li .k span { display: block; color: var(--label2); font-size: 13px; margin-top: 1px; }
+.mini { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 16px; } .mini input { flex: 1; min-width: 0; border: 0; background: none; color: var(--label); font: 17px/1 var(--font); outline: none; } .mini svg { width: 18px; height: 18px; color: var(--label2); flex: none; } .mini .go { color: var(--tint); font-weight: 600; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 16px 0; } .two button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 12px; background: var(--card); font: 600 16px/1 var(--font); box-shadow: 0 0 0 1.5px transparent; transition: box-shadow calc(.3s * var(--dur)); } .two button[aria-expanded="true"] { box-shadow: 0 0 0 1.5px var(--tint-fill); } .two svg { width: 21px; height: 21px; color: var(--tint); stroke-width: 1.9; }
+.stepr { display: inline-flex; align-items: center; border-radius: 9px; background: var(--fill); overflow: hidden; } .stepr button { width: 38px; height: 32px; font: 500 22px/1 var(--font); color: var(--tint); } .stepr button:active { background: var(--sep); } .stepr b { min-width: 34px; text-align: center; font: 600 16px/1 var(--round); }
+.sym { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 12px 16px 0; } .sym button { display: grid; place-items: center; aspect-ratio: 1; border-radius: 14px; background: var(--card); box-shadow: 0 0 0 2px transparent; transition: box-shadow calc(.25s * var(--dur)), transform calc(.35s * var(--dur)) var(--spring); } .sym button svg { width: 26px; height: 26px; stroke-width: 1.9; } .sym button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--tint-fill); transform: scale(1.05); color: var(--tint); }
+.tl { padding: 4px 16px 0; display: grid; gap: 0; } .tl div { display: flex; gap: 12px; align-items: center; min-height: 34px; position: relative; font-size: 15px; } .tl div::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--tint-fill); flex: none; } .tl div::after { content: ""; position: absolute; left: 4px; top: 22px; bottom: -12px; width: 1px; background: var(--sep); } .tl div:last-child::after { display: none; } .tl small { margin-left: auto; color: var(--label2); }
+.segc.none .th { opacity: 0; }
+/* ---------- Kalender ---------- */
+.calhead { position: sticky; top: calc(var(--sat) + 44px); z-index: 8; margin-top: 6px; padding-bottom: 2px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.calhead .segc { margin-top: 4px; }
+.cnav { display: flex; align-items: center; gap: 4px; padding: 10px 12px 6px 16px; } .cnav b { font: 700 19px/1.1 var(--font); letter-spacing: -0.01em; } .cnav small { margin-left: 8px; font: 500 13px/1 var(--font); color: var(--label2); }
+.cnav .sp { flex: 1; } .cnav .cb2 { width: 36px; height: 36px; display: grid; place-items: center; color: var(--tint); border-radius: 18px; } .cnav .cb2:active { background: var(--fill); } .cnav .cb2 svg { width: 12px; height: 19px; stroke-width: 2.6; } .cnav .cb2.l svg { transform: rotate(180deg); }
+.cnav .today { height: 30px; padding: 0 12px; margin-left: 4px; border-radius: 15px; background: var(--tint-soft); color: var(--tint); font: 600 14px/1 var(--font); }
+.wkh { display: grid; grid-template-columns: 34px repeat(7, 1fr); padding: 0 8px 0 4px; } .wkh button { display: grid; justify-items: center; gap: 3px; padding: 4px 0 6px; font: 600 11px/1 var(--font); color: var(--label2); } .wkh button b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font: 500 17px/1 var(--round); color: var(--label); transition: background-color calc(.3s * var(--dur)), transform calc(.4s * var(--dur)) var(--spring); } .wkh button.td b { color: #fff; background: var(--tint-fill); } .wkh button.td { color: var(--tint); } .wkh button[aria-pressed="true"]:not(.td) b { background: var(--fill); } .wkh button:active b { transform: scale(.9); }
+.alld { display: grid; grid-template-columns: 34px repeat(7, 1fr); gap: 0 2px; padding: 0 8px 6px 4px; border-bottom: .5px solid var(--sep); } .alld > span { font: 500 9px/18px var(--font); color: var(--label3); text-align: right; padding-right: 4px; } .alld .ad { min-height: 18px; display: grid; gap: 2px; align-content: start; } .alld .ad i { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 4px; border-radius: 4px; background: color-mix(in srgb, var(--c) 24%, var(--bg)); color: var(--c); font: 600 10px/16px var(--font); font-style: normal; }
+.tg { position: relative; display: grid; grid-template-columns: 34px 1fr; margin: 0 8px 0 4px; } .tg .hrs { position: relative; } .tg .hrs span { position: absolute; right: 5px; transform: translateY(-50%); font: 500 10px/1 var(--font); color: var(--label3); font-variant-numeric: tabular-nums; }
+.tg .cols { position: relative; display: grid; grid-template-columns: repeat(var(--nc), 1fr); background-image: repeating-linear-gradient(to bottom, color-mix(in srgb, var(--sep) 70%, transparent) 0 1px, transparent 1px var(--hh)); background-position: 0 0; } .tg .col { position: relative; border-left: .5px solid var(--sep); touch-action: pan-y; } .tg .col.td { background: color-mix(in srgb, var(--tint-fill) 5%, transparent); }
+.blk { position: absolute; left: 1px; right: 1px; overflow: hidden; padding: 2px 3px; border-radius: 5px; border-left: 3px solid var(--c); background: color-mix(in srgb, var(--c) 20%, var(--bg)); color: color-mix(in srgb, var(--c) 78%, var(--label)); font: 600 10px/1.15 var(--font); text-align: left; letter-spacing: -0.01em; animation: blkin calc(.5s * var(--dur)) var(--spring) backwards; transition: transform calc(.3s * var(--dur)) var(--spring); } .blk:active { transform: scale(.96); } .blk.dn { opacity: .5; text-decoration: line-through; } .blk.ev { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 20%, var(--bg)) 0 6px, color-mix(in srgb, var(--c) 12%, var(--bg)) 6px 12px); }
+.tg.day .blk { padding: 6px 10px; font-size: 14px; border-radius: 8px; left: 4px; right: 4px; } .tg.day .blk small { display: block; font: 500 12px/1.2 var(--font); opacity: .85; margin-top: 1px; }
+@keyframes blkin { from { opacity: 0; transform: scale(.9); } }
+.nowl { position: absolute; left: -4px; right: 0; height: 0; z-index: 3; border-top: 1.5px solid var(--red-fill); pointer-events: none; } .nowl::before { content: ""; position: absolute; left: -2px; top: -5px; width: 9px; height: 9px; border-radius: 50%; background: var(--red-fill); }
+.cv { animation: cvin calc(.5s * var(--dur)) var(--spring) backwards; } @keyframes cvin { from { opacity: 0; transform: translateX(calc(var(--dir, 0) * 26px)); } }
+.mgrid { display: grid; grid-template-columns: repeat(7, 1fr); margin: 0 8px; } .mgrid em { font: 600 11px/22px var(--font); font-style: normal; text-align: center; color: var(--label3); }
+.mgrid button { position: relative; height: 58px; display: grid; justify-items: center; align-content: start; gap: 4px; padding-top: 6px; border-top: .5px solid var(--sep); font: 500 17px/1 var(--round); } .mgrid button b { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font-weight: 500; transition: background-color calc(.3s * var(--dur)), transform calc(.4s * var(--dur)) var(--spring); } .mgrid button.mu { color: var(--label3); } .mgrid button.td b { color: var(--tint); font-weight: 700; } .mgrid button[aria-pressed="true"] b { background: var(--tint-fill); color: #fff; font-weight: 700; transform: scale(1.04); } .mgrid .dots { display: flex; gap: 3px; height: 6px; } .mgrid .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+.dayh { padding: 18px 20px 0; font: 700 20px/1.1 var(--font); letter-spacing: -0.01em; } .dayh small { display: block; margin-top: 4px; font: 500 13px/1 var(--font); color: var(--label2); letter-spacing: 0; }
+.evrow { display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 8px 16px; background: var(--card); } .evrow + .evrow::before, .group .evrow + .row::before, .group .row + .evrow::before { content: ""; } .evrow .bar { width: 4px; align-self: stretch; border-radius: 2px; background: var(--c); } .evrow b { display: block; font: 500 17px/1.2 var(--font); } .evrow span { color: var(--label2); font-size: 13px; }
+/* ---------- Wächter ---------- */
+.search2 { display: flex; align-items: center; gap: 8px; height: 38px; margin: 10px 16px 0; padding: 0 10px; border-radius: 10px; background: var(--fill); } .search2 svg { width: 17px; height: 17px; color: var(--label2); flex: none; } .search2 input { flex: 1; min-width: 0; border: 0; background: none; color: var(--label); font: 17px/1 var(--font); outline: none; } .search2 input::placeholder { color: var(--label2); }
+.wsum { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 12px 20px 0; font-size: 14px; color: var(--label2); } .wsum b { color: var(--label); font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
+.ban { display: flex; align-items: center; gap: 12px; width: calc(100% - 32px); margin: 12px 16px 0; padding: 12px 14px; border-radius: 14px; background: var(--tint-soft); text-align: left; transition: transform calc(.3s * var(--dur)) var(--spring); } .ban:active { transform: scale(.98); } .ban .bi { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--tint-fill); color: #fff; flex: none; } .ban .bi svg { width: 21px; height: 21px; } .ban b { display: block; font: 600 16px/1.25 var(--font); color: var(--label); } .ban span { font-size: 13px; color: var(--label2); } .ban .chev { margin-left: auto; width: 12px; height: 18px; color: var(--label3); flex: none; }
+.wsh { display: flex; align-items: center; gap: 8px; padding: 22px 20px 0; font: 700 20px/1 var(--font); letter-spacing: -0.01em; } .wsh svg { width: 19px; height: 19px; } .wsh .n { margin-left: 2px; color: var(--label2); font: 500 15px/1 var(--round); }
+.list.prob { box-shadow: 0 0 0 1.5px var(--red-fill); } .li .pr { color: var(--red); font-weight: 500; }
+.ghead { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 16px 8px 14px; text-align: left; border-radius: 12px; background: var(--card); transition: background-color calc(.2s * var(--dur)); } .ghead:active { background: var(--fill); } .ghead .gi { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: var(--c); color: #fff; flex: none; } .ghead .gi svg { width: 18px; height: 18px; } .ghead b { flex: 1; font: 600 17px/1.2 var(--font); letter-spacing: -0.01em; } .ghead .num { color: var(--label2); font: 500 15px/1 var(--round); } .ghead .chev { width: 11px; height: 17px; color: var(--label3); transition: transform calc(.4s * var(--dur)) var(--spring); } .ghead[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.gs { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 11px; font: 600 12px/1 var(--font); background: color-mix(in srgb, var(--green-fill) 16%, transparent); color: var(--green-fill); } .gs.warn { background: color-mix(in srgb, var(--red-fill) 14%, transparent); color: var(--red); } .gs.mid { background: color-mix(in srgb, var(--orange-fill) 18%, transparent); color: var(--orange-fill); }
+.gb { display: grid; grid-template-rows: 0fr; transition: grid-template-rows calc(.45s * var(--dur)) var(--spring); } .gb.open { grid-template-rows: 1fr; } .gb > div { overflow: hidden; } .gb .list { margin-top: 6px; }
+.gwrap { margin: 8px 16px 0; } .gwrap + .gwrap { margin-top: 8px; }
+.bat { width: 40px; height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; flex: none; } .bat i { display: block; height: 100%; border-radius: 3px; background: var(--green-fill); } .bat.low i { background: var(--red-fill); } .bat.mid i { background: var(--orange-fill); }
+.vpill { min-width: 52px; text-align: right; font: 600 15px/1 var(--round); font-variant-numeric: tabular-nums; } .vpill.low { color: var(--red); } .vpill.mid { color: var(--orange-fill); }
+.summ { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 16px 0; } .summ div { padding: 12px; border-radius: 14px; background: var(--card); } .summ b { display: block; font: 700 28px/1 var(--round); } .summ span { font-size: 12.5px; color: var(--label2); } .summ .low b { color: var(--red); } .summ .mid b { color: var(--orange-fill); }
+.pbar { display: flex; height: 10px; margin: 12px 16px 0; border-radius: 5px; overflow: hidden; background: var(--fill); gap: 2px; } .pbar i { display: block; height: 100%; transform-origin: left; animation: grow calc(.9s * var(--dur)) var(--spring) backwards; } @keyframes grow { from { transform: scaleX(0); } }
+.wprog { padding: 6px 20px 0; display: flex; align-items: center; gap: 10px; color: var(--label2); font: 600 13px/1 var(--font); } .wprog .tr { flex: 1; height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; } .wprog .tr i { display: block; height: 100%; background: var(--tint-fill); border-radius: 2px; transition: width calc(.5s * var(--dur)) var(--spring); }
+.ent { margin: 8px 16px 0; border-radius: 12px; background: var(--card); overflow: hidden; max-height: 300px; overflow-y: auto; } .ent button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 54px; padding: 6px 14px; text-align: left; } .ent button + button { border-top: .5px solid var(--sep); } .ent button b { display: block; font: 600 15px/1.25 var(--font); } .ent button span { display: block; font-size: 12px; color: var(--label2); } .ent button .v { margin-left: auto; font-size: 14px; color: var(--label2); } .ent button:active { background: var(--fill); }
+.selent { margin: 12px 16px 0; padding: 12px 14px; border-radius: 14px; background: var(--card); } .selent .t { display: flex; align-items: center; gap: 10px; } .selent .t b { font: 600 16px/1.2 var(--font); display: block; } .selent .t > span:not(.sico):not(.v) span { display: block; font-size: 12px; color: var(--label2); } .selent .t .v { margin-left: auto; font: 700 18px/1 var(--round); }
+.probe { margin: 12px 16px 0; padding: 14px; border-radius: 14px; background: var(--card); } .probe .bars7 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 70px; margin-top: 12px; } .probe .bars7 i { display: block; border-radius: 4px 4px 2px 2px; background: var(--tint-fill); height: 0; transition: height calc(.8s * var(--dur)) var(--spring); } .probe .lab7 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 6px; font-size: 11px; color: var(--label2); text-align: center; }
+.prev { margin: 12px 16px 0; border-radius: 14px; overflow: hidden; background: var(--card); } .prev .ph { padding: 10px 14px 0; font: 700 11.5px/1 var(--font); letter-spacing: .06em; text-transform: uppercase; color: var(--label2); } .prev .row { background: none; }
+.wcard { margin: 12px 16px 0; padding: 14px; border-radius: 14px; background: var(--card); } .wcard .k { font: 700 11.5px/1 var(--font); letter-spacing: .06em; text-transform: uppercase; color: var(--label2); } .wcard .v { margin-top: 5px; font: 600 18px/1.3 var(--font); letter-spacing: -0.01em; } .wcard .v + .k { margin-top: 14px; }
+.opt { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 62px; padding: 10px 16px; text-align: left; } .opt .oi { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--c, var(--fill)); color: #fff; flex: none; } .opt .oi svg { width: 20px; height: 20px; } .opt b { display: block; font: 600 16px/1.25 var(--font); } .opt span.d { display: block; font-size: 13px; color: var(--label2); line-height: 1.3; } .opt .badge { margin-left: auto; flex: none; height: 22px; padding: 0 8px; border-radius: 11px; background: var(--tint-soft); color: var(--tint); font: 600 12px/22px var(--font); }
+.fld { display: block; width: calc(100% - 32px); margin: 8px 16px 0; padding: 12px 14px; border: 0; border-radius: 12px; background: var(--card); color: var(--label); font: 17px/1.3 var(--font); outline: none; resize: none; } .fld:focus { box-shadow: 0 0 0 2px var(--tint-fill); }
+.inl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 16px 0; font-size: 15px; color: var(--label2); } .inl input { width: 62px; height: 38px; padding: 0 10px; border: 0; border-radius: 10px; background: var(--card); color: var(--label); font: 600 17px var(--round); outline: none; text-align: center; } .inl input:focus { box-shadow: 0 0 0 2px var(--tint-fill); } .inl em { font-style: normal; color: var(--label); font-weight: 600; }
+.sfoot.two2 { display: flex; gap: 10px; } .sfoot.two2 .bigbtn { flex: 1; } .sfoot .bigbtn.soft2 { flex: 0 0 auto; width: auto; padding: 0 22px; background: var(--card); color: var(--tint); }
+.fkb { position: absolute; left: 0; right: 0; bottom: 0; z-index: 100; height: 290px; padding: 10px 4px calc(8px + var(--sab)); display: grid; grid-template-rows: repeat(4, 1fr); gap: 10px; background: color-mix(in srgb, var(--label3) 38%, var(--bg)); backdrop-filter: blur(24px); transform: translateY(100%); transition: transform calc(.5s * var(--dur)) var(--spring); pointer-events: none; } .fkb.on { transform: none; } .fkb div { display: flex; justify-content: center; gap: 6px; } .fkb i { flex: 1; max-width: 34px; display: grid; place-items: center; border-radius: 6px; background: var(--card); font: 400 22px/1 var(--font); font-style: normal; box-shadow: 0 1px 0 rgba(0, 0, 0, .3); } .fkb i.w { max-width: 90px; font-size: 16px; background: color-mix(in srgb, var(--label3) 55%, var(--bg)); } .fkb i.sp { max-width: none; font-size: 16px; }
+.sfoot .bigbtn.soft2 { color: var(--tint) !important; }
+
 /* ---------- Desktop: Split-Ansicht ---------- */
 .side, .pane { display: none; }
 @media (min-width: 900px) {
   .stage { display: block; } .app { border-radius: 0; box-shadow: none; }
   .root { display: grid; grid-template-columns: 270px 420px minmax(0, 1fr); }
   .screens { position: relative; inset: auto; border-right: .5px solid var(--sep); }
+  .root.wide { grid-template-columns: 270px minmax(0, 1fr); } .root.wide .pane { display: none; } .root.wide .screens { border-right: 0; }
+  .root.wide .tg .blk { font-size: 12px; } .root.wide .calhead, .root.wide .tg, .root.wide .alld, .root.wide .mgrid, .root.wide .cv > .dayh, .root.wide #mday { max-width: 1100px; margin-left: auto; margin-right: auto; } .root.wide .mgrid button { height: 78px; }
   .tabbar, .tiles { display: none; }
   .scroll { padding-bottom: 120px; }
   .side { display: flex; flex-direction: column; gap: 14px; padding: 18px 12px; background: color-mix(in srgb, var(--bg) 90%, var(--label)); border-right: .5px solid var(--sep); overflow-y: auto; }
@@ -435,6 +510,8 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   </div>
   <div class="scrim" id="scrim"></div>
   <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+  <div class="scrim2" id="scrim2"></div>
+  <div class="sheet s2" id="sheet2" role="dialog" aria-modal="true"></div>
   <div class="menu" id="menu" role="menu" aria-label="Personen"></div>
   <div class="banner" id="banner" role="alert"></div>
   <div class="alertw" id="alertw"><div class="alertb" id="alertb" role="alertdialog" aria-modal="true"></div></div>
@@ -615,6 +692,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   // ---------- Blatt ----------
   var sheet = $('sheet'), scrim = $('scrim'), root = $('root'), curTask = null, onSheetClose = null;
   function showSheet(html, opts) {
+    if (sheet._hm) { for (var ty in sheet._hm) sheet.removeEventListener(ty, sheet._hm[ty]); sheet._hm = {}; }
     opts = opts || {}; sheet.className = 'sheet' + (opts.med ? ' med' : ''); sheet.innerHTML = '<div class="grab" id="grab"><i></i></div>' + html; sheet.setAttribute('aria-label', opts.label || 'Blatt');
     void sheet.offsetWidth; sheet.classList.add('on'); scrim.classList.add('on'); plusState(!!opts.plus); if (!opts.med && !desk()) root.classList.add('back'); onSheetClose = opts.onClose || null; wireDrag();
   }
@@ -646,7 +724,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   }
   function openTask(t) {
     curTask = t;
-    if (desk()) { var pane = $('pane'); pane.innerHTML = '<div class="sbody" style="padding-top:28px">' + detailHtml(t, true).replace('<div class="sbody">', '').replace(/<\/div>$/, '') + '</div>'; pane.dataset.id = t.id; return; }
+    if (desk() && !root.classList.contains('wide')) { var pane = $('pane'); pane.innerHTML = '<div class="sbody" style="padding-top:28px">' + detailHtml(t, true).replace('<div class="sbody">', '').replace(/<\/div>$/, '') + '</div>'; pane.dataset.id = t.id; return; }
     showSheet(detailHtml(t, false), { label: t.t });
   }
   document.addEventListener('click', function (e) {
@@ -662,30 +740,6 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
 
   // ---------- Neue Aufgabe ----------
   $('fab').addEventListener('click', openNew);
-  function openNew() {
-    showSheet('<div class="shead"><button data-close>Abbrechen</button><span class="ti">Neue Aufgabe</span><button class="r" id="add" disabled>Hinzufügen</button></div>' +
-      '<div class="sbody"><textarea class="field" id="nf" rows="2" placeholder="Was steht an?" aria-label="Titel der Aufgabe"></textarea><div class="chips" id="chips" aria-live="polite"></div><p class="hint">Tipp: „Müll morgen 19 Uhr @Ben #Haushalt“. Datum, Person und Board erkennt Stups beim Schreiben.</p></div>', { med: true, label: 'Neue Aufgabe', onClose: null, plus: true });
-    var f = $('nf'), typed = false; f.focus({ preventScroll: true });
-    f.addEventListener('input', function () { typed = true; parse(); });
-    $('add').addEventListener('click', addTask);
-    if (!calm) wait(700, function () { if (typed) return; var s = 'Müll morgen 19 Uhr @Ben #Haushalt', i = 0; (function tick() { if (typed || !sheet.classList.contains('on')) return; f.value = s.slice(0, ++i); parse(); if (i < s.length) setTimeout(tick, 55); })(); });
-  }
-  var parsed = {};
-  function parse() {
-    var v = $('nf').value, p = { title: v.replace(/@\w+|#\w+|\b(morgen|heute)\b|\b\d{1,2}(:\d\d)? ?uhr\b|\b\d{1,2}:\d\d\b/gi, '').replace(/\s+/g, ' ').trim() }, chips = '';
-    var m = v.match(/\b(morgen|heute)\b/i), h = v.match(/\b(\d{1,2})(?::(\d\d))? ?uhr\b|\b(\d{1,2}):(\d\d)\b/i);
-    if (m) { p.day = m[1].toLowerCase(); } if (h) { p.time = (h[1] || h[3]).padStart(2, '0') + ':' + (h[2] || h[4] || '00'); }
-    if (p.day || p.time) { p.when = (p.day || 'heute') + (p.time ? ' ' + p.time : ''); chips += '<span class="chip">' + I('cal') + p.when + '</span>'; }
-    var a = v.match(/@(\w+)/); if (a) people.forEach(function (x) { if (x[1].toLowerCase() === a[1].toLowerCase()) { p.who = x[0]; chips += '<span class="chip">' + I('people') + x[1] + '</span>'; } });
-    var b = v.match(/#(\w+)/); if (b) { p.board = b[1]; chips += '<span class="chip">' + I('layers') + b[1] + '</span>'; }
-    var c = $('chips'), key = chips; if (c.dataset.k !== key) { c.innerHTML = chips; c.dataset.k = key; }
-    parsed = p; $('add').disabled = !p.title;
-  }
-  function addTask() {
-    if (!parsed.title) return; var t = { id: nextId++, t: parsed.title.charAt(0).toUpperCase() + parsed.title.slice(1), due: parsed.day === 'heute' ? 'today' : 'week', when: parsed.when || 'heute', who: parsed.who || 'A', board: parsed.board || 'Haushalt' };
-    tasks.push(t); if (who && !mine(t)) who[t.who] = 1; closeSheet(); wait(350, function () { refresh(); var r = document.querySelector('.row[data-id="' + t.id + '"]'); if (r) { r.classList.add('fresh'); var sc = r.closest('.scroll'); if (sc) sc.scrollTo({ top: sc.scrollTop + r.getBoundingClientRect().top - sc.getBoundingClientRect().top - 260, behavior: calm ? 'auto' : 'smooth' }); } toast('Hinzugefügt'); });
-  }
-
   // ---------- Menü ----------
   var menu = $('menu');
   function menuHtml() {
@@ -716,6 +770,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     if (k === curTab) return; clearPages(); curTab = k;
     document.querySelectorAll('.tb, .snav .si').forEach(function (b) { b.setAttribute('aria-current', b.dataset.tab === k ? 'page' : 'false'); });
     moveBubble(true);
+    root.classList.toggle('wide', k === 'cal');
     var ts = $('tabscreen'); if (k === 'tasks') { ts.classList.remove('on'); return; }
     ts.innerHTML = tabHtml(k); wireTab(ts, k); void ts.offsetWidth; ts.classList.add('on');
   }
@@ -884,8 +939,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
       right = '<button class="nbtn ic" data-newboard aria-label="Neues Board">' + I('plus') + '</button>';
       body = '<div class="list" style="margin-top:8px">' + BOARDS.map(function (b) { var n = tasks.filter(function (t) { return t.board === b[0] && !t.done; }).length; return '<button class="li link" style="color:var(--label)" data-board="' + b[0] + '"><span class="sico" style="--c:' + b[1] + '">' + I(b[2]) + '</span><span class="k">' + b[0] + '</span><span class="v num">' + n + ' offen</span>' + I('chev', 'chev') + '</button>'; }).join('') + '</div><p class="hint" style="padding-top:12px">Tippe ein Board an, um seine Spalten zu sehen.</p>';
     } else if (k === 'cal') {
-      var D = [['Do', 12], ['Fr', 13], ['Sa', 14], ['So', 15], ['Mo', 16], ['Di', 17], ['Mi', 18]];
-      body = '<div data-seg2></div><div class="dstrip" role="group" aria-label="Tage">' + D.map(function (d) { var n = tasks.filter(function (t) { return dayOf(t) === d[0] && !t.done; }).length; return '<button data-day="' + d[0] + '" aria-pressed="' + (calDay === d[0]) + '">' + d[0] + '<b class="num">' + d[1] + '</b><i class="' + (n ? '' : 'none') + '"></i></button>'; }).join('') + '</div><div id="dayList">' + dayList(calDay) + '</div>';
+      right = '<button class="nbtn ic" data-newday aria-label="Neue Aufgabe">' + I('plus') + '</button>'; body = '<div id="calroot"></div>';
     } else if (typeof watchBody === 'function') { var w = watchBody(); body = w.body; right = w.right; }
     return '<header class="nav"><div class="l"></div><div class="it" style="opacity:0">' + TABS[k] + '</div><div class="r">' + right + '</div></header><div class="scroll"><div class="large"><h1>' + TABS[k] + '</h1></div>' + body + '</div>';
   }
@@ -893,21 +947,23 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     ts.querySelectorAll('[data-day]').forEach(function (b) { b.addEventListener('click', function () { calDay = b.dataset.day; ts.querySelectorAll('[data-day]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); $('dayList').innerHTML = dayList(calDay); }); });
     ts.querySelectorAll('[data-board]').forEach(function (b) { b.addEventListener('click', function () { pushPage(boardPage(b.dataset.board)); }); });
     var nb = ts.querySelector('[data-newboard]'); if (nb) nb.addEventListener('click', function () { toast('Neues Board: Name, Vorlage, Farbe'); });
-    if (typeof wireWatch === 'function') wireWatch(ts);
+    if (typeof wireWatch === 'function' && k === 'watch') wireWatch(ts);
+    if (k === 'cal') { var nd = ts.querySelector('[data-newday]'); if (nd) nd.addEventListener('click', function () { openNew({ draft: { d: cv.day, m: 9 * 60, manual: { d: 1 } }, noFocus: true, noDemo: true }); }); drawCal(false); wait(80, calScroll); }
     var sc = ts.querySelector('.scroll'), nav = ts.querySelector('.nav'), h1 = ts.querySelector('h1'); nav.style.setProperty('--p', 0);
     sc.addEventListener('scroll', function () { var q2 = Math.max(0, Math.min(1, (sc.scrollTop - 30) / 22)); nav.style.setProperty('--p', q2); nav.querySelector('.it').style.opacity = q2; h1.style.opacity = 1 - Math.min(1, sc.scrollTop / 40); });
   }
   function afterRefresh() {
     pstack.forEach(function (pg) { if (pg.redraw) pg.redraw(); });
-    var ts = $('tabscreen'); if (ts && ts.classList.contains('on') && curTab === 'cal') { var dl = $('dayList'); if (dl) dl.innerHTML = dayList(calDay); }
+    var ts = $('tabscreen'); if (ts && ts.classList.contains('on') && curTab === 'cal' && cv && cv.view != null) drawCal(true);
   }
 
   // ---------- Seitenübersicht ----------
   var INDEX = [
     ['Start', [['Anmelden', 'Passkey oder Passwort', 'openLogin'], ['Noch kein Zugriff', 'Warten auf Freigabe', 'openNoAccess'], ['Einrichtung', 'Willkommen, Personen, Wächter, fertig', 'openOnboarding']]],
-    ['Aufgaben', [['Aufgabe öffnen', 'Details als Blatt', 'idxTask'], ['Neue Aufgabe', 'Schnelleingabe', 'openNew'], ['Termin wählen', 'Kalender und Uhrzeit', 'idxDate'], ['Wiederholung', 'Auswahl', 'idxRepeat'], ['Stupsen', 'Nachricht und Vorschau', 'idxPoke'], ['Kartenmenü', 'Aktionsblatt', 'idxMenu'], ['Mitteilungen', 'Liste', 'openNotifs'], ['Diese Woche', 'Verteilung ohne Rangliste', 'openWeek']]],
+    ['Aufgaben', [['Aufgabe öffnen', 'Details als Blatt', 'idxTask'], ['Neue Aufgabe', 'Alle Felder, Schnelleingabe', 'openNew'], ['Neue Aufgabe mit Tastatur', 'Blatt bleibt über der Tastatur', 'idxKb'], ['Termin wählen', 'Kalender und Uhrzeit', 'idxDate'], ['Wiederholung', 'Plan, Wochentage, Toleranz', 'idxRepeat'], ['Erinnerung', 'Vorab und Nachhaken', 'idxRemind'], ['Stupsen', 'Nachricht und Vorschau', 'idxPoke'], ['Kartenmenü', 'Aktionsblatt', 'idxMenu'], ['Mitteilungen', 'Liste', 'openNotifs'], ['Diese Woche', 'Verteilung ohne Rangliste', 'openWeek']]],
     ['Boards', [['Boards', 'Liste', 'idxBoards'], ['Board', 'Spalten als Segment', 'idxBoard'], ['Board-Einstellungen', 'Spalten, Kategorien, Archiv', 'idxBoardSet'], ['Board löschen', 'Warnung', 'idxBoardDel']]],
-    ['Wächter', [['Wächter', 'Liste und Gefundenes', 'idxWatch'], ['Wächter-Detail', 'Verlauf mit Schwelle', 'idxWatchDetail'], ['Neuer Wächter', 'Vier Schritte', 'openWizard']]],
+    ['Kalender', [['Woche', 'Standardansicht', 'idxCalWeek'], ['Tag', 'Zeitleiste', 'idxCalDay'], ['Monat', 'Raster mit Tagesliste', 'idxCalMonth'], ['Liste', 'Die nächsten 14 Tage', 'idxCalList']]],
+    ['Wächter', [['Wächter', 'Nach Kategorien, mit Suche', 'idxWatch'], ['Kategorie mit 100 Batterien', 'Kritisch, Räume, Alle', 'idxCat'], ['Gefunden', 'Vorschläge einrichten', 'openFound'], ['Wächter-Detail', 'Verlauf, Regeln, Läufe', 'idxWatchDetail'], ['Neuer Wächter', 'Vorlage und vier Schritte', 'openWizard']]],
     ['Einstellungen', [['Übersicht', 'Gruppen', 'openSettings'], ['Benachrichtigungen', 'Schalter und Zeiten', 'idxS1'], ['Sprache und Farbe', 'Darstellung live', 'idxS2'], ['Personen und Zugriff', 'Rechte', 'idxS3'], ['Konto und Anmeldung', 'Passkeys', 'idxS4']]],
     ['Dialoge', [['Warnung', 'Löschen bestätigen', 'idxAlert'], ['Aktionsblatt', 'Mehrere Aktionen', 'idxMenu']]]
   ];
@@ -980,84 +1036,8 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   });
   document.addEventListener('click', function (e) { var b; if ((b = e.target.closest('.sw')) && b.closest('.page, #full')) { var on = !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-checked', on); } });
 
-  // ================= Wächter =================
-  var WATCH = [
-    { id: 1, n: 'Waschmaschine', ic: 'house', c: 'var(--blue-fill)', rule: 'Leistung fällt unter 5 W', task: 'Waschmaschine ausräumen', who: 'A', st: 'run', val: '212 W', thr: 5, stxt: 'Läuft seit 14:52', series: [380, 372, 390, 150, 360, 380, 340, 220, 350, 210] },
-    { id: 2, n: 'Trockner', ic: 'house', c: 'var(--orange-fill)', rule: 'Leistung fällt unter 5 W', task: 'Wäsche aufhängen', who: 'A', st: 'wait', val: '1,2 W', thr: 5, stxt: 'Wartet', series: [2, 1.5, 1.4, 1.3, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2] },
-    { id: 3, n: 'Briefkasten', ic: 'eye', c: 'var(--green-fill)', rule: 'Klappe öffnet sich', task: 'Post holen', who: 'B', st: 'wait', val: 'Zu', thr: 0, stxt: 'Wartet', series: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-    { id: 4, n: 'Spülmaschine', ic: 'house', c: '#af52de', rule: 'Leistung fällt unter 3 W', task: 'Spülmaschine ausräumen', who: 'M', st: 'off', val: '0 W', thr: 3, stxt: 'Pausiert', series: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
-  ];
-  function watchBody() {
-    var rows = WATCH.map(function (w) { return '<button class="li link" style="color:var(--label)" data-watch="' + w.id + '"><span class="sico" style="--c:' + w.c + '">' + I(w.ic) + '</span><span class="k">' + w.n + '<small>' + w.rule + '</small></span><span class="pill ' + w.st + '"><i></i>' + w.stxt + '</span>' + I('chev', 'chev') + '</button>'; });
-    return { right: '<button class="nbtn ic" data-newwatch aria-label="Neuer Wächter">' + I('plus') + '</button>', body: '<p class="hint" style="padding-top:2px">Wächter beobachten Geräte in deinem Home Assistant und legen eine Aufgabe an, sobald etwas passiert.</p><div class="list" style="margin-top:12px">' + rows.join('') + '</div><button class="bigbtn soft" data-newwatch>Neuen Wächter anlegen</button>' };
-  }
-  function wireWatch(ts) {
-    ts.querySelectorAll('[data-watch]').forEach(function (b) { b.addEventListener('click', function () { pushPage(watchPage(WATCH.filter(function (w) { return w.id === +b.dataset.watch; })[0])); }); });
-    ts.querySelectorAll('[data-newwatch]').forEach(function (b) { b.addEventListener('click', openWizard); });
-  }
-  function graphSvg(w) {
-    var s = w.series, mx = Math.max.apply(null, s.concat([w.thr * 2, 10])), W = 320, H = 130, pts = s.map(function (v, i) { return [8 + i * (W - 16) / (s.length - 1), H - 10 - (v / mx) * (H - 24)]; });
-    var d = pts.map(function (p, i) { if (!i) return 'M' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); var q = pts[i - 1], cx = (q[0] + p[0]) / 2; return 'C' + cx.toFixed(1) + ' ' + q[1].toFixed(1) + ' ' + cx.toFixed(1) + ' ' + p[1].toFixed(1) + ' ' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
-    var ty = H - 10 - (w.thr / mx) * (H - 24), last = pts[pts.length - 1];
-    return '<svg class="graph" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Verlauf der letzten 3 Stunden"><defs><linearGradient id="gfill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--tint-fill)" stop-opacity=".45"/><stop offset="1" stop-color="var(--tint-fill)" stop-opacity="0"/></linearGradient></defs>' +
-      (w.thr ? '<line class="thr" x1="0" x2="' + W + '" y1="' + ty.toFixed(1) + '" y2="' + ty.toFixed(1) + '"/><text class="tx" x="' + (W - 2) + '" y="' + (ty - 5).toFixed(1) + '" text-anchor="end">Schwelle ' + w.thr + ' W</text>' : '') +
-      '<path class="ar" d="' + d + ' L' + last[0] + ' ' + H + ' L8 ' + H + ' Z"/><path class="ln" pathLength="1" d="' + d + '"/><circle class="dot" cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="5"/></svg>';
-  }
-  function watchPage(w) {
-    var inner = '<div class="gcard"><div class="gh"><b>' + w.val + '</b><span>Letzte 3 Stunden</span></div>' + graphSvg(w) + '</div>' +
-      '<div class="kv"><div><b>' + (w.thr || 'Auf') + (w.thr ? ' W' : '') + '</b><span>Schwelle</span></div><div><b>2 Min.</b><span>Dauer</span></div><div><b>3</b><span>Auslösungen</span></div></div>' +
-      grp('Wenn', ['<div class="li"><span class="k">' + w.rule + '</span></div>']) + grp('Dann', ['<div class="li"><span class="k">Aufgabe „' + w.task + '“<small>Board Haushalt</small></span><span class="avs">' + '<span class="av" style="--c:' + P[w.who].c + '">' + w.who + '</span></span></div>']) +
-      '<div class="list" style="margin-top:22px">' + swRow('Wächter aktiv', w.st !== 'off') + '</div><button class="bigbtn soft" data-wtest>Jetzt testen</button><div class="list" style="margin-top:22px"><button class="li tap redtxt" data-wdel>Wächter löschen</button></div>';
-    var sec = buildPage(w.n, 'Wächter', '', inner, 'wpage');
-    sec.querySelector('[data-wtest]').addEventListener('click', function () { toast('Testlauf: Aufgabe „' + w.task + '“ würde jetzt angelegt'); });
-    sec.querySelector('[data-wdel]').addEventListener('click', function () { alertBox({ title: '„' + w.n + '“ löschen?', msg: 'Der Wächter hört auf zu beobachten. Bereits angelegte Aufgaben bleiben erhalten.', actions: [{ t: 'Abbrechen', bold: true }, { t: 'Löschen', dest: true, fn: function () { popPage(); WATCH = WATCH.filter(function (x) { return x !== w; }); var ts = $('tabscreen'); if (curTab === 'watch') { ts.innerHTML = tabHtml('watch'); wireTab(ts, 'watch'); } toast('Wächter gelöscht'); } }] }); });
-    wait(450, function () { var g = sec.querySelector('.graph'); if (g) g.classList.add('go'); }); if (calm) { var g = sec.querySelector('.graph'); if (g) g.classList.add('go'); }
-    return sec;
-  }
-  function openWizard() {
-    var DEV = [['Waschmaschine', 'Leistung', 'Waschmaschine ausräumen'], ['Trockner', 'Leistung', 'Wäsche aufhängen'], ['Spülmaschine', 'Leistung', 'Spülmaschine ausräumen'], ['Briefkasten', 'Klappe', 'Post holen'], ['Haustür', 'Kontakt', 'Tür prüfen']];
-    var st = { s: 0, dev: 0, cond: 0, thr: 5, who: 'A', title: DEV[0][2] }, rev = false;
-    function body() {
-      if (st.s === 0) return '<div class="list" style="margin-top:8px" id="wdev">' + radioRows('dev', DEV.map(function (d) { return [d[0], d[1]]; }), st.dev) + '</div><p class="hint" style="padding-top:8px">Die Geräte kommen aus deinem Home Assistant.</p>';
-      if (st.s === 1) return segHtml('wcond', ['Fällt unter', 'Steigt über'], st.cond) + '<div class="bignum"><span id="wv">' + st.thr + '</span><small>W</small></div><div style="padding:6px 28px 0"><input class="rng" type="range" min="1" max="50" value="' + st.thr + '" id="wrng" aria-label="Schwelle in Watt"></div><div class="list" style="margin-top:22px"><div class="li"><span class="k">Für mindestens</span><span class="v">2 Minuten</span></div></div><p class="hint" style="padding-top:8px">So reagiert der Wächter nicht auf kurze Ausschläge.</p>';
-      if (st.s === 2) return '<input class="field2" id="wtitle" value="' + st.title + '" aria-label="Titel der Aufgabe"><div class="hist" style="padding-top:22px">Für wen?</div><div class="chips" id="wwho" style="padding-top:10px">' + people.slice(0, 5).map(function (p) { return '<button class="chip" style="animation:none;' + (p[0] === st.who ? '' : 'background:var(--fill);color:var(--label)') + '" data-w="' + p[0] + '"><span class="av" style="--c:' + p[2] + ';width:20px;height:20px;font-size:10px">' + p[0] + '</span>' + p[1] + '</button>'; }).join('') + '</div>';
-      var d = DEV[st.dev]; return '<div class="gcard" style="margin-top:12px;padding:18px"><div style="font:600 13px var(--font);color:var(--label2)">WENN</div><div style="font:600 19px/1.3 var(--font);margin:4px 0 14px">' + d[0] + ' ' + (st.cond ? 'über' : 'unter') + ' ' + st.thr + ' W ' + (st.cond ? 'steigt' : 'fällt') + '</div><div style="font:600 13px var(--font);color:var(--label2)">DANN</div><div style="font:600 19px/1.3 var(--font);margin-top:4px">Aufgabe „' + st.title + '“ für ' + P[st.who].n + '</div></div><p class="hint" style="padding-top:10px">Du kannst den Wächter jederzeit pausieren.</p>';
-    }
-    function draw() {
-      var first = st.s === 0, last = st.s === 3;
-      var dots = '<div class="dots3">' + [0, 1, 2, 3].map(function (i) { return '<i class="' + (i <= st.s ? 'on' : '') + '"></i>'; }).join('') + '</div>';
-      var titles = ['Welches Gerät?', 'Wann soll es melden?', 'Welche Aufgabe?', 'Alles bereit'];
-      showSheetKeep('<div class="shead"><button data-wback>' + (first ? 'Abbrechen' : 'Zurück') + '</button><span class="ti">Neuer Wächter</span><button class="r" data-wnext>' + (last ? 'Aktivieren' : 'Weiter') + '</button></div><div class="sbody">' + dots + '<div class="large" style="padding:8px 20px 0"><h2 style="font:700 26px/1.15 var(--font);letter-spacing:.01em">' + titles[st.s] + '</h2></div><div class="wstep' + (rev ? ' rev' : '') + '">' + body() + '</div></div>');
-      sheet.querySelector('[data-wback]').addEventListener('click', function () { if (first) closeSheet(); else { st.s--; rev = true; draw(); } });
-      sheet.querySelector('[data-wnext]').addEventListener('click', function () { if (last) { var dv = DEV[st.dev]; WATCH.push({ id: 10 + WATCH.length, n: dv[0], ic: 'house', c: 'var(--blue-fill)', rule: 'Leistung ' + (st.cond ? 'steigt über ' : 'fällt unter ') + st.thr + ' W', task: st.title, who: st.who, st: 'wait', val: '0 W', thr: st.thr, stxt: 'Wartet', series: [2, 2, 1, 1, 1, 1, 1, 1, 1, 1] }); closeSheet(); wait(450, function () { if (curTab !== 'watch') setTab('watch'); else { var ts = $('tabscreen'); ts.innerHTML = tabHtml('watch'); wireTab(ts, 'watch'); } toast('Wächter „' + dv[0] + '“ ist aktiv'); }); } else { st.s++; rev = false; draw(); } });
-      var wd = sheet.querySelector('#wdev'); if (wd) wireRadio(wd, function (n, i) { st.dev = i; st.title = DEV[i][2]; });
-      var sg = sheet.querySelector('#wcond'); if (sg) wireSeg(sg, function (i) { st.cond = i; });
-      var rg = sheet.querySelector('#wrng'); if (rg) rg.addEventListener('input', function () { st.thr = +rg.value; $('wv').textContent = rg.value; });
-      var wt = sheet.querySelector('#wtitle'); if (wt) wt.addEventListener('input', function () { st.title = wt.value; });
-      sheet.querySelectorAll('[data-w]').forEach(function (b) { b.addEventListener('click', function () { st.who = b.dataset.w; sheet.querySelectorAll('[data-w]').forEach(function (x) { var on = x === b; x.style.background = on ? '' : 'var(--fill)'; x.style.color = on ? '' : 'var(--label)'; }); }); });
-    }
-    showSheet('', { label: 'Neuer Wächter' }); draw();
-  }
-  function showSheetKeep(html) { var g = sheet.querySelector('#grab'); sheet.innerHTML = '<div class="grab" id="grab"><i></i></div>' + html; wireDrag(); }
-
   // ================= Dialoge =================
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
-  function idxDate() {
-    var sel = 12, html = '<div class="shead"><button data-close>Abbrechen</button><span class="ti">Termin</span><button class="r" data-close data-save>Fertig</button></div><div class="sbody">' +
-      '<div class="chips" style="padding-top:8px">' + ['Heute', 'Morgen', 'Am Wochenende', 'Nächste Woche'].map(function (c, i) { return '<button class="chip" style="animation:none" data-q="' + [12, 13, 14, 16][i] + '">' + c + '</button>'; }).join('') + '</div>' +
-      '<div class="cal"><div class="ch">November 2026<span>' + I('chev') + '</span></div><div class="gr">' + ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(function (d) { return '<em>' + d + '</em>'; }).join('') + '<i></i><i></i><i></i><i></i><i></i><i></i>' + Array.apply(null, Array(30)).map(function (_, i) { var d = i + 1; return '<button data-d="' + d + '" class="' + (d === 12 ? 'td' : '') + (d < 12 ? ' mute' : '') + '" aria-pressed="' + (d === sel) + '">' + d + '</button>'; }).join('') + '</div></div>' +
-      '<div class="wheels"><div class="wheel" id="wh">' + Array.apply(null, Array(24)).map(function (_, i) { return '<div>' + pad2(i) + '</div>'; }).join('') + '</div><span class="col">:</span><div class="wheel" id="wm">' + Array.apply(null, Array(12)).map(function (_, i) { return '<div>' + pad2(i * 5) + '</div>'; }).join('') + '</div></div>' +
-      '<div class="list"><div class="li"><span class="k">Wiederholen</span><span class="v">Nie' + I('chev', 'chev') + '</span></div></div></div>';
-    showSheet(html, { label: 'Termin' });
-    var gr = sheet.querySelector('.gr'); function pick(d) { sel = d; gr.querySelectorAll('[data-d]').forEach(function (b) { b.setAttribute('aria-pressed', +b.dataset.d === d); }); }
-    gr.addEventListener('click', function (e) { var b = e.target.closest('[data-d]'); if (b) pick(+b.dataset.d); });
-    sheet.querySelectorAll('[data-q]').forEach(function (b) { b.addEventListener('click', function () { pick(+b.dataset.q); }); });
-    sheet.querySelector('#wh').scrollTop = 18 * 44; sheet.querySelector('#wm').scrollTop = 6 * 44;
-  }
-  function idxRepeat() {
-    showSheet('<div class="shead"><button data-close>Abbrechen</button><span class="ti">Wiederholung</span><button class="r" data-close>Fertig</button></div><div class="sbody"><div class="list" id="rp" style="margin-top:12px">' + radioRows('rp', [['Nie'], ['Jeden Tag'], ['Jede Woche', 'Donnerstags'], ['Alle 2 Wochen'], ['Jeden Monat', 'Am 12.'], ['Eigene …']], 2) + '</div>' + grp('Endet', ['<div class="li"><span class="k">Nie</span><svg class="ck" viewBox="0 0 24 24" style="width:18px;height:18px;stroke-width:2.8;color:var(--tint)"><use href="#i-check"/></svg></div>']) + '<p class="hint" style="padding-top:10px">Erledigst du die Aufgabe, erscheint die nächste automatisch.</p></div>', { med: true, label: 'Wiederholung' });
-    wireRadio(sheet.querySelector('#rp'));
-  }
   function idxPoke() {
     var who = 'B', msg = 0, MS = ['Heute noch?', 'Kannst du das übernehmen?', 'Danke dir!', 'Brauchst du Hilfe?'];
     showSheet('<div class="shead"><button data-close>Abbrechen</button><span class="ti">Stupsen</span><button class="r" id="pk">Senden</button></div><div class="sbody"><div class="hist" style="padding-top:12px">An</div><div class="chips" id="pw" style="padding-top:10px">' + people.slice(0, 5).map(function (p) { return '<button class="chip" style="animation:none;' + (p[0] === who ? '' : 'background:var(--fill);color:var(--label)') + '" data-w="' + p[0] + '"><span class="av" style="--c:' + p[2] + ';width:20px;height:20px;font-size:10px">' + p[0] + '</span>' + p[1] + '</button>'; }).join('') + '</div>' +
@@ -1075,7 +1055,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     showSheet('<div class="shead"><span></span><span class="ti">Diese Woche</span><button class="r" data-close>Fertig</button></div><div class="sbody"><div class="hero" style="padding:22px 28px 4px"><h1 style="font-size:44px" class="num">' + tot + '</h1><p>Aufgaben habt ihr diese Woche gemeinsam erledigt.</p></div><div class="list bars">' + D.map(function (d) { return '<div class="br"><span>' + d[0] + '</span><div class="tr"><i style="--c:' + d[1] + '" data-w="' + (d[2] / mx * 100) + '"></i></div><span class="num">' + d[2] + '</span></div>'; }).join('') + '</div><p class="hint" style="padding-top:10px">Alphabetisch sortiert, ohne Rangliste. Es geht um Verteilung, nicht um Wettbewerb.</p></div>', { med: true, label: 'Diese Woche' });
     wait(250, function () { sheet.querySelectorAll('.bars i').forEach(function (i) { i.style.width = i.dataset.w + '%'; }); });
   }
-  FN.idxRepeat = idxRepeat; FN.idxDate = idxDate; FN.idxPoke = idxPoke; FN.idxMenu = idxMenu; FN.openWeek = openWeek;
+  FN.idxPoke = idxPoke; FN.idxMenu = idxMenu; FN.openWeek = openWeek;
   FN.idxS1 = function () { openSettings(); wait(650, function () { SUBS['Benachrichtigungen'](); }); };
   FN.idxS2 = function () { openSettings(); wait(650, function () { SUBS['Sprache und Farbe'](); }); };
   FN.idxS3 = function () { openSettings(); wait(650, function () { SUBS['Personen und Zugriff'](); }); };
@@ -1114,6 +1094,657 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     });
   }
   window.openLogin = openLogin; FN.openLogin = openLogin; FN.openNoAccess = openNoAccess; FN.openOnboarding = openOnboarding;
+
+  // ================= Zeit, Hilfen =================
+  var DOW = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'], DOWL = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'], TODAY = 12, NOWMIN = 17 * 60 + 42;
+  var MON = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.'], MONL = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  function dt(d) { return new Date(2026, 10, d); }
+  function absOf(dateObj) { return Math.round((new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()) - new Date(2026, 10, 0)) / 864e5); }
+  function dowOf(d) { return (dt(d).getDay() + 6) % 7; }
+  function dmL(d) { var x = dt(d); return x.getDate() + '. ' + MON[x.getMonth()]; }
+  function dateLabel(d) { return DOW[dowOf(d)] + '., ' + dmL(d); }
+  function dayWord(d) { return d === 12 ? 'Heute' : d === 13 ? 'Morgen' : dateLabel(d); }
+  function hm(m) { return pad2(Math.floor(m / 60)) + ':' + pad2(m % 60); }
+  function lowerDay(d) { return d === 12 ? 'heute' : d === 13 ? 'morgen' : DOW[dowOf(d)] + ' ' + dt(d).getDate() + '.'; }
+  function whenText(d, m) { return d ? lowerDay(d) + (m != null ? ' ' + hm(m) : '') : 'ohne Termin'; }
+  function dayNumOf(w) { w = (w || '').split(' ')[0]; var m = { heute: 12, morgen: 13, Do: 12, Fr: 13, Sa: 14, So: 15, Mo: 16, Di: 17, Mi: 18 }; return m[w] || 12; }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function minOf(w) { var m = (w || '').match(/(\d\d):(\d\d)/); return m ? +m[1] * 60 + +m[2] : null; }
+  tasks.forEach(function (t) { if (t.d == null) { t.d = dayNumOf(t.when); t.m = minOf(t.when); } });
+  var ET = { Putzen: '#34c759', Familie: '#ff2d55', Technik: '#0a84ff', Garten: '#ff9500', Wichtig: '#af52de' };
+  var BOARDCOL = { Haushalt: '#ff9500', Einkauf: '#34c759', Umbau: '#0a84ff', Technik: '#af52de', Finanzen: '#ff3b30' };
+
+  function bindSheet(type, fn) { sheet._hm = sheet._hm || {}; if (sheet._hm[type]) sheet.removeEventListener(type, sheet._hm[type]); sheet._hm[type] = fn; sheet.addEventListener(type, fn); }
+  // ---------- zweites Blatt ----------
+  var sheet2 = $('sheet2'), scrim2 = $('scrim2');
+  function showSheet2(html, o) { o = o || {}; sheet2.className = 'sheet s2' + (o.med ? ' med' : ''); sheet2.innerHTML = '<div class="grab"><i></i></div>' + html; sheet2.setAttribute('aria-label', o.label || 'Blatt'); void sheet2.offsetWidth; sheet2.classList.add('on'); scrim2.classList.add('on'); }
+  function closeSheet2() { sheet2.classList.remove('on'); scrim2.classList.remove('on'); }
+  scrim2.addEventListener('click', closeSheet2);
+  document.addEventListener('click', function (e) { if (e.target.closest('#sheet2 [data-close2]')) closeSheet2(); });
+  // ---------- Tastatur: das Blatt bleibt über der Tastatur ----------
+  (function () {
+    var vv = window.visualViewport, app = $('app'); if (!vv) return;
+    function upd() { var kb = Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop)); if (kb < 80) kb = 0; app.style.setProperty('--kb', kb + 'px'); if (!kb) document.querySelectorAll('.sheet.typing').forEach(function (s) { s.classList.remove('typing'); }); }
+    vv.addEventListener('resize', upd); vv.addEventListener('scroll', upd);
+  })();
+  document.addEventListener('focusin', function (e) {
+    var f = e.target, sh = f.closest && f.closest('.sheet'); if (!sh || !/^(INPUT|TEXTAREA)$/.test(f.tagName)) return;
+    setTimeout(function () { var sb = f.closest('.sbody'); if (!sb) return; var d = f.getBoundingClientRect().top - sb.getBoundingClientRect().top - 90; if (d > 0 || d < -200) sb.scrollTo({ top: sb.scrollTop + d, behavior: calm ? 'auto' : 'smooth' }); }, 320);
+  });
+  var coarse = matchMedia('(pointer: coarse)').matches;
+
+  // ---------- Schnelleingabe lesen ----------
+  var SYMS = [['trash', 'Mülltonne'], ['house', 'Haushalt'], ['cal', 'Termin'], ['clock', 'Zeit'], ['bell', 'Erinnerung'], ['gear', 'Reparatur'], ['layers', 'Einkauf'], ['people', 'Familie'], ['tasks', 'Liste'], ['week', 'Woche'], ['done', 'Erledigt'], ['eye', 'Beobachten'], ['flag', 'Wichtig'], ['shield', 'Sicherheit'], ['repeat', 'Wiederholen']], SYMCOL = ['', '#ff9500', '#34c759', '#0a84ff', '#af52de', '#ff3b30', '#8e8e93'];
+  function symName(id) { for (var i = 0; i < SYMS.length; i++) if (SYMS[i][0] === id) return SYMS[i][1]; return 'Aufgabe'; }
+  function detectSym(t) { t = t.toLowerCase(); return /müll|tonne|abfall|papier/.test(t) ? 'trash' : /geburtstag|termin|arzt|zahnarzt|schule|elternabend/.test(t) ? 'cal' : /wäsche|wasch|putz|fenster|staub|saug|spül|aufräum|bad|küche/.test(t) ? 'house' : /heizung|elektr|reparat|rauchmelder|glühbirne|batterie|lampe/.test(t) ? 'gear' : /einkauf|kaufen|paket|geschenk|besorg/.test(t) ? 'layers' : /steuer|rechnung|überweis|versicher/.test(t) ? 'done' : null; }
+  var WDAYS = { montag: 16, dienstag: 17, mittwoch: 18, donnerstag: 19, freitag: 13, samstag: 14, sonntag: 15, wochenende: 14 };
+  function parseTitle(v, ign) {
+    var toks = [], rest = v, out = { d: null, m: null, who: [], board: null, prio: null, rep: null, cats: [], problem: '' };
+    function take(re, fn) { rest = rest.replace(re, function (all) { var id = all.trim().toLowerCase(); if (ign[id]) return all; var tk = fn.apply(null, arguments); if (tk) { tk.id = id; toks.push(tk); return ' '; } return all; }); }
+    take(/\bjede[nrs]? (montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\b/gi, function (a, w) { var i = Object.keys(WDAYS).indexOf(w.toLowerCase()); out.rep = { kind: 'week', days: [i], mode: 'fixed', n: 1 }; return { kind: 'rep', label: 'Jeden ' + w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(), ic: 'repeat' }; });
+    take(/\b(täglich|jeden tag)\b/gi, function () { out.rep = { kind: 'day', mode: 'fixed', n: 1 }; return { kind: 'rep', label: 'Täglich', ic: 'repeat' }; });
+    take(/\b(wöchentlich|jede woche)\b/gi, function () { out.rep = { kind: 'week', days: [3], mode: 'fixed', n: 1 }; return { kind: 'rep', label: 'Jede Woche', ic: 'repeat' }; });
+    take(/\b(monatlich|jeden monat)\b/gi, function () { out.rep = { kind: 'month', mode: 'fixed', n: 1, monthMode: 'same' }; return { kind: 'rep', label: 'Jeden Monat', ic: 'repeat' }; });
+    take(/\b(heute|morgen|übermorgen|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\b/gi, function (a, w) { w = w.toLowerCase(); out.d = w === 'heute' ? 12 : w === 'morgen' ? 13 : w === 'übermorgen' ? 14 : WDAYS[w]; return { kind: 'day', label: dayWord(out.d), ic: 'cal' }; });
+    take(/\b(?:um )?(\d{1,2})(?::(\d\d))? ?uhr\b|\bum (\d{1,2})(?::(\d\d))?\b|\b(\d{1,2}):(\d\d)\b/gi, function (a, h1, m1, h2, m2, h3, m3) { var h = +(h1 || h2 || h3), m = +(m1 || m2 || m3 || 0); if (h > 23 || m > 59) return null; out.m = h * 60 + m; return { kind: 'time', label: hm(out.m) + ' Uhr', ic: 'clock' }; });
+    take(/@(\w+)/g, function (a, n) { var pend = arguments[arguments.length - 2] + a.length === arguments[arguments.length - 1].length; var p = people.filter(function (x) { return x[1].toLowerCase() === n.toLowerCase(); })[0]; if (p) { out.who.push(p[0]); return { kind: 'who', label: p[1], who: p[0] }; } if (pend) return { kind: 'who', label: '@' + n + ' …', ic: 'people' }; out.problem = 'Wer ist „' + n + '“? Es gibt keine Person mit diesem Namen. Tippe auf den Chip, um ihn zurückzunehmen.'; return { kind: 'who', label: '„' + n + '“ unbekannt', warn: 1 }; });
+    take(/#(\w+)/g, function (a, n) { var b = BOARDS.filter(function (x) { return x[0].toLowerCase() === n.toLowerCase(); })[0], c = Object.keys(ET).filter(function (x) { return x.toLowerCase() === n.toLowerCase(); })[0]; if (b) { out.board = b[0]; return { kind: 'board', label: b[0], ic: 'layers' }; } if (c) { out.cats.push(c); return { kind: 'cat', label: c, cat: c }; } return { kind: 'cat', label: n + ' (neu)', cat: n, isnew: 1 }; });
+    take(/!(hoch|wichtig|mittel|niedrig)\b/gi, function (a, p) { p = p.toLowerCase(); out.prio = p === 'niedrig' ? 'low' : p === 'mittel' ? 'medium' : 'high'; return { kind: 'prio', label: p === 'niedrig' ? 'Niedrig' : p === 'mittel' ? 'Mittel' : 'Hoch', ic: 'flag' }; });
+    if (out.m != null && out.d == null) { out.d = out.m > NOWMIN ? 12 : 13; }
+    out.title = rest.replace(/\s+/g, ' ').trim(); out.toks = toks; return out;
+  }
+
+  // ================= Neue Aufgabe =================
+  var nt = null, ntEl = null;
+  function newDraft(o) { return Object.assign({ title: '', sym: null, symOff: false, board: 'Haushalt', col: 'Offen', d: null, m: null, rep: null, remind: null, who: ['A'], prio: null, cats: [], newCats: [], note: '', items: [], links: [], files: [], effort: null, cost: '', confirm: null, manual: {}, ign: {}, more: {}, opened: {} }, o || {}); }
+  var SPARK = '<svg viewBox="0 0 24 24"><path d="M12 2.5l1.9 6.1 6.1 1.9-6.1 1.9L12 18.5l-1.9-6.1L4 10.5l6.1-1.9z"/></svg>';
+  function repText(r) {
+    if (!r) return null; if (r.kind === 'hour') return r.n > 1 ? 'Alle ' + r.n + ' Stunden' : 'Stündlich'; if (r.kind === 'day') return r.n > 1 ? 'Alle ' + r.n + ' Tage' : 'Täglich';
+    if (r.kind === 'week') { var ds = (r.days || []).slice().sort(), n = r.n || 1; if (n === 2 && ds.length <= 1) return 'Alle 2 Wochen'; if (!ds.length) return 'Jede Woche'; return ds.length === 1 ? 'Jeden ' + DOWL[ds[0]] : ds.map(function (i) { return DOW[i]; }).join(', '); }
+    if (r.kind === 'month') return r.monthMode === 'last' ? 'Monatlich am letzten Tag' : 'Monatlich'; if (r.kind === 'year') return 'Jährlich'; if (r.kind === 'custom') return 'Alle ' + r.n + ' ' + r.unit; return null;
+  }
+  function remText(r) {
+    if (!r || r.kind === 'off') return null; var a = r.kind === 'due' ? 'Zur Fälligkeit' : (r.lead >= 1440 ? '1 Tag' : r.lead >= 60 ? (r.lead / 60) + ' Std.' : r.lead + ' Min.') + ' vorher'; return a + (r.nag ? ' · Nachhaken' : '');
+  }
+  function symTileHtml(sym, auto) { var id = sym && sym.id || 'tasks', col = sym && sym.col; return '<span class="symtile" style="' + (col ? '--c:' + col + ';--cf:#fff' : '') + '">' + I(id) + (auto ? '<span class="spk">' + SPARK + '</span>' : '') + '</span>'; }
+  function tokHtml(tk, i) { return '<button type="button" class="tok' + (tk.warn ? ' warn' : '') + '" data-tk="' + tk.id.replace(/"/g, '') + '" aria-label="' + tk.label + ': zurücknehmen" style="animation-delay:' + (i * 30) + 'ms">' + (tk.who ? '<span class="av" style="--c:' + P[tk.who].c + ';margin-left:-8px;margin-right:0">' + tk.who + '</span>' : tk.ic ? I(tk.ic, 'ic') : tk.cat ? '<i class="dot" style="width:9px;height:9px;border-radius:50%;background:' + (ET[tk.cat] || '#ff9500') + '"></i>' : '') + tk.label + '<span class="x">' + I('plus', '').replace('<svg', '<svg style="transform:rotate(45deg)"') + '</span></button>'; }
+  function ntRender() {
+    var s = ntEl, p = nt.p, sym = nt.sym || (!nt.symOff && p.sym ? { id: p.sym, auto: 1 } : null);
+    s.querySelector('#nsym').innerHTML = symTileHtml(sym, sym && sym.auto);
+    var chips = (sym ? '<button type="button" class="tok" data-sym>' + I(sym.id, 'ic') + 'Symbol: ' + symName(sym.id) + '<span class="x" data-symx>' + I('plus').replace('<svg', '<svg style="transform:rotate(45deg)"') + '</span></button>' : '') + p.toks.map(tokHtml).join(''), c = s.querySelector('#chips'); if (c.dataset.k !== chips) { c.innerHTML = chips; c.dataset.k = chips; }
+    var er = s.querySelector('#qerr'); er.hidden = !p.problem; er.textContent = p.problem;
+    var dueT = nt.d ? dayWord(nt.d) + (nt.m != null ? ', ' + hm(nt.m) : '') : 'Kein Termin', rp = repText(nt.rep), rm = remText(nt.remind);
+    function row(ic, c2, tt, mm, key, dis) { return '<button type="button" class="li tap' + (dis ? ' dis' : '') + '" data-wh="' + key + '"><span class="tile2" style="--c:' + c2 + '">' + I(ic) + '</span><span class="k"><b>' + tt + '</b><span>' + mm + '</span></span>' + I('chev', 'chev') + '</button>'; }
+    s.querySelector('#nwh').innerHTML = row('layers', '#af52de', nt.board, 'Board • Spalte ' + nt.col, 'col') + row('cal', '#ff3b30', dueT, nt.d ? dateLabel(nt.d) + ' 2026' : 'Tippe, um einen Termin zu setzen', 'date') +
+      row('repeat', '#30b0c7', rp || 'Keine Wiederholung', nt.d ? (rp ? (nt.rep.mode === 'after' ? 'Neu zählen ab Erledigung' : 'Plan bleibt fest') : 'Einmalig') : 'Zuerst einen Termin wählen', 'rep', !nt.d) + row('bell', '#0a84ff', rm || 'Keine Erinnerung', nt.d ? (rm ? 'Nur für zuständige Personen' : 'Tippe, um zu erinnern') : 'Zuerst einen Termin wählen', 'rem', !nt.d);
+    s.querySelector('#nwho').innerHTML = people.slice().sort(function (a, b) { return a[0] === 'A' ? -1 : b[0] === 'A' ? 1 : 0; }).map(function (x) { return '<button type="button" class="pc" data-who2="' + x[0] + '" aria-pressed="' + (nt.who.indexOf(x[0]) >= 0) + '"><span class="av" style="--c:' + x[2] + '">' + x[0] + '</span>' + (x[0] === 'A' ? 'Ich' : x[1]) + '</button>'; }).join('');
+    s.querySelector('#nprio').innerHTML = '<span class="th"></span>' + [['low', 'Niedrig'], ['medium', 'Mittel'], ['high', 'Hoch']].map(function (x, i) { return '<button type="button" data-pr="' + x[0] + '" aria-pressed="' + (nt.prio === x[0]) + '">' + I('flag') + x[1] + '</button>'; }).join('');
+    var th = s.querySelector('#nprio'); th.style.setProperty('--i', ['low', 'medium', 'high'].indexOf(nt.prio)); th.classList.toggle('none', !nt.prio);
+    s.querySelector('#ncat').innerHTML = Object.keys(ET).map(function (c2) { return '<button type="button" class="pc nop" data-cat="' + c2 + '" aria-pressed="' + (nt.cats.indexOf(c2) >= 0) + '"><i class="dot" style="--c:' + ET[c2] + '"></i>' + c2 + '</button>'; }).concat(nt.newCats.map(function (c2) { return '<button type="button" class="pc nop" data-cat="' + c2 + '" aria-pressed="true"><i class="dot" style="--c:#ff9500"></i>' + c2 + '</button>'; })).join('') + '<button type="button" class="pc nop" data-newcat aria-pressed="' + !!nt.opened.cat + '">' + I('plus') + 'Neue Kategorie</button>';
+    s.querySelector('#nmore').innerHTML = ntMore(); s.querySelector('#nmore2').innerHTML = ntMore2();
+    var add = s.querySelector('#add'); add.disabled = !p.title || !!p.problem;
+  }
+  function ntMore() {
+    var h = '<div class="two"><button type="button" data-tog="items" aria-expanded="' + !!(nt.more.items || nt.items.length) + '">' + I('tasks') + 'Checkliste' + (nt.items.length ? ' · ' + nt.items.length : '') + '</button><button type="button" data-tog="att" aria-expanded="' + !!(nt.more.att || nt.links.length || nt.files.length) + '">' + I('search') + 'Foto / Link' + (nt.links.length + nt.files.length ? ' · ' + (nt.links.length + nt.files.length) : '') + '</button></div>';
+    if (nt.more.items || nt.items.length) h += '<div class="list" role="group" aria-label="Checkliste">' + nt.items.map(function (x, i) { return '<div class="mini">' + I('check') + '<span style="flex:1">' + x + '</span><button type="button" data-rmi="' + i + '" aria-label="Eintrag entfernen">' + I('plus').replace('<svg', '<svg style="transform:rotate(45deg)"') + '</button></div>'; }).join('') + '<div class="mini">' + I('plus') + '<input id="newitem" placeholder="Eintrag hinzufügen" enterkeyhint="done" aria-label="Neuer Eintrag"><button type="button" class="go" data-additem>Hinzufügen</button></div></div>';
+    if (nt.more.att || nt.links.length || nt.files.length) h += '<div class="list" role="group" aria-label="Foto oder Link">' + nt.links.map(function (x, i) { return '<div class="mini">' + I('flag') + '<span style="flex:1">' + x + '</span><button type="button" data-rml="' + i + '" aria-label="Link entfernen">' + I('plus').replace('<svg', '<svg style="transform:rotate(45deg)"') + '</button></div>'; }).join('') + nt.files.map(function (x, i) { return '<div class="mini">' + I('search') + '<span style="flex:1">' + x + '</span><button type="button" data-rmf="' + i + '" aria-label="Anhang entfernen">' + I('plus').replace('<svg', '<svg style="transform:rotate(45deg)"') + '</button></div>'; }).join('') + '<div class="mini">' + I('flag') + '<input id="newlink" type="url" placeholder="Website oder Maps-Link einfügen" enterkeyhint="done" aria-label="Neuer Link"><button type="button" class="go" data-addlink>Hinzufügen</button></div><button type="button" class="mini li tap" data-addfile style="color:var(--tint);width:100%;border-top:.5px solid var(--sep)">' + I('plus') + 'Foto oder PDF hinzufügen</button></div>';
+    return h;
+  }
+  function ntMore2() {
+    var o = nt.opened.more, h = '<button type="button" class="li tap" data-tog2 aria-expanded="' + !!o + '" style="margin:22px 16px 0;width:calc(100% - 32px);border-radius:12px;background:var(--card);color:var(--label)"><span class="k"><b>Aufwand, Kosten, Bestätigung</b><span>Optional, fürs Ausgleichen und die Eltern</span></span><svg class="chev" viewBox="0 0 24 24" style="transition:transform .3s;transform:rotate(' + (o ? 90 : 0) + 'deg)"><use href="#i-chev"/></svg></button>';
+    if (o) h += '<div class="hist" style="padding-top:16px">Aufwand</div>' + segHtml('neff', ['Offen', 'Klein', 'Mittel', 'Groß'], ['', 'small', 'medium', 'large'].indexOf(nt.effort || '')) + '<p class="hint" style="padding-top:6px">Zählt in der Fairness-Ansicht: eine große Aufgabe wiegt mehr als eine kleine.</p><div class="hist" style="padding-top:16px">Kosten</div><div class="list" style="margin-top:8px"><div class="mini"><input id="ncost" inputmode="decimal" placeholder="z. B. 49,90" value="' + nt.cost + '" aria-label="Kosten in Euro"><span style="color:var(--label2)">€</span></div></div><div class="hist" style="padding-top:16px">Bestätigung</div>' + segHtml('nconf', ['Vorgabe', 'Immer', 'Nie'], [null, 'on', 'off'].indexOf(nt.confirm)) + '<p class="hint" style="padding-top:6px">Bei Kindern zählt „Erledigt“ erst nach einem Ja der Eltern.</p>';
+    return h;
+  }
+  function openNew(opts) {
+    opts = opts || {}; nt = newDraft(opts.draft); nt.p = parseTitle('', {});
+    var html = '<div class="shead"><button data-close>Abbrechen</button><span class="ti">Neue Aufgabe</span><span></span></div><div class="sbody" id="ntb">' +
+      '<div class="qcard"><div class="qrow"><button type="button" id="nsym" aria-label="Symbol ändern" style="flex:none"></button><div class="qf"><label for="nf" class="lab">Was steht an?</label><textarea id="nf" rows="2" maxlength="200" placeholder="z. B. Müll raus morgen 19 Uhr @Ben" enterkeyhint="done" autocapitalize="sentences" spellcheck="false"></textarea></div></div>' +
+      '<p class="qhint">' + SPARK + 'Schreib einfach los: Datum, Uhrzeit, @Person, #Kategorie und !hoch erkennt Stups.</p><div class="chips" id="chips" style="padding:0" aria-live="polite"></div><p class="qerr" id="qerr" hidden role="alert"></p></div>' +
+      '<div class="hist2">Wann und wo</div><div class="list" id="nwh" style="margin-top:10px"></div>' +
+      '<div class="hist2">Wer kümmert sich?</div><div class="chips scrollx" id="nwho" style="padding-top:10px;padding-bottom:4px" role="group" aria-label="Wer kümmert sich?"></div>' +
+      '<div class="hist2">Priorität</div><div class="segc" id="nprio" style="--n:3;--i:0;margin-top:10px" role="group" aria-label="Priorität"></div>' +
+      '<div class="hist2">Kategorie</div><div class="chips scrollx" id="ncat" style="padding-top:10px" role="group" aria-label="Kategorie"></div><div id="ncatnew"></div>' +
+      '<div class="hist2">Notiz</div><div class="list" style="margin-top:10px;padding:12px 16px"><textarea id="nnote" rows="3" placeholder="z. B. Gelbe Tonne steht im Hof, Schlüssel hängt am Brett." aria-label="Notiz" style="width:100%;border:0;background:none;color:var(--label);font:16px/1.4 var(--font);resize:none;outline:none"></textarea></div>' +
+      '<div class="hist2">Mehr</div><div id="nmore"></div><div id="nmore2"></div></div>' +
+      '<div class="sfoot"><div class="kbar" id="kbar"></div><button type="button" class="bigbtn" id="add" disabled>Aufgabe anlegen</button></div>';
+    showSheet(html, { label: 'Neue Aufgabe', plus: true }); ntEl = sheet;
+    var nf = $('nf'), p0 = nt.title; nf.value = nt.title || ''; ntParse(); ntRender(); ntWire(nf);
+    if (!coarse && !opts.noFocus) { nf.focus({ preventScroll: true }); }
+    if (!calm && !opts.noDemo) wait(700, function () { if (nt.touched || !sheet.classList.contains('on') || document.activeElement !== nf && coarse) return; var s2 = 'Müll morgen 19 Uhr @Ben #Haushalt', i = 0; (function tick() { if (nt.touched || !sheet.classList.contains('on')) return; nf.value = s2.slice(0, ++i); ntParse(); ntRender(); if (i < s2.length) setTimeout(tick, 55); })(); });
+  }
+  function ntParse() {
+    var nf = $('nf'), p = nt.p = parseTitle(nf.value, nt.ign), m = nt.manual; p.sym = detectSym(p.title);
+    if (!m.d) { nt.d = p.d; nt.m = p.d != null ? p.m : null; }
+    if (!m.rep) nt.rep = p.rep; if (!m.prio) nt.prio = p.prio; if (!m.who) nt.who = p.who.length ? p.who.slice() : ['A']; if (!m.cats) nt.cats = p.cats.slice(); if (p.board && !m.board) nt.board = p.board;
+    if (!nt.d) { if (!m.rep) nt.rep = null; nt.remind = null; }
+    nt.col = nt.colPicked ? nt.col : (nt.d && nt.d > TODAY ? 'Geplant' : 'Offen');
+  }
+  function ntWire(nf) {
+    var s = ntEl;
+    function grow() { nf.style.height = 'auto'; nf.style.height = Math.max(52, nf.scrollHeight) + 'px'; }
+    nf.addEventListener('input', function () { nt.touched = true; grow(); ntParse(); ntRender(); kbarDraw(); }); setTimeout(grow, 0);
+    nf.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); if (!s.querySelector('#add').disabled) addTask(); } });
+    nf.addEventListener('focus', function () { s.classList.add('typing'); kbarDraw(); }); nf.addEventListener('blur', function () { setTimeout(function () { if (document.activeElement !== nf) s.classList.remove('typing'); }, 80); });
+    nf.addEventListener('keyup', kbarDraw); nf.addEventListener('click', kbarDraw);
+    s.querySelector('#kbar').addEventListener('pointerdown', function (e) { e.preventDefault(); });
+    s.querySelector('#kbar').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return; if (b.dataset.done != null) { nf.blur(); return; }
+      var ins = b.dataset.ins; if (ins == null) return; nt.touched = true; var v = nf.value, m = v.match(/(^|\s)([@#]\w*)$/);
+      if (m && /^[@#]/.test(ins) && ins.charAt(0) === m[2].charAt(0)) v = v.slice(0, v.length - m[2].length) + ins + ' '; else v = (v && !/\s$/.test(v) ? v + ' ' : v) + ins + (/^[@#!]$/.test(ins) ? '' : ' ');
+      nf.value = v; nf.focus(); ntParse(); ntRender(); kbarDraw();
+    });
+    function kbarDraw() {
+      var v = nf.value, m = v.match(/(^|\s)([@#])(\w*)$/), kb = s.querySelector('#kbar'), h = '';
+      if (m && m[2] === '@') h = people.filter(function (x) { return x[1].toLowerCase().indexOf(m[3].toLowerCase()) === 0; }).map(function (x) { return '<button data-ins="@' + x[1] + '"><span class="av" style="--c:' + x[2] + '">' + x[0] + '</span>' + x[1] + '</button>'; }).join('');
+      else if (m && m[2] === '#') h = BOARDS.map(function (b2) { return b2[0]; }).concat(Object.keys(ET)).filter(function (x) { return x.toLowerCase().indexOf(m[3].toLowerCase()) === 0; }).map(function (x) { return '<button data-ins="#' + x + '">#' + x + '</button>'; }).join('');
+      else h = [['heute', 'Heute'], ['morgen', 'Morgen'], ['19 Uhr', 'Abends'], ['@', '@ Person'], ['#', '# Kategorie'], ['!hoch', '! Wichtig']].map(function (x) { return '<button data-ins="' + x[0] + '">' + x[1] + '</button>'; }).join('');
+      kb.innerHTML = h + '<button data-done class="done">Fertig</button>';
+    }
+    bindSheet('click', ntClick); bindSheet('input', function (e) { if (e.target.id === 'nnote') nt.note = e.target.value; if (e.target.id === 'ncost') nt.cost = e.target.value; });
+    $('add').addEventListener('click', addTask);
+    $('nsym').addEventListener('click', ntSym);
+  }
+  function ntClick(e) {
+    var t = e.target, b;
+    if ((b = t.closest('[data-symx]'))) { nt.sym = null; nt.symOff = true; ntRender(); e.stopPropagation(); return; }
+    if (t.closest('[data-sym]')) { ntSym(); return; }
+    if ((b = t.closest('[data-tk]'))) { nt.ign[b.dataset.tk] = 1; ntParse(); ntRender(); return; }
+    if ((b = t.closest('[data-wh]'))) { var k = b.dataset.wh; if (b.classList.contains('dis')) { toast('Mit einem Termin kannst du auch wiederholen und erinnern.'); return; } $('nf').blur(); if (k === 'col') ntPickCol(); else if (k === 'date') pickDate({ d: nt.d, m: nt.m }, function (v) { nt.manual.d = 1; nt.d = v.d; nt.m = v.m; if (!v.d) { nt.rep = null; nt.remind = null; } ntParse2(); }); else if (k === 'rep') pickRepeat(nt.rep, function (r) { nt.manual.rep = 1; nt.rep = r; ntRender(); }); else pickRemind(nt.remind, function (r) { nt.manual.rem = 1; nt.remind = r; ntRender(); }); return; }
+    if ((b = t.closest('[data-who2]'))) { var id = b.dataset.who2; nt.manual.who = 1; var i = nt.who.indexOf(id); if (i >= 0) nt.who.splice(i, 1); else nt.who.push(id); ntRender(); return; }
+    if ((b = t.closest('[data-pr]'))) { nt.manual.prio = 1; nt.prio = nt.prio === b.dataset.pr ? null : b.dataset.pr; ntRender(); return; }
+    if ((b = t.closest('[data-cat]'))) { nt.manual.cats = 1; var c = b.dataset.cat, j = nt.cats.indexOf(c); if (j >= 0) nt.cats.splice(j, 1); else nt.cats.push(c); ntRender(); return; }
+    if (t.closest('[data-newcat]')) { nt.opened.cat = !nt.opened.cat; ntNewCat(); ntRender(); return; }
+    if ((b = t.closest('[data-tog]'))) { nt.more[b.dataset.tog] = !nt.more[b.dataset.tog] && !(b.dataset.tog === 'items' && nt.items.length) && !(b.dataset.tog === 'att' && (nt.links.length || nt.files.length)); ntRender(); var i2 = ntEl.querySelector(b.dataset.tog === 'items' ? '#newitem' : '#newlink'); if (i2) i2.focus({ preventScroll: true }); return; }
+    if (t.closest('[data-tog2]')) { nt.opened.more = !nt.opened.more; ntRender(); wireNtMore(); return; }
+    if (t.closest('[data-additem]')) { var iv = $('newitem'); if (iv.value.trim()) { nt.items.push(iv.value.trim()); ntRender(); $('newitem').focus({ preventScroll: true }); } return; }
+    if (t.closest('[data-addlink]')) { var lv = $('newlink'); if (lv.value.trim()) { nt.links.push(lv.value.trim().replace(/^https?:\/\//, '').split('/')[0]); ntRender(); } return; }
+    if (t.closest('[data-addfile]')) { nt.files.push('Foto ' + (nt.files.length + 1) + '.jpg · 1,2 MB'); ntRender(); return; }
+    if ((b = t.closest('[data-rmi]'))) { nt.items.splice(+b.dataset.rmi, 1); ntRender(); return; } if ((b = t.closest('[data-rml]'))) { nt.links.splice(+b.dataset.rml, 1); ntRender(); return; } if ((b = t.closest('[data-rmf]'))) { nt.files.splice(+b.dataset.rmf, 1); ntRender(); return; }
+  }
+  function wireNtMore() { var se = ntEl.querySelector('#neff'); if (se) wireSeg(se, function (i) { nt.effort = [null, 'small', 'medium', 'large'][i]; }); var sc = ntEl.querySelector('#nconf'); if (sc) wireSeg(sc, function (i) { nt.confirm = [null, 'on', 'off'][i]; }); }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target && (e.target.id === 'newitem' || e.target.id === 'newlink')) { e.preventDefault(); var bt = ntEl.querySelector(e.target.id === 'newitem' ? '[data-additem]' : '[data-addlink]'); if (bt) bt.click(); } });
+  function ntParse2() { ntParse(); ntRender(); }
+  function ntNewCat() {
+    var h = ntEl.querySelector('#ncatnew'); if (!nt.opened.cat) { h.innerHTML = ''; return; }
+    h.innerHTML = '<div class="list" style="margin-top:10px;padding:12px 14px" role="group" aria-label="Neue Kategorie"><div style="display:flex;gap:8px;align-items:center"><input id="ncn" placeholder="Name, z. B. Garten" maxlength="40" aria-label="Name der Kategorie" style="flex:1;min-width:0;height:44px;padding:0 12px;border:0;border-radius:10px;background:var(--fill);color:var(--label);font:16px var(--font);outline:none"><button type="button" class="bigbtn" id="ncgo" style="margin:0;width:auto;height:44px;padding:0 18px;font-size:15px">Anlegen</button></div><div class="swatch" style="padding:12px 0 0;gap:12px" id="ncs">' + ['#ff9500', '#34c759', '#0a84ff', '#af52de', '#ff3b30', '#8e8e93'].map(function (c, i) { return '<button type="button" style="--c:' + c + '" aria-pressed="' + (i === 0) + '" aria-label="Farbe ' + (i + 1) + '"></button>'; }).join('') + '</div></div>';
+    h.querySelector('#ncgo').addEventListener('click', function () { var v = $('ncn').value.trim(); if (!v) return; nt.newCats.push(v); nt.cats.push(v); nt.opened.cat = false; ntNewCat(); ntRender(); });
+    h.querySelectorAll('#ncs button').forEach(function (b) { b.addEventListener('click', function () { h.querySelectorAll('#ncs button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }); });
+    $('ncn').focus({ preventScroll: true });
+  }
+  function ntPickCol() {
+    actionSheet({ title: 'Spalte in „' + nt.board + '“', items: [{ t: 'Offen', fn: function () { nt.col = 'Offen'; nt.colPicked = 1; ntRender(); } }, { t: 'Geplant', fn: function () { if (!nt.d || nt.d <= TODAY) { toast('„Geplant“ braucht einen Termin nach heute. Stell zuerst den Termin ein.'); return; } nt.col = 'Geplant'; nt.colPicked = 1; ntRender(); } }, { t: 'In Arbeit', fn: function () { nt.col = 'In Arbeit'; nt.colPicked = 1; ntRender(); } }] });
+  }
+  function ntSym() { openSymPicker(nt.sym || (!nt.symOff && nt.p.sym ? { id: nt.p.sym } : null), function (v) { nt.sym = v; nt.symOff = false; ntRender(); }); }
+  function openSymPicker(sym, cb) {
+    var cur = sym ? sym.id : null, col = sym && sym.col || '';
+    showSheet2('<div class="shead"><button data-close2>Abbrechen</button><span class="ti">Symbol</span><button class="r" data-close2 id="symok">Fertig</button></div><div class="sbody"><div class="sym" id="syg">' + SYMS.map(function (s) { return '<button type="button" data-s="' + s[0] + '" aria-pressed="' + (s[0] === cur) + '" aria-label="' + s[1] + '">' + I(s[0]) + '</button>'; }).join('') + '</div><div class="hist" style="padding-top:20px">Farbe</div><div class="swatch" id="syc" style="padding:12px 20px">' + SYMCOL.map(function (c, i) { return '<button type="button" style="--c:' + (c || 'var(--tint-fill)') + '" data-c="' + c + '" aria-pressed="' + (c === col) + '" aria-label="Farbe ' + (i + 1) + '"></button>'; }).join('') + '</div></div>', { med: true, label: 'Symbol' });
+    sheet2.querySelector('#syg').addEventListener('click', function (e) { var b = e.target.closest('[data-s]'); if (!b) return; cur = b.dataset.s; sheet2.querySelectorAll('#syg button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); cb({ id: cur, col: col }); });
+    sheet2.querySelector('#syc').addEventListener('click', function (e) { var b = e.target.closest('[data-c]'); if (!b) return; col = b.dataset.c; sheet2.querySelectorAll('#syc button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); cb({ id: cur || 'tasks', col: col }); });
+  }
+  function addTask() {
+    var p = nt.p; if (!p.title || p.problem) return; var sym = nt.sym || (!nt.symOff && p.sym ? { id: p.sym } : null);
+    var tt = { id: nextId++, t: p.title.charAt(0).toUpperCase() + p.title.slice(1), d: nt.d, m: nt.m, due: nt.d == null || nt.d <= TODAY ? 'today' : nt.d <= 18 ? 'week' : 'later', when: nt.d ? whenText(nt.d, nt.m) : 'ohne Termin', who: nt.who.length ? nt.who.join('') : 'A', board: nt.board, col: nt.col, prio: nt.prio, rep: nt.rep, remind: nt.remind, cats: nt.cats.slice(), note: nt.note, items: nt.items.slice() };
+    if (nt.rep) tt.rep = repText(nt.rep);
+    tasks.push(tt); if (who && !mine(tt)) who[tt.who[0]] = 1; var rp = ntEl; closeSheet(); wait(350, function () { refresh(); var r = document.querySelector('.row[data-id="' + tt.id + '"]'); if (r) { r.classList.add('fresh'); var sc = r.closest('.scroll'); if (sc) sc.scrollTo({ top: sc.scrollTop + r.getBoundingClientRect().top - sc.getBoundingClientRect().top - 260, behavior: calm ? 'auto' : 'smooth' }); } toast('Aufgabe angelegt'); });
+  }
+
+  // ================= Pickers im zweiten Blatt =================
+  function stepper(id, v) { return '<span class="stepr" data-sp="' + id + '"><button type="button" data-sd="-1" aria-label="Weniger">−</button><b>' + v + '</b><button type="button" data-sd="1" aria-label="Mehr">+</button></span>'; }
+  function chipsRow(name, items, sel) { return '<div class="chips scrollx" data-ch="' + name + '" style="padding-top:10px" role="group">' + items.map(function (it, i) { return '<button type="button" class="pc nop" data-ci="' + i + '" aria-pressed="' + (Array.isArray(sel) ? sel.indexOf(i) >= 0 : sel === i) + '">' + it + '</button>'; }).join('') + '</div>'; }
+  function hd(t) { return '<div class="hist" style="padding-top:20px">' + t + '</div>'; }
+  function pickDate(cur, cb) {
+    var sel = cur.d, mo = 0, hh = cur.m != null ? Math.floor(cur.m / 60) : 9, mm = cur.m != null ? cur.m % 60 : 0;
+    function cal() {
+      var first = new Date(2026, 10 + mo, 1), lead = (first.getDay() + 6) % 7, days = new Date(2026, 11 + mo, 0).getDate(), base = absOf(first) - 1, h = '';
+      for (var i = 0; i < lead; i++) h += '<i></i>'; for (var d = 1; d <= days; d++) { var a = base + d; h += '<button type="button" data-d="' + a + '" class="' + (a === TODAY ? 'td' : '') + (a < TODAY ? ' mute' : '') + '" aria-pressed="' + (a === sel) + '">' + d + '</button>'; } return h;
+    }
+    function head() { return MONL[(10 + mo + 12) % 12] + ' ' + (2026 + Math.floor((10 + mo) / 12)); }
+    showSheet2('<div class="shead"><button data-close2>Abbrechen</button><span class="ti">Termin</span><button class="r" id="dok">Übernehmen</button></div><div class="sbody"><div class="chips scrollx" style="padding-top:8px">' + [['Heute 18:00', 12, 18 * 60], ['Morgen 09:00', 13, 9 * 60], ['Am Wochenende', 14, 10 * 60], ['Nächste Woche', 16, 9 * 60]].map(function (c, i) { return '<button type="button" class="pc nop" data-q="' + i + '">' + c[0] + '</button>'; }).join('') + '</div>' +
+      '<div class="cal"><div class="ch"><b id="dmo" style="font-weight:600">' + head() + '</b><span style="display:flex;gap:14px"><button type="button" data-mo="-1" aria-label="Voriger Monat" style="transform:rotate(180deg)">' + I('chev') + '</button><button type="button" data-mo="1" aria-label="Nächster Monat">' + I('chev') + '</button></span></div><div class="gr" id="dgr">' + DOW.map(function (d) { return '<em>' + d + '</em>'; }).join('') + cal() + '</div></div>' +
+      '<div class="wheels"><div class="wheel" id="wh" aria-label="Stunde">' + Array.apply(null, Array(24)).map(function (_, i) { return '<div>' + pad2(i) + '</div>'; }).join('') + '</div><span class="col">:</span><div class="wheel" id="wm" aria-label="Minute">' + Array.apply(null, Array(12)).map(function (_, i) { return '<div>' + pad2(i * 5) + '</div>'; }).join('') + '</div></div>' +
+      '<div class="list"><button type="button" class="li tap redtxt" id="dno">Kein Termin</button></div><p class="hint" style="padding-top:10px">Mit einem Termin kannst du auch wiederholen und erinnern.</p></div>', { label: 'Termin' });
+    var gr = sheet2.querySelector('#dgr'), wh = sheet2.querySelector('#wh'), wm = sheet2.querySelector('#wm');
+    function setTime(h, m) { hh = h; mm = m; wh.scrollTo({ top: h * 44, behavior: calm ? 'auto' : 'smooth' }); wm.scrollTo({ top: Math.round(m / 5) * 44, behavior: calm ? 'auto' : 'smooth' }); }
+    wh.scrollTop = hh * 44; wm.scrollTop = Math.round(mm / 5) * 44;
+    gr.addEventListener('click', function (e) { var b = e.target.closest('[data-d]'); if (!b) return; sel = +b.dataset.d; gr.querySelectorAll('[data-d]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); });
+    sheet2.querySelectorAll('[data-q]').forEach(function (b) { var c = [[12, 18 * 60], [13, 9 * 60], [14, 10 * 60], [16, 9 * 60]][+b.dataset.q]; b.addEventListener('click', function () { mo = 0; sheet2.querySelector('#dmo').textContent = head(); gr.innerHTML = DOW.map(function (d) { return '<em>' + d + '</em>'; }).join('') + cal(); sel = c[0]; gr.querySelectorAll('[data-d]').forEach(function (x) { x.setAttribute('aria-pressed', +x.dataset.d === sel); }); setTime(Math.floor(c[1] / 60), c[1] % 60); }); });
+    sheet2.querySelectorAll('[data-mo]').forEach(function (b) { b.addEventListener('click', function () { mo = Math.max(-1, Math.min(12, mo + +b.dataset.mo)); sheet2.querySelector('#dmo').textContent = head(); gr.innerHTML = DOW.map(function (d) { return '<em>' + d + '</em>'; }).join('') + cal(); }); });
+    sheet2.querySelector('#dok').addEventListener('click', function () { hh = Math.min(23, Math.round(wh.scrollTop / 44)); mm = Math.min(55, Math.round(wm.scrollTop / 44) * 5); closeSheet2(); if (sel == null) sel = TODAY; cb({ d: sel, m: hh * 60 + mm }); });
+    sheet2.querySelector('#dno').addEventListener('click', function () { closeSheet2(); cb({ d: null, m: null }); });
+  }
+  function nextDates(r, base, m) {
+    var out = [], tm = m != null ? ', ' + hm(m) : '', i;
+    function add(d) { out.push(dateLabel(d) + tm); }
+    if (r.kind === 'hour') { for (i = 1; i <= 3; i++) out.push(dateLabel(base) + ', ' + hm(((m || 9 * 60) + i * (r.n || 1) * 60) % 1440)); return out; }
+    if (r.kind === 'day') { for (i = 1; i <= 3; i++) add(base + i * (r.n || 1)); return out; }
+    if (r.kind === 'week') { var ds = r.days && r.days.length ? r.days : [dowOf(base)], n = r.n || 1; for (var d = base + 1; out.length < 3 && d < base + 120; d++) { var wk = Math.floor((d - base + dowOf(base)) / 7); if (ds.indexOf(dowOf(d)) >= 0 && wk % n === 0) add(d); } return out; }
+    if (r.kind === 'month' || r.kind === 'year') { var x = dt(base); for (i = 1; i <= 3; i++) { var y = r.kind === 'year' ? new Date(x.getFullYear() + i, x.getMonth(), x.getDate()) : (r.monthMode === 'last' ? new Date(x.getFullYear(), x.getMonth() + i + 1, 0) : new Date(x.getFullYear(), x.getMonth() + i, x.getDate())); add(absOf(y)); } return out; }
+    var u = { Stunden: 1 / 24, Tage: 1, Wochen: 7, Monate: 30, Jahre: 365 }[r.unit || 'Tage']; for (i = 1; i <= 3; i++) add(Math.round(base + i * (r.n || 1) * u)); return out;
+  }
+  function pickRepeat(cur, cb) {
+    var r = cur ? JSON.parse(JSON.stringify(cur)) : { kind: 'none' }, base = nt && nt.d || TODAY, bm = nt && nt.m;
+    var KINDS = [['none', 'Nie'], ['hour', 'Stündlich'], ['day', 'Täglich'], ['week', 'Wöchentlich'], ['w2', 'Alle 2 Wochen'], ['month', 'Monatlich'], ['year', 'Jährlich'], ['custom', 'Eigene …']];
+    function kindIdx() { return r.kind === 'week' && r.n === 2 && (r.days || []).length <= 1 ? 4 : KINDS.map(function (k) { return k[0]; }).indexOf(r.kind); }
+    function body() {
+      var h = hd('Wie oft?').replace('padding-top:20px', 'padding-top:12px') + '<div class="list" id="rk" style="margin-top:8px">' + radioRows('rk', KINDS.map(function (k) { return [k[1]]; }), kindIdx()) + '</div>';
+      if (r.kind === 'hour') h += hd('Abstand') + '<div class="list" style="margin-top:8px"><div class="li"><span class="k">Alle</span>' + stepper('n', (r.n || 1) + ' Std.') + '</div>' + swRow('Nur zwischen bestimmten Uhrzeiten', !!r.win) + (r.win ? '<div class="li"><span class="k">von</span><span class="v">08:00</span></div><div class="li"><span class="k">bis</span><span class="v">20:00</span></div><div class="li"><span class="k">Spätere Termine</span><span class="v">rücken auf den nächsten Morgen</span></div>' : '') + '</div>';
+      if (r.kind === 'week') { h += hd('Wochentage') + chipsRow('days', DOW, r.days && r.days.length ? r.days : [dowOf(base)]); }
+      if (r.kind === 'month') h += hd('Tag im Monat') + segHtml('mm', ['Tag des Termins', 'Letzter Tag'], r.monthMode === 'last' ? 1 : 0);
+      if (r.kind === 'custom') h += hd('Abstand') + '<div class="list" style="margin-top:8px"><div class="li"><span class="k">Alle</span>' + stepper('n', r.n || 3) + '</div></div>' + hd('Einheit') + segHtml('unit', ['Std.', 'Tage', 'Wochen', 'Monate', 'Jahre'], ['Stunden', 'Tage', 'Wochen', 'Monate', 'Jahre'].indexOf(r.unit || 'Tage'));
+      if (r.kind !== 'none') {
+        h += hd('Und wenn ich später fertig werde?') + segHtml('rmode', ['Plan bleibt fest', 'Neu zählen'], r.mode === 'after' ? 1 : 0) + '<p class="hint" id="rm-h" style="padding-top:8px">' + (r.mode === 'after' ? 'Der nächste Termin kommt nach der Erledigung. Danach beginnt der Plan neu.' : 'Der Plan bleibt: ' + repText(r.kind === 'none' ? null : Object.assign({}, r)) + ', egal wann erledigt.') + '</p>';
+        if (r.kind === 'week' || r.kind === 'month') h += '<div class="list" style="margin-top:12px">' + swRow('Kleine Verspätung ist okay', !!r.tol, 'Der Plan rückt nicht weiter, solange du in der Toleranz bleibst') + (r.tol ? '<div class="li"><span class="k">Toleranz<small>So viele Tage darfst du zu spät sein</small></span>' + stepper('tol', r.tol + ' Tage') + '</div>' : '') + '</div>';
+        h += hd('Nächste Termine') + '<div class="tl" style="padding-top:8px">' + nextDates(r, base, bm).map(function (x, i) { return '<div>' + x + '<small>' + (i === 0 ? 'als Nächstes' : '') + '</small></div>'; }).join('') + '</div><p class="hint" style="padding:12px 20px 0">Titel, Zuständige, Kategorien, Priorität und Erinnerungen kommen immer mit. Beim Erledigen bleibt die jetzige Karte in „Erledigt“, die nächste wird neu angelegt.</p>';
+      }
+      return h;
+    }
+    showSheet2('<div class="shead"><button data-close2>Abbrechen</button><span class="ti">Wiederholung</span><button class="r" id="rok">Fertig</button></div><div class="sbody" id="rbody"></div>', { label: 'Wiederholung' });
+    var bd = sheet2.querySelector('#rbody');
+    function draw(keep) { var sc = bd.scrollTop; bd.innerHTML = body(); wire(); bd.scrollTop = sc; }
+    function wire() {
+      wireRadio(bd.querySelector('#rk'), function (n, i) { var k = KINDS[i][0]; if (k === 'w2') r = { kind: 'week', n: 2, days: r.days || [dowOf(base)], mode: r.mode || 'fixed' }; else r = Object.assign({ kind: k, mode: 'fixed', n: 1 }, k === 'week' ? { days: [dowOf(base)] } : {}, k === 'custom' ? { n: 3, unit: 'Tage' } : {}, { mode: r.mode || 'fixed' }); draw(); });
+      bd.querySelectorAll('[data-ch="days"] [data-ci]').forEach(function (b) { b.addEventListener('click', function () { var i = +b.dataset.ci, ds = r.days && r.days.length ? r.days.slice() : [dowOf(base)], j = ds.indexOf(i); if (j >= 0) { if (ds.length > 1) ds.splice(j, 1); } else ds.push(i); r.days = ds; draw(); }); });
+      var mm = bd.querySelector('#mm'); if (mm) wireSeg(mm, function (i) { r.monthMode = i ? 'last' : 'same'; draw(); }); var un = bd.querySelector('#unit'); if (un) wireSeg(un, function (i) { r.unit = ['Stunden', 'Tage', 'Wochen', 'Monate', 'Jahre'][i]; draw(); }); var rm = bd.querySelector('#rmode'); if (rm) wireSeg(rm, function (i) { r.mode = i ? 'after' : 'fixed'; draw(); });
+      bd.querySelectorAll('[data-sp]').forEach(function (sp) { sp.addEventListener('click', function (e) { var b = e.target.closest('[data-sd]'); if (!b) return; var k = sp.dataset.sp, d = +b.dataset.sd; if (k === 'tol') r.tol = Math.max(1, Math.min(6, (r.tol || 1) + d)); else r.n = Math.max(1, Math.min(60, (r.n || 1) + d)); draw(); }); });
+      bd.querySelectorAll('.sw').forEach(function (sw) { sw.addEventListener('click', function () { var on = !sw.classList.contains('on'), lab = sw.getAttribute('aria-label'); if (/Verspätung/.test(lab)) r.tol = on ? 1 : 0; else r.win = on; setTimeout(draw, 160); }); });
+    }
+    draw();
+    sheet2.querySelector('#rok').addEventListener('click', function () { closeSheet2(); cb(r.kind === 'none' ? null : r); });
+  }
+  function pickRemind(cur, cb) {
+    var r = cur ? JSON.parse(JSON.stringify(cur)) : { kind: 'off' }, d0 = nt && nt.d || TODAY, m0 = nt && nt.m != null ? nt.m : 9 * 60;
+    var LEAD = [[5, '5 Min.'], [15, '15 Min.'], [30, '30 Min.'], [60, '1 Std.'], [120, '2 Std.'], [1440, '1 Tag']], AFTER = [[60, 'Nach 1 Std.'], [4320, 'Nach 3 Tagen'], [10080, 'Nach 1 Woche']], REP = [['no', 'Nein'], ['hour', 'Stündlich'], ['day', 'Täglich'], ['week', 'Wöchentlich']];
+    function at(min) { var tot = d0 * 1440 + m0 + min, d = Math.floor(tot / 1440), mm = tot % 1440; return dateLabel(d).replace(/\.,/, '.,') + ', ' + hm(mm); }
+    function body() {
+      var h = '<div class="list" id="rr" style="margin-top:12px">' + radioRows('rr', [['Aus'], ['Nur zur Fälligkeit'], ['Vorher erinnern']], r.kind === 'off' ? 0 : r.kind === 'due' ? 1 : 2) + '</div>';
+      if (r.kind === 'before') h += hd('Vorab-Erinnerung') + chipsRow('lead', LEAD.map(function (x) { return x[1]; }), LEAD.map(function (x) { return x[0]; }).indexOf(r.lead || 60));
+      if (r.kind !== 'off') {
+        h += '<div class="list" style="margin-top:22px">' + swRow('Nachhaken, wenn nicht erledigt', !!r.nag, 'Freundlich erinnern, endet mit der Erledigung') + '</div>';
+        if (r.nag) { h += hd('Zeit bis zum Nachhaken') + chipsRow('after', AFTER.map(function (x) { return x[1]; }), AFTER.map(function (x) { return x[0]; }).indexOf(r.after || 60)) + hd('Danach wiederholen?') + chipsRow('rep', REP.map(function (x) { return x[1]; }), REP.map(function (x) { return x[0]; }).indexOf(r.rep || 'no')); if (r.rep && r.rep !== 'no') h += '<div class="list" style="margin-top:12px"><div class="li"><span class="k">Höchstens so oft</span>' + stepper('max', (r.max || 3) + '×') + '</div></div>'; }
+        h += hd('Dein Ablauf (Termin: ' + dateLabel(d0) + ', ' + hm(m0) + ')') + '<div class="tl" style="padding-top:8px">' + (r.kind === 'before' ? '<div>Vorab-Erinnerung<small>' + at(-(r.lead || 60)) + '</small></div>' : '') + '<div>Fällig<small>' + at(0) + '</small></div>' + (r.nag ? '<div>Nachhaken<small>' + at(r.after || 60) + '</small></div>' + (r.rep && r.rep !== 'no' ? '<div>Danach ' + REP.filter(function (x) { return x[0] === r.rep; })[0][1].toLowerCase() + '<small>höchstens ' + (r.max || 3) + '×</small></div>' : '') : '') + '</div><p class="hint" style="padding:12px 20px 0">Mit der Erledigung endet alles automatisch. Ruhezeiten gelten. Nur für dich.</p>';
+      } else h += '<p class="hint" style="padding:12px 20px 0">Mit einem Termin und einer zuständigen Person erinnert Stups, bevor etwas fällig wird.</p>';
+      return h;
+    }
+    showSheet2('<div class="shead"><button data-close2>Abbrechen</button><span class="ti">Erinnerung</span><button class="r" id="mok">Fertig</button></div><div class="sbody" id="mbody"></div>', { label: 'Erinnerung' });
+    var bd = sheet2.querySelector('#mbody');
+    function draw() { var sc = bd.scrollTop; bd.innerHTML = body(); wire(); bd.scrollTop = sc; }
+    function wire() {
+      wireRadio(bd.querySelector('#rr'), function (n, i) { r.kind = ['off', 'due', 'before'][i]; if (r.kind === 'before' && !r.lead) r.lead = 60; draw(); });
+      var sw = bd.querySelector('.sw'); if (sw) sw.addEventListener('click', function () { r.nag = !sw.classList.contains('on'); if (r.nag && !r.after) r.after = 60; setTimeout(draw, 160); });
+      bd.querySelectorAll('[data-ch]').forEach(function (c) { c.addEventListener('click', function (e) { var b = e.target.closest('[data-ci]'); if (!b) return; var i = +b.dataset.ci, k = c.dataset.ch; if (k === 'lead') r.lead = LEAD[i][0]; else if (k === 'after') r.after = AFTER[i][0]; else r.rep = REP[i][0]; draw(); }); });
+      bd.querySelectorAll('[data-sp]').forEach(function (sp) { sp.addEventListener('click', function (e) { var b = e.target.closest('[data-sd]'); if (!b) return; r.max = Math.max(1, Math.min(10, (r.max || 3) + +b.dataset.sd)); draw(); }); });
+    }
+    draw();
+    sheet2.querySelector('#mok').addEventListener('click', function () { closeSheet2(); cb(r.kind === 'off' ? null : r); });
+  }
+  FN.idxDate = function () { nt = nt || newDraft(); pickDate({ d: 13, m: 9 * 60 }, function () { }); };
+  FN.idxRepeat = function () { nt = newDraft({ d: 12, m: 18 * 60 + 30 }); pickRepeat({ kind: 'week', days: [3], mode: 'fixed', n: 1 }, function () { }); };
+  FN.idxRemind = function () { nt = newDraft({ d: 13, m: 19 * 60 }); pickRemind({ kind: 'before', lead: 60, nag: true, after: 60, rep: 'hour', max: 3 }, function () { }); };
+
+  // ================= Kalender =================
+  tasks.push(
+    { id: 11, t: 'Altpapier rausstellen', d: 9, m: 19 * 60, due: 'today', when: 'Mo 19:00', who: 'A', board: 'Haushalt', done: 1 },
+    { id: 12, t: 'Wäsche waschen', d: 10, m: 18 * 60, due: 'today', when: 'Di 18:00', who: 'A', board: 'Haushalt', done: 1 },
+    { id: 13, t: 'Wochenmarkt', d: 11, m: 17 * 60, due: 'today', when: 'Mi 17:00', who: 'B', board: 'Einkauf', done: 1 },
+    { id: 14, t: 'Strom bezahlen', d: 19, m: 9 * 60, due: 'later', when: 'Do 19. 09:00', who: 'A', board: 'Finanzen' },
+    { id: 15, t: 'Zahnarzt mit Mia', d: 20, m: 10 * 60 + 30, due: 'later', when: 'Fr 20. 10:30', who: 'AM', board: 'Haushalt' },
+    { id: 16, t: 'Grünschnitt wegbringen', d: 21, m: 11 * 60, due: 'later', when: 'Sa 21. 11:00', who: 'N', board: 'Haushalt' },
+    { id: 17, t: 'Auto zum TÜV', d: 24, m: 8 * 60, due: 'later', when: 'Di 24. 08:00', who: 'A', board: 'Technik' },
+    { id: 18, t: 'Adventskranz basteln', d: 28, m: 15 * 60, due: 'later', when: 'Sa 28. 15:00', who: 'AM', board: 'Haushalt' }
+  );
+  tasks.forEach(function (t) { if (t.d == null) { t.d = dayNumOf(t.when); t.m = minOf(t.when); } });
+  var EV = [{ d: 12, m: 19 * 60 + 30, dur: 90, t: 'Elternabend', c: '#30b0c7' }, { d: 13, all: 1, t: 'Müllabfuhr: Restmüll', c: '#8e8e93' }, { d: 14, all: 1, t: 'Geburtstag Oma', c: '#ff2d55' }, { d: 15, m: 13 * 60, dur: 120, t: 'Familienessen', c: '#30b0c7' }, { d: 17, all: 1, t: 'Altpapier', c: '#8e8e93' }, { d: 26, m: 18 * 60, dur: 120, t: 'Weihnachtsmarkt', c: '#30b0c7' }];
+  var cv = { view: 1, off: 0, day: 12, mo: 0, dir: 0 }, HH = 52, H0 = 6, H1 = 24, CVN = ['Tag', 'Woche', 'Monat', 'Liste'];
+  function items(d) { var L = []; tasks.forEach(function (t) { if (t.d === d && vis(t)) L.push({ k: 't', t: t, m: t.m, dur: t.dur || 45, all: t.m == null }); }); EV.forEach(function (e) { if (e.d === d) L.push({ k: 'e', e: e, m: e.m, dur: e.dur || 60, all: !!e.all }); }); return L; }
+  function weekStart() { return 9 + cv.off * 7; }
+  function kwOf(d) { var x = dt(d), t = new Date(x.getTime()); t.setDate(t.getDate() + 3 - ((t.getDay() + 6) % 7)); var w1 = new Date(t.getFullYear(), 0, 4); return 1 + Math.round(((t - w1) / 864e5 - 3 + ((w1.getDay() + 6) % 7)) / 7); }
+  function navTitle() {
+    if (cv.view === 1) { var a = dt(weekStart()), b = dt(weekStart() + 6); return '<b>' + (a.getMonth() === b.getMonth() ? a.getDate() + '.–' + b.getDate() + '. ' + MON[b.getMonth()] : a.getDate() + '. ' + MON[a.getMonth()] + ' – ' + b.getDate() + '. ' + MON[b.getMonth()]) + '</b><small>KW ' + kwOf(weekStart()) + '</small>'; }
+    if (cv.view === 0) return '<b>' + dayWord(cv.day) + '</b><small>' + DOWL[dowOf(cv.day)] + ', KW ' + kwOf(cv.day) + '</small>';
+    if (cv.view === 2) { var m = new Date(2026, 10 + cv.mo, 1); return '<b>' + MONL[m.getMonth()] + '</b><small>' + m.getFullYear() + '</small>'; }
+    return '<b>Als Nächstes</b><small>14 Tage</small>';
+  }
+  function dayHead(days, strip) {
+    return '<div class="wkh" role="group" aria-label="Tage">' + '<span></span>' + days.map(function (d) { return '<button type="button" data-cd="' + d + '" class="' + (d === TODAY ? 'td' : '') + '" aria-pressed="' + (d === cv.day) + '">' + DOW[dowOf(d)] + '<b>' + dt(d).getDate() + '</b></button>'; }).join('') + '</div>';
+  }
+  function blkHtml(it, wide, i, ln, nl) {
+    ln = ln || 0; nl = nl || 1;
+    var c = it.k === 't' ? BOARDCOL[it.t.board] || '#ff9500' : it.e.c, top = (it.m - H0 * 60) / 60 * HH, ht = Math.max(wide ? 40 : 26, it.dur / 60 * HH - 2), name = it.k === 't' ? it.t.t : it.e.t;
+    return '<button type="button" class="blk' + (it.k === 'e' ? ' ev' : '') + (it.t && it.t.done ? ' dn' : '') + '" style="--c:' + c + ';top:' + top.toFixed(1) + 'px;height:' + ht.toFixed(1) + 'px;' + (nl > 1 ? 'left:calc(' + (ln / nl * 100).toFixed(2) + '% + 1px);right:auto;width:calc(' + (100 / nl).toFixed(2) + '% - 2px);' : '') + 'animation-delay:' + (i * 35) + 'ms" ' + (it.k === 't' ? 'data-ot="' + it.t.id + '"' : 'data-oe="1"') + ' aria-label="' + name + ', ' + hm(it.m) + '">' + name + (wide ? '<small>' + hm(it.m) + ' bis ' + hm(it.m + it.dur) + '</small>' : '') + '</button>';
+  }
+  function lanesOf(L) {
+    L = L.slice().sort(function (a, b) { return a.m - b.m; }); var out = [], cl = [], cend = -1, ends = [];
+    function flush() { var n = ends.length; cl.forEach(function (x) { x.nl = n; out.push(x); }); cl = []; ends = []; }
+    L.forEach(function (x) { var st = x.m, en = x.m + Math.max(x.dur, 40); if (cl.length && st >= cend) flush(); var k = 0; while (k < ends.length && ends[k] > st) k++; ends[k] = en; x.ln = k; cl.push(x); cend = Math.max(cend, en); if (cl.length === 1) cend = en; });
+    flush(); return out;
+  }
+  function gridHtml(days, wide) {
+    var n = days.length, all = '', hrs = '', cols = '', i = 0;
+    for (var h = H0; h < H1; h++) hrs += '<span style="top:' + ((h - H0) * HH) + 'px">' + (h === H0 ? '' : pad2(h)) + '</span>';
+    days.forEach(function (d) { var L = items(d); all += '<div class="ad">' + L.filter(function (x) { return x.all && x.k === 'e'; }).map(function (x) { return '<i style="--c:' + x.e.c + '">' + x.e.t + '</i>'; }).join('') + '</div>'; cols += '<div class="col' + (d === TODAY ? ' td' : '') + '" data-col="' + d + '" role="group" aria-label="' + dateLabel(d) + '">' + lanesOf(L.filter(function (x) { return !x.all; })).map(function (x) { return blkHtml(x, wide, i++, x.ln, x.nl); }).join('') + (d === TODAY ? '<div class="nowl" style="top:' + ((NOWMIN - H0 * 60) / 60 * HH).toFixed(1) + 'px"></div>' : '') + '</div>'; });
+    return (wide ? '' : '<div class="alld"><span>ganztägig</span>' + all + '</div>') + (wide ? (function () { var L = items(days[0]).filter(function (x) { return x.all; }); return L.length ? '<div class="alld" style="grid-template-columns:34px 1fr"><span>ganztägig</span><div class="ad">' + L.map(function (x) { return '<i style="--c:' + (x.k === 'e' ? x.e.c : BOARDCOL[x.t.board]) + '">' + (x.k === 'e' ? x.e.t : x.t.t) + '</i>'; }).join('') + '</div></div>' : ''; })() : '') +
+      '<div class="tg' + (wide ? ' day' : '') + '" style="--nc:' + n + ';--hh:' + HH + 'px;height:' + ((H1 - H0) * HH) + 'px"><div class="hrs">' + hrs + '</div><div class="cols">' + cols + '</div></div>';
+  }
+  function evRow(e) { return '<div class="evrow"><span class="bar" style="--c:' + e.c + '"></span><div><b>' + e.t + '</b><span>' + (e.all ? 'Ganztägig' : hm(e.m) + ' bis ' + hm(e.m + (e.dur || 60))) + ' · Home-Assistant-Kalender</span></div></div>'; }
+  function dayItemsHtml(d) {
+    var L = items(d).sort(function (a, b) { return (a.m == null ? -1 : a.m) - (b.m == null ? -1 : b.m); });
+    if (!L.length) return '<div class="empty"><b>Nichts geplant.</b>Für diesen Tag ist nichts fällig.</div>';
+    return '<div class="group" role="list" style="margin:10px 16px 0;border-radius:12px;overflow:hidden">' + L.map(function (x) { return x.k === 't' ? rowHtml(x.t) : evRow(x.e); }).join('') + '</div>';
+  }
+  function calView() {
+    var v = cv.view, h = '';
+    if (v === 1) { var days = [0, 1, 2, 3, 4, 5, 6].map(function (i) { return weekStart() + i; }); h = '<div class="calhead">' + calTop() + dayHead(days) + '</div><div class="cv" id="cvb" style="--dir:' + cv.dir + '">' + gridHtml(days, false) + '</div>'; }
+    else if (v === 0) { var strip = [0, 1, 2, 3, 4, 5, 6].map(function (i) { return Math.floor((cv.day - 9) / 7) * 7 + 9 + i; }); h = '<div class="calhead">' + calTop() + dayHead(strip) + '</div><div class="cv" id="cvb" style="--dir:' + cv.dir + '">' + gridHtml([cv.day], true) + '</div>'; }
+    else if (v === 2) {
+      var first = new Date(2026, 10 + cv.mo, 1), lead = (first.getDay() + 6) % 7, base = absOf(first) - lead, cells = '';
+      for (var i = 0; i < 42; i++) { var d = base + i, x = dt(d), inm = x.getMonth() === first.getMonth(), L = items(d), cols = L.slice(0, 3).map(function (y) { return '<i style="--c:' + (y.k === 'e' ? y.e.c : BOARDCOL[y.t.board]) + '"></i>'; }).join(''); cells += '<button type="button" data-cd="' + d + '" class="' + (inm ? '' : 'mu ') + (d === TODAY ? 'td' : '') + '" aria-pressed="' + (d === cv.day) + '" aria-label="' + dateLabel(d) + (L.length ? ', ' + L.length + ' Einträge' : '') + '"><b>' + x.getDate() + '</b><span class="dots">' + cols + '</span></button>'; if (i === 34 && dt(base + 35).getMonth() !== first.getMonth()) break; }
+      h = '<div class="calhead">' + calTop() + '<div class="mgrid">' + DOW.map(function (d2) { return '<em>' + d2 + '</em>'; }).join('') + '</div></div><div class="cv" id="cvb" style="--dir:' + cv.dir + '"><div class="mgrid">' + cells + '</div><div class="dayh">' + dayWord(cv.day) + '<small>' + DOWL[dowOf(cv.day)] + '</small></div><div id="mday">' + dayItemsHtml(cv.day) + '</div></div>';
+    } else {
+      var s = ''; for (var k = 0; k < 14; k++) { var dd = TODAY + k, L2 = items(dd).filter(function (y) { return !(y.t && y.t.done); }); if (L2.length) s += '<div class="dayh" style="padding-top:20px">' + dayWord(dd) + '<small>' + DOWL[dowOf(dd)] + '</small></div>' + dayItemsHtml(dd); }
+      h = '<div class="calhead">' + calTop() + '</div><div class="cv" id="cvb" style="--dir:' + cv.dir + '">' + s + '</div>';
+    }
+    return h;
+  }
+  function calTop() { return segHtml('cseg', CVN, cv.view) + '<div class="cnav">' + (cv.view === 3 ? '' : '<button type="button" class="cb2 l" data-cn="-1" aria-label="Zurück">' + I('chev') + '</button>') + '<span style="display:flex;align-items:baseline;min-width:0">' + navTitle() + '</span><span class="sp"></span>' + (cv.view === 3 ? '' : '<button type="button" class="cb2" data-cn="1" aria-label="Weiter">' + I('chev') + '</button>') + '<button type="button" class="today" data-ctoday>Heute</button></div>'; }
+  function drawCal(keepScroll) {
+    var ts = $('tabscreen'), host = ts && ts.querySelector('#calroot'); if (!host) return; var sc = ts.querySelector('.scroll'), top = sc.scrollTop; host.innerHTML = calView(); wireCal(host, ts);
+    if (keepScroll) sc.scrollTop = top;
+  }
+  function wireCal(host, ts) {
+    var sg = host.querySelector('#cseg'); wireSeg(sg, function (i) { cv.view = i; cv.dir = 0; drawCal(false); calScroll(); });
+    host.querySelectorAll('[data-cn]').forEach(function (b) { b.addEventListener('click', function () { var d = +b.dataset.cn; cv.dir = d; if (cv.view === 1) cv.off += d; else if (cv.view === 0) { cv.day += d; } else if (cv.view === 2) { cv.mo += d; cv.day = absOf(new Date(2026, 10 + cv.mo, 1)); } drawCal(true); }); });
+    var t0 = host.querySelector('[data-ctoday]'); if (t0) t0.addEventListener('click', function () { cv.dir = cv.off > 0 || cv.mo > 0 ? -1 : 1; cv.off = 0; cv.mo = 0; cv.day = TODAY; drawCal(false); calScroll(); });
+    host.querySelectorAll('[data-cd]').forEach(function (b) { b.addEventListener('click', function () { var d = +b.dataset.cd; if (cv.view === 1) { cv.view = 0; cv.day = d; cv.dir = 1; drawCal(false); calScroll(); } else if (cv.view === 0) { cv.dir = d > cv.day ? 1 : -1; cv.day = d; drawCal(true); } else { cv.day = d; host.querySelectorAll('[data-cd]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); var dh = host.querySelector('.dayh'); dh.innerHTML = dayWord(d) + '<small>' + DOWL[dowOf(d)] + '</small>'; var md = host.querySelector('#mday'); md.innerHTML = dayItemsHtml(d); md.animate && md.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: calm ? 0 : 350, easing: 'cubic-bezier(.32,.72,0,1)' }); } }); });
+    host.querySelectorAll('[data-ot]').forEach(function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); openTask(byId(+b.dataset.ot)); }); });
+    host.querySelectorAll('[data-oe]').forEach(function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); toast('Termin aus dem Home-Assistant-Kalender'); }); });
+    host.querySelectorAll('[data-col]').forEach(function (c) { c.addEventListener('click', function (e) { if (e.target.closest('.blk')) return; var r = c.getBoundingClientRect(), m = Math.round(((e.clientY - r.top) / HH * 60 + H0 * 60) / 30) * 30; openNew({ draft: { d: +c.dataset.col, m: m, manual: { d: 1 } }, noFocus: true, noDemo: true }); }); });
+  }
+  function calScroll() { var ts = $('tabscreen'), sc = ts && ts.querySelector('.scroll'); if (!sc) return; if (cv.view > 1) { sc.scrollTo({ top: 0, behavior: calm ? 'auto' : 'smooth' }); return; } if (cv.view <= 1) { var tg = ts.querySelector('.tg'); if (tg) { var y = (cv.view === 1 && cv.off === 0 || cv.view === 0 && cv.day === TODAY) ? (NOWMIN - H0 * 60) / 60 * HH - 150 : (8 * 60 - H0 * 60) / 60 * HH - 20; sc.scrollTo({ top: Math.max(0, y + 120), behavior: calm ? 'auto' : 'smooth' }); } } }
+
+  // ================= Wächter =================
+  var ROOMS = ['Wohnzimmer', 'Küche', 'Schlafzimmer', 'Bad', 'Flur', 'Kinderzimmer', 'Keller', 'Garten', 'Büro', 'Garage'], TYPES = ['Fensterkontakt', 'Türkontakt', 'Bewegungsmelder', 'Thermostat', 'Rauchmelder', 'Temperatursensor', 'Wassersensor', 'Fernbedienung', 'Taster', 'Türschloss'];
+  var WATCH = [
+    { id: 1, n: 'Waschmaschine fertig', subj: 'Waschmaschine', cat: 'Haushaltsgeräte', ic: 'house', c: '#0a84ff', rule: 'Leistung fällt unter 5 W für 3 Min.', thr: 5, unit: 'W', task: 'Waschmaschine ausräumen', assign: 'Fair im Wechsel', phase: 'running', active: 1, val: '212 W', stxt: 'Läuft seit 14:52', series: [380, 372, 390, 150, 360, 380, 340, 220, 350, 212] },
+    { id: 2, n: 'Trockner fertig', subj: 'Trockner', cat: 'Haushaltsgeräte', ic: 'house', c: '#ff9500', rule: 'Leistung fällt unter 5 W für 3 Min.', thr: 5, unit: 'W', task: 'Wäsche aufhängen', assign: 'Fair im Wechsel', phase: 'idle', active: 1, val: '1,2 W', stxt: 'Aktuell', series: [2, 1.5, 1.4, 1.3, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2] },
+    { id: 3, n: 'Spülmaschine fertig', subj: 'Spülmaschine', cat: 'Haushaltsgeräte', ic: 'house', c: '#af52de', rule: 'Leistung fällt unter 3 W für 3 Min.', thr: 3, unit: 'W', task: 'Spülmaschine ausräumen', assign: 'Eine feste Person: Mia', phase: 'idle', active: 0, val: '0 W', stxt: 'Pausiert', series: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+    { id: 4, n: 'Saugroboter: Behälter leeren', subj: 'Saugroboter', cat: 'Haushaltsgeräte', ic: 'house', c: '#30b0c7', rule: 'Nach 3 Läufen (2 von 3)', thr: 0, unit: '', task: 'Staubbehälter leeren', assign: 'Fair im Wechsel', phase: 'waiting', active: 1, val: '2 Läufe', stxt: 'Wartet', series: [0, 1, 1, 1, 2, 2, 2, 2, 2, 2], card: { t: 'Staubbehälter leeren', who: 'B', since: 'seit 2 Std.' } },
+    { id: 5, n: 'Tonnen rausstellen', subj: 'Müllabfuhr', cat: 'Müll', ic: 'trash', c: '#8e8e93', rule: 'Kalender „Müllabfuhr“, 12 Std. vorher', thr: 0, unit: '', task: 'Tonnen rausstellen', assign: 'Fair im Wechsel', phase: 'soon', active: 1, val: 'Fr 06:00', stxt: 'In 3 Std.', series: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+    { id: 6, n: 'Wäsche rein, es regnet', subj: 'Wettervorhersage', cat: 'Wetter', ic: 'bell', c: '#5ac8fa', rule: 'Regen in den nächsten 2 Std.', thr: 0, unit: '', task: 'Wäsche reinholen', assign: 'Alle Anwesenden', phase: 'idle', active: 1, val: 'trocken', stxt: 'Aktuell', series: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+    { id: 7, n: 'Briefkasten', subj: 'Briefkasten Klappe', cat: null, ic: 'eye', c: '#34c759', rule: 'Klappe öffnet sich', thr: 0, unit: '', task: 'Post holen', assign: 'Fair im Wechsel', phase: 'idle', active: 1, val: '–', stxt: 'Problem', series: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], problem: 'Entität fehlt: binary_sensor.briefkasten' },
+    { id: 8, n: 'Gewächshaus zu feucht', subj: 'Gewächshaus', cat: 'Garten', ic: 'eye', c: '#34c759', rule: 'Luftfeuchte über 80 % für 10 Min.', thr: 80, unit: '%', task: 'Gewächshaus lüften', assign: 'Eine feste Person: Noah', phase: 'idle', active: 1, val: '62 %', stxt: 'Aktuell', series: [58, 60, 64, 61, 59, 63, 62, 66, 64, 62] },
+    { id: 9, n: 'Pool-Pumpe läuft zu lange', subj: 'Pool', cat: 'Garten', ic: 'gear', c: '#0a84ff', rule: 'An für länger als 10 Std.', thr: 0, unit: '', task: 'Pumpe prüfen', assign: 'Eine feste Person: Anna', phase: 'idle', active: 1, val: 'aus', stxt: 'Aktuell', series: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+    { id: 10, n: 'Gefrierschrank offen', subj: 'Gefrierschrank', cat: 'Haushaltsgeräte', ic: 'shield', c: '#ff3b30', rule: 'Tür offen länger als 5 Min.', thr: 0, unit: '', task: 'Gefrierschrank schließen', assign: 'Alle Anwesenden', phase: 'idle', active: 1, val: 'zu', stxt: 'Aktuell', series: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+    { id: 11, n: 'Keller feucht', subj: 'Kellersensor', cat: null, ic: 'eye', c: '#34c759', rule: 'Feuchte über 70 %', thr: 70, unit: '%', task: 'Keller lüften', assign: 'Niemand ist mehr zuständig', phase: 'idle', active: 1, val: '55 %', stxt: 'Problem', series: [50, 52, 55, 54, 53, 55, 55, 56, 55, 55], problem: 'Keine Karten: braucht neue Zuständige' }
+  ];
+  (function () { for (var i = 0; i < 100; i++) { var r = ROOMS[i % 10], ty = TYPES[Math.floor(i / 10)], pc = i % 25 === 3 ? 9 : i % 31 === 7 ? 14 : i % 40 === 11 ? 19 : i % 17 === 5 ? 26 : 34 + (i * 53) % 66, ser = []; for (var k = 0; k < 10; k++) ser.push(Math.min(100, pc + (9 - k) * 1.5 | 0)); WATCH.push({ id: 100 + i, n: 'Batterie schwach', subj: ty + ' ' + r, room: r, cat: 'Batterien', ic: 'bell', c: '#34c759', rule: 'Batterie unter 20 %', thr: 20, unit: '%', task: 'Batterie wechseln', assign: 'Fair im Wechsel', phase: pc < 15 ? 'waiting' : 'idle', active: 1, val: pc + ' %', pct: pc, stxt: pc < 20 ? 'Niedrig' : 'Aktuell', series: ser, card: pc < 15 ? { t: 'Batterie wechseln: ' + ty + ' ' + r, who: 'A', since: 'seit ' + (pc % 5 + 1) + ' Tagen' } : null }); } })();
+  var wst = { q: '', open: {}, more: {} }, CATICON = { 'Haushaltsgeräte': ['house', '#0a84ff'], 'Batterien': ['bell', '#34c759'], 'Garten': ['eye', '#30b0c7'], 'Müll': ['trash', '#8e8e93'], 'Wetter': ['bell', '#5ac8fa'] };
+  function pctCls(p) { return p < 15 ? 'low' : p < 25 ? 'mid' : ''; }
+  function wRow(i) {
+    var right, sub = i.problem ? '<span class="pr">' + i.problem + '</span>' : i.rule;
+    if (i.pct != null) right = '<span class="bat ' + pctCls(i.pct) + '"><i style="width:' + i.pct + '%"></i></span><span class="vpill ' + pctCls(i.pct) + '">' + i.pct + ' %</span>';
+    else right = '<span class="pill ' + (i.problem ? '' : i.phase === 'running' ? 'run' : i.active ? '' : 'off') + '"' + (i.problem ? ' style="background:color-mix(in srgb,var(--red-fill) 14%,transparent);color:var(--red)"' : '') + '><i' + (i.problem ? ' style="background:var(--red-fill)"' : '') + '></i>' + (i.problem ? 'Problem' : i.stxt) + '</span>';
+    return '<button type="button" class="li link" style="color:var(--label)" data-wrow="' + i.id + '"><span class="sico" style="--c:' + i.c + '">' + I(i.ic) + '</span><span class="k">' + (i.pct != null ? i.subj : i.n) + '<small>' + sub + '</small></span>' + right + I('chev', 'chev') + '</button>';
+  }
+  function matches(i, q) { return !q || (i.n + ' ' + (i.subj || '') + ' ' + (i.room || '') + ' ' + (i.cat || '') + ' ' + i.rule + ' ' + i.task).toLowerCase().indexOf(q) >= 0; }
+  function groupStatus(list) { var low = list.filter(function (i) { return i.pct != null ? i.pct < 20 : i.problem; }).length; return low ? '<span class="gs warn">' + low + (list[0].pct != null ? ' niedrig' : ' Problem') + '</span>' : '<span class="gs">alles gut</span>'; }
+  function wlistHtml() {
+    var q = wst.q.trim().toLowerCase(), all = WATCH.filter(function (i) { return matches(i, q); }), h = '';
+    if (q && !all.length) return '<div class="empty"><b>Keine Treffer.</b>Suche nach Gerät, Raum oder Kategorie.</div>';
+    var prob = all.filter(function (i) { return i.problem; }), rest0 = all.filter(function (i) { return !i.problem; }), wait = rest0.filter(function (i) { return i.phase === 'waiting'; }), run = rest0.filter(function (i) { return i.phase === 'running' && i.active; }), soon = rest0.filter(function (i) { return i.phase === 'soon' && i.active; }), rest = rest0.filter(function (i) { return wait.indexOf(i) < 0 && run.indexOf(i) < 0 && soon.indexOf(i) < 0; });
+    if (!q) {
+      if (prob.length) h += '<div class="wsh">' + I('alert').replace('<svg', '<svg style="color:var(--red-fill)"') + 'Mit Problem<span class="n">' + prob.length + '</span></div><div class="list prob" style="margin-top:8px">' + prob.map(wRow).join('') + '</div>';
+      if (wait.length) { var shown = wst.more.wait ? wait : wait.slice(0, 3); h += '<div class="wsh">' + I('flag').replace('<svg', '<svg style="color:var(--orange-fill)"') + 'Wartet auf jemanden<span class="n">' + wait.length + '</span></div><div class="list" style="margin-top:8px">' + shown.map(function (i) { return '<div class="li"><span class="sico" style="--c:' + i.c + '">' + I(i.ic) + '</span><button type="button" class="k" data-wrow="' + i.id + '" style="text-align:left">' + i.card.t + '<small>' + P[i.card.who].n + ' · ' + i.card.since + '</small></button><button type="button" class="demo" data-wnudge="' + i.id + '" style="margin:0">Stupsen</button></div>'; }).join('') + (wait.length > 3 && !wst.more.wait ? '<button type="button" class="li tap" data-wmore="wait" style="color:var(--tint)"><span class="k">' + (wait.length - 3) + ' weitere anzeigen</span></button>' : '') + '</div>'; }
+      if (run.length) h += '<div class="wsh">' + I('play').replace('<svg', '<svg style="color:var(--green-fill)"') + 'Läuft gerade<span class="n">' + run.length + '</span></div><div class="list" style="margin-top:8px">' + run.map(wRow).join('') + '</div>';
+      if (soon.length) h += '<div class="wsh">' + I('cal').replace('<svg', '<svg style="color:var(--orange-fill)"') + 'Kommt bald<span class="n">' + soon.length + '</span></div><div class="list" style="margin-top:8px">' + soon.map(wRow).join('') + '</div>';
+    } else rest = all;
+    var by = {}; rest.forEach(function (i) { var k = i.cat || 'Ohne Kategorie'; (by[k] = by[k] || []).push(i); });
+    var keys = Object.keys(by).sort(function (a, b) { return a === 'Ohne Kategorie' ? 1 : b === 'Ohne Kategorie' ? -1 : a.localeCompare(b); });
+    if (keys.length) h += '<div class="wsh">' + I('layers') + 'Kategorien<span class="n">' + keys.length + '</span></div>';
+    keys.forEach(function (k) {
+      var L = by[k], big = L.length > 8 && !q, ci = CATICON[k] || ['layers', '#8e8e93'], open = q ? true : wst.open[k] != null ? wst.open[k] : L.length <= 4;
+      h += '<div class="gwrap"><button type="button" class="ghead" data-wg="' + k + '" data-big="' + (big ? 1 : 0) + '" aria-expanded="' + (!big && open) + '"><span class="gi" style="--c:' + ci[1] + '">' + I(ci[0]) + '</span><b>' + k + '</b>' + groupStatus(L) + '<span class="num">' + L.length + '</span>' + I('chev', 'chev') + '</button>';
+      if (!big) { var cap = q && L.length > 8 && !wst.more[k] ? L.slice(0, 8) : L; h += '<div class="gb' + (open ? ' open' : '') + '"><div><div class="list">' + cap.map(wRow).join('') + (cap.length < L.length ? '<button type="button" class="li tap" data-wmore="' + k + '" style="color:var(--tint)"><span class="k">' + (L.length - cap.length) + ' weitere anzeigen</span></button>' : '') + '</div></div></div>'; }
+      h += '</div>';
+    });
+    if (!q) h += '<div class="wsh">Letzte Aktivität</div><div class="list" style="margin-top:8px">' + [['Waschmaschine fertig · Karte angelegt', 'heute 15:17 · Anna'], ['Saugroboter: Behälter leeren · Zähler 2 von 3', 'heute 12:40'], ['Batterie schwach · Karte angelegt', 'gestern 21:05 · Ben'], ['Tonnen rausstellen · Karte angelegt', 'Mi 18:00 · Mia']].map(function (r) { return '<div class="li"><span class="k">' + r[0] + '<small>' + r[1] + '</small></span></div>'; }).join('') + '</div>';
+    return h;
+  }
+  var FOUND = [{ k: 'Batterie schwach', ic: 'bell', c: '#34c759', list: [['Fensterkontakt Bad', 'Gäste-WC'], ['Bewegungsmelder Terrasse', ''], ['Thermostat Dachboden', ''], ['Rauchmelder Gästezimmer', '']], n: 12, why: 'Diese Geräte melden einen Batteriestand.' }, { k: 'Waschmaschine, Trockner, Spülmaschine', ic: 'house', c: '#0a84ff', list: [['Gefrierschrank Leistung', ''], ['Kaffeemaschine Leistung', '']], n: 2, why: 'Diese Steckdosen messen die Leistung.' }];
+  function wheadHtml() {
+    var cur = WATCH.filter(function (i) { return i.phase !== 'idle'; }).length, off = WATCH.filter(function (i) { return !i.active; }).length;
+    return '<div class="wsum"><b>' + WATCH.length + ' Wächter</b><span>' + cur + ' aktuell · ' + off + ' aus</span></div><button type="button" class="ban" data-found><span class="bi">' + I('search') + '</span><span><b>Stups hat 14 weitere Geräte gefunden</b><span>Tippe, um passende Wächter anzulegen.</span></span>' + I('chev', 'chev') + '</button>';
+  }
+  function watchBody() {
+    var head = wheadHtml();
+    return { right: '<button class="nbtn ic" data-newwatch aria-label="Neuer Wächter">' + I('plus') + '</button>', body: '<div class="search2">' + I('search') + '<input type="search" id="wq" placeholder="Wächter, Geräte und Räume suchen" aria-label="Wächter suchen" value="' + wst.q.replace(/"/g, '') + '"></div><div id="whead">' + (wst.q ? '' : head) + '</div><div id="wlist">' + wlistHtml() + '</div>' };
+  }
+  function wireWatch(ts) {
+    var wq = ts.querySelector('#wq'); if (wq) wq.addEventListener('input', function () { wst.q = wq.value; $('whead').innerHTML = wq.value ? '' : wheadHtml(); $('wlist').innerHTML = wlistHtml(); });
+    if (ts._ww) return; ts._ww = 1;
+    ts.addEventListener('click', function (e) {
+      var b;
+      if (curTab !== 'watch') return;
+      if ((b = e.target.closest('[data-wrow]'))) { pushPage(watchPage(WATCH.filter(function (w) { return w.id === +b.dataset.wrow; })[0])); return; }
+      if ((b = e.target.closest('[data-wg]'))) { var k = b.dataset.wg; if (b.dataset.big === '1') { pushPage(catPage(k)); return; } var open = b.getAttribute('aria-expanded') !== 'true'; wst.open[k] = open; b.setAttribute('aria-expanded', open); b.nextElementSibling.classList.toggle('open', open); return; }
+      if ((b = e.target.closest('[data-wmore]'))) { wst.more[b.dataset.wmore] = true; $('wlist').innerHTML = wlistHtml(); return; }
+      if ((b = e.target.closest('[data-wnudge]'))) { var w = WATCH.filter(function (x) { return x.id === +b.dataset.wnudge; })[0]; b.textContent = 'Gestupst'; b.disabled = true; toast(P[w.card.who].n + ' wurde angestupst'); return; }
+      if (e.target.closest('[data-found]')) { openFound(); return; }
+      if (e.target.closest('[data-newwatch]')) openWizard();
+    });
+  }
+  function catPage(name) {
+    var L = WATCH.filter(function (i) { return i.cat === name; }), view = 0, q = '', low = L.filter(function (i) { return i.pct < 15; }).length, mid = L.filter(function (i) { return i.pct >= 15 && i.pct < 25; }).length, ok = L.length - low - mid;
+    var inner = '<div class="summ"><div class="low"><b>' + low + '</b><span>Niedrig</span></div><div class="mid"><b>' + mid + '</b><span>Bald leer</span></div><div><b>' + ok + '</b><span>In Ordnung</span></div></div><div class="pbar" aria-hidden="true"><i style="flex:' + low + ';background:var(--red-fill)"></i><i style="flex:' + mid + ';background:var(--orange-fill)"></i><i style="flex:' + ok + ';background:var(--green-fill)"></i></div>' +
+      '<div class="search2">' + I('search') + '<input type="search" id="cq" placeholder="In ' + L.length + ' Geräten suchen" aria-label="Suchen"></div><div data-seg>' + segHtml('cvs', ['Kritisch', 'Räume', 'Alle'], 0) + '</div><div id="cbody"></div>';
+    var sec = buildPage(name, 'Wächter', '<button class="nbtn ic" data-cmenu aria-label="Mehr">' + I('more') + '</button>', inner, 'catpage'), cb = sec.querySelector('#cbody');
+    function sorted() { return L.filter(function (i) { return matches(i, q.toLowerCase()); }).sort(function (a, b) { return a.pct - b.pct; }); }
+    function draw() {
+      var S = sorted(), h = '';
+      if (q) h = S.length ? '<div class="list" style="margin-top:12px">' + S.slice(0, 40).map(wRow).join('') + '</div>' + (S.length > 40 ? '<p class="hint" style="padding-top:8px">Weitere ' + (S.length - 40) + ' Treffer. Suche genauer.</p>' : '') : '<div class="empty"><b>Keine Treffer.</b></div>';
+      else if (view === 0) { var c = S.filter(function (i) { return i.pct < 25; }); h = '<div class="hist" style="padding-top:18px">Zuerst wechseln</div><div class="list" style="margin-top:8px">' + c.map(wRow).join('') + '</div><p class="hint" style="padding-top:8px">Alle anderen Geräte haben mehr als 25 %. Wechsle zu „Räume“ oder „Alle“, um sie zu sehen.</p>'; }
+      else if (view === 1) { h = '<div class="gwrap" style="margin-top:14px">' + ROOMS.map(function (r) { var R = S.filter(function (i) { return i.room === r; }), mn = Math.min.apply(null, R.map(function (i) { return i.pct; })); return '<button type="button" class="ghead" data-room="' + r + '" aria-expanded="false" style="margin-top:6px"><b>' + r + '</b><span class="gs ' + (mn < 15 ? 'warn' : mn < 25 ? 'mid' : '') + '">niedrigster Stand ' + mn + ' %</span><span class="num">' + R.length + '</span>' + I('chev', 'chev') + '</button><div class="gb"><div><div class="list">' + R.map(wRow).join('') + '</div></div></div>'; }).join('') + '</div>'; }
+      else h = '<div class="list" style="margin-top:14px">' + S.slice().sort(function (a, b) { return a.subj.localeCompare(b.subj); }).map(wRow).join('') + '</div>';
+      cb.innerHTML = h; cb.animate && cb.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: calm ? 0 : 320, easing: 'cubic-bezier(.32,.72,0,1)' });
+    }
+    wireSeg(sec.querySelector('#cvs'), function (i) { view = i; draw(); });
+    sec.querySelector('#cq').addEventListener('input', function (e) { q = e.target.value.trim(); sec.querySelector('#cvs').style.opacity = q ? .4 : 1; draw(); });
+    sec.addEventListener('click', function (e) { var b = e.target.closest('[data-wrow]'); if (b) pushPage(watchPage(WATCH.filter(function (w) { return w.id === +b.dataset.wrow; })[0])); var r = e.target.closest('[data-room]'); if (r) { var o = r.getAttribute('aria-expanded') !== 'true'; r.setAttribute('aria-expanded', o); r.nextElementSibling.classList.toggle('open', o); } });
+    sec.querySelector('[data-cmenu]').addEventListener('click', function () { actionSheet({ title: name + ' · ' + L.length + ' Wächter', items: [{ t: 'Schwelle für alle ändern', icon: 'gear', fn: function () { toast('Neue Schwelle für alle ' + L.length + ' Wächter: 20 %'); } }, { t: 'Alle pausieren', icon: 'pause', fn: function () { toast('Alle ' + L.length + ' pausiert'); } }, { t: 'Neue Geräte suchen', icon: 'search', fn: openFound }] }); });
+    draw(); return sec;
+  }
+  function openFound() {
+    var sel = {}; FOUND.forEach(function (g, gi) { g.list.forEach(function (x, i) { sel[gi + ':' + i] = 1; }); });
+    function html() { return '<div class="shead"><span></span><span class="ti">Gefunden</span><button class="r" data-close>Fertig</button></div><div class="sbody"><p class="hint" style="padding-top:8px">Stups hat in Home Assistant Geräte gefunden, zu denen ein Wächter passt. Der Satz ist schon ausgefüllt.</p>' + FOUND.map(function (g, gi) { var n = Object.keys(sel).filter(function (k) { return k.indexOf(gi + ':') === 0; }).length; return '<div class="wsh" style="padding-top:20px"><span class="sico" style="--c:' + g.c + ';width:26px;height:26px">' + I(g.ic) + '</span>' + g.k + '<span class="n">' + g.n + '</span></div><p class="hint" style="padding-top:4px">' + g.why + '</p><div class="list" style="margin-top:8px">' + g.list.map(function (x, i) { return '<button type="button" class="li tap" role="checkbox" aria-checked="' + !!sel[gi + ':' + i] + '" data-fs="' + gi + ':' + i + '"><span class="k">' + x[0] + (x[1] ? '<small>' + x[1] + '</small>' : '') + '</span><svg class="ck" viewBox="0 0 24 24" style="opacity:' + (sel[gi + ':' + i] ? 1 : 0) + '"><use href="#i-check"/></svg></button>'; }).join('') + (g.n > g.list.length ? '<div class="li"><span class="k ghost">und ' + (g.n - g.list.length) + ' weitere, alle ausgewählt</span></div>' : '') + '</div><button type="button" class="bigbtn" data-fgo="' + gi + '">' + (g.n - g.list.length + n) + ' Wächter einrichten</button>'; }).join('') + '<div class="hist" style="padding-top:24px">Ohne Gerät</div><div class="list" style="margin-top:8px"><button class="li tap"><span class="k">Tonnen rausstellen<small>Karte kurz vor der Müllabfuhr</small></span>' + I('chev', 'chev') + '</button><button class="li tap"><span class="k">Alle Vorlagen ansehen</span>' + I('chev', 'chev') + '</button></div></div>'; }
+    function draw() { var sb = sheet.querySelector('.sbody'), st = sb ? sb.scrollTop : 0; sheet.innerHTML = '<div class="grab" id="grab"><i></i></div>' + html(); wireDrag(); sheet.querySelector('.sbody').scrollTop = st; }
+    showSheet('', { label: 'Gefunden' }); draw();
+    bindSheet('click', foundClick); function foundClick(e) { var b = e.target.closest('[data-fs]'); if (b) { var k = b.dataset.fs; if (sel[k]) delete sel[k]; else sel[k] = 1; draw(); return; } b = e.target.closest('[data-fgo]'); if (b) { var g = FOUND[+b.dataset.fgo], n = g.n - g.list.length + Object.keys(sel).filter(function (k) { return k.indexOf(b.dataset.fgo + ':') === 0; }).length; closeSheet(); wait(450, function () { toast(n + ' Wächter eingerichtet'); }); } }
+  }
+  function graphSvg(w, span) {
+    var s = w.series, mx = Math.max.apply(null, s.concat([(w.thr || 0) * 1.6, 10])), W = 320, H = 130, pts = s.map(function (v, i) { return [8 + i * (W - 16) / (s.length - 1), H - 10 - (v / mx) * (H - 24)]; });
+    var d = pts.map(function (p, i) { if (!i) return 'M' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); var q = pts[i - 1], cx = (q[0] + p[0]) / 2; return 'C' + cx.toFixed(1) + ' ' + q[1].toFixed(1) + ' ' + cx.toFixed(1) + ' ' + p[1].toFixed(1) + ' ' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+    var ty = H - 10 - ((w.thr || 0) / mx) * (H - 24), last = pts[pts.length - 1];
+    return '<svg class="graph" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Verlauf"><defs><linearGradient id="gfill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--tint-fill)" stop-opacity=".45"/><stop offset="1" stop-color="var(--tint-fill)" stop-opacity="0"/></linearGradient></defs>' +
+      (w.thr ? '<line class="thr" x1="0" x2="' + W + '" y1="' + ty.toFixed(1) + '" y2="' + ty.toFixed(1) + '"/><text class="tx" x="' + (W - 2) + '" y="' + (ty - 5).toFixed(1) + '" text-anchor="end">Schwelle ' + w.thr + ' ' + (w.unit || '') + '</text>' : '') +
+      '<path class="ar" d="' + d + ' L' + last[0] + ' ' + H + ' L8 ' + H + ' Z"/><path class="ln" pathLength="1" d="' + d + '"/><circle class="dot" cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="5"/></svg>';
+  }
+  function watchPage(w) {
+    var numeric = w.thr > 0, runs = w.pct != null ? [['Karte angelegt: Batterie wechseln', 'vor 3 Wochen · Ben'], ['Karte erledigt', 'vor 3 Wochen · Ben']] : [['Karte angelegt', 'heute 15:17 · Anna'], ['Karte erledigt', 'heute 15:40 · Anna'], ['Karte angelegt', 'Mi 11:02 · Ben'], ['Zähler 2 von 3', 'Mo 09:30']];
+    var inner = '<div class="list" style="margin-top:8px"><div class="li"><span class="k">Status<small>' + (w.problem ? w.problem : w.active ? (w.phase === 'running' ? 'Läuft gerade, ' + w.stxt.toLowerCase() : 'Aktiv') : 'Pausiert') + '</small></span><button class="sw' + (w.active ? ' on' : '') + '" role="switch" aria-checked="' + !!w.active + '" aria-label="Wächter aktiv"></button></div></div>' +
+      (numeric ? '<div class="gcard"><div class="gh"><b>' + w.val + '</b><span>' + (w.pct != null ? 'Letzte 7 Tage' : 'Letzte 3 Stunden') + '</span></div>' + graphSvg(w) + '</div>' : '') +
+      '<div class="wcard"><div class="k">Wenn</div><div class="v">' + w.rule + '</div><div class="k">Dann Karte</div><div class="v">' + w.task + '</div><div class="k">An wen</div><div class="v">' + w.assign + '</div></div>' +
+      grp('Feinschliff', ['<div class="li"><span class="k">Sperrzeit<small>Gegen flatternde Sensoren</small></span><span class="v">10 Min.</span></div>', '<div class="li"><span class="k">Keine zweite Karte<small>Solange eine offen ist</small></span><span class="v">An</span></div>', '<div class="li"><span class="k">Erledigt sich selbst</span><span class="v">' + (w.pct != null ? 'Batterie wieder über 40 %' : 'Aus') + '</span></div>', '<div class="li"><span class="k">Zählt zur Fairness</span><span class="v">Ja</span></div>']) +
+      grp('Verbindung', ['<div class="li"><span class="k">Entität<small>sensor.' + (w.subj || 'x').toLowerCase().replace(/[^a-z]+/g, '_') + '</small></span><span class="v">jetzt ' + w.val + '</span></div>']) +
+      '<div class="hist" style="padding-top:22px">Letzte Läufe</div><div class="list" style="margin-top:8px">' + runs.map(function (r) { return '<div class="li"><span class="k">' + r[0] + '<small>' + r[1] + '</small></span></div>'; }).join('') + '</div>' +
+      '<button class="bigbtn soft" data-wtest>Testen: Karte jetzt anlegen</button><button class="bigbtn plain" data-wedit>Ändern</button><div class="list" style="margin-top:22px"><button class="li tap redtxt" data-wdel>Wächter löschen</button></div>';
+    var sec = buildPage(w.pct != null ? w.subj : w.n, 'Zurück', '', inner, 'wpage');
+    sec.querySelector('[data-wtest]').addEventListener('click', function () { toast('Testkarte „' + w.task + '“ angelegt'); });
+    sec.querySelector('[data-wedit]').addEventListener('click', function () { openWizard({ edit: w }); });
+    sec.querySelector('[data-wdel]').addEventListener('click', function () { alertBox({ title: '„' + (w.pct != null ? w.subj : w.n) + '“ löschen?', msg: 'Der Wächter hört auf zu beobachten. Bereits angelegte Karten bleiben erhalten.', actions: [{ t: 'Abbrechen', bold: true }, { t: 'Löschen', dest: true, fn: function () { popPage(); WATCH = WATCH.filter(function (x) { return x !== w; }); redrawWatch(); toast('Wächter gelöscht'); } }] }); });
+    wait(450, function () { var g = sec.querySelector('.graph'); if (g) g.classList.add('go'); }); if (calm) { var g = sec.querySelector('.graph'); if (g) g.classList.add('go'); }
+    return sec;
+  }
+  function redrawWatch() { var ts = $('tabscreen'); if (curTab === 'watch' && ts) { var sc = ts.querySelector('.scroll'), y = sc.scrollTop; ts.innerHTML = tabHtml('watch'); wireTab(ts, 'watch'); ts.querySelector('.scroll').scrollTop = y; } pstack.forEach(function (pg) { if (pg.redraw) pg.redraw(); }); }
+
+  // ---------- Assistent: Neuer Wächter ----------
+  var ENT = [
+    { n: 'Waschmaschine Leistung', id: 'sensor.waschmaschine_leistung', s: '212', u: 'W', ser: [380, 372, 390, 150, 360, 380, 340, 220, 350, 212] },
+    { n: 'Trockner Leistung', id: 'sensor.trockner_leistung', s: '1,2', u: 'W', ser: [2, 1.5, 1.4, 1.3, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2] },
+    { n: 'Spülmaschine Leistung', id: 'sensor.spuelmaschine_leistung', s: '0', u: 'W', ser: [90, 85, 0, 0, 0, 0, 0, 0, 0, 0] },
+    { n: 'Gefrierschrank Leistung', id: 'sensor.gefrierschrank_leistung', s: '64', u: 'W', ser: [60, 70, 64, 62, 66, 64, 63, 64, 65, 64] },
+    { n: 'Kaffeemaschine Leistung', id: 'sensor.kaffeemaschine_leistung', s: '0', u: 'W', ser: [0, 0, 1200, 0, 0, 0, 0, 0, 0, 0] },
+    { n: 'Briefkasten Klappe', id: 'binary_sensor.briefkasten', s: 'off', u: '', states: ['on', 'off'] },
+    { n: 'Haustür Kontakt', id: 'binary_sensor.haustuer', s: 'off', u: '', states: ['on', 'off'] },
+    { n: 'Wohnzimmer Luftfeuchte', id: 'sensor.wohnzimmer_luftfeuchte', s: '48', u: '%', ser: [45, 46, 48, 47, 49, 48, 50, 49, 48, 48] },
+    { n: 'Saugroboter Läufe', id: 'sensor.saugroboter_laeufe', s: '2', u: '×', ser: [0, 1, 1, 1, 2, 2, 2, 2, 2, 2] }
+  ];
+  var TPLS = [
+    { id: 'washer', t: 'Waschmaschine fertig', h: 'Meldet, wenn die Waschmaschine fertig ist.', ic: 'house', c: '#0a84ff', ent: 0, kind: 'below', value: 5, forMin: 3, title: 'Waschmaschine ausräumen', due: 'in30', hit: 1 },
+    { id: 'dryer', t: 'Trockner fertig', h: 'Meldet, wenn der Trockner fertig ist.', ic: 'house', c: '#ff9500', ent: 1, kind: 'below', value: 5, forMin: 3, title: 'Wäsche aufhängen', due: 'in30', hit: 1 },
+    { id: 'dish', t: 'Spülmaschine fertig', h: 'Meldet, wenn die Spülmaschine fertig ist.', ic: 'house', c: '#af52de', ent: 2, kind: 'below', value: 3, forMin: 3, title: 'Spülmaschine ausräumen', due: 'in30', hit: 1 },
+    { id: 'bins', t: 'Tonnen rausstellen', h: 'Karte kurz vor der Müllabfuhr.', ic: 'trash', c: '#8e8e93', ent: null, kind: 'calendar', lead: 12, title: 'Tonnen rausstellen', due: 'sofort' },
+    { id: 'rain', t: 'Wäsche rein, es regnet', h: 'Karte, wenn Regen vorhergesagt ist.', ic: 'bell', c: '#5ac8fa', ent: null, kind: 'forecast', hours: 2, title: 'Wäsche reinholen, es regnet bald', due: 'in30' },
+    { id: 'battery', t: 'Batterie schwach', h: 'Karte, wenn eine Batterie unter 20 % fällt.', ic: 'gear', c: '#34c759', ent: null, kind: 'below', value: 20, forMin: 0, title: 'Batterie wechseln', due: 'none', hit: 12 },
+    { id: 'vacuum', t: 'Saugroboter: Behälter leeren', h: 'Karte nach einigen Läufen.', ic: 'house', c: '#30b0c7', ent: 8, kind: 'above', value: 0, forMin: 0, count: 3, title: 'Staubbehälter leeren', due: 'none' },
+    { id: 'blank', t: 'Von Grund auf', h: 'Alles selbst festlegen.', ic: 'plus', c: '#8e8e93', ent: null, kind: 'below', value: 5, forMin: 3, title: '', due: 'in30' }
+  ];
+  var DUES = [['sofort', 'Sofort'], ['in30', 'In 30 Min.'], ['in60', 'In 1 Std.'], ['eve', 'Heute Abend'], ['tom', 'Morgen'], ['none', 'Ohne Termin']];
+  var ASSIGN = [['fair', 'Fair im Wechsel', 'Reihum, nicht nach Aufwand gewichtet.', 'people'], ['fix', 'Eine feste Person', 'Immer dieselbe Person bekommt die Karte.', 'flag'], ['all', 'Alle Anwesenden', 'Alle bekommen die Frage „Wer übernimmt?“. Nach 30 Minuten ohne Antwort greift der Rückfall.', 'bell'], ['ask', 'Erst vorschlagen', 'Eine Person bekommt einen Vorschlag und kann ihn annehmen oder weitergeben.', 'repeat'], ['none', 'Niemand', 'Die Karte landet nur auf dem Board.', 'layers']];
+  function wzDraft(tpl, edit) {
+    var T = tpl || TPLS[7], d = { tpl: T.id, step: tpl ? 1 : 0, ent: T.ent, entQ: '', kind: T.kind, value: T.value, forMin: T.forMin || 0, to: 'on', lead: T.lead || 12, hours: T.hours || 2, count: T.count || '', title: T.title, sym: null, board: 'Haushalt', col: 'Offen', prio: null, due: T.due || 'in30', cats: [], assign: 'fair', who: [], fixed: 'A', home: true, fallback: 'first', fbPerson: 'A', doneOn: false, doneCond: 'Tür öffnet (on)', nudge: false, nudgeAfter: 60, nudgeRep: 'Stündlich', nudgeMax: 3, cooldown: 10, dedupe: true, fair: true, name: '', category: T.id === 'battery' ? 'Batterien' : T.id === 'bins' ? 'Müll' : T.id === 'rain' ? 'Wetter' : 'Haushaltsgeräte', desc: '', probe: false, rev: false, openCat: false };
+    if (edit) { d.step = 1; d.ent = 0; d.title = edit.task; d.name = edit.n; d.category = edit.cat || ''; d.kind = 'below'; d.value = edit.thr || 5; }
+    return d;
+  }
+  function wzAuto(d) { var T = TPLS.filter(function (x) { return x.id === d.tpl; })[0]; return T && T.id !== 'blank' ? T.t : d.ent != null ? ENT[d.ent].n.split(' ')[0] + ' meldet' : 'Neuer Wächter'; }
+  function dueText(k) { return DUES.filter(function (x) { return x[0] === k; })[0][1]; }
+  function openWizard(o) {
+    o = o || {}; var d = wzDraft(null, o.edit), STEP = ['Vorlage', 'Wenn', 'Dann', 'Wer', 'Feinschliff'], ST = ['Woran merkt Stups, dass etwas zu tun ist?', 'Welche Aufgabe soll dann entstehen?', 'Wer soll sich darum kümmern?', 'Fast fertig. Noch Extras?'];
+    function numField(id, v, unit) { return '<input id="' + id + '" inputmode="numeric" value="' + v + '" aria-label="' + id + '">' + (unit ? '<span>' + unit + '</span>' : ''); }
+    function s0() {
+      return '<p class="hint" style="padding:10px 20px 0">Füllt die Schritte vor, alles bleibt änderbar. Danach noch die Entität wählen.</p><div class="list" style="margin-top:12px">' + TPLS.map(function (t, i) { return '<button type="button" class="opt" data-tp="' + i + '" style="' + (i ? 'border-top:.5px solid var(--sep)' : '') + '"><span class="oi" style="--c:' + t.c + '">' + I(t.ic) + '</span><span><b>' + t.t + '</b><span class="d">' + t.h + '</span></span>' + (t.hit ? '<span class="badge">' + (t.hit > 1 ? t.hit + ' Geräte' : 'Gefunden') + '</span>' : '') + '</button>'; }).join('') + '</div>';
+    }
+    function s1() {
+      var e = d.ent != null ? ENT[d.ent] : null, T = TPLS.filter(function (x) { return x.id === d.tpl; })[0], h = '';
+      h += '<div class="search2" style="margin-top:12px">' + I('search') + '<input id="entq" role="combobox" aria-expanded="false" autocomplete="off" placeholder="' + (e ? e.n : 'Entität suchen, z. B. waschmaschine') + '" value="' + d.entQ + '" aria-label="Entität suchen"></div><div id="entl"></div>';
+      if (e) {
+        var w2 = { series: e.ser || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], thr: d.kind === 'state' ? 0 : +d.value || 0, unit: e.u };
+        h += '<div class="selent"><div class="t"><span class="sico" style="--c:' + (T ? T.c : '#0a84ff') + '">' + I(T ? T.ic : 'house') + '</span><span><b>' + e.n + '</b><span>' + e.id + '</span></span><span class="v">' + e.s + (e.u ? ' ' + e.u : '') + '</span></div>' + (e.ser ? '<div style="margin-top:6px">' + graphSvg(w2) + '</div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--label2);margin-top:2px"><span>letzte 3 Stunden</span><span>jetzt</span></div>' : '') + '</div>';
+      } else if (d.kind === 'calendar' || d.kind === 'forecast') h += '';
+      else h += '<div class="chips scrollx" style="padding-top:10px"><span class="chip" style="animation:none;background:var(--fill);color:var(--label2)">Vorschläge</span>' + [0, 1, 2].map(function (i) { return '<button type="button" class="pc nop" data-pe="' + i + '">' + ENT[i].n + '</button>'; }).join('') + '<button type="button" class="pc nop" data-found2>+11</button></div>';
+      h += '<div class="hist" style="padding-top:20px">Bedingung</div>';
+      if (d.kind === 'calendar') h += '<div class="inl"><span>Wie viele Stunden vorher?</span><em>' + numField('lead', d.lead, 'Std.') + '</em></div><p class="hint" style="padding-top:6px">So früh vor dem Termin entsteht die Karte. Kalender: Müllabfuhr.</p>';
+      else if (d.kind === 'forecast') h += '<div class="inl"><span>Regen in den nächsten</span><em>' + numField('hrs', d.hours, 'Std.') + '</em></div><p class="hint" style="padding-top:6px">Stups schaut in die Wettervorhersage.</p>';
+      else {
+        h += segHtml('wk', ['Unter', 'Über', 'Zustand'], ['below', 'above', 'state'].indexOf(d.kind));
+        if (d.kind === 'state') h += '<div class="inl"><span>Zustand</span><input id="to" value="' + d.to + '" style="width:96px" aria-label="Zielzustand"><span>länger als</span>' + numField('fm', d.forMin, 'Min.') + '</div><div class="chips" style="padding-top:12px">' + ['on', 'off', 'unavailable'].map(function (s2) { return '<button type="button" class="pc nop" data-st="' + s2 + '" aria-pressed="' + (d.to === s2) + '">' + s2 + '</button>'; }).join('') + '</div><p class="hint" style="padding-top:6px">Zustände aus dem Verlauf der Entität.</p>';
+        else h += '<div class="inl"><span>' + (d.kind === 'below' ? 'fällt unter' : 'steigt über') + '</span><em>' + numField('val', d.value, e && e.u || '') + '</em><span>länger als</span><em>' + numField('fm', d.forMin, 'Min.') + '</em></div>';
+        h += '<div class="inl" style="padding-top:14px"><button type="button" class="bigbtn soft" id="probe" style="margin:0;width:auto;height:40px;padding:0 18px;font-size:15px">Probelauf</button></div>';
+        if (d.probe) { var cn = [2, 1, 3, 0, 2, 1, 1]; h += '<div class="probe" id="pbox"><b style="font:600 16px/1.3 var(--font)">Was hätte der Wächter in den letzten 7 Tagen getan?</b><p style="margin-top:4px;font-size:14px;color:var(--label2)">Er hätte <b style="color:var(--label)">10 Karten</b> angelegt, im Schnitt eine pro Tag.</p><div class="bars7">' + cn.map(function (c) { return '<i data-h="' + c * 22 + '" aria-label="' + c + ' Karten"></i>'; }).join('') + '</div><div class="lab7">' + ['Fr', 'Sa', 'So', 'Mo', 'Di', 'Mi', 'Do'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div></div>'; }
+      }
+      return h;
+    }
+    function previewCard() { var s = d.sym || { id: 'house' }; return '<div class="prev"><div class="ph">So erscheint die Karte</div><div class="row" style="overflow:visible"><div class="rc" style="pointer-events:none"><span class="sico" style="--c:var(--tint-fill);width:30px;height:30px">' + I(s.id) + '</span><div><div class="t">' + (d.title || 'Titel der Karte') + '</div><div class="m"><span class="due">' + I('clock') + (d.due === 'none' ? 'ohne Termin' : dueText(d.due).toLowerCase()) + '</span>' + (d.prio ? '<span>' + I('flag') + ' ' + { low: 'Niedrig', medium: 'Mittel', high: 'Hoch' }[d.prio] + '</span>' : '') + '</div></div><span class="av" style="--c:' + P.A.c + '">A</span></div></div></div>'; }
+    function s2() {
+      var s = d.sym || { id: 'house' };
+      return '<div class="qcard" style="margin-top:12px"><div class="qrow"><button type="button" id="wsym" aria-label="Symbol ändern" style="flex:none">' + symTileHtml(d.sym || { id: 'house' }, false) + '</button><div class="qf"><label class="lab" for="wtitle">Titel der Karte</label><textarea id="wtitle" rows="2" placeholder="z. B. Waschmaschine ausräumen" aria-label="Titel der Karte">' + d.title + '</textarea></div></div></div>' +
+        '<div class="hist2">Wohin?</div><div class="list" style="margin-top:10px"><button type="button" class="li tap" data-wb><span class="tile2" style="--c:#af52de">' + I('layers') + '</span><span class="k"><b>' + d.board + '</b><span>Board • Spalte ' + d.col + '</span></span>' + I('chev', 'chev') + '</button></div>' +
+        '<div class="hist2">Priorität</div><div class="segc' + (d.prio ? '' : ' none') + '" id="wpr" style="--n:3;--i:' + ['low', 'medium', 'high'].indexOf(d.prio) + ';margin-top:10px"><span class="th"></span>' + [['low', 'Niedrig'], ['medium', 'Mittel'], ['high', 'Hoch']].map(function (x) { return '<button type="button" data-pr="' + x[0] + '" aria-pressed="' + (d.prio === x[0]) + '">' + I('flag') + x[1] + '</button>'; }).join('') + '</div>' +
+        '<div class="hist2">Fällig</div><div class="chips scrollx" style="padding-top:10px" role="group" aria-label="Fälligkeit">' + DUES.map(function (x) { return '<button type="button" class="pc nop" data-du="' + x[0] + '" aria-pressed="' + (d.due === x[0]) + '">' + x[1] + '</button>'; }).join('') + '<button type="button" class="pc nop" data-du="custom" aria-pressed="' + (d.due === 'custom') + '">Anders …</button></div>' +
+        (d.due === 'custom' ? '<div class="inl"><span>In</span><em>' + numField('dmin', d.dmin || 45, 'Min.') + '</em><span>nach dem Auslösen</span></div>' : '') +
+        '<div class="hist2">Kategorien der Karte</div><div class="chips scrollx" style="padding-top:10px">' + Object.keys(ET).map(function (c) { return '<button type="button" class="pc nop" data-cat="' + c + '" aria-pressed="' + (d.cats.indexOf(c) >= 0) + '"><i class="dot" style="--c:' + ET[c] + '"></i>' + c + '</button>'; }).join('') + '</div>' + previewCard();
+    }
+    function s3() {
+      var h = '<div class="hist2" style="padding-top:14px">Wer bekommt die Karte?</div><div class="list" id="wa" style="margin-top:10px">' + ASSIGN.map(function (a, i) { return '<button type="button" class="opt" role="radio" aria-checked="' + (d.assign === a[0]) + '" data-as="' + a[0] + '" style="' + (i ? 'border-top:.5px solid var(--sep)' : '') + '"><span class="oi" style="--c:' + (d.assign === a[0] ? 'var(--tint-fill)' : '#8e8e93') + '">' + I(a[3]) + '</span><span><b>' + a[1] + '</b><span class="d">' + a[2] + '</span></span></button>'; }).join('') + '</div>';
+      if (d.assign === 'fix') h += '<div class="hist2">Person</div><div class="chips scrollx" style="padding-top:10px">' + people.slice(0, 6).map(function (x) { return '<button type="button" class="pc" data-fx="' + x[0] + '" aria-pressed="' + (d.fixed === x[0]) + '"><span class="av" style="--c:' + x[2] + '">' + x[0] + '</span>' + x[1] + '</button>'; }).join('') + '</div>';
+      if (d.assign === 'fair' || d.assign === 'ask' || d.assign === 'all') h += '<div class="hist2">Wer kommt infrage?</div><div class="chips scrollx" style="padding-top:10px">' + people.slice(0, 6).map(function (x) { return '<button type="button" class="pc" data-el="' + x[0] + '" aria-pressed="' + (d.who.indexOf(x[0]) >= 0) + '"><span class="av" style="--c:' + x[2] + '">' + x[0] + '</span>' + x[1] + '</button>'; }).join('') + '</div><p class="hint" style="padding-top:8px">Leer heißt: alle Mitglieder von „' + d.board + '“.</p>';
+      if (d.assign !== 'none') {
+        h += '<div class="list" style="margin-top:22px">' + swRow('Nur, wer zu Hause ist', d.home, 'Anwesend heißt: Die Person in Home Assistant ist zu Hause.') + '</div>';
+        if (d.home) h += '<div class="hist2">Ist niemand zu Hause</div><div class="list" id="wf" style="margin-top:10px">' + radioRows('fb', [['Wer zuerst heimkommt', 'Die Karte erscheint ohne Zuständige und ohne Push. Die Fälligkeit zählt ab dann.'], ['Rückfall nach 24 Stunden', 'Eine feste Person bekommt die Karte, wenn bis dahin niemand heimkam.'], ['Unzugewiesen lassen', 'Die Karte bleibt auf dem Board.']], ['first', 'fb', 'none'].indexOf(d.fallback)) + '</div>' + (d.fallback === 'fb' ? '<div class="chips scrollx" style="padding-top:12px">' + people.slice(0, 6).map(function (x) { return '<button type="button" class="pc" data-fp="' + x[0] + '" aria-pressed="' + (d.fbPerson === x[0]) + '"><span class="av" style="--c:' + x[2] + '">' + x[0] + '</span>' + x[1] + '</button>'; }).join('') + '</div>' : '');
+      }
+      return h;
+    }
+    function s4() {
+      var h = '<div class="wcard" style="margin-top:12px"><div class="k">Wenn</div><div class="v">' + (d.kind === 'calendar' ? 'Kalender 12 Std. vorher' : d.kind === 'forecast' ? 'Regen in den nächsten ' + d.hours + ' Std.' : (d.ent != null ? ENT[d.ent].n : 'Entität') + ' ' + (d.kind === 'state' ? 'ist ' + d.to : d.kind === 'below' ? 'unter ' + d.value + ' ' + (d.ent != null ? ENT[d.ent].u : '') : 'über ' + d.value)) + '</div><div class="k">Dann</div><div class="v">Karte „' + (d.title || '…') + '“</div><div class="k">Wer</div><div class="v">' + ASSIGN.filter(function (a) { return a[0] === d.assign; })[0][1] + '</div></div>';
+      h += '<div class="list" style="margin-top:14px">' + swRow('Erledigt sich selbst', d.doneOn, 'Zum Beispiel: Die Tür der Waschmaschine geht auf.') + (d.doneOn ? '<div class="li"><span class="k">Bedingung zum Erledigen<small>Die offene Karte wird dann erledigt.</small></span><span class="v">' + d.doneCond + '</span></div>' : '') + swRow('Stupsen, wenn noch offen', d.nudge, 'Freundlich erinnern, endet mit der Erledigung') + (d.nudge ? '<div class="li"><span class="k">Stupsen nach</span>' + stepper('na', d.nudgeAfter + ' Min.') + '</div><div class="li"><span class="k">Wiederholen alle</span><span class="v">' + d.nudgeRep + '</span></div><div class="li"><span class="k">Höchstens</span>' + stepper('nm', d.nudgeMax + '×') + '</div>' : '') +
+        '<div class="li"><span class="k">Erst beim N-ten Mal<small>z. B. Saugroboter nach 3 Läufen</small></span>' + stepper('cn', (d.count || 1) + '×') + '</div><div class="li"><span class="k">Sperrzeit<small>Gegen flatternde Sensoren</small></span>' + stepper('cd', d.cooldown + ' Min.') + '</div>' + swRow('Keine zweite Karte', d.dedupe, 'Solange eine offen ist') + swRow('Zählt zur Fairness', d.fair, 'Board „' + d.board + '“ zählt mit') + '</div>';
+      h += '<div class="hist2">Name des Wächters</div><input class="fld" id="wname" placeholder="' + wzAuto(d) + '" value="' + d.name + '" maxlength="80" aria-label="Name des Wächters">';
+      h += '<div class="hist2">Kategorie</div><div class="chips scrollx" style="padding-top:10px">' + ['Haushaltsgeräte', 'Batterien', 'Garten', 'Müll', 'Wetter', 'Ohne Kategorie'].map(function (c) { return '<button type="button" class="pc nop" data-wc="' + c + '" aria-pressed="' + (d.category === c || (c === 'Ohne Kategorie' && !d.category)) + '">' + c + '</button>'; }).join('') + '<button type="button" class="pc nop" data-wnc>' + I('plus') + 'Neue Kategorie …</button></div><p class="hint" style="padding-top:8px">Danach sortiert die Liste der Wächter. Stups schlägt eine vor, du kannst sie ändern oder eine eigene anlegen.</p>';
+      h += '<div class="hist2">Beschreibung</div><textarea class="fld" id="wdesc" rows="2" placeholder="Beschreibung (optional)" aria-label="Beschreibung">' + d.desc + '</textarea>';
+      return h;
+    }
+    function draw() {
+      var sc = sheet.querySelector('.sbody'), y = sc ? sc.scrollTop : 0, last = d.step === 4, first = d.step === 0;
+      var body = [s0, s1, s2, s3, s4][d.step]();
+      var prog = first ? '' : '<div class="wprog"><span>Schritt ' + d.step + ' von 4</span><div class="tr"><i style="width:' + d.step * 25 + '%"></i></div><span>' + STEP[d.step] + '</span></div>';
+      sheet.innerHTML = '<div class="grab" id="grab"><i></i></div><div class="shead"><button data-wback>' + (first || o.edit && d.step === 1 ? 'Abbrechen' : 'Zurück') + '</button><span class="ti">' + (o.edit ? 'Wächter ändern' : 'Neuer Wächter') + '</span><span></span></div><div class="sbody" id="wzb">' + prog + '<div class="large" style="padding:10px 20px 0"><h2 style="font:700 24px/1.15 var(--font);letter-spacing:.01em">' + (first ? 'Womit starten?' : ST[d.step - 1]) + '</h2></div><div class="wstep' + (d.rev ? ' rev' : '') + '">' + body + '</div></div>' + (first ? '' : '<div class="sfoot two2"><button type="button" class="bigbtn soft2" data-wtest2>Testen</button><button type="button" class="bigbtn" data-wnext>' + (last ? (o.edit ? 'Speichern' : 'Wächter anlegen') : 'Weiter: ' + STEP[d.step + 1]) + '</button></div>');
+      wireDrag(); sheet.querySelector('.sbody').scrollTop = y; d.rev = false; wire(); sheet.querySelectorAll('.graph').forEach(function (g) { if (calm) g.classList.add('go'); else wait(250, function () { g.classList.add('go'); }); });
+      var pb = sheet.querySelector('#pbox'); if (pb) wait(120, function () { pb.querySelectorAll('.bars7 i').forEach(function (i) { i.style.height = Math.max(4, +i.dataset.h) + 'px'; }); }); if (pb && calm) pb.querySelectorAll('.bars7 i').forEach(function (i) { i.style.height = Math.max(4, +i.dataset.h) + 'px'; });
+    }
+    function go(n) { d.rev = n < d.step; d.step = n; draw(); }
+    function entList() {
+      var q = d.entQ.trim().toLowerCase(), L = ENT.filter(function (e) { return !q || (e.n + e.id).toLowerCase().indexOf(q) >= 0; }), el = sheet.querySelector('#entl'); if (!el) return;
+      el.innerHTML = d.entOpen ? '<div class="ent" role="listbox" aria-label="Entität suchen">' + (L.length ? L.map(function (e) { return '<button type="button" role="option" data-pe2="' + ENT.indexOf(e) + '"><span><b>' + e.n + '</b><span>' + e.id + '</span></span><span class="v">' + e.s + (e.u ? ' ' + e.u : '') + '</span></button>'; }).join('') : '<div style="padding:14px;color:var(--label2);font-size:14px">Nichts gefunden.</div>') + '</div>' : '';
+    }
+    function wire() {
+      var s = sheet;
+      s.querySelector('[data-wback]').addEventListener('click', function () { if (d.step === 0 || o.edit && d.step === 1) closeSheet(); else go(d.step - 1); });
+      var nx = s.querySelector('[data-wnext]'); if (nx) nx.addEventListener('click', function () { if (d.step === 4) save(); else { if (d.step === 1 && d.ent == null && d.kind !== 'calendar' && d.kind !== 'forecast') { toast('Wähle zuerst die Entität, die Stups beobachten soll.'); var q = s.querySelector('#entq'); if (q) q.focus(); return; } go(d.step + 1); } });
+      var tt = s.querySelector('[data-wtest2]'); if (tt) tt.addEventListener('click', function () { toast('Testkarte „' + (d.title || 'Karte') + '“ angelegt'); });
+      s.querySelectorAll('[data-tp]').forEach(function (b) { b.addEventListener('click', function () { var t = TPLS[+b.dataset.tp], nd = wzDraft(t); d = nd; d.step = 1; d.rev = false; draw(); }); });
+      var q = s.querySelector('#entq'); if (q) { q.addEventListener('focus', function () { d.entOpen = true; entList(); }); q.addEventListener('input', function () { d.entQ = q.value; d.entOpen = true; entList(); }); q.addEventListener('blur', function () { setTimeout(function () { d.entOpen = false; entList(); }, 150); }); }
+      bindSheet('click', clickAll); wireInputs();
+    }
+    function wireInputs() {
+      var s = sheet, map = { val: function (v) { d.value = v; }, fm: function (v) { d.forMin = v; }, lead: function (v) { d.lead = v; }, hrs: function (v) { d.hours = v; }, to: function (v) { d.to = v; }, dmin: function (v) { d.dmin = v; }, wtitle: function (v) { d.title = v; var pt = s.querySelector('.prev .t'); if (pt) pt.textContent = v || 'Titel der Karte'; }, wname: function (v) { d.name = v; }, wdesc: function (v) { d.desc = v; } };
+      s.querySelectorAll('input,textarea').forEach(function (i) { if (map[i.id]) i.addEventListener('input', function () { map[i.id](i.value); }); });
+      var wk = s.querySelector('#wk'); if (wk) wireSeg(wk, function (i) { d.kind = ['below', 'above', 'state'][i]; draw(); });
+      var pr = s.querySelector('#probe'); if (pr) pr.addEventListener('click', function () { d.probe = true; draw(); var pb = s.querySelector('#pbox'); if (pb) pb.scrollIntoView && s.querySelector('.sbody').scrollTo({ top: pb.offsetTop - 140, behavior: calm ? 'auto' : 'smooth' }); });
+      s.querySelectorAll('.sw').forEach(function (sw) { sw.addEventListener('click', function () { var on = !sw.classList.contains('on'), l = sw.getAttribute('aria-label'); if (/zu Hause/.test(l)) d.home = on; else if (/Erledigt sich/.test(l)) d.doneOn = on; else if (/Stupsen/.test(l)) d.nudge = on; else if (/zweite/.test(l)) d.dedupe = on; else if (/Fairness/.test(l)) d.fair = on; setTimeout(draw, 180); }); });
+      var wf = s.querySelector('#wf'); if (wf) wireRadio(wf, function (n, i) { d.fallback = ['first', 'fb', 'none'][i]; draw(); });
+      var sy = s.querySelector('#wsym'); if (sy) sy.addEventListener('click', function () { openSymPicker(d.sym, function (v) { d.sym = v; sy.innerHTML = symTileHtml(v, false); var pv = s.querySelector('.prev .sico'); if (pv) pv.innerHTML = I(v.id); }); });
+      var pr2 = s.querySelector('#wpr'); if (pr2) pr2.addEventListener('click', function (e) { var b = e.target.closest('[data-pr]'); if (!b) return; d.prio = d.prio === b.dataset.pr ? null : b.dataset.pr; pr2.classList.toggle('none', !d.prio); pr2.style.setProperty('--i', ['low', 'medium', 'high'].indexOf(d.prio)); pr2.querySelectorAll('[data-pr]').forEach(function (x) { x.setAttribute('aria-pressed', x === b && !!d.prio); }); var pv = s.querySelector('.prev'); if (pv) pv.outerHTML = previewCard(); });
+    }
+    function clickAll(e) {
+      var b, t = e.target;
+      if ((b = t.closest('[data-pe]'))) { d.ent = +b.dataset.pe; d.entQ = ''; draw(); return; }
+      if ((b = t.closest('[data-pe2]'))) { d.ent = +b.dataset.pe2; d.entQ = ''; d.entOpen = false; if (ENT[d.ent].states) d.kind = 'state'; draw(); return; }
+      if (t.closest('[data-found2]')) { openFound(); return; }
+      if ((b = t.closest('[data-st]'))) { d.to = b.dataset.st; draw(); return; }
+      if (t.closest('[data-wb]')) { actionSheet({ title: 'Board und Spalte', items: BOARDS.map(function (x) { return { t: x[0], fn: function () { d.board = x[0]; draw(); } }; }).concat([{ t: 'Spalte: In Arbeit', fn: function () { d.col = 'In Arbeit'; draw(); } }, { t: 'Spalte: Offen', fn: function () { d.col = 'Offen'; draw(); } }]) }); return; }
+      if ((b = t.closest('[data-du]'))) { d.due = b.dataset.du; draw(); return; }
+      if ((b = t.closest('[data-cat]'))) { var c = b.dataset.cat, i = d.cats.indexOf(c); if (i >= 0) d.cats.splice(i, 1); else d.cats.push(c); b.setAttribute('aria-pressed', i < 0); return; }
+      if ((b = t.closest('[data-as]'))) { d.assign = b.dataset.as; draw(); return; }
+      if ((b = t.closest('[data-fx]'))) { d.fixed = b.dataset.fx; draw(); return; }
+      if ((b = t.closest('[data-fp]'))) { d.fbPerson = b.dataset.fp; draw(); return; }
+      if ((b = t.closest('[data-el]'))) { var x = b.dataset.el, j = d.who.indexOf(x); if (j >= 0) d.who.splice(j, 1); else d.who.push(x); b.setAttribute('aria-pressed', j < 0); return; }
+      if ((b = t.closest('[data-wc]'))) { d.category = b.dataset.wc === 'Ohne Kategorie' ? '' : b.dataset.wc; draw(); return; }
+      if (t.closest('[data-wnc]')) { alertBox({ title: 'Neue Kategorie', msg: 'Gib der Kategorie einen Namen, zum Beispiel „Sicherheit“. Danach sortiert die Liste der Wächter danach.', actions: [{ t: 'Abbrechen' }, { t: 'Anlegen', bold: true, fn: function () { d.category = 'Sicherheit'; draw(); } }] }); return; }
+      if ((b = t.closest('[data-sp]'))) { var sd = t.closest('[data-sd]'); if (!sd) return; var k = b.dataset.sp, dv = +sd.dataset.sd; if (k === 'na') d.nudgeAfter = Math.max(5, d.nudgeAfter + dv * 15); else if (k === 'nm') d.nudgeMax = Math.max(1, Math.min(10, d.nudgeMax + dv)); else if (k === 'cn') d.count = Math.max(1, Math.min(20, (+d.count || 1) + dv)); else if (k === 'cd') d.cooldown = Math.max(0, d.cooldown + dv * 5); draw(); }
+    }
+    function save() {
+      var T = TPLS.filter(function (x) { return x.id === d.tpl; })[0], e = d.ent != null ? ENT[d.ent] : null, nm = d.name.trim() || wzAuto(d);
+      var rule = d.kind === 'calendar' ? 'Kalender, ' + d.lead + ' Std. vorher' : d.kind === 'forecast' ? 'Regen in den nächsten ' + d.hours + ' Std.' : d.kind === 'state' ? (e ? e.n : '') + ' ist ' + d.to : 'Wert ' + (d.kind === 'below' ? 'fällt unter ' : 'steigt über ') + d.value + (e && e.u ? ' ' + e.u : '');
+      var w = { id: 200 + WATCH.length, n: nm, subj: e ? e.n.split(' ')[0] : '', cat: d.category || null, ic: T ? T.ic : 'eye', c: T ? T.c : '#34c759', rule: rule, thr: d.kind === 'state' ? 0 : +d.value || 0, unit: e ? e.u : '', task: d.title || nm, assign: ASSIGN.filter(function (a) { return a[0] === d.assign; })[0][1], phase: 'idle', active: 1, val: e ? e.s + (e.u ? ' ' + e.u : '') : '–', stxt: 'Aktuell', series: e && e.ser || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
+      if (o.edit) { Object.assign(o.edit, { n: nm, task: w.task, cat: w.cat, rule: o.edit.rule }); } else WATCH.push(w);
+      closeSheet(); wait(450, function () { if (curTab !== 'watch') setTab('watch'); else redrawWatch(); toast(o.edit ? 'Gespeichert' : 'Wächter „' + nm + '“ ist aktiv'); });
+    }
+    showSheet('', { label: 'Neuer Wächter' }); draw();
+  }
+
+  // ================= Zusammenführen =================
+  FN.openFound = openFound;
+  FN.idxKb = function () {
+    openNew({ noFocus: true, noDemo: true });
+    var app = $('app'), kb = document.createElement('div'); kb.className = 'fkb'; kb.setAttribute('aria-hidden', 'true');
+    kb.innerHTML = ['qwertzuiop', 'asdfghjkl', 'yxcvbnm'].map(function (r) { return '<div>' + r.split('').map(function (c) { return '<i>' + c + '</i>'; }).join('') + '</div>'; }).join('') + '<div><i class="w">123</i><i class="sp">Leerzeichen</i><i class="w">Fertig</i></div>';
+    app.appendChild(kb); void kb.offsetWidth; app.style.setProperty('--kb', '290px'); kb.classList.add('on'); sheet.classList.add('typing');
+    var nf = $('nf'); nf.value = 'Müll morgen 19 Uhr @Be'; nt.touched = true; nf.dispatchEvent(new Event('input')); nf.focus({ preventScroll: true });
+    onSheetClose = function () { app.style.setProperty('--kb', '0px'); kb.classList.remove('on'); setTimeout(function () { kb.remove(); }, 500); };
+  };
+  function calGo(view) { return function () { setTab('cal'); wait(curTab === 'cal' ? 500 : 520, function () { cv.view = view; cv.day = TODAY; cv.off = 0; cv.mo = 0; drawCal(false); calScroll(); }); }; }
+  FN.idxCalWeek = calGo(1); FN.idxCalDay = calGo(0); FN.idxCalMonth = calGo(2); FN.idxCalList = calGo(3);
+  FN.idxCat = function () { setTab('watch'); wait(520, function () { pushPage(catPage('Batterien')); }); };
+  FN.idxWatchDetail = function () { setTab('watch'); wait(520, function () { pushPage(watchPage(WATCH[0])); }); };
+  refresh();
 
   // ---------- Auftakt und Vorführung ----------
   var touched = false, demoRun = 0, banner, bTimer;

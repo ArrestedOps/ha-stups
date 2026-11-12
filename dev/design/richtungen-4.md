@@ -43,3 +43,12 @@ Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
 - Start: Anmelden, Noch kein Zugriff, Einrichtung in vier Schritten.
 - Oben in der Aufgabenliste: „Seiten“ öffnet eine Übersicht, aus der jede Seite direkt aufgerufen wird.
 - Dunkelmodus über die gleichen Tokens, Desktop als Split-Ansicht, „Bewegung reduzieren“ wird respektiert.
+
+## Rückmeldung: Aufgabe anlegen, Kalender, Wächter
+
+- **Neue Aufgabe** hat jetzt alle Felder der echten App: Symbol (automatisch erkannt, mit Funken, änderbar), Titel mit Erkennung (Datum, Uhrzeit, @Person, #Kategorie, !Priorität, „jeden Donnerstag“), Chips zum Zurücknehmen, Board und Spalte, Termin, Wiederholung, Erinnerung, Zuständige, Priorität, Kategorie (auch neu anlegen), Notiz, Checkliste, Foto/Link, dazu Aufwand, Kosten und Bestätigung.
+- **Tastatur:** Das Blatt folgt der sichtbaren Fläche (`visualViewport`) und bleibt über der Tastatur. Auf Touchgeräten gibt es keinen Autofokus, das Formular ist zuerst komplett zu sehen. Über der Tastatur sitzt eine Leiste mit Schnellwahl (Heute, Morgen, Abends, @ Person, # Kategorie, ! Wichtig), beim Tippen von @ oder # schlägt sie Personen und Kategorien vor, dazu „Fertig“.
+- **Zweites Blatt** für Termin (Monat, Zeiträder), Wiederholung (Wie oft, Wochentage, Tag im Monat, Plan bleibt fest oder neu zählen, Toleranz, nächste Termine als Vorschau), Erinnerung (vorab, Nachhaken, Ablauf), Symbol.
+- **Kalender:** Tag, Woche (Standard), Monat, Liste. Woche und Tag als Zeitleiste mit Jetzt-Linie, überlappende Einträge nebeneinander, Antippen einer freien Zeit legt eine Aufgabe mit dieser Zeit an. Am Computer volle Breite.
+- **Wächter:** Suche, Bereiche wie in der echten App (Mit Problem, Wartet auf jemanden, Läuft gerade, Kommt bald), danach Kategorien. Große Kategorien (über 8) öffnen eine eigene Seite: Zusammenfassung (niedrig, bald leer, in Ordnung), Suche, Umschalter Kritisch, Räume, Alle. Kleine klappen inline auf. „Gefunden“ als Blatt mit Mehrfachauswahl und „Alle einrichten“.
+- **Wächter anlegen** wie in der echten App: Vorlage, dann Wenn (Entität suchen, Bedingung Unter/Über/Zustand, länger als, Verlauf, Probelauf), Dann (Titel, Symbol, Board, Spalte, Priorität, Fälligkeit, Kategorien, Vorschau), Wer (Zuweisung, wer kommt infrage, nur wer zu Hause ist, Rückfall), Feinschliff (erledigt sich selbst, Stupsen, N-tes Mal, Sperrzeit, keine zweite Karte, Fairness, Name, Kategorie, Beschreibung).

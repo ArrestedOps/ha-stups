@@ -449,6 +449,13 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
 .row.nudged .rc { background: color-mix(in srgb, var(--tint-fill) 10%, var(--card)); box-shadow: inset 3px 0 0 var(--tint-fill); }
 .stp, .stpm { display: inline-flex; align-items: center; gap: 4px; } .stp { color: var(--tint); font-weight: 700; } .stp svg, .stpm svg { width: 13px; height: 13px; stroke-width: 2; flex: none; }
 .tbn { position: absolute; top: 3px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--red-fill); color: #fff; font: 700 11px/18px var(--round); text-align: center; box-shadow: 0 0 0 2px var(--mat, var(--bg)); animation: cnt calc(.6s * var(--dur)) var(--spring) backwards; } .tbn[hidden] { display: none; } .tb { position: relative; }
+/* ---------- Board-Farbe ---------- */
+.cb { border-color: color-mix(in srgb, var(--bc, var(--label3)) 80%, transparent); }
+.rc .m .bchip { color: var(--label2); } .bchip i { width: 8px; height: 8px; border-radius: 50%; flex: none; } .boardpage .bchip, .bygrp .bchip { display: none !important; }
+.sec h2 em.ttl { display: inline-flex; align-items: center; gap: 9px; font: inherit; color: inherit; font-style: normal; } .gdot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.whop { white-space: nowrap; flex: none; } .subrow .demo { flex: none; } @media (max-width: 899px) { .subrow .demo { font-size: 0; gap: 0; padding: 0 10px; } .subrow .demo svg { width: 16px; height: 16px; } }
+.grpb { padding: 0 10px; } .grpb svg { width: 17px; height: 17px; } .grpb[aria-pressed="true"] { background: var(--tint-fill); color: #fff; }
+.stups .sbtn button, .cnav .today, .kbar .done { display: inline-flex; align-items: center; justify-content: center; text-align: center; } .stups .sbtn button { display: flex; }
 /* ---------- Desktop: Split-Ansicht ---------- */
 .side, .pane { display: none; }
 @media (min-width: 900px) {
@@ -571,6 +578,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   function mine(t) { if (!who) return true; return t.who.split('').some(function (c) { return who[c]; }); }
   function vis(t) { return mine(t); }
   function open_(t) { return !t.done; }
+  var BCOL = { Haushalt: '#ff9500', Einkauf: '#34c759', Umbau: '#0a84ff', Technik: '#af52de', Finanzen: '#ff3b30' }, grp = 'due';
   var count = {
     today: function () { return tasks.filter(function (t) { return vis(t) && !t.done && t.due === 'today'; }).length; },
     late: function () { return tasks.filter(function (t) { return vis(t) && !t.done && t.due === 'late'; }).length; },
@@ -589,24 +597,30 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     if (t.rep) s += '<span aria-label="wiederholt sich">' + I('repeat') + '</span>';
     if (t.hi) s += '<span class="hi">' + I('flag') + 'Hoch</span>';
     if (nudgedToMe(t)) s += '<span class="stp">' + I('hand') + t.nudges.map(function (n) { return P[n.from].n; }).join(' und ') + ' stupst dich</span>'; else if (t.sent && t.sent.length && !t.done) s += '<span class="stpm">' + I('hand') + 'Du hast ' + t.sent.map(function (n) { return P[n.to].n; }).join(' und ') + ' gestupst</span>';
+    if (t.board) s += '<span class="bchip"><i style="background:' + (BCOL[t.board] || '#8e8e93') + '"></i>' + t.board + '</span>';
     if (t.wacht) s += '<span class="badge">' + I('eye') + 'Wächter</span>';
     if (isLive(t.id) && !t.done) s += '<span class="lvb"><i></i><span data-lv="' + t.id + '" class="num">' + fmt(elapsed(liveOf(t.id))) + '</span></span>';
     return s;
   }
   function rowHtml(t) {
-    return '<div class="row' + (t.done ? ' doing' : '') + (nudgedToMe(t) ? ' nudged' : '') + '" data-id="' + t.id + '" role="listitem">' +
+    return '<div class="row' + (t.done ? ' doing' : '') + (nudgedToMe(t) ? ' nudged' : '') + '" style="--bc:' + (BCOL[t.board] || '#8e8e93') + '" data-id="' + t.id + '" role="listitem">' +
       '<div class="act lead"><button tabindex="-1" aria-hidden="true">' + I('check') + 'Erledigt</button></div>' +
       '<div class="act trail"><button class="later" tabindex="-1">' + I('clock') + 'Später</button><button class="del" tabindex="-1">' + I('trash') + 'Löschen</button></div>' +
       '<div class="rc" tabindex="0" role="button" aria-label="' + t.t + ', ' + t.when + '. Details öffnen"><button class="cb" aria-label="' + t.t + ' erledigen"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>' +
       '<div><div class="t">' + t.t + '</div><div class="m">' + meta(t) + '</div></div>' + (onlyMe() && t.who === 'A' ? '<span></span>' : avatars(t.who)) + '</div></div>';
   }
   var secIdx = 0;
-  function section(title, list, cls) {
+  function section(title, list, cls, col) {
     if (!list.length) return '';
-    return '<section class="sec ' + (cls || '') + '" style="--i:' + (secIdx++) + '"><h2>' + title + '<span class="num">' + list.length + '</span></h2><div class="group" role="list">' + list.map(rowHtml).join('') + '</div></section>';
+    return '<section class="sec ' + (cls || '') + '" style="--i:' + (secIdx++) + '"><h2><em class="ttl">' + (col ? '<i class="gdot" style="background:' + col + '"></i>' : '') + title + '</em><span class="num">' + list.length + '</span></h2><div class="group" role="list">' + list.map(rowHtml).join('') + '</div></section>';
   }
   function listHtml(v) {
     var L = tasks.filter(vis), out = ''; secIdx = 0;
+    if (grp === 'board' && v === 'all') {
+      var rank = { late: 0, today: 1, week: 2, later: 3 };
+      BOARDS.forEach(function (b) { out += section(b[0], L.filter(function (t) { return !t.done && t.board === b[0]; }).sort(function (x, y) { return (rank[x.due] - rank[y.due]) || ((x.d - y.d) || ((x.m || 0) - (y.m || 0))); }), '', BCOL[b[0]]); });
+      return out ? '<div class="bygrp">' + out + '</div>' : '<div class="empty"><b>Hier ist nichts offen.</b>Gute Arbeit.</div>';
+    }
     if (v === 'all' || v === 'late') out += section('Überfällig', L.filter(function (t) { return !t.done && t.due === 'late'; }), 'late');
     if (v === 'all' || v === 'today') out += section('Heute', L.filter(function (t) { return !t.done && t.due === 'today'; }));
     if (v === 'all' || v === 'week') out += section('Diese Woche', L.filter(function (t) { return !t.done && t.due === 'week'; }));
@@ -631,7 +645,7 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
   }
   function makeScreen(v, back) {
     var s = document.createElement('section'); s.className = 'screen'; s.dataset.view = v;
-    s.innerHTML = navHtml(VIEWS[v][0], back, v === 'all') + '<div class="scroll"><div class="large"><h1>' + VIEWS[v][0] + '</h1>' + (v === 'all' ? '<div class="subrow"><button class="whop" data-menu aria-haspopup="menu" aria-label="Personen filtern"><span data-whotext>' + whoText() + '</span>' + I('chev') + '</button><button class="demo" data-demo aria-label="Vorführung abspielen"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>Demo</button><button class="demo" data-index aria-label="Alle Seiten ansehen" style="margin-left:0"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.2"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>Seiten</button></div>' : '<div class="sub" data-whotext>' + whoText() + '</div>') + '</div>' +
+    s.innerHTML = navHtml(VIEWS[v][0], back, v === 'all') + '<div class="scroll"><div class="large"><h1>' + VIEWS[v][0] + '</h1>' + (v === 'all' ? '<div class="subrow"><button class="whop" data-menu aria-haspopup="menu" aria-label="Personen filtern"><span data-whotext>' + whoText() + '</span>' + I('chev') + '</button><button class="demo grpb" data-grp aria-label="Gruppieren" style="margin-right:0"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round"><path d="M4 7h16M4 12h10M4 17h6"/></svg></button><button class="demo" data-demo aria-label="Vorführung abspielen"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>Demo</button><button class="demo" data-index aria-label="Alle Seiten ansehen" style="margin-left:0"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.2"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>Seiten</button></div>' : '<div class="sub" data-whotext>' + whoText() + '</div>') + '</div>' +
       (v === 'all' ? '<div class="search" role="search">' + I('search') + 'Suchen</div>' + '<div id="stupsWrap">' + stupsHtml() + '</div><div id="liveWrap">' + liveHtml() + '</div>' + tilesHtml() : '') + '<div class="lists" data-lists>' + listHtml(v) + '</div></div>';
     var sc = s.querySelector('.scroll'), nav = s.querySelector('.nav'), h1 = s.querySelector('h1');
     sc.addEventListener('scroll', function () { var p = Math.max(0, Math.min(1, (sc.scrollTop - 30) / 22)); nav.style.setProperty('--p', p); h1.style.opacity = 1 - Math.min(1, sc.scrollTop / 40); });
@@ -1794,6 +1808,9 @@ body.intro .nav .r, body.intro .nav .l { animation: titlein calc(.7s * var(--dur
     var n = allNudges().length, b = $('tbn'); if (b) { var was = b.textContent; b.hidden = !n; b.textContent = n; if (n && was !== String(n)) { b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; } }
   }
   var _ref = refresh; refresh = function () { _ref.apply(null, arguments); renderStups(); };
+  document.addEventListener('click', function (e) {
+    var gb = e.target.closest('[data-grp]'); if (gb) { actionSheet({ title: 'Aufgaben gruppieren', items: [{ t: (grp === 'due' ? '✓ ' : '') + 'Nach Fälligkeit', icon: 'clock', fn: function () { grp = 'due'; refresh(); } }, { t: (grp === 'board' ? '✓ ' : '') + 'Nach Board', icon: 'layers', fn: function () { grp = 'board'; refresh(); } }] }); }
+  });
   document.addEventListener('click', function (e) {
     var b;
     if ((b = e.target.closest('[data-smore]'))) { stupsOpen = !stupsOpen; renderStups(); return; }

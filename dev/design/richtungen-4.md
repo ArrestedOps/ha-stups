@@ -66,3 +66,10 @@ Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
 - Betroffene Zeilen sind getönt und tragen „Mia stupst dich“; selbst Gestupstes steht als „Du hast Ben gestupst“. Am Tab Aufgaben zeigt ein Zähler die offenen Stupse. In den Details steht der Stups mit denselben Antworten.
 - Stupsen sendet jetzt für die gewählte Aufgabe: Person, Nachricht, Vorschau, danach „Du hast … gestupst“ in der Zeile.
 - Entfernt: die Live-Aufgabe „Läuft gerade“ samt „Jetzt starten, die Zeit läuft mit“. Das bleibt erstmal draußen.
+
+## Board-Zuordnung in der Aufgabenliste
+
+- Jede Zeile trägt die Boardfarbe: der Haken-Kreis ist in der Farbe des Boards umrandet (wie bei den Listen in iOS Erinnerungen), in der Zeile steht zusätzlich ein Farbpunkt mit dem Boardnamen. Die Farben sind dieselben wie in der Boards-Liste, im Kalender und in den Zeitleisten.
+- In der Boardansicht und beim Gruppieren nach Board entfällt der Chip, weil der Kopf das Board schon nennt.
+- Neu: Schaltfläche „Gruppieren“ neben dem Personen-Filter. „Nach Fälligkeit“ (Standard) oder „Nach Board“ mit farbigen Überschriften.
+- Die Texte der Stups-Schnellantworten sind mittig.

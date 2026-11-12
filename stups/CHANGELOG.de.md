@@ -2,6 +2,18 @@
 
 > 🇬🇧 [English version](CHANGELOG.md) · Die englische Fassung ist maßgeblich.
 
+## 1.41.1
+
+Korrekturen nach einer Durchsicht. Keine neuen Funktionen.
+
+- **Datenschutz.** „Symbole aus Titeln erkennen“ zeigte Administratoren die Titel von Karten aus fremden privaten Boards und konnte dort Symbole setzen. Beides gilt jetzt nur noch für Boards, die man selbst sehen darf.
+- **Zuletzt erledigt** zeigt heute Erledigtes auch dann, wenn die Karte vor Wochen fällig war oder nie einen Termin hatte. Gefragt wird nach dem Erledigungsdatum, nicht nach der Fälligkeit.
+- **Handys in der Einrichtung.** Das letzte Handy lässt sich wieder abwählen und wird auch so gespeichert. „Ann“ findet kein Handy „Annas iPhone“ mehr, und ein Gerät, das zum Namen von zwei Personen passt, wird keiner von beiden vorgewählt. Ein Kind kann in der Einrichtung die Testnachricht an das eigene Handy senden; das Handy eintragen bleibt Sache eines Erwachsenen, und der Text sagt das. Der Fehlertext heißt „Die Testnachricht konnte nicht gesendet werden“ und nennt den Grund; die Abschlussseite verspricht „Ab jetzt meldet sich dein Zuhause von selbst“ nur, wenn ein Wächter eingerichtet wurde.
+- **Gleichzeitig arbeiten.** „Rückgängig“ nach „Überfällige verschieben“ setzt nur Karten zurück, deren Termin noch so dasteht, wie das Verschieben ihn hinterlassen hat. Hat jemand inzwischen einen anderen Termin gesetzt, bleibt dessen Entscheidung, und Stups sagt es. „Alle auf heute/morgen/Wochenende“ und „Morgen“ schreiben mit der Version, die die Liste gesehen hat: Eine inzwischen geänderte Karte bleibt, wie sie ist, und die Meldung sagt, dass sie sich nicht verschieben ließ. Ein Fehler bei einer Karte bricht die übrigen nicht mehr ab.
+- **Aufgaben laden schneller und vollständig.** Die Terminliste wurde bei 2000 Karten still abgeschnitten. Sie kommt jetzt seitenweise und vollständig; bei 6000 Karten braucht der Server dafür etwa ein Drittel der Zeit. Schnell aufeinander folgende Änderungen laden einmal statt mehrfach nach, und überholte Anfragen werden abgebrochen.
+- **Das Docker-Image läuft nicht mehr als root.** Ohne Home Assistant übergibt ein kleiner Einstiegspunkt den Datenordner an den Benutzer `node` (Benutzerkennung 1000) und startet Stups als diesen Benutzer. Bestehende Daten und ein neues Volume funktionieren beide; Ordner, die sich nicht übergeben lassen (Netzlaufwerk), laufen wie bisher als root, mit Hinweis im Protokoll. **Im Home-Assistant-Add-on ändert sich nichts**: Es bleibt root, wie jedes Add-on.
+- **Kleineres.** Kalender und Aufgaben ordnen Karten kurz vor und nach Mitternacht dem richtigen Tag zu. Importzyklen zwischen Dateien in Server und Oberfläche sind aufgelöst, ein neuer Test lässt künftig keine mehr zu.
+
 ## 1.41.0
 
 - **Einrichtung beim ersten Start.** Wer Stups zum ersten Mal öffnet, wird als Administrator in etwa drei Minuten durch die Einrichtung geführt: **Wer wohnt hier?** (die Personen aus Home Assistant sind vorgewählt, Handys erkennt Stups nach der Zuordnung von Home Assistant selbst, wer kein Handy hat, bekommt einen Link zur Companion App, du legst fest, wer ein Kind ist), **Dein erster Wächter** (dieselbe „Gefunden“-Liste und derselbe Assistent wie unter Wächter), **Testnachricht** (ein echtes Beispiel der Nachricht zu einer neuen Karte, mit Vorschau wie auf dem iPhone) und **Fertig**. Jeder Schritt lässt sich überspringen; der Stand liegt auf dem Server, ein Abbruch lässt sich auf einem anderen Gerät weiterführen. Mitglieder sehen eine Kurzfassung. Bestehende Installationen zeigen sie nicht von selbst; sie lässt sich jederzeit unter *Einstellungen › Hilfe und Daten › Einrichtung nochmal durchgehen* öffnen (nicht für Kinder).

@@ -111,12 +111,6 @@ export function resolveCarry(raw: string | null | undefined): CarryField[] {
   }
 }
 
-export function parseBool(value: unknown, what: string): boolean {
-  if (value === undefined) return false;
-  if (typeof value !== 'boolean') throw new ValidationError(t('{what} muss wahr oder falsch sein', { what }));
-  return value;
-}
-
 export function isPosInt(n: unknown): n is number {
   return typeof n === 'number' && Number.isInteger(n) && n >= 1;
 }

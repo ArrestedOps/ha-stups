@@ -239,8 +239,6 @@ export const EFFORTS: readonly Effort[] = ['small', 'medium', 'large'];
 export type IconColor = 'orange' | 'purple' | 'violet' | 'blue' | 'teal' | 'green' | 'red' | 'gray';
 export const ICON_COLORS: readonly IconColor[] = ['orange', 'purple', 'violet', 'blue', 'teal', 'green', 'red', 'gray'];
 export type IconSource = 'auto' | 'manual';
-/** Gewichte für die Fairness-Ansicht; eine Karte ohne Angabe zählt wie mittel */
-export const EFFORT_WEIGHT: Record<Effort, number> = { small: 1, medium: 2, large: 3 };
 
 export type { Today, TodayCard } from './today.js';
 

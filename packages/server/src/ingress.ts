@@ -1,7 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { identityAuth, type Identity, type Principal } from './identity.js';
-
-export type HaUser = Principal;
+import { identityAuth, type Identity } from './identity.js';
 
 export interface IngressOptions {
   /** Only accept the Supervisor ingress proxy (172.30.32.2). Disable for local development. */

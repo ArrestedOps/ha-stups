@@ -33,3 +33,13 @@ Offen: Boards, Wächter, Einstellungen und Dialoge im selben Stil.
 - Einstellungen: echtes Zahnrad (8 Zähne), vorher sah das Symbol wie eine Sonne aus.
 - Keine Wächter-Vorschläge mehr unter „Aufgaben“. Die Wächter-Seite bleibt, mit Schaltern.
 - **Live-Aufgabe:** Eine laufende Aufgabe erscheint oben als dunkle Karte wie eine iOS Live Activity (Laufzeit tickt, Ring zeigt den Anteil an der geschätzten Dauer, Pause/Weiter, Fertig). In der Liste trägt die Zeile die laufende Zeit. Starten aus den Details („Jetzt starten, die Zeit läuft mit“).
+
+## Stand: alle Seiten, Einstellungen, Dialoge (Prototyp `ios/aufgaben.html`)
+
+- Entscheidung: keine Dauer-Schätzung und kein Fortschrittsring. Die Live-Aufgabe zeigt nur die laufende Zeit. Fertig tippen, dann ist die Aufgabe erledigt.
+- Neu: Boards (Liste, Board mit Segment Offen/Geplant/In Arbeit/Erledigt, Menü, Board-Einstellungen, Löschwarnung), Kalender mit echten Tagen, Wächter (Liste, Detail mit gezeichnetem Verlauf und Schwelle, Assistent in vier Schritten).
+- Einstellungen als Unterseiten im Blatt: Benachrichtigungen, Sprache und Farbe (Hell/Dunkel/System und Akzentfarbe wirken sofort), Personen und Zugriff, Konto und Anmeldung, Dashboard, Warum kommt nichts an, Papierkorb, Vorlagen, Termine, Feedback.
+- Dialoge: Warnung, Aktionsblatt, Termin (Kalender und Zeiträder), Wiederholung, Stupsen mit Vorschau der Mitteilung, Kartenmenü, Diese Woche (Verteilung ohne Rangliste).
+- Start: Anmelden, Noch kein Zugriff, Einrichtung in vier Schritten.
+- Oben in der Aufgabenliste: „Seiten“ öffnet eine Übersicht, aus der jede Seite direkt aufgerufen wird.
+- Dunkelmodus über die gleichen Tokens, Desktop als Split-Ansicht, „Bewegung reduzieren“ wird respektiert.

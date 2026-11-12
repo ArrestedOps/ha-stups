@@ -4,6 +4,14 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.41.1-beta.3
+
+**Aufgeräumt, an der App ändert sich nichts.** Zwei Stellen in der Oberfläche, an denen sich Dateien gegenseitig importierten, sind aufgelöst: Zwei Hilfsfunktionen liegen jetzt dort, wo sie hingehören, ihr Inhalt ist unverändert. Ein neuer Test lässt solche Importzyklen in Server und Oberfläche künftig nicht mehr zu. Vier Funktionen, die nirgends mehr benutzt wurden, sind entfernt. Verhalten und Texte sind unverändert; Tests und Browser-Tests laufen wie vorher.
+
+**Für die Entwicklung: Claude Code bringt Werkzeuge mit.** Das Repository richtet den Svelte-MCP ein und liefert ein Plugin mit den Sprachservern für TypeScript und Svelte (`dev/claude-plugins/`). Die Sprachserver kommen als devDependencies mit `pnpm install`; im Image ändert sich nichts. Einrichten steht in `dev/entwicklung.md`.
+
+**Bitte prüfen (Testliste):** (1) Eine Aktion mit Fehler (z. B. eine Karte bearbeiten, die auf einem anderen Gerät gerade gelöscht wurde) zeigt den roten Hinweis und lädt danach neu. (2) Kalender und Aufgaben ordnen Karten kurz vor und nach Mitternacht dem richtigen Tag zu.
+
 ## 1.41.1-beta.2
 
 Weitere Korrekturen nach der Durchsicht, dazu stabilere Tests. Keine neuen Funktionen.

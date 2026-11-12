@@ -1,0 +1,6 @@
+{
+  "name": "stups-lsp",
+  "description": "Sprachserver für TypeScript und Svelte aus den devDependencies des Repos",
+  "version": "1.0.0",
+  "author": { "name": "ha-stups" }
+}

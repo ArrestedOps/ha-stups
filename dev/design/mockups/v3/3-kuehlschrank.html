@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stups · Welt 3 · Kühlschrank</title>
+<!--
+  Mockup, kein Produktcode. Der Haushalt an der Kühlschranktür: Zettel mit Magneten, Buchstabenmagnete, ein Kalender, ein Foto, eine Zeichnung von Mia.
+  Alles lässt sich ziehen. Stempel-Symbol auf einem Zettel: "Erledigt" schlägt auf, der Zettel fällt in die Erledigt-Dose unten links.
+  Nach ein paar Sekunden knallt Ben einen Stups-Zettel auf "Fenster putzen". Tippe darauf, um zu antworten.
+  Parameter: ?theme=light|dark (dunkel = Küche bei Nacht). Respektiert "Bewegung reduzieren".
+-->
+<style>
+@font-face { font-family: "Caveat"; src: url("../fonts/caveat-latin-wght-normal.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+@font-face { font-family: "Figtree"; src: url("../fonts/figtree-latin-wght-normal.woff2") format("woff2"); font-weight: 300 900; font-display: swap; }
+:root {
+  --door: #e3ebee; --door-hi: #edf3f5; --edge: #c7d3d8; --handle: #7b8a92; --ink: #1c1c1c; --mute: #4b5560;
+  --shadow: rgba(0,0,0,.16); --bar: #ffffff;
+  --y: #ffe66d; --p: #ffc2d4; --m: #b8f0d6; --b: #bfe3ff; --o: #ffd3a8; --w: #fffdf6;
+  --red: #e0352b; --green: #1b8a3e;
+  --hand: "Caveat", "Segoe Print", cursive; --sans: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --door: #2b343a; --door-hi: #323d44; --edge: #1f272c; --handle: #5c6b73; --shadow: rgba(0,0,0,.5); --bar: #1d2328; --mute: #a9b6be; color-scheme: dark; } }
+:root[data-theme="dark"] { --door: #2b343a; --door-hi: #323d44; --edge: #1f272c; --handle: #5c6b73; --shadow: rgba(0,0,0,.5); --bar: #1d2328; --mute: #a9b6be; color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
+body { background: var(--door); color: var(--ink); font: 500 15px/1.25 var(--sans); -webkit-font-smoothing: antialiased; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+button:focus-visible { outline: 3px solid #3b82f6; outline-offset: 2px; border-radius: 8px; }
+svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.door { position: fixed; inset: 0; background: var(--door); }
+.door::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 28px; background: var(--edge); }
+.door::after { content: ""; position: absolute; top: 14%; left: 7px; width: 14px; height: 38%; border-radius: 8px; background: var(--handle); }
+.band { position: absolute; top: 0; bottom: 0; left: 62%; width: 7%; background: var(--door-hi); }
+.seam { position: absolute; left: 0; right: 0; top: 30%; height: 4px; background: var(--edge); }
+.door.shake { animation: shake .35s linear; }
+@keyframes shake { 15% { transform: translate(-5px, 2px); } 35% { transform: translate(4px, -2px); } 55% { transform: translate(-3px, 1px); } 75% { transform: translate(2px, 0); } }
+
+.item { position: absolute; left: 0; top: 0; will-change: transform; touch-action: none; cursor: grab; }
+.item:active { cursor: grabbing; }
+.drop { animation: drop .7s cubic-bezier(.3, 1.5, .5, 1) backwards; }
+@keyframes drop { from { opacity: 0; translate: 0 -120px; scale: 1.25; } 60% { opacity: 1; } }
+.slap { animation: slap .45s cubic-bezier(.2, 1.4, .4, 1) backwards; }
+@keyframes slap { from { opacity: 0; scale: 1.5; rotate: -8deg; } 50% { opacity: 1; } }
+
+.letter { display: grid; place-items: center; width: 46px; height: 52px; border-radius: 10px; font: 800 32px/1 var(--sans); box-shadow: 0 3px 0 rgba(0,0,0,.22), 0 8px 12px var(--shadow); color: #fff; }
+.note { width: var(--nw); min-height: var(--nh); padding: 22px 14px 12px; background: var(--c); box-shadow: 0 2px 0 rgba(0,0,0,.08), 0 10px 18px var(--shadow); border-radius: 3px 3px 12px 3px; color: var(--ink); }
+.mag { position: absolute; top: -9px; left: 50%; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: var(--mc, #e0352b); box-shadow: inset -3px -3px 0 rgba(0,0,0,.18), 0 3px 5px var(--shadow); }
+.note h3 { font: 700 var(--fs, 30px)/0.95 var(--hand); letter-spacing: 0; }
+.note .m { margin-top: 6px; font: 600 13px/1.2 var(--sans); color: #3a3a3a; display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; }
+.note .m .late { color: #b91c1c; font-weight: 800; }
+.note .row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.note .who { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #1c1c1c; color: #fff; font: 800 12px/1 var(--sans); }
+.note .who + .who { margin-left: -8px; background: #2563eb; }
+.stampbtn { display: grid; place-items: center; width: 40px; height: 40px; margin: -6px -6px -6px 0; border-radius: 50%; color: #1c1c1c; }
+.stampbtn svg { width: 26px; height: 26px; }
+.marker { position: absolute; left: 12px; right: 12px; bottom: 54px; height: 10px; pointer-events: none; }
+.hi { position: absolute; top: 6px; right: 8px; font: 800 30px/1 var(--hand); color: var(--red); transform: rotate(8deg); }
+.stamp { position: absolute; left: 50%; top: 42%; translate: -50% -50%; rotate: -12deg; border: 5px solid var(--green); color: var(--green); border-radius: 10px; padding: 2px 12px 4px; font: 800 36px/1 var(--sans); letter-spacing: .02em; pointer-events: none; animation: slam .28s cubic-bezier(.5, 0, 1, .6) forwards; text-shadow: 1px 1px 0 rgba(255,255,255,.4); }
+@keyframes slam { from { scale: 3; opacity: 0; } 70% { opacity: 1; } to { scale: 1; opacity: .92; } }
+.fall { transition: transform .8s cubic-bezier(.5, 0, 1, .6), opacity .8s; }
+
+.sticky { width: var(--sw, 150px); padding: 16px 12px 10px; background: #fff36b; box-shadow: 0 2px 0 rgba(0,0,0,.08), 0 10px 18px var(--shadow); color: var(--ink); }
+.sticky b { display: block; font: 700 28px/0.95 var(--hand); }
+.sticky span { display: block; margin-top: 4px; font: 600 22px/1 var(--hand); color: #2563eb; }
+.sticky .acts { margin-top: 6px; font: 700 20px/1 var(--hand); }
+
+.calendar { width: 156px; background: #fff; border-radius: 8px; padding: 8px 8px 8px; box-shadow: 0 2px 0 rgba(0,0,0,.08), 0 10px 18px var(--shadow); color: #1c1c1c; }
+.calendar .h { display: flex; justify-content: space-between; font: 800 12px/1 var(--sans); padding-bottom: 6px; border-bottom: 2px solid #e0352b; margin-bottom: 6px; }
+.calendar .g { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font: 700 12px/20px var(--sans); }
+.calendar .g span { color: #7a8794; font-size: 9.5px; font-weight: 700; }
+.calendar .g b { position: relative; font-weight: 700; }
+.calendar .g b.on::after { content: ""; position: absolute; inset: -1px -2px; border: 2.5px solid var(--red); border-radius: 50% 46% 52% 48%; rotate: -8deg; }
+.photo { width: 128px; padding: 8px 8px 8px; background: #fffdf6; box-shadow: 0 2px 0 rgba(0,0,0,.08), 0 10px 18px var(--shadow); color: #1c1c1c; }
+.photo .pic { height: 78px; background: #bfe3ff; display: flex; align-items: flex-end; justify-content: center; gap: 0; padding-bottom: 6px; overflow: hidden; position: relative; }
+.photo .pic i { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #bfe3ff; margin: 0 -5px; display: grid; place-items: center; font: 800 14px/1 var(--sans); font-style: normal; color: #fff; }
+.photo .pic::before { content: ""; position: absolute; top: 8px; right: 12px; width: 22px; height: 22px; border-radius: 50%; background: #ffd23f; }
+.photo p { margin-top: 4px; text-align: center; font: 700 22px/1 var(--hand); }
+.draw { width: 118px; background: #fffdf6; padding: 8px; box-shadow: 0 2px 0 rgba(0,0,0,.08), 0 10px 18px var(--shadow); }
+.draw svg { width: 100%; height: auto; display: block; stroke-width: 3.2; }
+.draw p { text-align: center; font: 700 20px/1 var(--hand); color: #1c1c1c; margin-top: 2px; }
+
+.tin { position: absolute; left: 44px; bottom: 82px; display: grid; justify-items: center; gap: 2px; }
+.tin button { display: grid; place-items: center; width: 74px; height: 58px; border-radius: 10px 10px 14px 14px; background: #d94f3a; color: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.2), 0 8px 12px var(--shadow); font: 800 22px/1 var(--sans); position: relative; }
+.tin button::before { content: ""; position: absolute; top: -6px; left: 8px; right: 8px; height: 8px; border-radius: 4px 4px 0 0; background: #b83b29; }
+.tin span { font: 700 20px/1 var(--hand); color: var(--ink); }
+:root[data-theme="dark"] .tin span { color: #e6eef2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tin span { color: #e6eef2; } }
+
+.nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; gap: 10px; padding: 10px 12px max(14px, env(safe-area-inset-bottom)); z-index: 50; background: var(--bar); box-shadow: 0 -2px 0 rgba(0,0,0,.06); }
+.nav button { display: inline-flex; align-items: center; gap: 7px; height: 44px; padding: 0 16px; border-radius: 22px; background: #eef2f4; color: #1c1c1c; font: 700 15px/1 var(--sans); }
+.nav button[aria-current="page"] { background: #1c1c1c; color: #fff; }
+:root[data-theme="dark"] .nav button { background: #2d363c; color: #eaf0f3; } :root[data-theme="dark"] .nav button[aria-current="page"] { background: #f2f6f8; color: #111; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nav button { background: #2d363c; color: #eaf0f3; } :root:not([data-theme="light"]) .nav button[aria-current="page"] { background: #f2f6f8; color: #111; } }
+@media (max-width: 420px) { .nav { gap: 6px; padding-inline: 8px; } .nav button { padding: 0 12px; font-size: 14px; gap: 5px; } .nav svg { width: 18px; height: 18px; } }
+.wordmark { position: fixed; left: 40px; top: 16px; font: 800 24px/1 var(--sans); letter-spacing: -0.02em; color: var(--ink); z-index: 40; }
+.wordmark i { font-style: normal; color: #c2410c; }
+:root[data-theme="dark"] .wordmark { color: #fff; } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wordmark { color: #fff; } }
+.ping { position: absolute; border-radius: 50%; border: 4px solid var(--ink); pointer-events: none; animation: ping .6s ease-out forwards; z-index: 30; }
+@keyframes ping { from { scale: .2; opacity: 1; } to { scale: 1.6; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .drop, .slap, .door.shake, .stamp, .ping { animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="door" id="door">
+  <div class="band"></div><div class="seam"></div>
+</div>
+<span class="wordmark" id="wm">stups<i>.</i></span>
+
+<nav class="nav" aria-label="Hauptbereiche">
+  <button aria-current="page"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>Aufgaben</button>
+  <button><svg viewBox="0 0 24 24"><path d="m12 3.5 8.5 4.7L12 13 3.5 8.2 12 3.5Z"/><path d="m3.5 12.6 8.5 4.8 8.5-4.8"/></svg>Boards</button>
+  <button><svg viewBox="0 0 24 24"><path d="M12 3.5 19.5 6.5v5.6c0 4.2-3 7.4-7.5 8.4-4.5-1-7.5-4.2-7.5-8.4V6.5L12 3.5Z"/></svg>Wächter</button>
+</nav>
+
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var th = q.get('theme'); if (th === 'dark' || th === 'light') document.documentElement.dataset.theme = th;
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var door = document.getElementById('door');
+  var W = innerWidth, H = innerHeight, small = W < 700;
+  var items = [], z = 10, doneCount = 0, doneStack = [];
+
+  function el(html, cls) { var d = document.createElement('div'); d.className = 'item ' + (cls || ''); d.innerHTML = html; door.appendChild(d); return d; }
+  function place(it, x, y, rot) { it.x = x; it.y = y; it.rot = rot || 0; it.style.transform = 'translate(' + x + 'px,' + y + 'px) rotate(' + it.rot + 'deg)'; }
+  function wait(ms) { return calm ? 0 : ms; }
+
+  // Buchstabenmagnete
+  var letters = ['S', 'T', 'U', 'P', 'S'], lc = ['#2563eb', '#e0352b', '#f59e0b', '#15803d', '#7c3aed'];
+  var lx = small ? 112 : 190, ly = small ? 18 : 22;
+  letters.forEach(function (c, i) {
+    var it = el('<div class="letter" style="background:' + lc[i] + '">' + c + '</div>', 'drop'); it.style.animationDelay = wait(i * 110) + 'ms';
+    place(it, lx + i * (small ? 50 : 56), ly + (i % 2 ? 6 : 0), [-6, 5, -3, 7, -5][i]); drag(it);
+  });
+  var dot = el('<div class="letter" style="background:#c2410c;width:22px;height:22px;border-radius:50%"></div>', 'drop'); dot.style.animationDelay = wait(600) + 'ms'; place(dot, lx + 5 * (small ? 50 : 56) - 8, ly + 30, 0); drag(dot);
+
+  // Kalender
+  var cal = el('<div class="calendar"><div class="h"><span>NOVEMBER</span><span>2026</span></div><div class="g"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span><b>2</b><b>3</b><b>4</b><b class="on">5</b><b>6</b><b>7</b><b>8</b></div></div>', 'slap'); cal.style.animationDelay = wait(500) + 'ms';
+  place(cal, small ? W - 172 : W - 200, small ? 84 : 20, small ? 3 : 2); drag(cal);
+
+  // Foto
+  var ph = el('<div class="photo"><div class="pic"><i style="background:#c2410c">A</i><i style="background:#2563eb">B</i><i style="background:#be185d">M</i></div><p>Unser Haus</p></div>', 'slap'); ph.style.animationDelay = wait(650) + 'ms';
+  place(ph, small ? 24 : W - 360, small ? 82 : 34, small ? -4 : -3); drag(ph);
+
+  // Zeichnung
+  if (!small) {
+    var dr = el('<div class="draw"><svg viewBox="0 0 100 70" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="78" cy="16" r="9" stroke="#f59e0b"/><path d="M78 2v4M78 26v4M64 16h4M88 16h4M68 6l3 3M88 26l-3-3M88 6l-3 3M68 26l3-3" stroke="#f59e0b"/><path d="M14 62V34l22-16 22 16v28Z" stroke="#e0352b"/><path d="M30 62V46h12v16" stroke="#2563eb"/><path d="M4 63h92" stroke="#15803d"/></svg><p>von Mia</p></div>', 'slap'); dr.style.animationDelay = wait(800) + 'ms';
+    place(dr, W - 520, 40, 4); drag(dr);
+  }
+
+  // Zettel
+  var cols = small ? 2 : 4, gx = small ? 12 : 34, gy = small ? 14 : 38, x0 = small ? 18 : 64, y0 = small ? 234 : 210;
+  var NW = small ? Math.floor((W - 36 - 12) / 2) : Math.min(270, Math.floor((W - x0 * 2 - gx * 3) / 4)), NH = small ? 134 : Math.max(170, Math.floor((H - 84 - y0 - 110) / 2 - gy));
+  var FS = small ? 28 : Math.round(NW / 6.6);
+  var defs = [
+    { id: 'muell', t: 'Müll rausbringen', c: 'var(--y)', m: '<span class="late">seit 16:17</span><span>Hoch</span>', mc: '#e0352b', who: 'A', late: 1, hi: 1, rot: -3 },
+    { id: 'paket', t: 'Paket abholen', c: 'var(--p)', m: '<span class="late">seit 16:30</span>', mc: '#2563eb', who: 'A', late: 1, rot: 2.5 },
+    { id: 'fenster', t: 'Fenster putzen', c: 'var(--m)', m: '<span>morgen 10:00</span>', mc: '#f59e0b', who: 'AB', rot: -2 },
+    { id: 'geschenk', t: 'Geschenk&shy;papier kaufen', c: 'var(--b)', m: '<span>morgen 18:00</span>', mc: '#15803d', who: 'A', rot: 3 },
+    { id: 'elektro', t: 'Elektriker Termin', c: 'var(--o)', m: '<span>Sa 09:00</span>', mc: '#7c3aed', who: 'A', rot: -4 },
+    { id: 'steuer', t: 'Steuer&shy;erklärung', c: 'var(--w)', m: '<span>Di 23:00</span>', mc: '#e0352b', who: 'A', rot: 1.5 },
+    { id: 'heizung', t: 'Heizung entlüften', c: 'var(--p)', m: '<span>Mo 18:00</span>', mc: '#7c3aed', who: 'A', rot: -2.5, desk: 1 },
+    { id: 'rauch', t: 'Rauchmelder testen', c: 'var(--m)', m: '<span>So 11:00</span>', mc: '#2563eb', who: 'A', rot: 3, desk: 1 }
+  ];
+  var notes = {};
+  defs.filter(function (d) { return !(small && d.desk); }).forEach(function (d, i) {
+    var it = el('<div class="note" style="--nw:' + NW + 'px;--nh:' + NH + 'px;--fs:' + FS + 'px;--c:' + d.c + '"><span class="mag" style="--mc:' + d.mc + '"></span>' + (d.hi ? '<span class="hi" aria-hidden="true">!</span>' : '') + '<h3>' + d.t + '</h3><div class="m">' + d.m + '</div><div class="row"><span><span class="who">' + d.who[0] + '</span>' + (d.who[1] ? '<span class="who">B</span>' : '') + '</span><button class="stampbtn" aria-label="' + d.t.replace(/&shy;/g, '') + ' als erledigt abstempeln"><svg viewBox="0 0 24 24"><path d="M8 3h8v7l3 3v2H5v-2l3-3V3Z"/><path d="M5 20h14"/></svg></button></div></div>', 'slap');
+    it.style.animationDelay = wait(900 + i * 170) + 'ms';
+    var c = i % cols, r = Math.floor(i / cols);
+    place(it, x0 + c * (NW + gx) + (r % 2 ? 6 : 0), y0 + r * (NH + gy), d.rot); drag(it); it.def = d; notes[d.id] = it;
+    it.querySelector('.stampbtn').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+    it.querySelector('.stampbtn').addEventListener('click', function () { doStamp(it); });
+  });
+
+  // Erledigt-Dose
+  var tin = document.createElement('div'); tin.className = 'tin'; tin.innerHTML = '<button aria-label="Erledigt-Dose: letzte Aufgabe zurückholen"><span id="dn" style="font:800 24px/1 var(--sans)">1</span></button><span>erledigt</span>';
+  tin.style.cssText = 'left:' + (small ? 22 : 46) + 'px;bottom:' + (small ? 86 : 84) + 'px'; door.appendChild(tin);
+  doneStack = [{ t: 'Spülmaschine ausräumen' }];
+  tin.querySelector('button').addEventListener('click', function () { reopen(); });
+
+  function setCount() { document.getElementById('dn').textContent = doneStack.length; }
+  function ping(x, y, r) { var p = document.createElement('div'); p.className = 'ping'; p.style.cssText = 'left:' + (x - r) + 'px;top:' + (y - r) + 'px;width:' + 2 * r + 'px;height:' + 2 * r + 'px'; door.appendChild(p); setTimeout(function () { p.remove(); }, 650); }
+  function shake() { if (calm) return; door.classList.remove('shake'); void door.offsetWidth; door.classList.add('shake'); }
+
+  function doStamp(it) {
+    if (it.stamped) return; it.stamped = true;
+    var s = document.createElement('div'); s.className = 'stamp'; s.textContent = 'Erledigt'; it.firstChild.parentNode.appendChild(s);
+    setTimeout(function () { shake(); ping(it.x + it.offsetWidth / 2, it.y + it.offsetHeight * 0.45, 70); }, wait(260));
+    setTimeout(function () {
+      it.classList.add('fall'); it.style.transform = 'translate(' + (it.x + 20) + 'px,' + (H + 60) + 'px) rotate(' + (it.rot + 18) + 'deg)'; it.style.opacity = '0';
+      doneStack.push({ t: it.def.t.replace(/&shy;/g, ''), def: it.def, it: it }); setCount();
+      setTimeout(function () { it.style.display = 'none'; }, 850);
+    }, wait(1000));
+  }
+  function reopen() {
+    var d = doneStack.pop(); if (!d) return; setCount();
+    if (d.it) { var it = d.it; it.stamped = false; var s = it.querySelector('.stamp'); if (s) s.remove(); it.style.display = ''; it.classList.remove('fall'); it.style.opacity = '1'; it.style.transition = 'none'; place(it, it.x, -260, it.rot); void it.offsetWidth; it.style.transition = 'transform .7s cubic-bezier(.3,1.4,.5,1)'; place(it, it.x, it.y, it.rot); setTimeout(function () { it.style.transition = ''; }, 800); }
+  }
+
+  // Stups von Ben
+  var sticky = null;
+  function stups() {
+    var f = notes.fenster, tx = f.x + (small ? 40 : 70), ty = f.y + (small ? 40 : 90);
+    sticky = el('<div class="sticky" style="--sw:' + (small ? 128 : 150) + 'px"><span class="mag" style="--mc:#2563eb"></span><b>Heute noch?</b><span>– Ben</span><div class="acts" hidden>Bin dran!</div></div>');
+    sticky.style.zIndex = 20; sticky.style.transition = calm ? 'none' : 'transform .38s cubic-bezier(.3,.1,.8,.5)'; place(sticky, W + 60, ty - 120, 28); void sticky.offsetWidth;
+    place(sticky, tx, ty, -6);
+    setTimeout(function () { shake(); ping(tx + 70, ty + 40, 80); sticky.style.transition = ''; }, wait(400));
+    drag(sticky);
+    sticky.addEventListener('click', function () { if (sticky.moved) return; var a = sticky.querySelector('.acts'); a.hidden = false; sticky.firstChild.style.background = '#15803d'; setTimeout(function () { sticky.style.transition = 'transform .7s cubic-bezier(.5,0,1,.6), opacity .7s'; sticky.style.opacity = '0'; sticky.style.transform = 'translate(' + sticky.x + 'px,' + (H + 40) + 'px) rotate(20deg)'; }, 1200); });
+  }
+  if (!calm) setTimeout(stups, 4800); else setTimeout(stups, 300);
+
+  // Ziehen
+  function drag(it) {
+    var st = null;
+    it.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('.stampbtn')) return;
+      it.setPointerCapture(e.pointerId); st = { px: e.clientX, py: e.clientY, x: it.x, y: it.y, lx: e.clientX, t: performance.now() }; it.moved = false; it.style.zIndex = ++z; it.style.transition = 'none';
+    });
+    it.addEventListener('pointermove', function (e) {
+      if (!st) return; var dx = e.clientX - st.px, dy = e.clientY - st.py; if (Math.abs(dx) + Math.abs(dy) > 5) it.moved = true;
+      var vx = e.clientX - st.lx; st.lx = e.clientX; var tilt = Math.max(-12, Math.min(12, vx * 0.7));
+      it.x = st.x + dx; it.y = st.y + dy; it.style.transform = 'translate(' + it.x + 'px,' + it.y + 'px) rotate(' + (it.rot + tilt) + 'deg) scale(1.04)';
+    });
+    function up() { if (!st) return; st = null; it.style.transition = 'transform .25s cubic-bezier(.3,1.5,.5,1)'; it.style.transform = 'translate(' + it.x + 'px,' + it.y + 'px) rotate(' + it.rot + 'deg)'; setTimeout(function () { it.style.transition = ''; }, 280); }
+    it.addEventListener('pointerup', up); it.addEventListener('pointercancel', up);
+  }
+})();
+</script>
+</body>
+</html>

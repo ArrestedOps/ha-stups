@@ -41,7 +41,7 @@
 </script>
 
 {#if me}
-  <div class="flex items-center gap-3.5 rounded-row border border-line bg-surface p-3.5" data-testid="settings-head">
+  <div class="flex items-center gap-3.5 rounded-row bg-surface p-3.5" data-testid="settings-head">
     <Avatar person={me} size={56} />
     <div class="min-w-0 flex-1">
       <p class="truncate text-[17px] font-bold tracking-tight">{me.displayName}</p>

@@ -114,8 +114,11 @@
 {:else if page === 'beta'}
   <BetaPage />
 {:else}
-  <Sheet title={t('Einstellungen')} onclose={closeSheet} lgWidth={880}>
-    <div class="flex flex-col gap-3.5 pt-1 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
+  {#snippet done()}
+    <button class="inline-flex h-11 items-center px-2 text-[16px] font-bold text-accent-text" onclick={closeSheet}>{t('Fertig')}</button>
+  {/snippet}
+  <Sheet title={t('Einstellungen')} onclose={closeSheet} right={done} hideClose lgWidth={880}>
+    <div class="settings-flat flex flex-col gap-3.5 pt-1 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
       <div class="lg:col-span-2"><SettingsHead /></div>
       {#if !ui.isChild}
         <div class="lg:col-span-2">
@@ -131,7 +134,7 @@
       {/if}
       {#each groups as g (g.id)}
         <div>
-          <p class="px-4 pb-1.5 text-[13px] font-medium tracking-wide text-text-soft uppercase">{g.title}</p>
+          <p class="px-4 pb-1.5 text-[13px] font-semibold text-text-soft">{g.title}</p>
           <div class="list-group !mt-0">
           {#if g.actions?.includes('header')}
             <ListRow title={t('HA-Kopfzeile ausblenden')}>

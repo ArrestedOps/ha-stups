@@ -701,3 +701,7 @@
 
 /* Eigenschaften-Liste (Aufgabe): Zeilen ohne Kachel, die Trennlinie beginnt am Rand */
 .list-group.kv > li + li::before, .list-group.kv > div + div::before { left: 16px; }
+
+/* Einstellungen: Zeilen einzeilig mit dem Wert rechts (kein Untertitel), wie im Entwurf */
+.settings-flat .list-group span.flex-col > span:nth-child(2) { display: none; }
+.settings-flat .list-group > div[data-variant] { min-height: 52px !important; }

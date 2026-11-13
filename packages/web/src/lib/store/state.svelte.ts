@@ -15,7 +15,7 @@ export type Sheet =
   | null
   | { type: 'card'; id: string }
   | { type: 'cardMenu'; id: string }
-  | { type: 'new'; columnId: string; dueAt?: string; /** die Spalte ist gewählt (das „+“ über einer Spalte im Kanban): der Termin ändert sie nicht von selbst */ picked?: boolean }
+  | { type: 'new'; columnId: string; dueAt?: string; /** die Spalte ist gewählt (das „+“ über einer Spalte im Kanban): der Termin ändert sie nicht von selbst */ picked?: boolean; /** Titel vorbelegt (die Schnellzeile am Desktop) */ title?: string }
   | { type: 'slot'; at: string }
   | { type: 'boards' }
   | { type: 'newBoard' }
@@ -103,6 +103,12 @@ export const ui = $state({
   tasksCalendar: false,
   /** Wunsch von außen (Leiste unten): Aufgaben als Liste oder Kalender zeigen; TasksView nimmt ihn an und setzt ihn zurück */
   tasksGoto: null as 'list' | 'calendar' | null,
+  /** Desktop: welche Ansicht der Aufgabenliste die Seitenleiste gewählt hat (Alle offen, Gestupst, Heute, Überfällig, Diese Woche, Erledigt) */
+  taskView: 'all' as 'all' | 'nudged' | 'today' | 'overdue' | 'week' | 'done',
+  /** Desktop: die Liste nach Fälligkeit oder nach Board gruppiert */
+  taskGroupBy: 'due' as 'due' | 'board',
+  /** Desktop: wie viele Aufgaben die Liste gerade zeigt (für die Kopfzeile) */
+  taskCount: 0,
   /** Filter für Agenda und Kalender (Personen, Boards, Erledigtes) */
   sf: { ...DEFAULT_FILTER } as ScheduleFilter,
   /** zählt bei jedem Nachladen hoch, damit offene Detailansichten und die Agenda sich aktualisieren */

@@ -86,12 +86,11 @@ describe('Kopfzeile des Desktops', () => {
     expect(html()).toContain('data-testid="board-name"');
   });
 
-  it('Suche (Strg K), Home Assistant im Add-on und Glocke; Neue Aufgabe nur mit Board und für Erwachsene', () => {
+  it('Suche (Strg K); Neue Aufgabe nur mit Board und für Erwachsene (Home Assistant und Glocke stehen in der Seitenleiste)', () => {
     const out = html();
     expect(out).toContain('type="search"');
     expect(out).toContain('Strg K');
-    expect(out).toContain('data-testid="home-button"');
-    expect(out).toContain('data-testid="bell"');
+    expect(out).not.toContain('data-testid="bell"');
     expect(out).not.toContain('data-testid="new-task"'); // noch kein Board geladen
     ui.view = { columns: [{ id: 'c1', name: 'Offen', isDone: false, isPlanned: false }], cards: [], categories: [] } as never;
     expect(html()).toContain('data-testid="new-task"');
@@ -101,7 +100,7 @@ describe('Kopfzeile des Desktops', () => {
 
   it('ohne Home Assistant (eigener Container) kein Home-Knopf', () => {
     ui.caps = { auth: 'session' } as never;
-    expect(html()).not.toContain('home-button');
+    expect(render(Sidebar).body).not.toContain('home-button');
   });
 
   it('das Feld zeigt die Suche des Reiters: Boards filter.search, sonst query', () => {

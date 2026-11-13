@@ -142,7 +142,7 @@ test.describe('Aufgaben', () => {
   test('Klick auf die Zeile öffnet die Detailspalte neben der Liste (kein Sheet); Escape und Schließen leeren sie; ohne Auswahl steht ein Platzhalter da', async ({ page, request }) => {
     const s = await seed(request);
     await page.goto('/');
-    await expect(page.getByTestId('detail-empty')).toBeVisible();
+    await expect(page.getByTestId('detail')).toHaveCount(0); // ohne Auswahl keine Spalte (die Liste nutzt die ganze Breite)
     const first = row(page, s.cards[0]!.title);
     await first.click();
     const detail = page.getByTestId('detail');
@@ -161,7 +161,7 @@ test.describe('Aufgaben', () => {
     // Escape schließt
     await page.keyboard.press('Escape');
     await expect(detail).toHaveCount(0);
-    await expect(page.getByTestId('detail-empty')).toBeVisible();
+    await expect(page.getByTestId('detail')).toHaveCount(0); // ohne Auswahl keine Spalte (die Liste nutzt die ganze Breite)
     // Schließen-Knopf
     await first.click();
     await page.getByTestId('detail-close').click();

@@ -31,7 +31,7 @@
   import type { TileColor } from './ui/Tile.svelte';
 
   /** dueAt: vorbelegter Termin, z. B. aus dem Kalender */
-  let { columnId, dueAt = null, picked = false }: { columnId: string; dueAt?: string | null; picked?: boolean } = $props();
+  let { columnId, dueAt = null, picked = false, initialTitle = '' }: { columnId: string; dueAt?: string | null; picked?: boolean; initialTitle?: string } = $props();
 
   const columns = $derived(ui.view?.columns ?? []);
   // Ohne eigene Wahl richtet sich die Spalte nach dem Termin: nach heute → „Geplant", sonst „Offen"
@@ -67,7 +67,8 @@
     categoryIds: [],
     costCents: null,
   });
-  let title = $state('');
+  // svelte-ignore state_referenced_locally
+  let title = $state(initialTitle);
 
   // ---------- Schnell-Eingabe: aus einer Zeile Text werden Titel, Termin, Zuständige, Kategorie, Wiederholung, Priorität ----------
   const tz = deviceTz();

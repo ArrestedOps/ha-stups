@@ -1,11 +1,8 @@
 <script lang="ts">
-  import { unread } from '../lib/inbox.svelte';
-  import { bellText } from '../lib/inbox';
   import { columnForNew } from '../lib/calendar';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { feat, goToDashboard, openSheet, ui } from '../lib/store.svelte';
+  import { openSheet, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
-  import SymbolIcon from './SymbolIcon.svelte';
 
   /**
    * Kopfzeile des Desktops (ab 1024 px) über allen Reitern: links Titel und Untertitel, rechts die Suche (Strg/Cmd + K), „Neue Aufgabe“
@@ -15,17 +12,18 @@
    */
   const view = $derived(ui.view);
   const board = $derived(ui.boards.find((b) => b.id === ui.boardId));
+  const VIEW_LABEL = $derived({ all: t('Alle offen'), nudged: t('Gestupst'), today: t('Heute'), overdue: t('Überfällig'), week: t('Diese Woche'), done: t('Erledigt') });
   const page = $derived(
     ui.tab === 'boards'
       ? { title: board?.name ?? 'Boards', sub: t('Organisiere deine Aufgaben in Kanban-Boards.'), titleTestid: 'board-name' }
       : ui.tab === 'watchers'
         ? { title: t('Wächter'), sub: t('Automatische Aufgaben aus Home Assistant.') }
-        : { title: ui.tasksCalendar ? t('Kalender') : t('Aufgaben'), sub: t('Deine Aufgaben, Termine und To-dos an einem Ort.'), subTestid: 'tasks-sub' },
+        : { title: ui.tasksCalendar ? t('Kalender') : VIEW_LABEL[ui.taskView], sub: t('Deine Aufgaben, Termine und To-dos an einem Ort.'), subTestid: 'tasks-sub' },
   );
 
   const newColumn = $derived(columnForNew(view?.columns ?? [], false));
   const canCreate = $derived(!!view && !!newColumn && !ui.isChild);
-  const unseen = $derived(unread());
+  const onList = $derived(ui.tab === 'tasks' && !ui.tasksCalendar);
 
   const value = $derived(ui.tab === 'boards' ? ui.filter.search : ui.query);
   function setValue(v: string) {
@@ -46,7 +44,7 @@
 
 <header class="flex shrink-0 items-start gap-4 pt-6 pb-5" data-testid="desktop-header">
   <div class="min-w-0 flex-1">
-    <h1 class="truncate text-[30px] leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{page.title}</h1>
+    <h1 class="flex items-baseline gap-3 truncate text-[30px] leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{page.title}{#if onList}<span class="text-[14px] font-medium tracking-normal text-text-soft">{tn('{n} Aufgabe', '{n} Aufgaben', ui.taskCount)}</span>{/if}</h1>
     <p class="mt-1 truncate text-[14px] text-fg2" data-testid={page.subTestid}>{page.sub}</p>
   </div>
 
@@ -54,6 +52,14 @@
     <span class="mt-2 flex shrink-0 items-center gap-1.5 rounded-full bg-surface2 px-3 py-1 text-[13px] text-fg2" role="status">
       <Icon name="wifi-off" size={14} />Offline
     </span>
+  {/if}
+
+  {#if onList}
+    <div class="flex h-10 shrink-0 items-center gap-0.5 rounded-[10px] bg-surface2 p-0.5" role="radiogroup" aria-label={t('Gruppieren')}>
+      {#each [['due', t('Fälligkeit')], ['board', 'Board']] as [id, label] (id)}
+        <button class="h-9 rounded-[8px] px-3 text-[13px] font-semibold {ui.taskGroupBy === id ? 'bg-surface shadow-sm' : 'text-text-soft'}" role="radio" aria-checked={ui.taskGroupBy === id} onclick={() => (ui.taskGroupBy = id as 'due' | 'board')}>{label}</button>
+      {/each}
+    </div>
   {/if}
 
   <label class="focus-ring-in flex h-12 w-[230px] shrink-0 items-center gap-2.5 rounded-[14px] border border-line-chip bg-surface px-3.5 text-text-soft hover:border-sep xl:w-[340px]">
@@ -83,13 +89,4 @@
       <Icon name="plus" size={20} stroke={2.4} /><span class="max-xl:sr-only">{t('Neue Aufgabe')}</span>
     </button>
   {/if}
-  {#if feat.haUi}
-    <button class="head-icon" aria-label={t('Zurück zu Home Assistant')} data-testid="home-button" onclick={goToDashboard}>
-      <SymbolIcon id="home-assistant" size={26} />
-    </button>
-  {/if}
-  <button class="head-icon relative" aria-label={unseen > 0 ? tn('Mitteilungen, {n} ungelesen', 'Mitteilungen, {n} ungelesen', unseen) : t('Mitteilungen')} data-testid="bell" onclick={() => openSheet({ type: 'notifications' })}>
-    <Icon name="bell" size={24} />
-    {#if unseen > 0}<span class="bell-count absolute top-[8px] right-[9px]" data-testid="bell-dot" aria-hidden="true">{bellText(unseen)}</span>{/if}
-  </button>
 </header>

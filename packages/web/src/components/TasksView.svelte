@@ -2,7 +2,7 @@
   import { clock } from '../lib/clock.svelte';
   import { agenda } from '../lib/agenda.svelte';
   import { type TodayCard } from '../lib/api';
-  import { dayKeyOf, type CalMode } from '../lib/calendar';
+  import { columnForNew, dayKeyOf, type CalMode } from '../lib/calendar';
   import { deviceTz } from '../lib/datetime';
   import { names as monthNames } from '../lib/i18n/names';
   import { t, tn } from '../lib/i18n/index.svelte';
@@ -18,7 +18,9 @@
   import CardSheet from './CardSheet.svelte';
   import FeedbackLink from './FeedbackLink.svelte';
   import Icon from './Icon.svelte';
+  import type { ScheduleCard } from '../lib/schedule';
   import TaskRow from './TaskRow.svelte';
+  import TaskTableRow from './TaskTableRow.svelte';
   import TopBar from './TopBar.svelte';
   import StupsCard from './StupsCard.svelte';
   import Chip from './ui/Chip.svelte';
@@ -121,6 +123,28 @@
       sort: sf.sort,
     }),
   );
+  /** Desktop: die Gruppen der gewählten Ansicht (Seitenleiste) und Gruppierung (Kopfzeile) */
+  type DeskGroup = { key: string; title: string; cards: ScheduleCard[] };
+  const deskGroups = $derived.by<DeskGroup[]>(() => {
+    const v = ui.taskView;
+    const base = v === 'done' ? visible(recentDone).filter((c) => !houseIds.has(c.id)) : shownOpen;
+    if (v === 'nudged') {
+      const ids = new Set(nudges.map((n) => n.card.id));
+      return [{ key: 'nudged', title: t('Gestupst'), cards: base.filter((c) => ids.has(c.id)) }];
+    }
+    if (ui.taskGroupBy === 'board' && v !== 'done') {
+      const dueOnly = base.filter((c) => (v === 'all' ? true : groupTasks([c], nowMs, tz)[0]?.key === v));
+      return ui.boards
+        .map((b) => ({ key: `board:${b.id}`, title: b.name, cards: dueOnly.filter((c) => c.boardId === b.id) }))
+        .filter((g) => g.cards.length > 0);
+    }
+    const gs = groupTasks(base, nowMs, tz, { withDone: v === 'done', sort: sf.sort });
+    return gs.filter((g) => (v === 'all' ? g.key !== 'done' : v === 'done' ? g.key === 'done' : g.key === v));
+  });
+  const deskCount = $derived(deskGroups.reduce((n, g) => n + g.cards.length, 0));
+  $effect(() => {
+    ui.taskCount = deskCount;
+  });
   const stats = $derived(taskStats([...open, ...recentDone], meId, nowMs, tz));
   /** Meine offenen Aufgaben, die in den nächsten sieben Tagen fällig werden (die Kachel „Diese Woche“) */
   const weekCount = $derived(
@@ -160,6 +184,10 @@
 
   const done = (c: TodayCard) => void completeCard(c);
   const openHouse = (c: TodayCard) => void openCardAnywhere(c);
+  /** Desktop: Schnellzeile über der Tabelle */
+  let quick = $state('');
+  const quickColumn = $derived(columnForNew(ui.view?.columns ?? [], false));
+
   /** Handy: Beschriftung und Menü des Bereichs-Chips */
   let scopeOpen = $state(false);
   const scopeText = $derived.by(() => {
@@ -249,7 +277,7 @@
         {:else if !loaded}
           <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
         {:else}
-          <div class="max-lg:order-[-6] lg:order-[-9]">
+          <div class="max-lg:order-[-6] lg:hidden">
           <StatsBar
             label={t('Deine Zahlen')}
             onselect={(id) => (id === 'week' ? openCalendar('week') : openSheet({ type: 'stats', kind: id as StatsKind }))}
@@ -263,7 +291,7 @@
           </div>
 
           {#if nudges.length > 0}
-            <div class="max-lg:order-[-7] lg:order-[-8]"><StupsCard {nudges} /></div>
+            <div class="max-lg:order-[-7] lg:hidden"><StupsCard {nudges} /></div>
           {/if}
           <!-- Handy: ein Bereichs-Chip („Meine Aufgaben ▾“) mit Menü und der Filter-Knopf; Desktop: die Chips unten -->
           <div class="relative flex items-center justify-between gap-2 lg:hidden order-[-9]">
@@ -301,7 +329,7 @@
           </div>
 
           {#if !ui.isChild}
-            <div class="items-center gap-2 max-lg:hidden lg:order-[-7] lg:flex">
+            <div class="hidden items-center gap-2">
               <div class="no-scrollbar -ml-3 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-3" role="group" aria-label={t('Personen')} use:scrollStrip={sf.personIds.join() + sf.unassigned}>
                 <Chip active={!personFilterActive(sf)} pressed={!personFilterActive(sf)} onclick={() => setScheduleFilter({ personIds: [], unassigned: false })}>
                   <Icon name="user" size={20} />{t('Alle')}
@@ -321,7 +349,50 @@
             </div>
           {:else}
             <!-- Kind: kein „Wer", der Knopf steht allein rechts -->
-            <div class="flex justify-end max-lg:hidden lg:order-[-7]">{@render filterButton(extraFilter, false)}</div>
+            <div class="hidden justify-end">{@render filterButton(extraFilter, false)}</div>
+          {/if}
+
+          {#if ui.desktop}
+            <!-- Desktop (Entwurf): Stups-Leiste, Schnellzeile, Tabelle mit den Spalten Aufgabe, Board, Fällig, Wer; die Ansicht wählt die Seitenleiste -->
+            {#if nudges.length > 0 && (ui.taskView === 'all' || ui.taskView === 'nudged')}<StupsCard bar {nudges} />{/if}
+            {#if !ui.isChild && quickColumn}
+              <label class="flex h-11 items-center gap-3 rounded-[12px] bg-surface px-3 text-text-soft">
+                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-accent/14 text-accent-text"><Icon name="plus" size={14} stroke={2.6} /></span>
+                <input
+                  class="min-w-0 flex-1 bg-transparent text-[15px] text-fg outline-none placeholder:text-text-soft"
+                  placeholder={t('Neue Aufgabe: z. B. Müll morgen 19 Uhr')}
+                  aria-label={t('Neue Aufgabe schnell anlegen')}
+                  bind:value={quick}
+                  onkeydown={(e) => {
+                    if (e.key === 'Enter' && quick.trim()) {
+                      e.preventDefault();
+                      openSheet({ type: 'new', columnId: quickColumn!, title: quick.trim() });
+                      quick = '';
+                    }
+                  }}
+                />
+              </label>
+            {/if}
+            <div class="grid px-4 text-[12px] font-medium text-text-soft" style:grid-template-columns="minmax(0,1fr) 170px 150px 92px" aria-hidden="true">
+              <span class="pl-11">{t('Aufgabe')}</span><span>Board</span><span>{t('Fällig')}</span><span class="text-right">{t('Wer')}</span>
+            </div>
+            {#each deskGroups as g (g.key)}
+              {@const isOpen = !closed.includes(g.key)}
+              <section aria-label={g.title} data-testid="group-{g.key}">
+                <SectionHeader title={g.title} count={g.cards.length} tone={g.key === 'overdue' ? 'danger' : undefined} plain open={isOpen} ontoggle={() => toggleGroup(g.key)} />
+                {#if isOpen}
+                  <ul class="list-group !mt-0 desk-table">
+                    {#each g.cards as c (c.id)}<li><TaskTableRow card={c} {nowMs} showBoard /></li>{/each}
+                  </ul>
+                {/if}
+              </section>
+            {/each}
+            {#if deskCount === 0}
+              <div class="py-10 text-center" data-testid="tasks-empty">
+                <p class="text-[17px] font-semibold">{t('Hier ist nichts offen.')}</p>
+                <p class="mt-1 text-[15px] text-text-soft">{t('Gute Arbeit.')}</p>
+              </div>
+            {/if}
           {/if}
 
           {#if house.length > 0}
@@ -354,7 +425,7 @@
             </section>
           {/if}
 
-          {#each groups as g (g.key)}
+          {#each ui.desktop ? [] : groups as g (g.key)}
             {@const isOpen = !closed.includes(g.key)}
             <section aria-label={g.title} data-testid="group-{g.key}">
               <SectionHeader
@@ -373,7 +444,7 @@
             </section>
           {/each}
 
-          {#if groups.length === 0 && house.length === 0}
+          {#if !ui.desktop && groups.length === 0 && house.length === 0}
             <div class="py-6 text-center" data-testid="tasks-empty">
               <p class="text-[17px] font-semibold">{t('Keine Aufgaben mit Termin')}</p>
               <p class="mt-1 text-[15px] text-fg2">{t('Aufgaben mit Termin erscheinen hier, nach Fälligkeit geordnet.')}</p>
@@ -414,13 +485,6 @@
     {#if ui.detailId}
       <aside class="w-[380px] shrink-0 pb-6 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-20" aria-label={t('Aufgabe')} data-testid="detail">
         {#key ui.detailId}<CardSheet id={ui.detailId} panel />{/key}
-      </aside>
-    {:else}
-      <aside class="hidden w-[380px] shrink-0 pb-6 xl:block" data-testid="detail-empty">
-        <div class="flex h-full flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-line px-8 text-center text-fg2">
-          <Icon name="checklist" size={32} stroke={1.6} />
-          <p class="text-[15px]">{t('Wähle eine Aufgabe, um Details zu sehen.')}</p>
-        </div>
       </aside>
     {/if}
   {/if}

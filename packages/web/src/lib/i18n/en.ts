@@ -258,6 +258,8 @@ export const en: Catalog = {
   'Name des neuen Boards': 'Name of the new board',
   'Tag': 'Day',
   '3 Tage': '3 days',
+  '„{title}“ auf morgen schieben': 'Move “{title}” to tomorrow',
+  '„{title}“ stupsen': 'Nudge “{title}”',
   'Personen und Kategorien': 'People and categories',
   'Auswahl aufheben': 'Clear selection',
   'Aktivieren': 'Activate',

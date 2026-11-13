@@ -4,7 +4,8 @@
   import { formatDue } from '../lib/datetime';
   import { describeRecurrence } from '../lib/recurrence';
   import type { ScheduleCard } from '../lib/schedule';
-  import { completeCard, openCardAnywhere, openCardMenuAnywhere, personById, ui } from '../lib/store.svelte';
+  import { completeCard, openCardAnywhere, openCardMenuAnywhere, openSheet, personById, shiftCards, ui } from '../lib/store.svelte';
+  import { canNudge } from '../lib/nudge';
   import AvatarStack from './AvatarStack.svelte';
   import Icon from './Icon.svelte';
 
@@ -65,6 +66,19 @@
   </span>
   <span class="flex items-center justify-end gap-1">
     <AvatarStack people={assignees} />
+    {#if !ui.isChild && !done}
+      <!-- beim Darüberfahren: Stupsen und „Morgen“ (Termin auf morgen), dann „…“ -->
+      {#if canNudge(card, ui.me?.id ?? null)}
+        <button class="flex h-8 w-7 shrink-0 items-center justify-center rounded-md text-text-soft2 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100" aria-label={t('„{title}“ stupsen', { title: card.title })} title={t('Stupsen')} onclick={() => openSheet({ type: 'nudge', id: card.id })}>
+          <Icon name="hand" size={17} stroke={2} />
+        </button>
+      {/if}
+      {#if card.dueAt}
+        <button class="flex h-8 w-7 shrink-0 items-center justify-center rounded-md text-text-soft2 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100" aria-label={t('„{title}“ auf morgen schieben', { title: card.title })} title={t('Morgen')} onclick={() => void shiftCards([card], 'tomorrow')}>
+          <Icon name="calendar" size={17} stroke={2} />
+        </button>
+      {/if}
+    {/if}
     {#if !ui.isChild}
       <button class="flex h-8 w-7 shrink-0 items-center justify-center rounded-md text-text-soft2 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100" aria-label={t('Menü für „{title}“', { title: card.title })} onclick={() => void openCardMenuAnywhere(card)}>
         <Icon name="more" size={18} stroke={2.6} />

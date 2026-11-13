@@ -19,9 +19,9 @@
   import WatcherDesk from './WatcherDesk.svelte';
   import WatcherRow from './WatcherRow.svelte';
   import WatcherTableRow from './WatcherTableRow.svelte';
-  import Banner from './ui/Banner.svelte';
   import Segmented from './ui/Segmented.svelte';
   import ListRow from './ui/ListRow.svelte';
+  import Banner from './ui/Banner.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
   import Tile from './ui/Tile.svelte';
 
@@ -361,15 +361,14 @@
 
       {#if !ui.desktop && can('watchers') && found > 0 && data?.available}
         <div data-testid="home-found">
-          <Banner
-            wrap
-            title={tn('Stups hat {n} weiteres Gerät gefunden', 'Stups hat {n} weitere Geräte gefunden', found)}
-            sub={t('Tippe, um passende Wächter anzulegen.')}
-            onclick={() => openSheet({ type: 'found' })}
-          >
-            {#snippet leading()}<span class="text-banner-radio"><Icon name="radio" size={34} stroke={1.9} /></span>{/snippet}
-            {#snippet trailing()}<Icon name="chevron-right" size={20} stroke={2} />{/snippet}
-          </Banner>
+          <button class="flex w-full items-center gap-3 rounded-[16px] bg-accent/12 p-3.5 text-left" onclick={() => openSheet({ type: 'found' })}>
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-brand-dot text-on-accent"><Icon name="search" size={22} stroke={2} /></span>
+            <span class="min-w-0 flex-1">
+              <b class="block text-[17px] leading-tight font-semibold">{tn('Stups hat {n} weiteres Gerät gefunden', 'Stups hat {n} weitere Geräte gefunden', found)}</b>
+              <span class="mt-0.5 block text-[14px] text-text-soft">{t('Tippe, um passende Wächter anzulegen.')}</span>
+            </span>
+            <span class="text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>
+          </button>
         </div>
       {/if}
 
@@ -442,12 +441,13 @@
         <!-- Wächter mit Problem (keine Zuständigen, Entität oder Ziel fehlt): ganz oben, vor allem anderen, mit rotem Rand und dem Grund als Text -->
         {#if layout.problems.length > 0 && (scopeAll || scope === 'problem')}
           <section class="@container" aria-label={t('Wächter mit Problem')} data-testid="home-problems">
+            <SectionHeader title={t('Mit Problem')} count={layout.problems.length} plain tone="danger" />
             {@render rowList(layout.problems, false, true)}
           </section>
         {/if}
         {#if layout.waiting.length > 0 && (scopeAll || scope === 'waiting')}
           <section aria-label={t('Wartet auf jemanden')} data-testid="home-waiting">
-            <SectionHeader title={t('Wartet auf jemanden')} icon="alert" iconTone="red" count={layout.waiting.length} large open={!closed.includes('waiting')} ontoggle={() => toggle('waiting')} />
+            <SectionHeader title={t('Wartet auf jemanden')} count={layout.waiting.length} plain open={!closed.includes('waiting')} ontoggle={() => toggle('waiting')} />
             {#if !closed.includes('waiting')}
               <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3 max-lg:list-group max-lg:!mt-0 max-lg:!gap-0">
                 {#each layout.waiting as i (i.watcherId)}
@@ -522,7 +522,7 @@
           {#each [{ key: 'running', title: t('Läuft gerade'), icon: 'play', tone: 'green', list: layout.running, label: t('Läuft gerade') }, { key: 'soon', title: t('Kommt bald'), icon: 'calendar', tone: 'orange', list: layout.soon, label: t('Kommt bald') }] as sec (sec.key)}
             {#if sec.list.length > 0 && (scopeAll || scope === sec.key)}
               <section aria-label={sec.label} data-testid="home-{sec.key}">
-                <SectionHeader title={sec.title} icon={sec.icon} iconTone={sec.tone as 'green' | 'orange'} count={sec.list.length} large open={!closed.includes(sec.key)} ontoggle={() => toggle(sec.key)} />
+                <SectionHeader title={sec.title} count={sec.list.length} plain open={!closed.includes(sec.key)} ontoggle={() => toggle(sec.key)} />
                 {#if !closed.includes(sec.key)}{@render rowList(sec.list, true)}{/if}
               </section>
             {/if}
@@ -531,7 +531,7 @@
           {#if ui.desktop ? deskGroups.length > 0 : phoneGroups.length > 0}
             {#if !ui.desktop}
               <section aria-label={t('Kategorien')} data-testid="watcher-categories">
-                <SectionHeader title={t('Kategorien')} count={phoneGroups.length} large />
+                <SectionHeader title={t('Kategorien')} count={phoneGroups.length} plain />
                 <ul class="list-group">
                   {#each phoneGroups as g (g.key)}
                     <li data-testid="watcher-category" data-category={g.name ?? ''}>
@@ -548,7 +548,7 @@
             <section aria-label={t('Kategorien')} class="flex flex-col gap-3" data-testid="watcher-categories">
               {#each deskGroups as g (g.key)}
                 <div data-testid="watcher-category" data-category={g.name ?? ''}>
-                  <SectionHeader title={g.name ?? t('Ohne Kategorie')} icon="folder" iconTone="soft" count={g.items.length} large open={open(g.key)} ontoggle={() => toggleCategory(g.key)} />
+                  <SectionHeader title={g.name ?? t('Ohne Kategorie')} count={g.items.length} plain open={open(g.key)} ontoggle={() => toggleCategory(g.key)} />
                   {#if open(g.key)}{@render rowList(g.items, false)}{/if}
                 </div>
               {/each}
@@ -559,7 +559,7 @@
 
         {#if activity.length > 0 && scopeAll}
           <section aria-label={t('Letzte Aktivität')} data-testid="home-activity">
-            <SectionHeader title={t('Letzte Aktivität')} large />
+            <SectionHeader title={t('Letzte Aktivität')} plain />
             <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
               {#each activity as r (r.id)}
                 <li>
@@ -575,6 +575,14 @@
         </div>
       {/if}
 
+      {#if !ui.desktop && can('watchers') && data?.available}
+        <div class="list-group !mt-0">
+          <button class="flex h-[46px] w-full items-center gap-3 px-3.5 text-left text-[17px] font-medium text-accent-text" onclick={() => openSheet({ type: 'watcher', id: null })}>
+            <span class="flex h-[30px] w-[30px] items-center justify-center"><Icon name="plus" size={22} stroke={2.2} /></span>{t('Neuer Wächter')}
+          </button>
+        </div>
+      {/if}
+
       {#if can('watchers')}
         <!-- Verwalten, Gefunden und Vorlagen bleiben in den Einstellungen erreichbar -->
         <ListRow title={t('Alle Wächter verwalten')} onclick={() => openSettings('watchers')}>
@@ -586,13 +594,4 @@
     </div>
   </div>
 
-  {#if !ui.desktop && can('watchers') && data?.available}
-    <button
-      class="fab-grad fixed right-[max(1rem,calc((100vw-720px)/2+1rem))] bottom-[calc(var(--nav-h)+16px)] z-30 flex h-[58px] w-[58px] items-center justify-center rounded-btn"
-      aria-label={t('Neuer Wächter')}
-      onclick={() => openSheet({ type: 'watcher', id: null })}
-    >
-      <Icon name="plus" size={28} stroke={2.4} />
-    </button>
-  {/if}
 </main>

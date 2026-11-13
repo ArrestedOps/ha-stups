@@ -13,6 +13,7 @@
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
   import SymbolIcon from './SymbolIcon.svelte';
+  import { symbolById } from '../lib/symbols/library';
 
   /**
    * Seitenleiste auf dem Desktop (ab 1024 px, 264 px breit, fest), wie im Entwurf: oben Logo mit Home Assistant, Glocke und Zahnrad, die Suche,
@@ -184,7 +185,9 @@
       {#each ui.boards as b (b.id)}
         {@const current = ui.tab === 'boards' && b.id === ui.boardId}
         <button style:order="20" class="side-item side-board h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-current={current ? 'true' : undefined} onclick={() => openBoard(b.id)}>
-          <span class="h-2.5 w-2.5 shrink-0 rounded-full" style:background={dot(b.id, b.color)} aria-hidden="true"></span>
+          <span class="flex h-5 w-5 shrink-0 items-center justify-center" style:color={dot(b.id, b.color)} aria-hidden="true">
+            {#if symbolById(b.icon)}<SymbolIcon id={b.icon} size={18} />{:else}<span class="h-2.5 w-2.5 rounded-full bg-current"></span>{/if}
+          </span>
           <span class="min-w-0 flex-1 truncate text-left">{b.name}</span>
           <span class="shrink-0 text-[13px] text-text-soft tabular-nums" aria-label={t('{n} offen', { n: b.openCards })}>{b.openCards}</span>
         </button>

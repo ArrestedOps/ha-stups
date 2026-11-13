@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.6
+
+**Lange Wächternamen und Board-Symbole.** In der Wächter-Tabelle am Desktop steht die Bedingung jetzt in der zweiten Zeile unter dem Namen; ein langer Name bricht auf zwei Zeilen um und wird nicht mehr abgeschnitten. Alle Zeilen sind gleich hoch (64 px). Die Seitenleiste zeigt Boards mit dem Symbol aus den Board-Einstellungen in der Boardfarbe. Dazu: Wächter-Gruppe in der Seitenleiste, Ablauf klappt unter der Zeile auf, „Aktivität“ als Reiter (aus beta.5).
+
+**Bitte prüfen (Testliste):** (1) Wächter mit sehr langem Namen: voll lesbar, Zeilen gleich hoch. (2) Seitenleiste: Boards mit eigenem Symbol und Farbe. (3) Zeile aufklappen, ändern, speichern. (4) Reiter „Aktivität“.
+
 ## 1.42.0-beta.5
 
 **Wächter am Desktop neu geordnet.** Wächter sind eine eigene Gruppe in der Seitenleiste (unter Boards und Kalender), mit Filtern und Kategorien. Die Seite ist eine einzige Tabelle in voller Breite, alle Zeilen gleich hoch. Ein Klick auf eine Zeile klappt den Ablauf darunter auf (bearbeiten, speichern, testen, pausieren, löschen), kein Fenster mehr. „Aktivität“ ist ein Reiter. Am Handy bleibt alles wie bisher.

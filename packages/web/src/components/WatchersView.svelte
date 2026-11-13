@@ -11,7 +11,7 @@
   import { listSummary } from '../lib/watcher-desk';
   import { WatcherEditor } from '../lib/watcher-editor.svelte';
   import type { SavedWatcher } from '../lib/watcher-types';
-  import { categoryKeyOf, COL_LAST, COL_MID, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
+  import { categoryKeyOf, COL_LAST, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
   import { noteText, RUN_TEXT } from '../lib/watchers';
   import { askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openNewWatcher, openSettings, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
@@ -196,9 +196,6 @@
     }
   }
 
-  /** Läuft etwas in den Bereichen unten (Tabellenkopf nur, wenn es Zeilen gibt) */
-  const hasRows = $derived(layout.running.length + layout.soon.length + layout.groups.length > 0);
-
   // ---------- Desktop: „Neuer Wächter“ klappt über der Liste auf (statt Fenster mit vier Schritten) ----------
 
   /** Das offene Formular (null: zu); jedes Aufklappen bekommt einen frischen Editor, der Entwurf geht beim Zuklappen verloren */
@@ -305,8 +302,7 @@
         {:else}
           <div class="sticky top-0 z-10 -mx-1 bg-bg px-1 pt-1" data-testid="watcher-table-head">
             <div class="grid items-center gap-x-3 rounded-row border border-transparent px-3.5 py-1.5 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase {TABLE_COLS}">
-              <span>{t('Wächter')}</span>
-              <span class={COL_MID}>{t('Bedingung')}</span>
+              <span>{t('Wächter')} · {t('Bedingung')}</span>
               <span>{t('Aktuell')}</span>
               <span>{t('Status')}</span>
               <span class={COL_LAST}>{t('Zuletzt')}</span>
@@ -361,19 +357,11 @@
 
 <!-- Die Zeilen eines Bereichs: auf dem Desktop eine Tabelle mit Spalten, auf dem Handy kompakte Zeilen untereinander -->
 {#snippet rowList(list: HomeItem[], current: boolean, problem = false)}
-  {#if ui.desktop}
-    <ul class="mt-2 divide-y divide-line overflow-hidden rounded-row border bg-surface {problem ? 'border-danger' : 'border-line'}">
-      {#each list as i (i.watcherId)}
-        <WatcherTableRow item={i} {nowMs} {canToggle} busy={busy.includes(i.watcherId)} fresh={fresh === i.watcherId} selected={selected.includes(i.watcherId)} onselect={canToggle ? (on) => toggleSelected(i.watcherId, on) : undefined} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} />
-      {/each}
-    </ul>
-  {:else}
-    <ul class="list-group {problem ? 'ring-1 ring-danger' : ''}">
+  <ul class="list-group {problem ? 'ring-1 ring-danger' : ''}">
       {#each list as i (i.watcherId)}
         <li data-testid="watcher-row"><WatcherRow item={i} {nowMs} {current} {canToggle} busy={busy.includes(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} /></li>
       {/each}
     </ul>
-  {/if}
 {/snippet}
 
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col lg:max-w-none">
@@ -618,30 +606,6 @@
         <!-- Alle übrigen Wächter: Läuft gerade, Kommt bald, dann die Kategorien. Jeder Wächter steht genau einmal da. Die Breite der Liste
              bestimmt auf dem Desktop die Spalten (Container-Abfrage). -->
         <div class="@container flex flex-col gap-3.5" data-testid="watcher-list">
-          {#if ui.desktop && selected.length > 0}
-            <div class="flex items-center gap-3 rounded-[12px] bg-surface px-4 py-2.5 text-[14px]" role="toolbar" aria-label={t('Sammelaktionen')} data-testid="watcher-bulk">
-              <b>{tn('{n} ausgewählt', '{n} ausgewählt', selected.length)}</b>
-              <span class="flex-1"></span>
-              <button class="h-9 rounded-full bg-surface2 px-4 font-semibold" onclick={() => void bulkActive(false)}>{t('Pausieren')}</button>
-              <button class="h-9 rounded-full bg-surface2 px-4 font-semibold" onclick={() => void bulkActive(true)}>{t('Aktivieren')}</button>
-              <button class="h-9 px-2 font-semibold text-accent-text" onclick={() => (selected = [])}>{t('Auswahl aufheben')}</button>
-            </div>
-          {/if}
-          {#if ui.desktop && hasRows}
-            <div class="sticky top-0 z-10 -mx-1 bg-bg px-1 pt-1" data-testid="watcher-table-head">
-              <div class="grid items-center gap-x-3 rounded-row border border-transparent px-3.5 py-1.5 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase {TABLE_COLS}">
-                <span>{t('Wächter')}</span>
-                <span class={COL_MID}>{t('Bedingung')}</span>
-                <span>{t('Aktuell')}</span>
-                <span>{t('Status')}</span>
-                <span class={COL_LAST}>{t('Zuletzt')}</span>
-                <span class={COL_WIDE}>{t('Nächste Aufgabe')}</span>
-                <span class={COL_WIDE}>{t('Zuständig')}</span>
-                <span class="flex justify-end"><span class="sr-only">{t('Aktiv')}</span></span>
-              </div>
-            </div>
-          {/if}
-
           {#each [{ key: 'running', title: t('Läuft gerade'), icon: 'play', tone: 'green', list: layout.running, label: t('Läuft gerade') }, { key: 'soon', title: t('Kommt bald'), icon: 'calendar', tone: 'orange', list: layout.soon, label: t('Kommt bald') }] as sec (sec.key)}
             {#if sec.list.length > 0 && (scopeAll || scope === sec.key)}
               <section aria-label={sec.label} data-testid="home-{sec.key}">
@@ -651,32 +615,21 @@
             {/if}
           {/each}
 
-          {#if ui.desktop ? deskGroups.length > 0 : phoneGroups.length > 0}
-            {#if !ui.desktop}
-              <section aria-label={t('Kategorien')} data-testid="watcher-categories">
-                <SectionHeader title={t('Kategorien')} count={phoneGroups.length} plain />
-                <ul class="list-group">
-                  {#each phoneGroups as g (g.key)}
-                    <li data-testid="watcher-category" data-category={g.name ?? ''}>
-                      <ListRow title={g.name ?? t('Ohne Kategorie')} label={t('Kategorie {name} öffnen', { name: g.name ?? t('Ohne Kategorie') })} onclick={() => openPage(g.key)}>
-                        {#snippet tile()}<Tile color="gray"><Icon name="folder" size={24} /></Tile>{/snippet}
-                        {#snippet meta()}<span class="min-w-0 truncate">{groupSummary(g.items)}</span>{/snippet}
-                        {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
-                      </ListRow>
-                    </li>
-                  {/each}
-                </ul>
-              </section>
-            {:else}
-            <section aria-label={t('Kategorien')} class="flex flex-col gap-3" data-testid="watcher-categories">
-              {#each deskGroups as g (g.key)}
-                <div data-testid="watcher-category" data-category={g.name ?? ''}>
-                  <SectionHeader title={g.name ?? t('Ohne Kategorie')} count={g.items.length} plain open={open(g.key)} ontoggle={() => toggleCategory(g.key)} />
-                  {#if open(g.key)}{@render rowList(g.items, false)}{/if}
-                </div>
-              {/each}
+          {#if phoneGroups.length > 0}
+            <section aria-label={t('Kategorien')} data-testid="watcher-categories">
+              <SectionHeader title={t('Kategorien')} count={phoneGroups.length} plain />
+              <ul class="list-group">
+                {#each phoneGroups as g (g.key)}
+                  <li data-testid="watcher-category" data-category={g.name ?? ''}>
+                    <ListRow title={g.name ?? t('Ohne Kategorie')} label={t('Kategorie {name} öffnen', { name: g.name ?? t('Ohne Kategorie') })} onclick={() => openPage(g.key)}>
+                      {#snippet tile()}<Tile color="gray"><Icon name="folder" size={24} /></Tile>{/snippet}
+                      {#snippet meta()}<span class="min-w-0 truncate">{groupSummary(g.items)}</span>{/snippet}
+                      {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
+                    </ListRow>
+                  </li>
+                {/each}
+              </ul>
             </section>
-            {/if}
           {/if}
         </div>
 

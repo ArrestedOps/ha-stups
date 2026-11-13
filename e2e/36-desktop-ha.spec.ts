@@ -43,12 +43,12 @@ test('Wächter: Raster in zwei oder drei Spalten, alle Aufgaben einer Reihe glei
   await expect(page.getByRole('button', { name: 'Neuer Wächter', exact: true })).toHaveCount(1); // nur der Knopf, nicht zusätzlich der „+“ des Handys
   await expect(page.getByTestId('sidebar')).toBeVisible();
 
-  // eine Tabelle: alle vier Wächter, jede Zeile gleich hoch (60 px), nichts läuft über
+  // eine Tabelle: alle vier Wächter, jede Zeile gleich hoch (64 px), nichts läuft über
   const rows = page.getByTestId('watcher-row');
   await expect(rows).toHaveCount(4);
   const heights = await rows.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().height)));
   expect(new Set(heights).size, `Zeilenhöhen ${heights.join('/')}`).toBe(1);
-  expect(heights[0]).toBe(60);
+  expect(heights[0]).toBe(64);
   // „Wächter“ ist eine eigene Gruppe in der Seitenleiste (Filter und Kategorien), kein zweites Auswahlfeld in der Seite
   await expect(page.getByTestId('sidebar').getByRole('button', { name: /^Mit Problem/ })).toBeVisible();
   await expect(page.getByTestId('watchers-panel')).toHaveCount(0);
@@ -125,9 +125,9 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
       return { headCells, rows };
     });
   let c = await cols();
-  expect(c.headCells.length).toBe(8);
+  expect(c.headCells.length).toBe(7);
   for (const r of c.rows) {
-    expect(r.length).toBe(8);
+    expect(r.length).toBe(7);
     r.forEach((x, i) => expect(Math.abs(x - c.headCells[i]!), `Spalte ${i} bündig`).toBeLessThanOrEqual(2));
   }
   const row = page.getByTestId('watcher-row').filter({ hasText: `Bad ${tag}` });
@@ -175,7 +175,7 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
 
   // schmaleres Fenster (1024 px): Spalten fallen weg statt zu quetschen, nichts läuft über
   await page.setViewportSize({ width: 1024, height: 768 });
-  await expect.poll(async () => (await cols()).headCells.length).toBeLessThan(8);
+  await expect.poll(async () => (await cols()).headCells.length).toBeLessThan(7);
   c = await cols();
   expect(c.headCells.length).toBeGreaterThanOrEqual(4);
   for (const r of c.rows) r.forEach((x, i) => expect(Math.abs(x - c.headCells[i]!)).toBeLessThanOrEqual(2));
@@ -270,4 +270,5 @@ test('Wächter am Desktop: Filter in der Seitenleiste, aufgeklappter Ablauf bear
   await expect(page.getByTestId('home-activity')).toBeVisible();
   await expect(page.getByTestId('watcher-row')).toHaveCount(0);
   for (const id of ids) await request.delete(`/api/watchers/${id}`);
+  await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '12' } }); // andere Tests erwarten den Stand von vorher
 });

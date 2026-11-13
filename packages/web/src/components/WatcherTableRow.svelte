@@ -4,7 +4,7 @@
   import { t } from '../lib/i18n/index.svelte';
   import { personById } from '../lib/store.svelte';
   import { modeSummary } from '../lib/watcher-flow';
-  import { COL_LAST, COL_MID, COL_WIDE, rowStatus, statusLabel, TABLE_COLS, triggerText, whoText, type RowStatus } from '../lib/watcherList';
+  import { COL_LAST, COL_WIDE, rowStatus, statusLabel, TABLE_COLS, triggerText, whoText, type RowStatus } from '../lib/watcherList';
   import AvatarStack from './AvatarStack.svelte';
   import Icon from './Icon.svelte';
   import Tile, { type TileColor } from './ui/Tile.svelte';
@@ -43,7 +43,7 @@
   });
 </script>
 
-<li class="relative grid h-[60px] {selected || open ? 'bg-accent/10' : ''} scroll-mt-14 items-center gap-x-3 px-3.5 transition-colors duration-700 hover:bg-surface2 {fresh ? 'row-fresh' : ''} has-[[data-row-open]:focus-visible]:bg-surface2 has-[[data-row-open]:focus-visible]:outline-2 has-[[data-row-open]:focus-visible]:-outline-offset-2 has-[[data-row-open]:focus-visible]:outline-accent {TABLE_COLS}" data-testid="watcher-row" data-status={status} data-watcher-id={i.watcherId} data-fresh={fresh ? '' : undefined}>
+<li class="relative grid h-16 {selected || open ? 'bg-accent/10' : ''} scroll-mt-14 items-center gap-x-3 px-3.5 transition-colors duration-700 hover:bg-surface2 {fresh ? 'row-fresh' : ''} has-[[data-row-open]:focus-visible]:bg-surface2 has-[[data-row-open]:focus-visible]:outline-2 has-[[data-row-open]:focus-visible]:-outline-offset-2 has-[[data-row-open]:focus-visible]:outline-accent {TABLE_COLS}" data-testid="watcher-row" data-status={status} data-watcher-id={i.watcherId} data-fresh={fresh ? '' : undefined}>
   <!-- Die ganze Zeile öffnet den Wächter: ein Knopf, der die Zeile ausfüllt und über den Zellen liegt (ohne Text, der Name steht im Label);
        er steht zuerst, damit die Tab-Reihenfolge stimmt. Der Schalter liegt darüber. -->
   <button type="button" class="absolute inset-0 z-[1] cursor-pointer focus-visible:outline-none" data-row-open aria-expanded={open} aria-label={t('Wächter {name} öffnen', { name: i.name })} onclick={onopen}></button>
@@ -54,12 +54,10 @@
     {/if}
     <Tile color={TILE[status]}><Icon name="eye" size={24} /></Tile>
     <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
-      <span class="truncate text-[15px] font-bold tracking-tight" title={i.name}>{i.name}</span>
-      <span class="truncate text-[13px] text-fg2" title={i.entity} data-testid="watcher-subject">{i.entity}</span>
+      <span class="line-clamp-2 text-[15px] leading-[1.25] font-bold tracking-tight wrap-anywhere" title={i.name} data-testid="watcher-name">{i.name}</span>
+      <span class="truncate text-[12.5px] text-fg2" title="{i.entity} · {t('Wenn {condition}', { condition: triggerText(i) })}"><span data-testid="watcher-subject">{i.entity}</span><span class="hidden @min-[640px]:inline" data-testid="watcher-condition">{' · '}{t('Wenn {condition}', { condition: triggerText(i) })}</span></span>
     </span>
   </div>
-  <!-- Bedingung -->
-  <p class="{COL_MID} truncate text-[13px] text-fg2 {dim}" title={t('Wenn {condition}', { condition: triggerText(i) })} data-testid="watcher-condition">{t('Wenn {condition}', { condition: triggerText(i) })}</p>
   <!-- Stand -->
   <span class="flex min-w-0 items-center gap-2 text-[14px] tabular-nums {i.value ? 'text-fg' : 'text-hint'} {dim}">
     {#if percent !== null}<span class="h-1.5 w-8 shrink-0 overflow-hidden rounded-full bg-track" aria-hidden="true"><i class="block h-full rounded-full" style:width="{percent}%" style:background={percent < 15 ? 'var(--danger)' : percent < 30 ? 'var(--c-orange-fg)' : 'var(--c-green-fg)'}></i></span>{/if}

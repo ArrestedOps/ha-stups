@@ -108,16 +108,16 @@
 
 <div bind:this={host} class="relative overflow-hidden">
   {#if dx > 4 && onlead}
-    <div class="absolute inset-0 flex items-center bg-(--c-green-fg) px-5 text-white" aria-hidden="true">
+    <div class="absolute inset-0 flex items-center px-5" style="background: var(--tile-green-a); color: var(--tile-green-fg)" aria-hidden="true">
       <span class="flex items-center gap-2 text-[16px] font-semibold"><Icon name="check" size={20} stroke={3} />{t('Erledigt')}</span>
     </div>
   {/if}
   {#if dx < -4}
     <div class="absolute inset-y-0 right-0 flex" style:width="{TRAIL}px">
-      <button class="flex w-1/2 flex-col items-center justify-center gap-1 bg-(--c-orange-fg) text-[14px] font-semibold text-white" tabindex={open ? 0 : -1} onclick={() => fire(onlater)}>
+      <button class="flex w-1/2 flex-col items-center justify-center gap-1 text-[14px] font-semibold" style="background: var(--tile-orange-a); color: var(--tile-orange-fg)" tabindex={open ? 0 : -1} onclick={() => fire(onlater)}>
         <Icon name="clock" size={20} stroke={2} />{t('Später')}
       </button>
-      <button class="flex w-1/2 flex-col items-center justify-center gap-1 bg-(--c-red-fg) text-[14px] font-semibold text-white" tabindex={open ? 0 : -1} onclick={() => fire(ondelete)}>
+      <button class="flex w-1/2 flex-col items-center justify-center gap-1 text-[14px] font-semibold" style="background: var(--tile-red-a); color: var(--tile-red-fg)" tabindex={open ? 0 : -1} onclick={() => fire(ondelete)}>
         <Icon name="trash" size={20} stroke={2} />{t('Löschen')}
       </button>
     </div>

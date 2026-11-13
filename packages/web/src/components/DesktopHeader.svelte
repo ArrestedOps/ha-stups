@@ -46,7 +46,12 @@
 
 <header class="flex shrink-0 items-start gap-4 pt-6 pb-5" data-testid="desktop-header">
   <div class="min-w-0 flex-1">
-    <h1 class="flex items-baseline gap-3 truncate text-[30px] leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{#if ui.tab === 'boards' && board}<i class="block h-3 w-3 shrink-0 rounded-full" style:background="var(--c-{boardKey}-fg)" aria-hidden="true"></i>{/if}{page.title}{#if ui.tab === 'boards' && board}<span class="text-[14px] font-medium tracking-normal text-text-soft">{t('{n} offen', { n: board.openCards })}</span>{/if}{#if onList}<span class="text-[14px] font-medium tracking-normal text-text-soft">{tn('{n} Aufgabe', '{n} Aufgaben', ui.taskCount)}</span>{/if}</h1>
+    <div class="flex min-w-0 items-baseline gap-3">
+      {#if ui.tab === 'boards' && board}<i class="block h-3 w-3 shrink-0 self-center rounded-full" style:background="var(--c-{boardKey}-fg)" aria-hidden="true"></i>{/if}
+      <h1 class="truncate text-[30px] leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{page.title}</h1>
+      {#if ui.tab === 'boards' && board}<span class="shrink-0 text-[14px] font-medium text-text-soft">{t('{n} offen', { n: board.openCards })}</span>{/if}
+      {#if onList}<span class="shrink-0 text-[14px] font-medium text-text-soft">{tn('{n} Aufgabe', '{n} Aufgaben', ui.taskCount)}</span>{/if}
+    </div>
     <p class="mt-1 truncate text-[14px] text-fg2" data-testid={page.subTestid}>{page.sub}</p>
   </div>
 

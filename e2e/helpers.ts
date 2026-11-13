@@ -30,14 +30,14 @@ export async function skipOnboarding(page: Page): Promise<void> {
 
 /**
  * Aufgaben öffnen, auf Wunsch „Alle“ statt „Meine“ wählen (die Standardwahl ist „Meine“; der Filter gilt auch im Kalender) und eine Ansicht
- * wählen: die Liste, oder Tag, Woche, Monat (der Kalender ist eine Seite unter Aufgaben, der Kalender-Knopf der Wochenleiste öffnet sie)
+ * wählen: die Liste, oder Tag, Woche, Monat (der Kalender ist eine Seite unter Aufgaben, der Reiter „Kalender“ in der Leiste öffnet sie)
  */
 export async function openTasksView(page: Page, view: 'Liste' | 'Tag' | 'Woche' | 'Monat', all = true): Promise<void> {
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
   if (all) await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Alle', exact: true }).click();
   if (view === 'Liste') return;
-  await page.getByRole('button', { name: 'Kalender öffnen' }).click();
-  await page.getByRole('radiogroup', { name: 'Ansicht' }).getByRole('radio', { name: view }).click();
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Kalender' }).click();
+  await page.getByRole('radiogroup', { name: 'Ansicht' }).getByRole('radio', { name: view, exact: true }).click();
 }
 
 /** Die Liste in Aufgaben (die frühere Agenda) öffnen, mit „Alle“ statt „Meine“ */
@@ -83,3 +83,12 @@ export async function pickDue(page: Page, due: string): Promise<void> {
 
 /** Das Fenster „Neue Aufgabe“ (der Titel steht im Feld „Was steht an?“) */
 export const newTaskSheet = (page: Page) => page.getByRole('dialog', { name: 'Neue Aufgabe' });
+
+/** Wächter am Handy: die Kategorie ist eine eigene Seite; öffnet sie (ohne Namen: die erste Kategorie). Am Desktop steht alles in der Tabelle, dort tut es nichts. */
+export async function openWatcherCategory(page: Page, name?: string | RegExp): Promise<void> {
+  const cats = page.getByTestId('watcher-category');
+  if ((await page.getByTestId('watcher-table-head').count()) > 0) return;
+  await expect(cats.first()).toBeVisible();
+  await (name ? cats.filter({ hasText: name }) : cats).first().getByRole('button').click();
+  await expect(page.getByTestId('watcher-page')).toBeVisible();
+}

@@ -64,33 +64,29 @@ test('Aufgaben: meine Aufgaben in Gruppen (Überfällig, Heute, Diese Woche, Sp�
   expect(done.cards.find((c) => c.title === overdue)?.completedAt).not.toBeNull();
 });
 
-test('Aufgaben: Kalender-Knopf und „Monatsansicht" öffnen den Kalender (Tag, Woche, Monat), „‹ Aufgaben" führt zurück zur Liste', async ({ page }) => {
+test('Kalender: der Reiter „Kalender" öffnet ihn (Tag, 3 Tage, Woche, Monat), „‹ Aufgaben" führt zurück zur Liste', async ({ page }) => {
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
-  // Es gibt keinen Umschalter Liste/Tag/Woche/Monat mehr in der Liste
+  // Es gibt keinen Umschalter Liste/Tag/Woche/Monat in der Liste
   await expect(page.getByRole('radiogroup', { name: 'Ansicht' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Kalender öffnen' }).click();
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Kalender' }).click();
   const views = page.getByRole('radiogroup', { name: 'Ansicht' });
   await expect(page.getByRole('heading', { name: 'Kalender' })).toBeVisible();
-  await expect(views.getByRole('radio', { name: 'Woche' })).toHaveAttribute('aria-checked', 'true');
+  // auf dem Handy öffnet der Kalender mit 3 Tagen
+  await expect(views.getByRole('radio', { name: '3 Tage' })).toHaveAttribute('aria-checked', 'true');
   await expect(page.getByTestId('calendar-grid')).toBeVisible();
-  await views.getByRole('radio', { name: 'Monat' }).click();
+  await views.getByRole('radio', { name: 'Woche', exact: true }).click();
+  await expect(page.getByTestId('calendar-grid')).toBeVisible();
+  await views.getByRole('radio', { name: 'Monat', exact: true }).click();
   await expect(page.getByTestId('calendar-month')).toBeVisible();
-  await views.getByRole('radio', { name: 'Tag' }).click();
+  await views.getByRole('radio', { name: 'Tag', exact: true }).click();
   await expect(page.getByTestId('calendar-grid')).toBeVisible();
   await page.getByRole('button', { name: 'Aufgaben', exact: true }).first().click(); // „‹ Aufgaben" oben links
   await expect(page.getByTestId('tasks')).toBeVisible();
-  // die Wochenleiste: ein Tipp auf den Tag öffnet die Tagesansicht, „Monatsansicht" die Monatsansicht
-  await page.getByTestId('week-strip').getByRole('button', { name: /Heute/ }).click();
-  await expect(views.getByRole('radio', { name: 'Tag' })).toHaveAttribute('aria-checked', 'true');
-  await page.getByRole('button', { name: 'Aufgaben', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Monatsansicht' }).click();
-  await expect(views.getByRole('radio', { name: 'Monat' })).toHaveAttribute('aria-checked', 'true');
-  await expect(page.getByTestId('calendar-month')).toBeVisible();
 });
 
-test('Aufgaben: von oben nach unten Kopf, Zahlenleiste, Woche, Chips, dann die Gruppen (wie im Mockup)', async ({ page, request }) => {
+test('Aufgaben: von oben nach unten Kopf, Zahlenkacheln, Chips, dann die Gruppen (wie im Entwurf)', async ({ page, request }) => {
   const s = await seed(request);
   await s.mk(`Reihenfolge ${s.tag}`, { assigneeIds: [s.me], dueAt: new Date(Date.now() - 3_600_000).toISOString() });
   await page.goto('/');
@@ -103,15 +99,12 @@ test('Aufgaben: von oben nach unten Kopf, Zahlenleiste, Woche, Chips, dann die G
     await y(page.getByRole('heading', { name: 'Aufgaben' })),
     await y(page.getByTestId('tasks-sub')),
     await y(page.getByRole('group', { name: 'Deine Zahlen' })),
-    await y(page.getByTestId('week-strip')),
     await y(page.getByRole('group', { name: 'Personen' })),
     await y(page.getByTestId('group-overdue')),
   ];
   expect(order, 'Reihenfolge der Bereiche von oben nach unten').toEqual([...order].sort((a, b) => a - b));
-  // Die Zahlenleiste hat drei Zellen, die Wochenleiste sieben Tage und den Kalender-Knopf
-  await expect(page.getByRole('group', { name: 'Deine Zahlen' }).getByText(/Heute fällig|Überfällig|Erledigt/)).toHaveCount(3);
-  // zwei Knöpfe oben (Monatsansicht und der Monat), sieben Tage und der Kalender-Knopf
-  await expect(page.getByTestId('week-strip').getByRole('button')).toHaveCount(10);
+  // Die Zahlen stehen in vier Kacheln: Heute fällig, Überfällig, Diese Woche, Erledigt heute
+  await expect(page.getByRole('group', { name: 'Deine Zahlen' }).getByText(/Heute fällig|Überfällig|Diese Woche|Erledigt/)).toHaveCount(4);
   // rechts neben den Chips der Filter-Knopf
   await expect(page.getByRole('button', { name: 'Filter' })).toBeVisible();
   // Zeile: Erledigt-Kreis, Titel, Mehr-Knopf

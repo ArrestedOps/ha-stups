@@ -2,6 +2,15 @@
 
 > 🇩🇪 [Deutsche Fassung](CHANGELOG.de.md) · This English version is the authoritative one.
 
+## Unreleased
+
+- **New design.** Stups looks calmer and more like an iPhone app: flat orange instead of glowing gradients, grouped lists with hairlines, a floating tab bar (Tasks · Boards · **+** · Calendar · Watchers) and four number tiles on Tasks. The board shows as a coloured dot with its name in every row; the check circle stays neutral. Dark mode follows the same rules, and the contrast of every colour pair is tested.
+- **“Nudge” card on Tasks.** When someone nudged you, a card at the top lets you answer right there: **Done**, **On it** or **Later**. The card disappears after your reply and the row keeps a quiet trace with **Undo**.
+- **Calendar.** Day, **3 days** (the default on the phone, swipe to page), week and month. On the desktop the calendar has its own entry in the sidebar.
+- **Watchers as pages.** Every category opens as its own page, the same for all of them, with search, a filter (All · Active · Off) and “Show more” for large categories such as batteries.
+- **“Card” is now “Task”** everywhere (app, messages, guide).
+- **Search on the phone** under the title on Tasks.
+
 ## 1.41.0
 
 - **Setup on first start.** The first time an administrator opens Stups, a short setup (about three minutes) guides them: **Who lives here?** (the people from Home Assistant are preselected, phones are detected from Home Assistant's own assignment, anyone without a phone gets a link to the Companion App, and you mark the children), **Your first watcher** (the same “Found” list and assistant as under Watchers), **Test message** (a real example of the message a new card sends, with a preview like on the iPhone) and **Done**. Every step can be skipped; where you stopped is saved on the server, so you can carry on on another device. Members see a short version. Existing installations do not show it by themselves; it can be opened at any time under *Settings › Help and data › Go through the setup again* (not for children).

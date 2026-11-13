@@ -61,7 +61,7 @@ test('Kalender: Monatsansicht, Tipp auf einen Tag zeigt seine Aufgaben, „Tages
   // die Aufgaben des Tages stehen unter dem Monat
   await expect(page.getByTestId('calendar-daylist').getByText(s.t.conny)).toBeVisible();
   await page.getByRole('button', { name: 'Tagesansicht öffnen' }).click();
-  await expect(page.getByRole('radiogroup', { name: 'Ansicht' }).getByRole('radio', { name: 'Tag' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('radiogroup', { name: 'Ansicht' }).getByRole('radio', { name: 'Tag', exact: true })).toHaveAttribute('aria-checked', 'true');
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
 });
 

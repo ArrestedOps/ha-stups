@@ -105,7 +105,9 @@
   const fctx = $derived(filterContext());
   /** Ein Kind sieht nur die eigenen Aufgaben; Erwachsene wählen mit den Chips und dem Blatt „Filter" */
   /** Desktop: das Suchfeld oben filtert die geladenen Aufgaben (Titel, Beschreibung, Board, Kategorien) */
-  const query = $derived(ui.desktop ? ui.query : '');
+  /** Handy: das Suchfeld unter dem Titel (Desktop: das Feld oben in der Kopfzeile) */
+  let phoneQuery = $state('');
+  const query = $derived((ui.desktop ? ui.query : phoneQuery).trim());
   const visible = (list: typeof open) =>
     filterSchedule(ui.isChild ? list.filter((c) => !!meId && c.assigneeIds.includes(meId)) : list, sf, fctx).filter(
       (c) => !query || matchesQuery(query, c.title, c.description, c.boardName, ...c.categories.map((x) => x.name)),
@@ -196,7 +198,7 @@
     <div class="flex min-h-0 flex-1 flex-col px-3 pt-[calc(var(--safe-top)+8px)] lg:px-0 lg:pt-0" data-testid="calendar-page">
       <div class="flex flex-col gap-3">
         <div>
-          <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[16px] font-semibold text-accent-text" onclick={back}>
+          <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[16px] font-semibold text-accent-text lg:hidden" onclick={back}>
             <Icon name="chevron-left" size={22} stroke={2.2} />{t('Aufgaben')}
           </button>
           <div class="flex items-end justify-between gap-2">
@@ -215,6 +217,12 @@
     <div class="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab lg:-mx-1 lg:px-1 lg:pt-0" data-testid="tasks" role="presentation" onkeydown={arrows}>
       <div class="flex flex-col gap-3.5">
         <TopBar title={t('Aufgaben')} sub={t('Deine Aufgaben, Termine und To-dos an einem Ort.')} subTestid="tasks-sub" />
+        {#if !ui.desktop && loaded}
+          <label class="flex h-11 items-center gap-2 rounded-[12px] bg-surface2 px-3 text-fg2">
+            <Icon name="search" size={18} stroke={2} />
+            <input class="h-full min-w-0 flex-1 bg-transparent text-[16px] text-fg outline-none placeholder:text-fg2" type="search" enterkeyhint="search" placeholder="{t('Suchen')} …" aria-label={t('Aufgaben durchsuchen')} bind:value={phoneQuery} />
+          </label>
+        {/if}
 
         {#if failed && !loaded}
           <p class="py-10 text-center text-fg2">{t('Aufgaben konnten nicht geladen werden.')}</p>

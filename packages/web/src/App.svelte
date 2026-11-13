@@ -23,7 +23,7 @@
   import { agendaDelay } from './lib/agendaGate';
   import { columnForNew } from './lib/calendar';
   import { feedbackSheet } from './lib/feedbackSheet.svelte';
-  import { closeDetail, init, openSheet, setDesktop, ui } from './lib/store.svelte';
+  import { closeDetail, feat, goTasks, init, openSheet, selectTab, setDesktop, ui } from './lib/store.svelte';
   import { watchDesktop } from './lib/viewport';
   import Lazy from './components/Lazy.svelte';
 
@@ -84,13 +84,28 @@
   const typing = (el: EventTarget | null) => el instanceof HTMLElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable);
 
   /**
-   * Tasten des Desktops. Strg/Cmd + K: Suche. N: neue Aufgabe (nicht in Eingabefeldern, nicht mit offenem Fenster). Escape: Detailspalte
+   * Tasten des Desktops. Strg/Cmd + K: Suche. G dann T, B, C oder W: zu Aufgaben, Boards, Kalender, Wächter. N: neue Aufgabe (nicht in Eingabefeldern, nicht mit offenem Fenster). Escape: Detailspalte
    * schließen (nur wenn kein Fenster, Foto oder Rückfrage darüber liegt und Escape nicht schon etwas anderes getan hat). Im Capture,
    * damit ein Fenster, das Escape selbst schließt, die Detailspalte nicht gleich mit schließt.
    */
+  /** Zweistufige Tasten: „G“, dann T (Aufgaben), B (Boards), C (Kalender), W (Wächter); die zweite Taste gilt eine Sekunde lang */
+  let goAt = 0;
   function keydown(e: KeyboardEvent) {
     if (!ui.desktop || !ui.ready || ui.gate || !ui.allowed) return;
     const modal = !!ui.sheet || !!ui.viewer || !!ui.confirm;
+    if (!e.metaKey && !e.ctrlKey && !e.altKey && !typing(e.target) && !modal) {
+      const key = e.key.toLowerCase();
+      if (goAt && Date.now() - goAt < 1000 && 'tbcw'.includes(key) && key.length === 1) {
+        goAt = 0;
+        e.preventDefault();
+        if (key === 't') goTasks('list');
+        else if (key === 'c') goTasks('calendar');
+        else if (key === 'b') selectTab('boards');
+        else if (feat.watchers) selectTab('watchers');
+        return;
+      }
+      goAt = key === 'g' ? Date.now() : 0;
+    }
     if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       if (modal) return;

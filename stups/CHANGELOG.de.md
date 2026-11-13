@@ -2,6 +2,15 @@
 
 > 🇬🇧 [English version](CHANGELOG.md) · Die englische Fassung ist maßgeblich.
 
+## Unreleased
+
+- **Neues Design.** Stups wirkt ruhiger und mehr wie eine iPhone-App: flaches Orange statt leuchtender Verläufe, gruppierte Listen mit feinen Linien, eine schwebende Leiste (Aufgaben · Boards · **+** · Kalender · Wächter) und vier Zahlenkacheln bei Aufgaben. Das Board steht in jeder Zeile als farbiger Punkt mit Namen; der Erledigt-Kreis bleibt neutral. Der dunkle Modus folgt denselben Regeln, der Kontrast jedes Farbpaars wird getestet.
+- **Stups-Karte bei Aufgaben.** Hat dich jemand angestupst, antwortest du direkt oben: **Erledigt**, **Mach ich** oder **Später**. Nach der Antwort verschwindet die Karte, die Zeile behält eine leise Spur mit **Rückgängig**.
+- **Kalender.** Tag, **3 Tage** (Standard auf dem Handy, Wischen blättert), Woche und Monat. Am Desktop hat der Kalender einen eigenen Eintrag in der Seitenleiste.
+- **Wächter als Seiten.** Jede Kategorie öffnet als eigene Seite, bei allen gleich, mit Suche, Filter (Alle · Aktiv · Aus) und „Mehr anzeigen“ bei großen Kategorien wie Batterien.
+- **„Karte“ heißt jetzt „Aufgabe“** überall (App, Nachrichten, Anleitung).
+- **Suche am Handy** unter dem Titel bei Aufgaben.
+
 ## 1.41.0
 
 - **Einrichtung beim ersten Start.** Wer Stups zum ersten Mal öffnet, wird als Administrator in etwa drei Minuten durch die Einrichtung geführt: **Wer wohnt hier?** (die Personen aus Home Assistant sind vorgewählt, Handys erkennt Stups nach der Zuordnung von Home Assistant selbst, wer kein Handy hat, bekommt einen Link zur Companion App, du legst fest, wer ein Kind ist), **Dein erster Wächter** (dieselbe „Gefunden“-Liste und derselbe Assistent wie unter Wächter), **Testnachricht** (ein echtes Beispiel der Nachricht zu einer neuen Aufgabe, mit Vorschau wie auf dem iPhone) und **Fertig**. Jeder Schritt lässt sich überspringen; der Stand liegt auf dem Server, ein Abbruch lässt sich auf einem anderen Gerät weiterführen. Mitglieder sehen eine Kurzfassung. Bestehende Installationen zeigen sie nicht von selbst; sie lässt sich jederzeit unter *Einstellungen › Hilfe und Daten › Einrichtung nochmal durchgehen* öffnen (nicht für Kinder).

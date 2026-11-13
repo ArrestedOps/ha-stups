@@ -8,7 +8,7 @@ const nav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
 test.describe('Start', () => {
   test('Drei Reiter, die App startet immer auf „Aufgaben": gemerkte alte Namen, Wächter und Boards ändern daran nichts', async ({ page }) => {
     await page.goto('/');
-    await expect(nav(page).getByRole('button')).toHaveText(['Aufgaben', 'Boards', 'Wächter']);
+    await expect(nav(page).getByRole('button')).toHaveText(['Aufgaben', 'Boards', '', 'Kalender', 'Wächter']);
     await expect(nav(page).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('heading', { name: 'Aufgaben' })).toBeVisible();
     // alte gemerkte Namen: Heute, Agenda und Kalender sind jetzt Aufgaben; Zuhause und „watchers" führen auch zu Aufgaben (Start)
@@ -32,13 +32,13 @@ test.describe('Start', () => {
     await expect(page.getByRole('heading', { name: 'Aufgaben' })).toBeVisible();
   });
 
-  test('Die frühere Kalenderansicht bleibt lesbar: gemerkte Monatsansicht öffnet der Kalender-Knopf, Aufgaben starten mit der Liste', async ({ page }) => {
+  test('Die frühere Kalenderansicht bleibt lesbar: gemerkte Monatsansicht öffnet der Reiter „Kalender“, Aufgaben starten mit der Liste', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => localStorage.setItem('stups.calmode', 'month'));
     await page.reload();
     await expect(page.getByTestId('tasks')).toBeVisible(); // Start ist die Liste
-    await page.getByRole('button', { name: 'Kalender öffnen' }).click();
-    await expect(page.getByRole('radio', { name: 'Monat' })).toHaveAttribute('aria-checked', 'true');
+    await nav(page).getByRole('button', { name: 'Kalender' }).click();
+    await expect(page.getByRole('radio', { name: 'Monat', exact: true })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByTestId('calendar-month')).toBeVisible();
   });
 });
@@ -89,8 +89,8 @@ test('Die Einstellungen haben keine Zeile „Wächter", die Verwaltung öffnet i
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+  await expect(page.getByRole('dialog', { name: 'Einstellungen' })).toBeVisible();
   await expect(page.getByRole('dialog').getByRole('button', { name: /^Wächter/ })).toHaveCount(0);
-  await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();

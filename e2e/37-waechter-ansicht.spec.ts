@@ -52,7 +52,7 @@ async function openList(page: Page, s: S) {
   await expect(page.getByTestId('watcher-list')).toBeVisible();
 }
 
-test('Alle Wächter sind immer sichtbar, nach Kategorie gruppiert; Gruppen klappen zu und auf und der Zustand bleibt', async ({ page, request }) => {
+test('Kategorien sind eigene Seiten (einheitlich), gleiche Namen ohne Beachtung der Groß-/Kleinschreibung sind eine Kategorie', async ({ page, request }) => {
   await clear(request);
   const s = await setup(request);
   const long = `Sehr langer Wächtername ${'x'.repeat(40)} ${s.tag}`;
@@ -65,33 +65,28 @@ test('Alle Wächter sind immer sichtbar, nach Kategorie gruppiert; Gruppen klapp
   }
   await openList(page, s);
 
-  // kein Zuklapper „N Wächter ohne offene Aktion": jeder Wächter steht als Zeile da
-  await expect(page.getByText(/ohne offene Aktion/)).toHaveCount(0);
-  await expect(page.getByTestId('watcher-row')).toHaveCount(3);
-  // gleiche Namen ohne Beachtung der Groß-/Kleinschreibung sind eine Gruppe; „Ohne Kategorie" steht ganz unten
+  // keine Zeilen in der Übersicht: jede Kategorie ist eine Zeile, die eine eigene Seite öffnet; „Ohne Kategorie" steht ganz unten
+  await expect(page.getByTestId('watcher-row')).toHaveCount(0);
   const groups = page.getByTestId('watcher-category');
   await expect(groups).toHaveCount(2);
   await expect(groups.nth(0)).toContainText('Garten');
-  await expect(groups.nth(0).getByTestId('watcher-row')).toHaveCount(2);
+  await expect(groups.nth(0)).toContainText('2 Wächter');
   await expect(groups.nth(1)).toContainText('Ohne Kategorie');
 
-  // Schalter: mindestens 44 px hoch, nichts läuft über, auch bei dem langen Namen
+  await groups.nth(0).getByRole('button').click();
+  const sub = page.getByTestId('watcher-page');
+  await expect(sub.getByRole('heading', { name: 'Garten' })).toBeVisible();
+  await expect(sub.getByTestId('watcher-row')).toHaveCount(2);
+  // Schalter: mindestens 44 px hoch, nichts läuft über
   for (const sw of await page.getByRole('switch').all()) expect((await sw.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  // zurück zur Übersicht
+  await sub.getByRole('button', { name: 'Wächter', exact: true }).click();
+  await expect(page.getByTestId('watcher-page')).toHaveCount(0);
+  await groups.nth(1).getByRole('button').click();
+  await expect(page.getByTestId('watcher-page').getByTestId('watcher-row')).toHaveCount(1);
   const rows = await page.getByTestId('watcher-row').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right));
   for (const r of rows) expect(r).toBeLessThanOrEqual(page.viewportSize()!.width);
-
-  // zuklappen: Kopf mit aria-expanded, die Zeilen verschwinden, nach dem Neuladen bleibt es zugeklappt
-  const head = groups.nth(0).getByRole('button', { expanded: true });
-  await head.click();
-  await expect(groups.nth(0).getByRole('button', { expanded: false })).toBeVisible();
-  await expect(groups.nth(0).getByTestId('watcher-row')).toHaveCount(0);
-  await expect(groups.nth(1).getByTestId('watcher-row')).toHaveCount(1);
-  await page.reload();
-  await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  await expect(page.getByTestId('watcher-category').nth(0).getByTestId('watcher-row')).toHaveCount(0);
-  await page.getByTestId('watcher-category').nth(0).getByRole('button', { expanded: false }).click();
-  await expect(page.getByTestId('watcher-category').nth(0).getByTestId('watcher-row')).toHaveCount(2);
   await clear(request);
 });
 

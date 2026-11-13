@@ -7,7 +7,7 @@
   import { taskStats } from '../lib/tasks';
   import { deviceTz } from '../lib/datetime';
   import { visibleTabs, type Tab } from '../lib/tabs';
-  import { feat, openSettings, openSheet, selectBoard, selectTab, ui } from '../lib/store.svelte';
+  import { feat, goTasks, openSettings, openSheet, selectBoard, selectTab, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
 
@@ -22,7 +22,20 @@
     boards: { label: 'Boards', icon: 'layers' },
     watchers: { label: t('Wächter'), icon: 'shield' },
   });
-  const tabs = $derived(visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }).map((id) => ({ id, ...all[id] })));
+  type Item = { id: Tab | 'calendar'; label: string; icon: string };
+  // Aufgaben | Boards | Kalender | Wächter, wie die Leiste am Handy; der Kalender ist eine Ansicht unter Aufgaben
+  const tabs = $derived.by<Item[]>(() => {
+    const list: Item[] = visibleTabs({ watchers: feat.watchers, isChild: ui.isChild }).map((id) => ({ id, ...all[id] }));
+    const at = list.findIndex((x) => x.id === 'boards');
+    list.splice(at < 0 ? list.length : at + 1, 0, { id: 'calendar', label: t('Kalender'), icon: 'calendar' });
+    return list;
+  });
+  const isCurrent = (id: Item['id']) => (id === 'calendar' ? ui.tab === 'tasks' && ui.tasksCalendar : id === 'tasks' ? ui.tab === 'tasks' && !ui.tasksCalendar : ui.tab === id);
+  function go(id: Item['id']) {
+    if (id === 'calendar') goTasks('calendar');
+    else if (id === 'tasks' && ui.tasksCalendar) goTasks('list');
+    else selectTab(id);
+  }
 
   // Zähler am Reiter Aufgaben: was für mich heute dran oder überfällig ist (dieselben Zahlen wie die Zahlenleiste)
   const due = $derived.by(() => {
@@ -49,7 +62,7 @@
 
   <nav class="mt-6 flex flex-col gap-1" aria-label={t('Ansicht')}>
     {#each tabs as tb (tb.id)}
-      <button class="side-item h-[46px] gap-3 px-3.5 text-[15px] font-semibold" aria-current={ui.tab === tb.id ? 'page' : undefined} onclick={() => selectTab(tb.id)}>
+      <button class="side-item h-[46px] gap-3 px-3.5 text-[15px] font-semibold" aria-current={isCurrent(tb.id) ? 'page' : undefined} onclick={() => go(tb.id)}>
         <Icon name={tb.icon} size={22} stroke={1.8} />
         <span class="min-w-0 flex-1 truncate text-left">{tb.label}</span>
         {#if tb.id === 'tasks' && due > 0}

@@ -218,4 +218,5 @@ test('Wächter am Desktop: Zeilen markieren, Sammelaktionen Pausieren und Aktivi
     .poll(async () => ((await (await request.get('/api/watchers')).json()) as { items: { id: string; active: boolean }[] }).items.filter((w) => ids.includes(w.id)).every((w) => !w.active))
     .toBe(true);
   await expect(bar).toHaveCount(0);
+  await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '12' } }); // andere Tests erwarten den Stand von vorher
 });

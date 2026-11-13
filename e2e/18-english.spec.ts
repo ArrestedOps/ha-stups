@@ -44,7 +44,7 @@ test('Englisches Gerät: Board, Schnell-Eingabe, Erledigen, alles auf Englisch',
   await noSideScroll(page);
 
   // Neue Aufgabe mit der Schnell-Eingabe auf Englisch
-  await page.getByRole('button', { name: 'New card', exact: true }).click();
+  await page.getByRole('button', { name: 'New task', exact: true }).click();
   // „heute“, damit die Aufgabe in der offenen Spalte landet (Termine nach heute kommen nach „Geplant“)
   await page.getByLabel('What needs doing?').fill('Take out trash today 11:59pm !!');
   const chips = page.getByTestId('quick-chip');
@@ -81,7 +81,8 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   await noGerman(page, 'Aufgaben', 'header, nav');
   await noSideScroll(page);
   // die Liste (die frühere Agenda): Gruppen und Chips auf Englisch
-  await page.getByRole('group', { name: 'People' }).getByRole('button', { name: 'All', exact: true }).click();
+  await page.getByTestId('scope-button').click();
+  await page.getByRole('menuitemradio', { name: 'All tasks' }).click();
   await expect(page.getByTestId('tasks').getByText('Dentist').first()).toBeVisible();
   await expect(page.getByRole('group', { name: 'Your numbers' })).toBeVisible();
   await noGerman(page, 'Liste', 'header, nav');
@@ -103,6 +104,7 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   await noSideScroll(page);
 
   await nav.getByRole('button', { name: 'Boards' }).click();
+  await page.getByTestId('board-list').getByRole('button').first().click();
   await page.getByRole('group', { name: 'People' }).getByRole('button', { name: 'All', exact: true }).click(); // Boards starts at „Mine“
   await page.getByRole('button', { name: /^Dentist/ }).click();
   const dialog = page.getByRole('dialog');

@@ -125,6 +125,7 @@ test('Archivieren: der Dialog zeigt die Wächter als pausiert, die Liste sagt �
 
   // Wiederherstellen aus „Archivierte Boards“
   await nav(page).getByRole('button', { name: 'Boards' }).click();
+  await page.getByTestId('board-list').getByRole('button').first().click(); // Handy: erst ein Board öffnen
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('dialog', { name: 'Boards' }).getByRole('button', { name: 'Archivierte Boards' }).click();
   await page.getByTestId(`archived-${arch.id}`).getByRole('button', { name: 'Wiederherstellen' }).click();

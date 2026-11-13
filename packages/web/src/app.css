@@ -284,8 +284,8 @@
  * Auf ein <ul> setzen; die Zeilen (ListRow, TaskRow, CardItem) verlieren dort Rand, Rundung und eigenen Grund.
  */
 .list-group { display: flex; flex-direction: column; gap: 0 !important; margin-top: 8px; border-radius: var(--radius-row); background: var(--surface); overflow: hidden; }
-.list-group > li { position: relative; }
-.list-group > li + li::before { content: ''; position: absolute; top: 0; right: 0; left: 54px; height: 0.5px; background: var(--sep); z-index: 1; }
+.list-group > li, .list-group > div { position: relative; }
+.list-group > li + li::before, .list-group > div + div::before { content: ''; position: absolute; top: 0; right: 0; left: 54px; height: 0.5px; background: var(--sep); z-index: 1; }
 .list-group [data-variant], .list-group .rounded-row { border-color: transparent !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
 .list-group .row-current, .list-group .row-new { background: color-mix(in srgb, var(--accent) 12%, transparent) !important; box-shadow: inset 3px 0 0 var(--brand-dot) !important; }
 

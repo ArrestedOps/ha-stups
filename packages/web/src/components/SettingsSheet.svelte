@@ -25,7 +25,6 @@
   import PeopleSheet from './PeopleSheet.svelte';
   import Sheet from './Sheet.svelte';
   import ListRow from './ui/ListRow.svelte';
-  import SectionHeader from './ui/SectionHeader.svelte';
   import Tile, { type TileColor } from './ui/Tile.svelte';
   import Toggle from './ui/Toggle.svelte';
   import { restart as restartOnboarding } from '../lib/onboarding.svelte';
@@ -120,15 +119,18 @@
       <SettingsHead />
       {#if !ui.isChild}
         <!-- Für jede Person ganz oben: Feedback senden (die Liste der Rückmeldungen steht für Administratoren unter „Hilfe und Daten") -->
+        <div class="list-group !mt-0">
         <ListRow title={t('Feedback & Ideen')} label={t('Feedback & Ideen')} onclick={() => openFeedback()}>
           {#snippet tile()}<Tile color="orange"><Icon name="message" size={22} stroke={1.8} /></Tile>{/snippet}
           {#snippet meta()}{t('Fehler melden, Wünsche, Lob und Kritik')}{/snippet}
           {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
         </ListRow>
+        </div>
       {/if}
       {#each groups as g (g.id)}
-        <div class="flex flex-col gap-2">
-          <SectionHeader title={g.title} />
+        <div>
+          <p class="px-4 pb-1.5 text-[13px] font-medium tracking-wide text-text-soft uppercase">{g.title}</p>
+          <div class="list-group !mt-0">
           {#if g.actions?.includes('header')}
             <ListRow title={t('HA-Kopfzeile ausblenden')}>
               {#snippet tile()}<Tile color="gray"><Icon name="columns" size={22} stroke={1.8} /></Tile>{/snippet}
@@ -165,6 +167,7 @@
               {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
             </ListRow>
           {/if}
+          </div>
         </div>
       {/each}
 

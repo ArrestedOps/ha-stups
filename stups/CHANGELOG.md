@@ -12,6 +12,8 @@
 - **Desktop.** A sidebar with the views (All open, Nudged, Today, Overdue, This week, Done), Boards, More and People; tasks as a table with a nudge bar and a quick-add line; calendar with a mini month and board selection; watchers with a list on the left (All, With a problem, Waiting, Running, Soon, Paused, categories); a command palette (**Ctrl/Cmd+K**), **/** focuses the filter field and **G** then **T / B / C / W** switches page.
 - **“Card” is now “Task”** everywhere (app, messages, guide).
 - **Search on the phone** under the title on Tasks.
+- **Task details.** The properties are now a grouped list (Due, Assignee, Repeat, Reminder, Priority, …) with the value on the right; tapping a row opens its editor below it. On the phone a big **Done** button and **Move to tomorrow** sit under the list, and a nudge sent to you shows as the orange card with the three replies. On the desktop the details fill the full height on the right, next to the list.
+- **New watcher assistant.** Templates as a list with icon and one-line explanation, a single progress bar (“Step 2 of 4”) and a plain “Back” in the header.
 
 ## 1.41.1
 

@@ -12,6 +12,8 @@
 - **Desktop.** Seitenleiste mit den Ansichten (Alle offen, Gestupst, Heute, Überfällig, Diese Woche, Erledigt), Boards, Mehr und Personen; Aufgaben als Tabelle mit Stups-Leiste und Schnellzeile; Kalender mit Mini-Monat und Board-Auswahl; Wächter mit Auswahl links (Alle, Mit Problem, Wartet, Läuft gerade, Kommt bald, Pausiert, Kategorien); Befehlspalette (**Strg/Cmd+K**), **/** fokussiert das Filterfeld, **G** dann **T / B / C / W** wechselt die Seite.
 - **„Karte“ heißt jetzt „Aufgabe“** überall (App, Nachrichten, Anleitung).
 - **Suche am Handy** unter dem Titel bei Aufgaben.
+- **Aufgaben-Details.** Die Eigenschaften stehen jetzt als gruppierte Liste (Fällig, Zuständig, Wiederholung, Erinnerung, Priorität, …) mit dem Wert rechts; ein Tipp auf die Zeile öffnet darunter das Feld. Am Handy folgen unter der Liste ein großer Knopf **Erledigt** und **Auf morgen verschieben**, ein Stups an dich erscheint als orange Karte mit den drei Antworten. Am Desktop füllen die Details die ganze Höhe rechts neben der Liste.
+- **Neuer Wächter-Assistent.** Vorlagen als Liste mit Symbol und einer Zeile Erklärung, eine einzige Fortschrittsleiste („Schritt 2 von 4“) und ein schlichtes „Zurück“ in der Kopfzeile.
 
 ## 1.41.1
 

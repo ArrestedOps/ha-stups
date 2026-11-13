@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.2
+
+**Aufgaben-Details im neuen Stil.** Die Eigenschaften stehen als gruppierte Liste (Fällig, Zuständig, Wiederholung, …); am Handy gibt es unter der Liste einen großen Knopf „Erledigt“ und „Auf morgen verschieben“, ein Stups an dich erscheint als orange Karte. Am Desktop füllen die Details die ganze Höhe rechts. **Wächter-Assistent:** Vorlagen als Liste, eine Fortschrittsleiste, „Zurück“ ohne „Schließen“.
+
+**Bitte prüfen (Testliste):** (1) Aufgabe öffnen: jede Zeile öffnet ihr Feld, Änderungen speichern sofort. (2) Stups an dich: Karte in den Details, die drei Antworten gehen. (3) Neuer Wächter: Vorlage wählen, alle vier Schritte, Zurück behält die Eingaben. (4) Desktop: Detailspalte neben der Liste, Kopfzeile bleibt lesbar.
+
 ## 1.42.0-beta.1
 
 **Neues Design (iOS-Stil), am Handy und am Desktop.** Aufgaben, Boards, Kalender und Wächter sind neu gestaltet: Tab-Leiste mit Aufgaben | Boards | + | Kalender | Wächter, Kopfzeile mit Stups-Logo, Home-Assistant-Symbol, Glocke und Zahnrad, gruppierte Listen, flaches Orange. Am Desktop gibt es Seitenleiste, Aufgaben-Tabelle mit Gruppierung, Schnellerfassung, Kontextmenü, Befehlspalette (Strg/Cmd+K) und Tastenkürzel (G dann T/B/C/W, „/“ für die Suche).

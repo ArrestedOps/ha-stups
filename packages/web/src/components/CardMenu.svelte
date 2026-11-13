@@ -54,7 +54,7 @@
         {/each}
       </div>
 
-      <div class="flex flex-col gap-2">
+      <div class="list-group !mt-0">
         <ListRow title={t('Öffnen')} onclick={() => openSheet({ type: 'card', id: card.id })}>
           {#snippet tile()}<Tile color="gray" size="sm"><Icon name="external" size={18} stroke={2} /></Tile>{/snippet}
         </ListRow>

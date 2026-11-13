@@ -22,7 +22,8 @@
     {/if}
   {/snippet}
 
-  <div class="flex flex-col gap-2 pt-1">
+  <div class="flex flex-col gap-3 pt-1">
+    <div class="list-group !mt-0">
     {#each ui.boards as b (b.id)}
       {@const current = b.id === ui.boardId}
       {@const info = boardMeta(b, ui.people)}
@@ -32,8 +33,9 @@
         {#snippet right()}{#if current}<span class="flex text-accent-text" aria-label={t('Geöffnet')}><Icon name="check" size={20} stroke={2.6} /></span>{/if}{/snippet}
       </ListRow>
     {/each}
+    </div>
 
-    <div class="mt-3 flex flex-col gap-2">
+    <div class="list-group !mt-0">
       <ListRow title={t('Neues Board erstellen')} onclick={() => openSheet({ type: 'newBoard' })}>
         {#snippet tile()}<Tile color="green"><Icon name="plus" size={22} stroke={2} /></Tile>{/snippet}
         {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}

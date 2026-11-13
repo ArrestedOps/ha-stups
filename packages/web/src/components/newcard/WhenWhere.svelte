@@ -62,7 +62,7 @@
   <span class="flex shrink-0 text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
 {/snippet}
 
-<div class="flex flex-col gap-2">
+<div class="list-group !mt-0">
   <div class="relative">
     <ListRow title={board?.name ?? t('Board')} variant="setting">
       {#snippet tile()}<Tile color="purple"><Icon name="layers" size={24} /></Tile>{/snippet}

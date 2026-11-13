@@ -108,7 +108,7 @@
         </label>
       </section>
 
-      <section aria-label={t('Außerdem')} class="flex flex-col gap-2">
+      <section aria-label={t('Außerdem')} class="list-group !mt-0">
         <SectionHeader title={t('Außerdem')} />
         <ListRow title={t('Nur mit offenem Stups')}>
           {#snippet tile()}<Tile color="orange"><Icon name="hand" size={22} /></Tile>{/snippet}
@@ -166,7 +166,7 @@
         <Segmented small items={PRIORITY} value={sf.priority ?? 'all'} label={t('Priorität')} onchange={(id) => setScheduleFilter({ priority: id === 'all' ? null : (id as 'high' | 'medium' | 'low') })} />
       </section>
 
-      <section aria-label={t('Außerdem')} class="flex flex-col gap-2">
+      <section aria-label={t('Außerdem')} class="list-group !mt-0">
         <SectionHeader title={t('Außerdem')} />
         {#if !ui.isChild}
           <ListRow title={t('Nur mit offenem Stups')}>

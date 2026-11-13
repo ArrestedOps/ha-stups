@@ -54,7 +54,7 @@
       </button>
     {/if}
   </div>
-  <h1 class="mt-2.5 px-0.5 text-[30px] leading-[1.1] font-extrabold tracking-tight">{title}</h1>
-  <p class="mt-1 px-0.5 text-[14px] text-fg2" data-testid={subTestid}>{sub}</p>
+  <h1 class="mt-1 px-0.5 text-[34px] leading-[1.1] font-bold tracking-[0.01em]">{title}</h1>
+  <p class="sr-only" data-testid={subTestid}>{sub}</p>
 </div>
 {/if}

@@ -36,12 +36,12 @@ describe('Tile', () => {
 });
 
 describe('Chip', () => {
-  it('normal, aktiv (Verlauf) und Umriss; Größe 40 oder 34', () => {
+  it('normal, aktiv (getönt mit Ring) und Umriss; Größe 40 oder 34', () => {
     expect(html(Chip, { children: snip('Alle') })).toContain('h-10');
     expect(html(Chip, { small: true, children: snip('Alle') })).toContain('h-[34px]');
-    expect(html(Chip, { active: true, children: snip('Alle') })).toContain('bg-accent-grad');
+    expect(html(Chip, { active: true, children: snip('Alle') })).toContain('chip-on');
     expect(html(Chip, { outline: true, children: snip('Alle') })).toContain('border-accent');
-    expect(html(Chip, { children: snip('Alle') })).not.toContain('bg-accent-grad');
+    expect(html(Chip, { children: snip('Alle') })).not.toContain('chip-on');
   });
   it('Beschriftung für Screenreader und Schaltzustand', () => {
     const out = html(Chip, { label: 'Filter', pressed: true, children: snip('<svg></svg>') });
@@ -57,22 +57,22 @@ describe('Toggle', () => {
     expect(on).toContain('aria-checked="true"');
     expect(on).toContain('aria-label="Push"');
     expect(on).toContain('h-11');
-    expect(on).toContain('bg-accent-grad');
+    expect(on).toContain('bg-(--switch)');
     const off = html(Toggle, { checked: false, label: 'Push' });
     expect(off).toContain('aria-checked="false"');
-    expect(off).not.toContain('bg-accent-grad');
+    expect(off).not.toContain('bg-(--switch)');
   });
 });
 
 describe('Segmented', () => {
   const items = [{ id: 'a', label: 'Offen' }, { id: 'b', label: 'Erledigt' }];
-  it('Auswahl: radiogroup mit radio und aria-checked, aktives Segment mit Verlauf', () => {
+  it('Auswahl: radiogroup mit radio und aria-checked, aktives Segment mit abgesetztem Griff', () => {
     const out = html(Segmented, { items, value: 'b', label: 'Ansicht', onchange: () => {} });
     expect(out).toContain('role="radiogroup"');
     expect(count(out, 'role="radio"')).toBe(2);
     expect(out).toMatch(/aria-checked="true"[^>]*>\s*Erledigt|Erledigt/);
     expect(count(out, 'aria-checked="true"')).toBe(1);
-    expect(count(out, 'bg-accent-grad')).toBe(1);
+    expect(count(out, 'seg-on')).toBe(1);
   });
   it('Reiter (Spalten): tablist mit tab und aria-selected', () => {
     const out = html(Segmented, { items, value: 'a', label: 'Spalten', kind: 'tabs', onchange: () => {} });
@@ -80,9 +80,9 @@ describe('Segmented', () => {
     expect(count(out, 'role="tab"')).toBe(2);
     expect(count(out, 'aria-selected="true"')).toBe(1);
   });
-  it('Höhe 52, klein 44; viele Einträge wischen seitlich', () => {
-    expect(html(Segmented, { items, value: 'a', label: 'x', onchange: () => {} })).toContain('h-[52px]');
-    expect(html(Segmented, { items, value: 'a', label: 'x', small: true, onchange: () => {} })).toContain('h-11');
+  it('Höhe 44, klein 36; viele Einträge wischen seitlich', () => {
+    expect(html(Segmented, { items, value: 'a', label: 'x', onchange: () => {} })).toContain('h-11');
+    expect(html(Segmented, { items, value: 'a', label: 'x', small: true, onchange: () => {} })).toContain('h-9');
     expect(html(Segmented, { items, value: 'a', label: 'x', scroll: true, onchange: () => {} })).toContain('overflow-x-auto');
   });
 });
@@ -189,18 +189,18 @@ describe('StatsBar', () => {
     expect(out).toMatch(/>4</);
     expect(out).toMatch(/>7</);
   });
-  it('Zahlen auf Wunsch farbig (Akzent, Gefahr, Grün)', () => {
+  it('Kacheln auf Wunsch farbig (Akzent, Gefahr, Grün)', () => {
     const out = html(StatsBar, { label: 'Stand', items: [{ id: 'a', label: 'A', value: 1, tone: 'accent' }, { id: 'b', label: 'B', value: 2, tone: 'danger' }, { id: 'c', label: 'C', value: 3, tone: 'ok' }] });
-    expect(out).toContain('text-sig-orange');
-    expect(out).toContain('text-sig-red');
-    expect(out).toContain('text-sig-green');
+    expect(out).toContain('tile-orange');
+    expect(out).toContain('tile-red');
+    expect(out).toContain('tile-green');
   });
 });
 
 describe('CtaButton und SheetFooter', () => {
-  it('großer Knopf 56 px mit Verlauf; ghost ohne', () => {
+  it('großer Knopf 52 px in Akzentfarbe; ghost ohne', () => {
     const cta = html(CtaButton, { children: snip('Speichern') });
-    expect(cta).toContain('h-14');
+    expect(cta).toContain('h-[52px]');
     expect(cta).toContain('bg-accent-grad');
     expect(html(CtaButton, { ghost: true, children: snip('x') })).not.toContain('bg-accent-grad');
     expect(html(CtaButton, { type: 'submit', disabled: true, children: snip('x') })).toMatch(/type="submit"[^>]*disabled|disabled[^>]*type="submit"/);

@@ -62,6 +62,15 @@ export function revealNewCard(card: { assigneeIds: string[] }): void {
   if (hiddenInList) setScheduleFilter({ personIds: [], unassigned: false });
 }
 
+/** Reiter Aufgaben als Liste oder als Kalender öffnen (die Leiste unten hat beides) */
+export function goTasks(to: 'list' | 'calendar'): void {
+  ui.tab = 'tasks';
+  ui.sheet = null;
+  ui.detailId = null;
+  ui.query = '';
+  ui.tasksGoto = to;
+}
+
 export function selectTab(tab: Tab): void {
   ui.tab = tab;
   ui.sheet = null;

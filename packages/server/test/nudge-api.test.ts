@@ -46,6 +46,29 @@ async function call(who: object, method: 'GET' | 'POST' | 'PATCH', url: string, 
   return { status: res.statusCode, body: res.body ? (res.json() as any) : null };
 }
 
+describe('POST /api/nudges/:id/reply', () => {
+  async function stupsToBen() {
+    const r = await call(anna, 'POST', `/api/cards/${cardId}/nudge`, { to: [benId], template: 'think' });
+    return r.body.sent[0].nudgeId as string;
+  }
+  const ben = as('ha-ben', 'Ben');
+
+  it('„Mach ich“ und „Später“ antwortet der Empfänger, jeder Stups nur einmal', async () => {
+    const id = await stupsToBen();
+    expect((await call(ben, 'POST', `/api/nudges/${id}/reply`, { action: 'later' })).body).toEqual({ outcome: 'postponed' });
+    expect((await call(ben, 'POST', `/api/nudges/${id}/reply`, { action: 'ack' })).body).toEqual({ outcome: 'acked' });
+    expect((await call(ben, 'POST', `/api/nudges/${id}/reply`, { action: 'ack' })).body).toEqual({ outcome: 'stale' });
+  });
+
+  it('nur der Empfänger darf antworten, und die Aktion muss stimmen', async () => {
+    const id = await stupsToBen();
+    expect((await call(anna, 'POST', `/api/nudges/${id}/reply`, { action: 'ack' })).status).toBe(403);
+    expect((await call(ben, 'POST', `/api/nudges/${id}/reply`, { action: 'nope' })).status).toBe(400);
+    expect((await call(ben, 'POST', `/api/nudges/unbekannt/reply`, { action: 'ack' })).status).toBe(404);
+    expect((await call(chef, 'POST', `/api/nudges/${id}/reply`, { action: 'ack' })).status).toBe(403);
+  });
+});
+
 describe('POST /api/cards/:id/nudge', () => {
   it('stupst die gewählte Person und stößt die Zustellung an', async () => {
     const r = await call(anna, 'POST', `/api/cards/${cardId}/nudge`, { to: [benId], template: 'think' });

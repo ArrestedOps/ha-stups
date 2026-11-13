@@ -101,6 +101,8 @@ export const ui = $state({
   tab: 'tasks' as Tab,
   /** Aufgaben zeigt gerade den Kalender (Tag, Woche, Monat) statt der Liste: der „+"-Knopf ruht dann */
   tasksCalendar: false,
+  /** Wunsch von außen (Leiste unten): Aufgaben als Liste oder Kalender zeigen; TasksView nimmt ihn an und setzt ihn zurück */
+  tasksGoto: null as 'list' | 'calendar' | null,
   /** Filter für Agenda und Kalender (Personen, Boards, Erledigtes) */
   sf: { ...DEFAULT_FILTER } as ScheduleFilter,
   /** zählt bei jedem Nachladen hoch, damit offene Detailansichten und die Agenda sich aktualisieren */

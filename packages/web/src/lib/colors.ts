@@ -23,6 +23,15 @@ export function nextColor(used: string[]): string {
 export const findCategory = <T extends { name: string }>(list: T[], name: string): T | undefined =>
   list.find((c) => c.name.trim().toLowerCase() === name.trim().toLowerCase());
 
+/** Farbe eines Boards für den Punkt neben dem Namen: die gewählte Farbe, sonst reihum nach der Stellung in der Liste */
+export function boardColorKey(boards: { id: string; color: string | null }[], boardId: string): string {
+  const i = boards.findIndex((b) => b.id === boardId);
+  const own = i >= 0 ? boards[i]!.color : null;
+  if (own && CATEGORY_COLORS.includes(own as never)) return own;
+  const ring = ['orange', 'green', 'blue', 'purple', 'red', 'teal', 'pink', 'indigo'] as const;
+  return ring[(i < 0 ? 0 : i) % ring.length]!;
+}
+
 /** Gültiger Farbname, sonst grau (für die Punkte an den Karten: var(--c-<name>-fg)) */
 export const catKey = (color: string): string => (CATEGORY_COLORS.includes(color as never) ? color : 'gray');
 

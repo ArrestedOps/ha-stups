@@ -768,7 +768,10 @@ export function createNotifier(deps: NotifierDeps) {
     return 'completed';
   }
 
-  return { tick, handleAction, clearFor, nudgesClosed, notifyAssigned, notifySuggest, suggestClosed, confirmationRequested, confirmationAnswered, idle };
+  /** Antwort auf einen Stups aus der App (Karte oben in Aufgaben): dieselben Regeln und Rückmeldungen wie der Tipp in der Push-Nachricht */
+  const replyToNudge = (nudgeId: string, personId: string, kind: 'DONE' | 'ACK' | 'LATER'): Promise<ActionResult> => handleNudgeAction(kind, nudgeId, { id: '', title: '', action: '', personId } as PushAction);
+
+  return { tick, handleAction, replyToNudge, clearFor, nudgesClosed, notifyAssigned, notifySuggest, suggestClosed, confirmationRequested, confirmationAnswered, idle };
 }
 
 export type Notifier = ReturnType<typeof createNotifier>;

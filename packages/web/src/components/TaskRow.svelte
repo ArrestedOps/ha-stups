@@ -21,8 +21,11 @@
   const categories = $derived(card.categories ?? []);
 </script>
 
+{#snippet symbol()}<CardTile {card} />{/snippet}
+
 <ListRow
   variant="task"
+  tile={card.icon ? symbol : undefined}
   title={card.title}
   current={ui.desktop && ui.detailId === card.id}
   strike={done}
@@ -35,11 +38,8 @@
   }}
   onclick={() => void openCardAnywhere(card)}
 >
-  {#snippet tile()}
-    <CardTile {card} />
-  {/snippet}
   {#snippet meta()}
-    <CardMeta {card} {done} {overdue} {nowMs} {categories} quietDue />
+    <CardMeta {card} {done} {overdue} {nowMs} {categories} quietDue showBoard={ui.boards.length > 1} />
   {/snippet}
   {#snippet right()}
     <AvatarStack people={assignees} />

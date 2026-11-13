@@ -46,6 +46,8 @@ export interface ApiDeps {
   notifier?: {
     clearFor(cardId: string): Promise<void>;
     tick?(): Promise<number>;
+    /** Antwort des Empfängers auf einen Stups in der App (erledigt, mach ich, später) */
+    replyToNudge?(nudgeId: string, personId: string, kind: 'DONE' | 'ACK' | 'LATER'): Promise<string>;
     /** Ein Kind hat abgehakt: die Bestätiger fragen */
     confirmationRequested?(cardId: string): Promise<void>;
     /** Ein Bestätiger hat geantwortet: dem Kind Bescheid geben, die Fragen bei den anderen Bestätigern wegräumen */

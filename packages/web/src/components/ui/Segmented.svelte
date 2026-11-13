@@ -38,7 +38,7 @@
 </script>
 
 <div
-  class="no-scrollbar gap-0.5 rounded-row border border-line bg-surface p-1 {small ? 'h-11' : 'h-[52px]'} {scroll ? 'flex overflow-x-auto' : 'grid grid-flow-col auto-cols-fr'}"
+  class="no-scrollbar gap-0.5 rounded-[10px] bg-surface2 p-0.5 {small ? 'h-9' : 'h-11'} {scroll ? 'flex overflow-x-auto' : 'grid grid-flow-col auto-cols-fr'}"
   role={kind === 'tabs' ? 'tablist' : 'radiogroup'}
   aria-label={label}
   use:scrollStrip={value}
@@ -50,7 +50,7 @@
       role={kind === 'tabs' ? 'tab' : 'radio'}
       aria-selected={kind === 'tabs' ? on : undefined}
       aria-checked={kind === 'choice' ? on : undefined}
-      class="inline-flex min-h-0 items-center justify-center gap-1.5 rounded-[12px] {large ? 'text-[15px]' : 'text-[14px]'} whitespace-nowrap {scroll ? 'px-3' : 'px-0.5'} {scroll ? 'shrink-0 flex-1' : ''} {on ? 'bg-accent-grad glow-seg font-bold' : 'text-text-soft2'} {disabled ? 'opacity-60' : ''}"
+      class="inline-flex min-h-0 items-center justify-center gap-1.5 rounded-[8px] {large ? 'text-[15px]' : 'text-[13px]'} whitespace-nowrap {scroll ? 'px-3' : 'px-0.5'} {scroll ? 'shrink-0 flex-1' : ''} {on ? 'seg-on font-semibold' : 'text-fg'} {disabled ? 'opacity-60' : ''}"
       {disabled}
       onclick={() => onchange(item.id)}
     >

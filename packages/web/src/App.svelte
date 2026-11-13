@@ -129,7 +129,6 @@
     <!-- Einrichtung beim ersten Start: statt der Reiter, solange der Server sie verlangt; Fenster (Einstellungen, Prüfen) öffnen darüber -->
     <Lazy load={loadOnboarding} />
   {:else}
-  <div class="header-glow" aria-hidden="true"></div>
   {#snippet pages()}
     {#if tab === 'boards'}
       <BoardsView />
@@ -151,17 +150,6 @@
     </div>
   {:else}
     {@render pages()}
-
-    {#if (tab === 'boards' || (tab === 'tasks' && !ui.tasksCalendar)) && canCreate}
-      <!-- ab 640 px sitzt der Knopf am Rand der zentrierten Spalte (720 px), nicht am Rand des Fensters -->
-      <button
-        class="fab-grad fixed right-[max(1rem,calc((100vw-720px)/2+1rem))] bottom-[calc(var(--nav-h)+16px)] z-30 flex h-[58px] w-[58px] items-center justify-center rounded-btn"
-        aria-label={t('Neue Karte')}
-        onclick={() => openSheet({ type: 'new', columnId: newCardColumn! })}
-      >
-        <Icon name="plus" size={28} stroke={2.4} />
-      </button>
-    {/if}
 
     <TabBar />
   {/if}

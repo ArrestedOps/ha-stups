@@ -12,17 +12,15 @@
   import type { StatsKind } from '../lib/statsSheets';
   import { groupTasks, nudgesToMe, parseTasksView, taskStats, type TaskGroupKey, type TasksView } from '../lib/tasks';
   import { ageText, sourceLine } from '../lib/today';
-  import { shortMonthTitle, weekStrip } from '../lib/week';
-  import { activeScheduleFilter, claimCard, closeDetail, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
+    import { activeScheduleFilter, claimCard, closeDetail, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import CalendarView from './CalendarView.svelte';
   import CardSheet from './CardSheet.svelte';
   import FeedbackLink from './FeedbackLink.svelte';
   import Icon from './Icon.svelte';
   import TaskRow from './TaskRow.svelte';
-  import WeekStrip from './WeekStrip.svelte';
   import TopBar from './TopBar.svelte';
-  import Banner from './ui/Banner.svelte';
+  import StupsCard from './StupsCard.svelte';
   import Chip from './ui/Chip.svelte';
   import ListRow from './ui/ListRow.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
@@ -71,6 +69,14 @@
     setCalMode('day');
   }
   const back = () => (view = 'list');
+  // Die Leiste unten hat „Aufgaben“ und „Kalender“: sie wünschen sich die Ansicht über ui.tasksGoto
+  $effect(() => {
+    const goto = ui.tasksGoto;
+    if (!goto) return;
+    ui.tasksGoto = null;
+    if (goto === 'calendar') setCalMode(view === 'list' ? calMode : (view as CalMode));
+    else view = 'list';
+  });
   $effect(() => {
     ui.tasksCalendar = view !== 'list';
     // Im Kalender gibt es keine Detailspalte: eine gewählte Karte öffnet dort als Fenster
@@ -111,7 +117,10 @@
     }),
   );
   const stats = $derived(taskStats([...open, ...recentDone], meId, nowMs, tz));
-  const strip = $derived(weekStrip(visible(open), nowMs, tz));
+  /** Meine offenen Aufgaben, die in den nächsten sieben Tagen fällig werden (die Kachel „Diese Woche“) */
+  const weekCount = $derived(
+    meId ? open.filter((c) => c.assigneeIds.includes(meId) && !!c.dueAt && Date.parse(c.dueAt) >= nowMs && Date.parse(c.dueAt) < nowMs + 7 * 86_400_000).length : 0,
+  );
   const nudges = $derived(
     (ui.isChild ? [] : nudgesToMe(open, meId)).sort((a, b) => (a.card.updatedAt < b.card.updatedAt ? 1 : a.card.updatedAt > b.card.updatedAt ? -1 : 0)),
   );
@@ -119,13 +128,10 @@
     (today?.others ?? []).map((o) => ({ ...o, person: personById(o.personId) })).filter((o): o is typeof o & { person: NonNullable<typeof o.person> } => o.person !== undefined),
   );
   const othersOpen = $derived(others.reduce((sum, o) => sum + o.open, 0));
-  const monthTitle = $derived(shortMonthTitle(nowMs, tz));
   const calMonthTitle = $derived.by(() => {
     const [y, m] = day.split('-');
     return `${monthNames().monthsLong[Number(m) - 1]} ${y}`;
   });
-
-  const nameList = (ids: string[]) => ids.map((id) => personById(id)?.displayName ?? t('Jemand')).join(', ');
 
   // ---------- Chips: Meine, Alle, Personen, Filter ----------
   const people = $derived(ui.people.filter((p) => p.isPerson && p.id !== meId));
@@ -159,7 +165,6 @@
   const done = (c: TodayCard) => void completeCard(c);
   const openHouse = (c: TodayCard) => void openCardAnywhere(c);
   /** Ein Stups: die Karte öffnen (dort die Antwort); mehrere: die Liste der Mitteilungen */
-  const openNudge = () => (nudges.length === 1 ? void openCardAnywhere(nudges[0]!.card) : openSheet({ type: 'notifications' }));
 </script>
 
 {#snippet filterButton(count: number, small: boolean)}
@@ -215,34 +220,18 @@
         {:else}
           <StatsBar
             label={t('Deine Zahlen')}
-            onselect={(id) => openSheet({ type: 'stats', kind: id as StatsKind })}
+            onselect={(id) => (id === 'week' ? openCalendar('week') : openSheet({ type: 'stats', kind: id as StatsKind }))}
             items={[
-              { id: 'today', label: t('Heute fällig'), value: stats.today, icon: 'calendar', tone: 'accent' },
-              { id: 'overdue', label: t('Überfällig'), value: stats.overdue, icon: 'alert-circle', tone: 'danger' },
-              { id: 'done', label: t('Erledigt heute'), value: stats.done, icon: 'done', tone: 'ok' },
+              { id: 'today', label: t('Heute fällig'), value: stats.today, icon: 'calendar', color: 'blue' },
+              { id: 'overdue', label: t('Überfällig'), value: stats.overdue, icon: 'alert-circle', color: 'red' },
+              { id: 'week', label: t('Diese Woche'), value: weekCount, icon: 'list', color: 'orange' },
+              { id: 'done', label: t('Erledigt heute'), value: stats.done, icon: 'done', color: 'gray' },
             ]}
           />
 
-          <WeekStrip days={strip} title={monthTitle} onday={openDay} onweek={() => openCalendar(calMode)} onmonth={() => openCalendar('month')} />
-
           {#if nudges.length > 0}
-            {@const n = nudges[0]!}
-            <Banner
-              title={t('{names} stupst dich! 👋', { names: nameList(n.fromIds) })}
-              sub={nudges.length > 1 ? `${n.card.title} · ${tn('{n} weiterer Stups', '{n} weitere Stupse', nudges.length - 1)}` : n.card.title}
-              onclick={openNudge}
-            >
-              {#snippet leading()}
-                <svg class="text-banner-icon" width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M3 6l3 2M7 2.5l1.5 3M2 12h3.5" />
-                  <path d="M12 9h16a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-9l-6 5v-5h-1a3 3 0 0 1-3-3V12a3 3 0 0 1 3-3z" />
-                  <path d="M15.5 17l3 3 6-6" />
-                </svg>
-              {/snippet}
-              {#snippet trailing()}<Icon name="chevron-right" size={20} stroke={2} />{/snippet}
-            </Banner>
+            <StupsCard {nudges} />
           {/if}
-
           {#if !ui.isChild}
             <div class="flex items-center gap-2">
               <div class="no-scrollbar -ml-3 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-3" role="group" aria-label={t('Personen')} use:scrollStrip={sf.personIds.join() + sf.unassigned}>
@@ -311,7 +300,7 @@
                 ontoggle={() => toggleGroup(g.key)}
               />
               {#if isOpen}
-                <ul class="mt-2 flex flex-col gap-2">
+                <ul class="list-group">
                   {#each g.cards as c (c.id)}<li><TaskRow card={c} {nowMs} /></li>{/each}
                 </ul>
               {/if}

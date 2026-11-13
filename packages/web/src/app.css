@@ -51,76 +51,76 @@
   --color-step-done: var(--step-done);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
-  --font-sans: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
-  --font-display: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
-  /* Rundungen: Zeile und Box 16, Kachel 11, großer Knopf 18, Sheet 26 */
-  --radius-row: 16px;
-  --radius-tile: 11px;
-  --radius-btn: 18px;
-  --radius-sheet: 26px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter Variable', Inter, system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter Variable', Inter, system-ui, sans-serif;
+  /* Rundungen (iOS): Zeile und Box 12, Kachel 8, großer Knopf 14, Sheet 14 */
+  --radius-row: 12px;
+  --radius-tile: 8px;
+  --radius-btn: 14px;
+  --radius-sheet: 14px;
   /* Abstände: Seitenrand 12, zwischen Boxen 8, zwischen Blöcken 14 */
   --spacing-gutter: 12px;
   --spacing-box: 8px;
   --spacing-block: 14px;
-  --spacing-row: 68px;
+  --spacing-row: 60px;
 }
 
 :root {
   color-scheme: dark;
-  --bg: #0e0d0d;
-  --bg-dim: #050404; /* hinter Sheets */
-  --surface: #171415;
-  --surface2: #2a2527;
-  --border: #2a2527;
-  --track: #3a3538; /* Schalter aus, Griff am Sheet */
+  --bg: #000000;
+  --bg-dim: #000000; /* hinter Sheets */
+  --surface: #1c1c1e;
+  --surface2: #2c2c2e;
+  --border: #38383a;
+  --track: #48484a; /* Schalter aus, Griff am Sheet */
   --text: #ffffff;
-  --text2: #b5b5bd;
-  --hint: #a29da0;
-  --accent: #f05400;
-  --accent2: #ff8d65;
-  --accent-end: #d34800; /* dunkleres Ende des Verlaufs: --accent → --accent-end (Weiß darauf überall mindestens 3,5 : 1) */
-  --accent-text: #ff8d65;
-  --on-accent: #ffffff;
+  --text2: #a1a1a8;
+  --hint: #a1a1a8;
+  --accent: #ff7a1a;
+  --accent2: #ff9a4d;
+  --accent-end: #ff7a1a; /* dunkleres Ende des Verlaufs: --accent → --accent-end (Weiß darauf überall mindestens 3,5 : 1) */
+  --accent-text: #ff8a3d;
+  --on-accent: #1a0b02;
   /* Zweite Stimme: Türkis für alles, was vom Haus kommt (unabhängig vom wählbaren Akzent) */
-  --house: #4fd6c8;
-  --house-bg: #11302d;
+  --house: #5ad8cc;
+  --house-bg: #0f2b29;
   --house-line: #1f5a54;
-  --danger: #ff5a5f;
+  --danger: #ff6961;
   --danger-bg: #3a1d22;
   --danger-glow: rgba(255, 90, 95, 0.75); /* Leuchten der hohen Priorität */
   --danger-fill-a: #e5484d; /* roter Knopf im Bestätigen-Dialog: Verlauf a → b, Weiß darauf */
   --danger-fill-b: #b3262c;
   /* Feinere Stufen der Mockups: Symbole und Chips (hell), Trenner, Erledigt-Kreis, Rand der Chips, Zähler */
-  --text-soft: #e4e4e7;
-  --text-soft2: #d4d4d8;
-  --sep: #57525a;
-  --ring: #71717a;
-  --line-chip: #2e2a2c;
-  --count-bg: #232022;
-  --avatar-ring: #2a2a2e;
-  --dim: #8a8588;
+  --text-soft: #e5e5ea;
+  --text-soft2: #d1d1d6;
+  --sep: #48484a;
+  --ring: #8e8e93;
+  --line-chip: #2c2c2e;
+  --count-bg: #2c2c2e;
+  --avatar-ring: #1c1c1e;
+  --dim: #98989f;
   --count-on: rgba(255, 255, 255, 0.2); /* Zähler im aktiven Chip */
-  --tok-fg: #ffd2b0; /* Schrift auf den orange hinterlegten Chips (erkannte Teile, gewählte Farbe „Auto“) */
-  --soft-btn: #211d1f; /* kleine Knöpfe auf Flächen (Monat vor und zurück) */
+  --tok-fg: #ffb27a; /* Schrift auf den orange hinterlegten Chips (erkannte Teile, gewählte Farbe „Auto“) */
+  --soft-btn: #2c2c2e; /* kleine Knöpfe auf Flächen (Monat vor und zurück) */
   /* Signalfarben für Zahlen, Punkte und Abschnittssymbole: heute (orange), überfällig (rot), erledigt (grün), später (blau) */
   --sig-orange: #ffa51f;
   --sig-red: #ff5a5f;
   --sig-green: #7be07b;
   --sig-blue: #7fc8ff;
-  --brand-dot: #fd6305; /* der Punkt der Wortmarke */
+  --brand-dot: #ff7a1a; /* der Punkt der Wortmarke */
   /* Wächter-Editor: Schilder der vier Karten (Grund und Schrift), grüne Marke „jetzt“, Linie im Verlauf, erledigte Schritte, Einsatz-Fläche */
   --tag-when-bg: #2f213f; --tag-when-fg: #d7c2ff;
   --tag-then-bg: #402212; --tag-then-fg: #ffc59a;
   --tag-who-bg: #272f3f; --tag-who-fg: #c9ddff;
   --tag-done-bg: #273525; --tag-done-fg: #b4f0b4;
   --ok-bg: #253023; --ok-fg: #8fe88f;
-  --graph-line: #ff8a1f;
-  --step-done: #ffb07a;
-  --surface-inset: #0a0909;
-  --scrim: rgba(0, 0, 0, 0.6);
-  --glow: radial-gradient(ellipse at 85% -5%, rgba(255, 90, 31, 0.32), transparent 62%);
+  --graph-line: #ff8a3d;
+  --step-done: #ff9a4d;
+  --surface-inset: #000000;
+  --scrim: rgba(0, 0, 0, 0.5);
+  --glow: none;
   --shadow-card: none;
-  --shadow-accent: 0 10px 24px rgba(255, 90, 31, 0.4);
+  --shadow-accent: none;
   /* Dringlichkeit: Balken links an der Karte */
   --u-over: #ff4d4d;
   --u-today: #ff5a1f;
@@ -129,25 +129,25 @@
 
 
   /* Kacheln: Verlauf von a nach b (160°) und Farbe des Symbols. In beiden Themen gleich: helles Symbol auf gesättigtem Grund */
-  --tile-orange-a: #df670e; --tile-orange-b: #b84402; --tile-orange-fg: #fff1e6;
-  --tile-purple-a: #7c3fda; --tile-purple-b: #4c1c9c; --tile-purple-fg: #f1e6ff;
-  --tile-violet-a: #9440db; --tile-violet-b: #5a1597; --tile-violet-fg: #f5e3ff;
-  --tile-blue-a: #2e74d0; --tile-blue-b: #153c86; --tile-blue-fg: #e1edff;
-  --tile-teal-a: #0f939b; --tile-teal-b: #045359; --tile-teal-fg: #d5fbfc;
-  --tile-green-a: #5a9a1c; --tile-green-b: #33610a; --tile-green-fg: #ecffd6;
-  --tile-red-a: #c8414a; --tile-red-b: #861c28; --tile-red-fg: #ffe1e3;
-  --tile-gray-a: #4a4547; --tile-gray-b: #2a2627; --tile-gray-fg: #edeaeb;
+  --tile-orange-a: #d97100; --tile-orange-b: #d97100; --tile-orange-fg: #ffffff;
+  --tile-purple-a: #af52de; --tile-purple-b: #af52de; --tile-purple-fg: #ffffff;
+  --tile-violet-a: #9b4fe0; --tile-violet-b: #9b4fe0; --tile-violet-fg: #ffffff;
+  --tile-blue-a: #0a7aff; --tile-blue-b: #0a7aff; --tile-blue-fg: #ffffff;
+  --tile-teal-a: #168fa5; --tile-teal-b: #168fa5; --tile-teal-fg: #ffffff;
+  --tile-green-a: #2d9a4b; --tile-green-b: #2d9a4b; --tile-green-fg: #ffffff;
+  --tile-red-a: #e5372b; --tile-red-b: #e5372b; --tile-red-fg: #ffffff;
+  --tile-gray-a: #6e6e73; --tile-gray-b: #6e6e73; --tile-gray-fg: #ffffff;
   /* Banner: lila (Stups, Hinweise) und warm */
-  --banner-purple: linear-gradient(90deg, #4a1a6e, #632b90 55%, #4e1e73);
-  --banner-purple-line: rgba(180, 110, 240, 0.5);
-  --banner-purple-sub: #e3d4ff;
-  --banner-purple-icon: #ebddff;
+  --banner-purple: linear-gradient(120deg, #c84700, #b84000 55%, #a83500);
+  --banner-purple-line: transparent;
+  --banner-purple-sub: #ffffff;
+  --banner-purple-icon: #ffffff;
   --banner-radio: #ff5c8a; /* Symbol im Banner „Stups hat passende Automationen gefunden“ */
-  --banner-warm: linear-gradient(100deg, #24140f, #3b1d10 55%, #5a2a0e);
-  --banner-warm-line: rgba(255, 140, 80, 0.35);
-  --banner-warm-sub: #f2dccb;
+  --banner-warm: linear-gradient(120deg, #c84700, #b84000 55%, #a83500);
+  --banner-warm-line: transparent;
+  --banner-warm-sub: #ffffff;
   --on-banner: #ffffff;
-  --shadow-tile: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-tile: none;
   /* Fotos und Dateien auf Schwarz (Foto-Ansicht), Schrift auf Fotos und Avataren, Schrift auf Gefahr-Knöpfen: in beiden Themen gleich */
   --media: #000000;
   --on-media: #ffffff;
@@ -156,6 +156,8 @@
   --ios-glass: rgba(58, 58, 64, 0.78);
   --ios-glass-held: rgba(28, 28, 30, 0.94);
   --ha-blue: #18bcf2;
+  --switch: #30d158; /* UISwitch an */
+  --seg-thumb: #636366; /* gewähltes Segment */
   --on-avatar: #0e0d0d;
   --on-danger: #2a0a0e; /* auf dem hellen Rot des Dunkelmodus */
 
@@ -176,56 +178,58 @@
 @media (prefers-color-scheme: light) {
   :root {
     color-scheme: light;
-    --bg: #fff6ee;
-    --bg-dim: #f3e4d6;
+    --bg: #f2f2f7;
+    --bg-dim: #e5e5ea;
     --surface: #ffffff;
-    --surface2: #f6e8dc;
-    --border: #efdccb;
-    --track: #e2cdbb;
-    --text: #2b1d15;
-    --text2: #6e5a4d;
-    --hint: #7a6558;
-    --accent: #c04100;
-    --accent2: #f25914;
-    --accent-end: #a53600;
-    --accent-text: #a93800;
+    --surface2: #e9e9ee;
+    --border: #d6d6da;
+    --track: #c7c7cc;
+    --text: #000000;
+    --text2: #5f5f64;
+    --hint: #5f5f64;
+    --accent: #d24600;
+    --accent2: #e8590a;
+    --accent-end: #d24600;
+    --accent-text: #b03800;
     --on-accent: #ffffff;
     --house: #0a6b63;
     --house-bg: #dff4f0;
     --house-line: #9fd8d0;
-    --danger: #b0001a;
+    --danger: #c01e14;
     --on-danger: #ffffff;
     --danger-bg: #ffe5e7;
     --danger-glow: rgba(212, 56, 42, 0.5);
-    --text-soft: #4a3a30;
-    --text-soft2: #5c4a3d;
-    --sep: #c9b8a8;
-    --ring: #9a8676;
-    --line-chip: #efdccb;
-    --count-bg: #f6e8dc;
-    --avatar-ring: #efdccb;
-    --dim: #7a6558;
+    --text-soft: #3a3a3c;
+    --text-soft2: #48484a;
+    --sep: #c6c6c8;
+    --ring: #8a8a8f;
+    --line-chip: #e9e9ee;
+    --count-bg: #e9e9ee;
+    --avatar-ring: #ffffff;
+    --dim: #636366;
     --count-on: rgba(255, 255, 255, 0.22);
-    --tok-fg: #7a3000;
-    --soft-btn: #f6e8dc;
+    --tok-fg: #8a2f00;
+    --soft-btn: #e9e9ee;
     --sig-orange: #a85200;
     --sig-red: #c0121f;
     --sig-green: #1c7a3a;
     --sig-blue: #0a5ea8;
-    --brand-dot: #e0480d;
-    --scrim: rgba(43, 29, 21, 0.4);
+    --brand-dot: #d24600;
+    --switch: #34c759;
+    --seg-thumb: #ffffff;
+    --scrim: rgba(0, 0, 0, 0.32);
     --tag-when-bg: #efe6fb; --tag-when-fg: #5a2aa0;
     --tag-then-bg: #ffe9d9; --tag-then-fg: #8a3000;
     --tag-who-bg: #e4eefc; --tag-who-fg: #0a4f9c;
     --tag-done-bg: #e3f4e6; --tag-done-fg: #14602e;
     --ok-bg: #e4f7e9; --ok-fg: #1c7a3a;
-    --graph-line: #c04100;
-    --step-done: #a93800;
-    --surface-inset: #fbefe4;
-    --glow: radial-gradient(ellipse at 90% -10%, rgba(255, 138, 77, 0.42), transparent 60%);
-    --shadow-card: 0 6px 18px rgba(120, 60, 20, 0.08);
-    --shadow-tile: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 10px rgba(120, 60, 20, 0.22);
-    --shadow-accent: 0 10px 22px rgba(208, 63, 9, 0.3);
+    --graph-line: #d24600;
+    --step-done: #b03800;
+    --surface-inset: #ffffff;
+    --glow: none;
+    --shadow-card: none;
+    --shadow-tile: none;
+    --shadow-accent: none;
     --u-over: #d4382a;
     --u-today: #e0480d;
     --u-soon: #d9a000;
@@ -246,39 +250,65 @@
   }
 }
 
+/* Leiste unten: schwebende Glasfläche mit gleitender Kugel unter dem gewählten Reiter und flachem Plus-Knopf */
+.tabbar-bar { background: color-mix(in srgb, var(--surface) 80%, transparent); backdrop-filter: blur(28px) saturate(1.8); -webkit-backdrop-filter: blur(28px) saturate(1.8); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18), 0 0 0 0.5px var(--sep); }
+.tabbar-bubble { background: color-mix(in srgb, var(--text) 8%, transparent); transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1), width 0.5s cubic-bezier(0.32, 0.72, 0, 1); }
+.tabbar-plus { background: var(--accent); color: var(--on-accent); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+.tabbar-plus:active { transform: scale(0.94); }
+
+/* Stups-Karte: orange Verlauf mit Glanz oben rechts, weiße Schrift (Kontrast an jedem Punkt geprüft) */
+.stups-card { background-image: var(--banner-purple); box-shadow: 0 10px 28px color-mix(in srgb, var(--accent) 26%, transparent); animation: stups-in 0.8s cubic-bezier(0.32, 0.72, 0, 1) backwards; }
+.stups-card::before { content: ''; position: absolute; right: -40px; top: -50px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.28), transparent 70%); pointer-events: none; }
+.stups-hand { background: rgba(255, 255, 255, 0.22); }
+.stups-hand svg { transform-origin: 60% 90%; animation: stups-wave 1.6s ease-in-out 0.6s 3; }
+.stups-bubble { background: rgba(255, 255, 255, 0.17); }
+.stups-more { background: rgba(255, 255, 255, 0.24); }
+.stups-btn { flex: 1; height: 42px; border-radius: 21px; background: rgba(255, 255, 255, 0.2); color: #fff; font-size: 16px; font-weight: 600; transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+.stups-btn:active { transform: scale(0.95); }
+.stups-btn:disabled { opacity: 0.6; }
+.stups-ok { background: #fff; color: #a83500; }
+@keyframes stups-in { from { opacity: 0; transform: translateY(-14px) scale(0.94); } }
+@keyframes stups-wave { 0%, 60%, 100% { transform: rotate(0); } 10% { transform: rotate(-16deg); } 20% { transform: rotate(18deg); } 30% { transform: rotate(-14deg); } 40% { transform: rotate(14deg); } 50% { transform: rotate(-6deg); } }
+
+/* Gewähltes Chip (Personen, Filter): getönte Fläche mit Ring in der Akzentfarbe, Schrift in --accent-text */
+.chip-on { background-color: color-mix(in srgb, var(--accent) 14%, var(--surface)); box-shadow: inset 0 0 0 1.5px var(--accent); color: var(--accent-text); }
+/* Gewähltes Segment: abgesetzter Griff mit feinem Schatten (UISegmentedControl) */
+.seg-on { background-color: var(--seg-thumb); color: var(--text); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.05); }
+
+/*
+ * Inset-gruppierte Liste (iOS): die Zeilen sitzen in einer gemeinsamen, gerundeten Fläche und sind durch feine Linien getrennt.
+ * Auf ein <ul> setzen; die Zeilen (ListRow, TaskRow, CardItem) verlieren dort Rand, Rundung und eigenen Grund.
+ */
+.list-group { display: flex; flex-direction: column; gap: 0 !important; margin-top: 8px; border-radius: var(--radius-row); background: var(--surface); overflow: hidden; }
+.list-group > li { position: relative; }
+.list-group > li + li::before { content: ''; position: absolute; top: 0; right: 0; left: 52px; height: 0.5px; background: var(--sep); z-index: 1; }
+.list-group [data-variant], .list-group .rounded-row { border-color: transparent !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+.list-group .row-current, .list-group .row-new { background: color-mix(in srgb, var(--accent) 12%, transparent) !important; box-shadow: inset 3px 0 0 var(--brand-dot) !important; }
+
 /* Leuchtende Orange-Fläche: Knopf „+", aktiver Reiter, wichtige Knöpfe. Weiße Schrift darauf bleibt an jedem Punkt lesbar. */
 .bg-accent-grad {
-  background-image: linear-gradient(180deg, var(--accent), var(--accent-end));
-  box-shadow: var(--shadow-accent);
+  background-color: var(--accent);
   color: var(--on-accent);
 }
 
-/* Leuchten je Baustein (Größe und Stärke wie in den Mockups): Chip, Segment, Tag der Wochenleiste, großer Knopf */
-.bg-accent-grad.glow-chip { box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent); }
-.bg-accent-grad.glow-seg { box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 35%, transparent); }
-.bg-accent-grad.glow-day { box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent); }
-.bg-accent-grad.glow-pill { box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent); }
-.bg-accent-grad.glow-cta { box-shadow: 0 8px 26px color-mix(in srgb, var(--accent) 45%, transparent); }
 
 /* Kachel mit Symbol: Verlauf und feiner heller Rand; Farbe über die Klasse */
-.prio-glow { filter: drop-shadow(0 0 5px var(--danger-glow)); }
+.prio-glow { }
 .tile {
   display: flex;
   flex: none;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: var(--shadow-tile);
 }
-.tile-orange { background-image: linear-gradient(160deg, var(--tile-orange-a), var(--tile-orange-b)); color: var(--tile-orange-fg); }
-.tile-purple { background-image: linear-gradient(160deg, var(--tile-purple-a), var(--tile-purple-b)); color: var(--tile-purple-fg); }
-.tile-violet { background-image: linear-gradient(160deg, var(--tile-violet-a), var(--tile-violet-b)); color: var(--tile-violet-fg); }
-.tile-blue { background-image: linear-gradient(160deg, var(--tile-blue-a), var(--tile-blue-b)); color: var(--tile-blue-fg); }
-.tile-teal { background-image: linear-gradient(160deg, var(--tile-teal-a), var(--tile-teal-b)); color: var(--tile-teal-fg); }
-.tile-green { background-image: linear-gradient(160deg, var(--tile-green-a), var(--tile-green-b)); color: var(--tile-green-fg); }
-.tile-red { background-image: linear-gradient(160deg, var(--tile-red-a), var(--tile-red-b)); color: var(--tile-red-fg); }
-.tile-gray { background-image: linear-gradient(160deg, var(--tile-gray-a), var(--tile-gray-b)); color: var(--tile-gray-fg); }
+.tile-orange { background-color: var(--tile-orange-a); color: var(--tile-orange-fg); }
+.tile-purple { background-color: var(--tile-purple-a); color: var(--tile-purple-fg); }
+.tile-violet { background-color: var(--tile-violet-a); color: var(--tile-violet-fg); }
+.tile-blue { background-color: var(--tile-blue-a); color: var(--tile-blue-fg); }
+.tile-teal { background-color: var(--tile-teal-a); color: var(--tile-teal-fg); }
+.tile-green { background-color: var(--tile-green-a); color: var(--tile-green-fg); }
+.tile-red { background-color: var(--tile-red-a); color: var(--tile-red-fg); }
+.tile-gray { background-color: var(--tile-gray-a); color: var(--tile-gray-fg); }
 
 /* Erkannte Teile der Schnell-Eingabe und die gewählte Farbe „Auto“: orange hinterlegter Chip, wie im Mockup */
 .tok {
@@ -298,7 +328,7 @@
 .tok-warn { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); }
 
 /* Feld mit Fokus: orange Rand und weicher Ring (Notiz, Suche, neue Kategorie) */
-.focus-ring-in:focus-within { border-color: var(--brand-dot); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+.focus-ring-in:focus-within { border-color: transparent; box-shadow: 0 0 0 2px var(--accent); }
 
 /* Uhrzeit-Rad: das gewählte Feld liegt in einem Band */
 .wheel-band {
@@ -331,14 +361,14 @@
 .pick-on {
   border-color: var(--brand-dot);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: none;
 }
 
 /* Neu und offen (Mitteilungen): oranger Rand an der Zeile, oranger Punkt mit Leuchten */
-.bg-danger-grad { background-image: linear-gradient(180deg, var(--danger-fill-a), var(--danger-fill-b)); color: var(--on-accent); }
-.row-current { border-color: var(--brand-dot); background-color: color-mix(in srgb, var(--accent) 10%, var(--surface)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
+.bg-danger-grad { background-color: var(--danger-fill-a); color: #fff; }
+.row-current { border-color: transparent; background-color: color-mix(in srgb, var(--accent) 12%, var(--surface)); box-shadow: inset 3px 0 0 var(--brand-dot); }
 .row-new { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
-.dot-new { background: var(--brand-dot); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 70%, transparent); }
+.dot-new { background: var(--brand-dot); }
 
 /* Wächter-Editor: Karte des Ablaufs (Rundung 20), Verbindung mit Pfeil nach unten, Schilder, Wert-Feld der Schwelle, Ring um „als Nächstes dran“ */
 .flow-card {
@@ -398,14 +428,7 @@
 @media (prefers-color-scheme: dark) {
   .header-glow { display: none; }
 }
-.header-glow {
-  position: fixed;
-  inset: 0 0 auto 0;
-  height: 340px;
-  background: var(--glow);
-  pointer-events: none;
-  z-index: 0;
-}
+.header-glow { display: none; }
 
 /* Überschriften der Reiter: eigene Schrift (lokal gebündelt, kein CDN) */
 .font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
@@ -523,15 +546,14 @@
 
 .no-scrollbar { scrollbar-width: none; touch-action: pan-x pan-y; }
 /* Leiste unten: 88 px hoch (8 oben, 30 unten für den Home-Balken; mit größerem Sicherheitsabstand entsprechend mehr) */
-:root { --nav-h: calc(58px + var(--pad-bottom)); }
+:root { --nav-h: calc(70px + var(--pad-bottom)); }
 /* unten Platz für die Leiste */
 .pb-tabbar { padding-bottom: calc(var(--nav-h) + 24px); }
-/* mit dem „+"-Knopf über der Leiste (58 px hoch, 16 px über der Leiste): auch die letzte Karte lässt sich darüber hinaus scrollen */
-.pb-fab { padding-bottom: calc(var(--nav-h) + 102px); }
-/* Der „+"-Knopf: 58 × 58, Rundung 18, Verlauf 160° mit Leuchten (wie die Mockups) */
+/* Der Plus-Knopf sitzt in der Leiste: wie pb-tabbar */
+.pb-fab { padding-bottom: calc(var(--nav-h) + 24px); }
+/* Der „+"-Knopf: flache Fläche in Akzentfarbe */
 .fab-grad {
-  background-image: linear-gradient(160deg, var(--accent), var(--accent-end));
-  box-shadow: 0 8px 26px color-mix(in srgb, var(--accent) 45%, transparent);
+  background-color: var(--accent);
   color: var(--on-accent);
 }
 .no-scrollbar::-webkit-scrollbar { display: none; }

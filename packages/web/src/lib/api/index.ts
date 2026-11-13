@@ -263,6 +263,8 @@ export const api = {
   exportData: () => post<{ dir: string; bytes: number; files: boolean }>('admin/export'),
 
   nudgeInfo: (cardId: string) => get<NudgeInfo>(`cards/${cardId}/nudges`),
+  /** Antwort auf einen Stups an mich: erledigt, mach ich, später */
+  nudgeReply: (nudgeId: string, action: 'done' | 'ack' | 'later') => post<{ outcome: string }>(`nudges/${nudgeId}/reply`, { action }),
   nudge: (cardId: string, b: { to: string[]; template?: NudgeTemplate; text?: string }) =>
     post<NudgeResult>(`cards/${cardId}/nudge`, b),
 };

@@ -20,6 +20,7 @@
     fit = false,
     bare = false,
     wide = false,
+    lgWidth,
     titleClass = 'text-[17px] font-extrabold',
     footer,
     children,
@@ -40,6 +41,8 @@
     bare?: boolean;
     /** Desktop: breites Fenster (Board-Einstellungen mit der Liste der Boards links), sonst 600 px */
     wide?: boolean;
+    /** Desktop: eine eigene Breite in px (Neue Aufgabe in zwei Spalten) */
+    lgWidth?: number;
     children: Snippet;
   } = $props();
 
@@ -119,7 +122,8 @@
     tabindex="-1"
     use:focusScope={{ isTop: () => stack[stack.length - 1] === me }}
     data-sheet
-    class="relative flex w-full flex-col rounded-t-sheet border-t border-line bg-bg shadow-[0_-10px_40px_rgba(0,0,0,0.6)] outline-none md:max-w-[640px] md:border-x {wide ? 'lg:w-[1080px]' : 'lg:w-[600px]'} lg:max-w-[calc(100vw-48px)] lg:overflow-hidden lg:rounded-sheet lg:border lg:shadow-[0_24px_80px_rgba(0,0,0,0.5)] {fit
+    style:--sheet-w={lgWidth ? `${lgWidth}px` : undefined}
+    class="relative flex w-full flex-col rounded-t-sheet border-t border-line bg-bg shadow-[0_-10px_40px_rgba(0,0,0,0.6)] outline-none md:max-w-[640px] md:border-x {lgWidth ? 'lg:w-(--sheet-w)' : wide ? 'lg:w-[1080px]' : 'lg:w-[600px]'} lg:max-w-[calc(100vw-48px)] lg:overflow-hidden lg:rounded-sheet lg:border lg:shadow-[0_24px_80px_rgba(0,0,0,0.5)] {fit
       ? 'max-h-[calc(100dvh-54px)] lg:max-h-[calc(100dvh-64px)]'
       : 'h-[calc(100dvh-54px)] lg:h-[min(780px,calc(100dvh-64px))]'}"
     style:transform={dy ? `translateY(${dy}px)` : undefined}

@@ -284,8 +284,9 @@
   <div class="mt-1 flex h-[30px] items-center gap-2 px-1"><h2 class="text-[17px] font-extrabold tracking-tight">{label}</h2></div>
 {/snippet}
 
-<Sheet title={t('Neue Aufgabe')} onclose={closeSheet} left={cancel} footer={foot}>
-  <form onsubmit={create} class="flex flex-col gap-3.5 pt-1">
+<Sheet title={t('Neue Aufgabe')} onclose={closeSheet} left={cancel} footer={foot} lgWidth={880}>
+  <form onsubmit={create} class="flex flex-col gap-3.5 pt-1 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
+    <div class="max-lg:order-0 lg:col-span-2">
     <QuickLine
       bind:title
       {parsed}
@@ -299,7 +300,10 @@
       }}
       oncreate={() => void create()}
     />
+    </div>
 
+    <div class="flex flex-col gap-3.5 max-lg:contents" data-testid="new-left">
+      <div class="flex flex-col gap-3.5 max-lg:order-1">
     {@render sec(t('Wann und wo'))}
     <WhenWhere
       {fields}
@@ -312,6 +316,28 @@
       }}
     />
 
+      </div>
+      <div class="flex flex-col gap-3.5 max-lg:order-5">
+    {@render sec(t('Notiz'))}
+    <div class="focus-ring-in flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3">
+      <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="note">{t('Freitext, Details, Maße …')}</label>
+      <textarea
+        id="note"
+        rows="3"
+        bind:value={description}
+        use:autogrow={description}
+        placeholder={t('z. B. Gelbe Tonne steht im Hof, Schlüssel hängt am Brett.')}
+        class="block min-h-[66px] w-full resize-none overflow-hidden bg-transparent p-0 text-[15px] leading-[1.45] font-medium outline-none placeholder:text-dim"
+      ></textarea>
+    </div>
+
+      </div>
+      <div class="flex flex-col gap-3.5 max-lg:order-6">
+    {@render sec(t('Mehr'))}
+    <MoreSection bind:this={more} bind:items bind:urls bind:files />
+      </div>
+    </div>
+    <div class="flex flex-col gap-3.5 max-lg:order-2" data-testid="new-right">
     {@render sec(t('Wer kümmert sich?'))}
     <div class="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3" role="group" aria-label={t('Wer kümmert sich?')}>
       {#each people as p (p.id)}
@@ -333,21 +359,7 @@
     {@render sec(t('Kategorie'))}
     <CategoryPicker {fields} {onsave} />
 
-    {@render sec(t('Notiz'))}
-    <div class="focus-ring-in flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3">
-      <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="note">{t('Freitext, Details, Maße …')}</label>
-      <textarea
-        id="note"
-        rows="3"
-        bind:value={description}
-        use:autogrow={description}
-        placeholder={t('z. B. Gelbe Tonne steht im Hof, Schlüssel hängt am Brett.')}
-        class="block min-h-[66px] w-full resize-none overflow-hidden bg-transparent p-0 text-[15px] leading-[1.45] font-medium outline-none placeholder:text-dim"
-      ></textarea>
     </div>
-
-    {@render sec(t('Mehr'))}
-    <MoreSection bind:this={more} bind:items bind:urls bind:files />
   </form>
 </Sheet>
 

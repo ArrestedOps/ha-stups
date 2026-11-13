@@ -263,6 +263,28 @@ svg { display: block; }
 .compose input { flex: 1; min-width: 0; height: 38px; border-radius: 19px; border: 0; background: var(--card2); padding: 0 14px; font: inherit; color: var(--label); outline: none; }
 .hist { padding: 6px 14px 12px; font-size: 13px; color: var(--label2); display: flex; flex-direction: column; gap: 8px; } .hist i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--off); margin-right: 8px; }
 .pgsw { margin-left: 8px; }
+
+.who { margin: 6px 6px 2px; padding: 10px 10px 9px; border-radius: 12px; background: var(--card); box-shadow: 0 0 0 .5px var(--sep); }
+.who small { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--label2); margin-bottom: 7px; }
+.wrow { display: flex; gap: 6px; align-items: center; }
+.wp { height: 32px; min-width: 32px; padding: 0 10px; border-radius: 16px; background: var(--card2); font-weight: 700; font-size: 12.5px; display: inline-grid; place-items: center; box-shadow: 0 0 0 .5px var(--sep); color: var(--label); }
+.wp.av2 { padding: 0; width: 32px; color: #fff; border: 0; box-shadow: none; }
+.wp[aria-pressed="true"] { box-shadow: 0 0 0 2.5px var(--accent); }
+.wp.av2[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--accent); }
+.wlbl { display: block; margin-top: 8px; font-size: 12.5px; color: var(--label2); }
+.wlbl b { color: var(--label); }
+.scopechip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 6px 0 12px; border-radius: 14px; background: var(--accent-soft); color: var(--accent-text); font-weight: 700; font-size: 12.5px; }
+.scopechip button { width: 20px; height: 20px; border-radius: 10px; display: grid; place-items: center; }
+.scopechip button:hover { background: var(--accent-soft); }
+.entpick { display: flex; flex-direction: column; gap: 8px; }
+.entpick .sf { display: flex; align-items: center; gap: 8px; height: 40px; border-radius: 10px; background: var(--card); box-shadow: 0 0 0 .5px var(--sep); padding: 0 12px; color: var(--label2); }
+.entpick .sf input { flex: 1; border: 0; background: none; font: inherit; color: var(--label); outline: none; min-width: 0; }
+.entpick .hit { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 12px; background: var(--card); border-radius: 10px; box-shadow: 0 0 0 .5px var(--sep); text-align: left; width: 100%; }
+.entpick .hit[aria-pressed="true"] { box-shadow: 0 0 0 1.5px var(--accent) inset; }
+.entpick .hit b { display: block; font-size: 13.5px; } .entpick .hit small { color: var(--label2); font-size: 12px; } .entpick .hit em { margin-left: auto; font-style: normal; color: var(--label2); font-size: 12.5px; }
+.sel { height: 36px; border-radius: 10px; border: 0; background: var(--card); box-shadow: 0 0 0 .5px var(--sep); padding: 0 10px; font: inherit; color: var(--label); }
+.egrid { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px 12px; align-items: center; font-size: 13px; color: var(--label2); }
+.egrid .r { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -279,8 +301,8 @@ svg { display: block; }
   <div><b>Alle Zeilen 60 px</b>Name und Gerät je eine Zeile, die Bedingung eine Zeile. Der volle Text steht beim Aufklappen.</div>
   <div><b>Aufklappen statt Fenster</b>Ein Klick öffnet den Ablauf direkt unter der Zeile: Wenn, Dann, Wer, Erledigt sich selbst. Bearbeiten und Speichern ohne Wechsel der Seite.</div>
   <div><b>Aktivität als Reiter</b>Gleiche Tabelle wie die Wächter, kein eigener Kartenstil am Seitenende.</div>
-  <div><b>Neu: Ablauf untereinander</b>Wenn, Dann, Wer, Erledigt sich selbst stehen untereinander mit Verbindern. „Ändern“ klappt den Editor in der Karte auf, nichts wird gequetscht. Der Schalter sitzt immer rechts in der Karte.</div>
-  <div><b>Neu: Seite Aufgaben</b>Oben die Personen-Leiste (Alle, Meine, Anna, Ben, Mia) statt der Gruppe in der Seitenleiste. Aufgeklappt: Titel und Aktionen in einer Kopfzeile, die Eigenschaften als Felder-Raster (Label oben, Wert darunter), darunter links Notiz, Checkliste, Links, rechts Kommentare und Verlauf als Reiter. Oben rechts auf „Seite Aufgaben“ umschalten.</div>
+  <div><b>Neu: Ablauf untereinander</b>Wenn, Dann, Wer, Erledigt sich selbst stehen untereinander. „Ändern“ klappt den vollen Editor in der Karte auf: bei Wenn die Entität wechseln und die Bedingung, bei Dann Titel, Symbol, Board, Spalte, Fälligkeit, Priorität, Kategorien, bei Wer die sieben Zuweisungsarten.</div>
+  <div><b>Neu: Aufgaben und Personen</b>Die Personen stehen nicht mehr unten, sondern ganz oben in der Seitenleiste als Feld „Ansicht für“ (Alle, Anna, Ben, Mia) mit Klartext darunter. Die Wahl gilt für Aufgaben und Wächter; auf der Seite zeigt ein Chip „Nur Ben ✕“, was gefiltert ist. Aufgeklappte Aufgabe: Titel und Aktionen in einer Kopfzeile, die Eigenschaften als Felder-Raster (Label oben, Wert darunter), darunter links Notiz, Checkliste, Links, rechts Kommentare und Verlauf als Reiter. Oben rechts auf „Seite Aufgaben“ umschalten.</div>
 </div>
 
 <div class="stage"><div class="app">
@@ -295,6 +317,11 @@ svg { display: block; }
     </div>
     <button class="sbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Suchen oder Befehl<kbd>Strg K</kbd></button>
 
+    <div class="who" role="group" aria-label="Ansicht für">
+      <small>Ansicht für</small>
+      <div class="wrow" id="wrow"></div>
+      <span class="wlbl" id="wlbl"></span>
+    </div>
     <p class="hd pri">Aufgaben</p>
     <button class="it" id="s-tasks"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg>Alle offen<span class="n">12</span></button>
     <button class="it"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V5a1.5 1.5 0 0 1 3 0v5M11 10V4a1.5 1.5 0 0 1 3 0v6M14 10V6a1.5 1.5 0 0 1 3 0v8c0 4-2 6-5 6s-5-2-6-4l-2-4a1.5 1.5 0 0 1 3-1l1 2"/></svg>Gestupst<span class="n hot">1</span></button>
@@ -364,7 +391,7 @@ svg { display: block; }
       <button class="btn pri"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Neue Aufgabe</button>
     </div>
     <div class="bar">
-      <div class="pbar" id="pbar" role="group" aria-label="Wessen Aufgaben"></div>
+      <span id="scope"></span>
       <span class="sp" style="flex:1"></span>
       <div class="seg" role="tablist" aria-label="Gruppieren"><button aria-pressed="true">Fälligkeit</button><button aria-pressed="false">Board</button></div>
     </div>
@@ -373,7 +400,7 @@ svg { display: block; }
 </div></div>
 
 <script>
-var P = { A: ['#c8501a', 'Anna'], B: ['#2f7ee8', 'Ben'], R: ['#c42b6a', 'Rene'], C: ['#2f9e57', 'Conny'] };
+var P = { A: ['#c8501a', 'Anna'], B: ['#2f7ee8', 'Ben'], M: ['#c42b6a', 'Mia'] };
 var ICON = {
   batt: '<path d="M7 7h9a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zM20 11v2"/>',
   plug: '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
@@ -382,17 +409,17 @@ var ICON = {
 };
 var W = [
   { id: 1, g: 'Batterien', st: 'ok', stt: 'Ruhig', on: 1, tile: 't-teal', ic: 'batt', name: 'Batterie schwach: Flur Schließzylinder Wohnungseingangstür', dev: 'sensor.flur_schliesszylinder_batterie', cond: 'Wenn Flur | Schließzylinder | Wohnungseingangstür Batterie 10 Minuten unter 20 % liegt', cur: '16 %', pct: 16, last: 'Nie', next: 'Batterie wechseln', who: 'R' },
-  { id: 2, g: 'Batterien', st: 'ok', stt: 'Ruhig', on: 1, tile: 't-teal', ic: 'batt', name: 'Batterie schwach: Küche Fensterkontakt', dev: 'sensor.kueche_fenster_batterie', cond: 'Wenn Küche Fensterkontakt Batterie 10 Minuten unter 20 % liegt', cur: '54 %', pct: 54, last: 'vor 3 Tg.', next: 'Batterie wechseln', who: 'C' },
+  { id: 2, g: 'Batterien', st: 'ok', stt: 'Ruhig', on: 1, tile: 't-teal', ic: 'batt', name: 'Batterie schwach: Küche Fensterkontakt', dev: 'sensor.kueche_fenster_batterie', cond: 'Wenn Küche Fensterkontakt Batterie 10 Minuten unter 20 % liegt', cur: '54 %', pct: 54, last: 'vor 3 Tg.', next: 'Batterie wechseln', who: 'B' },
   { id: 3, g: 'Haushaltsgeräte', st: 'info', stt: 'Läuft gerade', on: 1, tile: 't-orange', ic: 'plug', name: 'Trockner fertig', dev: 'sensor.trockner_leistung', cond: 'Wenn Trockner Leistung 3 Minuten unter 5 W liegt', cur: '212 W', pct: 70, last: 'vor 1 Tag', next: 'Wäsche aufhängen', who: 'A' },
-  { id: 4, g: 'Haushaltsgeräte', st: 'warn', stt: 'Wartet', on: 1, tile: 't-orange', ic: 'wash', name: 'Waschmaschine fertig', dev: 'sensor.waschmaschine_leistung', cond: 'Wenn Waschmaschine Leistung 3 Minuten unter 5 W liegt', cur: '1,2 W', pct: 4, last: 'heute 07:12', next: 'Wäsche aufhängen', who: 'BR' },
+  { id: 4, g: 'Haushaltsgeräte', st: 'warn', stt: 'Wartet', on: 1, tile: 't-orange', ic: 'wash', name: 'Waschmaschine fertig', dev: 'sensor.waschmaschine_leistung', cond: 'Wenn Waschmaschine Leistung 3 Minuten unter 5 W liegt', cur: '1,2 W', pct: 4, last: 'heute 07:12', next: 'Wäsche aufhängen', who: 'BM' },
   { id: 5, g: 'Haushaltsgeräte', st: 'off', stt: 'Pausiert', on: 0, tile: 't-gray', ic: 'plug', name: 'Spülmaschine fertig', dev: 'sensor.spuelmaschine_leistung', cond: 'Wenn Spülmaschine Leistung 5 Minuten unter 4 W liegt', cur: '–', pct: 0, last: 'vor 6 Tg.', next: 'Spülmaschine ausräumen', who: 'A' },
   { id: 6, g: 'Sicherheit', st: 'bad', stt: 'Problem', on: 1, tile: 't-purple', ic: 'door', name: 'Haustür steht offen', dev: 'binary_sensor.haustuer_kontakt', cond: 'Entität nicht gefunden: binary_sensor.haustuer_kontakt', cur: '–', pct: 0, last: 'vor 12 Tg.', next: 'Haustür prüfen', who: 'AB' },
-  { id: 7, g: 'Sicherheit', st: 'ok', stt: 'Ruhig', on: 1, tile: 't-green', ic: 'door', name: 'Fenster offen bei Regen', dev: 'weather.home · Regen in 3 Std.', cond: 'Wenn Regen in den nächsten 3 Stunden erwartet wird', cur: '2 mm', pct: 20, last: 'vor 9 Tg.', next: 'Fenster schließen', who: 'C' }
+  { id: 7, g: 'Sicherheit', st: 'ok', stt: 'Ruhig', on: 1, tile: 't-green', ic: 'door', name: 'Fenster offen bei Regen', dev: 'weather.home · Regen in 3 Std.', cond: 'Wenn Regen in den nächsten 3 Stunden erwartet wird', cur: '2 mm', pct: 20, last: 'vor 9 Tg.', next: 'Fenster schließen', who: 'B' }
 ];
 var ACT = [
-  ['heute 07:12', 'Waschmaschine fertig', 'Aufgabe angelegt', 'Wäsche aufhängen', 'BR'],
-  ['gestern 13:57', 'Trockner fertig', 'Test: Aufgabe angelegt', 'Wäsche aufhängen', 'R'],
-  ['vor 3 Tg.', 'Batterie schwach: Küche Fensterkontakt', 'Aufgabe angelegt', 'Batterie wechseln', 'C'],
+  ['heute 07:12', 'Waschmaschine fertig', 'Aufgabe angelegt', 'Wäsche aufhängen', 'BM'],
+  ['gestern 13:57', 'Trockner fertig', 'Test: Aufgabe angelegt', 'Wäsche aufhängen', 'M'],
+  ['vor 3 Tg.', 'Batterie schwach: Küche Fensterkontakt', 'Aufgabe angelegt', 'Batterie wechseln', 'B'],
   ['vor 6 Tg.', 'Spülmaschine fertig', 'Aufgabe angelegt', 'Spülmaschine ausräumen', 'A'],
   ['vor 9 Tg.', 'Fenster offen bei Regen', 'Übersprungen (Sperrzeit)', '–', '']
 ];
@@ -409,12 +436,22 @@ function detail(w) {
         '<div class="ent"><span class="tile ' + w.tile + '">' + svg(w.ic) + '</span><div style="min-width:0"><b style="display:block;font-size:13.5px">' + esc(w.name) + '</b><small>' + esc(w.dev) + '</small></div></div>' +
         '<div class="ln">' + esc(w.cond) + '</div>' +
         '<div class="graph"><svg viewBox="0 0 200 64" preserveAspectRatio="none"><path d="M0 46 L40 44 L80 47 L120 42 L160 30 L200 ' + (50 - w.pct / 3) + '" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div>' +
-        '<div class="edit"><div class="fieldrow"><span>Auslösen, wenn der Wert</span><button class="chip" aria-pressed="true">unter</button><button class="chip" aria-pressed="false">über</button><span>20 %</span><span>mindestens</span><button class="chip" aria-pressed="true">10 Min.</button><button class="chip" aria-pressed="false">30 Min.</button></div></div></div>' +
+        '<div class="edit"><div class="entpick"><span class="lbl2" style="font-size:12.5px;color:var(--label2)">Entität ändern</span><label class="sf"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input placeholder="Entität suchen, z. B. waschmaschine" aria-label="Entität suchen"></label>' +
+          '<button class="hit" aria-pressed="true"><b>' + esc(w.name) + '</b><small>' + esc(w.dev) + '</small><em>' + esc(w.cur) + '</em></button><button class="hit" aria-pressed="false"><b>Steckdose Spülmaschine Leistung</b><small>sensor.spuelmaschine_leistung</small><em>0,4 W</em></button><button class="hit" aria-pressed="false"><b>Steckdose Waschmaschine Leistung</b><small>sensor.waschmaschine_leistung</small><em>120 W</em></button></div>' +
+          '<div class="fieldrow" style="margin-top:12px"><span>Auslösen, wenn der Wert</span><button class="chip" aria-pressed="true">unter</button><button class="chip" aria-pressed="false">über</button><button class="chip" aria-pressed="false">Zustand</button><span>5 W</span><span>mindestens</span><button class="chip" aria-pressed="true">3 Min.</button><button class="chip" aria-pressed="false">10 Min.</button></div></div></div>' +
       '<span class="join" aria-hidden="true"></span>' +
       '<div class="fc"><div class="fh"><span class="tag then">DANN AUFGABE</span><button class="chg">Ändern</button></div>' +
         '<div class="mini"><span class="ck"></span><span>' + esc(w.next) + '</span></div>' +
         '<div class="ln"><b>Board</b> Haushalt · Spalte Offen &nbsp;·&nbsp; <b>Fällig</b> sofort &nbsp;·&nbsp; <b>Priorität</b> Mittel</div>' +
-        '<div class="edit"><div class="fieldrow"><span>Titel</span><input class="inp" value="' + esc(w.next) + '" aria-label="Titel der Aufgabe" style="flex:1;height:36px;border-radius:10px;border:0;background:var(--card);box-shadow:0 0 0 .5px var(--sep);padding:0 12px;font:inherit;color:var(--label)"></div></div></div>' +
+        '<div class="edit"><div class="egrid">' +
+          '<span>Titel</span><input value="' + esc(w.next) + '" aria-label="Titel der Aufgabe" style="height:36px;border-radius:10px;border:0;background:var(--card);box-shadow:0 0 0 .5px var(--sep);padding:0 12px;font:inherit;color:var(--label)">' +
+          '<span>Symbol</span><div class="r"><span class="tile ' + w.tile + '" style="width:34px;height:34px">' + svg(w.ic) + '</span><button class="chip">Symbol ändern</button></div>' +
+          '<span>Board und Spalte</span><div class="r"><select class="sel" aria-label="Board"><option>Haushalt</option><option>Umbau</option></select><select class="sel" aria-label="Spalte"><option>Offen</option><option>Geplant</option><option>In Arbeit</option></select></div>' +
+          '<span>Fällig</span><div class="r"><button class="chip" aria-pressed="false">Kein Termin</button><button class="chip" aria-pressed="true">sofort</button><button class="chip" aria-pressed="false">in 30 Min.</button><button class="chip" aria-pressed="false">in 1 Std.</button><button class="chip" aria-pressed="false">heute Abend</button><button class="chip" aria-pressed="false">morgen früh</button></div>' +
+          '<span>Priorität</span><div class="r"><button class="chip" aria-pressed="false">Keine</button><button class="chip" aria-pressed="false">Niedrig</button><button class="chip" aria-pressed="true">Mittel</button><button class="chip" aria-pressed="false">Hoch</button></div>' +
+          '<span>Kategorien</span><div class="r"><button class="chip" aria-pressed="false">Putzen</button><button class="chip" aria-pressed="true">Familie</button><button class="chip" aria-pressed="false">Technik</button></div>' +
+          '<span>Beschreibung</span><input placeholder="Notiz zur Aufgabe (optional)" aria-label="Beschreibung" style="height:36px;border-radius:10px;border:0;background:var(--card);box-shadow:0 0 0 .5px var(--sep);padding:0 12px;font:inherit;color:var(--label)">' +
+        '</div></div></div>' +
       '<span class="join" aria-hidden="true"></span>' +
       '<div class="fc"><div class="fh"><span class="tag who">AN WEN</span><span class="muted" style="font-size:13px">abwechselnd, nur wer zu Hause ist</span><button class="chg">Ändern</button></div>' +
         '<div class="order"><div class="o">' + w.who.split('').map(function (c, i) { return '<span class="av" style="background:' + P[c][0] + '">' + c + '</span>' + P[c][1] + (i ? '' : '<em>als Nächstes</em>'); }).join('</div><div class="o">') + '</div></div>' +
@@ -450,6 +487,7 @@ function render() {
   var list = W.filter(function (w) {
     if (state.f !== 'all' && w.st !== state.f) return false;
     if (state.g && w.g !== state.g) return false;
+    var pf = tstate.person; if (pf !== 'alle') { var key = pf === 'meine' ? 'A' : pf; if (w.who.indexOf(key) < 0) return false; }
     return !q || (w.name + w.dev + w.cond + w.g).toLowerCase().indexOf(q) >= 0;
   });
   var groups = {}; list.forEach(function (w) { (groups[w.g] = groups[w.g] || []).push(w); });
@@ -485,7 +523,6 @@ document.getElementById('q').addEventListener('input', function (e) { state.q = 
 function show(v) { document.getElementById('v-w').hidden = v !== 'w'; document.getElementById('v-a').hidden = v !== 'a'; document.getElementById('tab-w').setAttribute('aria-pressed', v === 'w'); document.getElementById('tab-a').setAttribute('aria-pressed', v === 'a'); }
 document.getElementById('tab-w').onclick = function () { show('w'); };
 document.getElementById('tab-a').onclick = function () { show('a'); };
-render();
 
 /* ---------- Aufgaben ---------- */
 var PP = { A: ['#c8501a', 'Anna'], B: ['#2f7ee8', 'Ben'], M: ['#c42b6a', 'Mia'] };
@@ -498,7 +535,15 @@ var T = [
 ];
 var tstate = { open: 2, person: 'meine', fed: null, tab: 'c', done: [1] };
 function pav(w) { return '<span class="avs">' + w.split('').map(function (c) { return '<span class="av" style="background:' + PP[c][0] + '" title="' + PP[c][1] + '">' + c + '</span>'; }).join('') + '</span>'; }
-function pbar() {
+function whoUI() {
+  var w = tstate.person, h = '<button class="wp" data-w="alle" aria-pressed="' + (w === 'alle') + '" aria-label="Alle">Alle</button><button class="wp av2" data-w="meine" aria-pressed="' + (w === 'meine') + '" aria-label="Meine" style="background:' + PP.A[0] + '">A</button>';
+  ['B', 'M'].forEach(function (k) { h += '<button class="wp av2" data-w="' + k + '" aria-pressed="' + (w === k) + '" aria-label="' + PP[k][1] + '" style="background:' + PP[k][0] + '">' + k + '</button>'; });
+  document.getElementById('wrow').innerHTML = h;
+  var name = w === 'alle' ? 'alle Personen' : w === 'meine' ? 'dich (Anna)' : PP[w][1];
+  document.getElementById('wlbl').innerHTML = 'Aufgaben und Wächter von <b>' + name + '</b>';
+  var sc = document.getElementById('scope'); if (sc) sc.innerHTML = w === 'alle' ? '' : '<span class="scopechip">Nur ' + (w === 'meine' ? 'meine' : PP[w][1]) + '<button data-w="alle" aria-label="Filter aufheben">✕</button></span>';
+}
+function pbar() { whoUI(); return;
   var h = '<button class="pc all" data-p="alle" aria-pressed="' + (tstate.person === 'alle') + '">Alle</button><button class="pc all" data-p="meine" aria-pressed="' + (tstate.person === 'meine') + '">Meine</button>';
   Object.keys(PP).forEach(function (k) { h += '<button class="pc" data-p="' + k + '" aria-pressed="' + (tstate.person === k) + '"><span class="av" style="background:' + PP[k][0] + '">' + k + '</span>' + PP[k][1] + '</button>'; });
   document.getElementById('pbar').innerHTML = h;
@@ -558,11 +603,14 @@ document.addEventListener('click', function (e) {
   }
   if (t.id === 'g-w' || t.id === 'g-t' || t.id === 's-tasks') { page(t.id === 'g-w' ? 'w' : 't'); return; }
 });
+document.addEventListener('click', function (e) { var el = e.target.closest('[data-w]'); if (!el) return; tstate.person = el.dataset.w; render(); trender(); });
+var _init = 0;
 function page(p) {
   document.getElementById('pg-w').hidden = p !== 'w'; document.getElementById('pg-t').hidden = p !== 't';
   document.getElementById('g-w').setAttribute('aria-pressed', p === 'w'); document.getElementById('g-t').setAttribute('aria-pressed', p === 't');
   document.querySelectorAll('.side .it').forEach(function (b) { if (p === 't') b.setAttribute('aria-current', b.id === 's-tasks' ? 'page' : 'false'); });
   if (p === 'w') render(); else trender();
 }
-</script>
-</body></html>
+
+render(); trender();
+</script></body></html>

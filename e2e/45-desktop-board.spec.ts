@@ -92,8 +92,9 @@ test('Reihenfolge ändern über die Seitenleiste: die Seitenleiste folgt, die Re
   for (let i = 0; i < 20 && (await up.isEnabled()); i += 1) await up.click();
   await sheet.getByRole('button', { name: 'Fertig' }).click();
   await expect.poll(async () => (await list(request)).map((x) => x.id).filter((id) => [a.id, b.id].includes(id))).toEqual([b.id, a.id]);
-  const names = await sideBoards(page).getByRole('button', { name: new RegExp(`^(Eins|Zwei) ${tag}`) }).allInnerTexts();
-  expect(names.map((n) => n.split('\n')[0]!.trim())).toEqual([`Zwei ${tag}`, `Eins ${tag}`]);
+  await expect
+    .poll(async () => (await sideBoards(page).getByRole('button', { name: new RegExp(`^(Eins|Zwei) ${tag}`) }).allInnerTexts()).map((n) => n.split('\n')[0]!.trim()))
+    .toEqual([`Zwei ${tag}`, `Eins ${tag}`]);
 });
 
 test('Löschen am Desktop: Dialog mit Wahl je Wächter (Umziehen), danach läuft der Wächter im Ziel-Board weiter', async ({ page, request }) => {

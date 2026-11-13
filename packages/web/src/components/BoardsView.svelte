@@ -77,6 +77,7 @@
         type="button"
         class="inline-flex h-9 max-w-full items-center gap-1.5 self-start rounded-full bg-surface2 px-3.5 text-[15px] font-semibold"
         aria-expanded={chipsOpen}
+        aria-label={t('Personen und Kategorien')}
         data-testid="board-filter-toggle"
         onclick={() => (chipsOpen = !chipsOpen)}
       >

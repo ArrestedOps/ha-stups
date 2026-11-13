@@ -258,6 +258,7 @@ export const en: Catalog = {
   'Name des neuen Boards': 'Name of the new board',
   'Tag': 'Day',
   '3 Tage': '3 days',
+  'Personen und Kategorien': 'People and categories',
   'Auswahl aufheben': 'Clear selection',
   'Aktivieren': 'Activate',
   '{n} ausgewählt': ['{n} selected', '{n} selected'],

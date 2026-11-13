@@ -84,7 +84,8 @@ test.describe('Aufbau', () => {
       const d = dialog(page);
       await expect(d).toBeVisible();
       // die Übergangsanimation abwarten, dann messen
-      await expect.poll(async () => Math.round((await d.boundingBox())!.width)).toBe(600);
+      // Einstellungen: zwei Spalten, 880 px; Filter und Mitteilungen 600 px
+      await expect.poll(async () => Math.round((await d.boundingBox())!.width)).toBe((await trigger.getAttribute('aria-label'))?.startsWith('Einstellungen') ? 880 : 600);
       const box = (await d.boundingBox())!;
       expect(Math.abs(box.x + box.width / 2 - 720), 'waagerecht mittig').toBeLessThanOrEqual(1);
       expect(box.y, 'oben Abstand').toBeGreaterThan(20);

@@ -31,7 +31,12 @@ export async function openBoardFilters(page: Page): Promise<void> {
  */
 export async function setScope(page: Page, who: string): Promise<void> {
   const button = page.getByTestId('scope-button');
-  if (await button.count()) {
+  const chips = page.getByRole('group', { name: 'Personen' });
+  if ((await button.count()) === 0 && (await page.getByTestId('board-filter-toggle').count()) > 0) {
+    // Board-Seite am Handy: die Chips (eingeklappt) wählen die Person
+    await openBoardFilters(page);
+    await chips.getByRole('button', { name: who, exact: false }).first().click();
+  } else if (await button.count()) {
     await button.click();
     const label = who === 'Alle' ? 'Alle Aufgaben' : who === 'Meine' ? 'Meine Aufgaben' : `Aufgaben von ${who}`;
     await page.getByRole('menuitemradio', { name: label }).click();

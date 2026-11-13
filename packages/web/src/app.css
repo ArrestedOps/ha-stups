@@ -598,11 +598,11 @@
 .side-board:hover { background: var(--surface); color: var(--text); }
 .side-item[aria-pressed='true'],
 .side-item[aria-current='page'] {
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  border-color: transparent;
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent-text);
 }
-.side-item[aria-current='page']::before {
+.side-item[aria-current='page']::before { display: none;
   content: '';
   position: absolute;
   left: -1px;

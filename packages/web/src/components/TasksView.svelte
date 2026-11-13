@@ -2,7 +2,7 @@
   import { clock } from '../lib/clock.svelte';
   import { agenda } from '../lib/agenda.svelte';
   import { type TodayCard } from '../lib/api';
-  import { columnForNew, dayKeyOf, type CalMode } from '../lib/calendar';
+  import { columnForNew, dayKeyOf, dayNumber, monthGrid, step as stepCal, weekdayShort, type CalMode } from '../lib/calendar';
   import { deviceTz } from '../lib/datetime';
   import { names as monthNames } from '../lib/i18n/names';
   import { t, tn } from '../lib/i18n/index.svelte';
@@ -183,6 +183,8 @@
 
   const done = (c: TodayCard) => void completeCard(c);
   const openHouse = (c: TodayCard) => void openCardAnywhere(c);
+  const todayKey = $derived(dayKeyOf(nowMs));
+
   /** Desktop: Schnellzeile über der Tabelle */
   let quick = $state('');
   const quickColumn = $derived(columnForNew(ui.view?.columns ?? [], false));
@@ -246,22 +248,65 @@
           </span>
         </div>
         {:else}
-        <div>
-          <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[16px] font-semibold text-accent-text" onclick={back}>
-            <Icon name="chevron-left" size={22} stroke={2.2} />{t('Aufgaben')}
-          </button>
-          <div class="flex items-end justify-between gap-2">
-            <h1 class="mt-0.5 text-[30px] leading-[1.1] font-extrabold tracking-tight lg:sr-only">{t('Kalender')}</h1>
-            <div class="mb-0.5 flex items-center gap-2">
-              {@render filterButton(activeFilterCount(sf), true)}
-              <Chip small onclick={() => setCalMode('month')}>{calMonthTitle}<Icon name="chevron-down" size={16} stroke={2} /></Chip>
-            </div>
-          </div>
+        <div class="flex items-center justify-between gap-3">
+          <span class="sr-only">{t('Kalender')}</span>
+          {@render filterButton(activeFilterCount(sf), true)}
         </div>
         {/if}
         <Segmented items={ui.desktop ? VIEWS : [...VIEWS, { id: 'list', label: t('Liste') }]} value={calMode} label={t('Ansicht')} small onchange={(v) => (v === 'list' ? back() : setCalMode(v as CalMode))} />
       </div>
-      <CalendarView mode={calMode} bind:day onopenday={openDay} />
+      <div class="flex min-h-0 flex-1 gap-6">
+        {#if ui.desktop}
+          <!-- Desktop (Entwurf): links der Mini-Monat und die Boards zum Ein- und Ausblenden -->
+          <aside class="hidden w-[236px] shrink-0 flex-col gap-5 pt-3 xl:flex" aria-label={t('Kalender-Auswahl')} data-testid="calendar-side">
+            <div>
+              <div class="mb-2 flex items-center justify-between px-1">
+                <h3 class="text-[15px] font-semibold">{calMonthTitle}</h3>
+                <span class="flex">
+                  <button class="flex h-7 w-7 items-center justify-center text-text-soft" aria-label={t('Voriger Monat')} onclick={() => (day = stepCal('month', day, -1))}><Icon name="chevron-left" size={16} stroke={2.4} /></button>
+                  <button class="flex h-7 w-7 items-center justify-center text-text-soft" aria-label={t('Nächster Monat')} onclick={() => (day = stepCal('month', day, 1))}><Icon name="chevron-right" size={16} stroke={2.4} /></button>
+                </span>
+              </div>
+              <div class="grid grid-cols-7 text-center text-[11px] font-semibold text-text-soft">
+                {#each monthGrid(day)[0]! as d (d)}<span class="py-1">{weekdayShort(d).slice(0, 1)}</span>{/each}
+              </div>
+              {#each monthGrid(day) as week (week[0])}
+                {@const inView = week.includes(day) && (calMode === 'week' || calMode === 'days3' || calMode === 'day')}
+                <div class="grid grid-cols-7 rounded-md text-center text-[13px] {inView ? 'bg-accent/12' : ''}">
+                  {#each week as d (d)}
+                    <button
+                      class="flex h-7 items-center justify-center rounded-full {d === todayKey ? 'bg-brand-dot font-bold text-on-accent' : ''} {d.slice(0, 7) === day.slice(0, 7) ? '' : 'text-text-soft2'}"
+                      aria-label={d}
+                      aria-current={d === day ? 'date' : undefined}
+                      onclick={() => (day = d)}
+                    >{dayNumber(d)}</button>
+                  {/each}
+                </div>
+              {/each}
+            </div>
+            <div>
+              <p class="side-head !px-1">Boards</p>
+              {#each ui.boards as b (b.id)}
+                {@const on = sf.boardIds.length === 0 || sf.boardIds.includes(b.id)}
+                <label class="flex h-8 cursor-pointer items-center gap-2.5 px-1 text-[14px]">
+                  <input
+                    type="checkbox"
+                    class="h-[18px] w-[18px] accent-(--brand-dot)"
+                    checked={on}
+                    onchange={() => {
+                      const all = ui.boards.map((x) => x.id);
+                      const current = sf.boardIds.length === 0 ? all : sf.boardIds;
+                      const next = current.includes(b.id) ? current.filter((x) => x !== b.id) : [...current, b.id];
+                      setScheduleFilter({ boardIds: next.length === all.length || next.length === 0 ? [] : next });
+                    }}
+                  />{b.name}
+                </label>
+              {/each}
+            </div>
+          </aside>
+        {/if}
+        <div class="flex min-h-0 min-w-0 flex-1 flex-col"><CalendarView mode={calMode} bind:day onopenday={openDay} /></div>
+      </div>
     </div>
   {:else}
     <div class="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab lg:-mx-1 lg:px-1 lg:pt-0" data-testid="tasks" role="presentation" onkeydown={arrows}>

@@ -1406,6 +1406,7 @@ export const en: Catalog = {
   'Original im Browser öffnen': 'Open original in the browser',
   'Älter': 'Earlier',
   'Alle gelesen': 'Mark all read',
+  'Alle als gelesen markieren': 'Mark all as read',
   'Mitteilungen nicht geladen': 'Notifications not loaded',
   'Beim Laden ist etwas schiefgegangen. Bitte gleich noch einmal versuchen.': 'Something went wrong while loading. Please try again in a moment.',
   'Stupse, Antworten, Aufgaben von Wächtern, Erledigtes und Kommentare der letzten 14 Tage erscheinen hier.': 'Nudges, replies, tasks from watchers, completed tasks and comments from the last 14 days appear here.',

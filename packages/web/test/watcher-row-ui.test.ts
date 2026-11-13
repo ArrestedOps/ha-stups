@@ -98,7 +98,7 @@ describe('Wächter-Zeile in der Tabelle (Desktop)', () => {
   it('alle Spalten sind da, jede mit ihrem Inhalt', () => {
     const out = table();
     expect(out).toMatch(/data-testid="watcher-subject">Tür Batterie</);
-    expect(out).toMatch(/data-testid="watcher-condition">Wenn Tür Batterie 10 Minuten unter 20 % liegt</);
+    expect(out).toMatch(/data-testid="watcher-condition">\u00a0·\u00a0Wenn Tür Batterie 10 Minuten unter 20 % liegt</);
     expect(out).toMatch(/data-testid="watcher-value">26 %</);
     expect(out).toMatch(/data-testid="watcher-status">[\s\S]*Ruhig/);
     expect(out).toMatch(/data-testid="watcher-last">vor 3 Std\.</);
@@ -121,7 +121,8 @@ describe('Wächter-Zeile in der Tabelle (Desktop)', () => {
   it('Spalten richten sich nach der Breite der Liste: schmal weniger, mit denselben Klassen wie der Kopf', () => {
     const out = table();
     expect(out).toContain('grid-cols-[minmax(0,1fr)_4.5rem_7rem_3.25rem]');
-    expect(out).toMatch(/class="hidden @min-\[560px\]:block[^"]*"[^>]*data-testid="watcher-condition"/);
+    // die Bedingung steht in der Zelle des Namens und erscheint ab 640 px, nicht als eigene Spalte
+    expect(out).toMatch(/class="hidden @min-\[640px\]:inline"[^>]*data-testid="watcher-condition"/);
     expect(out).toMatch(/class="hidden @min-\[640px\]:block[^"]*"[^>]*data-testid="watcher-last"/);
     expect(out).toMatch(/class="hidden @min-\[820px\]:flex[^"]*"[^>]*data-testid="watcher-next"/);
   });

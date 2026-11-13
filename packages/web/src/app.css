@@ -336,8 +336,7 @@
 
 /* Uhrzeit-Rad: das gewählte Feld liegt in einem Band */
 .wheel-band {
-  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  background: var(--surface2);
 }
 
 /* „Mehr“ in Neue Aufgabe: gestrichelte Felder (Checkliste, Foto / Link) */

@@ -36,7 +36,8 @@
     mode,
     day = $bindable(),
     onopenday,
-  }: { mode: CalMode; day: string; onopenday: (day: string) => void } = $props();
+    hideNav = false,
+  }: { mode: CalMode; day: string; onopenday: (day: string) => void; /** Desktop: Pfeile, Titel und „Heute“ stehen in der Kopfzeile der Seite */ hideNav?: boolean } = $props();
   const todayKey = () => dayKeyOf(Date.now());
 
   let loaded = $state<ScheduleCard[]>([]);
@@ -143,7 +144,7 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
-  <div class="mt-3 flex items-center gap-1">
+  <div class="mt-3 flex items-center gap-1 {hideNav ? 'hidden' : ''}">
     <button class="flex h-11 w-9 items-center justify-center text-accent-text" aria-label={t('Zurück')} onclick={() => (day = step(mode, day, -1))}>
       <Icon name="chevron-left" size={22} stroke={2.6} />
     </button>

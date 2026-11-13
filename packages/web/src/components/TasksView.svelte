@@ -2,7 +2,7 @@
   import { clock } from '../lib/clock.svelte';
   import { agenda } from '../lib/agenda.svelte';
   import { type TodayCard } from '../lib/api';
-  import { columnForNew, dayKeyOf, dayNumber, monthGrid, step as stepCal, weekdayShort, type CalMode } from '../lib/calendar';
+  import { columnForNew, dayKeyOf, dayNumber, isoWeek, monthGrid, rangeTitle, step as stepCal, weekdayShort, type CalMode } from '../lib/calendar';
   import { deviceTz } from '../lib/datetime';
   import { names as monthNames } from '../lib/i18n/names';
   import { t, tn } from '../lib/i18n/index.svelte';
@@ -248,12 +248,22 @@
           </span>
         </div>
         {:else}
-        <div class="flex items-center justify-between gap-3">
-          <span class="sr-only">{t('Kalender')}</span>
+        <!-- Desktop (Entwurf): Pfeile und „Heute“, Zeitraum mit Kalenderwoche, rechts Tag, 3 Tage, Woche, Monat -->
+        <div class="flex items-center gap-3" data-testid="calendar-head">
+          <span class="flex items-center gap-1">
+            <button class="flex h-9 w-9 items-center justify-center rounded-full bg-surface2 text-accent-text" aria-label={t('Zurück')} onclick={() => (day = stepCal(calMode, day, -1))}><Icon name="chevron-left" size={18} stroke={2.6} /></button>
+            <button class="flex h-9 w-9 items-center justify-center rounded-full bg-surface2 text-accent-text" aria-label={t('Weiter')} onclick={() => (day = stepCal(calMode, day, 1))}><Icon name="chevron-right" size={18} stroke={2.6} /></button>
+          </span>
+          <button class="inline-flex h-9 items-center rounded-full bg-surface2 px-4 text-[14px] font-semibold" onclick={() => (day = dayKeyOf(nowMs))}>{t('Heute')}</button>
+          <h2 class="flex items-baseline gap-2 truncate text-[22px] font-bold" aria-live="polite">{rangeTitle(calMode, day)}{#if calMode === 'week' || calMode === 'days3'}<span class="text-[14px] font-medium text-text-soft">KW {isoWeek(day)}</span>{/if}</h2>
+          <span class="flex-1"></span>
+          <div class="w-[360px]"><Segmented items={VIEWS} value={calMode} label={t('Ansicht')} small onchange={(v) => setCalMode(v as CalMode)} /></div>
           {@render filterButton(activeFilterCount(sf), true)}
         </div>
         {/if}
-        <Segmented items={ui.desktop ? VIEWS : [...VIEWS, { id: 'list', label: t('Liste') }]} value={calMode} label={t('Ansicht')} small onchange={(v) => (v === 'list' ? back() : setCalMode(v as CalMode))} />
+        {#if !ui.desktop}
+          <Segmented items={[...VIEWS, { id: 'list', label: t('Liste') }]} value={calMode} label={t('Ansicht')} small onchange={(v) => (v === 'list' ? back() : setCalMode(v as CalMode))} />
+        {/if}
       </div>
       <div class="flex min-h-0 flex-1 gap-6">
         {#if ui.desktop}
@@ -305,7 +315,7 @@
             </div>
           </aside>
         {/if}
-        <div class="flex min-h-0 min-w-0 flex-1 flex-col"><CalendarView mode={calMode} bind:day onopenday={openDay} /></div>
+        <div class="flex min-h-0 min-w-0 flex-1 flex-col"><CalendarView mode={calMode} bind:day onopenday={openDay} hideNav={ui.desktop} /></div>
       </div>
     </div>
   {:else}

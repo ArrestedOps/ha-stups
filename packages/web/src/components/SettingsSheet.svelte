@@ -114,10 +114,11 @@
 {:else if page === 'beta'}
   <BetaPage />
 {:else}
-  <Sheet title={t('Einstellungen')} onclose={closeSheet}>
-    <div class="flex flex-col gap-3.5 pt-1">
-      <SettingsHead />
+  <Sheet title={t('Einstellungen')} onclose={closeSheet} lgWidth={880}>
+    <div class="flex flex-col gap-3.5 pt-1 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
+      <div class="lg:col-span-2"><SettingsHead /></div>
       {#if !ui.isChild}
+        <div class="lg:col-span-2">
         <!-- Für jede Person ganz oben: Feedback senden (die Liste der Rückmeldungen steht für Administratoren unter „Hilfe und Daten") -->
         <div class="list-group !mt-0">
         <ListRow title={t('Feedback & Ideen')} label={t('Feedback & Ideen')} onclick={() => openFeedback()}>
@@ -125,6 +126,7 @@
           {#snippet meta()}{t('Fehler melden, Wünsche, Lob und Kritik')}{/snippet}
           {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
         </ListRow>
+        </div>
         </div>
       {/if}
       {#each groups as g (g.id)}
@@ -171,7 +173,7 @@
         </div>
       {/each}
 
-      <p class="flex items-center justify-center gap-2 py-2 text-center text-[12px] text-dim">
+      <p class="flex items-center justify-center gap-2 py-2 text-center text-[12px] text-dim lg:col-span-2">
         <img src={logo} alt="" class="h-5 w-5 rounded-[5px]" width="20" height="20" />
         <span>
           {#if !feat.standalone}{t('Angemeldet als {name}', { name: ui.me?.displayName ?? '—' })}{/if}

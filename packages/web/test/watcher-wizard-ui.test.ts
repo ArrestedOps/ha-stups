@@ -23,14 +23,14 @@ beforeEach(() => {
 
 describe('Zurück im Assistenten: in jedem Schritt sichtbar', () => {
   for (const step of [1, 2, 3, 4] as const) {
-    it(`Schritt ${step}: genau ein Zurück-Knopf mit Pfeil in der Kopfzeile, benannt „Zurück“`, () => {
+    it(`Schritt ${step}: genau ein Zurück-Knopf (nur Text, wie im Entwurf) in der Kopfzeile, benannt „Zurück“`, () => {
       const out = html(editor(step));
       expect(count(out, /aria-label="Zurück"/g)).toBe(1);
-      expect(out).toMatch(/<button[^>]*aria-label="Zurück"[^>]*>[^]*?<svg/); // Pfeil links
+      expect(out).toMatch(/<button[^>]*aria-label="Zurück"[^>]*>\s*Zurück/);
     });
 
-    it(`Schritt ${step}: Schließen bleibt daneben erreichbar`, () => {
-      expect(html(editor(step))).toContain('>Schließen<');
+    it(`Schritt ${step}: kein „Schließen“ rechts (Escape schließt, Zurück am ersten Schritt)`, () => {
+      expect(html(editor(step))).not.toContain('>Schließen<');
     });
   }
 

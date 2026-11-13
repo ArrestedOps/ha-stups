@@ -115,6 +115,7 @@ for (const width of [320, 260]) {
 test('Tastatur: Tab führt nacheinander zu sichtbaren, benannten Bedienelementen; Escape schließt Fenster und gibt den Fokus zurück', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByTestId('tasks')).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Deine Zahlen' })).toBeVisible(); // erst wenn die Liste geladen ist, gibt es genug Bedienelemente
   const seen: string[] = [];
   for (let i = 0; i < 14; i += 1) {
     await page.keyboard.press('Tab');

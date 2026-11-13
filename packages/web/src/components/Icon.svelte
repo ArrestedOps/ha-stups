@@ -41,6 +41,7 @@
     'user': '<path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/>',
     'hand': '<path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/>',
     lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+    'pause': '<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>',
     'flag': '<path d="M4 22V15M4 15V4c3-2 6 0 8 0s5-2 8 0v11c-3-2-6 0-8 0s-5-2-8 0z"/>',
     tag: '<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
     columns: '<rect x="3" y="4" width="6" height="16" rx="1"/><rect x="11" y="4" width="10" height="9" rx="1"/>',

@@ -22,10 +22,11 @@
     busy = false,
     fresh = false,
     selected = false,
+    open = false,
     onselect,
     onopen,
     ontoggle,
-  }: { item: HomeItem; nowMs: number; canToggle: boolean; busy?: boolean; /** gerade angelegt: kurz hervorgehoben */ fresh?: boolean; /** für die Sammelaktionen markiert */ selected?: boolean; onselect?: (on: boolean) => void; onopen: () => void; ontoggle: (on: boolean) => void } = $props();
+  }: { item: HomeItem; nowMs: number; canToggle: boolean; busy?: boolean; /** gerade angelegt: kurz hervorgehoben */ fresh?: boolean; /** für die Sammelaktionen markiert */ selected?: boolean; /** der Ablauf steht aufgeklappt unter der Zeile */ open?: boolean; onselect?: (on: boolean) => void; onopen: () => void; ontoggle: (on: boolean) => void } = $props();
 
   const status = $derived<RowStatus>(rowStatus(i));
   const TILE: Record<RowStatus, TileColor> = { waiting: 'orange', running: 'green', soon: 'blue', quiet: 'teal', off: 'gray', missing: 'red', noassign: 'red', target: 'red' };
@@ -42,10 +43,10 @@
   });
 </script>
 
-<li class="relative grid min-h-16 {selected ? 'bg-accent/10' : ''} scroll-mt-14 items-center gap-x-3 px-3.5 py-2 transition-colors duration-700 hover:bg-surface2 {fresh ? 'row-fresh' : ''} has-[[data-row-open]:focus-visible]:bg-surface2 has-[[data-row-open]:focus-visible]:outline-2 has-[[data-row-open]:focus-visible]:-outline-offset-2 has-[[data-row-open]:focus-visible]:outline-accent {TABLE_COLS}" data-testid="watcher-row" data-status={status} data-watcher-id={i.watcherId} data-fresh={fresh ? '' : undefined}>
+<li class="relative grid h-[60px] {selected || open ? 'bg-accent/10' : ''} scroll-mt-14 items-center gap-x-3 px-3.5 transition-colors duration-700 hover:bg-surface2 {fresh ? 'row-fresh' : ''} has-[[data-row-open]:focus-visible]:bg-surface2 has-[[data-row-open]:focus-visible]:outline-2 has-[[data-row-open]:focus-visible]:-outline-offset-2 has-[[data-row-open]:focus-visible]:outline-accent {TABLE_COLS}" data-testid="watcher-row" data-status={status} data-watcher-id={i.watcherId} data-fresh={fresh ? '' : undefined}>
   <!-- Die ganze Zeile öffnet den Wächter: ein Knopf, der die Zeile ausfüllt und über den Zellen liegt (ohne Text, der Name steht im Label);
        er steht zuerst, damit die Tab-Reihenfolge stimmt. Der Schalter liegt darüber. -->
-  <button type="button" class="absolute inset-0 z-[1] cursor-pointer focus-visible:outline-none" data-row-open aria-label={t('Wächter {name} öffnen', { name: i.name })} onclick={onopen}></button>
+  <button type="button" class="absolute inset-0 z-[1] cursor-pointer focus-visible:outline-none" data-row-open aria-expanded={open} aria-label={t('Wächter {name} öffnen', { name: i.name })} onclick={onopen}></button>
   <!-- Wächter -->
   <div class="flex min-w-0 items-center gap-3 {dim}">
     {#if onselect}
@@ -58,7 +59,7 @@
     </span>
   </div>
   <!-- Bedingung -->
-  <p class="{COL_MID} line-clamp-2 wrap-anywhere text-[13px] leading-[1.35] text-fg2 {dim}" data-testid="watcher-condition">{t('Wenn {condition}', { condition: triggerText(i) })}</p>
+  <p class="{COL_MID} truncate text-[13px] text-fg2 {dim}" title={t('Wenn {condition}', { condition: triggerText(i) })} data-testid="watcher-condition">{t('Wenn {condition}', { condition: triggerText(i) })}</p>
   <!-- Stand -->
   <span class="flex min-w-0 items-center gap-2 text-[14px] tabular-nums {i.value ? 'text-fg' : 'text-hint'} {dim}">
     {#if percent !== null}<span class="h-1.5 w-8 shrink-0 overflow-hidden rounded-full bg-track" aria-hidden="true"><i class="block h-full rounded-full" style:width="{percent}%" style:background={percent < 15 ? 'var(--danger)' : percent < 30 ? 'var(--c-orange-fg)' : 'var(--c-green-fg)'}></i></span>{/if}
@@ -76,10 +77,10 @@
   </span>
   <!-- Zuständige -->
   <span class="{COL_WIDE} min-w-0 items-center gap-2 text-[12.5px] text-fg2 {dim}" title={who} data-testid="watcher-who">
-    {#if people.length}<AvatarStack {people} size={24} />{/if}{#if modeText}<span class="min-w-0 truncate">{modeText}</span>{/if}
+    {#if people.length}<AvatarStack {people} size={24} />{/if}{#if modeText && people.length === 0}<span class="min-w-0 truncate">{modeText}</span>{/if}
   </span>
   <!-- Schalter -->
-  <span class="relative z-10 flex justify-end">
+  <span class="relative z-10 flex items-center justify-end gap-2">
     <Toggle checked={i.active} label={t('{name} aktiv', { name: i.name })} disabled={!canToggle || busy} onchange={ontoggle} />
   </span>
 </li>

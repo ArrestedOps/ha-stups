@@ -201,7 +201,7 @@ export function whoText(assign: HomeItem['assign'], personName: (id: string) => 
  * ab 900 px die letzte Auslösung; ab 1100 px die nächste Aufgabe und die Zuständigen. Lieber Spalten ausblenden als quetschen.
  */
 export const TABLE_COLS =
-  'grid-cols-[minmax(0,1fr)_4.5rem_7rem_3.25rem] @min-[560px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_4.5rem_7rem_3.25rem] @min-[640px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_4.5rem_7rem_5.5rem_3.25rem] @min-[820px]:grid-cols-[minmax(0,1.6fr)_minmax(0,1.3fr)_4.5rem_7rem_5.5rem_minmax(0,1fr)_8rem_3.25rem]';
+  'grid-cols-[minmax(0,1fr)_4.5rem_7rem_3.25rem] @min-[560px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_4.5rem_7rem_3.25rem] @min-[640px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_4.5rem_7rem_5.5rem_3.25rem] @min-[820px]:grid-cols-[minmax(0,2.2fr)_minmax(0,1.3fr)_4.5rem_7rem_5rem_minmax(0,1fr)_6.5rem_3.25rem]';
 /** Spalten, die erst ab 700 px (Bedingung), 900 px (letzte Auslösung) und 1100 px (nächste Aufgabe, Zuständige) erscheinen */
 export const COL_MID = 'hidden @min-[560px]:block';
 export const COL_LAST = 'hidden @min-[640px]:block';

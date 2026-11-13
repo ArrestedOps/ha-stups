@@ -111,6 +111,10 @@ export const ui = $state({
   taskGroupBy: 'due' as 'due' | 'board',
   /** Desktop: wie viele Aufgaben die Liste gerade zeigt (für die Kopfzeile) */
   taskCount: 0,
+  /** Desktop, Reiter Wächter: was die Tabelle zeigt (all, problem, waiting, running, soon, paused oder cat:<Schlüssel>); die Seitenleiste wählt es */
+  watcherScope: 'all' as string,
+  /** Desktop: Zahlen und Kategorien für die Gruppe „Wächter“ in der Seitenleiste (die Seite Wächter füllt sie, solange sie offen ist) */
+  watcherNav: null as null | { counts: { all: number; problem: number; waiting: number; running: number; soon: number; paused: number }; cats: { key: string; name: string | null; n: number }[] },
   /** Desktop: die Befehlspalette (Strg/Cmd + K) ist offen */
   palette: false,
   /** Desktop: Rechtsklick-Menü einer Aufgabe (Zeigerstelle und Aufgabe) */

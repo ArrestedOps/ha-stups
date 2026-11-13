@@ -43,22 +43,15 @@ test('Wächter: Raster in zwei oder drei Spalten, alle Aufgaben einer Reihe glei
   await expect(page.getByRole('button', { name: 'Neuer Wächter', exact: true })).toHaveCount(1); // nur der Knopf, nicht zusätzlich der „+“ des Handys
   await expect(page.getByTestId('sidebar')).toBeVisible();
 
-  // jedes Raster: Zeilen mit gleich hohen Aufgaben, bis zu drei Spalten
-  const grids = page.getByTestId('home').locator('ul.grid');
-  await expect(grids.first()).toBeVisible();
-  const info = await grids.evaluateAll((els) =>
-    els.map((ul) => {
-      const items = [...ul.children].map((li) => li.getBoundingClientRect());
-      const rows = new Map<number, number[]>();
-      for (const r of items) rows.set(Math.round(r.top), [...(rows.get(Math.round(r.top)) ?? []), Math.round(r.height)]);
-      return { cols: Math.max(...[...rows.values()].map((r) => r.length)), equal: [...rows.values()].every((h) => Math.max(...h) - Math.min(...h) <= 1) };
-    }),
-  );
-  for (const g of info) {
-    expect(g.equal, 'Aufgaben einer Reihe gleich hoch').toBe(true);
-    expect(g.cols).toBeLessThanOrEqual(3);
-  }
-  expect(Math.max(...info.map((g) => g.cols)), 'mehrere Spalten').toBeGreaterThanOrEqual(2);
+  // eine Tabelle: alle vier Wächter, jede Zeile gleich hoch (60 px), nichts läuft über
+  const rows = page.getByTestId('watcher-row');
+  await expect(rows).toHaveCount(4);
+  const heights = await rows.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().height)));
+  expect(new Set(heights).size, `Zeilenhöhen ${heights.join('/')}`).toBe(1);
+  expect(heights[0]).toBe(60);
+  // „Wächter“ ist eine eigene Gruppe in der Seitenleiste (Filter und Kategorien), kein zweites Auswahlfeld in der Seite
+  await expect(page.getByTestId('sidebar').getByRole('button', { name: /^Mit Problem/ })).toBeVisible();
+  await expect(page.getByTestId('watchers-panel')).toHaveCount(0);
   const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(over).toBeLessThanOrEqual(0);
 
@@ -114,12 +107,13 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
   const list = page.getByTestId('watcher-list');
   await expect(list).toBeVisible();
 
-  // Läuft gerade (die Maschine), danach die Kategorien; jeder Wächter genau einmal
-  await expect(page.getByTestId('home-running')).toContainText(`Maschine ${tag}`);
+  // Alle Wächter nach Kategorie gruppiert (jeder genau einmal), der laufende trägt den Status „Läuft gerade“
   await expect(page.getByTestId('watcher-row')).toHaveCount(4);
-  await expect(page.getByTestId('watcher-category')).toHaveCount(2);
+  await expect(page.getByTestId('watcher-category')).toHaveCount(3);
   await expect(page.getByTestId('watcher-category').nth(0)).toContainText('Batterien');
-  await expect(page.getByTestId('watcher-category').nth(1)).toContainText('Ohne Kategorie');
+  await expect(page.getByTestId('watcher-category').nth(1)).toContainText('Haushaltsgeräte');
+  await expect(page.getByTestId('watcher-category').nth(2)).toContainText('Ohne Kategorie');
+  await expect(page.getByTestId('watcher-row').filter({ hasText: `Maschine ${tag}` }).getByTestId('watcher-status')).toContainText('Läuft');
 
   // Spaltenkopf und Zeilen: alle Spalten bei 1440 px, bündig (gleiche linke Kante je Spalte)
   const head = page.getByTestId('watcher-table-head');
@@ -151,29 +145,32 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
   await expect(row.getByTestId('watcher-status')).toContainText('Aus');
   await expect(page.getByTestId('watcher-row')).toHaveCount(4);
 
-  // Tippen auf die Zeile (irgendwo außer dem Schalter) öffnet den Wächter
+  // Tippen auf die Zeile (irgendwo außer dem Schalter) klappt den Ablauf darunter auf (kein Fenster); noch ein Tipp klappt zu
   const cell = (await row.getByTestId('watcher-condition').boundingBox())!;
   await page.mouse.click(cell.x + cell.width / 2, cell.y + cell.height / 2); // wie ein Mensch: ein Klick auf die Fläche, nicht auf einen Knopf
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('watcher-inline')).toBeVisible();
+  await expect(page.getByTestId('watcher-inline').getByTestId('watcher-flow')).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.mouse.click(cell.x + cell.width / 2, cell.y + cell.height / 2);
+  await expect(page.getByTestId('watcher-inline')).toHaveCount(0);
 
-  // Tastatur: der Name ist ein Knopf (Enter öffnet)
+  // Tastatur: der Name ist ein Knopf (Enter klappt auf)
   await row.getByRole('button', { name: `Wächter Bad ${tag} öffnen` }).focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('watcher-inline')).toBeVisible();
+  await row.getByRole('button', { name: `Wächter Bad ${tag} öffnen` }).press('Enter');
+  await expect(page.getByTestId('watcher-inline')).toHaveCount(0);
 
   // Kategorien klappen (aria-expanded), die Suche klappt Treffer-Gruppen wieder auf
   const batt = page.getByTestId('watcher-category').nth(0);
-  await batt.getByRole('button', { expanded: true }).click();
+  await batt.getByRole('button', { name: /Batterien/, expanded: true }).click();
   await expect(batt.getByTestId('watcher-row')).toHaveCount(0);
   await page.keyboard.press('/');
   await page.keyboard.type(`Handy ${tag}`);
   await expect(page.getByTestId('watcher-row')).toHaveCount(1);
   await expect(page.getByTestId('watcher-category').nth(0)).toContainText('Batterien');
   await page.keyboard.press('Escape');
-  await batt.getByRole('button', { expanded: false }).click();
+  await batt.getByRole('button', { name: /Batterien/, expanded: false }).click();
   await expect(batt.getByTestId('watcher-row')).toHaveCount(2);
 
   // schmaleres Fenster (1024 px): Spalten fallen weg statt zu quetschen, nichts läuft über
@@ -208,7 +205,7 @@ test('Wächter am Desktop: Zeilen markieren, Sammelaktionen Pausieren und Aktivi
   }
   await page.goto('/');
   await sideNav(page).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByTestId('watchers-panel').getByRole('button', { name: /^Sammel/ }).click();
+  await page.getByTestId('sidebar').getByRole('button', { name: /^Sammel 2$/ }).click();
   await page.getByRole('checkbox', { name: `Sammel ${tag} 0 auswählen` }).check();
   await page.getByRole('checkbox', { name: `Sammel ${tag} 1 auswählen` }).check();
   const bar = page.getByTestId('watcher-bulk');
@@ -219,4 +216,58 @@ test('Wächter am Desktop: Zeilen markieren, Sammelaktionen Pausieren und Aktivi
     .toBe(true);
   await expect(bar).toHaveCount(0);
   await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '12' } }); // andere Tests erwarten den Stand von vorher
+});
+
+test('Wächter am Desktop: Filter in der Seitenleiste, aufgeklappter Ablauf bearbeitet und speichert, Aktivität als Reiter', async ({ page, request }) => {
+  const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
+  const rene = people.find((p) => p.name === 'Rene')!;
+  const tag = Date.now().toString(36);
+  const board = (await (await request.post('/api/boards', { data: { name: `Inline ${tag}` } })).json()) as { id: string };
+  const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
+  const columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;
+  await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '80' } });
+  const ids: string[] = [];
+  for (const [name, category] of [[`Alpha ${tag}`, 'Gruppe A'], [`Beta ${tag}`, 'Gruppe B']] as const) {
+    const r = await request.post('/api/watchers', {
+      data: {
+        name,
+        category,
+        trigger: { entityId: 'sensor.bad_batterie', kind: 'below', value: 10, forMin: 10 },
+        card: { boardId: board.id, columnId, title: `Akku ${name}`, due: { kind: 'none' } },
+        assign: { mode: 'fixed', personIds: [rene.id] },
+      },
+    });
+    expect(r.status()).toBe(201);
+    ids.push(((await r.json()) as { id: string }).id);
+  }
+  await page.goto('/');
+  await sideNav(page).getByRole('button', { name: 'Wächter' }).click();
+  const side = page.getByTestId('sidebar');
+  await expect(page.getByTestId('watcher-row')).toHaveCount(2);
+
+  // Seitenleiste: Kategorie wählen filtert die Tabelle, „Alle Wächter“ zeigt wieder alles
+  await side.getByRole('button', { name: /^Gruppe A/ }).click();
+  await expect(page.getByTestId('watcher-row')).toHaveCount(1);
+  await expect(page.getByTestId('watcher-row')).toContainText(`Alpha ${tag}`);
+  await side.getByRole('button', { name: 'Wächter', exact: true }).click();
+  await expect(page.getByTestId('watcher-row')).toHaveCount(2);
+
+  // Aufklappen: der Ablauf steht unter der Zeile, ändert man etwas und speichert, gilt es sofort; nur eine Zeile ist offen
+  const row = page.getByTestId('watcher-row').filter({ hasText: `Alpha ${tag}` });
+  await row.getByRole('button', { name: `Wächter Alpha ${tag} öffnen` }).click();
+  const inline = page.getByTestId('watcher-inline');
+  await expect(inline.getByTestId('watcher-flow')).toBeVisible();
+  await page.getByTestId('watcher-row').filter({ hasText: `Beta ${tag}` }).getByRole('button', { name: `Wächter Beta ${tag} öffnen` }).click();
+  await expect(page.getByTestId('watcher-inline')).toHaveCount(1);
+  await expect(page.getByTestId('watcher-inline')).toContainText(`Beta ${tag}`);
+  await page.getByTestId('watcher-inline').getByRole('button', { name: 'Pausieren' }).click();
+  await expect
+    .poll(async () => ((await (await request.get('/api/watchers')).json()) as { items: { id: string; active: boolean }[] }).items.find((w) => w.id === ids[1])!.active)
+    .toBe(false);
+
+  // Aktivität: derselbe Aufbau als Reiter, kein Block am Ende der Seite
+  await page.getByRole('radio', { name: 'Aktivität' }).click();
+  await expect(page.getByTestId('home-activity')).toBeVisible();
+  await expect(page.getByTestId('watcher-row')).toHaveCount(0);
+  for (const id of ids) await request.delete(`/api/watchers/${id}`);
 });

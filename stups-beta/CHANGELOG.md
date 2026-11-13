@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.5
+
+**Wächter am Desktop neu geordnet.** Wächter sind eine eigene Gruppe in der Seitenleiste (unter Boards und Kalender), mit Filtern und Kategorien. Die Seite ist eine einzige Tabelle in voller Breite, alle Zeilen gleich hoch. Ein Klick auf eine Zeile klappt den Ablauf darunter auf (bearbeiten, speichern, testen, pausieren, löschen), kein Fenster mehr. „Aktivität“ ist ein Reiter. Am Handy bleibt alles wie bisher.
+
+**Bitte prüfen (Testliste):** (1) Seitenleiste: Gruppe „Wächter“ unter „Mehr“, Filter und Kategorien wählen. (2) Eine Zeile aufklappen, etwas ändern, speichern; eine andere Zeile klappt die erste zu. (3) Alle Zeilen gleich hoch, Namen vollständig sichtbar (Tooltip bei langen). (4) Reiter „Aktivität“. (5) „Neuer Wächter“ klappt weiter über der Tabelle auf.
+
 ## 1.42.0-beta.4
 
 **Zeilen am Handy zeigen, wem eine Aufgabe gehört.** Aufgaben und Karten im Board zeigen die Zuständigen als Bilder und mit Vornamen, neben Datum und Kategorie. Der Kalender hat am Handy den gleichen Kopf wie die anderen Reiter. Am Desktop wird das Zahnrad in der Seitenleiste nicht mehr abgeschnitten, und es gibt keinen Seitwärts-Balken mehr.

@@ -18,6 +18,7 @@
   import TopBar from './TopBar.svelte';
   import WatcherDesk from './WatcherDesk.svelte';
   import WatcherRow from './WatcherRow.svelte';
+  import WatcherSheet from './WatcherSheet.svelte';
   import WatcherTableRow from './WatcherTableRow.svelte';
   import Segmented from './ui/Segmented.svelte';
   import ListRow from './ui/ListRow.svelte';
@@ -78,21 +79,39 @@
     saveCollapse(memo);
   }
 
-  // Desktop: die Liste links (Alle Wächter, Mit Problem, Wartet, Läuft gerade, Kommt bald, Pausiert, Kategorien) wählt, was die Tabelle zeigt
-  let scope = $state<string>('all');
-  const scopeAll = $derived(!ui.desktop || scope === 'all');
-  const scopeCats = $derived(layout.groups);
+  // Desktop: die Seitenleiste wählt (ui.watcherScope), was die Tabelle zeigt: alle, ein Zustand oder eine Kategorie; immer nach Kategorie gruppiert
+  const scope = $derived(ui.watcherScope);
+  const scopeAll = $derived(!ui.desktop);
   const paused = $derived(items.filter((i) => !i.active));
+  const scopeItems = $derived.by(() => {
+    if (scope === 'problem') return layout.problems;
+    if (scope === 'waiting') return layout.waiting;
+    if (scope === 'running') return layout.running;
+    if (scope === 'soon') return layout.soon;
+    if (scope === 'paused') return paused;
+    return items;
+  });
   const deskGroups = $derived.by(() => {
-    if (!ui.desktop || scope === 'all') return layout.groups;
-    if (scope === 'paused') return paused.length ? [{ key: 'paused', name: t('Pausiert'), items: paused }] : [];
-    if (scope.startsWith('cat:')) return layout.groups.filter((g) => `cat:${g.key}` === scope);
-    return [];
+    const groups = groupItems(scopeItems);
+    return scope.startsWith('cat:') ? groups.filter((g) => `cat:${g.key}` === scope) : groups;
+  });
+  /** Zahlen und Kategorien für die Seitenleiste (die Gruppe „Wächter“ dort) */
+  $effect(() => {
+    if (!ui.desktop) return;
+    ui.watcherNav = {
+      counts: { all: allItems.length, problem: layoutAll.problems.length, waiting: layoutAll.waiting.length, running: layoutAll.running.length, soon: layoutAll.soon.length, paused: allItems.filter((i) => !i.active).length },
+      cats: groupItems(allItems).map((g) => ({ key: g.key, name: g.name, n: g.items.length })),
+    };
   });
   $effect(() => {
     // die gewählte Kategorie gibt es nicht mehr: zurück zu „Alle“
-    if (scope.startsWith('cat:') && !layout.groups.some((g) => `cat:${g.key}` === scope)) scope = 'all';
+    if (scope.startsWith('cat:') && data && !groupItems(allItems).some((g) => `cat:${g.key}` === scope)) ui.watcherScope = 'all';
   });
+  const layoutAll = $derived(watcherLayout(allItems));
+  /** Desktop: der aufgeklappte Wächter (Ablauf direkt unter der Zeile) und der Reiter Wächter / Aktivität */
+  let openId = $state<string | null>(null);
+  let deskTab = $state<'list' | 'activity'>('list');
+  const toggleOpen = (id: string) => (openId = openId === id ? null : id);
 
   // Desktop: Mehrfachauswahl und Sammelaktionen (Pausieren, Aktivieren) für viele gleiche Wächter, zum Beispiel 100 Batterien
   let selected = $state<string[]>([]);
@@ -114,9 +133,9 @@
   let pageFilter = $state<'all' | 'active' | 'off'>('all');
   let pageLimit = $state(PAGE_SIZE);
   /** Handy: alle Wächter einer Kategorie, auch die gerade laufenden oder wartenden (sie stehen oben zusätzlich); so wandert keiner beim Umschalten aus der Seite */
-  const phoneGroups = $derived.by(() => {
+  function groupItems(list: HomeItem[]) {
     const byKey = new Map<string, { key: string; name: string | null; items: HomeItem[] }>();
-    for (const i of items) {
+    for (const i of list) {
       const key = categoryKeyOf(i.category);
       let g = byKey.get(key);
       if (!g) byKey.set(key, (g = { key, name: i.category?.trim() ? i.category.trim().replace(/\s+/g, ' ') : null, items: [] }));
@@ -124,7 +143,8 @@
     }
     for (const g of byKey.values()) g.items.sort((a, b) => a.name.localeCompare(b.name) || (a.subject ?? '').localeCompare(b.subject ?? '') || a.watcherId.localeCompare(b.watcherId));
     return [...byKey.values()].sort((a, b) => (a.name === null ? 1 : b.name === null ? -1 : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })));
-  });
+  }
+  const phoneGroups = $derived(groupItems(items));
   // Menü „…“ der Kategorie-Seite: alle pausieren oder aktivieren, neuer Wächter in dieser Kategorie
   let pageMenu = $state(false);
   async function pageActive(on: boolean) {
@@ -233,8 +253,104 @@
     clearTimeout(freshTimer);
     freshTimer = setTimeout(() => (fresh = null), 3500);
   }
+  /** Ein Wächter im aufgeklappten Ablauf wurde gespeichert oder gelöscht: Liste und Seitenleiste neu laden, die Zeile bleibt offen */
+  async function afterInline(): Promise<void> {
+    ui.watchers = await api.watchers().catch(() => ui.watchers);
+    await load();
+    ui.rev += 1;
+  }
   onMount(() => () => clearTimeout(freshTimer));
 </script>
+
+<!-- Desktop: eine Tabelle für alle Wächter, nach Kategorie gruppiert; ein Klick klappt den Ablauf direkt unter der Zeile auf. Reiter „Aktivität“: dieselbe Tabelle. -->
+{#snippet deskBody()}
+  <div class="flex min-w-0 flex-col gap-3.5">
+    {#if deskTab === 'activity'}
+      <section aria-label={t('Letzte Aktivität')} data-testid="home-activity">
+        {#if activity.length === 0}
+          <p class="rounded-row bg-surface px-4 py-8 text-center text-fg2">{t('Noch keine Aktivität.')}</p>
+        {:else}
+          <ul class="divide-y divide-line overflow-hidden rounded-row bg-surface">
+            <li class="grid grid-cols-[150px_minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,1fr)] items-center gap-x-4 px-4 py-2 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" aria-hidden="true">
+              <span>{t('Zeit')}</span><span>{t('Wächter')}</span><span>{t('Ergebnis')}</span><span>{t('Zuständig')}</span>
+            </li>
+            {#each activity as r (r.id)}
+              <li>
+                <button type="button" class="grid h-[60px] w-full grid-cols-[150px_minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,1fr)] items-center gap-x-4 px-4 text-left text-[14px] hover:bg-surface2" aria-label={t('Wächter {name} öffnen', { name: r.watcherName })} onclick={() => { deskTab = 'list'; ui.watcherScope = 'all'; openId = r.watcherId; }}>
+                  <span class="truncate text-fg2">{formatDue(r.at, nowMs)}</span>
+                  <span class="min-w-0"><span class="block truncate font-semibold">{r.watcherName}</span>{#if r.subject}<span class="block truncate text-[12.5px] text-fg2">{r.subject}</span>{/if}</span>
+                  <span class="truncate">{RUN_TEXT[r.result] ?? r.result}{r.note ? ` · ${noteText(r.note)}` : ''}</span>
+                  <span class="truncate text-fg2">{r.assignedTo.length ? names(r.assignedTo) : '–'}</span>
+                </button>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </section>
+    {:else}
+      <div class="@container flex flex-col gap-3.5" data-testid="watcher-list">
+        {#if selected.length > 0}
+          <div class="flex items-center gap-3 rounded-[12px] bg-surface px-4 py-2.5 text-[14px]" role="toolbar" aria-label={t('Sammelaktionen')} data-testid="watcher-bulk">
+            <b>{tn('{n} ausgewählt', '{n} ausgewählt', selected.length)}</b>
+            <span class="flex-1"></span>
+            <button class="h-9 rounded-full bg-surface2 px-4 font-semibold" onclick={() => void bulkActive(false)}>{t('Pausieren')}</button>
+            <button class="h-9 rounded-full bg-surface2 px-4 font-semibold" onclick={() => void bulkActive(true)}>{t('Aktivieren')}</button>
+            <button class="h-9 px-2 font-semibold text-accent-text" onclick={() => (selected = [])}>{t('Auswahl aufheben')}</button>
+          </div>
+        {/if}
+        {#if query && items.length === 0}
+          <p class="py-10 text-center text-fg2" data-testid="home-no-match">{t('Keine Treffer')}</p>
+        {:else if deskGroups.length === 0}
+          <p class="rounded-row bg-surface px-4 py-8 text-center text-fg2" data-testid="home-scope-empty">{t('Keine Wächter in dieser Ansicht.')}</p>
+        {:else}
+          <div class="sticky top-0 z-10 -mx-1 bg-bg px-1 pt-1" data-testid="watcher-table-head">
+            <div class="grid items-center gap-x-3 rounded-row border border-transparent px-3.5 py-1.5 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase {TABLE_COLS}">
+              <span>{t('Wächter')}</span>
+              <span class={COL_MID}>{t('Bedingung')}</span>
+              <span>{t('Aktuell')}</span>
+              <span>{t('Status')}</span>
+              <span class={COL_LAST}>{t('Zuletzt')}</span>
+              <span class={COL_WIDE}>{t('Nächste Aufgabe')}</span>
+              <span class={COL_WIDE}>{t('Zuständig')}</span>
+              <span class="flex justify-end"><span class="sr-only">{t('Aktiv')}</span></span>
+            </div>
+          </div>
+          <section aria-label={t('Kategorien')} class="flex flex-col gap-3" data-testid="watcher-categories">
+            {#each deskGroups as g (g.key)}
+              <div data-testid="watcher-category" data-category={g.name ?? ''}>
+                <SectionHeader title={g.name ?? t('Ohne Kategorie')} count={g.items.length} plain open={open(g.key)} ontoggle={() => toggleCategory(g.key)} />
+                {#if open(g.key)}
+                  <ul class="mt-2 divide-y divide-line overflow-hidden rounded-row border bg-surface border-line">
+                    {#each g.items as i (i.watcherId)}
+                      <WatcherTableRow item={i} {nowMs} {canToggle} busy={busy.includes(i.watcherId)} fresh={fresh === i.watcherId} open={openId === i.watcherId} selected={selected.includes(i.watcherId)} onselect={canToggle ? (on) => toggleSelected(i.watcherId, on) : undefined} onopen={() => toggleOpen(i.watcherId)} ontoggle={(on) => void setActive(i, on)} />
+                      {#if openId === i.watcherId}
+                        <li class="bg-surface px-3.5 pt-1 pb-4" data-testid="watcher-inline" data-watcher-open={i.watcherId}>
+                          {#if i.openCard}
+                            {@const card = i.openCard}
+                            <div class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[12px] bg-surface2 px-3.5 py-2.5 text-[14px]" data-testid="watcher-open-card">
+                              <span class="inline-flex min-w-0 items-center gap-1.5"><Icon name="clock" size={15} stroke={1.9} /><b class="truncate">{card.title}</b></span>
+                              <span class="text-fg2">{card.assigneeIds.length ? names(card.assigneeIds) : t('Noch niemand zuständig')} · {openSinceText(card.createdAt, nowMs)}</span>
+                              <span class="flex-1"></span>
+                              {#if canNudge(card, ui.me?.id ?? null)}
+                                <button class="inline-flex h-9 items-center gap-1.5 rounded-full bg-accent/14 px-3.5 font-semibold text-accent-text" onclick={() => openSheet({ type: 'nudge', id: card.id })}><Icon name="burst" size={15} stroke={2.2} />{t('Stupsen')}</button>
+                              {/if}
+                              <button class="inline-flex h-9 items-center rounded-full bg-surface px-3.5 font-semibold" onclick={() => void openCardAnywhere(card)}>{t('Aufgabe öffnen')}</button>
+                            </div>
+                          {/if}
+                          {#key i.watcherId}<WatcherSheet inline id={i.watcherId} onsaved={afterInline} onback={() => { openId = null; void afterInline(); }} />{/key}
+                        </li>
+                      {/if}
+                    {/each}
+                  </ul>
+                {/if}
+              </div>
+            {/each}
+          </section>
+        {/if}
+      </div>
+    {/if}
+  </div>
+{/snippet}
 
 <!-- Das Gerät unter dem Namen (Friendly Name der Entität), eine Zeile -->
 {#snippet subj(subject: string | null)}
@@ -340,6 +456,9 @@
               <span class="text-[14px] text-fg2">{[summary.current > 0 ? t('{n} aktuell', { n: summary.current }) : '', summary.off > 0 ? t('{n} aus', { n: summary.off }) : ''].filter(Boolean).join(' · ')}</span>
             </p>
           {/if}
+          {#if data?.available && allItems.length > 0}
+            <Segmented items={[{ id: 'list', label: t('Wächter') }, { id: 'activity', label: t('Aktivität') }]} value={deskTab} label={t('Ansicht')} small onchange={(v) => (deskTab = v as typeof deskTab)} />
+          {/if}
           <span class="flex-1"></span>
           {#if can('watchers') && found > 0 && data?.available}
             <button
@@ -434,32 +553,10 @@
           {/if}
         </div>
       {:else}
+        {#if ui.desktop}
+          {@render deskBody()}
+        {:else}
         <div class={ui.desktop ? 'flex items-start gap-6' : 'contents'}>
-          {#if ui.desktop}
-            <!-- Desktop (Entwurf): links die Auswahl, rechts die Tabelle -->
-            <aside class="sticky top-0 flex w-[240px] shrink-0 flex-col gap-px" aria-label={t('Wächter filtern')} data-testid="watchers-panel">
-              {#each [
-                { id: 'all', label: t('Alle Wächter'), icon: 'shield', n: allItems.length, hot: false },
-                { id: 'problem', label: t('Mit Problem'), icon: 'alert', n: layout.problems.length, hot: true },
-                { id: 'waiting', label: t('Wartet auf jemanden'), icon: 'flag', n: layout.waiting.length, hot: false },
-                { id: 'running', label: t('Läuft gerade'), icon: 'play', n: layout.running.length, hot: false },
-                { id: 'soon', label: t('Kommt bald'), icon: 'calendar', n: layout.soon.length, hot: false },
-                { id: 'paused', label: t('Pausiert'), icon: 'pause', n: paused.length, hot: false },
-              ] as it (it.id)}
-                <button class="side-item h-9 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={scope === it.id} onclick={() => (scope = it.id)}>
-                  <Icon name={it.icon} size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{it.label}</span>
-                  {#if it.n > 0}<span class={it.hot ? 'bell-count' : 'text-[13px] text-text-soft tabular-nums'}>{it.n}</span>{/if}
-                </button>
-              {/each}
-              <p class="side-head mt-3">{t('Kategorien')}</p>
-              {#each scopeCats as g (g.key)}
-                <button class="side-item h-9 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={scope === `cat:${g.key}`} onclick={() => (scope = `cat:${g.key}`)}>
-                  <Icon name="folder" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{g.name ?? t('Ohne Kategorie')}</span>
-                  <span class="text-[13px] text-text-soft tabular-nums">{g.items.length}</span>
-                </button>
-              {/each}
-            </aside>
-          {/if}
           <div class={ui.desktop ? 'flex min-w-0 flex-1 flex-col gap-3.5' : 'contents'}>
         {#if query && items.length === 0}
           <p class="py-10 text-center text-fg2" data-testid="home-no-match">{t('Keine Treffer')}</p>
@@ -599,6 +696,7 @@
         {/if}
           </div>
         </div>
+        {/if}
       {/if}
 
       {#if !ui.desktop && can('watchers') && data?.available}
@@ -609,8 +707,8 @@
         </div>
       {/if}
 
-      {#if can('watchers')}
-        <!-- Verwalten, Gefunden und Vorlagen bleiben in den Einstellungen erreichbar -->
+      {#if can('watchers') && !ui.desktop}
+        <!-- Verwalten, Gefunden und Vorlagen bleiben in den Einstellungen erreichbar (am Desktop ist die Seite selbst die Verwaltung) -->
         <ListRow title={t('Alle Wächter verwalten')} onclick={() => openSettings('watchers')}>
           {#snippet tile()}<Tile color="gray"><Icon name="settings" size={24} /></Tile>{/snippet}
           {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}

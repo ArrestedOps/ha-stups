@@ -8,6 +8,7 @@
   import { categoryFg } from '../lib/cardMeta';
   import { nudgesToMe, taskStats } from '../lib/tasks';
   import { deviceTz } from '../lib/datetime';
+  import { categoryKeyOf } from '../lib/watcherList';
   import { activeScheduleFilter, feat, goTasks, goToDashboard, openSettings, openSheet, selectBoard, selectTab, setScheduleFilter, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
@@ -16,7 +17,7 @@
   /**
    * Seitenleiste auf dem Desktop (ab 1024 px, 264 px breit, fest), wie im Entwurf: oben Logo mit Home Assistant, Glocke und Zahnrad, die Suche,
    * dann „Aufgaben“ (Alle offen, Gestupst, Heute, Überfällig, Diese Woche, Erledigt: sie wählen die Ansicht der Liste), „Boards“, „Mehr“
-   * (Kalender, Wächter) und „Personen“ (Meine, Alle, die anderen: sie wählen, wessen Aufgaben die Liste zeigt), unten die angemeldete Person.
+   * (Kalender), „Wächter“ (Filter und Kategorien der Tabelle) und „Personen“ (Meine, Alle, die anderen: sie wählen, wessen Aufgaben die Liste zeigt), unten die angemeldete Person.
    * Die Reiter bleiben als Navigation „Ansicht“ erreichbar; `aria-current` wie die Leiste am Handy.
    */
   type TaskView = typeof ui.taskView;
@@ -49,6 +50,33 @@
   }
   const showWatchers = $derived(feat.watchers && !ui.isChild);
   const showBoards = $derived(true);
+  // Gruppe „Wächter“: Zahlen von der Seite Wächter (nach dem ersten Besuch), bis dahin die aus der Liste der Wächter
+  const wFallback = $derived.by(() => {
+    const items = ui.watchers?.items ?? [];
+    const byKey = new Map<string, { key: string; name: string | null; n: number }>();
+    for (const w of items) {
+      const key = categoryKeyOf(w.category);
+      const g = byKey.get(key) ?? { key, name: w.category?.trim() ? w.category.trim().replace(/\s+/g, ' ') : null, n: 0 };
+      g.n += 1;
+      byKey.set(key, g);
+    }
+    const cats = [...byKey.values()].sort((a, b) => (a.name === null ? 1 : b.name === null ? -1 : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })));
+    return { counts: { all: items.length, problem: 0, waiting: 0, running: 0, soon: 0, paused: items.filter((w) => !w.active).length }, cats };
+  });
+  const wNav = $derived(ui.watcherNav ?? wFallback);
+  const watcherCats = $derived(wNav.cats);
+  const watcherItems = $derived<{ id: string; label: string; icon: string; n: number; hot?: boolean }[]>([
+    { id: 'all', label: t('Alle Wächter'), icon: 'shield', n: wNav.counts.all },
+    { id: 'problem', label: t('Mit Problem'), icon: 'alert', n: wNav.counts.problem, hot: true },
+    { id: 'waiting', label: t('Wartet auf jemanden'), icon: 'flag', n: wNav.counts.waiting },
+    { id: 'running', label: t('Läuft gerade'), icon: 'play', n: wNav.counts.running },
+    { id: 'soon', label: t('Kommt bald'), icon: 'calendar', n: wNav.counts.soon },
+    { id: 'paused', label: t('Pausiert'), icon: 'pause', n: wNav.counts.paused },
+  ]);
+  function pickWatchers(id: string) {
+    ui.watcherScope = id;
+    selectTab('watchers');
+  }
   const people = $derived(ui.people.filter((p) => p.isPerson && p.id !== meId));
   const onlyId = $derived(sf.personIds.length === 1 ? sf.personIds[0] : null);
   const pickPerson = (ids: string[]) => {
@@ -94,7 +122,7 @@
     <kbd class="rounded-md bg-surface px-1.5 py-px font-sans text-[11px] font-semibold" aria-hidden="true">{mac ? '⌘ K' : `${t('Strg')} K`}</kbd>
   </button>
 
-  <!-- Die Navigationen stehen mit display: contents in einer Spalte; style:order stellt die Reihenfolge des Entwurfs her: Aufgaben, Boards, Mehr, Personen -->
+  <!-- Die Navigationen stehen mit display: contents in einer Spalte; style:order stellt die Reihenfolge des Entwurfs her: Aufgaben, Boards, Mehr, Wächter, Personen -->
   <nav class="contents" aria-label={t('Ansicht')}>
     <p class="side-head" style:order="10">{t('Aufgaben')}</p>
     {#each views as v (v.id)}
@@ -115,10 +143,22 @@
     <button style:order="30" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-current={ui.tab === 'tasks' && ui.tasksCalendar ? 'page' : undefined} onclick={() => goTasks('calendar')}>
       <Icon name="calendar" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{t('Kalender')}</span>
     </button>
+
     {#if showWatchers}
-      <button style:order="30" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-current={ui.tab === 'watchers' ? 'page' : undefined} onclick={() => selectTab('watchers')}>
-        <Icon name="shield" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{t('Wächter')}</span>
-      </button>
+      <!-- Wächter: eigene Gruppe mit den Auswahlen der Tabelle (Zahlen kommen von der Seite Wächter) und den Kategorien -->
+      <p class="side-head mt-4" style:order="35">{t('Wächter')}</p>
+      {#each watcherItems as it (it.id)}
+        <button style:order="35" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-label={it.id === 'all' ? t('Wächter') : undefined} aria-current={ui.tab === 'watchers' && ui.watcherScope === it.id ? 'page' : undefined} onclick={() => pickWatchers(it.id)}>
+          <Icon name={it.icon} size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{it.label}</span>
+          {#if it.n > 0}<span class="{it.hot ? 'bell-count' : 'text-[13px] text-text-soft tabular-nums'}">{it.n}</span>{/if}
+        </button>
+      {/each}
+      {#each watcherCats as g (g.key)}
+        <button style:order="35" class="side-item h-8 gap-2.5 px-2.5 pl-[38px] text-[13.5px] font-medium" aria-current={ui.tab === 'watchers' && ui.watcherScope === `cat:${g.key}` ? 'page' : undefined} onclick={() => pickWatchers(`cat:${g.key}`)}>
+          <span class="min-w-0 flex-1 truncate text-left">{g.name ?? t('Ohne Kategorie')}</span>
+          <span class="text-[13px] text-text-soft tabular-nums">{g.n}</span>
+        </button>
+      {/each}
     {/if}
 
     {#if !ui.isChild}

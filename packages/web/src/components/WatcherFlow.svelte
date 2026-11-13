@@ -39,7 +39,7 @@
    * SELBST), darunter der Feinschliff als Chips. „Ändern" klappt die Einstellungen der Aufgabe auf (dieselben wie im Assistenten). Oben steht der
    * Satz als Zusammenfassung. Mitglieder sehen alles lesend, auch den Verlauf der Entität.
    */
-  let { ed }: { ed: WatcherEditor } = $props();
+  let { ed, inline = false }: { ed: WatcherEditor; /** Desktop: aufgeklappt in der Liste, die vier Karten nebeneinander, ohne Fenster */ inline?: boolean } = $props();
 
   const f = $derived(ed.form);
   const readOnly = $derived(ed.readOnly);
@@ -135,7 +135,7 @@
   {/if}
 {/snippet}
 
-<Sheet title={f.name || t('Wächter')} titleClass="text-[17px] font-extrabold whitespace-normal" onclose={ed.back} right={readOnly || ed.loading ? undefined : saveButton} footer={readOnly || ed.loading ? undefined : foot}>
+{#snippet body()}
   {#if ed.loading}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
@@ -154,9 +154,9 @@
       {/if}
       <WatcherSummary form={f} personName={ed.personName} />
 
-      <div class="flex flex-col" data-testid="watcher-flow">
+      <div class={inline ? 'grid grid-cols-1 gap-3 xl:grid-cols-4' : 'flex flex-col'} data-testid="watcher-flow">
         <!-- WENN -->
-        <section class="flow-card" aria-label={t('Wenn')}>
+        <section class="flow-card min-w-0 {inline && open === 'when' ? 'xl:col-span-4' : ''}" aria-label={t('Wenn')}>
           <div class="flex items-center gap-2">
             {@render tag('when', t('WENN'))}
             {#if current}<span class="inline-flex h-[22px] items-center gap-1 rounded-full bg-ok-bg px-2 text-[12px] font-bold text-ok" data-testid="now-badge">● {t('jetzt {value}', { value: current })}</span>{/if}
@@ -176,10 +176,10 @@
           {/if}
           {#if open === 'when'}<div class="border-t border-line pt-3"><WatcherWhenEditor {ed} graph={false} entityRow={false} /></div>{/if}
         </section>
-        <div class="flow-link" aria-hidden="true"></div>
+        <div class="flow-link {inline ? '!hidden' : ''}" aria-hidden="true"></div>
 
         <!-- DANN KARTE -->
-        <section class="flow-card" aria-label={t('Dann Aufgabe')}>
+        <section class="flow-card min-w-0 {inline && open === 'then' ? 'xl:col-span-4' : ''}" aria-label={t('Dann Aufgabe')}>
           <div class="flex items-center gap-2">{@render tag('then', t('DANN KARTE'))}{@render change('then')}</div>
           <ListRow wrap inset variant="task" title={shownTitle} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
             {#snippet tile()}<CardTile card={look} />{/snippet}
@@ -189,10 +189,10 @@
           <p class="text-[12px] text-fg2">{t('So erscheint sie in den Aufgaben.')}</p>
           {#if open === 'then'}<div class="border-t border-line pt-3"><WatcherThenEditor {ed} preview={false} /></div>{/if}
         </section>
-        <div class="flow-link" aria-hidden="true"></div>
+        <div class="flow-link {inline ? '!hidden' : ''}" aria-hidden="true"></div>
 
         <!-- AN WEN -->
-        <section class="flow-card" id="flow-who" aria-label={t('An wen')}>
+        <section class="flow-card min-w-0 {inline && open === 'who' ? 'xl:col-span-4' : ''}" id="flow-who" aria-label={t('An wen')}>
           <div class="flex items-center gap-2">
             {@render tag('who', t('AN WEN'))}
             <span class="min-w-0 wrap-anywhere text-[13px] text-fg2">{modeSummary(f.assignMode)}</span>
@@ -202,10 +202,10 @@
           <AssignOrder order={ed.order} />
           {#if open === 'who'}<div class="border-t border-line pt-3"><WatcherWhoEditor {ed} /></div>{/if}
         </section>
-        <div class="flow-link" aria-hidden="true"></div>
+        <div class="flow-link {inline ? '!hidden' : ''}" aria-hidden="true"></div>
 
         <!-- ERLEDIGT SICH SELBST -->
-        <section class="flow-card" aria-label={t('Erledigt sich selbst')}>
+        <section class="flow-card min-w-0 {inline && open === 'done' ? 'xl:col-span-4' : ''}" aria-label={t('Erledigt sich selbst')}>
           <div class="flex items-center gap-2">
             {@render tag('done', t('ERLEDIGT SICH SELBST'))}
             <span class="ml-auto flex items-center gap-1">
@@ -306,4 +306,15 @@
       {/if}
     </div>
   {/if}
-</Sheet>
+{/snippet}
+
+{#if inline}
+  <div data-testid="watcher-inline-flow">
+    {@render body()}
+    {#if !readOnly && !ed.loading}<div class="mt-3 max-w-[420px]">{@render foot()}</div>{/if}
+  </div>
+{:else}
+  <Sheet title={f.name || t('Wächter')} titleClass="text-[17px] font-extrabold whitespace-normal" onclose={ed.back} right={readOnly || ed.loading ? undefined : saveButton} footer={readOnly || ed.loading ? undefined : foot}>
+    {@render body()}
+  </Sheet>
+{/if}

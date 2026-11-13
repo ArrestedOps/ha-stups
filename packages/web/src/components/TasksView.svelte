@@ -233,7 +233,8 @@
     <div class="flex min-h-0 flex-1 flex-col px-3 pt-[calc(var(--safe-top)+8px)] lg:px-0 lg:pt-0" data-testid="calendar-page">
       <div class="flex flex-col gap-3">
         <!-- Handy: Titel mittig und der Filter rechts (wie die Navigationsleiste im Entwurf); Desktop: Titel in der Kopfzeile -->
-        <div class="relative flex h-11 items-center justify-center lg:hidden">
+        {#if !ui.desktop}
+        <div class="relative flex h-11 items-center justify-center">
           <h1 class="text-[17px] font-semibold">{t('Kalender')}</h1>
           <span class="absolute right-0.5 inline-flex" data-testid="filter-button">
             <span class="relative inline-flex">
@@ -244,7 +245,8 @@
             </span>
           </span>
         </div>
-        <div class="max-lg:hidden">
+        {:else}
+        <div>
           <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[16px] font-semibold text-accent-text" onclick={back}>
             <Icon name="chevron-left" size={22} stroke={2.2} />{t('Aufgaben')}
           </button>
@@ -256,6 +258,7 @@
             </div>
           </div>
         </div>
+        {/if}
         <Segmented items={ui.desktop ? VIEWS : [...VIEWS, { id: 'list', label: t('Liste') }]} value={calMode} label={t('Ansicht')} small onchange={(v) => (v === 'list' ? back() : setCalMode(v as CalMode))} />
       </div>
       <CalendarView mode={calMode} bind:day onopenday={openDay} />

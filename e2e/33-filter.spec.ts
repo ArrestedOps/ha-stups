@@ -95,7 +95,7 @@ test('Filter: Wann, Board, Priorität und Trefferzahl; „Ohne Termin" holt Aufg
   // der Kalender nutzt dasselbe Filtermodell: der Knopf dort zeigt dieselben Einstellungen
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Kalender' }).click();
   await expect(page.getByTestId('calendar-page').getByTestId('filter-count')).toHaveText('3');
-  await page.getByTestId('calendar-page').getByRole('button', { name: /^Aufgaben$/ }).click();
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
 
   // gemerkt auf diesem Gerät: nach dem Neuladen steht alles noch so
   await page.reload();

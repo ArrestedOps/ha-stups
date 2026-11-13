@@ -221,7 +221,7 @@ test('„In der Liste filtern“ stellt den Filter der Liste: Heute bzw. Überf�
     await page.getByRole('dialog').getByRole('button', { name: 'In der Liste filtern' }).click();
     await expect(sheet(page)).toHaveCount(0);
     await expect(page.getByTestId('filter-count')).toHaveText('1');
-    await expect(page.getByRole('button', { name: 'Meine' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('scope-button')).toContainText('Meine Aufgaben');
     await expect(page.getByTestId('group-overdue').getByText(`Filter alt ${tag}`)).toBeVisible();
     await expect(page.getByTestId('group-today')).toHaveCount(0);
 

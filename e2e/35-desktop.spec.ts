@@ -217,14 +217,14 @@ test.describe('Aufgaben', () => {
     await expect(newTaskSheet(page)).toBeVisible();
   });
 
-  test('Neue Aufgabe: Knopf oben öffnet den Dialog (600 px, mittig), Anlegen zeigt die Aufgabe in der Liste, Escape schließt, der Fokus kehrt zum Knopf zurück', async ({ page }) => {
+  test('Neue Aufgabe: Knopf oben öffnet den Dialog (880 px in zwei Spalten, mittig), Anlegen zeigt die Aufgabe in der Liste, Escape schließt, der Fokus kehrt zum Knopf zurück', async ({ page }) => {
     await page.goto('/');
     const button = page.getByTestId('new-task');
     await button.focus(); // WebKit fokussiert Knöpfe beim Klick nicht überall: mit der Tastatur öffnen
     await page.keyboard.press('Enter');
     const sheet = newTaskSheet(page);
     await expect(sheet).toBeVisible();
-    await expect.poll(async () => Math.round((await sheet.boundingBox())!.width)).toBe(600);
+    await expect.poll(async () => Math.round((await sheet.boundingBox())!.width)).toBe(880);
     await page.keyboard.press('Escape');
     await expect(sheet).toHaveCount(0);
     await expect(button).toBeFocused();

@@ -185,3 +185,37 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
   for (const id of ids) await request.delete(`/api/watchers/${id}`);
 });
+
+test('Wächter am Desktop: Zeilen markieren, Sammelaktionen Pausieren und Aktivieren', async ({ page, request }) => {
+  const tag = Date.now().toString(36);
+  const board = (await (await request.post('/api/boards', { data: { name: `Sammel ${tag}` } })).json()) as { id: string };
+  const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
+  const columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;
+  await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '80' } });
+  const ids: string[] = [];
+  for (let i = 0; i < 2; i += 1) {
+    const r = await request.post('/api/watchers', {
+      data: {
+        name: `Sammel ${tag} ${i}`,
+        category: 'Sammel',
+        trigger: { entityId: 'sensor.bad_batterie', kind: 'below', value: 10, forMin: 10 },
+        card: { boardId: board.id, columnId, title: `Akku ${tag} ${i}`, due: { kind: 'none' } },
+        assign: { mode: 'rotation', personIds: [] },
+      },
+    });
+    expect(r.status()).toBe(201);
+    ids.push(((await r.json()) as { id: string }).id);
+  }
+  await page.goto('/');
+  await sideNav(page).getByRole('button', { name: 'Wächter' }).click();
+  await page.getByTestId('watchers-panel').getByRole('button', { name: /^Sammel/ }).click();
+  await page.getByRole('checkbox', { name: `Sammel ${tag} 0 auswählen` }).check();
+  await page.getByRole('checkbox', { name: `Sammel ${tag} 1 auswählen` }).check();
+  const bar = page.getByTestId('watcher-bulk');
+  await expect(bar).toContainText('2 ausgewählt');
+  await bar.getByRole('button', { name: 'Pausieren' }).click();
+  await expect
+    .poll(async () => ((await (await request.get('/api/watchers')).json()) as { items: { id: string; active: boolean }[] }).items.filter((w) => ids.includes(w.id)).every((w) => !w.active))
+    .toBe(true);
+  await expect(bar).toHaveCount(0);
+});

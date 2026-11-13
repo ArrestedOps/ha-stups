@@ -94,6 +94,19 @@
     if (scope.startsWith('cat:') && !layout.groups.some((g) => `cat:${g.key}` === scope)) scope = 'all';
   });
 
+  // Desktop: Mehrfachauswahl und Sammelaktionen (Pausieren, Aktivieren) für viele gleiche Wächter, zum Beispiel 100 Batterien
+  let selected = $state<string[]>([]);
+  const toggleSelected = (id: string, on: boolean) => (selected = on ? [...new Set([...selected, id])] : selected.filter((x) => x !== id));
+  $effect(() => {
+    const ids = new Set(allItems.map((i) => i.watcherId));
+    if (selected.some((id) => !ids.has(id))) selected = selected.filter((id) => ids.has(id));
+  });
+  async function bulkActive(on: boolean) {
+    const targets = allItems.filter((i) => selected.includes(i.watcherId) && i.active !== on);
+    for (const i of targets) await setActive(i, on);
+    selected = [];
+  }
+
   // Handy: eine Kategorie öffnet als eigene Seite (einheitlich für alle, auch mit 100 Batterien): Suche, Filter, „Mehr anzeigen“
   const PAGE_SIZE = 30;
   let page = $state<string | null>(null);
@@ -229,7 +242,7 @@
   {#if ui.desktop}
     <ul class="mt-2 divide-y divide-line overflow-hidden rounded-row border bg-surface {problem ? 'border-danger' : 'border-line'}">
       {#each list as i (i.watcherId)}
-        <WatcherTableRow item={i} {nowMs} {canToggle} busy={busy.includes(i.watcherId)} fresh={fresh === i.watcherId} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} />
+        <WatcherTableRow item={i} {nowMs} {canToggle} busy={busy.includes(i.watcherId)} fresh={fresh === i.watcherId} selected={selected.includes(i.watcherId)} onselect={canToggle ? (on) => toggleSelected(i.watcherId, on) : undefined} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} />
       {/each}
     </ul>
   {:else}
@@ -482,6 +495,15 @@
         <!-- Alle übrigen Wächter: Läuft gerade, Kommt bald, dann die Kategorien. Jeder Wächter steht genau einmal da. Die Breite der Liste
              bestimmt auf dem Desktop die Spalten (Container-Abfrage). -->
         <div class="@container flex flex-col gap-3.5" data-testid="watcher-list">
+          {#if ui.desktop && selected.length > 0}
+            <div class="flex items-center gap-3 rounded-[12px] bg-surface px-4 py-2.5 text-[14px]" role="toolbar" aria-label={t('Sammelaktionen')} data-testid="watcher-bulk">
+              <b>{tn('{n} ausgewählt', '{n} ausgewählt', selected.length)}</b>
+              <span class="flex-1"></span>
+              <button class="h-9 rounded-full bg-surface2 px-4 font-semibold" onclick={() => void bulkActive(false)}>{t('Pausieren')}</button>
+              <button class="h-9 rounded-full bg-surface2 px-4 font-semibold" onclick={() => void bulkActive(true)}>{t('Aktivieren')}</button>
+              <button class="h-9 px-2 font-semibold text-accent-text" onclick={() => (selected = [])}>{t('Auswahl aufheben')}</button>
+            </div>
+          {/if}
           {#if ui.desktop && hasRows}
             <div class="sticky top-0 z-10 -mx-1 bg-bg px-1 pt-1" data-testid="watcher-table-head">
               <div class="grid items-center gap-x-3 rounded-row border border-transparent px-3.5 py-1.5 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase {TABLE_COLS}">

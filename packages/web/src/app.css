@@ -698,3 +698,6 @@
 /* Symbol-Kacheln in gruppierten Listen: 32 px wie im Entwurf */
 .list-group .tile { width: 32px !important; height: 32px !important; border-radius: 8px !important; }
 .list-group .tile svg { width: 20px; height: 20px; }
+
+/* Eigenschaften-Liste (Aufgabe): Zeilen ohne Kachel, die Trennlinie beginnt am Rand */
+.list-group.kv > li + li::before, .list-group.kv > div + div::before { left: 16px; }

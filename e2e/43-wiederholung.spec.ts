@@ -159,7 +159,7 @@ test('Aufgabe: Wiederholung ohne Termin setzen, die Aufgabe bekommt den ersten T
   await openBoards(page);
   await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
   const props = page.getByRole('group', { name: 'Eigenschaften' });
-  await props.getByRole('button', { name: 'Wiederholen' }).click();
+  await props.getByRole('button', { name: /^Wiederholung:/ }).click();
   await page.getByRole('button', { name: 'Monatlich', exact: true }).click();
   await expect(page.getByTestId('recurrence-preview')).toContainText('monatlich');
 

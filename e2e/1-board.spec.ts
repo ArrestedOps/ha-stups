@@ -190,7 +190,7 @@ test('Termin setzen ohne Zuständige: Hinweis, dass keine Erinnerung kommt, mit 
   await openBoards(page);
   await tab(page, 'Offen').click();
   await card(page, title).getByText(title).click();
-  await page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /Fälligkeit/ }).click();
+  await page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /^Fällig:/ }).click();
   await page.getByRole('button', { name: 'Morgen 09:00' }).click();
 
   const hint = page.getByRole('status').filter({ hasText: 'Niemand ist zuständig' });
@@ -262,7 +262,7 @@ test('Neue Aufgabe: Felder gleich beim Anlegen (Priorität, Notiz, Checkliste, L
   // Kosten: an der Aufgabe (im Fenster „Neue Aufgabe“ gibt es sie nicht mehr)
   await made.getByRole('button', { name: 'Öffnen' }).click();
   const props = page.getByRole('group', { name: 'Eigenschaften' });
-  await props.getByRole('button', { name: 'Kosten' }).click();
+  await props.getByRole('button', { name: /^Kosten:/ }).click();
   await page.getByLabel('Kosten in Euro').fill('49,90');
   await page.getByLabel('Kosten in Euro').blur();
   await expect(page.getByText('Kosten dieser Aufgabe')).toBeVisible();

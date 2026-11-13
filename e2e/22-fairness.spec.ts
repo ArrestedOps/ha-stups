@@ -52,7 +52,7 @@ test('Aufwand an der Aufgabe wählen: gespeichert und als Chip zu sehen', async 
   await openBoards(page);
   await page.getByRole('button', { name: new RegExp(`^${title}`) }).first().click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByRole('button', { name: 'Aufwand' }).click();
+  await dialog.getByRole('button', { name: /^Aufwand:/ }).click();
   await dialog.getByRole('button', { name: 'Groß', exact: true }).click();
   await expect.poll(async () => ((await (await request.get(`/api/cards/${card.id}`)).json()) as { effort: string | null }).effort).toBe('large');
   await expect(dialog.getByRole('button', { name: 'Groß', exact: true }).first()).toBeVisible();

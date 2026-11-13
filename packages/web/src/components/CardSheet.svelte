@@ -16,11 +16,13 @@
     completeCard,
     can,
     moveCard,
+    openCardMenuAnywhere,
     openSheet,
     openViewer,
     personById,
     refresh,
     removeCard,
+    shiftCards,
     toast,
     ui,
   } from '../lib/store.svelte';
@@ -222,16 +224,6 @@
 </script>
 
 <!-- Oben wie im Mockup: links „Erledigt", mittig klein „Gespeichert", rechts „Fertig" (schließt). Alles speichert sofort, „Fertig" schließt nur. Nichts liegt unten im Weg. -->
-{#snippet doneButton()}
-  {#if canFinish}
-    <button
-      class="ml-1 inline-flex h-9 items-center gap-1.5 rounded-full border border-track bg-surface px-3.5 text-[14px] font-bold"
-      onclick={toggleDone}
-    >
-      <Icon name={done ? 'undo' : 'check'} size={16} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
-    </button>
-  {/if}
-{/snippet}
 
 {#snippet saveButton()}
   <button class="inline-flex h-11 items-center px-2 text-[16px] font-bold text-accent-text" onclick={finish}>{t('Fertig')}</button>
@@ -286,6 +278,27 @@
       <div>
         <CardProps card={card} {targets} onsave={save} onmove={(columnId) => moveCard(card!, columnId)} readonly={child} />
       </div>
+
+      {#if !panel && canFinish}
+        <button
+          class="bg-accent-grad flex min-h-[52px] w-full items-center justify-center gap-2 rounded-row text-[17px] font-semibold"
+          data-testid="detail-done"
+          onclick={toggleDone}
+        >
+          <Icon name={done ? 'undo' : 'check'} size={18} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
+        </button>
+        {#if !done && card.dueAt && !child}
+          <button
+            class="flex min-h-[46px] w-full items-center gap-3 rounded-row bg-surface px-4 text-left text-[16px] text-accent-text"
+            onclick={async () => {
+              await shiftCards([card!], 'tomorrow');
+              close();
+            }}
+          >
+            <Icon name="clock" size={20} stroke={2} />{t('Auf morgen verschieben')}
+          </button>
+        {/if}
+      {/if}
 
       {#if waiting}
         <div class="rounded-xl bg-surface2 px-3.5 py-3" data-testid="confirm-note">
@@ -536,15 +549,20 @@
 {/snippet}
 
 {#if panel}
-  <section class="flex h-full flex-col overflow-hidden rounded-[20px] border border-line bg-bg max-xl:shadow-[0_16px_48px_rgba(0,0,0,0.5)]" aria-label={t('Aufgabe')}>
-    <div class="flex h-14 shrink-0 items-center gap-2 pr-2 pl-4">
-      <h2 class="text-[12px] font-bold tracking-[0.12em] text-fg2 uppercase">{t('Aufgabe')}</h2>
-      <span class="min-w-0 flex-1 truncate text-[13px] font-semibold text-sig-green" aria-live="polite">{saved ? t('Gespeichert') : ''}</span>
-      <button class="flex h-10 w-10 items-center justify-center rounded-full text-text-soft hover:bg-surface2" aria-label={t('Schließen')} data-testid="detail-close" onclick={finish}>
+  <section class="flex h-full flex-col overflow-hidden border-l border-line bg-bg max-xl:shadow-[-18px_0_50px_rgba(0,0,0,0.25)]" aria-label={t('Aufgabe')}>
+    <div class="flex h-16 shrink-0 items-center gap-1.5 border-b border-line pr-3.5 pl-5">
+      <h2 class="text-[13px] font-semibold text-fg2">{t('Aufgabe')}</h2>
+      <span class="min-w-0 flex-1 truncate pl-2 text-[13px] font-semibold text-sig-green" aria-live="polite">{saved ? t('Gespeichert') : ''}</span>
+      {#if card && !child}
+        <button class="flex h-10 w-10 items-center justify-center rounded-full text-text-soft hover:bg-surface2" aria-label={t('Mehr')} title={t('Mehr')} onclick={() => void openCardMenuAnywhere(card!)}>
+          <Icon name="more" size={20} stroke={2} />
+        </button>
+      {/if}
+      <button class="flex h-10 w-10 items-center justify-center rounded-full text-text-soft hover:bg-surface2" aria-label={t('Schließen')} title={t('Schließen')} data-testid="detail-close" onclick={finish}>
         <Icon name="x" size={20} stroke={2} />
       </button>
     </div>
-    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 wrap-anywhere">{@render content()}</div>
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 wrap-anywhere">{@render content()}</div>
     {#if card && (canFinish || canStupse)}
       <div class="flex shrink-0 gap-2.5 border-t border-line px-4 py-3.5">
         {#if canStupse}
@@ -561,7 +579,7 @@
     {/if}
   </section>
 {:else}
-  <Sheet title={saved ? t('Gespeichert') : ''} titleClass="text-[13px] font-semibold text-sig-green" onclose={closeSheet} left={doneButton} right={saveButton} hideClose>
+  <Sheet title={saved ? t('Gespeichert') : t('Aufgabe')} titleClass={saved ? 'text-[13px] font-semibold text-sig-green' : ''} onclose={closeSheet} right={saveButton} hideClose>
     {@render content()}
   </Sheet>
 {/if}

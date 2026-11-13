@@ -513,13 +513,4 @@
       </div>
     </div>
   {/if}
-
-  {#if ui.desktop && view === 'list'}
-    <!-- Detailspalte (nur Desktop): die gewählte Aufgabe neben der Liste. Ab 1280 px steht sie fest daneben (ohne Auswahl ein Platzhalter), darunter legt sie sich über die Liste. -->
-    {#if ui.detailId}
-      <aside class="w-[380px] shrink-0 pb-6 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-20" aria-label={t('Aufgabe')} data-testid="detail">
-        {#key ui.detailId}<CardSheet id={ui.detailId} panel />{/key}
-      </aside>
-    {/if}
-  {/if}
 </main>

@@ -55,7 +55,7 @@
     <Tile color={TILE[status]}><Icon name="eye" size={24} /></Tile>
     <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
       <span class="line-clamp-2 text-[15px] leading-[1.25] font-bold tracking-tight wrap-anywhere" title={i.name} data-testid="watcher-name">{i.name}</span>
-      <span class="truncate text-[12.5px] text-fg2" title="{i.entity} · {t('Wenn {condition}', { condition: triggerText(i) })}"><span data-testid="watcher-subject">{i.entity}</span><span class="hidden @min-[640px]:inline" data-testid="watcher-condition">{' · '}{t('Wenn {condition}', { condition: triggerText(i) })}</span></span>
+      <span class="truncate text-[12.5px] text-fg2" title="{i.entity} · {t('Wenn {condition}', { condition: triggerText(i) })}"><span data-testid="watcher-subject">{i.entity}</span><span class="hidden @min-[640px]:inline" data-testid="watcher-condition">&nbsp;·&nbsp;{t('Wenn {condition}', { condition: triggerText(i) })}</span></span>
     </span>
   </div>
   <!-- Stand -->

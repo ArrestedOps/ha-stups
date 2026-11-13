@@ -99,7 +99,7 @@ test('Löschen am Desktop: Dialog mit Wahl je Wächter (Umziehen), danach läuft
   const quelle = await board(request, `Quelle ${tag}`);
   const ziel = await board(request, `Ziel ${tag}`);
   const res = await request.post('/api/watchers', {
-    data: { name: `Waschmaschine ${tag}`, trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 }, card: { boardId: quelle.id, columnId: quelle.columnId, title: 'Karte', due: { kind: 'none' } }, assign: { mode: 'none', personIds: [] } },
+    data: { name: `Waschmaschine ${tag}`, trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 }, card: { boardId: quelle.id, columnId: quelle.columnId, title: 'Aufgabe', due: { kind: 'none' } }, assign: { mode: 'none', personIds: [] } },
   });
   const wid = ((await res.json()) as { id: string }).id;
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), quelle.id);

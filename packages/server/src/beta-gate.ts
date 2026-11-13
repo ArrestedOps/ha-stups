@@ -4,7 +4,7 @@ import { t } from './i18n/index.js';
 
 /**
  * In der Beta sind Push und Wächter zunächst aus. Die Beta bekommt per Umzug die Daten der normalen App; ohne dieses Tor
- * würde sie dieselben Erinnerungen ein zweites Mal an die Familie schicken und dieselben Wächter doppelt Karten anlegen lassen.
+ * würde sie dieselben Erinnerungen ein zweites Mal an die Familie schicken und dieselben Wächter doppelt Aufgaben anlegen lassen.
  * Ein Administrator schaltet beides gezielt ein. In der normalen App tut das Tor nichts.
  */
 export type BetaPush = { mode: 'off' } | { mode: 'only'; personId: string } | { mode: 'all' };

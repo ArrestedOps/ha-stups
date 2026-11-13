@@ -79,7 +79,7 @@ export function startOfTomorrow(nowMs = Date.now(), tz = deviceTz()): number {
   return fromLocal({ y: next.getUTCFullYear(), m: next.getUTCMonth() + 1, d: next.getUTCDate(), h: 0, mi: 0, s: 0 }, tz);
 }
 
-/** Liegt der Termin nach heute? Solche Karten gehören nach „Geplant". */
+/** Liegt der Termin nach heute? Solche Aufgaben gehören nach „Geplant". */
 export const isFuture = (iso: string | null, nowMs = Date.now(), tz = deviceTz()): boolean =>
   !!iso && Date.parse(iso) >= startOfTomorrow(nowMs, tz);
 

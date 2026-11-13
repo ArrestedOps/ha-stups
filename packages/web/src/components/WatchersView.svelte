@@ -47,7 +47,7 @@
       if (mine === request) failed = true;
     }
   }
-  // Neu laden, wenn sich etwas geändert hat (ui.rev, auch durch Live-Sync) und alle 10 Sekunden: ein Vorgang, der anläuft, ändert keine Karte
+  // Neu laden, wenn sich etwas geändert hat (ui.rev, auch durch Live-Sync) und alle 10 Sekunden: ein Vorgang, der anläuft, ändert keine Aufgabe
   $effect(() => {
     void ui.rev;
     void load();
@@ -59,7 +59,7 @@
 
   const nowMs = $derived((void data, void clock.tick, Date.now()));
   const allItems = $derived(data?.items ?? []);
-  /** Desktop: das Suchfeld oben filtert nach Name, Gerät, Kategorie, offener Karte und der Karte, die danach kommt */
+  /** Desktop: das Suchfeld oben filtert nach Name, Gerät, Kategorie, offener Aufgabe und der Aufgabe, die danach kommt */
   const query = $derived(ui.desktop ? ui.query.trim() : '');
   const items = $derived(query ? allItems.filter((i) => matchesQuery(query, i.name, i.subject, i.entity, i.category, i.openCard?.title, i.nextCard)) : allItems);
   const layout = $derived(watcherLayout(items));
@@ -138,7 +138,7 @@
   });
 
   /**
-   * Gespeichert: der Bereich klappt zu (die Rückfrage „Soll jetzt eine Karte erstellt werden?“ stellt der Editor), die Liste lädt neu,
+   * Gespeichert: der Bereich klappt zu (die Rückfrage „Soll jetzt eine Aufgabe erstellt werden?“ stellt der Editor), die Liste lädt neu,
    * die Gruppe des neuen Wächters klappt auf, und seine Zeile wird kurz hervorgehoben und ins Bild gescrollt.
    */
   async function created(saved: SavedWatcher) {
@@ -233,7 +233,7 @@
           </div>
         {/if}
       {:else}
-        <!-- „Deine Wächter": Karte mit dem Roboter (Text echt und übersetzbar, nur der Roboter ist ein Bild) -->
+        <!-- „Deine Wächter": Aufgabe mit dem Roboter (Text echt und übersetzbar, nur der Roboter ist ein Bild) -->
         <div class="relative h-[88px] min-w-0 overflow-hidden rounded-[18px]" style="background-image: var(--banner-warm)" data-testid="watchers-hero">
           <img
             src={robot}
@@ -283,13 +283,13 @@
           <p class="mt-2 text-[17px] font-semibold">
             {data.lostSince ? t('Keine Verbindung zu Home Assistant seit {time}', { time: formatDue(data.lostSince, nowMs) }) : t('Keine Verbindung zu Home Assistant')}
           </p>
-          <p class="mt-1 text-[15px] text-fg2">{t('Boards und Karten funktionieren weiter. Sobald die Verbindung steht, erscheint hier wieder, was das Haus tut.')}</p>
+          <p class="mt-1 text-[15px] text-fg2">{t('Boards und Aufgaben funktionieren weiter. Sobald die Verbindung steht, erscheint hier wieder, was das Haus tut.')}</p>
         </div>
       {:else if allItems.length === 0}
         <div class="rounded-row border border-line bg-surface p-5" data-testid="home-empty">
           <p class="text-[17px] font-semibold">{t('Noch kein Wächter')}</p>
           <p class="mt-1 text-[15px] text-fg2">
-            {t('Ein Wächter beobachtet zum Beispiel die Waschmaschine und legt von selbst die Karte „ausräumen" an, für jemanden, der gerade zu Hause ist.')}
+            {t('Ein Wächter beobachtet zum Beispiel die Waschmaschine und legt von selbst die Aufgabe „ausräumen" an, für jemanden, der gerade zu Hause ist.')}
           </p>
           {#if can('watchers')}
             <button class="bg-accent-grad glow-cta mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-btn text-[17px] font-extrabold" onclick={() => (ui.desktop ? openDesk() : openSettings('watchers'))}>
@@ -367,7 +367,7 @@
                 <span>{t('Aktuell')}</span>
                 <span>{t('Status')}</span>
                 <span class={COL_LAST}>{t('Zuletzt')}</span>
-                <span class={COL_WIDE}>{t('Nächste Karte')}</span>
+                <span class={COL_WIDE}>{t('Nächste Aufgabe')}</span>
                 <span class={COL_WIDE}>{t('Zuständig')}</span>
                 <span class="flex justify-end"><span class="sr-only">{t('Aktiv')}</span></span>
               </div>

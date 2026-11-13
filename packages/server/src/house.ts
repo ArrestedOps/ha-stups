@@ -8,7 +8,7 @@ import { quietEnd } from './quiet.js';
 import type { HouseChannel, HousePending, Store } from './store.js';
 
 /**
- * Der dritte Push-Weg neben der Companion App und ntfy: Stups, Erinnerungen und Wächter-Karten kommen im Haus an, als Ansage
+ * Der dritte Push-Weg neben der Companion App und ntfy: Stups, Erinnerungen und Wächter-Aufgaben kommen im Haus an, als Ansage
  * über einen Lautsprecher oder als aufleuchtende Lampe. Je Kanal wählbar: welche Arten, und was geschieht, wenn die Person nicht
  * zu Hause ist (verwerfen oder warten bis zur Heimkehr). Siehe dev/superpowers/specs/2026-11-03-stufe-3-1-haus-kanaele-design.md.
  */
@@ -92,7 +92,7 @@ export function createHousePush(deps: HouseDeps) {
     }
   }
 
-  /** Ist die Person gerade in ihrer Ruhezeit? (Die Ruhezeit gilt für Stupse, Fälligkeiten und Wächter-Karten gleich.) */
+  /** Ist die Person gerade in ihrer Ruhezeit? (Die Ruhezeit gilt für Stupse, Fälligkeiten und Wächter-Aufgaben gleich.) */
   function inQuiet(userId: string): boolean {
     const person = store.userById(userId);
     return !!person && quietEnd(deps.now().getTime(), deps.timeZone(), person.nudgeQuiet) !== null;
@@ -152,13 +152,13 @@ export function createHousePush(deps: HouseDeps) {
 
   // ---------- Warteschlange ----------
 
-  /** Gilt die Nachricht noch? Karte erledigt oder Stups beantwortet: dann nicht mehr ansagen */
+  /** Gilt die Nachricht noch? Aufgabe erledigt oder Stups beantwortet: dann nicht mehr ansagen */
   function stillRelevant(p: HousePending): boolean {
     if (p.cardId) {
       try {
         if (store.getCard(p.cardId).completedAt) return false;
       } catch {
-        return false; // Karte gelöscht
+        return false; // Aufgabe gelöscht
       }
     }
     if (p.nudgeId) {

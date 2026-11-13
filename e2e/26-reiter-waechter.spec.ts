@@ -30,7 +30,7 @@ async function setup(request: APIRequestContext) {
 const cardsOf = async (request: APIRequestContext, boardId: string) =>
   ((await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { id: string; title: string; assigneeIds: string[]; completedAt: string | null }[] }).cards;
 
-test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Karte vom Haus, Erledigen nimmt sie weg', async ({ page, request }) => {
+test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Aufgabe vom Haus, Erledigen nimmt sie weg', async ({ page, request }) => {
   const s = await setup(request);
   await setState(request, 'person.rene', 'home');
   await setState(request, 'person.conny', 'not_home');
@@ -60,7 +60,7 @@ test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Karte 
   await expect(page.getByTestId('home-running')).toContainText(name, { timeout: 20_000 });
   await expect(page.getByTestId('home-running')).toContainText(`danach: ${title}`);
 
-  // Fertig: die Karte entsteht, der Wächter wartet auf Rene
+  // Fertig: die Aufgabe entsteht, der Wächter wartet auf Rene
   await setState(request, 'sensor.waschmaschine_leistung', '2');
   await expect(page.getByTestId('home-waiting')).toContainText(title, { timeout: 20_000 });
   expect((await cardsOf(request, s.boardId)).some((c) => c.title.startsWith(title))).toBe(true);
@@ -75,10 +75,10 @@ test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Karte 
   await expect(house.getByText(title)).toHaveCount(0);
 });
 
-test('Aufgaben: Weitergeben schiebt die Karte an die nächste Person, ohne sie zu erledigen', async ({ page, request }) => {
+test('Aufgaben: Weitergeben schiebt die Aufgabe an die nächste Person, ohne sie zu erledigen', async ({ page, request }) => {
   const s = await setup(request);
   await setState(request, 'person.rene', 'home');
-  await setState(request, 'person.conny', 'not_home'); // nur Rene ist da: die Karte entsteht bei ihm
+  await setState(request, 'person.conny', 'not_home'); // nur Rene ist da: die Aufgabe entsteht bei ihm
   await setState(request, 'sensor.waschmaschine_leistung', '120');
   const title = `Weiterreichen ${s.tag}`;
   const created = await request.post('/api/watchers', {
@@ -102,12 +102,12 @@ test('Aufgaben: Weitergeben schiebt die Karte an die nächste Person, ohne sie z
   const house = page.getByTestId('today-house');
   await expect(house.getByText(title)).toBeVisible();
 
-  // Ist niemand sonst zu Hause, bleibt die Karte bei mir, mit Hinweis
+  // Ist niemand sonst zu Hause, bleibt die Aufgabe bei mir, mit Hinweis
   await house.getByRole('button', { name: 'Weitergeben' }).first().click();
   await expect(page.getByText('Gerade ist niemand sonst dran')).toBeVisible();
   expect((await cardsOf(request, s.boardId))[0]!.assigneeIds).toEqual([s.rene.id]);
 
-  // Conny kommt heim: jetzt geht die Karte an sie
+  // Conny kommt heim: jetzt geht die Aufgabe an sie
   await setState(request, 'person.conny', 'home');
   await house.getByRole('button', { name: 'Weitergeben' }).first().click();
   await expect(page.getByText('Weitergegeben an Conny')).toBeVisible();
@@ -116,7 +116,7 @@ test('Aufgaben: Weitergeben schiebt die Karte an die nächste Person, ohne sie z
   await expect(house.getByText(title)).toHaveCount(0);
 });
 
-test('Erst vorschlagen: die Karte entsteht ohne Zuständige, „Übernehmen" auf Heute gibt sie dem, der tippt', async ({ page, request }) => {
+test('Erst vorschlagen: die Aufgabe entsteht ohne Zuständige, „Übernehmen" auf Heute gibt sie dem, der tippt', async ({ page, request }) => {
   const s = await setup(request);
   await setState(request, 'person.rene', 'home');
   await setState(request, 'person.conny', 'home');
@@ -165,7 +165,7 @@ test('Wächter: Administratoren bearbeiten einen Wächter direkt, Mitglieder seh
   // ein Lauf für den Verlauf („Test")
   expect((await request.post(`/api/watchers/${id}/test`)).status()).toBe(200);
 
-  // Administrator: Tipp auf den Wächter öffnet den Ablauf (Karten, Satz als Zusammenfassung, Speichern), der Status steht unten
+  // Administrator: Tipp auf den Wächter öffnet den Ablauf (Aufgaben, Satz als Zusammenfassung, Speichern), der Status steht unten
   await page.goto('/');
   await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
@@ -177,7 +177,7 @@ test('Wächter: Administratoren bearbeiten einen Wächter direkt, Mitglieder seh
   await expect(dialog.getByTestId('watcher-flow').getByRole('button', { name: 'Ändern' }).first()).toBeVisible();
   await expect(dialog.getByTestId('watcher-readonly')).toHaveCount(0);
   await expect(dialog.getByText('Status', { exact: true })).toBeVisible();
-  await expect(dialog.getByRole('button', { name: /Testen: Karte jetzt anlegen/ })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: /Testen: Aufgabe jetzt anlegen/ })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
@@ -191,13 +191,13 @@ test('Wächter: Administratoren bearbeiten einen Wächter direkt, Mitglieder seh
     const d = conny.getByRole('dialog');
     await expect(d.getByTestId('watcher-readonly')).toBeVisible();
     await expect(d.getByTestId('watcher-sentence')).toBeVisible();
-    // die vier Karten und der Verlauf der Entität sind zu sehen, aber nichts lässt sich ändern
+    // die vier Aufgaben und der Verlauf der Entität sind zu sehen, aber nichts lässt sich ändern
     await expect(d.getByTestId('watcher-flow')).toBeVisible();
     await expect(d.getByTestId('entity-graph')).toBeVisible();
     await expect(d.getByRole('button', { name: 'Ändern' })).toHaveCount(0);
     await expect(d.getByRole('switch', { name: 'Automatisch erledigen' })).toBeDisabled();
     await expect(d.getByRole('button', { name: 'Speichern' })).toHaveCount(0);
-    await expect(d.getByRole('button', { name: /Testen: Karte jetzt anlegen/ })).toHaveCount(0);
+    await expect(d.getByRole('button', { name: /Testen: Aufgabe jetzt anlegen/ })).toHaveCount(0);
     await expect(d.getByRole('button', { name: 'Wächter löschen' })).toHaveCount(0);
     await expect(d.getByText('Status', { exact: true })).toBeVisible(); // der Verlauf ist lesbar
     // und die Änderung bleibt auch über die Schnittstelle verboten

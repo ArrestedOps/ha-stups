@@ -13,8 +13,8 @@
   import ListRow from './ui/ListRow.svelte';
 
   /**
-   * Die Vorschau rechts im Formular am Desktop: der Satz („Wenn … länger als … unter … liegt, bekommt … die Karte …“), der Verlauf der
-   * Entität mit der Schwellenlinie (derselbe Verlauf wie im Assistenten) und „So erscheint die Karte“ als Zeile wie in den Aufgaben.
+   * Die Vorschau rechts im Formular am Desktop: der Satz („Wenn … länger als … unter … liegt, bekommt … die Aufgabe …“), der Verlauf der
+   * Entität mit der Schwellenlinie (derselbe Verlauf wie im Assistenten) und „So erscheint die Aufgabe“ als Zeile wie in den Aufgaben.
    * Nur zum Lesen: alles, was hier steht, kommt aus dem Formular.
    */
   let { ed }: { ed: WatcherEditor } = $props();
@@ -30,11 +30,11 @@
   const minutes = $derived(Number(f.forMin.trim() === '' ? (f.kind === 'state' ? 0 : 3) : f.forMin.replace(',', '.')) || 0);
   const current = $derived(valueText(ed.history?.current ?? null, ed.history?.kind === 'state' ? null : unit));
   const auto = $derived(f.icon ? null : (nameSymbol(f.title) ?? nameSymbol(f.entityName)));
-  /** Der Titel der Karte, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
+  /** Der Titel der Aufgabe, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
   const shownTitle = $derived(cardTitleWithEntity(f.title, f.kind, f.entityName || f.entityId) || '…');
   const look = $derived({ icon: f.icon || auto, iconColor: f.iconColor || null });
   const board = $derived(ui.boards.find((b) => b.id === f.boardId));
-  /** Wer die Karte bekommt, soweit es feststeht: die gewählten Personen (leer: kein Bild, nur das Schild des Wächters) */
+  /** Wer die Aufgabe bekommt, soweit es feststeht: die gewählten Personen (leer: kein Bild, nur das Schild des Wächters) */
   const people = $derived(f.assignMode === 'fixed' || f.assignMode === 'rotation' ? f.personIds.map(personById).filter((p) => p !== undefined) : []);
 </script>
 
@@ -59,7 +59,7 @@
     </div>
   {/if}
 
-  <h3 class="mt-1 text-[12px] font-bold tracking-[0.08em] text-fg2 uppercase">{t('So erscheint die Karte')}</h3>
+  <h3 class="mt-1 text-[12px] font-bold tracking-[0.08em] text-fg2 uppercase">{t('So erscheint die Aufgabe')}</h3>
   <div class="rounded-[18px] border border-dashed border-track bg-surface-inset p-2" data-testid="card-preview">
     <ListRow wrap variant="task" title={shownTitle} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
       {#snippet tile()}<CardTile card={look} />{/snippet}

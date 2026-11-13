@@ -84,7 +84,7 @@ describe('Einmaliger Durchlauf im Wächter-Dienst', () => {
       }),
     );
 
-  it('entfernt den Gerätenamen aus Name und Kartentitel, lässt eigene Namen und Titel stehen, merkt sich den Lauf und ändert danach nichts mehr', async () => {
+  it('entfernt den Gerätenamen aus Name und Aufgabentitel, lässt eigene Namen und Titel stehen, merkt sich den Lauf und ändert danach nichts mehr', async () => {
     ha.set('sensor.iphone_rene_battery_level', '15', '2026-11-04T09:00:00Z', { friendly_name: 'iPhone Rene Battery Level' });
     ha.set('sensor.ipad_battery', '12', '2026-11-04T09:00:00Z', { friendly_name: 'iPad Küche Batterie' });
     const alt = add('Batterie schwach: iPhone Rene', 'sensor.iphone_rene_battery_level');
@@ -95,7 +95,7 @@ describe('Einmaliger Durchlauf im Wächter-Dienst', () => {
     const engine = createWatchers({ store, data, ha, now: () => new Date('2026-11-04T12:00:00Z'), timeZone: () => 'Europe/Berlin' });
     engine.start();
     await engine.snapshot();
-    // auch der früher automatisch ergänzte Kartentitel der Vorlage: sonst hinge zur Laufzeit der Entitätsname doppelt an
+    // auch der früher automatisch ergänzte Aufgabentitel der Vorlage: sonst hinge zur Laufzeit der Entitätsname doppelt an
     expect(data.get(alt.id)).toMatchObject({ name: 'Batterie schwach', card: { title: 'Batterie wechseln' } });
     expect(data.get(alt2.id).name).toBe('Battery low');
     expect(data.get(eigen.id).name).toBe('Batterie schwach: Mamas Liebling');
@@ -123,7 +123,7 @@ describe('Einmaliger Durchlauf im Wächter-Dienst', () => {
   });
 });
 
-describe('Titel der Karte: der Name der Entität kommt zur Laufzeit dazu', () => {
+describe('Titel der Aufgabe: der Name der Entität kommt zur Laufzeit dazu', () => {
   it('hängt den Namen der Entität an („Batterie wechseln: Nuki Türschloss")', () => {
     expect(cardTitleOf('Batterie wechseln', 'below', 'Nuki Türschloss')).toBe('Batterie wechseln: Nuki Türschloss');
     expect(cardTitleOf('  Batterie wechseln ', 'state', 'sensor.nuki_tuer')).toBe('Batterie wechseln: sensor.nuki_tuer'); // ohne Anzeigename die Kennung
@@ -146,16 +146,16 @@ describe('Titel der Karte: der Name der Entität kommt zur Laufzeit dazu', () =>
     expect(out.length).toBeLessThanOrEqual(40);
     expect(out.startsWith('Batterie wechseln: ')).toBe(true);
     expect(out.endsWith('…')).toBe(true);
-    expect(cardTitleOf('Ein ziemlich langer Titel einer Karte', 'below', 'Flur', 40)).toBe('Ein ziemlich langer Titel einer Karte');
+    expect(cardTitleOf('Ein ziemlich langer Titel einer Aufgabe', 'below', 'Flur', 40)).toBe('Ein ziemlich langer Titel einer Aufgabe');
   });
 
-  it('die Vorlagen der Karten sind in beiden Sprachen bekannt', () => {
+  it('die Vorlagen der Aufgaben sind in beiden Sprachen bekannt', () => {
     expect(templateCardTitles()).toEqual(expect.arrayContaining(['Batterie wechseln', 'Change the battery']));
   });
 });
 
-describe('Die Karte, die der Wächter anlegt, bekommt den Namen der Entität', () => {
-  it('der Wächter selbst bleibt sauber, die Karte hat „Titel: Entität"; ohne Entität (Kalender) nichts', async () => {
+describe('Die Aufgabe, die der Wächter anlegt, bekommt den Namen der Entität', () => {
+  it('der Wächter selbst bleibt sauber, die Aufgabe hat „Titel: Entität"; ohne Entität (Kalender) nichts', async () => {
     const ha = new FakeHa();
     const db = openDb(':memory:');
     const store = createStore(db);

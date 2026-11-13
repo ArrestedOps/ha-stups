@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
-// Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Nach dem Speichern fragt die App, ob die Karte jetzt entstehen soll,
+// Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Nach dem Speichern fragt die App, ob die Aufgabe jetzt entstehen soll,
 // wenn die Bedingung schon erfüllt ist und der Wächter nicht von selbst auslöst (Zustand, Vorgang). Pegel (Batterie) lösen selbst aus.
 const MOCK = 'http://127.0.0.1:18411';
 test.describe.configure({ timeout: 90_000, mode: 'serial' });
@@ -39,7 +39,7 @@ async function createWatcher(page: Page, s: { boardId: string }, o: { search: st
   }
   if (o.wait) await d.getByRole('group', { name: 'Wartezeit in Minuten' }).getByRole('button', { name: o.wait }).click();
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
-  await d.getByLabel('Titel der Karte').fill(o.title);
+  await d.getByLabel('Titel der Aufgabe').fill(o.title);
   await d.getByLabel('Board', { exact: true }).selectOption(s.boardId);
   await d.getByRole('button', { name: 'Weiter: Wer' }).click();
   await d.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
@@ -51,7 +51,7 @@ const door = async (request: APIRequestContext, tag: string, state = 'off') => {
   await setState(request, `binary_sensor.nachfrage_${tag}`, state, { friendly_name: `Nachfrage Tür ${tag}` });
 };
 
-test('Zustand schon erreicht: Frage mit Gerät, Zustand und Kartentitel; „Nein“ legt keine Karte an', async ({ page, request }) => {
+test('Zustand schon erreicht: Frage mit Gerät, Zustand und Aufgabentitel; „Nein“ legt keine Aufgabe an', async ({ page, request }) => {
   const s = await setup(request);
   await door(request, s.tag);
   const title = `Tür schließen ${s.tag}`;
@@ -59,29 +59,29 @@ test('Zustand schon erreicht: Frage mit Gerät, Zustand und Kartentitel; „Nein
 
   const ask = page.getByRole('alertdialog');
   await expect(ask).toBeVisible();
-  await expect(ask).toContainText(`Nachfrage Tür ${s.tag} ist gerade aus – die Bedingung ist also schon erfüllt. Soll jetzt eine Karte „${title}“ erstellt werden?`);
-  await expect(ask.getByRole('button', { name: 'Ja, Karte erstellen' })).toBeVisible();
+  await expect(ask).toContainText(`Nachfrage Tür ${s.tag} ist gerade aus – die Bedingung ist also schon erfüllt. Soll jetzt eine Aufgabe „${title}“ erstellt werden?`);
+  await expect(ask.getByRole('button', { name: 'Ja, Aufgabe erstellen' })).toBeVisible();
   await ask.getByRole('button', { name: 'Nein, erst beim nächsten Mal' }).click();
   await expect(ask).toHaveCount(0);
   expect(await cardsOf(request, s.boardId)).toHaveLength(0);
 });
 
-test('„Ja, Karte erstellen“ legt die Karte an (mit Hinweis im Lauf), und das nur einmal', async ({ page, request }) => {
+test('„Ja, Aufgabe erstellen“ legt die Aufgabe an (mit Hinweis im Lauf), und das nur einmal', async ({ page, request }) => {
   const s = await setup(request);
   await door(request, s.tag);
   const title = `Tür schließen ${s.tag}`;
   await createWatcher(page, s, { search: `nachfrage tür ${s.tag}`, entity: /Nachfrage Tür/, state: 'off', title });
 
   const ask = page.getByRole('alertdialog');
-  await ask.getByRole('button', { name: 'Ja, Karte erstellen' }).click();
+  await ask.getByRole('button', { name: 'Ja, Aufgabe erstellen' }).click();
   await expect(ask).toHaveCount(0);
-  await expect(page.getByText('Karte angelegt', { exact: true })).toBeVisible();
+  await expect(page.getByText('Aufgabe angelegt', { exact: true })).toBeVisible();
   await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([`${title}: Nachfrage Tür ${s.tag}`]);
 
   const watcher = ((await (await request.get('/api/watchers')).json()) as { items: { id: string; card: { title: string } }[] }).items.find((w) => w.card.title === title)!;
   const runs = (await (await request.get(`/api/watchers/${watcher.id}/runs`)).json()) as { result: string; note: string | null }[];
   expect(runs[0]).toMatchObject({ result: 'created', note: 'beim Anlegen, auf Nachfrage' });
-  // ein zweites „Ja“ (etwa aus einem alten Dialog) gibt es nicht: eine offene Karte genügt
+  // ein zweites „Ja“ (etwa aus einem alten Dialog) gibt es nicht: eine offene Aufgabe genügt
   expect((await request.post(`/api/watchers/${watcher.id}/fire-now`)).status()).toBe(409);
   expect(await cardsOf(request, s.boardId)).toHaveLength(1);
 });
@@ -115,7 +115,7 @@ test('Vorgang (Leistung) unter der Schwelle: auch hier die Frage, mit dem Wert u
   expect(await cardsOf(request, s.boardId)).toHaveLength(0);
 });
 
-test('Pegel (Batterie) unter der Grenze: keine Frage, die Karte kommt sofort', async ({ page, request }) => {
+test('Pegel (Batterie) unter der Grenze: keine Frage, die Aufgabe kommt sofort', async ({ page, request }) => {
   const s = await setup(request);
   await setState(request, `sensor.nachfrage_batterie_${s.tag}`, '4', { friendly_name: `Nachfrage Knopf ${s.tag}`, unit_of_measurement: '%', device_class: 'battery' });
   const title = `Batterie wechseln ${s.tag}`;

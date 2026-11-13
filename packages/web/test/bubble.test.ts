@@ -6,7 +6,7 @@ const NOW = Date.parse('2026-11-05T11:00:00Z');
 const card = (dueAt: string | null, completedAt: string | null = null) => ({ dueAt, completedAt });
 
 describe('Dashboard-Button', () => {
-  it('zählt heute fällige (noch nicht vergangene) und überfällige offene Karten', () => {
+  it('zählt heute fällige (noch nicht vergangene) und überfällige offene Aufgaben', () => {
     const c = bubbleCounts(
       [
         card('2026-11-05T09:00:00Z'), // 10:00 Berlin: überfällig

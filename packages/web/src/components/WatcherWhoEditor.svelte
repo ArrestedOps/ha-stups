@@ -11,8 +11,8 @@
   import Tile from './ui/Tile.svelte';
 
   /**
-   * „Wer": an wen die Karte geht. Alle sieben Arten der Zuweisung sind wählbar, vorausgewählt ist „reihum"; darunter, wer infrage kommt, die
-   * Reihenfolge mit Fotos (wer als Nächstes dran ist, wer unterwegs ist) und der Rückfall. Im Ablauf klappt es in der Karte AN WEN auf.
+   * „Wer": an wen die Aufgabe geht. Alle sieben Arten der Zuweisung sind wählbar, vorausgewählt ist „reihum"; darunter, wer infrage kommt, die
+   * Reihenfolge mit Fotos (wer als Nächstes dran ist, wer unterwegs ist) und der Rückfall. Im Ablauf klappt es in der Aufgabe AN WEN auf.
    */
   let { ed }: { ed: WatcherEditor } = $props();
 
@@ -25,7 +25,7 @@
 
   const hint = $derived(
     f.assignMode === 'first_home'
-      ? t('Ist niemand zu Hause, erscheint die Karte ohne Zuständige und ohne Push. Wer als Erstes heimkommt, bekommt sie (die Fälligkeit zählt ab dann).')
+      ? t('Ist niemand zu Hause, erscheint die Aufgabe ohne Zuständige und ohne Push. Wer als Erstes heimkommt, bekommt sie (die Fälligkeit zählt ab dann).')
       : f.assignMode === 'rotation_present' || f.assignMode === 'all_present'
         ? t('Anwesend heißt: Die Person in Home Assistant ist zu Hause.')
         : f.assignMode === 'suggest'

@@ -7,7 +7,7 @@ import type { AssignMode, DueRule } from './watcher-types.js';
 /**
  * Vorlagen für Wächter und ihre Erkennung: Stups sucht in den Entitäten von Home Assistant selbst, was zu einer Vorlage passt
  * ("Steckdose Trockner misst Leistung"), statt dass man Entitäts-ID, Schwellwert und Minuten kennen muss.
- * Dazu Vorlagen ohne Gerät: wiederkehrende Karten (Entkalken, Rauchmelder testen …), die kein Wächter brauchen.
+ * Dazu Vorlagen ohne Gerät: wiederkehrende Aufgaben (Entkalken, Rauchmelder testen …), die kein Wächter brauchen.
  */
 
 export type TemplateId =
@@ -33,7 +33,7 @@ export interface TemplateDraft {
     | { kind: 'forecast'; condition: 'rain'; hours: number };
   card: { title: string; due: DueRule };
   assign: { mode: AssignMode };
-  /** Karte erledigt sich von selbst, wenn die Entität diese Bedingung erreicht (nur wo der Sensor das belegen kann) */
+  /** Aufgabe erledigt sich von selbst, wenn die Entität diese Bedingung erreicht (nur wo der Sensor das belegen kann) */
   done: { kind: 'above'; value: number } | null;
 }
 
@@ -46,7 +46,7 @@ export interface WatcherTemplate {
   domain: string | null;
   search: string;
   draft: TemplateDraft | null;
-  /** Nur bei kind = recurring: die Karte, die sich von selbst wiederholt */
+  /** Nur bei kind = recurring: die Aufgabe, die sich von selbst wiederholt */
   recurring: { title: string; recurrence: Recurrence } | null;
   /** Kann der Sensor belegen, dass die Aufgabe erledigt ist? Sonst bleibt „Von selbst erledigen" aus, mit Begründung */
   canSelfComplete: boolean;
@@ -65,7 +65,7 @@ export interface Suggestion {
   variant: 'power' | 'status' | 'default';
   /** Ersatz für den Entwurf der Vorlage (beim Programmstatus: Wechsel in „finished") */
   draft?: TemplateDraft;
-  /** Kurzer Gerätename für Name und Kartentitel des neuen Wächters ("iPhone Rene" statt "iPhone Rene Battery Level") */
+  /** Kurzer Gerätename für Name und Aufgabentitel des neuen Wächters ("iPhone Rene" statt "iPhone Rene Battery Level") */
   label: string;
 }
 
@@ -120,7 +120,7 @@ export function watcherTemplates(): WatcherTemplate[] {
       id: 'bins',
       kind: 'watcher',
       title: t('Tonnen rausstellen'),
-      hint: t('Kalender mit den Abfallterminen (zum Beispiel aus der Müllabfuhr-Integration). Am Vorabend entsteht die Karte.'),
+      hint: t('Kalender mit den Abfallterminen (zum Beispiel aus der Müllabfuhr-Integration). Am Vorabend entsteht die Aufgabe.'),
       domain: 'calendar',
       search: t('müll abfall'),
       draft: {
@@ -138,7 +138,7 @@ export function watcherTemplates(): WatcherTemplate[] {
       id: 'rain',
       kind: 'watcher',
       title: t('Wäsche rein, es regnet'),
-      hint: t('Wetter-Entität (weather): sobald in den nächsten Stunden Regen vorhergesagt ist, bekommt jemand die Karte.'),
+      hint: t('Wetter-Entität (weather): sobald in den nächsten Stunden Regen vorhergesagt ist, bekommt jemand die Aufgabe.'),
       domain: 'weather',
       search: '',
       draft: {
@@ -156,7 +156,7 @@ export function watcherTemplates(): WatcherTemplate[] {
       id: 'battery',
       kind: 'watcher',
       title: t('Batterie schwach'),
-      hint: t('Batterie-Sensor eines Geräts. Name und Karte nennen das Gerät dazu.'),
+      hint: t('Batterie-Sensor eines Geräts. Name und Aufgabe nennen das Gerät dazu.'),
       domain: 'sensor',
       search: t('batterie'),
       draft: {
@@ -164,7 +164,7 @@ export function watcherTemplates(): WatcherTemplate[] {
         trigger: { kind: 'below', value: 20, forMin: 10 },
         card: { title: t('Batterie wechseln'), due: { kind: 'none' } },
         assign: { mode: 'rotation_present' },
-        // ein neuer Satz Batterien zeigt sich im Sensor: die Karte erledigt sich von selbst
+        // ein neuer Satz Batterien zeigt sich im Sensor: die Aufgabe erledigt sich von selbst
         done: { kind: 'above', value: 50 },
       },
       recurring: null,
@@ -175,7 +175,7 @@ export function watcherTemplates(): WatcherTemplate[] {
       id: 'vacuum',
       kind: 'watcher',
       title: t('Saugroboter: Behälter leeren'),
-      hint: t('Staubsaugerroboter (vacuum). Nach 3 Reinigungen entsteht die Karte; wer zuerst nach Hause kommt, bekommt sie. Wird die Karte erledigt, beginnt die Zählung von vorn.'),
+      hint: t('Staubsaugerroboter (vacuum). Nach 3 Reinigungen entsteht die Aufgabe; wer zuerst nach Hause kommt, bekommt sie. Wird die Aufgabe erledigt, beginnt die Zählung von vorn.'),
       domain: 'vacuum',
       search: '',
       draft: {
@@ -189,10 +189,10 @@ export function watcherTemplates(): WatcherTemplate[] {
       canSelfComplete: false,
       whyNoSelfComplete: t('Der Roboter weiß nicht, ob jemand den Behälter geleert hat.'),
     },
-    recurring('descale', t('Entkalken'), t('Kaffeemaschine, Wasserkocher oder Waschmaschine: alle 3 Monate eine Karte.'), t('Entkalken'), { type: 'fixed', freq: 'monthly', every: 3 }),
-    recurring('smoke', t('Rauchmelder testen'), t('Alle 6 Monate eine Karte, damit der Test nicht untergeht.'), t('Rauchmelder testen'), { type: 'fixed', freq: 'monthly', every: 6 }),
-    recurring('filter', t('Filter wechseln'), t('Luftreiniger, Dunstabzug oder Wasserfilter: alle 3 Monate eine Karte.'), t('Filter wechseln'), { type: 'fixed', freq: 'monthly', every: 3 }),
-    recurring('bedding', t('Bettwäsche wechseln'), t('Alle 2 Wochen eine Karte.'), t('Bettwäsche wechseln'), { type: 'fixed', freq: 'weekly', every: 2 }),
+    recurring('descale', t('Entkalken'), t('Kaffeemaschine, Wasserkocher oder Waschmaschine: alle 3 Monate eine Aufgabe.'), t('Entkalken'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('smoke', t('Rauchmelder testen'), t('Alle 6 Monate eine Aufgabe, damit der Test nicht untergeht.'), t('Rauchmelder testen'), { type: 'fixed', freq: 'monthly', every: 6 }),
+    recurring('filter', t('Filter wechseln'), t('Luftreiniger, Dunstabzug oder Wasserfilter: alle 3 Monate eine Aufgabe.'), t('Filter wechseln'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('bedding', t('Bettwäsche wechseln'), t('Alle 2 Wochen eine Aufgabe.'), t('Bettwäsche wechseln'), { type: 'fixed', freq: 'weekly', every: 2 }),
   ];
 }
 

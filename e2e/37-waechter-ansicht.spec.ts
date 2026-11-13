@@ -36,9 +36,9 @@ type S = Awaited<ReturnType<typeof setup>>;
 
 const make = (s: S, name: string, entityId: string, extra: Record<string, unknown> = {}) => ({
   name,
-  // Schwelle 5: die Batterien (12 %, 14 %) liegen darüber, der Wächter bleibt ruhig (unter 20 % legte er nach 10 Minuten sofort eine Karte an)
+  // Schwelle 5: die Batterien (12 %, 14 %) liegen darüber, der Wächter bleibt ruhig (unter 20 % legte er nach 10 Minuten sofort eine Aufgabe an)
   trigger: { entityId, kind: 'below', value: 5, forMin: 10 },
-  card: { boardId: s.boardId, columnId: s.columnId, title: `Karte ${name}`, due: { kind: 'none' } },
+  card: { boardId: s.boardId, columnId: s.columnId, title: `Aufgabe ${name}`, due: { kind: 'none' } },
   assign: { mode: 'fixed', personIds: [s.rene.id] },
   cooldownMin: 0,
   ...extra,
@@ -103,7 +103,7 @@ test('Schalter: aus löst nicht mehr aus (der Server entscheidet), an wieder; di
   const created = await request.post('/api/watchers', { data: make(s, name, 'sensor.waschmaschine_leistung', { category: 'Test', trigger: { entityId: 'sensor.waschmaschine_leistung', kind: 'below', value: 5, forMin: 0 } }) });
   expect(created.status()).toBe(201);
   const id = ((await created.json()) as { id: string }).id;
-  const cards = async () => ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string }[] }).cards.filter((c) => c.title.startsWith(`Karte ${name}`));
+  const cards = async () => ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string }[] }).cards.filter((c) => c.title.startsWith(`Aufgabe ${name}`));
 
   await openList(page, s);
   const sw = page.getByRole('switch', { name: `${name} aktiv` });
@@ -117,7 +117,7 @@ test('Schalter: aus löst nicht mehr aus (der Server entscheidet), an wieder; di
   await expect(row).toBeVisible();
   await expect(row.getByTestId('watcher-status')).toHaveText('Aus');
 
-  // aus: die Maschine wird fertig, aber es entsteht keine Karte
+  // aus: die Maschine wird fertig, aber es entsteht keine Aufgabe
   await setState(request, 'sensor.waschmaschine_leistung', '2');
   await page.waitForTimeout(3000);
   expect(await cards()).toHaveLength(0);
@@ -161,7 +161,7 @@ test('Mitglied ohne Recht: der Schalter ist sichtbar, aber gesperrt; der Server 
 test('Neuer Wächter: die Kategorie wird vorgeschlagen und vorbelegt; eine eigene lässt sich anlegen; im Editor änderbar', async ({ page, request }) => {
   await clear(request);
   const s = await setup(request);
-  // die Werte neu setzen: unter 20 % legt ein neuer Batterie-Wächter nach 10 Minuten seit der letzten Änderung sofort eine Karte an
+  // die Werte neu setzen: unter 20 % legt ein neuer Batterie-Wächter nach 10 Minuten seit der letzten Änderung sofort eine Aufgabe an
   await setState(request, 'sensor.bad_batterie', '12');
   await setState(request, 'sensor.iphone_rene_battery_level', '14');
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), s.boardId);

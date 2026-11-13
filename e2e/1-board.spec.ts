@@ -8,11 +8,11 @@ const tab = (page: Page, name: string) => page.getByRole('tab', { name: new RegE
 const card = (page: Page, title: string) => page.locator('[role=presentation]').filter({ hasText: title });
 
 async function addCard(page: Page, title: string, due?: string) {
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   await page.getByLabel('Was steht an?').fill(title);
   if (due) await pickDue(page, due);
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
 }
 
 /** Wischen mit dem Finger: WebKit kann Touch nicht simulieren, darum Zeiger-Ereignisse wie bei einem Finger. */
@@ -44,7 +44,7 @@ test.beforeEach(async ({ page }) => {
   await tab(page, 'Offen').click();
 });
 
-test('Karte anlegen: erscheint in „Offen"', async ({ page }) => {
+test('Aufgabe anlegen: erscheint in „Offen"', async ({ page }) => {
   const title = uniqueTitle('Bad putzen');
   await addCard(page, title);
   await expect(card(page, title)).toBeVisible();
@@ -64,7 +64,7 @@ test('Wischen: Finger nach rechts = nächster Status, nach links = zurück', asy
   await expect(card(page, title)).toBeVisible();
 });
 
-test('Erledigen per Kreis, „Rückgängig" stellt die Karte wieder her', async ({ page }) => {
+test('Erledigen per Kreis, „Rückgängig" stellt die Aufgabe wieder her', async ({ page }) => {
   const title = uniqueTitle('Erledigen');
   await addCard(page, title);
 
@@ -78,7 +78,7 @@ test('Erledigen per Kreis, „Rückgängig" stellt die Karte wieder her', async 
   await expect(card(page, title)).toBeVisible();
 });
 
-test('Termin nach heute: die Karte landet von selbst in „Geplant"', async ({ page }) => {
+test('Termin nach heute: die Aufgabe landet von selbst in „Geplant"', async ({ page }) => {
   const title = uniqueTitle('Später');
   const nextYear = await page.evaluate(() => `${new Date().getFullYear() + 1}-06-15T09:00`);
   await addCard(page, title, nextYear);
@@ -99,7 +99,7 @@ test('Plus-Knopf: legt in „Offen" an, auch wenn gerade „Erledigt" oder „Ge
   }
 });
 
-test('Termin auf heute gestellt: die Karte bleibt in „Offen", ohne Fehler', async ({ page }) => {
+test('Termin auf heute gestellt: die Aufgabe bleibt in „Offen", ohne Fehler', async ({ page }) => {
   // Kein Datumswort im Titel („heute" würde die Schnell-Eingabe als Termin lesen)
   const title = uniqueTitle('Sofort dran');
   const today = await page.evaluate(() => {
@@ -111,13 +111,13 @@ test('Termin auf heute gestellt: die Karte bleibt in „Offen", ohne Fehler', as
   await expect(card(page, title)).toBeVisible();
 });
 
-test('Neue Karte: wer sie anlegt, ist zuerst selbst zuständig (sonst gäbe es keine Erinnerung)', async ({ page }) => {
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+test('Neue Aufgabe: wer sie anlegt, ist zuerst selbst zuständig (sonst gäbe es keine Erinnerung)', async ({ page }) => {
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Wer kümmert sich?' }).getByRole('button', { name: 'Ich' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('Fenster: der Fokus kommt hinein, Tab bleibt darin, nach Escape liegt er wieder am Knopf', async ({ page }) => {
-  const opener = page.getByRole('button', { name: 'Neue Karte', exact: true });
+  const opener = page.getByRole('button', { name: 'Neue Aufgabe', exact: true });
   await opener.focus();
   await page.keyboard.press('Enter');
   const sheet = newTaskSheet(page);
@@ -137,10 +137,10 @@ test('Fenster: der Fokus kommt hinein, Tab bleibt darin, nach Escape liegt er wi
   await expect(opener).toBeFocused();
 });
 
-test('Neue Karte: Kategorie direkt anlegen und gleich wählen, ein vorhandener Name wird wiederverwendet', async ({ page }) => {
+test('Neue Aufgabe: Kategorie direkt anlegen und gleich wählen, ein vorhandener Name wird wiederverwendet', async ({ page }) => {
   const title = uniqueTitle('Kategorie');
   const cat = `Garten ${Date.now().toString(36)}`;
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   await page.getByLabel('Was steht an?').fill(title);
   const sheet = newTaskSheet(page);
   // Auswahl-Chip im Fenster (die Filter-Chips über der Liste tragen denselben Namen)
@@ -163,13 +163,13 @@ test('Neue Karte: Kategorie direkt anlegen und gleich wählen, ein vorhandener N
   await expect(chip).toHaveCount(1);
 
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
-  // in der Liste zeigen Punkte die Kategorie, der Name steht für Vorlese-Programme daran (und im Karten-Fenster)
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
+  // in der Liste zeigen Punkte die Kategorie, der Name steht für Vorlese-Programme daran (und im Aufgaben-Fenster)
   await expect(card(page, title).getByTestId('card-categories')).toHaveAttribute('aria-label', new RegExp(cat));
 });
 
-test('Neue Karte: eigene Farbe für die neue Kategorie, die Farbpunkte sind per Tastatur wählbar', async ({ page }) => {
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+test('Neue Aufgabe: eigene Farbe für die neue Kategorie, die Farbpunkte sind per Tastatur wählbar', async ({ page }) => {
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   const sheet = newTaskSheet(page);
   await sheet.getByRole('button', { name: 'Neue Kategorie' }).click();
   const colors = sheet.getByRole('radiogroup', { name: 'Farbe der Kategorie' });
@@ -207,7 +207,7 @@ test('Menü „⋯": Duplizieren legt eine Kopie an', async ({ page }) => {
   await expect(card(page, `${title} (Kopie)`)).toBeVisible();
 });
 
-test('Karten-Fenster: „Erledigt" und „Fertig" oben (alles speichert sofort, „Fertig" schließt nur)', async ({ page }) => {
+test('Aufgaben-Fenster: „Erledigt" und „Fertig" oben (alles speichert sofort, „Fertig" schließt nur)', async ({ page }) => {
   const title = uniqueTitle('Fenster');
   await addCard(page, title);
 
@@ -219,7 +219,7 @@ test('Karten-Fenster: „Erledigt" und „Fertig" oben (alles speichert sofort, 
   await expect(page.getByRole('button', { name: 'Fertig', exact: true })).toHaveCount(0);
 });
 
-test('Erledigte Karte: nicht mehr „überfällig", zeigt die Erledigt-Zeit und den Verlauf', async ({ page }) => {
+test('Erledigte Aufgabe: nicht mehr „überfällig", zeigt die Erledigt-Zeit und den Verlauf', async ({ page }) => {
   const title = uniqueTitle('Verlauf');
   await addCard(page, title, '2020-01-15T09:00');
   await expect(card(page, title).getByTestId('card-due')).toHaveAttribute('data-overdue', 'true');
@@ -238,9 +238,9 @@ test('Erledigte Karte: nicht mehr „überfällig", zeigt die Erledigt-Zeit und 
   await expect(verlauf).toContainText('Erledigt');
 });
 
-test('Neue Karte: Felder gleich beim Anlegen (Priorität, Notiz, Checkliste, Link); Kosten gibt es danach an der Karte', async ({ page, request }) => {
+test('Neue Aufgabe: Felder gleich beim Anlegen (Priorität, Notiz, Checkliste, Link); Kosten gibt es danach an der Aufgabe', async ({ page, request }) => {
   const title = uniqueTitle('Date-Idee');
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   const sheet = newTaskSheet(page);
   await page.getByLabel('Was steht an?').fill(title);
 
@@ -256,16 +256,16 @@ test('Neue Karte: Felder gleich beim Anlegen (Priorität, Notiz, Checkliste, Lin
   await page.getByLabel('Neuer Link').press('Enter');
 
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  const made = page.getByRole('status').filter({ hasText: 'Karte angelegt' });
+  const made = page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' });
   await expect(made).toBeVisible();
 
-  // Kosten: an der Karte (im Fenster „Neue Aufgabe“ gibt es sie nicht mehr)
+  // Kosten: an der Aufgabe (im Fenster „Neue Aufgabe“ gibt es sie nicht mehr)
   await made.getByRole('button', { name: 'Öffnen' }).click();
   const props = page.getByRole('group', { name: 'Eigenschaften' });
   await props.getByRole('button', { name: 'Kosten' }).click();
   await page.getByLabel('Kosten in Euro').fill('49,90');
   await page.getByLabel('Kosten in Euro').blur();
-  await expect(page.getByText('Kosten dieser Karte')).toBeVisible();
+  await expect(page.getByText('Kosten dieser Aufgabe')).toBeVisible();
   await page.getByRole('button', { name: 'Fertig' }).click();
 
   // Budget: steht im Blatt „Filter" des Boards (der Test läuft in Hell und Dunkel auf demselben Board, die Summe wächst also mit)
@@ -282,7 +282,7 @@ test('Neue Karte: Felder gleich beim Anlegen (Priorität, Notiz, Checkliste, Lin
   expect(detail.links.map((l: { url: string }) => l.url)).toEqual(['https://maps.apple.com/?q=Restaurant']);
 });
 
-test('Überfälliges: der Termin ist rot (kein Balken mehr, der Kreis bleibt grau wie im Mockup); „Angelegt …“ steht nur im Karten-Fenster', async ({ page }) => {
+test('Überfälliges: der Termin ist rot (kein Balken mehr, der Kreis bleibt grau wie im Mockup); „Angelegt …“ steht nur im Aufgaben-Fenster', async ({ page }) => {
   const title = uniqueTitle('Balken');
   await addCard(page, title, '2020-01-15T09:00'); // längst überfällig
   const row = card(page, title);
@@ -317,7 +317,7 @@ test('Handy-Layout: nichts ragt seitlich heraus', async ({ page }) => {
 });
 
 
-test('Karte: die Kategorie steht in der Zeile, die Zuständigen als Bild rechts (kein Personenname in der Zeile)', async ({ page, request }) => {
+test('Aufgabe: die Kategorie steht in der Zeile, die Zuständigen als Bild rechts (kein Personenname in der Zeile)', async ({ page, request }) => {
   const headers = { 'x-stups-client': 'e2e' };
   const boards = (await (await request.get('/api/boards')).json()) as { id: string }[];
   const board = boards[0]!;

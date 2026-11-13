@@ -17,8 +17,8 @@
 
   /**
    * Die drei Blätter hinter der Zahlenleiste in Aufgaben (Mockup „Variante 3"): Heute fällig, Überfällig, Heute erledigt. Alle zeigen die eigenen
-   * Karten (wie die Leiste); die Daten sind die der Liste (agenda) und laden mit jeder Änderung (ui.rev) neu. Ein Kind sieht nur seine Karten
-   * und kein „Verschieben" (Kinder ändern keine Karten).
+   * Aufgaben (wie die Leiste); die Daten sind die der Liste (agenda) und laden mit jeder Änderung (ui.rev) neu. Ein Kind sieht nur seine Aufgaben
+   * und kein „Verschieben" (Kinder ändern keine Aufgaben).
    */
   let { kind }: { kind: StatsKind } = $props();
 
@@ -33,7 +33,7 @@
 
   const TITLE = $derived({ today: t('Heute fällig'), overdue: t('Überfällig'), done: t('Heute erledigt') }[kind]);
   const assignees = (c: ScheduleCard) => c.assigneeIds.map(personById).filter((p) => p !== undefined);
-  /** hinter dem Punkt: die erste Kategorie der Karte, sonst das Board */
+  /** hinter dem Punkt: die erste Kategorie der Aufgabe, sonst das Board */
   const place = (c: ScheduleCard) => c.categories?.[0]?.name ?? c.boardName;
   const canShift = $derived(!ui.isChild);
 
@@ -121,7 +121,7 @@
         <div class="text-fg2"><SectionHeader title={t('Schon erledigt')} icon="done" count={today.done.length} /></div>
         <ul class="flex flex-col gap-2">{#each today.done as c (c.id)}<li>{@render doneRow(c, false)}</li>{/each}</ul>
       {/if}
-      <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Tippe eine Karte an, um sie zu öffnen. Mit dem Kreis hakst du sie ab.')}</p>
+      <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Tippe eine Aufgabe an, um sie zu öffnen. Mit dem Kreis hakst du sie ab.')}</p>
     {:else if kind === 'overdue'}
       {#if overdue.length === 0}
         <div class="py-10 text-center" data-testid="stats-empty">
@@ -143,7 +143,7 @@
             <PillButton onclick={() => shift('tomorrow')}>{t('Alle auf morgen')}</PillButton>
             <PillButton onclick={() => shift('weekend')}>{t('Wochenende')}</PillButton>
           </div>
-          <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('„Morgen“ verschiebt nur diese Karte. Der Termin behält seine Uhrzeit. Das Verschieben lässt sich mit „Rückgängig“ zurücknehmen.')}</p>
+          <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('„Morgen“ verschiebt nur diese Aufgabe. Der Termin behält seine Uhrzeit. Das Verschieben lässt sich mit „Rückgängig“ zurücknehmen.')}</p>
         {/if}
       {/if}
     {:else}
@@ -170,7 +170,7 @@
       {:else}
         <SectionHeader title={t('Heute')} icon="done" count={doneList.length} />
         <ul class="flex flex-col gap-2">{#each doneList as c (c.id)}<li>{@render doneRow(c, true)}</li>{/each}</ul>
-        <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Mit „Rückgängig“ ist die Karte wieder offen. Gestern und älter findest du im Archiv.')}</p>
+        <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Mit „Rückgängig“ ist die Aufgabe wieder offen. Gestern und älter findest du im Archiv.')}</p>
       {/if}
     {/if}
   </div>

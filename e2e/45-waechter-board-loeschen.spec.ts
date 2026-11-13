@@ -26,7 +26,7 @@ async function board(request: APIRequestContext, name: string, extra: Record<str
 }
 async function watcherOn(request: APIRequestContext, target: { id: string; columnId: string }, name: string) {
   const res = await request.post('/api/watchers', {
-    data: { name, trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 }, card: { boardId: target.id, columnId: target.columnId, title: `${name} Karte`, due: { kind: 'none' } }, assign: { mode: 'none', personIds: [] } },
+    data: { name, trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 }, card: { boardId: target.id, columnId: target.columnId, title: `${name} Aufgabe`, due: { kind: 'none' } }, assign: { mode: 'none', personIds: [] } },
   });
   expect(res.status()).toBe(201);
   return ((await res.json()) as { id: string }).id;

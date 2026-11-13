@@ -1,6 +1,6 @@
 /**
  * Gerätenamen für Wächter: aus dem Friendly Name einer Entität ("iPhone Rene Battery Level") wird ein kurzer Gerätename ("iPhone Rene"),
- * den Name und Kartentitel eines Wächters nennen ("Batterie schwach: iPhone Rene"). Reine Funktionen ohne Abhängigkeiten.
+ * den Name und Aufgabentitel eines Wächters nennen ("Batterie schwach: iPhone Rene"). Reine Funktionen ohne Abhängigkeiten.
  */
 
 /** Wörter am Ende eines Sensornamens, die nur sagen, WAS gemessen wird (Batterie, Leistung, Zustand), nicht WO */

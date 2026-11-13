@@ -5,7 +5,7 @@
   import Sheet from './Sheet.svelte';
   import CtaButton from './ui/CtaButton.svelte';
 
-  /** „Erinnerung“ als eigenes Fenster (aus der Glockenzeile in Neue Aufgabe): der Editor der Karte, jede Änderung gilt sofort */
+  /** „Erinnerung“ als eigenes Fenster (aus der Glockenzeile in Neue Aufgabe): der Editor der Aufgabe, jede Änderung gilt sofort */
   let {
     dueAt,
     remindBeforeMin,

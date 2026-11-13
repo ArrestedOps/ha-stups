@@ -8,7 +8,7 @@
   import { arrowOnly, probeRight } from '../../lib/rowTap';
 
   /**
-   * Die eine Zeile für Aufgaben, Board-Karten, Wächter und Einstellungen: 68 px hoch, links optional der
+   * Die eine Zeile für Aufgaben, Board-Aufgaben, Wächter und Einstellungen: 68 px hoch, links optional der
    * Erledigt-Kreis und die Symbol-Kachel, Titel einzeilig, darunter die Meta-Zeile, rechts **genau ein** Element
    * (`right`: Foto, Stupsen, Pfeil, Zähler, Schalter, Wert oder kleiner Knopf).
    * Der Antippbereich (Kachel, Titel, Meta) ist ein Knopf, wenn `onclick` gesetzt ist, ein Link bei `href`.
@@ -64,7 +64,7 @@
     expanded?: boolean;
     /** der Antippbereich ist eine Auswahl (aria-pressed): die gewählte Zeile */
     pressed?: boolean;
-    /** Zeile in einer Karte (Ablauf im Wächter-Editor): dunkler Grund, 64 px hoch statt 68 */
+    /** Zeile in einer Aufgabe (Ablauf im Wächter-Editor): dunkler Grund, 64 px hoch statt 68 */
     inset?: boolean;
     onclick?: (e: MouseEvent) => void;
     href?: string;

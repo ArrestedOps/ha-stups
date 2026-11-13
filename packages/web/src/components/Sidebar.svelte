@@ -14,7 +14,7 @@
   /**
    * Seitenleiste auf dem Desktop (ab 1024 px, 256 px breit, fest): ersetzt die Leiste unten und das Blatt „Board wechseln“.
    * Oben Logo und Wortmarke, dann die Reiter (Aufgaben mit Zähler, Boards, Wächter), der Abschnitt BOARDS mit allen Boards
-   * (Farbpunkt, Name, offene Karten) und „Neues Board“, unten die Karte der angemeldeten Person mit dem Zahnrad (Einstellungen).
+   * (Farbpunkt, Name, offene Aufgaben) und „Neues Board“, unten die Aufgabe der angemeldeten Person mit dem Zahnrad (Einstellungen).
    * Dieselbe Navigation (`Ansicht`) und dasselbe `aria-current` wie die Leiste unten: gleiche Bedienung, gleiche Tests.
    */
   const all: Record<Tab, { label: string; icon: string }> = $derived({

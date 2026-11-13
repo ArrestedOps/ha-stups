@@ -48,7 +48,7 @@ describe('Wächter-Liste: Gerät unter dem Namen', () => {
     expect(count(html(), /data-testid="watcher-subject"/g)).toBe(1);
   });
 
-  it('die Zeile bricht um, bleibt aber bei einer Zeile (abgeschnitten) in der Karte', () => {
+  it('die Zeile bricht um, bleibt aber bei einer Zeile (abgeschnitten) in der Aufgabe', () => {
     ui.watchers = { available: true, items: [w('1', 'X'.repeat(120))] };
     expect(html()).toMatch(/class="[^"]*\btruncate\b[^"]*text-tok[^"]*"[^>]*data-testid="watcher-subject"/);
   });

@@ -12,7 +12,7 @@
 
   /**
    * Ein Wächter als Tabellenzeile (Desktop): Wächter (Kachel, Name, Entität), Bedingung als kurzer Satz, aktueller Stand, Status, letzte
-   * Auslösung, nächste Karte, Zuständige und der Schalter. Die ganze Zeile öffnet den Wächter (ein Knopf füllt sie aus); der Schalter liegt darüber
+   * Auslösung, nächste Aufgabe, Zuständige und der Schalter. Die ganze Zeile öffnet den Wächter (ein Knopf füllt sie aus); der Schalter liegt darüber
    * und ändert nur „aktiv". Spalten siehe `TABLE_COLS`.
    */
   let {
@@ -57,7 +57,7 @@
   </span>
   <!-- letzte Auslösung -->
   <span class="{COL_LAST} truncate text-[13px] text-fg2 {dim}" data-testid="watcher-last">{i.lastFiredAt ? ageText(i.lastFiredAt, nowMs) : t('Nie')}</span>
-  <!-- nächste Karte -->
+  <!-- nächste Aufgabe -->
   <span class="{COL_WIDE} min-w-0 items-center gap-1.5 text-[13px] text-fg2 {dim}" data-testid="watcher-next">
     <span class="shrink-0 text-text-soft2"><Icon name="robot" size={14} stroke={1.9} /></span><span class="truncate">{i.openCard?.title ?? i.nextCard}</span>
   </span>

@@ -3,7 +3,7 @@
 /*
  * Design "Stups": warmes Schwarz und das Orange aus dem Logo (dunkel), Creme mit weichen Schatten (hell).
  * Hell/Dunkel folgt dem System. --accent trägt Flächen (Knöpfe, aktiver Reiter), --accent-text trägt Schrift in
- * Orange und ist je Thema so gewählt, dass sie auf Karten und Hintergrund gut lesbar bleibt.
+ * Orange und ist je Thema so gewählt, dass sie auf Aufgaben und Hintergrund gut lesbar bleibt.
  */
 @theme inline {
   --color-bg: var(--bg);
@@ -108,7 +108,7 @@
   --sig-green: #7be07b;
   --sig-blue: #7fc8ff;
   --brand-dot: #ff7a1a; /* der Punkt der Wortmarke */
-  /* Wächter-Editor: Schilder der vier Karten (Grund und Schrift), grüne Marke „jetzt“, Linie im Verlauf, erledigte Schritte, Einsatz-Fläche */
+  /* Wächter-Editor: Schilder der vier Aufgaben (Grund und Schrift), grüne Marke „jetzt“, Linie im Verlauf, erledigte Schritte, Einsatz-Fläche */
   --tag-when-bg: #2f213f; --tag-when-fg: #d7c2ff;
   --tag-then-bg: #402212; --tag-then-fg: #ffc59a;
   --tag-who-bg: #272f3f; --tag-who-fg: #c9ddff;
@@ -121,7 +121,7 @@
   --glow: none;
   --shadow-card: none;
   --shadow-accent: none;
-  /* Dringlichkeit: Balken links an der Karte */
+  /* Dringlichkeit: Balken links an der Aufgabe */
   --u-over: #ff4d4d;
   --u-today: #ff5a1f;
   --u-soon: #ffc83c;
@@ -353,7 +353,7 @@
   font-weight: 600;
 }
 
-/* Das Feld der aktuellen Spalte im Karten-Menü: orange Rand, heller Orange-Ton */
+/* Das Feld der aktuellen Spalte im Aufgaben-Menü: orange Rand, heller Orange-Ton */
 .row-fresh { background-color: color-mix(in srgb, var(--accent) 14%, var(--surface)); box-shadow: inset 3px 0 0 var(--brand-dot); }
 .move-current { border-color: var(--brand-dot); color: var(--accent-text); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 
@@ -370,7 +370,7 @@
 .row-new { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
 .dot-new { background: var(--brand-dot); }
 
-/* Wächter-Editor: Karte des Ablaufs (Rundung 20), Verbindung mit Pfeil nach unten, Schilder, Wert-Feld der Schwelle, Ring um „als Nächstes dran“ */
+/* Wächter-Editor: Aufgabe des Ablaufs (Rundung 20), Verbindung mit Pfeil nach unten, Schilder, Wert-Feld der Schwelle, Ring um „als Nächstes dran“ */
 .flow-card {
   display: flex;
   flex-direction: column;
@@ -433,7 +433,7 @@
 /* Überschriften der Reiter: eigene Schrift (lokal gebündelt, kein CDN) */
 .font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
 
-/* Karten im hellen Thema mit weichem Schatten statt Rahmenlinie */
+/* Aufgaben im hellen Thema mit weichem Schatten statt Rahmenlinie */
 .card-shadow { box-shadow: var(--shadow-card); }
 @layer base {
   /*
@@ -534,7 +534,7 @@
 .cat-gray { background: var(--c-gray-bg); color: var(--c-gray-fg); }
 .cat-mint { background: var(--c-mint-bg); color: var(--c-mint-fg); }
 
-/* Rückmeldung nach dem Stupsen: die Karte hüpft kurz */
+/* Rückmeldung nach dem Stupsen: die Aufgabe hüpft kurz */
 @keyframes hop {
   0% { transform: translateY(0); }
   30% { transform: translateY(-10px) rotate(-1deg); }

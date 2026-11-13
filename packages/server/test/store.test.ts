@@ -154,7 +154,7 @@ describe('columns', () => {
 describe('Erledigt-Spalte löschen oder umstellen', () => {
   const openCount = (id: string) => store.listBoards(null).find((x) => x.id === id)!.openCards;
 
-  it('Löschen der Erledigt-Spalte mit Ziel „Offen“ öffnet die Karten wieder und zählt sie als offen', () => {
+  it('Löschen der Erledigt-Spalte mit Ziel „Offen“ öffnet die Aufgaben wieder und zählt sie als offen', () => {
     const { b, open, done } = board();
     const c = store.createCard(b.id, { columnId: open.id, title: 'A' }, rene.id);
     store.moveCard(c.id, { columnId: done.id }, rene.id);
@@ -166,7 +166,7 @@ describe('Erledigt-Spalte löschen oder umstellen', () => {
     expect(openCount(b.id)).toBe(1);
   });
 
-  it('Löschen mit Ziel „Erledigt“ lässt die Karten erledigt', () => {
+  it('Löschen mit Ziel „Erledigt“ lässt die Aufgaben erledigt', () => {
     const { b, doing, done } = board();
     const c = store.createCard(b.id, { columnId: doing.id, title: 'A' }, rene.id);
     store.moveCard(c.id, { columnId: done.id }, rene.id);
@@ -174,7 +174,7 @@ describe('Erledigt-Spalte löschen oder umstellen', () => {
     expect(store.getCard(c.id).completedAt).not.toBeNull();
   });
 
-  it('„Erledigt“ von einer Spalte nehmen öffnet ihre Karten wieder', () => {
+  it('„Erledigt“ von einer Spalte nehmen öffnet ihre Aufgaben wieder', () => {
     const { b, open, done } = board();
     const c = store.createCard(b.id, { columnId: open.id, title: 'A' }, rene.id);
     store.moveCard(c.id, { columnId: done.id }, rene.id);
@@ -183,7 +183,7 @@ describe('Erledigt-Spalte löschen oder umstellen', () => {
     expect(openCount(b.id)).toBe(1);
   });
 
-  it('archivierte Karten bleiben archiviert', () => {
+  it('archivierte Aufgaben bleiben archiviert', () => {
     const { b, open, done } = board();
     const c = store.createCard(b.id, { columnId: open.id, title: 'A' }, rene.id);
     store.moveCard(c.id, { columnId: done.id }, rene.id);

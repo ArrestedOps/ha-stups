@@ -30,7 +30,7 @@ const base = (over: Partial<PhaseInput>): PhaseInput => ({
 });
 
 describe('phaseOf: Wartet auf jemanden', () => {
-  it('eine offene Karte des Wächters, Alter ab Anlegen', () => {
+  it('eine offene Aufgabe des Wächters, Alter ab Anlegen', () => {
     const p = phaseOf(base({ openCard: { id: 'c1', createdAt: '2026-11-04T08:40:00Z' } }));
     expect(p).toEqual({ phase: 'waiting', since: '2026-11-04T08:40:00Z' });
   });
@@ -42,7 +42,7 @@ describe('phaseOf: Läuft gerade', () => {
     expect(p).toEqual({ phase: 'running', since: '2026-11-04T08:20:00Z' });
   });
 
-  it('below: Wert unter der Schwelle (Bedingung erfüllt, Karte folgt gleich) ist ruhig', () => {
+  it('below: Wert unter der Schwelle (Bedingung erfüllt, Aufgabe folgt gleich) ist ruhig', () => {
     expect(phaseOf(base({ seen: { state: '1', lastChanged: null, ...POWER } })).phase).toBe('quiet');
   });
 

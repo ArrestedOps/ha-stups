@@ -38,7 +38,7 @@ beforeEach(() => {
 });
 
 describe('Für dich', () => {
-  it('meine offenen Karten bis Ende morgen, nach Termin: überfällig und heute zuerst, dann morgen', () => {
+  it('meine offenen Aufgaben bis Ende morgen, nach Termin: überfällig und heute zuerst, dann morgen', () => {
     card('Morgen', { assigneeIds: [ben], dueAt: '2026-11-05T18:00:00Z' });
     card('Heute', { assigneeIds: [ben], dueAt: '2026-11-04T17:00:00Z' });
     card('Gestern', { assigneeIds: [ben], dueAt: '2026-11-03T08:00:00Z' });
@@ -62,7 +62,7 @@ describe('Für dich', () => {
     expect(titles(today().mine)).toEqual(['Sonntag spät']);
   });
 
-  it('erledigte, gelöschte und archivierte Karten fehlen; auch solche, die auf Bestätigung warten', () => {
+  it('erledigte, gelöschte und archivierte Aufgaben fehlen; auch solche, die auf Bestätigung warten', () => {
     const done = card('Erledigt', { assigneeIds: [ben], dueAt: '2026-11-04T17:00:00Z' });
     store.completeCard(done.id, { by: ben, source: 'app' });
     const gone = card('Gelöscht', { assigneeIds: [ben], dueAt: '2026-11-04T17:00:00Z' });
@@ -71,7 +71,7 @@ describe('Für dich', () => {
     expect(titles(today().mine)).toEqual(['Offen']);
   });
 
-  it('Karten von Wächtern stehen unter „Vom Haus", nicht doppelt unter „Für dich"', () => {
+  it('Aufgaben von Wächtern stehen unter „Vom Haus", nicht doppelt unter „Für dich"', () => {
     watcherCard('Wäsche aufhängen', [ben]);
     expect(titles(today().mine)).toEqual([]);
     expect(titles(today().house)).toEqual(['Wäsche aufhängen']);
@@ -79,20 +79,20 @@ describe('Für dich', () => {
 });
 
 describe('Vom Haus', () => {
-  it('Wächter-Karten, die mir zugewiesen sind oder noch niemandem, neueste zuerst; fremde nicht', () => {
+  it('Wächter-Aufgaben, die mir zugewiesen sind oder noch niemandem, neueste zuerst; fremde nicht', () => {
     at('2026-11-04T08:00:00Z');
     watcherCard('Alt für mich', [ben]);
     at('2026-11-04T08:30:00Z');
     watcherCard('Niemand', []);
     at('2026-11-04T08:45:00Z');
     watcherCard('Für Anna', [anna]);
-    card('Normale Karte ohne Zuständige');
+    card('Normale Aufgabe ohne Zuständige');
     const house = today().house;
     expect(titles(house)).toEqual(['Niemand', 'Alt für mich']);
     expect(house[0]).toMatchObject({ watcherId: 'w1', watcherName: 'Waschmaschine fertig', assigneeIds: [], boardName: 'Haushalt', why: null });
   });
 
-  it('erledigte Wächter-Karten fehlen', () => {
+  it('erledigte Wächter-Aufgaben fehlen', () => {
     const c = watcherCard('Fertig', [ben]);
     store.completeCard(c.id, { by: ben, source: 'app' });
     expect(today().house).toEqual([]);
@@ -100,7 +100,7 @@ describe('Vom Haus', () => {
 });
 
 describe('Bei den anderen', () => {
-  it('Zahl offener Karten je andere Person, ohne mich und ohne Personen ohne Karten', () => {
+  it('Zahl offener Aufgaben je andere Person, ohne mich und ohne Personen ohne Aufgaben', () => {
     card('A1', { assigneeIds: [anna], dueAt: '2026-11-04T17:00:00Z' });
     card('A2', { assigneeIds: [anna] });
     watcherCard('W', [anna]);
@@ -110,7 +110,7 @@ describe('Bei den anderen', () => {
 });
 
 describe('Kind', () => {
-  it('sieht nur die eigenen Karten und keine Zeile „Bei den anderen"', () => {
+  it('sieht nur die eigenen Aufgaben und keine Zeile „Bei den anderen"', () => {
     card('Für Mia', { assigneeIds: [mia], dueAt: '2026-11-04T17:00:00Z' });
     card('Für Ben', { assigneeIds: [ben], dueAt: '2026-11-04T17:00:00Z' });
     watcherCard('Haus für Mia', [mia]);

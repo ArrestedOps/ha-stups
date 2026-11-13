@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-// Wächter am Desktop (Server mit nachgebautem Home Assistant): Raster aus gleich hohen Karten, „Neuer Wächter“ als Knopf neben dem Kopf.
+// Wächter am Desktop (Server mit nachgebautem Home Assistant): Raster aus gleich hohen Aufgaben, „Neuer Wächter“ als Knopf neben dem Kopf.
 const MOCK = 'http://127.0.0.1:18411';
 test.describe.configure({ timeout: 90_000 });
 
@@ -11,7 +11,7 @@ test.afterEach(async ({ request }) => {
 
 const sideNav = (page: import('@playwright/test').Page) => page.getByRole('navigation', { name: 'Ansicht' });
 
-test('Wächter: Raster in zwei oder drei Spalten, alle Karten einer Reihe gleich hoch, kein „+“ des Handys, Neuer Wächter als Knopf in der Leiste', async ({ page, request }) => {
+test('Wächter: Raster in zwei oder drei Spalten, alle Aufgaben einer Reihe gleich hoch, kein „+“ des Handys, Neuer Wächter als Knopf in der Leiste', async ({ page, request }) => {
   const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
   const rene = people.find((p) => p.name === 'Rene')!;
   const tag = Date.now().toString(36);
@@ -31,7 +31,7 @@ test('Wächter: Raster in zwei oder drei Spalten, alle Karten einer Reihe gleich
     });
     expect(r.status()).toBe(201);
   }
-  // alle vier lösen aus: vier offene Karten vom Haus, Abschnitt „Wartet auf jemanden“ mit vier Karten
+  // alle vier lösen aus: vier offene Aufgaben vom Haus, Abschnitt „Wartet auf jemanden“ mit vier Aufgaben
   await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.waschmaschine_leistung', state: '2' } });
   await expect
     .poll(async () => ((await (await request.get(`/api/boards/${board.id}`)).json()) as { cards: unknown[] }).cards.length, { timeout: 20_000 })
@@ -43,7 +43,7 @@ test('Wächter: Raster in zwei oder drei Spalten, alle Karten einer Reihe gleich
   await expect(page.getByRole('button', { name: 'Neuer Wächter', exact: true })).toHaveCount(1); // nur der Knopf, nicht zusätzlich der „+“ des Handys
   await expect(page.getByTestId('sidebar')).toBeVisible();
 
-  // jedes Raster: Zeilen mit gleich hohen Karten, bis zu drei Spalten
+  // jedes Raster: Zeilen mit gleich hohen Aufgaben, bis zu drei Spalten
   const grids = page.getByTestId('home').locator('ul.grid');
   await expect(grids.first()).toBeVisible();
   const info = await grids.evaluateAll((els) =>
@@ -55,7 +55,7 @@ test('Wächter: Raster in zwei oder drei Spalten, alle Karten einer Reihe gleich
     }),
   );
   for (const g of info) {
-    expect(g.equal, 'Karten einer Reihe gleich hoch').toBe(true);
+    expect(g.equal, 'Aufgaben einer Reihe gleich hoch').toBe(true);
     expect(g.cols).toBeLessThanOrEqual(3);
   }
   expect(Math.max(...info.map((g) => g.cols)), 'mehrere Spalten').toBeGreaterThanOrEqual(2);
@@ -93,8 +93,8 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
   const make = (name: string, entityId: string, category: string | null, extra: Record<string, unknown> = {}) => ({
     name,
     category,
-    trigger: { entityId, kind: 'below', value: 5, forMin: 10 }, // Batterien liegen darüber: ruhig, keine sofortige Karte
-    card: { boardId: board.id, columnId, title: `Karte ${name}`, due: { kind: 'none' } },
+    trigger: { entityId, kind: 'below', value: 5, forMin: 10 }, // Batterien liegen darüber: ruhig, keine sofortige Aufgabe
+    card: { boardId: board.id, columnId, title: `Aufgabe ${name}`, due: { kind: 'none' } },
     assign: { mode: 'fixed', personIds: [rene.id] },
     ...extra,
   });
@@ -123,7 +123,7 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
 
   // Spaltenkopf und Zeilen: alle Spalten bei 1440 px, bündig (gleiche linke Kante je Spalte)
   const head = page.getByTestId('watcher-table-head');
-  for (const label of ['Wächter', 'Bedingung', 'Aktuell', 'Status', 'Zuletzt', 'Nächste Karte', 'Zuständig']) await expect(head).toContainText(label);
+  for (const label of ['Wächter', 'Bedingung', 'Aktuell', 'Status', 'Zuletzt', 'Nächste Aufgabe', 'Zuständig']) await expect(head).toContainText(label);
   const cols = async () =>
     page.evaluate(() => {
       const headCells = [...document.querySelectorAll('[data-testid=watcher-table-head] > div > span')].filter((e) => e.getBoundingClientRect().width > 0).map((e) => Math.round(e.getBoundingClientRect().left));
@@ -140,7 +140,7 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
   await expect(row.getByTestId('watcher-condition')).toContainText('unter 5 % liegt');
   await expect(row.getByTestId('watcher-value')).toHaveText('12 %');
   await expect(row.getByTestId('watcher-last')).toHaveText('Nie');
-  await expect(row.getByTestId('watcher-next')).toContainText(`Karte Bad ${tag}`);
+  await expect(row.getByTestId('watcher-next')).toContainText(`Aufgabe Bad ${tag}`);
   await expect(row.getByTestId('watcher-who')).toBeVisible();
   const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(over).toBeLessThanOrEqual(0);

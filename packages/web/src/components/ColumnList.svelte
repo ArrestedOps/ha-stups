@@ -39,7 +39,7 @@
     const id = String(e.detail.info.id);
     const index = items.findIndex((c) => c.id === id);
     const card = ui.view?.cards.find((c) => c.id === id);
-    // Nur die Liste reagiert, in der die Karte gelandet ist
+    // Nur die Liste reagiert, in der die Aufgabe gelandet ist
     if (index < 0 || !card) {
       setDragging(false);
       return;
@@ -81,12 +81,12 @@
 
 {#snippet empty(cls: string)}
   <p class={cls}>
-    {ui.filter.categoryIds.length || ui.filter.onlyMine || ui.filter.personIds.length || ui.filter.nudged || ui.filter.search ? t('Keine Karten passen zum Filter') : t('Noch keine Karten')}
+    {ui.filter.categoryIds.length || ui.filter.onlyMine || ui.filter.personIds.length || ui.filter.nudged || ui.filter.search ? t('Keine Aufgaben passen zum Filter') : t('Noch keine Aufgaben')}
   </p>
 {/snippet}
 
 {#if ui.desktop}
-  <!-- Desktop: die Liste füllt die Spalte (auch der leere Teil nimmt eine gezogene Karte an), der Hinweis liegt darüber -->
+  <!-- Desktop: die Liste füllt die Spalte (auch der leere Teil nimmt eine gezogene Aufgabe an), der Hinweis liegt darüber -->
   <div class="relative flex min-h-full flex-1 flex-col">
     {@render zone()}
     {#if items.length === 0 && !ui.dragging}{@render empty('pointer-events-none absolute inset-x-0 top-4 text-center text-[15px] text-fg2')}{/if}

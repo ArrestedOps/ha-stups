@@ -113,7 +113,7 @@ describe('Wächter-Zeile in der Tabelle (Desktop)', () => {
     expect(out).toMatch(/data-testid="watcher-value">–</);
   });
 
-  it('offene Karte steht als nächste Karte, wenn eine wartet', () => {
+  it('offene Aufgabe steht als nächste Aufgabe, wenn eine wartet', () => {
     const out = table({ item: item({ phase: 'waiting', openCard: { id: 'c', title: 'Gerade offen', boardId: 'b', assigneeIds: [], createdAt: '2026-11-06T11:00:00Z' } }) });
     expect(out).toMatch(/data-testid="watcher-next">[\s\S]*Gerade offen/);
   });

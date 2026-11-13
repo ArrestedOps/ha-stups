@@ -1,6 +1,6 @@
 /**
  * Namen und Suchwörter der Symbole (je Sprache rund 30 kB) kommen als eigenes Paket: Sie werden nur gebraucht, wenn ein Symbolname
- * angezeigt, ein Symbol gesucht oder eines zum Kartentitel vorgeschlagen wird. Der erste Zugriff startet das Laden; bis dahin
+ * angezeigt, ein Symbol gesucht oder eines zum Aufgabentitel vorgeschlagen wird. Der erste Zugriff startet das Laden; bis dahin
  * liefert keywords() null, danach zeichnen sich die Stellen, die es lesen, von selbst neu ($state).
  */
 export type WordTable = Record<string, readonly string[]>;

@@ -3,7 +3,7 @@ import { fetchAllPages } from '../src/lib/paging';
 
 /**
  * Listen, die der Server seitenweise liefert (`limit`/`offset`, Gesamtzahl in `x-total-count`): Der Client holt Seiten, bis alles da ist.
- * Ein stilles Abschneiden darf keine Karte in der Ansicht verschwinden lassen.
+ * Ein stilles Abschneiden darf keine Aufgabe in der Ansicht verschwinden lassen.
  */
 const card = (n: number) => ({ id: `c${n}` });
 const server = (all: { id: string }[], opts: { hide?: (c: { id: string }) => boolean; pageSize: number }) => {
@@ -43,7 +43,7 @@ describe('fetchAllPages', () => {
     expect(s.calls).toEqual([0, 2]);
   });
 
-  it('verschiebt sich der Bestand zwischen zwei Seiten, kommt keine Karte doppelt', async () => {
+  it('verschiebt sich der Bestand zwischen zwei Seiten, kommt keine Aufgabe doppelt', async () => {
     const pages = [
       { items: [card(1), card(2)], total: 4 },
       { items: [card(2), card(3)], total: 4 }, // c2 rutschte auf die zweite Seite

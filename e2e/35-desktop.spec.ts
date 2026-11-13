@@ -2,7 +2,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 import { newTaskSheet } from './helpers';
 
 // Desktop (1440 × 900, Dunkel und Hell): Seitenleiste statt Leiste unten, Detailspalte statt Sheet, Dialoge statt Bottom-Sheets, Kanban, Tasten.
-// Der Test-Server meldet jeden als „rene“ an; die Karten gehören Rene, damit sie unter „Meine“ in Aufgaben stehen.
+// Der Test-Server meldet jeden als „rene“ an; die Aufgaben gehören Rene, damit sie unter „Meine“ in Aufgaben stehen.
 test.describe.configure({ timeout: 90_000 });
 
 let counter = 0;
@@ -10,7 +10,7 @@ const unique = (base: string) => `${base} ${Date.now().toString(36)}${counter++}
 
 const sideNav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
 const dialog = (page: Page) => page.getByRole('dialog');
-/** Die Zeile einer Karte in der Liste von Aufgaben (der Antippbereich, nicht der Mehr-Knopf) */
+/** Die Zeile einer Aufgabe in der Liste von Aufgaben (der Antippbereich, nicht der Mehr-Knopf) */
 const row = (page: Page, title: string) => page.getByTestId('tasks').locator('button[data-row-open]').filter({ hasText: title });
 
 interface Seed {
@@ -20,7 +20,7 @@ interface Seed {
   cards: { id: string; title: string }[];
 }
 
-/** Ein eigenes Board mit drei Karten von Rene (Termine in 5, 10 und 15 Minuten; in den letzten 20 Minuten vor Mitternacht in 1, 2 und 3, damit sie „heute“ bleiben und nicht nach „Geplant“ rücken), die erste mit Checkliste */
+/** Ein eigenes Board mit drei Aufgaben von Rene (Termine in 5, 10 und 15 Minuten; in den letzten 20 Minuten vor Mitternacht in 1, 2 und 3, damit sie „heute“ bleiben und nicht nach „Geplant“ rücken), die erste mit Checkliste */
 async function seed(request: APIRequestContext, extra: { category?: string } = {}): Promise<Seed> {
   const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
   const rene = people.find((p) => p.name === 'Rene')!;
@@ -62,7 +62,7 @@ test.describe('Aufbau', () => {
     await expect(sideNav(page).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('heading', { name: 'Aufgaben', exact: true })).toBeVisible();
     await expect(page.getByTestId('new-task')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Neue Karte', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Neue Aufgabe', exact: true })).toHaveCount(0);
     // Person unten mit Zahnrad
     await expect(page.getByTestId('side-user')).toContainText('Rene');
     await expect(page.getByTestId('side-user').getByRole('button', { name: 'Einstellungen öffnen' })).toBeVisible();
@@ -117,11 +117,11 @@ test.describe('Aufbau', () => {
     await page.setViewportSize({ width: 820, height: 1100 });
     await expect(page.getByTestId('sidebar')).toHaveCount(0);
     await expect(sideNav(page).getByRole('button', { name: 'Boards' })).toBeVisible(); // die Leiste unten
-    await expect(page.getByRole('button', { name: 'Neue Karte', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Neue Aufgabe', exact: true })).toBeVisible();
     const col = (await page.getByTestId('tasks').boundingBox())!;
     expect(col.width).toBeLessThanOrEqual(720);
     expect(Math.abs(col.x + col.width / 2 - 410), 'Spalte mittig').toBeLessThanOrEqual(2);
-    await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+    await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
     const sheet = newTaskSheet(page);
     await expect(sheet).toBeVisible();
     await expect.poll(async () => Math.round((await sheet.boundingBox())!.width)).toBe(640);
@@ -155,7 +155,7 @@ test.describe('Aufgaben', () => {
     // die Liste bleibt sichtbar und bedienbar, die gewählte Zeile ist markiert
     await expect(first).toHaveAttribute('aria-current', 'true');
     await expect(row(page, s.cards[1]!.title)).toBeVisible();
-    // eine andere Karte wählen: die Spalte wechselt den Inhalt
+    // eine andere Aufgabe wählen: die Spalte wechselt den Inhalt
     await row(page, s.cards[1]!.title).click();
     await expect(detail.getByLabel('Titel')).toHaveValue(s.cards[1]!.title);
     // Escape schließt
@@ -168,7 +168,7 @@ test.describe('Aufgaben', () => {
     await expect(detail).toHaveCount(0);
   });
 
-  test('Änderungen in der Detailspalte speichern sofort, Kommentar schreiben, „Erledigt“ nimmt die Karte aus der Liste', async ({ page, request }) => {
+  test('Änderungen in der Detailspalte speichern sofort, Kommentar schreiben, „Erledigt“ nimmt die Aufgabe aus der Liste', async ({ page, request }) => {
     const s = await seed(request);
     await page.goto('/');
     await row(page, s.cards[1]!.title).click();
@@ -218,7 +218,7 @@ test.describe('Aufgaben', () => {
     await expect(newTaskSheet(page)).toBeVisible();
   });
 
-  test('Neue Aufgabe: Knopf oben öffnet den Dialog (600 px, mittig), Anlegen zeigt die Karte in der Liste, Escape schließt, der Fokus kehrt zum Knopf zurück', async ({ page }) => {
+  test('Neue Aufgabe: Knopf oben öffnet den Dialog (600 px, mittig), Anlegen zeigt die Aufgabe in der Liste, Escape schließt, der Fokus kehrt zum Knopf zurück', async ({ page }) => {
     await page.goto('/');
     const button = page.getByTestId('new-task');
     await button.focus(); // WebKit fokussiert Knöpfe beim Klick nicht überall: mit der Tastatur öffnen
@@ -234,7 +234,7 @@ test.describe('Aufgaben', () => {
     const title = unique('Fenster putzen');
     await sheet.getByLabel('Was steht an?').fill(title);
     await sheet.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-    await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
     await expect(sheet).toHaveCount(0);
   });
 });
@@ -260,7 +260,7 @@ test.describe('Boards', () => {
 
     // „+“ der zweiten Spalte (die erste Spalte ist „Offen“, die zweite „Geplant“ hat keins, die dritte „In Arbeit“)
     const target = s.columns.find((c) => c.name === 'In Arbeit')!;
-    await kanban.getByRole('button', { name: `Neue Karte in „${target.name}“` }).click();
+    await kanban.getByRole('button', { name: `Neue Aufgabe in „${target.name}“` }).click();
     const title = unique('Keller');
     await newTaskSheet(page).getByLabel('Was steht an?').fill(title);
     await newTaskSheet(page).getByRole('button', { name: 'Aufgabe anlegen' }).click();
@@ -268,17 +268,17 @@ test.describe('Boards', () => {
     await expect(sections.filter({ has: page.getByRole('heading', { name: target.name }) }).getByTestId('column-count')).toHaveText('1');
   });
 
-  test('Karten brechen die Meta-Zeile um, statt Kategorien abzuschneiden; Klick öffnet die Karte als Dialog', async ({ page, request }) => {
+  test('Aufgaben brechen die Meta-Zeile um, statt Kategorien abzuschneiden; Klick öffnet die Aufgabe als Dialog', async ({ page, request }) => {
     const long = 'Sehr lange Kategorie für schmale Spalten';
     const s = await seed(request, { category: long });
     await page.goto('/');
     await page.getByTestId('sidebar').getByRole('navigation', { name: 'Boards' }).getByRole('button', { name: new RegExp(`^${s.boardName}`) }).click();
     const card = page.getByTestId('kanban').locator('[data-variant=task]').filter({ hasText: s.cards[0]!.title });
     await expect(card).toBeVisible();
-    // alles, was die Karte zeigt, liegt innerhalb der Karte (nichts ragt heraus oder wird abgeschnitten)
+    // alles, was die Aufgabe zeigt, liegt innerhalb der Aufgabe (nichts ragt heraus oder wird abgeschnitten)
     const cut = await card.evaluate((el) => {
       const box = el.getBoundingClientRect();
-      // Blätter mit Text (ohne den Text nur für Screenreader): liegen sie in der Karte, und ist ihr Text ganz zu sehen?
+      // Blätter mit Text (ohne den Text nur für Screenreader): liegen sie in der Aufgabe, und ist ihr Text ganz zu sehen?
       return [...el.querySelectorAll<HTMLElement>('*')].filter((n) => {
         if (n.classList.contains('sr-only') || n.children.length > 0 || !n.textContent?.trim()) return false;
         const r = n.getBoundingClientRect();
@@ -288,13 +288,13 @@ test.describe('Boards', () => {
     expect(cut, `nichts abgeschnitten: ${JSON.stringify(cut)}`).toEqual([]);
     await expect(card.getByTestId('card-category')).toContainText(long);
     await card.getByRole('button', { name: s.cards[0]!.title, exact: true }).click();
-    await expect(dialog(page)).toBeVisible(); // in Boards öffnet die Karte als Dialog
+    await expect(dialog(page)).toBeVisible(); // in Boards öffnet die Aufgabe als Dialog
     await expect.poll(async () => Math.round((await dialog(page).boundingBox())!.width)).toBe(600);
     await page.keyboard.press('Escape');
     await expect(dialog(page)).toHaveCount(0);
   });
 
-  test('Drag & Drop mit der Maus: eine Karte in eine andere Spalte ziehen', async ({ page, request }) => {
+  test('Drag & Drop mit der Maus: eine Aufgabe in eine andere Spalte ziehen', async ({ page, request }) => {
     const s = await seed(request);
     await page.goto('/');
     await page.getByTestId('sidebar').getByRole('navigation', { name: 'Boards' }).getByRole('button', { name: new RegExp(`^${s.boardName}`) }).click();
@@ -308,7 +308,7 @@ test.describe('Boards', () => {
     await page.mouse.move(from.x + from.width / 2 + 12, from.y + 30, { steps: 4 });
     await page.mouse.move(to.x + to.width / 2, to.y + 80, { steps: 20 });
     await page.mouse.move(to.x + to.width / 2, to.y + 60, { steps: 4 });
-    // die Bibliothek sucht die Spalte unter der Karte im Takt (nicht bei jeder Mausbewegung): kurz stehen bleiben, dann loslassen
+    // die Bibliothek sucht die Spalte unter der Aufgabe im Takt (nicht bei jeder Mausbewegung): kurz stehen bleiben, dann loslassen
     await expect(page.getByTestId(`column-list-${target.id}`).locator('[data-is-dnd-shadow-item-internal]')).toHaveCount(1, { timeout: 5000 });
     await page.mouse.up();
     await expect(page.getByTestId(`column-list-${target.id}`).getByText(title)).toBeVisible({ timeout: 10_000 });

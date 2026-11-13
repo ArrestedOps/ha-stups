@@ -194,7 +194,7 @@
     {#if f.kind === 'calendar_event'}
       <span class="text-[14px] text-fg2">{t('Wie viele Stunden vorher?')}</span>
       <DeskField bind:value={f.leadHours} label={t('Vorlauf in Stunden')} unit={t('Std.')} width="w-24" inputmode="numeric" />
-      <span class="text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Karte')}</span>
+      <span class="text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Aufgabe')}</span>
     {:else if f.kind === 'forecast'}
       <span class="text-[14px] text-fg2">{t('Regen in den nächsten …')}</span>
       <DeskField bind:value={f.forecastHours} label={t('Stunden im Voraus')} unit={t('Std.')} width="w-24" inputmode="numeric" />

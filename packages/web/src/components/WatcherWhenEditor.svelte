@@ -16,8 +16,8 @@
   import Tile from './ui/Tile.svelte';
 
   /**
-   * „Wenn": woran Stups merkt, dass die Karte entstehen soll. Im Assistenten (Schritt 1) mit großem Verlauf der Entität; im Ablauf klappt
-   * es in der Karte WENN auf (`graph` aus, der Verlauf steht schon in der Karte) und bietet dort „Entität ändern" an.
+   * „Wenn": woran Stups merkt, dass die Aufgabe entstehen soll. Im Assistenten (Schritt 1) mit großem Verlauf der Entität; im Ablauf klappt
+   * es in der Aufgabe WENN auf (`graph` aus, der Verlauf steht schon in der Aufgabe) und bietet dort „Entität ändern" an.
    */
   let { ed, graph = true, entityRow = true }: { ed: WatcherEditor; graph?: boolean; entityRow?: boolean } = $props();
 
@@ -91,7 +91,7 @@
       <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
         <span class="flex min-w-0 flex-1 flex-col gap-1">
           <span class="wrap-anywhere text-[15px] font-bold">{t('Wie viele Stunden vorher?')}</span>
-          <span class="wrap-anywhere text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Karte')}</span>
+          <span class="wrap-anywhere text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Aufgabe')}</span>
         </span>
         <NumberField bind:value={f.leadHours} label={t('Vorlauf in Stunden')} unit={t('Std.')} />
       </div>

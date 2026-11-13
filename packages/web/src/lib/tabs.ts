@@ -17,7 +17,7 @@ export function migrateTab(raw: string | null | undefined): Tab {
 /**
  * Auf welchem Reiter die App startet: immer auf **Aufgaben**, auch nach dem Neuladen und wenn dieses Gerät früher auf Boards oder
  * Wächter war. Wer die App öffnet, will sehen, was für ihn dran ist; der Reiter wird deshalb nirgends gemerkt (ein alter Eintrag
- * `stups.tab` wird nicht mehr gelesen). Ein Link auf eine Karte öffnet sie wie bisher über dem Reiter Aufgaben.
+ * `stups.tab` wird nicht mehr gelesen). Ein Link auf eine Aufgabe öffnet sie wie bisher über dem Reiter Aufgaben.
  */
 export const startTab = (): Tab => 'tasks';
 

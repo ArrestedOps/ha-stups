@@ -37,7 +37,7 @@ describe('mayConfirm', () => {
 });
 
 describe('waitingForConfirmation', () => {
-  it('nur eine offene Karte mit Anfrage wartet', () => {
+  it('nur eine offene Aufgabe mit Anfrage wartet', () => {
     expect(waitingForConfirmation({ confirmRequestedAt: '2026-11-04T09:00:00Z', completedAt: null })).toBe(true);
     expect(waitingForConfirmation({ confirmRequestedAt: null, completedAt: null })).toBe(false);
     expect(waitingForConfirmation({ confirmRequestedAt: '2026-11-04T09:00:00Z', completedAt: '2026-11-04T10:00:00Z' })).toBe(false);

@@ -2,7 +2,7 @@ import type { Card, Store } from './store.js';
 import { parseIcon, parseIconColor } from './store/validate.js';
 import type { WatcherHa } from './watchers.js';
 
-/** Name des Home-Assistant-Ereignisses, mit dem eigene Automationen eine Karte anlegen */
+/** Name des Home-Assistant-Ereignisses, mit dem eigene Automationen eine Aufgabe anlegen */
 export const EVENT_TYPE = 'stups_create_card';
 
 export interface AutomationDeps {
@@ -28,7 +28,7 @@ const KEEP = 20;
 const asText = (v: unknown): string | null => (typeof v === 'string' && v.trim() !== '' ? v.trim() : null);
 
 /**
- * Eigene Automationen in Home Assistant legen Karten an, indem sie das Ereignis `stups_create_card` auslösen
+ * Eigene Automationen in Home Assistant legen Aufgaben an, indem sie das Ereignis `stups_create_card` auslösen
  * (Aktion `event.fire` bzw. `event:` in der Automation). Felder: board, column, title, description, assignees
  * (Namen oder „present"), due_in_minutes, dedupe_key. Fehler gehen nicht verloren, sondern stehen im Protokoll.
  */
@@ -41,7 +41,7 @@ export function createAutomationCards(deps: AutomationDeps) {
     log.length = Math.min(log.length, KEEP);
   }
 
-  /** `icon` (mdi:name oder name) und `icon_color`: ungültige Angaben werden ignoriert, die Karte entsteht trotzdem */
+  /** `icon` (mdi:name oder name) und `icon_color`: ungültige Angaben werden ignoriert, die Aufgabe entsteht trotzdem */
   function iconOf(data: Record<string, unknown>): { icon?: string; iconColor?: string } {
     const out: { icon?: string; iconColor?: string } = {};
     const raw = asText(data.icon);
@@ -101,7 +101,7 @@ export function createAutomationCards(deps: AutomationDeps) {
 
       const key = asText(data.dedupe_key);
       if (key && store.openCardByDedupeKey(key)) {
-        record('duplicate', title, `Für „${key}" gibt es schon eine offene Karte`);
+        record('duplicate', title, `Für „${key}" gibt es schon eine offene Aufgabe`);
         return;
       }
 
@@ -127,7 +127,7 @@ export function createAutomationCards(deps: AutomationDeps) {
         return created;
       });
       if (!card) {
-        record('duplicate', title, `Für „${key}" gibt es schon eine offene Karte`);
+        record('duplicate', title, `Für „${key}" gibt es schon eine offene Aufgabe`);
         return;
       }
       record('created', title, unknown.length ? `Unbekannte Personen übersprungen: ${unknown.join(', ')}` : `in „${board.name}"`);

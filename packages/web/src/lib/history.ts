@@ -17,7 +17,7 @@ export interface EntityHistory {
 }
 
 export interface GraphOptions {
-  /** Maße des Zeichenbereichs (viewBox); der Aufrufer streckt ihn auf die Breite der Karte */
+  /** Maße des Zeichenbereichs (viewBox); der Aufrufer streckt ihn auf die Breite der Aufgabe */
   width: number;
   height: number;
   /** Höchster und tiefster Punkt der Linie (oben und unten bleibt Luft für Strichstärke und Auslösepunkt) */

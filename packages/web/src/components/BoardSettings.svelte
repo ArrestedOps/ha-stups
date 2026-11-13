@@ -329,7 +329,7 @@
               <span>{t('Geplant')}</span>
               <Toggle checked={col.isPlanned} disabled={col.isDone} label={t('Spalte „{name}“ als geplant', { name: col.name })} onchange={(on) => act(() => api.updateColumn(col.id, { isPlanned: on }))} />
             </div>
-            <p class="text-[12.5px] leading-[1.45] text-hint">{t('„Geplant“ nimmt nur Karten mit Termin nach heute auf. Am Tag der Fälligkeit rücken sie von selbst nach „Offen“, beim Wischen wird die Spalte übersprungen.')}</p>
+            <p class="text-[12.5px] leading-[1.45] text-hint">{t('„Geplant“ nimmt nur Aufgaben mit Termin nach heute auf. Am Tag der Fälligkeit rücken sie von selbst nach „Offen“, beim Wischen wird die Spalte übersprungen.')}</p>
             <button class="flex min-h-11 items-center gap-2 text-left text-[15px] font-semibold text-danger" aria-label={t('Spalte löschen')} onclick={() => askDelete(col.id)}>
               <Icon name="trash" size={16} />{t('Spalte löschen')}
             </button>
@@ -337,7 +337,7 @@
         {/if}
         {#if deletingColumn === col.id}
           <div class="flex flex-wrap items-center gap-2 border-t border-line bg-bg px-3.5 py-3 text-[15px]">
-            <span>{t('{n} Karten verschieben nach', { n: cardsIn(col.id) })}</span>
+            <span>{t('{n} Aufgaben verschieben nach', { n: cardsIn(col.id) })}</span>
             <SelectField bind:value={moveTo} variant="box" class="!min-h-10 !bg-surface" label={t('Zielspalte')}>
               {#each columns.filter((c) => c.id !== col.id) as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
             </SelectField>
@@ -490,7 +490,7 @@
             {#snippet tile()}<Tile color="blue"><Icon name="archive" size={22} stroke={1.8} /></Tile>{/snippet}
             {#snippet meta()}{t('hält die Erledigt-Spalte kurz')}{/snippet}
             {#snippet right()}
-              <span class="flex items-center gap-1.5 text-[14px] text-fg2" title={t('Erledigte Karten wandern nach dieser Zeit ins Archiv. 0 bedeutet nie.')}>
+              <span class="flex items-center gap-1.5 text-[14px] text-fg2" title={t('Erledigte Aufgaben wandern nach dieser Zeit ins Archiv. 0 bedeutet nie.')}>
                 {t('nach')}
                 <input
                   type="number"
@@ -509,12 +509,12 @@
 
           <ListRow title={t('Archiv')} onclick={() => openSheet({ type: 'archive' })}>
             {#snippet tile()}<Tile color="gray"><Icon name="archive" size={22} stroke={1.8} /></Tile>{/snippet}
-            {#snippet meta()}{archivedCount === null ? '' : tn('{n} erledigte Karte', '{n} erledigte Karten', archivedCount)}{/snippet}
+            {#snippet meta()}{archivedCount === null ? '' : tn('{n} erledigte Aufgabe', '{n} erledigte Aufgaben', archivedCount)}{/snippet}
             {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
           </ListRow>
           <ListRow title={t('Papierkorb')} onclick={() => openSheet({ type: 'trash' })}>
             {#snippet tile()}<Tile color="gray"><Icon name="trash" size={22} stroke={1.8} /></Tile>{/snippet}
-            {#snippet meta()}{trashCount === null ? '' : `${tn('{n} Karte', '{n} Karten', trashCount)} • ${t('30 Tage wiederherstellbar')}`}{/snippet}
+            {#snippet meta()}{trashCount === null ? '' : `${tn('{n} Aufgabe', '{n} Aufgaben', trashCount)} • ${t('30 Tage wiederherstellbar')}`}{/snippet}
             {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
           </ListRow>
         </div>

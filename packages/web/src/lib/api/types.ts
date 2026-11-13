@@ -5,7 +5,7 @@ import type { Permission } from '../permissions';
 import type { AssignMode, WatchTrigger } from '../watcher-types';
 
 export type Priority = 'low' | 'medium' | 'high';
-/** Aufwand einer Karte für die Fairness-Ansicht; leer zählt wie mittel */
+/** Aufwand einer Aufgabe für die Fairness-Ansicht; leer zählt wie mittel */
 export type Effort = 'small' | 'medium' | 'large';
 
 export interface User {
@@ -33,7 +33,7 @@ export interface User {
   weeklySummary: boolean;
   /** Rolle „Kind": eingeschränkte Rechte, der Administrator legt sie fest */
   isChild: boolean;
-  /** Welche Boards ein Kind sieht: alle oder nur die mit eigenen Karten */
+  /** Welche Boards ein Kind sieht: alle oder nur die mit eigenen Aufgaben */
   childScope: 'all' | 'assigned';
   /** „Erledigt" des Kindes braucht standardmäßig eine Bestätigung */
   confirmDefault: boolean;
@@ -113,7 +113,7 @@ export interface BoardDeletePreview {
   cards: { total: number; open: number };
   recurring: { id: string; title: string; recurrence: Recurrence }[];
   watchers: { id: string; name: string; active: boolean }[];
-  /** Persönliche Erinnerungen (Nachhaken) an Karten des Boards */
+  /** Persönliche Erinnerungen (Nachhaken) an Aufgaben des Boards */
   reminders: number;
   lock: null | 'last';
   mayManage: boolean;
@@ -135,11 +135,11 @@ export interface BoardDuplicateInput {
 export interface BoardAccessPreview {
   /** Personen, die das Board danach nicht mehr sehen */
   removedIds: string[];
-  /** Betroffene Wächter: Zuständige jetzt (before) und danach (after); missing: niemand bleibt, der Wächter legt dann keine Karten an */
+  /** Betroffene Wächter: Zuständige jetzt (before) und danach (after); missing: niemand bleibt, der Wächter legt dann keine Aufgaben an */
   watchers: { watcherId: string; name: string; mode: string; before: string[]; after: string[]; missing: boolean; circleEmpty: boolean; fallbackCleared: boolean }[];
   /** Wächter, die verhindern, dass das Board privat wird */
   blocking: { id: string; name: string }[];
-  /** Karten, bei denen Zuständige entfernt werden */
+  /** Aufgaben, bei denen Zuständige entfernt werden */
   assigneeCards: number;
 }
 export interface BoardAccessInput {
@@ -156,7 +156,7 @@ export interface Column {
   name: string;
   position: string;
   isDone: boolean;
-  /** nur Karten mit Termin nach heute */
+  /** nur Aufgaben mit Termin nach heute */
   isPlanned: boolean;
 }
 export interface Category {
@@ -167,7 +167,7 @@ export interface Category {
   position: string;
 }
 
-/** Felder, die eine wiederkehrende Karte in die nächste Karte mitnimmt */
+/** Felder, die eine wiederkehrende Aufgabe in die nächste Aufgabe mitnimmt */
 export type CarryField = 'description' | 'checklist' | 'links' | 'cost' | 'attachments' | 'comments';
 
 export interface Card {
@@ -179,7 +179,7 @@ export interface Card {
   description: string | null;
   priority: Priority | null;
   effort: Effort | null;
-  /** Symbol der Karte (Name aus lib/symbols); leer = Standard „Aufgabe“ */
+  /** Symbol der Aufgabe (Name aus lib/symbols); leer = Standard „Aufgabe“ */
   icon: string | null;
   /** feste Kachelfarbe; leer = Auto (nach Bereich des Symbols) */
   iconColor: string | null;
@@ -195,17 +195,17 @@ export interface Card {
   version: number;
   remindBeforeMin: number | null;
   costCents: number | null;
-  /** Was die nächste Karte übernimmt, wenn sich diese wiederholt */
+  /** Was die nächste Aufgabe übernimmt, wenn sich diese wiederholt */
   carryOver: CarryField[];
-  /** Die Karte, aus deren Wiederholung diese entstanden ist */
+  /** Die Aufgabe, aus deren Wiederholung diese entstanden ist */
   repeatedFrom: string | null;
-  /** Wächter, aus dem die Karte entstanden ist */
+  /** Wächter, aus dem die Aufgabe entstanden ist */
   watcherId: string | null;
-  /** offene Stupse zu dieser Karte */
+  /** offene Stupse zu dieser Aufgabe */
   openNudges: OpenNudge[];
   /** Bestätigung beim Erledigen durch ein Kind: ein, aus oder leer (Vorgabe der zuständigen Person) */
   confirm: 'on' | 'off' | null;
-  /** Ein Kind hat abgehakt, die Karte wartet auf Bestätigung (seit wann, durch wen) */
+  /** Ein Kind hat abgehakt, die Aufgabe wartet auf Bestätigung (seit wann, durch wen) */
   confirmRequestedAt: string | null;
   confirmRequestedBy: string | null;
   assigneeIds: string[];
@@ -261,11 +261,11 @@ export interface Attachment {
   hasThumb: boolean;
   createdBy: string | null;
   createdAt: string;
-  /** Ein Bild, das nicht zu einer Karte gehört (Rückmeldung): Adresse des Bildes; die Ansicht zeigt dann kein „Entfernen" */
+  /** Ein Bild, das nicht zu einer Aufgabe gehört (Rückmeldung): Adresse des Bildes; die Ansicht zeigt dann kein „Entfernen" */
   url?: string;
 }
 export interface CardDetail extends Card {
-  /** Mein Nachhaken an dieser Karte (persönlich: die Erinnerungen anderer bekomme ich nie); null = keins */
+  /** Mein Nachhaken an dieser Aufgabe (persönlich: die Erinnerungen anderer bekomme ich nie); null = keins */
   reminder: ReminderSpec | null;
   checklistItems: ChecklistItem[];
   links: CardLink[];
@@ -317,9 +317,9 @@ export interface CompleteResult {
   card: CardDetail;
   completionId: string | null;
   nextDueAt: string | null;
-  /** die neue Karte, wenn sich die erledigte wiederholt */
+  /** die neue Aufgabe, wenn sich die erledigte wiederholt */
   nextCardId: string | null;
-  /** true: ein Kind hat abgehakt, erledigt wurde noch nichts (die Karte wartet auf Bestätigung) */
+  /** true: ein Kind hat abgehakt, erledigt wurde noch nichts (die Aufgabe wartet auf Bestätigung) */
   awaitingConfirmation?: boolean;
 }
 
@@ -344,7 +344,7 @@ export interface CardInput {
 }
 export type CardPatch = Partial<Omit<CardInput, 'columnId'>> & {
   confirm?: 'on' | 'off' | null;
-  /** nur ändern, wenn die Karte noch in dieser Fassung vorliegt (sonst 409: jemand war schneller) */
+  /** nur ändern, wenn die Aufgabe noch in dieser Fassung vorliegt (sonst 409: jemand war schneller) */
   expectedVersion?: number;
 };
 
@@ -378,7 +378,7 @@ export interface InboxEntry {
   watcherName: string | null;
   assigned: boolean;
   dueAt: string | null;
-  /** Kennung des Wächters bei Mitteilungen ohne Karte (`detail` ist dann `assignees_missing` oder `shrunk`); sonst null */
+  /** Kennung des Wächters bei Mitteilungen ohne Aufgabe (`detail` ist dann `assignees_missing` oder `shrunk`); sonst null */
   watcherId: string | null;
   /** Die Angaben zu "braucht neue Zuständige" und "läuft weiter mit ..." (sonst null) */
   notice: { boardName: string; removedNames: string[]; remainingNames: string[] } | null;
@@ -404,7 +404,7 @@ export interface TodayCard {
   watcherId: string | null;
   watcherName: string | null;
   createdAt: string;
-  /** Warum diese Person dran ist; nur bei Karten vom Haus */
+  /** Warum diese Person dran ist; nur bei Aufgaben vom Haus */
   why: string | null;
 }
 
@@ -423,7 +423,7 @@ export interface HomeItem {
   subject: string;
   /** Friendly Name der beobachteten Entität (ohne Namen die Entitäts-ID) */
   entity: string;
-  /** ok, entity_missing, target_missing (pausiert) oder assignees_missing (legt keine Karten an, braucht neue Zuständige) */
+  /** ok, entity_missing, target_missing (pausiert) oder assignees_missing (legt keine Aufgaben an, braucht neue Zuständige) */
   status: 'ok' | 'entity_missing' | 'target_missing' | 'assignees_missing';
   /** Bei target_missing: das Board ist archiviert oder gelöscht (fehlt oder null: nur die Spalte fehlt) */
   pausedBy?: 'archived' | 'deleted' | null;
@@ -432,7 +432,7 @@ export interface HomeItem {
   phase: 'waiting' | 'running' | 'soon' | 'quiet';
   since: string | null;
   progress: { n: number; of: number } | null;
-  /** Titel der Karte, die danach kommt */
+  /** Titel der Aufgabe, die danach kommt */
   nextCard: string;
   entityMissing: boolean;
   openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; createdAt: string } | null;
@@ -447,7 +447,7 @@ export interface HomeItem {
   /** Zuletzt ausgelöst (null: noch nie) und für wen */
   lastFiredAt: string | null;
   lastAssigneeIds: string[];
-  /** An wen die Karte geht */
+  /** An wen die Aufgabe geht */
   assign: { mode: AssignMode; personIds: string[] };
 }
 
@@ -474,7 +474,7 @@ export interface Fairness {
   /** In der Reihenfolge der Personenliste, nicht nach Wert sortiert */
   people: (FairnessCounts & { id: string; name: string; color: string | null; busyUntil: string | null })[];
   total: FairnessCounts;
-  /** Karten in diesem Zeitraum, die von Wächtern kamen */
+  /** Aufgaben in diesem Zeitraum, die von Wächtern kamen */
   houseCards: number;
   /** Bestätigungen von Kindern, die die angemeldete Person geben darf */
   waitingForYou: { cardId: string; title: string; boardId: string; childId: string | null; requestedAt: string }[];
@@ -591,11 +591,11 @@ export interface PushStatus {
   nudges: { title: string; from: string; to: string; at: string; deliverAt: string; state: 'wartet' | 'offen' | 'beantwortet' | 'geschlossen' }[];
 }
 
-/** Karte mit Termin samt Board (Antwort von /api/schedule) */
+/** Aufgabe mit Termin samt Board (Antwort von /api/schedule) */
 export interface ScheduleCard extends Card {
   boardName: string;
   boardColor: string | null;
-  /** die Kategorien der Karte (Name und Farbe); Aufgaben zeigt die erste in der Zeile */
+  /** die Kategorien der Aufgabe (Name und Farbe); Aufgaben zeigt die erste in der Zeile */
   categories: { id: string; name: string; color: string }[];
 }
 

@@ -66,7 +66,7 @@ describe('Hilfen zu Boards', () => {
     expect(moveItem(list, 5, 1)).toBe(list);
   });
 
-  it('boardMeta: offene Karten, dahinter klein wer es sieht (Alle: nichts)', () => {
+  it('boardMeta: offene Aufgaben, dahinter klein wer es sieht (Alle: nichts)', () => {
     expect(boardMeta(ui.boards[0]!, ui.people)).toEqual({ open: '3 offen', who: null });
     expect(boardMeta(ui.boards[1]!, ui.people).who).toBe('👥 Rene, Anna');
     expect(boardMeta(ui.boards[2]!, ui.people).who).toBe('🔒 nur ich');
@@ -98,7 +98,7 @@ describe('Hilfen zu Boards', () => {
 describe('Board-Auswahl', () => {
   const html = () => render(BoardSwitcher, { props: {} }).body;
 
-  it('die Liste der Boards mit offenen Karten und Sichtbarkeit, darunter Neues Board erstellen und Board-Einstellungen', () => {
+  it('die Liste der Boards mit offenen Aufgaben und Sichtbarkeit, darunter Neues Board erstellen und Board-Einstellungen', () => {
     const out = html();
     for (const name of ['Haushalt', 'Bad-Umbau', 'Meine Ideen']) expect(out).toContain(name);
     expect(out).toContain('3 offen');

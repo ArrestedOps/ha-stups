@@ -23,7 +23,7 @@ export class WatcherEditor {
   item = $state<WatcherItem | null>(null);
   runs = $state<WatcherRun[]>([]);
   templates = $state<WatcherTemplate[]>([]);
-  /** Warum sich die Karte nicht von selbst erledigen kann (leer = sie kann) */
+  /** Warum sich die Aufgabe nicht von selbst erledigen kann (leer = sie kann) */
   selfNote = $state('');
   view = $state<BoardView | null>(null);
   /** Assistent: Schritt 1 bis 4 */
@@ -277,7 +277,7 @@ export class WatcherEditor {
     this.busy = false;
   }
 
-  /** Gilt die Bedingung schon und löst der Wächter deshalb nicht von selbst aus, fragt die App, ob die Karte jetzt entstehen soll */
+  /** Gilt die Bedingung schon und löst der Wächter deshalb nicht von selbst aus, fragt die App, ob die Aufgabe jetzt entstehen soll */
   private askAfterSave(saved: SavedWatcher): void {
     const met = metNowOf(saved);
     if (!met) return;
@@ -286,9 +286,9 @@ export class WatcherEditor {
         await api.fireWatcherNow(saved.id);
         ui.watchers = await api.watchers().catch(() => ui.watchers);
         ui.rev += 1;
-        toast(t('Karte angelegt'));
+        toast(t('Aufgabe angelegt'));
       } catch (e) {
-        toast(e instanceof ApiError ? e.message : t('Karte konnte nicht angelegt werden'), { tone: 'error' });
+        toast(e instanceof ApiError ? e.message : t('Aufgabe konnte nicht angelegt werden'), { tone: 'error' });
       }
     });
   }
@@ -298,7 +298,7 @@ export class WatcherEditor {
     this.busy = true;
     try {
       await api.testWatcher(this.id);
-      toast(t('Testkarte angelegt'));
+      toast(t('Testaufgabe angelegt'));
       this.runs = await api.watcherRuns(this.id).catch(() => this.runs);
     } catch (e) {
       toast(e instanceof ApiError ? e.message : t('Test fehlgeschlagen'), { tone: 'error' });
@@ -332,7 +332,7 @@ export class WatcherEditor {
     if (!id) return;
     ui.confirm = {
       title: t('Wächter löschen?'),
-      text: t('„{name}“ legt danach keine Karten mehr an. Bereits angelegte Karten bleiben.', { name: this.form.name }),
+      text: t('„{name}“ legt danach keine Aufgaben mehr an. Bereits angelegte Aufgaben bleiben.', { name: this.form.name }),
       label: t('Löschen'),
       run: async () => {
         try {

@@ -56,7 +56,7 @@ describe('needsOnboarding: wer die Einrichtung sieht', () => {
     expect(await me(chef)).toMatchObject({ needsOnboarding: true, onboarding: null, onboardingProgress: null });
   });
 
-  it('Administrator: nein, sobald es Karten gibt', async () => {
+  it('Administrator: nein, sobald es Aufgaben gibt', async () => {
     await build();
     addCard();
     expect((await me(chef)).needsOnboarding).toBe(false);

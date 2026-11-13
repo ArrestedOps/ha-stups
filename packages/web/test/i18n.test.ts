@@ -13,7 +13,7 @@ describe('t', () => {
     setLanguage('de');
     catalog({ 'Hallo {name}': 'Hello {name}' });
     expect(t('Hallo {name}', { name: 'Anna' })).toBe('Hallo Anna');
-    expect(t('Karte löschen?')).toBe('Karte löschen?');
+    expect(t('Aufgabe löschen?')).toBe('Aufgabe löschen?');
   });
 
   it('Englisch: der Katalogtext, mit Platzhaltern', () => {
@@ -63,15 +63,15 @@ describe('tx', () => {
 
 describe('tn', () => {
   it('Deutsch und Englisch, eins und mehrere', () => {
-    catalog({ '{n} Karte': ['{n} card', '{n} cards'] });
+    catalog({ '{n} Aufgabe': ['{n} card', '{n} cards'] });
     setLanguage('de');
-    expect(tn('{n} Karte', '{n} Karten', 1)).toBe('1 Karte');
-    expect(tn('{n} Karte', '{n} Karten', 2)).toBe('2 Karten');
-    expect(tn('{n} Karte', '{n} Karten', 0)).toBe('0 Karten');
+    expect(tn('{n} Aufgabe', '{n} Aufgaben', 1)).toBe('1 Aufgabe');
+    expect(tn('{n} Aufgabe', '{n} Aufgaben', 2)).toBe('2 Aufgaben');
+    expect(tn('{n} Aufgabe', '{n} Aufgaben', 0)).toBe('0 Aufgaben');
     setLanguage('en');
-    expect(tn('{n} Karte', '{n} Karten', 1)).toBe('1 card');
-    expect(tn('{n} Karte', '{n} Karten', 3)).toBe('3 cards');
-    expect(tn('{n} Karte', '{n} Karten', 0)).toBe('0 cards');
+    expect(tn('{n} Aufgabe', '{n} Aufgaben', 1)).toBe('1 card');
+    expect(tn('{n} Aufgabe', '{n} Aufgaben', 3)).toBe('3 cards');
+    expect(tn('{n} Aufgabe', '{n} Aufgaben', 0)).toBe('0 cards');
   });
 
   it('Englisch ohne Eintrag: die deutsche Mehrzahl', () => {

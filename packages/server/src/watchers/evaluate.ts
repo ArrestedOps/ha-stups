@@ -61,7 +61,7 @@ export function createEvaluate(ctx: Ctx, calls: () => Parts) {
 
   /**
    * Nach dem Anlegen oder Ändern: Startzustand prüfen (kein Auslösen, wenn die Bedingung schon erfüllt ist, außer bei Pegeln) und
-   * abonnieren. Antwort: `MetNow`, wenn die Bedingung schon erfüllt ist, nichts von selbst ausgelöst hat und keine Karte des Wächters
+   * abonnieren. Antwort: `MetNow`, wenn die Bedingung schon erfüllt ist, nichts von selbst ausgelöst hat und keine Aufgabe des Wächters
    * offen ist, sonst null.
    */
   async function onSaved(id: string): Promise<MetNow | null> {
@@ -88,14 +88,14 @@ export function createEvaluate(ctx: Ctx, calls: () => Parts) {
         remember(w, s, data.getState(id).lastFireAt); // der Stand beim Anlegen: lief schon etwas, ist der Beginn unbekannt
         const met = conditionMet(w.trigger, s.state);
         const nowMs = now().getTime();
-        // Ein Pegel (Batterie, Temperatur), der beim ersten Anlegen schon über der Grenze liegt, ist ein Befund: die Karte kommt sofort
+        // Ein Pegel (Batterie, Temperatur), der beim ersten Anlegen schon über der Grenze liegt, ist ein Befund: die Aufgabe kommt sofort
         // (nach der Wartezeit, gerechnet ab der letzten Änderung des Werts). Vorgänge und Unbekanntes warten auf den nächsten Wechsel.
         const levelNow = met && (w.trigger.kind === 'below' || w.trigger.kind === 'above') && measuresLevel(s, w.trigger.entityId) && !data.getState(id).lastFireAt;
         const since = met ? metSinceOf(levelNow ? 'state' : w.trigger.kind, s, nowMs) : null;
         data.patchState(id, { armed: levelNow || !met, metSince: since });
         if (w.status === 'entity_missing') data.setStatus(id, 'ok');
         if (levelNow && since && nowMs - Date.parse(since) >= minutes(w.trigger.forMin)) await calls().fire(w);
-        // Schon erfüllt und kein automatisches Auslösen: die Oberfläche darf fragen (nur wenn noch keine Karte des Wächters offen ist)
+        // Schon erfüllt und kein automatisches Auslösen: die Oberfläche darf fragen (nur wenn noch keine Aufgabe des Wächters offen ist)
         if (met && !levelNow && w.active && checksState(w) && !store.openCardOfWatcher(id)) {
           metNow = { entityName: s.name ?? w.trigger.entityId, stateText: stateText(s.state, s.unit), reason: 'already_met' };
         }
@@ -137,7 +137,7 @@ export function createEvaluate(ctx: Ctx, calls: () => Parts) {
   }
 
   /**
-   * Einmalig: Namen und Kartentitel der Vorlagen, an die frühere Versionen das Gerät gehängt haben („Trockner fertig: Nachfrage mw50gdjw"),
+   * Einmalig: Namen und Aufgabentitel der Vorlagen, an die frühere Versionen das Gerät gehängt haben („Trockner fertig: Nachfrage mw50gdjw"),
    * verlieren es wieder. Angefasst wird nur ein Text, der genau so aussieht, wie die alte Regel ihn aus dem Namen einer Vorlage und dem Gerät der Entität
    * baute; eigene Namen bleiben, ebenso alles, was nicht sicher passt. Läuft, sobald die Zustände aus Home Assistant da sind (dann ist
    * auch der Friendly Name bekannt), und merkt sich, dass es gelaufen ist.
@@ -149,7 +149,7 @@ export function createEvaluate(ctx: Ctx, calls: () => Parts) {
     let changed = 0;
     for (const w of data.list()) {
       const friendly = seenOf(w.trigger.entityId)?.name;
-      // auch der Kartentitel der Vorlage: sonst hinge zur Laufzeit der Name der Entität ein zweites Mal an
+      // auch der Aufgabentitel der Vorlage: sonst hinge zur Laufzeit der Name der Entität ein zweites Mal an
       const name = plainName(w.name, w.trigger.entityId, friendly, bases);
       const title = plainName(w.card.title, w.trigger.entityId, friendly, titles, 200);
       if (name === null && title === null) continue;

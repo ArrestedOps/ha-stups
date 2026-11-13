@@ -14,7 +14,7 @@ afterEach(() => {
 
 const T = '2026-11-01T08:00:00.000Z';
 
-/** Eine Datenbank im Stand 22 mit Karten, Stupsen, Kommentaren, Erledigungen, Wächterläufen und einer Kind-Person */
+/** Eine Datenbank im Stand 22 mit Aufgaben, Stupsen, Kommentaren, Erledigungen, Wächterläufen und einer Kind-Person */
 function buildV22(file: string): void {
   const db = openDb(file, { migrations: migrations.filter((m) => m.version <= 22) });
   db.exec(`

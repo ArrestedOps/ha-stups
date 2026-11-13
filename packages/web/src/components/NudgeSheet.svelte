@@ -117,7 +117,7 @@
           {@const hint = targetHint(p)}
           {#if hint}<p class="px-1 text-[13px] text-fg2"><b class="font-semibold text-fg">{p.name}:</b> {hint}</p>{/if}
         {/each}
-        <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Es bekommt jeder einen eigenen Stups. Pro Karte und Person geht höchstens einer alle 30 Minuten.')}</p>
+        <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Es bekommt jeder einen eigenen Stups. Pro Aufgabe und Person geht höchstens einer alle 30 Minuten.')}</p>
       </section>
 
       <section aria-label={t('Nachricht')} class="flex flex-col gap-3.5">

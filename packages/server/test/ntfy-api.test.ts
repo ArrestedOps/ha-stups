@@ -160,7 +160,7 @@ describe('Stand der Zustellung', () => {
     expect((await call(ben, 'GET', '/api/notifications/status')).body.ntfy.roundTrip).toBeNull();
   });
 
-  it('ein Thema zählt als Gerät: Karten mit Zuständigen ohne Gerät werden gemeldet, mit Thema nicht', async () => {
+  it('ein Thema zählt als Gerät: Aufgaben mit Zuständigen ohne Gerät werden gemeldet, mit Thema nicht', async () => {
     const board = store.createBoard({ name: 'Haushalt' });
     const col = store.getBoardView(board.id).columns[0]!.id;
     store.createCard(board.id, { columnId: col, title: 'Bad', dueAt: '2099-01-01T09:00:00.000Z', assigneeIds: [idOf('Anna')] }, idOf('Anna'));

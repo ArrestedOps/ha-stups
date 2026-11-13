@@ -10,7 +10,7 @@
   /**
    * Kopfzeile des Desktops (ab 1024 px) über allen Reitern: links Titel und Untertitel, rechts die Suche (Strg/Cmd + K), „Neue Aufgabe“
    * (ersetzt den „+“-Knopf des Handys), Home Assistant (nur im Add-on) und die Glocke. Logo, Zahnrad und Profil stehen in der Seitenleiste.
-   * Die Suche filtert die schon geladenen Karten im Gerät: in Boards wie das Feld im Blatt „Filter“ (`filter.search`), in Aufgaben und
+   * Die Suche filtert die schon geladenen Aufgaben im Gerät: in Boards wie das Feld im Blatt „Filter“ (`filter.search`), in Aufgaben und
    * Wächtern über `ui.query`.
    */
   const view = $derived(ui.view);

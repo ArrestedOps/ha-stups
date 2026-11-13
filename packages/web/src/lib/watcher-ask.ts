@@ -11,13 +11,13 @@ export function metNowOf(res: { metNow?: MetNow | null }): MetNow | null {
 
 /**
  * Die Rückfrage nach dem Speichern, wenn die Bedingung schon erfüllt ist und der Wächter deshalb nicht von selbst auslöst
- * („Tür ist gerade aus … Soll jetzt eine Karte erstellt werden?“). `run` legt die Karte an („Ja“); „Nein“ schließt nur.
+ * („Tür ist gerade aus … Soll jetzt eine Aufgabe erstellt werden?“). `run` legt die Aufgabe an („Ja“); „Nein“ schließt nur.
  */
 export function askCard(m: MetNow, cardTitle: string, run: ConfirmRequest['run']): ConfirmRequest {
   return {
-    title: t('Karte jetzt erstellen?'),
-    text: t('{name} ist gerade {state} – die Bedingung ist also schon erfüllt. Soll jetzt eine Karte „{title}“ erstellt werden?', { name: m.entityName, state: m.stateText, title: cardTitle }),
-    label: t('Ja, Karte erstellen'),
+    title: t('Aufgabe jetzt erstellen?'),
+    text: t('{name} ist gerade {state} – die Bedingung ist also schon erfüllt. Soll jetzt eine Aufgabe „{title}“ erstellt werden?', { name: m.entityName, state: m.stateText, title: cardTitle }),
+    label: t('Ja, Aufgabe erstellen'),
     cancelLabel: t('Nein, erst beim nächsten Mal'),
     tone: 'primary',
     run,

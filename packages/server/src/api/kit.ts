@@ -42,7 +42,7 @@ export interface ApiDeps {
   resolveMapsLink?: (url: string) => Promise<{ url: string; title: string | null } | null>;
   /** Meldet Änderungen an alle verbundenen Geräte (Live-Sync). */
   bus?: EventBus;
-  /** Räumt Push-Nachrichten auf, wenn eine Karte in der App erledigt wurde; tick stellt neue Stupse sofort zu. */
+  /** Räumt Push-Nachrichten auf, wenn eine Aufgabe in der App erledigt wurde; tick stellt neue Stupse sofort zu. */
   notifier?: {
     clearFor(cardId: string): Promise<void>;
     tick?(): Promise<number>;

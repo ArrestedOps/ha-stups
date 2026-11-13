@@ -4,13 +4,13 @@ import { i18n, loadCatalog, setLanguage, t, useCatalog } from '../src/lib/i18n/i
 describe('Englischer Katalog als eigenes Paket', () => {
   it('Deutsch braucht keinen Katalog: der Text ist der Schlüssel', () => {
     setLanguage('de');
-    expect(t('Karte löschen?')).toBe('Karte löschen?');
+    expect(t('Aufgabe löschen?')).toBe('Aufgabe löschen?');
   });
 
   it('nach dem Laden übersetzt t() auf Englisch und zählt rev hoch (damit sich die Oberfläche neu zeichnet)', async () => {
     await loadCatalog();
     setLanguage('en');
-    expect(t('Karte löschen?')).not.toBe('Karte löschen?');
+    expect(t('Aufgabe löschen?')).not.toBe('Aufgabe löschen?');
   });
 
   it('useCatalog ersetzt den Katalog und stellt ihn wieder her, rev ändert sich bei beidem', () => {

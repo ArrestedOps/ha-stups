@@ -1,7 +1,7 @@
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 
-/** Was die Glocke zeigt: Stupse, Antworten, Wächter-Karten, Erledigungen, Kommentare, Erinnerungen, Änderungen und Bitten um Bestätigung */
+/** Was die Glocke zeigt: Stupse, Antworten, Wächter-Aufgaben, Erledigungen, Kommentare, Erinnerungen, Änderungen und Bitten um Bestätigung */
 export type InboxKind = 'nudge' | 'reply' | 'watcher' | 'done' | 'comment' | 'reminder' | 'change' | 'confirm';
 
 /**
@@ -24,11 +24,11 @@ export interface InboxEntry {
   detail: string | null;
   /** Name des Wächters (nur kind watcher) */
   watcherName: string | null;
-  /** Wächter: die Karte ist mir zugewiesen (sonst sucht sie noch jemanden) */
+  /** Wächter: die Aufgabe ist mir zugewiesen (sonst sucht sie noch jemanden) */
   assigned: boolean;
-  /** Termin der Karte (nur bei Erinnerungen: „überfällig seit …") */
+  /** Termin der Aufgabe (nur bei Erinnerungen: „überfällig seit …") */
   dueAt: string | null;
-  /** Kennung des Wächters (nur bei Mitteilungen zu Wächtern ohne Karte: `detail` ist dann `assignees_missing` oder `shrunk`) */
+  /** Kennung des Wächters (nur bei Mitteilungen zu Wächtern ohne Aufgabe: `detail` ist dann `assignees_missing` oder `shrunk`) */
   watcherId: string | null;
   /** Die Angaben zu „braucht neue Zuständige" und „läuft weiter mit …" (sonst null); die Oberfläche bildet den Satz */
   notice: { boardName: string; removedNames: string[]; remainingNames: string[] } | null;
@@ -46,7 +46,7 @@ export const INBOX_DAYS = 14;
 export const INBOX_LIMIT = 100;
 const COMMENT_MAX = 140;
 
-/** Welche Wächter-Läufe die Person angehen (die Karte steht beim Lauf) */
+/** Welche Wächter-Läufe die Person angehen (die Aufgabe steht beim Lauf) */
 const WATCHER_RESULTS = ['created', 'suggested', 'assigned', 'passed', 'suggest_fallback', 'nudged'];
 
 /** Der Posteingang je Person: eine Abfrage über die bestehenden Ereignisse, ohne eigene Tabelle für die Einträge */
@@ -56,17 +56,17 @@ export function createInbox(c: Ctx, late: unknown) {
   const { confirmerIds, visibleBoardsSql, watcherNoticesFor } = lazy(s, ['confirmerIds', 'visibleBoardsSql', 'watcherNoticesFor'] as const);
 
   /**
-   * Gehört die Karte (Alias `c`) zu dieser Person? Ein Kind: immer nur Karten, die ihm zugewiesen sind (nie fremde Boards). Sonst Karten,
-   * die ihr zugewiesen sind, die sie angelegt hat oder an denen sie gestupst hat (`strict`). Gelöschte Karten und Boards gibt es nicht.
+   * Gehört die Aufgabe (Alias `c`) zu dieser Person? Ein Kind: immer nur Aufgaben, die ihm zugewiesen sind (nie fremde Boards). Sonst Aufgaben,
+   * die ihr zugewiesen sind, die sie angelegt hat oder an denen sie gestupst hat (`strict`). Gelöschte Aufgaben und Boards gibt es nicht.
    */
   function mine(child: boolean, me: string, strict = true): { sql: string; args: (string | null)[] } {
-    // Nur Boards, die die Person sieht: Karten aus privaten Boards anderer erscheinen nie in ihren Mitteilungen
+    // Nur Boards, die die Person sieht: Aufgaben aus privaten Boards anderer erscheinen nie in ihren Mitteilungen
     const seen = visibleBoardsSql(me);
     const base = `c.deleted_at is null and c.board_id in (${seen.sql})`;
     const assigned = `exists (select 1 from card_assignees a where a.card_id = c.id and a.user_id = ?)`;
     // Die Platzhalter des Teils „base" stehen im SQL vor den übrigen
     if (child) return { sql: `${base} and ${assigned}`, args: [...seen.args, me] };
-    // Was mir direkt gilt (Stups an mich, Erinnerung an mich) braucht bei einem Erwachsenen keinen weiteren Bezug zur Karte
+    // Was mir direkt gilt (Stups an mich, Erinnerung an mich) braucht bei einem Erwachsenen keinen weiteren Bezug zur Aufgabe
     if (!strict) return { sql: base, args: [...seen.args] };
     return {
       sql: `${base} and (${assigned} or c.created_by = ? or exists (select 1 from nudges n where n.card_id = c.id and n.from_user = ?))`,
@@ -119,7 +119,7 @@ export function createInbox(c: Ctx, late: unknown) {
       out.push(entry({ id: `reply:${r.id}`, kind: 'reply', at: r.reply_at, ...base(r), actorId: r.to_user, text: r.text, detail: r.reply }));
     }
 
-    // Wächter: Karten für mich; ein Erwachsener auch Karten, die noch jemanden suchen (ein Kind nur, solange ihm die Karte noch zugewiesen ist)
+    // Wächter: Aufgaben für mich; ein Erwachsener auch Aufgaben, die noch jemanden suchen (ein Kind nur, solange ihm die Aufgabe noch zugewiesen ist)
     const wq = all(
       `select r.id, r.at, r.result, r.assigned_to, w.name as watcher_name, c.id as card_id, c.title, c.board_id from watcher_runs r
        join watchers w on w.id = r.watcher_id join cards c on c.id = r.card_id
@@ -142,7 +142,7 @@ export function createInbox(c: Ctx, late: unknown) {
       out.push(entry({ id: `watcher:${r.id}`, kind: 'watcher', at: r.at, ...base(r), detail: r.result, watcherName: r.watcher_name, assigned }));
     }
 
-    // Wächter, die neue Zuständige brauchen oder nach dem Entfernen einer Person verkleinert weiterlaufen (ohne Karte; nie für ein Kind)
+    // Wächter, die neue Zuständige brauchen oder nach dem Entfernen einer Person verkleinert weiterlaufen (ohne Aufgabe; nie für ein Kind)
     if (!child) {
       for (const n of watcherNoticesFor(userId, since, before, LIM)) {
         out.push(
@@ -163,7 +163,7 @@ export function createInbox(c: Ctx, late: unknown) {
       }
     }
 
-    // Erledigungen anderer auf meinen Karten
+    // Erledigungen anderer auf meinen Aufgaben
     for (const r of all(
       `select p.id, p.completed_by, p.completed_at, c.id as card_id, c.title, c.board_id from completions p
        join cards c on c.id = p.card_id where p.completed_at >= ? and p.completed_at < ? and (p.completed_by is null or p.completed_by != ?) and ${m.sql}
@@ -173,7 +173,7 @@ export function createInbox(c: Ctx, late: unknown) {
       out.push(entry({ id: `done:${r.id}`, kind: 'done', at: r.completed_at, ...base(r), actorId: r.completed_by }));
     }
 
-    // Kommentare anderer auf meinen Karten
+    // Kommentare anderer auf meinen Aufgaben
     for (const r of all(
       `select k.id, k.author_id, k.text, k.created_at, c.id as card_id, c.title, c.board_id from comments k
        join cards c on c.id = k.card_id where k.created_at >= ? and k.created_at < ? and (k.author_id is null or k.author_id != ?) and ${m.sql}
@@ -184,7 +184,7 @@ export function createInbox(c: Ctx, late: unknown) {
       out.push(entry({ id: `comment:${r.id}`, kind: 'comment', at: r.created_at, ...base(r), actorId: r.author_id, text: text.length > COMMENT_MAX ? `${text.slice(0, COMMENT_MAX - 1)}…` : text }));
     }
 
-    // Was ich als Erinnerung bekommen habe: fällig, vorab, überfällig (Zusammenfassungen haben keine Karte)
+    // Was ich als Erinnerung bekommen habe: fällig, vorab, überfällig (Zusammenfassungen haben keine Aufgabe)
     for (const r of all(
       `select x.id, x.kind, x.sent_at, c.due_at, c.id as card_id, c.title, c.board_id from sent_notifications x
        join cards c on c.id = x.card_id where x.user_id = ? and x.status = 'sent' and x.kind in ('due', 'reminder', 'nag')
@@ -195,7 +195,7 @@ export function createInbox(c: Ctx, late: unknown) {
       out.push(entry({ id: `reminder:${r.id}`, kind: 'reminder', at: r.sent_at, ...base(r), detail: r.kind, dueAt: r.due_at }));
     }
 
-    // Änderungen anderer an meinen Karten: verschoben, wieder geöffnet, anderer Termin (vom System Wieder-Geöffnetes inklusive)
+    // Änderungen anderer an meinen Aufgaben: verschoben, wieder geöffnet, anderer Termin (vom System Wieder-Geöffnetes inklusive)
     for (const r of all(
       `select e.id, e.kind, e.by_user, e.at, c.id as card_id, c.title, c.board_id from card_events e
        join cards c on c.id = e.card_id where e.at >= ? and e.at < ? and (e.by_user is null or e.by_user != ?) and ${m.sql}

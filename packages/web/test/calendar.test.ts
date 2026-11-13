@@ -111,12 +111,12 @@ describe('columnForNew', () => {
 });
 
 describe('layoutDay', () => {
-  it('einzelne Karten stehen voll breit auf ihrer Uhrzeit', () => {
+  it('einzelne Aufgaben stehen voll breit auf ihrer Uhrzeit', () => {
     const p = layoutDay([mk('a', '2026-11-05T08:00:00Z')], TZ);
     expect(p).toMatchObject([{ top: 9 * 60, col: 0, cols: 1 }]);
   });
 
-  it('überlappende Karten stehen nebeneinander', () => {
+  it('überlappende Aufgaben stehen nebeneinander', () => {
     const p = layoutDay([mk('a', '2026-11-05T08:00:00Z'), mk('b', '2026-11-05T08:15:00Z'), mk('c', '2026-11-05T08:30:00Z')], TZ);
     expect(p.map((x) => [x.card.id, x.col, x.cols])).toEqual([
       ['a', 0, 3],
@@ -125,7 +125,7 @@ describe('layoutDay', () => {
     ]);
   });
 
-  it('eine Spalte wird wiederverwendet, sobald die Karte davor zu Ende ist', () => {
+  it('eine Spalte wird wiederverwendet, sobald die Aufgabe davor zu Ende ist', () => {
     const p = layoutDay([mk('a', '2026-11-05T08:00:00Z'), mk('b', '2026-11-05T08:15:00Z'), mk('c', '2026-11-05T08:50:00Z')], TZ);
     expect(p.map((x) => [x.card.id, x.col, x.cols])).toEqual([
       ['a', 0, 2],

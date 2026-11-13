@@ -65,13 +65,13 @@ describe('Vorlagen vom Server anwenden', () => {
     expect(f).toMatchObject({ kind: 'state', to: 'docked', count: '3', assignMode: 'first_home', dueKind: 'none' });
   });
 
-  it('Batterie: die Karte erledigt sich von selbst, wenn der Sensor wieder über 50 steigt', () => {
+  it('Batterie: die Aufgabe erledigt sich von selbst, wenn der Sensor wieder über 50 steigt', () => {
     const f = applyTemplate(emptyForm('b', 'c'), tpl('battery', draft({ trigger: { kind: 'below', value: 20, forMin: 10 }, done: { kind: 'above', value: 50 } })), { entityId: 'sensor.bad', name: 'Bad' });
     expect(f).toMatchObject({ doneOn: true, doneEntityId: 'sensor.bad', doneKind: 'above', doneValue: '50' });
     expect(formProblem(f)).toBeNull();
   });
 
-  it('Treffer mit Gerätename: Wächter und Kartentitel der Vorlage bleiben sauber (den Namen der Entität hängt der Server an die Karte)', () => {
+  it('Treffer mit Gerätename: Wächter und Aufgabentitel der Vorlage bleiben sauber (den Namen der Entität hängt der Server an die Aufgabe)', () => {
     const f = applyTemplate(emptyForm('b', 'c'), tpl('battery', draft({ name: 'Batterie schwach', card: { title: 'Batterie wechseln', due: { kind: 'none' } } })), {
       entityId: 'sensor.iphone_rene_battery_level',
       name: 'iPhone Rene Battery Level',
@@ -139,23 +139,23 @@ describe('Der Satz im Formular', () => {
 
   it('das Beispiel aus dem Entwurf, mit antippbaren Feldern', () => {
     const f = filled({ entityName: 'Trockner Leistung', forMin: '3', title: 'Trockner fertig' });
-    expect(plain(f)).toBe('Wenn Trockner Leistung länger als 3 Min. unter 5 W liegt, bekommt wer zu Hause ist, reihum die Karte Trockner fertig.');
+    expect(plain(f)).toBe('Wenn Trockner Leistung länger als 3 Min. unter 5 W liegt, bekommt wer zu Hause ist, reihum die Aufgabe Trockner fertig.');
     expect(parts(f).filter((p) => p.field).map((p) => p.field)).toEqual(['entity', 'duration', 'threshold', 'who', 'title']);
   });
 
   it('ohne Wartezeit entfällt das Feld „länger als", Zustandswechsel lesen sich als Wechsel', () => {
-    expect(plain(filled({ forMin: '0', kind: 'state', to: 'docked', entityName: 'S7' }))).toBe('Wenn S7 zu docked wechselt, bekommt wer zu Hause ist, reihum die Karte Waschmaschine ausräumen.');
+    expect(plain(filled({ forMin: '0', kind: 'state', to: 'docked', entityName: 'S7' }))).toBe('Wenn S7 zu docked wechselt, bekommt wer zu Hause ist, reihum die Aufgabe Waschmaschine ausräumen.');
     expect(plain(filled({ forMin: '5', kind: 'state', to: 'off', entityName: 'Tür' }))).toContain('länger als 5 Min. auf off steht');
   });
 
   it('wer: Erst vorschlagen, feste Personen, niemand', () => {
-    expect(plain(filled({ assignMode: 'suggest' }))).toContain('bekommt wer sich meldet die Karte');
-    expect(plain(filled({ assignMode: 'fixed', personIds: ['a', 'b'] }))).toContain('bekommt Anna, Ben die Karte');
-    expect(plain(filled({ assignMode: 'none' }))).toContain('bekommt niemand die Karte');
+    expect(plain(filled({ assignMode: 'suggest' }))).toContain('bekommt wer sich meldet die Aufgabe');
+    expect(plain(filled({ assignMode: 'fixed', personIds: ['a', 'b'] }))).toContain('bekommt Anna, Ben die Aufgabe');
+    expect(plain(filled({ assignMode: 'none' }))).toContain('bekommt niemand die Aufgabe');
   });
 
   it('Kalender und Regen', () => {
-    expect(plain(filled({ kind: 'calendar_event', leadHours: '12', entityName: 'Abfall' }))).toBe('Wenn im Kalender Abfall 12 Stunden vor einem Termin ansteht, bekommt wer zu Hause ist, reihum die Karte Waschmaschine ausräumen.');
+    expect(plain(filled({ kind: 'calendar_event', leadHours: '12', entityName: 'Abfall' }))).toBe('Wenn im Kalender Abfall 12 Stunden vor einem Termin ansteht, bekommt wer zu Hause ist, reihum die Aufgabe Waschmaschine ausräumen.');
     expect(plain(filled({ kind: 'forecast', forecastHours: '3', entityName: 'Zuhause' }))).toContain('in den nächsten 3 Stunden Regen vorhersagt');
   });
 
@@ -168,7 +168,7 @@ describe('Der Satz im Formular', () => {
   it('auf Englisch mit anderer Wortstellung, gleiche Felder', () => {
     setLanguage('en');
     const f = filled({ entityName: 'Dryer power', forMin: '3', title: 'Dryer done' });
-    expect(plain(f)).toBe('When Dryer power stays below 5 W for more than 3 min, whoever is home, in turn gets the card Dryer done.');
+    expect(plain(f)).toBe('When Dryer power stays below 5 W for more than 3 min, whoever is home, in turn gets the task Dryer done.');
     expect(parts(f).filter((p) => p.field).map((p) => p.field)).toEqual(['entity', 'threshold', 'duration', 'who', 'title']);
   });
 });

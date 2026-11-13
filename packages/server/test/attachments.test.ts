@@ -120,7 +120,7 @@ describe('Anhänge', () => {
     expect(thumb.statusCode).toBe(200);
   });
 
-  it('nimmt PDFs ohne Vorschaubild an und zeigt sie in der Kartenansicht', async () => {
+  it('nimmt PDFs ohne Vorschaubild an und zeigt sie in der Aufgabenansicht', async () => {
     const res = await upload([{ name: 'file', filename: 'Angebot.pdf', type: 'application/pdf', data: PDF }]);
     expect(res.statusCode).toBe(201);
     expect(res.json().hasThumb).toBe(false);
@@ -148,7 +148,7 @@ describe('Anhänge', () => {
       await app.register(apiRoutes, { store, files: createFileStore(dir), uploadLimits: limits, now: () => new Date('2026-10-30T10:00:00Z') });
     }
 
-    it('je Karte höchstens so viele Anhänge (413 mit klarem Text)', async () => {
+    it('je Aufgabe höchstens so viele Anhänge (413 mit klarem Text)', async () => {
       await withLimits({ cardFiles: 3 });
       for (let i = 0; i < 3; i += 1) expect((await send(pdf(10))).statusCode).toBe(201);
       const res = await send(pdf(10));
@@ -157,7 +157,7 @@ describe('Anhänge', () => {
       expect(store.getCard(cardId).attachments).toHaveLength(3);
     });
 
-    it('je Karte höchstens so viele Bytes insgesamt (413)', async () => {
+    it('je Aufgabe höchstens so viele Bytes insgesamt (413)', async () => {
       await withLimits({ cardBytes: 1000 });
       expect((await send(pdf(600))).statusCode).toBe(201);
       const res = await send(pdf(600));
@@ -203,7 +203,7 @@ describe('Anhänge', () => {
     expect(store.getCard(cardId).attachments).toHaveLength(0);
   });
 
-  it('verlangt eine Datei und eine existierende Karte', async () => {
+  it('verlangt eine Datei und eine existierende Aufgabe', async () => {
     const none = await upload([{ name: 'thumb', filename: 't.jpg', type: 'image/jpeg', data: JPEG }]);
     expect(none.statusCode).toBe(400);
     const form = new FormData();

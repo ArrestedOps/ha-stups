@@ -66,7 +66,7 @@
       });
   });
 
-  // Ein Kind sieht nur die eigenen Karten
+  // Ein Kind sieht nur die eigenen Aufgaben
   const shown = $derived(filterSchedule(loaded, activeScheduleFilter(), filterContext()).filter((c) => !ui.isChild || c.assigneeIds.includes(ui.me?.id ?? '')));
   const byDay = $derived(cardsByDay(shown));
   const days = $derived(visibleDays(mode, day));
@@ -88,7 +88,7 @@
   function jump() {
     if (!needScroll || !scroller || mode === 'month') return;
     needScroll = false;
-    // erste Karte; bei „heute" höchstens die aktuelle Uhrzeit; ohne Karten 7 Uhr
+    // erste Aufgabe; bei „heute" höchstens die aktuelle Uhrzeit; ohne Aufgaben 7 Uhr
     const first = days.flatMap((d) => byDay.get(d) ?? []).map((c) => minutesOfDay(c.dueAt!))[0];
     const now = minutesOfDay(new Date().toISOString());
     const target = first !== undefined ? Math.min(first, days.includes(today) ? now : first) : days.includes(today) ? now - 60 : 7 * 60;
@@ -99,7 +99,7 @@
   const nowTop = $derived((void minuteClock.tick, (minutesOfDay(new Date().toISOString()) / 60) * HOUR_PX));
 
   function tapSlot(e: MouseEvent, d: string) {
-    if (ui.isChild) return; // ein Kind legt keine Karten an
+    if (ui.isChild) return; // ein Kind legt keine Aufgaben an
     const el = e.currentTarget as HTMLElement;
     // Mit der Tastatur gibt es keine Stelle: dann 9 Uhr
     const minutes = e.detail === 0 ? 9 * 60 : ((e.clientY - el.getBoundingClientRect().top) / HOUR_PX) * 60 - 15;
@@ -107,7 +107,7 @@
     pending = { day: d, minutes: rounded };
     openSheet({ type: 'slot', at: slotIso(d, minutes) });
   }
-  /** der angetippte freie Zeitpunkt, gestrichelt markiert, solange das Fenster „Neue Karte" offen ist */
+  /** der angetippte freie Zeitpunkt, gestrichelt markiert, solange das Fenster „Neue Aufgabe" offen ist */
   let pending = $state<{ day: string; minutes: number } | null>(null);
   const showPending = $derived(ui.sheet?.type === 'slot' ? pending : null);
   const clock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -119,7 +119,7 @@
 
   const dayLabel = (d: string) => `${weekdayShort(d)} ${dayNumber(d)}`;
 
-  /** Monat: die Karten des gewählten Tages und seine Überschrift („Freitag, 31. Januar") */
+  /** Monat: die Aufgaben des gewählten Tages und seine Überschrift („Freitag, 31. Januar") */
   const dayCards = $derived(byDay.get(day) ?? []);
   const dayTitle = $derived.by(() => {
     const [y, m, d] = day.split('-').map(Number);
@@ -154,7 +154,7 @@
             {@const list = byDay.get(d) ?? []}
             <button
               class="flex h-[50px] flex-col items-center justify-center gap-1 rounded-xl text-[15px] font-semibold {d === today ? 'bg-accent-grad glow-day' : ''} {d === day ? 'shadow-[inset_0_0_0_2px_var(--brand-dot)]' : ''} {inMonth(d, day) || d === today ? '' : 'text-sep'}"
-              aria-label={`${dayLabel(d)}, ${tn('{n} Karte', '{n} Karten', list.length)}`}
+              aria-label={`${dayLabel(d)}, ${tn('{n} Aufgabe', '{n} Aufgaben', list.length)}`}
               aria-pressed={d === day}
               data-today={d === today ? '' : undefined}
               onclick={() => (day = d)}
@@ -207,7 +207,7 @@
             {/each}
             {#each days as d (d)}
               <div class="relative flex-1 border-l border-line/50">
-                <button class="absolute inset-0 w-full cursor-pointer" aria-label={t('Neue Karte am {day}', { day: dayLabel(d) })} onclick={(e) => tapSlot(e, d)}></button>
+                <button class="absolute inset-0 w-full cursor-pointer" aria-label={t('Neue Aufgabe am {day}', { day: dayLabel(d) })} onclick={(e) => tapSlot(e, d)}></button>
                 {#if showPending && showPending.day === d}
                   <span
                     class="pointer-events-none absolute z-[1] flex items-center justify-center rounded-lg border-[1.5px] border-dashed border-brand-dot bg-accent/10 text-center text-[10.5px] leading-[1.15] font-bold text-tok"
@@ -244,7 +244,7 @@
         </div>
       </div>
     </div>
-    <p class="px-1 pt-2 pb-tabbar text-[12.5px] leading-[1.45] text-hint">{t('Auf eine freie Zeit tippen legt eine Karte mit genau diesem Termin an.')}</p>
+    <p class="px-1 pt-2 pb-tabbar text-[12.5px] leading-[1.45] text-hint">{t('Auf eine freie Zeit tippen legt eine Aufgabe mit genau diesem Termin an.')}</p>
   {/if}
 
   {#if loading}<p class="sr-only" role="status">{t('Lädt …')}</p>{/if}

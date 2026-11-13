@@ -192,7 +192,7 @@ export function createPeople(c: Ctx, late: unknown) {
     });
   }
 
-  /** Nimmt jemanden aus der Liste. Karten behalten die Zuweisung, sie tritt wieder in Kraft, wenn die Person zurückkommt. */
+  /** Nimmt jemanden aus der Liste. Aufgaben behalten die Zuweisung, sie tritt wieder in Kraft, wenn die Person zurückkommt. */
   function removePerson(id: string): void {
     userRow(id);
     run('update users set is_person = 0 where id = ?', id);
@@ -282,7 +282,7 @@ export function createPeople(c: Ctx, late: unknown) {
     let scope: 'all' | 'assigned' | undefined;
     if (patch.childScope !== undefined) {
       if (patch.childScope !== 'all' && patch.childScope !== 'assigned') {
-        throw new ValidationError(t('Die Sichtbarkeit muss „all" (alle Boards) oder „assigned" (nur Boards mit eigenen Karten) sein'));
+        throw new ValidationError(t('Die Sichtbarkeit muss „all" (alle Boards) oder „assigned" (nur Boards mit eigenen Aufgaben) sein'));
       }
       scope = patch.childScope;
     }
@@ -400,7 +400,7 @@ export function createPeople(c: Ctx, late: unknown) {
    * Zeigt Stups dieser Person die Einrichtung? Die eine Regel für Oberfläche und Tests (Abschnitt 3.0 der Übergabe):
    * - Nie, wenn schon „fertig" oder „übersprungen" gespeichert ist.
    * - Mitglieder und Kinder (Personen): beim ersten Start, auch in einer vollen Installation (Kurzfassung). Wer vor Migration 30 da war, gilt als fertig.
-   * - Administratoren: auf einer neuen Installation (keine Karten, keine Wächter, keine anderen Personen) oder mitten in der Einrichtung
+   * - Administratoren: auf einer neuen Installation (keine Aufgaben, keine Wächter, keine anderen Personen) oder mitten in der Einrichtung
    *   (gespeicherter Fortschritt, sonst wäre sie nach dem Anlegen der Personen nicht mehr „neu"; auch „nochmal durchgehen" setzt ihn).
    */
   function needsOnboarding(id: string, who: { isAdmin: boolean }): boolean {
@@ -466,7 +466,7 @@ export function createPeople(c: Ctx, late: unknown) {
   /**
    * Personen und Zugriff kommen aus der Add-on-Konfiguration in Home Assistant (Option users ausgefüllt).
    * Bei jedem Start gilt die Liste dort: genannte Personen werden angelegt und bekommen ihre Push-Geräte,
-   * alle anderen sind keine Person mehr (ihre Karten behalten die Zuweisung), der Zugriff folgt access_mode.
+   * alle anderen sind keine Person mehr (ihre Aufgaben behalten die Zuweisung), der Zugriff folgt access_mode.
    * In der App sind Personen, Geräte und Zugriff dann gesperrt.
    */
   function applyManagedPeople(users: { name: string; notify: string[] }[], mode: AccessMode): void {

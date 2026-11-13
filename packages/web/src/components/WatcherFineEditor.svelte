@@ -15,7 +15,7 @@
 
   /**
    * „Feinschliff" (Schritt 4): Zeilen mit den Extras, jede mit einer Kachel, einem Satz und rechts genau einem Element (Schalter oder Zahl):
-   * erledigt sich selbst, stupsen, erst beim N-ten Mal, Sperrzeit. Dazu der Name des Wächters und die Doppelkarten-Regel.
+   * erledigt sich selbst, stupsen, erst beim N-ten Mal, Sperrzeit. Dazu der Name des Wächters und die Doppelaufgaben-Regel.
    */
   let {
     ed,
@@ -56,10 +56,10 @@
     {#snippet meta()}<span class="wrap-anywhere">{t('gegen flatternde Sensoren')}</span>{/snippet}
     {#snippet right()}<NumberField bind:value={f.cooldownMin} label={t('Sperrzeit in Minuten')} unit={t('Min.')} placeholder="10" />{/snippet}
   </ListRow>
-  <ListRow wrap title={t('Keine zweite Karte')}>
+  <ListRow wrap title={t('Keine zweite Aufgabe')}>
     {#snippet tile()}<Tile color="green"><Icon name="copy" size={22} stroke={1.8} /></Tile>{/snippet}
     {#snippet meta()}<span class="wrap-anywhere">{t('solange eine offen ist')}</span>{/snippet}
-    {#snippet right()}<Toggle label={t('Keine Doppelkarten')} checked={f.dedupe} onchange={(v) => (f.dedupe = v)} />{/snippet}
+    {#snippet right()}<Toggle label={t('Keine Doppelaufgaben')} checked={f.dedupe} onchange={(v) => (f.dedupe = v)} />{/snippet}
   </ListRow>
   <div class={columns ? 'col-span-full' : ''}><WatcherFairnessRow {ed} wide={columns} /></div>
   {#if name}

@@ -56,7 +56,7 @@
       {@render slot(tb)}
     {/each}
     {#if canCreate}
-      <button class="tabbar-plus relative z-[1] mx-1 flex h-9 w-[58px] shrink-0 items-center justify-center rounded-full" aria-label={t('Neue Karte')} onclick={() => openSheet({ type: 'new', columnId: newColumn! })}>
+      <button class="tabbar-plus relative z-[1] mx-1 flex h-9 w-[58px] shrink-0 items-center justify-center rounded-full" aria-label={t('Neue Aufgabe')} onclick={() => openSheet({ type: 'new', columnId: newColumn! })}>
         <Icon name="plus" size={22} stroke={2.9} />
       </button>
     {/if}

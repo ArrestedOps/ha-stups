@@ -14,7 +14,7 @@ import type { WatchTrigger } from './watcher-types.js';
 export type { MetNow, WatcherDeps, WatcherHa } from './watchers/types.js';
 
 /**
- * Die Wächter: beobachten Entitäten in Home Assistant und legen Karten an. Die Arbeit liegt in watchers/ (wie beim Store in store/):
+ * Die Wächter: beobachten Entitäten in Home Assistant und legen Aufgaben an. Die Arbeit liegt in watchers/ (wie beim Store in store/):
  * `context` hält den Stand im Speicher und die Warteschlange, die übrigen Teile bekommen ihn und rufen einander über `Parts` auf.
  */
 export function createWatchers(deps: WatcherDeps) {

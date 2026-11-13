@@ -15,11 +15,11 @@ export function targetHint(target: NudgeTarget, tz = deviceTz()): string | null 
   return null;
 }
 
-/** Stupsen gibt es nur bei Karten, die (auch) jemand anderem zugewiesen sind – nicht bei eigenen oder unzugewiesenen */
+/** Stupsen gibt es nur bei Aufgaben, die (auch) jemand anderem zugewiesen sind – nicht bei eigenen oder unzugewiesenen */
 export const canNudge = (card: { assigneeIds: string[] }, meId: string | null): boolean =>
   meId !== null && card.assigneeIds.some((id) => id !== meId);
 
-/** Wie viele offene Stupse an mich und von mir an dieser Karte hängen (für das Abzeichen) */
+/** Wie viele offene Stupse an mich und von mir an dieser Aufgabe hängen (für das Abzeichen) */
 export function nudgeBadge(card: { openNudges?: OpenNudge[] }, meId: string | null): { toMe: OpenNudge[]; fromMe: OpenNudge[] } {
   const list = card.openNudges ?? [];
   if (!meId) return { toMe: [], fromMe: [] };

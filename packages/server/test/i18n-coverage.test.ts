@@ -20,10 +20,10 @@ for (const f of all) for (const x of extract(readFileSync(f, 'utf8'))) found.set
 
 describe('Prüfer für den Quelltext', () => {
   it('findet t(), tn() und tx(), aber nichts, was nur so ähnlich aussieht', () => {
-    const src = ["t('Neu')", "x.t('nicht')", "format('nein')", "tn('{n} Karte', '{n} Karten', n)", "tx('Kontext', 'Alle')", 't(`Hallo ${name}`)'].join('\n');
+    const src = ["t('Neu')", "x.t('nicht')", "format('nein')", "tn('{n} Aufgabe', '{n} Aufgaben', n)", "tx('Kontext', 'Alle')", 't(`Hallo ${name}`)'].join('\n');
     expect(extract(src)).toEqual([
       { key: 'Neu', plural: false },
-      { key: '{n} Karte', plural: true },
+      { key: '{n} Aufgabe', plural: true },
       { key: 'Kontext|Alle', plural: false },
     ]);
   });

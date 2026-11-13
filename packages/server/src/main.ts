@@ -146,7 +146,7 @@ const notifier = createNotifier({
 });
 nudgesClosed = (list) => void notifier.nudgesClosed(list);
 
-// Wächter: Karten automatisch aus Zuständen in Home Assistant (nur mit Verbindung dorthin)
+// Wächter: Aufgaben automatisch aus Zuständen in Home Assistant (nur mit Verbindung dorthin)
 const watcherData = createWatcherData(db, undefined, () => store.markAllChanged());
 const watchers = token
   ? createWatchers({
@@ -156,14 +156,14 @@ const watchers = token
       now: () => new Date(),
       timeZone: () => timeZone,
       enabled: () => betaGate.watchersEnabled(),
-      onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Karte fehlgeschlagen')),
+      onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Aufgabe fehlgeschlagen')),
       onSuggest: (card, ids) => void notifier.notifySuggest(card, ids).catch((err) => app.log.warn(err, 'Frage „Wer übernimmt?" fehlgeschlagen')),
       onSuggestClosed: (card) => void notifier.suggestClosed(card).catch(() => undefined),
       onChange: () => bus.emit({ by: null }),
       log,
     })
   : undefined;
-// Eigene Automationen in Home Assistant: das Ereignis stups_create_card legt eine Karte an
+// Eigene Automationen in Home Assistant: das Ereignis stups_create_card legt eine Aufgabe an
 const automation = watchers
   ? createAutomationCards({
       store,
@@ -171,7 +171,7 @@ const automation = watchers
       now: () => new Date(),
       presentPersonIds: () => watchers.presentPersonIds(),
       eventType: names.eventType,
-      onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Karte fehlgeschlagen')),
+      onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Aufgabe fehlgeschlagen')),
       onChange: () => bus.emit({ by: null }),
     })
   : undefined;
@@ -189,21 +189,21 @@ function housekeeping() {
   }
   const archived = store.archiveDone();
   if (archived > 0) {
-    app.log.info(`${archived} erledigte Karten archiviert`);
+    app.log.info(`${archived} erledigte Aufgaben archiviert`);
     bus.emit({ by: null });
   }
-  // Dateien gelöschter Karten wegräumen; eine Stunde Schonfrist für Uploads, die gerade ankommen
+  // Dateien gelöschter Aufgaben wegräumen; eine Stunde Schonfrist für Uploads, die gerade ankommen
   const removed = files.cleanup(store.referencedFiles(), 60 * 60 * 1000);
   if (removed > 0) app.log.info(`${removed} verwaiste Dateien entfernt`);
 }
 housekeeping();
 setInterval(housekeeping, 60 * 60 * 1000).unref();
 
-// Karten, deren Termin heute dran ist, rücken von „Geplant" nach „Offen" (kurz nach Mitternacht)
+// Aufgaben, deren Termin heute dran ist, rücken von „Geplant" nach „Offen" (kurz nach Mitternacht)
 function syncPlanned() {
   const moved = store.syncPlanned();
   if (moved > 0) {
-    app.log.info(`${moved} Karten zwischen „Geplant" und „Offen" verschoben`);
+    app.log.info(`${moved} Aufgaben zwischen „Geplant" und „Offen" verschoben`);
     bus.emit({ by: null });
   }
 }

@@ -57,11 +57,11 @@ describe('Wer ein Board sieht (Anzeige)', () => {
   });
 });
 
-describe('Auswahl beim Anlegen und Ändern (Karten, Schalter)', () => {
+describe('Auswahl beim Anlegen und Ändern (Aufgaben, Schalter)', () => {
   const picker = (over: Record<string, unknown> = {}) =>
     render(BoardVisibilityPicker, { props: { visibility: 'all', memberIds: [], counts: true, ownerId: 'rene', onvisibility: () => undefined, onmembers: () => undefined, oncounts: () => undefined, ...over } }).body;
 
-  it('drei Karten, bei „Alle" ist der Schalter an und bedienbar', () => {
+  it('drei Aufgaben, bei „Alle" ist der Schalter an und bedienbar', () => {
     const out = picker();
     for (const x of ['🔒 Nur ich', '🏠 Alle in Stups', '👥 Ausgewählte Personen', 'Zählt zur Fairness der Woche']) expect(out).toContain(x);
     expect(out).toMatch(/data-testid="visibility-all"[^>]*aria-checked="true"|aria-checked="true"[^>]*data-testid="visibility-all"/);
@@ -111,13 +111,13 @@ describe('Dialog „Person entfernen" und „Board kann nicht privat werden"', (
 
   it('zeigt ALLE betroffenen Wächter mit „jetzt → danach", bei Rest „Rene (reihum)", bei niemand die orange Zeile', () => {
     const out = dialog();
-    expect(out).toContain('Das ändert 2 Wächter. Es gehen keine Karten verloren.');
+    expect(out).toContain('Das ändert 2 Wächter. Es gehen keine Aufgaben verloren.');
     expect(out).toContain('Waschmaschine fertig');
     expect(out).toContain('Rene, Anna');
     expect(out).toContain('Rene (reihum)');
     expect(out).toContain('Heizung prüfen');
     expect(out).toContain('niemand');
-    expect(out).toContain('Wächter legt keine Karten an, bis neue Zuständige gewählt sind');
+    expect(out).toContain('Wächter legt keine Aufgaben an, bis neue Zuständige gewählt sind');
     expect(out.match(/data-missing/g)).toHaveLength(1);
   });
 
@@ -219,7 +219,7 @@ describe('Wächter mit Problem: ganz oben, roter Rand, Status als Text', () => {
   });
 
   it('der Grund als Text, Probleme erkannt', () => {
-    expect(problemText(item({ status: 'assignees_missing' }))).toBe('Keine Karten: braucht neue Zuständige');
+    expect(problemText(item({ status: 'assignees_missing' }))).toBe('Keine Aufgaben: braucht neue Zuständige');
     expect(problemText(item({ status: 'target_missing' }))).toMatch(/Pausiert/);
     expect(problemText(item({ entityMissing: true }))).toBe('Entität fehlt');
     expect(problemText(item())).toBeNull();
@@ -232,16 +232,16 @@ describe('Wächter mit Problem: ganz oben, roter Rand, Status als Text', () => {
     const out = render(WatcherRow, { props: props(item({ status: 'assignees_missing' })) }).body;
     expect(out).toContain('row-problem');
     expect(out).not.toContain('row-new');
-    expect(out).toMatch(/text-danger[^>]*data-testid="watcher-status">Keine Karten: braucht neue Zuständige</);
+    expect(out).toMatch(/text-danger[^>]*data-testid="watcher-status">Keine Aufgaben: braucht neue Zuständige</);
     const ok = render(WatcherRow, { props: props(item()) }).body;
     expect(ok).not.toContain('row-problem');
     expect(ok).toContain('border-line');
   });
 
-  it('Desktop: dieselbe Tabellenzeile, Status „Keine Karten"', () => {
+  it('Desktop: dieselbe Tabellenzeile, Status „Keine Aufgaben"', () => {
     const out = render(WatcherTableRow, { props: props(item({ status: 'assignees_missing' })) }).body;
     expect(out).toContain('data-status="noassign"');
-    expect(out).toContain('Keine Karten');
+    expect(out).toContain('Keine Aufgaben');
   });
 
   it('der rote Rand steht in app.css mit dem Danger-Token', async () => {

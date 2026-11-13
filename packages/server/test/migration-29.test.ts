@@ -14,7 +14,7 @@ afterEach(() => {
 const T = '2026-11-01T08:00:00.000Z';
 
 describe('Migration 29 (Boards archivieren)', () => {
-  it('hängt archived_at an die Boards: Bestandsboards sind nicht archiviert, Karten, Spalten und Reihenfolge bleiben', () => {
+  it('hängt archived_at an die Boards: Bestandsboards sind nicht archiviert, Aufgaben, Spalten und Reihenfolge bleiben', () => {
     const dir = mkdtempSync(join(tmpdir(), 'stups-m29-'));
     dirs.push(dir);
     const file = join(dir, 'k.sqlite');

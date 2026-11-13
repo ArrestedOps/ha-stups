@@ -5,7 +5,7 @@ import { openDb } from '../src/db.js';
 import { ingressAuth } from '../src/ingress.js';
 import { createStore, type Store } from '../src/store.js';
 
-// Welche Boards und Karten ein Kind sieht: alle oder nur Boards mit eigenen Karten, in jedem Bereich (nicht nur in der Boardliste).
+// Welche Boards und Aufgaben ein Kind sieht: alle oder nur Boards mit eigenen Aufgaben, in jedem Bereich (nicht nur in der Boardliste).
 const as = (id: string, name = id) => ({ 'x-remote-user-id': id, 'x-remote-user-name': name, 'x-remote-user-display-name': name });
 const mia = as('ha-mia', 'Mia'); // Kind, nur eigene Boards
 const tom = as('ha-tom', 'Tom'); // Kind, alle Boards
@@ -56,7 +56,7 @@ beforeEach(async () => {
 });
 
 describe('Kind mit „nur eigene Boards"', () => {
-  it('die Boardliste zeigt nur Boards mit eigenen Karten, auch wenn die Karte schon erledigt ist', async () => {
+  it('die Boardliste zeigt nur Boards mit eigenen Aufgaben, auch wenn die Aufgabe schon erledigt ist', async () => {
     const boards = ok<{ id: string; name: string }[]>(await get(mia, '/api/boards'));
     expect(boards.map((b) => b.name).sort()).toEqual(['A', 'C']);
   });
@@ -67,28 +67,28 @@ describe('Kind mit „nur eigene Boards"', () => {
     expect((await get(mia, `/api/boards/${ids.boardC}`)).statusCode).toBe(200);
   });
 
-  it('Karten nach Kennung: nur die aus sichtbaren Boards', async () => {
+  it('Aufgaben nach Kennung: nur die aus sichtbaren Boards', async () => {
     const cards = ok<{ id: string }[]>(await get(mia, `/api/cards?ids=${ids.cardA},${ids.cardB},${ids.cardC}`));
     expect(cards.map((c) => c.id).sort()).toEqual([ids.cardA, ids.cardC].sort());
     expect((await get(mia, `/api/cards/${ids.cardB}`)).statusCode).toBe(404);
     expect((await get(mia, `/api/cards/${ids.cardA}`)).statusCode).toBe(200);
   });
 
-  it('Kommentare und Erledigungen einer fremden Karte: 404', async () => {
+  it('Kommentare und Erledigungen einer fremden Aufgabe: 404', async () => {
     expect((await get(mia, `/api/cards/${ids.cardB}/comments`)).statusCode).toBe(404);
     expect((await get(mia, `/api/cards/${ids.cardB}/completions`)).statusCode).toBe(404);
     expect((await get(mia, `/api/cards/${ids.cardA}/comments`)).statusCode).toBe(200);
     expect((await get(mia, `/api/cards/${ids.cardC}/completions`)).statusCode).toBe(200);
   });
 
-  it('Agenda und Kalender: nur Karten aus sichtbaren Boards, auch wenn man das fremde Board ausdrücklich verlangt', async () => {
+  it('Agenda und Kalender: nur Aufgaben aus sichtbaren Boards, auch wenn man das fremde Board ausdrücklich verlangt', async () => {
     const all = ok<{ boardName: string }[]>(await get(mia, '/api/schedule?done=1'));
     expect(all.map((c) => c.boardName).sort()).toEqual(['A', 'C']);
     const asked = ok<{ boardName: string }[]>(await get(mia, `/api/schedule?boards=${ids.boardB}&done=1`));
     expect(asked).toEqual([]);
   });
 
-  it('Anhänge einer fremden Karte: 404', async () => {
+  it('Anhänge einer fremden Aufgabe: 404', async () => {
     const a = store.addAttachment(ids.cardB!, { id: 'att-b', filename: 'x.png', mime: 'image/png', size: 3, file: 'f1', thumb: 't1' }, null);
     const mine = store.addAttachment(ids.cardA!, { id: 'att-a', filename: 'y.png', mime: 'image/png', size: 3, file: 'f2', thumb: 't2' }, null);
     for (const path of [`/api/attachments/${a.id}`, `/api/attachments/${a.id}/thumb`]) {
@@ -101,7 +101,7 @@ describe('Kind mit „nur eigene Boards"', () => {
     expect((await get(ben, `/api/attachments/${a.id}`)).statusCode).toBe(200);
   });
 
-  it('wird ihr eine Karte in einem neuen Board zugewiesen, sieht sie das Board sofort', async () => {
+  it('wird ihr eine Aufgabe in einem neuen Board zugewiesen, sieht sie das Board sofort', async () => {
     const miaId = store.people().find((p) => p.name === 'Mia')!.id;
     expect(ok<{ name: string }[]>(await get(mia, '/api/boards')).map((b) => b.name)).not.toContain('B');
     store.updateCard(ids.cardB!, { assigneeIds: [miaId] });
@@ -110,7 +110,7 @@ describe('Kind mit „nur eigene Boards"', () => {
 });
 
 describe('Kind mit „alle Boards", Mitglieder und Administratoren', () => {
-  it('Tom sieht alle Boards und Karten (Lesen), darf aber weiter nur Eigenes ändern', async () => {
+  it('Tom sieht alle Boards und Aufgaben (Lesen), darf aber weiter nur Eigenes ändern', async () => {
     expect(ok<unknown[]>(await get(tom, '/api/boards'))).toHaveLength(3);
     expect((await get(tom, `/api/boards/${ids.boardB}`)).statusCode).toBe(200);
     expect((await get(tom, `/api/cards/${ids.cardB}`)).statusCode).toBe(200);

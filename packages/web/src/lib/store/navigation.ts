@@ -49,8 +49,8 @@ export function restoreView(): void {
 }
 
 /**
- * Eine neue Karte soll man sehen: Verstecken sie die Personenfilter (Start mit „Meine"), wechselt die Ansicht für Boards und
- * Aufgaben auf „Alle", statt die Karte unauffindbar zu lassen.
+ * Eine neue Aufgabe soll man sehen: Verstecken sie die Personenfilter (Start mit „Meine"), wechselt die Ansicht für Boards und
+ * Aufgaben auf „Alle", statt die Aufgabe unauffindbar zu lassen.
  */
 export function revealNewCard(card: { assigneeIds: string[] }): void {
   if (hiddenByPerson(card.assigneeIds, ui.filter, ui.me?.id ?? null)) {
@@ -79,8 +79,8 @@ export function selectTab(tab: Tab): void {
 }
 
 /**
- * Wo eine Karte aufgeht. Auf dem Desktop steht sie in Aufgaben in der Detailspalte rechts (die Liste bleibt sichtbar), überall sonst
- * (Boards, Kalender, Handy) als Sheet. Alle Wege, eine Karte zu öffnen, laufen hierüber.
+ * Wo eine Aufgabe aufgeht. Auf dem Desktop steht sie in Aufgaben in der Detailspalte rechts (die Liste bleibt sichtbar), überall sonst
+ * (Boards, Kalender, Handy) als Sheet. Alle Wege, eine Aufgabe zu öffnen, laufen hierüber.
  */
 export function openCard(id: string): void {
   if (ui.desktop && ui.tab === 'tasks' && !ui.tasksCalendar) {
@@ -92,7 +92,7 @@ export function openCard(id: string): void {
 }
 export const closeDetail = (): void => void (ui.detailId = null);
 
-/** Das Fenster wird breiter oder schmaler als 1024 px: eine offene Karte wechselt zwischen Detailspalte und Sheet */
+/** Das Fenster wird breiter oder schmaler als 1024 px: eine offene Aufgabe wechselt zwischen Detailspalte und Sheet */
 export function setDesktop(on: boolean): void {
   ui.desktop = on;
   if (!on && ui.detailId) {
@@ -119,19 +119,19 @@ export function setScheduleFilter(patch: Partial<ScheduleFilter>): void {
   memo.set('stups.schedule', JSON.stringify(ui.sf));
 }
 
-/** Öffnet eine Karte aus Agenda oder Kalender, auch wenn sie in einem anderen Board liegt */
+/** Öffnet eine Aufgabe aus Agenda oder Kalender, auch wenn sie in einem anderen Board liegt */
 export async function openCardAnywhere(card: { id: string; boardId: string }): Promise<void> {
   if (card.boardId !== ui.boardId) await selectBoard(card.boardId);
   openCard(card.id);
 }
 
-/** Öffnet das Karten-Menü („…") einer Karte aus Aufgaben, auch wenn sie in einem anderen Board liegt */
+/** Öffnet das Aufgaben-Menü („…") einer Aufgabe aus Aufgaben, auch wenn sie in einem anderen Board liegt */
 export async function openCardMenuAnywhere(card: { id: string; boardId: string }): Promise<void> {
   if (card.boardId !== ui.boardId) await selectBoard(card.boardId);
   ui.sheet = { type: 'cardMenu', id: card.id };
 }
 
-/** Lässt eine Karte kurz hüpfen: die Rückmeldung nach dem Stupsen */
+/** Lässt eine Aufgabe kurz hüpfen: die Rückmeldung nach dem Stupsen */
 export function hopCard(id: string): void {
   ui.hop = id;
   setTimeout(() => {

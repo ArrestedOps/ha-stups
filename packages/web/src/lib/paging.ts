@@ -14,7 +14,7 @@ export async function fetchAllPages<T extends { id: string }>(page: (offset: num
   const seen = new Set<string>();
   for (let offset = 0; ; offset += pageSize) {
     const { items, total } = await page(offset);
-    // Verschiebt sich der Bestand zwischen zwei Seiten, kann dieselbe Karte zweimal kommen
+    // Verschiebt sich der Bestand zwischen zwei Seiten, kann dieselbe Aufgabe zweimal kommen
     for (const it of items) {
       if (seen.has(it.id)) continue;
       seen.add(it.id);

@@ -37,7 +37,7 @@
   const fctx = $derived(filterContext());
   const meId = $derived(ui.me?.id ?? null);
   const houseIds = $derived(new Set(ui.isChild ? [] : (agenda.today?.house ?? []).map((c) => c.id)));
-  // alles, was die Liste zeigen kann: offene Karten mit und ohne Termin und das zuletzt Erledigte; „Vom Haus" steht eigens darüber und zählt hier nicht
+  // alles, was die Liste zeigen kann: offene Aufgaben mit und ohne Termin und das zuletzt Erledigte; „Vom Haus" steht eigens darüber und zählt hier nicht
   const pool = $derived(
     [...agenda.open, ...agenda.undated, ...agenda.recentDone].filter((c) => !houseIds.has(c.id) && (!ui.isChild || (!!meId && c.assigneeIds.includes(meId)))),
   );
@@ -90,7 +90,7 @@
 </script>
 
 {#snippet footerCta()}
-  <CtaButton onclick={closeSheet}>{boardMode ? tn('{n} Karte anzeigen', '{n} Karten anzeigen', boardHits) : tn('{n} Aufgabe anzeigen', '{n} Aufgaben anzeigen', hits)}</CtaButton>
+  <CtaButton onclick={closeSheet}>{boardMode ? tn('{n} Aufgabe anzeigen', '{n} Aufgaben anzeigen', boardHits) : tn('{n} Aufgabe anzeigen', '{n} Aufgaben anzeigen', hits)}</CtaButton>
 {/snippet}
 
 <Sheet footer={footerCta} title={t('Filter')} onclose={closeSheet}>
@@ -103,8 +103,8 @@
       <section aria-label={t('Suchen')} class="flex flex-col gap-3.5">
         <SectionHeader title={t('Suchen')} />
         <label class="flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3 focus-within:border-accent">
-          <span class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Karten durchsuchen')}</span>
-          <input type="search" bind:value={ui.filter.search} placeholder={t('Titel oder Beschreibung')} class="min-h-6 w-full bg-transparent text-[16px] font-semibold outline-none" aria-label={t('Karten durchsuchen')} />
+          <span class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Aufgaben durchsuchen')}</span>
+          <input type="search" bind:value={ui.filter.search} placeholder={t('Titel oder Beschreibung')} class="min-h-6 w-full bg-transparent text-[16px] font-semibold outline-none" aria-label={t('Aufgaben durchsuchen')} />
         </label>
       </section>
 

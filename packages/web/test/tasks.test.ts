@@ -20,7 +20,7 @@ describe('groupTasks: Überfällig, Heute, Diese Woche, Später', () => {
     mk('erledigt', '2026-11-03T09:00:00Z', { completedAt: '2026-11-03T10:00:00Z' }),
   ];
 
-  it('teilt offene Karten nach Termin und sortiert nach Termin', () => {
+  it('teilt offene Aufgaben nach Termin und sortiert nach Termin', () => {
     const g = groupTasks(cards, NOW, TZ);
     expect(g.map((x) => x.key)).toEqual(['overdue', 'today', 'week', 'later']);
     expect(ids(g[0]!.cards)).toEqual(['gestern', 'heute-frueh']);
@@ -90,7 +90,7 @@ describe('taskStats: nur die eigenen Zahlen', () => {
     mk('d3', '2026-11-04T06:00:00Z', { assigneeIds: ['ben'], completedAt: '2026-11-04T08:00:00Z' }), // fremd
   ];
 
-  it('fällig heute, überfällig und heute erledigt, nur Karten, die mir zugewiesen sind', () => {
+  it('fällig heute, überfällig und heute erledigt, nur Aufgaben, die mir zugewiesen sind', () => {
     expect(taskStats([...open, ...done], me, NOW, TZ)).toEqual({ today: 1, overdue: 2, done: 1 });
   });
 
@@ -122,7 +122,7 @@ describe('nudgesToMe: das Stups-Banner oben', () => {
     mk('d', '2026-11-06T17:00:00Z', { openNudges: [n('5', 'conny', 'anna')], completedAt: '2026-11-06T18:00:00Z' }),
     mk('e', '2026-11-06T17:00:00Z', { openNudges: [n('6', 'conny', 'anna')] }),
   ];
-  it('Karten mit einem offenen Stups an mich, mit den Absendern ohne Doppelte; Erledigtes nicht', () => {
+  it('Aufgaben mit einem offenen Stups an mich, mit den Absendern ohne Doppelte; Erledigtes nicht', () => {
     expect(nudgesToMe(cards, 'anna').map((x) => [x.card.id, x.fromIds])).toEqual([
       ['a', ['conny', 'ben']],
       ['e', ['conny']],

@@ -7,9 +7,9 @@
   import Toggle from './ui/Toggle.svelte';
 
   /**
-   * „Zählt zur Fairness": gehören die Karten dieses Wächters in die Auswertung der Woche? Zählt das Board nicht mit (oder ist es privat),
+   * „Zählt zur Fairness": gehören die Aufgaben dieses Wächters in die Auswertung der Woche? Zählt das Board nicht mit (oder ist es privat),
    * ist der Schalter grau, aus und gesperrt, die Zeile sagt „Board zählt nicht mit: nicht möglich". Der gespeicherte Wert bleibt dabei erhalten
-   * (zählt das Board später wieder, gilt er wieder). Am Desktop als breite Karte mit ausführlicherem Satz (`wide`).
+   * (zählt das Board später wieder, gilt er wieder). Am Desktop als breite Aufgabe mit ausführlicherem Satz (`wide`).
    */
   let { ed, wide = false, readOnly = false }: { ed: WatcherEditor; wide?: boolean; readOnly?: boolean } = $props();
 

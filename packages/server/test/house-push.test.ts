@@ -160,7 +160,7 @@ describe('Ruhezeit', () => {
     now = new Date('2026-11-03T22:30:00Z'); // 23:30 Berlin: in der Ruhezeit (22:00 bis 07:00)
   });
 
-  it('Fälligkeit und Wächter-Karte werden in der Ruhezeit verworfen, nicht nachgeholt', async () => {
+  it('Fälligkeit und Wächter-Aufgabe werden in der Ruhezeit verworfen, nicht nachgeholt', async () => {
     speakChannel({ kinds: ['nudge', 'due', 'watcher'], whenAway: 'wait' });
     expect(await house().send(ben, msg('due'))).toBe(true); // bewusst verworfen: kein Fehler, kein Wiederholen
     expect(await house().send(ben, msg('watcher'))).toBe(true);
@@ -276,7 +276,7 @@ describe('Warteschlange', () => {
     expect(store.housePendingOf(ben)).toHaveLength(1);
   });
 
-  it('ist die Karte inzwischen erledigt, wird nichts mehr angesagt', async () => {
+  it('ist die Aufgabe inzwischen erledigt, wird nichts mehr angesagt', async () => {
     const { h } = await queue({}, msg('due', { open: { cardId } }));
     store.completeCard(cardId, { by: ben, source: 'app' });
     home[ben] = 'home';

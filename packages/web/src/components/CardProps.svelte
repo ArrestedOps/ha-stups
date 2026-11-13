@@ -4,7 +4,7 @@
   import type { Recurrence } from '../lib/recurrence';
   import type { ReminderSpec } from '../lib/reminder';
 
-  /** Die Felder, die eine neue und eine bestehende Karte gemeinsam haben */
+  /** Die Felder, die eine neue und eine bestehende Aufgabe gemeinsam haben */
   export interface CardFields {
     columnId: string;
     assigneeIds: string[];
@@ -17,11 +17,11 @@
     effort?: Effort | null;
     categoryIds: string[];
     costCents: number | null;
-    /** gesetzt, wenn die Karte erledigt ist: dann ist der Termin nicht mehr „überfällig" */
+    /** gesetzt, wenn die Aufgabe erledigt ist: dann ist der Termin nicht mehr „überfällig" */
     completedAt?: string | null;
-    /** Was die nächste Karte übernimmt; ohne Angabe gilt die Voreinstellung */
+    /** Was die nächste Aufgabe übernimmt; ohne Angabe gilt die Voreinstellung */
     carryOver?: CarryField[];
-    /** Bestätigung beim Erledigen durch ein Kind; fehlt bei einer neuen Karte (dort gibt es die Wahl noch nicht) */
+    /** Bestätigung beim Erledigen durch ein Kind; fehlt bei einer neuen Aufgabe (dort gibt es die Wahl noch nicht) */
     confirm?: 'on' | 'off' | null;
   }
 </script>
@@ -59,7 +59,7 @@
   } = $props();
 
   const column = $derived(ui.view?.columns.find((c) => c.id === card.columnId));
-  // Eine erledigte Karte ist nicht überfällig, auch wenn ihr Termin in der Vergangenheit liegt
+  // Eine erledigte Aufgabe ist nicht überfällig, auch wenn ihr Termin in der Vergangenheit liegt
   const late = $derived(isOverdue(card.dueAt) && !card.completedAt && !column?.isDone);
 
   // Welches Eigenschaftsfeld unter den Chips offen ist (immer nur eines)
@@ -83,7 +83,7 @@
   ]);
   const effortLabel = $derived(card.effort ? (EFFORTS.find((e) => e[0] === card.effort)?.[1] ?? '') : t('Aufwand'));
 
-  // Bestätigung: nur sinnvoll, wenn der Karte ein Kind zugewiesen ist
+  // Bestätigung: nur sinnvoll, wenn der Aufgabe ein Kind zugewiesen ist
   const hasChild = $derived(ui.people.some((p) => p.isChild && card.assigneeIds.includes(p.id)));
   const CONFIRMS: [('on' | 'off') | null, string][] = $derived([
     [null, t('Vorgabe der Person')],
@@ -202,7 +202,7 @@
     <select
       class="absolute inset-0 h-full w-full opacity-0"
       value={card.columnId}
-      aria-label={t('Status der Karte')}
+      aria-label={t('Status der Aufgabe')}
       onchange={(e) => onmove(e.currentTarget.value)}
     >
       {#each targets as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
@@ -343,7 +343,7 @@
           </button>
         {/each}
       </div>
-      <p class="mt-3 text-[13px] text-fg2">{t('Ist die Karte einem Kind zugewiesen, kann „Erledigt“ erst nach einem Ja der Eltern zählen. „Vorgabe der Person“ folgt der Einstellung unter Personen & Zugriff.')}</p>
+      <p class="mt-3 text-[13px] text-fg2">{t('Ist die Aufgabe einem Kind zugewiesen, kann „Erledigt“ erst nach einem Ja der Eltern zählen. „Vorgabe der Person“ folgt der Einstellung unter Personen & Zugriff.')}</p>
     {/if}
   </div>
 {/if}

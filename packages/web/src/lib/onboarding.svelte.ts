@@ -248,7 +248,7 @@ export function assignees(): string[] {
 /** Der Wächter ist im Assistenten bzw. Editor der App gespeichert: merken, was danach zählt (Test, Fertig) */
 export function watcherSaved(saved: SavedWatcher): void {
   ob.watcherNames = [...ob.watcherNames, saved.name];
-  // der Titel, den die echte Karte (und ihre Nachricht) bekommt: mit dem Namen des Geräts, wie die Vorschau im Editor ihn zeigt
+  // der Titel, den die echte Aufgabe (und ihre Nachricht) bekommt: mit dem Namen des Geräts, wie die Vorschau im Editor ihn zeigt
   ob.watcherCards = [...ob.watcherCards, cardTitleWithEntity(saved.card.title, saved.trigger.kind, saved.entityName ?? saved.trigger.entityId)];
   ob.watchersDone = true;
 }
@@ -300,11 +300,11 @@ export function testTarget(): User | null {
   return list.find((p) => p.id === ob.testTo) ?? list[0] ?? null;
 }
 
-/** Titel und Text der Testnachricht: genau, was eine neue Karte eines Wächters auf dem Handy zeigt (der Server baut dieselbe Nachricht) */
+/** Titel und Text der Testnachricht: genau, was eine neue Aufgabe eines Wächters auf dem Handy zeigt (der Server baut dieselbe Nachricht) */
 export function previewTexts(): { title: string; body: string } {
   const due = formatDue(new Date(Date.now() + 30 * 60_000).toISOString());
   // in der Beta setzt der Server den Kanalnamen davor (Beta ·), die Vorschau zeigt es ebenso
-  return { title: (feat.beta ? 'Beta · ' : '') + (ob.watcherCards[0] ?? t('Waschmaschine ausräumen')), body: t('Neue Karte für dich · fällig {due}', { due }) };
+  return { title: (feat.beta ? 'Beta · ' : '') + (ob.watcherCards[0] ?? t('Waschmaschine ausräumen')), body: t('Neue Aufgabe für dich · fällig {due}', { due }) };
 }
 
 /** Für Mitglieder (Kurzfassung) geht sie an sie selbst, für den Administrator an die gewählte Person */

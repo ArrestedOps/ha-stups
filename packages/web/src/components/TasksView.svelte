@@ -31,7 +31,7 @@
   /**
    * Der Reiter Aufgaben nach dem Mockup (Main), von oben nach unten: Kopf mit Titel, Zahlenleiste, „Diese Woche" mit Wochenleiste,
    * Stups-Banner (nur bei offenem Stups an mich), Chips (Meine, Alle, Personen, Filter), die Gruppen Überfällig, Heute, Diese Woche, Später.
-   * „Vom Haus" steht (nur mit Karten) vor Überfällig, Fairness und „Bei den anderen" am Ende. Der Kalender (Tag, Woche, Monat) ist eine
+   * „Vom Haus" steht (nur mit Aufgaben) vor Überfällig, Fairness und „Bei den anderen" am Ende. Der Kalender (Tag, Woche, Monat) ist eine
    * eigene Seite unter Aufgaben mit „‹ Aufgaben" oben: „Monatsansicht" und der Kalender-Knopf der Wochenleiste öffnen sie.
    */
 
@@ -79,7 +79,7 @@
   });
   $effect(() => {
     ui.tasksCalendar = view !== 'list';
-    // Im Kalender gibt es keine Detailspalte: eine gewählte Karte öffnet dort als Fenster
+    // Im Kalender gibt es keine Detailspalte: eine gewählte Aufgabe öffnet dort als Fenster
     if (ui.tasksCalendar) closeDetail();
     return () => {
       ui.tasksCalendar = false;
@@ -100,8 +100,8 @@
   /** Der Filter, wie er für diese Rolle gilt, und was er zum Rechnen braucht */
   const sf = $derived(activeScheduleFilter());
   const fctx = $derived(filterContext());
-  /** Ein Kind sieht nur die eigenen Karten; Erwachsene wählen mit den Chips und dem Blatt „Filter" */
-  /** Desktop: das Suchfeld oben filtert die geladenen Karten (Titel, Beschreibung, Board, Kategorien) */
+  /** Ein Kind sieht nur die eigenen Aufgaben; Erwachsene wählen mit den Chips und dem Blatt „Filter" */
+  /** Desktop: das Suchfeld oben filtert die geladenen Aufgaben (Titel, Beschreibung, Board, Kategorien) */
   const query = $derived(ui.desktop ? ui.query : '');
   const visible = (list: typeof open) =>
     filterSchedule(ui.isChild ? list.filter((c) => !!meId && c.assigneeIds.includes(meId)) : list, sf, fctx).filter(
@@ -164,7 +164,7 @@
 
   const done = (c: TodayCard) => void completeCard(c);
   const openHouse = (c: TodayCard) => void openCardAnywhere(c);
-  /** Ein Stups: die Karte öffnen (dort die Antwort); mehrere: die Liste der Mitteilungen */
+  /** Ein Stups: die Aufgabe öffnen (dort die Antwort); mehrere: die Liste der Mitteilungen */
 </script>
 
 {#snippet filterButton(count: number, small: boolean)}
@@ -267,7 +267,7 @@
                     {#if c.why}<p class="mt-1 text-[13px] text-fg2">{c.why}</p>{/if}
                     <div class="mt-3 flex gap-2">
                       {#if c.assigneeIds.length === 0}
-                        <!-- "Erst vorschlagen": noch hat niemand die Karte, wer zuerst tippt, bekommt sie -->
+                        <!-- "Erst vorschlagen": noch hat niemand die Aufgabe, wer zuerst tippt, bekommt sie -->
                         <button class="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-house font-semibold text-bg" onclick={() => void claimCard(c)}>
                           <Icon name="hand" size={18} />{t('Übernehmen')}
                         </button>
@@ -310,7 +310,7 @@
           {#if groups.length === 0 && house.length === 0}
             <div class="py-6 text-center" data-testid="tasks-empty">
               <p class="text-[17px] font-semibold">{t('Keine Aufgaben mit Termin')}</p>
-              <p class="mt-1 text-[15px] text-fg2">{t('Karten mit Termin erscheinen hier, nach Fälligkeit geordnet.')}</p>
+              <p class="mt-1 text-[15px] text-fg2">{t('Aufgaben mit Termin erscheinen hier, nach Fälligkeit geordnet.')}</p>
               {#if isFiltered(sf)}
                 <button class="mt-3 min-h-11 rounded-xl border border-line px-4 text-[15px]" onclick={() => setScheduleFilter({ ...DEFAULT_FILTER })}>{t('Zurücksetzen')}</button>
               {/if}
@@ -318,7 +318,7 @@
           {/if}
 
           {#if !ui.isChild}
-            <!-- Fairness und die Karten der anderen: ohne Rangliste, Prozente und Punkte -->
+            <!-- Fairness und die Aufgaben der anderen: ohne Rangliste, Prozente und Punkte -->
             <div class="flex flex-col gap-2">
               <ListRow title={t('Fairness diese Woche')} onclick={() => openSheet({ type: 'week' })}>
                 {#snippet tile()}<Tile color="teal"><Icon name="user" size={24} /></Tile>{/snippet}
@@ -327,7 +327,7 @@
               </ListRow>
               {#if others.length > 0}
                 <ListRow title={t('Bei den anderen')} onclick={() => openSheet({ type: 'week' })}>
-                  {#snippet meta()}{tn('{n} Karte offen', '{n} Karten offen', othersOpen)}{/snippet}
+                  {#snippet meta()}{tn('{n} Aufgabe offen', '{n} Aufgaben offen', othersOpen)}{/snippet}
                   {#snippet right()}
                     <span class="flex -space-x-1.5">
                       {#each others.slice(0, 4) as o (o.personId)}<Avatar person={o.person} size={28} ring={1.5} />{/each}
@@ -344,9 +344,9 @@
   {/if}
 
   {#if ui.desktop && view === 'list'}
-    <!-- Detailspalte (nur Desktop): die gewählte Karte neben der Liste. Ab 1280 px steht sie fest daneben (ohne Auswahl ein Platzhalter), darunter legt sie sich über die Liste. -->
+    <!-- Detailspalte (nur Desktop): die gewählte Aufgabe neben der Liste. Ab 1280 px steht sie fest daneben (ohne Auswahl ein Platzhalter), darunter legt sie sich über die Liste. -->
     {#if ui.detailId}
-      <aside class="w-[380px] shrink-0 pb-6 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-20" aria-label={t('Karte')} data-testid="detail">
+      <aside class="w-[380px] shrink-0 pb-6 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-20" aria-label={t('Aufgabe')} data-testid="detail">
         {#key ui.detailId}<CardSheet id={ui.detailId} panel />{/key}
       </aside>
     {:else}

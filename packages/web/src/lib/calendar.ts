@@ -4,7 +4,7 @@ import type { ScheduleCard } from './schedule';
 
 export type CalMode = 'day' | 'week' | 'month';
 
-/** Die Ansichten des Kalenders: Tag, Woche, Monat und die Liste (die frühere Agenda: alle Karten mit Termin nach Tagen) */
+/** Die Ansichten des Kalenders: Tag, Woche, Monat und die Liste (die frühere Agenda: alle Aufgaben mit Termin nach Tagen) */
 export type CalView = CalMode | 'list';
 
 /** Die gemerkte Ansicht von diesem Gerät; Unbekanntes oder nichts ergibt die Woche */
@@ -106,10 +106,10 @@ export interface Placed<T> {
   cols: number;
 }
 
-/** Eine Karte hat nur einen Zeitpunkt; im Raster belegt sie so viele Minuten */
+/** Eine Aufgabe hat nur einen Zeitpunkt; im Raster belegt sie so viele Minuten */
 export const BLOCK_MINUTES = 45;
 
-/** Legt die Karten eines Tages ins Zeitraster; überlappende stehen nebeneinander */
+/** Legt die Aufgaben eines Tages ins Zeitraster; überlappende stehen nebeneinander */
 export function layoutDay<T extends ScheduleCard>(cards: T[], tz = deviceTz()): Placed<T>[] {
   const items = cards
     .map((card) => ({ card, start: minutesOfDay(card.dueAt!, tz) }))
@@ -138,7 +138,7 @@ export function layoutDay<T extends ScheduleCard>(cards: T[], tz = deviceTz()): 
   return placed;
 }
 
-/** Spalte für eine neue Karte mit Termin: nach heute → „Geplant", sonst die erste offene Spalte */
+/** Spalte für eine neue Aufgabe mit Termin: nach heute → „Geplant", sonst die erste offene Spalte */
 export function columnForNew(columns: { id: string; isDone: boolean; isPlanned: boolean }[], future: boolean): string | undefined {
   const open = columns.find((c) => !c.isDone && !c.isPlanned);
   return (future ? (columns.find((c) => c.isPlanned) ?? open) : open)?.id ?? columns[0]?.id;

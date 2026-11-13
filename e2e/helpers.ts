@@ -5,7 +5,7 @@ export async function openBoards(page: Page): Promise<void> {
   const nav = page.getByRole('navigation', { name: /^(Ansicht|View)$/ });
   await nav.getByRole('button', { name: 'Boards' }).click();
   await expect(nav.getByRole('button', { name: 'Boards' })).toHaveAttribute('aria-current', 'page');
-  // Boards startet bei „Meine"; die Tests brauchen alle Karten (ein Kind hat keine Personen-Chips)
+  // Boards startet bei „Meine"; die Tests brauchen alle Aufgaben (ein Kind hat keine Personen-Chips)
   const all = page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Alle', exact: true });
   if (await all.count()) await all.click();
 }

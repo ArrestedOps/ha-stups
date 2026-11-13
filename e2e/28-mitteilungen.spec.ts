@@ -26,7 +26,7 @@ async function setup(request: APIRequestContext) {
   return { boardId: board.id as string, cardId: card.id as string, title, connyId: conny.id };
 }
 
-test('Glocke: ein Stups an mich setzt den Punkt, Blatt und Banner zeigen ihn, ein Tipp öffnet die Karte, „Alle gelesen“ löscht den Punkt (auch nach dem Neuladen)', async ({ browser, request }, info) => {
+test('Glocke: ein Stups an mich setzt den Punkt, Blatt und Banner zeigen ihn, ein Tipp öffnet die Aufgabe, „Alle gelesen“ löscht den Punkt (auch nach dem Neuladen)', async ({ browser, request }, info) => {
   const { cardId, title, connyId } = await setup(request);
   const context = await browser.newContext({ baseURL: String(info.project.use.baseURL), extraHTTPHeaders: connyHeaders, colorScheme: 'dark' });
   const conny = await context.newPage();
@@ -34,7 +34,7 @@ test('Glocke: ein Stups an mich setzt den Punkt, Blatt und Banner zeigen ihn, ei
     await conny.goto('/');
     await conny.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
     await expect(conny.getByRole('heading', { name: 'Aufgaben', exact: true })).toBeVisible();
-    // (frühere Läufe haben Conny schon gestupst: der Punkt kann schon da sein, darum zählt unten die neue Karte im Blatt)
+    // (frühere Läufe haben Conny schon gestupst: der Punkt kann schon da sein, darum zählt unten die neue Aufgabe im Blatt)
 
     // Rene stupst Conny
     const sent = await request.post(`/api/cards/${cardId}/nudge`, { data: { to: [connyId], template: 'today' } });
@@ -47,7 +47,7 @@ test('Glocke: ein Stups an mich setzt den Punkt, Blatt und Banner zeigen ihn, ei
     await expect(conny.getByTestId('bell')).toHaveAccessibleName(/^Mitteilungen, \d+ ungelesen$/);
     await expect(conny.getByRole('button', { name: /Rene stupst dich!/ })).toBeVisible();
 
-    // Das Blatt zeigt den Stups mit der Karte; ein Tipp öffnet die Karte
+    // Das Blatt zeigt den Stups mit der Aufgabe; ein Tipp öffnet die Aufgabe
     await conny.getByTestId('bell').click();
     const sheet = conny.getByTestId('notifications');
     await expect(sheet).toContainText('Rene stupst dich 👋');
@@ -120,7 +120,7 @@ test('Ein Kommentar von Rene erscheint bei Conny als Mitteilung mit Punkt; Rene 
   }
 });
 
-test('Kind: die Mitteilungen zeigen nur Eigenes, nichts von fremden Karten und Boards', async ({ browser, request }, info) => {
+test('Kind: die Mitteilungen zeigen nur Eigenes, nichts von fremden Aufgaben und Boards', async ({ browser, request }, info) => {
   const tag = Date.now().toString(36);
   const kid = (await (await request.post('/api/access/people', { data: { name: `Kind${tag}`, haUserId: `ha-kid-${tag}` } })).json()) as { id: string };
   await request.patch(`/api/access/people/${kid.id}`, { data: { isChild: true, childScope: 'assigned', quietOff: true } });
@@ -129,7 +129,7 @@ test('Kind: die Mitteilungen zeigen nur Eigenes, nichts von fremden Karten und B
     const b = (await (await request.post('/api/boards', { data: { name: `${name} ${tag}` } })).json()) as { id: string };
     boards.push(b.id);
     const col = ((await (await request.get(`/api/boards/${b.id}`)).json()) as { columns: { id: string }[] }).columns[0]!.id;
-    const c = (await (await request.post(`/api/boards/${b.id}/cards`, { data: { title: `${name} Karte ${tag}`, columnId: col, assigneeIds: assignees } })).json()) as { id: string };
+    const c = (await (await request.post(`/api/boards/${b.id}/cards`, { data: { title: `${name} Aufgabe ${tag}`, columnId: col, assigneeIds: assignees } })).json()) as { id: string };
     await request.post(`/api/cards/${c.id}/comments`, { data: { text: `Kommentar zu ${name}` } });
     return c.id;
   };
@@ -148,8 +148,8 @@ test('Kind: die Mitteilungen zeigen nur Eigenes, nichts von fremden Karten und B
     await expect(page.getByTestId('bell-dot')).toBeVisible({ timeout: 20_000 });
     await page.getByTestId('bell').click();
     const sheet = page.getByTestId('notifications');
-    await expect(sheet).toContainText(`Eigene Karte ${tag}`);
-    await expect(sheet).not.toContainText(`Fremde Karte ${tag}`);
+    await expect(sheet).toContainText(`Eigene Aufgabe ${tag}`);
+    await expect(sheet).not.toContainText(`Fremde Aufgabe ${tag}`);
     await expect(sheet).not.toContainText('Kommentar zu Fremde');
   } finally {
     await context.close();

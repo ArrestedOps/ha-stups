@@ -67,7 +67,7 @@ export interface NtfyDeps {
 
 const PRIORITY = { 'time-sensitive': 4, active: 3, passive: 2 } as const;
 
-/** Push über einen ntfy-Server (https://ntfy.sh): ein Thema je Person, Link zur Karte, Knöpfe, die über Stups zurückmelden */
+/** Push über einen ntfy-Server (https://ntfy.sh): ein Thema je Person, Link zur Aufgabe, Knöpfe, die über Stups zurückmelden */
 export function createNtfyPush(deps: NtfyDeps): PushGateway {
   const doFetch = deps.fetch ?? fetch;
   const { config } = deps;
@@ -114,7 +114,7 @@ export function createNtfyPush(deps: NtfyDeps): PushGateway {
       }
     } else if (!warnedUrl) {
       warnedUrl = true;
-      deps.log?.warn('STUPS_PUBLIC_URL fehlt: Nachrichten über ntfy kommen ohne Link zur Karte und ohne Knöpfe');
+      deps.log?.warn('STUPS_PUBLIC_URL fehlt: Nachrichten über ntfy kommen ohne Link zur Aufgabe und ohne Knöpfe');
     }
     return out;
   }

@@ -22,10 +22,10 @@ describe('Prüfer für den Quelltext', () => {
   it('findet t() und tn(), aber nichts, was nur so ähnlich aussieht', () => {
     const src = [
       "const a = t('Neu');",
-      '{t("Karte „{title}“", { title })}',
+      '{t("Aufgabe „{title}“", { title })}',
       "x.t('nicht')",
       "format('nein')",
-      "const b = tn('{n} Karte', '{n} Karten', n);",
+      "const b = tn('{n} Aufgabe', '{n} Aufgaben', n);",
       'const c = t(`Hallo ${name}`);',
       "const d = t('Es ist \\'so\\'');",
       "const e = tx('Wiederholung', 'Alle');",
@@ -33,8 +33,8 @@ describe('Prüfer für den Quelltext', () => {
     ].join('\n');
     expect(extract(src)).toEqual([
       { key: 'Neu', plural: false },
-      { key: 'Karte „{title}“', plural: false },
-      { key: '{n} Karte', plural: true },
+      { key: 'Aufgabe „{title}“', plural: false },
+      { key: '{n} Aufgabe', plural: true },
       { key: "Es ist 'so'", plural: false },
       { key: 'Wiederholung|Alle', plural: false },
     ]);

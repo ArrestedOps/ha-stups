@@ -1,6 +1,6 @@
 import type { Card } from './api';
 
-/** Was in der einen Zeile unter dem Titel einer Karte steht, in dieser Reihenfolge (was nicht passt, wird hinten abgeschnitten) */
+/** Was in der einen Zeile unter dem Titel einer Aufgabe steht, in dieser Reihenfolge (was nicht passt, wird hinten abgeschnitten) */
 export type MetaItem =
   | { kind: 'done'; text: string }
   | { kind: 'due'; text: string; overdue: boolean }
@@ -20,7 +20,7 @@ export interface MetaFormat {
   recurrence: (rule: NonNullable<Card['recurrence']>) => string;
 }
 
-/** Farbe der Priorität auf der Karte: hoch leuchtet rot, mittel ist orange */
+/** Farbe der Priorität auf der Aufgabe: hoch leuchtet rot, mittel ist orange */
 export function priorityTone(level: 'medium' | 'high'): { text: string; glow: boolean } {
   return level === 'high' ? { text: 'text-danger', glow: true } : { text: 'text-accent-text', glow: false };
 }
@@ -34,7 +34,7 @@ export function categoryFg(color: string): string {
 }
 
 /**
- * `opts.categories`: die Kategorien der Karte. Die erste steht (mit Farbpunkt) nach Termin, Wächter und Wiederholung, bei mehreren mit der
+ * `opts.categories`: die Kategorien der Aufgabe. Die erste steht (mit Farbpunkt) nach Termin, Wächter und Wiederholung, bei mehreren mit der
  * Zahl der übrigen. Wer zuständig ist, zeigen die Bilder rechts in der Zeile, nicht diese Zeile.
  */
 export function cardMeta(card: MetaCard, state: { overdue: boolean; isDone: boolean }, fmt: MetaFormat, opts: { categories?: { name: string; color: string }[] } = {}): MetaItem[] {

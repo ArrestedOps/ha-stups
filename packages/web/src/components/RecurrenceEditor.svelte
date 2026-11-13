@@ -44,13 +44,13 @@
     value: Recurrence | null;
     /** Ohne Termin legt die Wahl einer Regel den ersten Termin automatisch fest (zweites Argument von `onchange`) */
     dueAt: string | null;
-    /** Felder, die die nächste Karte übernimmt */
+    /** Felder, die die nächste Aufgabe übernimmt */
     carryOver: CarryField[];
     onchange: (rule: Recurrence | null, autoDue?: string) => void;
     oncarry: (fields: CarryField[]) => unknown;
   } = $props();
 
-  // Die eigene Wahl gilt, bis das Speichern durch ist: Zwei schnelle Klicks rechnen sonst beide vom alten Stand der Karte, und der zweite
+  // Die eigene Wahl gilt, bis das Speichern durch ist: Zwei schnelle Klicks rechnen sonst beide vom alten Stand der Aufgabe, und der zweite
   // überschreibt den ersten. Gespeichert wird nacheinander, damit die letzte Wahl auch die ist, die der Server behält.
   let chosen = $state<CarryField[] | null>(null);
   const shownCarry = $derived(chosen ?? carryOver);
@@ -358,8 +358,8 @@
   {/if}
 
   {#if editor.mode !== 'none'}
-    <fieldset class="rounded-xl border border-line px-3 py-2" aria-label={t('Für die nächste Karte übernehmen')}>
-      <legend class="px-1 text-[13px] font-semibold text-fg2">{t('Für die nächste Karte übernehmen')}</legend>
+    <fieldset class="rounded-xl border border-line px-3 py-2" aria-label={t('Für die nächste Aufgabe übernehmen')}>
+      <legend class="px-1 text-[13px] font-semibold text-fg2">{t('Für die nächste Aufgabe übernehmen')}</legend>
       {#each CARRY_OPTIONS as o (o.field)}
         <label class="flex min-h-10 items-center justify-between gap-3 text-[15px]">
           <span>{o.label}{#if o.hint}<span class="text-fg2"> · {o.hint}</span>{/if}</span>
@@ -367,13 +367,13 @@
             type="checkbox"
             class="h-5 w-5 accent-[var(--accent)]"
             checked={shownCarry.includes(o.field)}
-            aria-label={t('{label} in die nächste Karte übernehmen', { label: o.label })}
+            aria-label={t('{label} in die nächste Aufgabe übernehmen', { label: o.label })}
             onchange={(e) => carry(o.field, e.currentTarget.checked)}
           />
         </label>
       {/each}
       <p class="mt-1 mb-1 text-[13px] text-fg2">
-        {t('Titel, Zuständige, Kategorien, Priorität und Erinnerungen kommen immer mit. Beim Erledigen bleibt die jetzige Karte mit allem in „Erledigt“, die nächste wird neu angelegt.')}
+        {t('Titel, Zuständige, Kategorien, Priorität und Erinnerungen kommen immer mit. Beim Erledigen bleibt die jetzige Aufgabe mit allem in „Erledigt“, die nächste wird neu angelegt.')}
       </p>
     </fieldset>
   {/if}

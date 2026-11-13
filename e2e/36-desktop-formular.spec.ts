@@ -38,7 +38,7 @@ async function setup(request: APIRequestContext) {
 }
 type S = Awaited<ReturnType<typeof setup>>;
 
-/** Reiter Wächter öffnen (das Board der Karte ist vorgewählt) */
+/** Reiter Wächter öffnen (das Board der Aufgabe ist vorgewählt) */
 async function openList(page: Page, s: S) {
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), s.boardId);
   await page.goto('/');
@@ -63,14 +63,14 @@ async function pickEntity(page: Page, search: string, name: RegExp) {
 async function fillBelow(page: Page, s: S, o: { threshold: string; wait: string; title: string }) {
   await desk(page).getByLabel('Schwellwert').fill(o.threshold);
   await desk(page).getByLabel('Wartezeit in Minuten').fill(o.wait);
-  await desk(page).getByLabel('Titel der Karte').fill(o.title);
+  await desk(page).getByLabel('Titel der Aufgabe').fill(o.title);
   await page.getByTestId('desk-then').getByLabel('Board', { exact: true }).selectOption(s.boardId);
 }
 
 test('Der Knopf klappt das Formular über der Liste auf und zu, die Liste rutscht nach unten; Fokus im Feld, X und Escape klappen zu', async ({ page, request }) => {
   const s = await setup(request);
   await request.post('/api/watchers', {
-    data: { name: `Zeile ${s.tag}`, trigger: { entityId: 'sensor.bad_batterie', kind: 'below', value: 5, forMin: 10 }, card: { boardId: s.boardId, columnId: s.columnId, title: `Karte ${s.tag}`, due: { kind: 'none' } }, assign: { mode: 'fixed', personIds: [s.rene.id] }, category: 'Batterien' },
+    data: { name: `Zeile ${s.tag}`, trigger: { entityId: 'sensor.bad_batterie', kind: 'below', value: 5, forMin: 10 }, card: { boardId: s.boardId, columnId: s.columnId, title: `Aufgabe ${s.tag}`, due: { kind: 'none' } }, assign: { mode: 'fixed', personIds: [s.rene.id] }, category: 'Batterien' },
   });
   await openList(page, s);
   await expect(page.getByTestId('watchers-summary')).toContainText('1 Wächter');
@@ -196,7 +196,7 @@ test('Vorschläge: drei Chips und „+N“; ein Chip füllt vor (Kategorie vorge
   await expect(chips.getByRole('button', { pressed: true })).toHaveCount(1);
   await expect(page.getByTestId('desk-entity-id')).toBeVisible();
   await expect(page.getByTestId('category-suggested')).toBeVisible();
-  await expect(desk(page).getByLabel('Titel der Karte')).not.toHaveValue('');
+  await expect(desk(page).getByLabel('Titel der Aufgabe')).not.toHaveValue('');
 
   // „+N“: die ganze Liste, nach Vorlage gruppiert; Einrichten auf „Bad Fenster“ füllt die Batterie-Vorlage vor
   await more.click();
@@ -210,7 +210,7 @@ test('Vorschläge: drei Chips und „+N“; ein Chip füllt vor (Kategorie vorge
   await expect(page.getByTestId('category-field').locator('select')).toHaveValue('Batterien');
   await expect(page.getByTestId('category-suggested')).toBeVisible();
   await expect(desk(page).getByTestId('desk-name')).toHaveValue('Batterie schwach');
-  await expect(desk(page).getByLabel('Titel der Karte')).toHaveValue('Batterie wechseln');
+  await expect(desk(page).getByLabel('Titel der Aufgabe')).toHaveValue('Batterie wechseln');
   await expect(page.getByTestId('category-suggested')).toBeVisible();
 });
 
@@ -219,14 +219,14 @@ test('Von Hand geänderter Name und Titel bleiben, auch wenn danach eine andere 
   await openList(page, s);
   await openDesk(page);
   await pickEntity(page, 'bad fenster', /Bad Fenster Batterie/);
-  await desk(page).getByLabel('Titel der Karte').fill('Mein eigener Titel');
+  await desk(page).getByLabel('Titel der Aufgabe').fill('Mein eigener Titel');
   await desk(page).getByTestId('desk-name').fill('Mein Name');
   await pickEntity(page, 'trockner', /Steckdose Trockner/);
-  await expect(desk(page).getByLabel('Titel der Karte')).toHaveValue('Mein eigener Titel');
+  await expect(desk(page).getByLabel('Titel der Aufgabe')).toHaveValue('Mein eigener Titel');
   await expect(desk(page).getByTestId('desk-name')).toHaveValue('Mein Name');
 });
 
-test('Zustand schon erreicht: dieselbe Rückfrage wie im Assistenten; „Nein“ legt keine Karte an, „Ja“ genau eine', async ({ page, request }) => {
+test('Zustand schon erreicht: dieselbe Rückfrage wie im Assistenten; „Nein“ legt keine Aufgabe an, „Ja“ genau eine', async ({ page, request }) => {
   const s = await setup(request);
   const door = `binary_sensor.formular_${s.tag}`;
   await setState(request, door, 'off', { friendly_name: `Formular Tür ${s.tag}` });
@@ -238,7 +238,7 @@ test('Zustand schon erreicht: dieselbe Rückfrage wie im Assistenten; „Nein“
     await pickEntity(page, `formular tür ${s.tag}`, /Formular Tür/);
     await page.getByRole('radiogroup', { name: 'Bedingung' }).getByRole('radio', { name: 'ist' }).click();
     await desk(page).getByLabel('Zielzustand').fill('off');
-    await desk(page).getByLabel('Titel der Karte').fill(title);
+    await desk(page).getByLabel('Titel der Aufgabe').fill(title);
     await page.getByTestId('desk-then').getByLabel('Board', { exact: true }).selectOption(s.boardId);
     await page.getByTestId('desk-submit').click();
     await expect(page.getByText('Wächter gespeichert').first()).toBeVisible();
@@ -247,7 +247,7 @@ test('Zustand schon erreicht: dieselbe Rückfrage wie im Assistenten; „Nein“
   await create();
   const ask = page.getByRole('alertdialog');
   await expect(desk(page)).toHaveCount(0);
-  await expect(ask).toContainText(`Formular Tür ${s.tag} ist gerade aus – die Bedingung ist also schon erfüllt. Soll jetzt eine Karte „${title}“ erstellt werden?`);
+  await expect(ask).toContainText(`Formular Tür ${s.tag} ist gerade aus – die Bedingung ist also schon erfüllt. Soll jetzt eine Aufgabe „${title}“ erstellt werden?`);
   await ask.getByRole('button', { name: 'Nein, erst beim nächsten Mal' }).click();
   await expect(ask).toHaveCount(0);
   expect(await cardsOf(request, s.boardId)).toHaveLength(0);
@@ -257,12 +257,12 @@ test('Zustand schon erreicht: dieselbe Rückfrage wie im Assistenten; „Nein“
   await page.reload();
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await create();
-  await ask.getByRole('button', { name: 'Ja, Karte erstellen' }).click();
-  await expect(page.getByText('Karte angelegt', { exact: true })).toBeVisible();
+  await ask.getByRole('button', { name: 'Ja, Aufgabe erstellen' }).click();
+  await expect(page.getByText('Aufgabe angelegt', { exact: true })).toBeVisible();
   await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([`${title}: Formular Tür ${s.tag}`]);
 });
 
-test('Batterie unter der Grenze: keine Frage, die Karte kommt sofort', async ({ page, request }) => {
+test('Batterie unter der Grenze: keine Frage, die Aufgabe kommt sofort', async ({ page, request }) => {
   const s = await setup(request);
   // eine vorhandene Batterie (keine neue Entität: „Gefunden“ in anderen Specs zählt die Batterien)
   await setState(request, 'sensor.iphone_rene_battery_level', '14');
@@ -281,14 +281,14 @@ test('Eingaben gehen beim Zuklappen verloren, aber vorher fragt die App (X, Knop
   const s = await setup(request);
   await openList(page, s);
   await openDesk(page);
-  await desk(page).getByLabel('Titel der Karte').fill(`Entwurf ${s.tag}`);
+  await desk(page).getByLabel('Titel der Aufgabe').fill(`Entwurf ${s.tag}`);
   const ask = page.getByRole('alertdialog');
 
   await page.getByTestId('desk-close').click();
   await expect(ask).toContainText('Entwurf verwerfen?');
   await ask.getByRole('button', { name: 'Weiter bearbeiten' }).click();
   await expect(ask).toHaveCount(0);
-  await expect(desk(page).getByLabel('Titel der Karte')).toHaveValue(`Entwurf ${s.tag}`);
+  await expect(desk(page).getByLabel('Titel der Aufgabe')).toHaveValue(`Entwurf ${s.tag}`);
 
   await page.getByTestId('new-watcher').click();
   await expect(ask).toBeVisible();
@@ -296,14 +296,14 @@ test('Eingaben gehen beim Zuklappen verloren, aber vorher fragt die App (X, Knop
   await expect(ask).toHaveCount(0);
   await expect(desk(page)).toBeVisible();
 
-  await desk(page).getByLabel('Titel der Karte').focus();
+  await desk(page).getByLabel('Titel der Aufgabe').focus();
   await page.keyboard.press('Escape');
   await expect(ask).toBeVisible();
   await ask.getByRole('button', { name: 'Verwerfen' }).click();
   await expect(desk(page)).toHaveCount(0);
   // ein neuer Entwurf ist leer
   await openDesk(page);
-  await expect(desk(page).getByLabel('Titel der Karte')).toHaveValue('');
+  await expect(desk(page).getByLabel('Titel der Aufgabe')).toHaveValue('');
 });
 
 test('Gefunden: „Einrichten“ am Desktop öffnet das Formular mit vorbelegten Werten (kein Fenster mit Schritten)', async ({ page, request }) => {
@@ -354,7 +354,7 @@ test('Layout: ab etwa 1340 px zwei Spalten (Vorschau rechts), bei 1024 px eine S
   await openList(page, s);
   await openDesk(page);
   await pickEntity(page, 'flur_schliesszylinder', /sensor\.flur_schliesszylinder/);
-  await desk(page).getByLabel('Titel der Karte').fill(`Ein sehr langer Titel ${'x'.repeat(60)} ${s.tag}`);
+  await desk(page).getByLabel('Titel der Aufgabe').fill(`Ein sehr langer Titel ${'x'.repeat(60)} ${s.tag}`);
   const box = async (id: string) => (await page.getByTestId(id).boundingBox())!;
   const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 
@@ -376,7 +376,7 @@ test('Layout: ab etwa 1340 px zwei Spalten (Vorschau rechts), bei 1024 px eine S
 test('Ohne Recht „Wächter“ gibt es den Knopf nicht (die Liste bleibt lesbar)', async ({ browser, request, baseURL }) => {
   const s = await setup(request);
   await request.post('/api/watchers', {
-    data: { name: `Lesend ${s.tag}`, trigger: { entityId: 'sensor.bad_batterie', kind: 'below', value: 5, forMin: 10 }, card: { boardId: s.boardId, columnId: s.columnId, title: `Karte ${s.tag}`, due: { kind: 'none' } }, assign: { mode: 'fixed', personIds: [s.rene.id] } },
+    data: { name: `Lesend ${s.tag}`, trigger: { entityId: 'sensor.bad_batterie', kind: 'below', value: 5, forMin: 10 }, card: { boardId: s.boardId, columnId: s.columnId, title: `Aufgabe ${s.tag}`, due: { kind: 'none' } }, assign: { mode: 'fixed', personIds: [s.rene.id] } },
   });
   const ctx = await browser.newContext({
     baseURL: String(baseURL),

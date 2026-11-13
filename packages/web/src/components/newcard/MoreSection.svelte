@@ -6,7 +6,7 @@
   import Icon from '../Icon.svelte';
 
   /**
-   * „Mehr" beim Anlegen: Checkliste, Links und Anhänge. Die Listen gehören der Karte (der Aufrufer legt sie nach dem Anlegen an);
+   * „Mehr" beim Anlegen: Checkliste, Links und Anhänge. Die Listen gehören der Aufgabe (der Aufrufer legt sie nach dem Anlegen an);
    * `flush()` übernimmt, was getippt, aber noch nicht bestätigt ist.
    */
   let {

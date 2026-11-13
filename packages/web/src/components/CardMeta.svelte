@@ -9,8 +9,8 @@
   import Icon from './Icon.svelte';
 
   /**
-   * Die Meta-Zeile unter dem Titel einer Karte wie im Mockup: Symbol und Text, getrennt durch „•"
-   * („Mo, 27. Jan • Ben • 0/3 • 1"). Eine Zeile; was nicht passt, wird hinten abgeschnitten. Alles Weitere steht im Karten-Fenster.
+   * Die Meta-Zeile unter dem Titel einer Aufgabe wie im Mockup: Symbol und Text, getrennt durch „•"
+   * („Mo, 27. Jan • Ben • 0/3 • 1"). Eine Zeile; was nicht passt, wird hinten abgeschnitten. Alles Weitere steht im Aufgaben-Fenster.
    * `quietDue`: ein überfälliger Termin wird nicht rot (in Aufgaben sagt das die Gruppe „Überfällig").
    */
   let {
@@ -26,7 +26,7 @@
     card: Card;
     done?: boolean;
     overdue?: boolean;
-    /** die Kategorien der Karte: die erste steht mit Farbpunkt in der Zeile, alle als Text für Vorlese-Programme */
+    /** die Kategorien der Aufgabe: die erste steht mit Farbpunkt in der Zeile, alle als Text für Vorlese-Programme */
     categories?: { id: string; name: string; color: string }[];
     quietDue?: boolean;
     /** der Name des Boards mit Farbpunkt am Ende (Aufgaben über alle Boards) */

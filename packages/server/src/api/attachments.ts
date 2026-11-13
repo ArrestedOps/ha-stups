@@ -17,9 +17,9 @@ export async function registerAttachmentRoutes(app: FastifyInstance, k: ApiKit):
   app.post<{ Params: Params }>('/api/cards/:id/attachments', async (req, reply) => {
     const files = deps.files;
     if (!files) throw new AppError(t('Die Dateiablage ist nicht verfügbar'), 501);
-    const existing = store.getCard(req.params.id).attachments; // unbekannte Karte: sofort 404
+    const existing = store.getCard(req.params.id).attachments; // unbekannte Aufgabe: sofort 404
     const card = { files: existing.length, bytes: existing.reduce((n, a) => n + a.size, 0) };
-    // Obergrenzen vor dem Lesen: je Karte und je Person (Kinder dürfen hochladen, jeder Upload hält bis zu zwei Dateien im Speicher)
+    // Obergrenzen vor dem Lesen: je Aufgabe und je Person (Kinder dürfen hochladen, jeder Upload hält bis zu zwei Dateien im Speicher)
     const who = req.user?.id ?? 'anonym';
     const release = quota.begin(who, card);
     try {
@@ -46,7 +46,7 @@ export async function registerAttachmentRoutes(app: FastifyInstance, k: ApiKit):
     }
     if (!file) throw new ValidationError(t('Es fehlt die Datei'));
     if (quota.wouldExceedCard(card, file.data.length + (thumb?.length ?? 0))) {
-      throw new AppError(t('Die Anhänge dieser Karte sind schon {mb} MB groß, mehr ist nicht erlaubt', { mb: Math.round(quota.limits.cardBytes / 1048576) }), 413);
+      throw new AppError(t('Die Anhänge dieser Aufgabe sind schon {mb} MB groß, mehr ist nicht erlaubt', { mb: Math.round(quota.limits.cardBytes / 1048576) }), 413);
     }
 
     const mime = sniffMime(file.data);

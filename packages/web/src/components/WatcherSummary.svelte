@@ -4,7 +4,7 @@
 
   /**
    * Der Wächter als ein Satz („Wenn die Waschmaschine unter 5 W liegt, bekommt …"): die Zusammenfassung in Schritt 4 und oben im Ablauf.
-   * Nur zum Lesen; geändert wird in den Schritten und Karten. Entität, Schwelle, wer und Karte stehen fett.
+   * Nur zum Lesen; geändert wird in den Schritten und Aufgaben. Entität, Schwelle, wer und Aufgabe stehen fett.
    */
   let { form, personName }: { form: WatcherForm; personName: (id: string) => string } = $props();
   const parts = $derived(summaryParts(form, personName));

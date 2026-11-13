@@ -6,7 +6,7 @@ import { conditionText, pausedText } from './watchers';
 /**
  * Die Ansicht „Wächter": Wer steht wo? Jeder Wächter steht genau einmal. Oben die aktuellen (Wartet, Läuft, Bald), darunter alle übrigen
  * nach Kategorie, „Ohne Kategorie" ganz unten. Ein ausgeschalteter Wächter bleibt sichtbar (in seiner Kategorie); nur seine noch offene
- * Karte steht, solange sie wartet, oben. Der Klappzustand der Kategorien wird je Gerät gemerkt (Standard: aufgeklappt).
+ * Aufgabe steht, solange sie wartet, oben. Der Klappzustand der Kategorien wird je Gerät gemerkt (Standard: aufgeklappt).
  */
 
 export interface WatcherGroup {
@@ -41,7 +41,7 @@ const byName = (a: HomeItem, b: HomeItem): number =>
 const bySince = (list: HomeItem[]): HomeItem[] => [...list].sort((a, b) => (a.since ?? '').localeCompare(b.since ?? '') || byName(a, b));
 
 /**
- * Hat der Wächter ein Problem? `assignees_missing` (legt keine Karten an), `entity_missing` oder `target_missing` (pausiert). Solche Wächter
+ * Hat der Wächter ein Problem? `assignees_missing` (legt keine Aufgaben an), `entity_missing` oder `target_missing` (pausiert). Solche Wächter
  * stehen ganz oben in der Liste, mit rotem Rand und dem Grund als Text.
  */
 export const isProblem = (i: Pick<HomeItem, 'status' | 'entityMissing'>): boolean =>
@@ -54,7 +54,7 @@ export function watcherLayout(items: HomeItem[]): WatcherLayout {
   const soon: HomeItem[] = [];
   const rest: HomeItem[] = [];
   for (const i of items) {
-    // Ein ausgeschalteter Wächter läuft nie „gerade" und kommt nicht „bald": nur seine offene Karte wartet weiter
+    // Ein ausgeschalteter Wächter läuft nie „gerade" und kommt nicht „bald": nur seine offene Aufgabe wartet weiter
     if (isProblem(i)) problems.push(i);
     else if (i.phase === 'waiting') waiting.push(i);
     else if (i.phase === 'running' && i.active) running.push(i);
@@ -142,9 +142,9 @@ export type RowStatus = 'noassign' | 'target' | 'missing' | 'off' | 'waiting' | 
 export const rowStatus = (i: Pick<HomeItem, 'entityMissing' | 'active' | 'phase'> & { status?: HomeItem['status'] }): RowStatus =>
   i.status === 'assignees_missing' ? 'noassign' : i.status === 'target_missing' ? 'target' : i.entityMissing || i.status === 'entity_missing' ? 'missing' : !i.active ? 'off' : i.phase;
 
-/** Der Grund eines Problems als Satz für die Zeile („Keine Karten: braucht neue Zuständige"); null: kein Problem */
+/** Der Grund eines Problems als Satz für die Zeile („Keine Aufgaben: braucht neue Zuständige"); null: kein Problem */
 export function problemText(i: Pick<HomeItem, 'status' | 'entityMissing' | 'pausedBy'>): string | null {
-  if (i.status === 'assignees_missing') return t('Keine Karten: braucht neue Zuständige');
+  if (i.status === 'assignees_missing') return t('Keine Aufgaben: braucht neue Zuständige');
   if (i.status === 'target_missing') return pausedText(i);
   if (i.status === 'entity_missing' || i.entityMissing) return t('Entität fehlt');
   return null;
@@ -153,7 +153,7 @@ export function problemText(i: Pick<HomeItem, 'status' | 'entityMissing' | 'paus
 export function statusLabel(s: RowStatus): string {
   switch (s) {
     case 'noassign':
-      return t('Keine Karten');
+      return t('Keine Aufgaben');
     case 'target':
       return t('Pausiert');
     case 'missing':
@@ -185,7 +185,7 @@ export const triggerText = (i: Pick<HomeItem, 'trigger' | 'entity' | 'entityUnit
     forecastHours: String(i.trigger.forecast?.hours ?? 3),
   });
 
-/** Wer die Karte bekommt, als Text: feste Personen mit Namen, sonst die Art der Zuweisung */
+/** Wer die Aufgabe bekommt, als Text: feste Personen mit Namen, sonst die Art der Zuweisung */
 export function whoText(assign: HomeItem['assign'], personName: (id: string) => string): string {
   const names = assign.personIds.map(personName).join(', ');
   if (assign.mode === 'fixed' && names) return names;
@@ -198,11 +198,11 @@ export function whoText(assign: HomeItem['assign'], personName: (id: string) => 
 /**
  * Die Spalten der Tabelle, für Kopf und Zeilen gleich (bündig). Sie richten sich nach der Breite der Liste (Container-Abfrage), nicht nach
  * dem Fenster: Seitenleiste und Detailspalte nehmen Platz weg. Schmal: Wächter, Aktuell, Status, Schalter; ab 700 px dazu die Bedingung;
- * ab 900 px die letzte Auslösung; ab 1100 px die nächste Karte und die Zuständigen. Lieber Spalten ausblenden als quetschen.
+ * ab 900 px die letzte Auslösung; ab 1100 px die nächste Aufgabe und die Zuständigen. Lieber Spalten ausblenden als quetschen.
  */
 export const TABLE_COLS =
   'grid-cols-[minmax(0,1fr)_4.5rem_7rem_3.25rem] @min-[700px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_4.5rem_7rem_3.25rem] @min-[900px]:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_4.5rem_7rem_5.5rem_3.25rem] @min-[1100px]:grid-cols-[minmax(0,1.6fr)_minmax(0,1.3fr)_4.5rem_7rem_5.5rem_minmax(0,1fr)_8rem_3.25rem]';
-/** Spalten, die erst ab 700 px (Bedingung), 900 px (letzte Auslösung) und 1100 px (nächste Karte, Zuständige) erscheinen */
+/** Spalten, die erst ab 700 px (Bedingung), 900 px (letzte Auslösung) und 1100 px (nächste Aufgabe, Zuständige) erscheinen */
 export const COL_MID = 'hidden @min-[700px]:block';
 export const COL_LAST = 'hidden @min-[900px]:block';
 export const COL_WIDE = 'hidden @min-[1100px]:flex';

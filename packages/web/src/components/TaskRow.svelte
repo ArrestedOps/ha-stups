@@ -9,15 +9,15 @@
   import CardTile from './CardTile.svelte';
 
   /**
-   * Eine Karte mit Termin in der Liste von Aufgaben (aus allen Boards), wie im Mockup: Erledigt-Kreis, Kachel, Titel,
-   * Meta-Zeile („Mo, 27. Jan • Ben • 0/3 • 1"), rechts das Bild der Person und der Mehr-Knopf („…", öffnet das Karten-Menü)
+   * Eine Aufgabe mit Termin in der Liste von Aufgaben (aus allen Boards), wie im Mockup: Erledigt-Kreis, Kachel, Titel,
+   * Meta-Zeile („Mo, 27. Jan • Ben • 0/3 • 1"), rechts das Bild der Person und der Mehr-Knopf („…", öffnet das Aufgaben-Menü)
    */
   let { card, nowMs }: { card: ScheduleCard; nowMs: number } = $props();
 
   const done = $derived(!!card.completedAt);
   const overdue = $derived(!done && !!card.dueAt && Date.parse(card.dueAt) < nowMs);
   const assignees = $derived(card.assigneeIds.map(personById).filter((p) => p !== undefined));
-  // Kategorien der Karte (vom Server mitgeliefert): die erste steht mit Farbpunkt in der Zeile
+  // Kategorien der Aufgabe (vom Server mitgeliefert): die erste steht mit Farbpunkt in der Zeile
   const categories = $derived(card.categories ?? []);
 </script>
 

@@ -23,7 +23,7 @@ function setup() {
   return { b, open: v.columns[0]!, done: v.columns[2]! };
 }
 
-/** Karte mit Beschreibung, Kosten, Checkliste, Link, Anhang und Kommentar */
+/** Aufgabe mit Beschreibung, Kosten, Checkliste, Link, Anhang und Kommentar */
 function fullCard(carryOver?: string[]) {
   const { b, open } = setup();
   const card = store.createCard(
@@ -50,7 +50,7 @@ function fullCard(carryOver?: string[]) {
   return { b, card };
 }
 
-describe('Übernahme-Felder einer wiederkehrenden Karte', () => {
+describe('Übernahme-Felder einer wiederkehrenden Aufgabe', () => {
   it('ohne Angabe gilt die Voreinstellung: Beschreibung, Checkliste, Links und Kosten', () => {
     const { card } = fullCard();
     expect(card.carryOver).toEqual(['description', 'checklist', 'links', 'cost']);
@@ -94,7 +94,7 @@ describe('Übernahme-Felder einer wiederkehrenden Karte', () => {
     expect(store.deleteAttachment(next.attachments[0]!.id)).toEqual({ file: 'file-1.jpg', thumb: 'thumb-1.jpg' });
   });
 
-  it('lässt sich bei bestehenden Karten ändern und prüft die Werte', () => {
+  it('lässt sich bei bestehenden Aufgaben ändern und prüft die Werte', () => {
     const { card } = fullCard();
     const upd = store.updateCard(card.id, { carryOver: ['links', 'links', 'cost'] });
     expect(upd.carryOver).toEqual(['links', 'cost']);
@@ -110,7 +110,7 @@ describe('Übernahme-Felder einer wiederkehrenden Karte', () => {
 });
 
 describe('Verlauf und Verkettung', () => {
-  it('die neue Karte zeigt „Aus Wiederholung angelegt" und verweist auf die erledigte', () => {
+  it('die neue Aufgabe zeigt „Aus Wiederholung angelegt" und verweist auf die erledigte', () => {
     const { card } = fullCard();
     const res = store.completeCard(card.id, { by: rene.id, source: 'push' });
     const next = store.getCard(res.nextCardId!);
@@ -119,7 +119,7 @@ describe('Verlauf und Verkettung', () => {
     expect(store.getCard(card.id).repeatedFrom).toBeNull();
   });
 
-  it('eine Kette: jede Wiederholung ist eine eigene Karte, nur die letzte ist offen', () => {
+  it('eine Kette: jede Wiederholung ist eine eigene Aufgabe, nur die letzte ist offen', () => {
     const { b, card } = fullCard();
     let id = card.id;
     for (let i = 0; i < 3; i++) {
@@ -132,7 +132,7 @@ describe('Verlauf und Verkettung', () => {
     expect(cards.filter((c) => c.recurrence !== null)).toHaveLength(1);
   });
 
-  it('Rückgängig nach „nur Fotos geteilt" lässt die Datei der erledigten Karte unangetastet', () => {
+  it('Rückgängig nach „nur Fotos geteilt" lässt die Datei der erledigten Aufgabe unangetastet', () => {
     const { card } = fullCard(['attachments']);
     const res = store.completeCard(card.id, { by: rene.id, source: 'app' });
     store.undoCompletion(res.completionId!);
@@ -145,7 +145,7 @@ describe('Stündlich, Zeitfenster und Toleranz bleiben beim Wiederholen erhalten
   const hourly: Recurrence = { type: 'fixed', freq: 'hourly', every: 3, window: { from: '08:00', to: '20:00' } };
   const tolerant: Recurrence = { type: 'fixed', freq: 'weekly', every: 2, weekdays: [6], lateTolerance: 3 };
 
-  it('Erledigen: Folgekarte mit gleicher Regel und dem berechneten Termin', () => {
+  it('Erledigen: Folgeaufgabe mit gleicher Regel und dem berechneten Termin', () => {
     const { b, open } = setup();
     // jetzt Fr 30.10. 11:00 Berlin; Termin 10:00 Berlin (09:00Z)
     const card = store.createCard(b.id, { columnId: open.id, title: 'Trinken', dueAt: '2026-10-30T09:00:00Z', recurrence: hourly }, rene.id);

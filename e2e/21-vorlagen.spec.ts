@@ -31,7 +31,7 @@ async function openCreate(page: Page) {
   await page.getByRole('button', { name: 'Neues Board erstellen' }).click();
 }
 
-test('neues Board aus der Vorlage „Haushalt": Vorschau, Spalten und Karten kommen mit', async ({ page, request }) => {
+test('neues Board aus der Vorlage „Haushalt": Vorschau, Spalten und Aufgaben kommen mit', async ({ page, request }) => {
   const name = `Haus ${unique()}`;
   await openCreate(page);
   const templates = page.getByRole('radiogroup', { name: 'Vorlage für das neue Board' });
@@ -39,7 +39,7 @@ test('neues Board aus der Vorlage „Haushalt": Vorschau, Spalten und Karten kom
   const preview = page.getByTestId('template-preview');
   await expect(preview).toContainText('4 Spalten');
   await expect(preview).toContainText('5 Kategorien');
-  await expect(preview).toContainText('7 Karten');
+  await expect(preview).toContainText('7 Aufgaben');
 
   await page.getByLabel('Name des neuen Boards').fill(name);
   await page.getByLabel('Name des neuen Boards').press('Enter');
@@ -58,7 +58,7 @@ test('neues Board aus der Vorlage „Haushalt": Vorschau, Spalten und Karten kom
   expect(view.cards.find((c) => c.title === 'Müll rausbringen')).toMatchObject({ effort: 'small' });
   expect(view.cards.find((c) => c.title === 'Müll rausbringen')!.recurrence).not.toBeNull();
 
-  // Die Karte ohne Termin liegt in „Offen" und ist zu sehen
+  // Die Aufgabe ohne Termin liegt in „Offen" und ist zu sehen
   await expect(page.getByRole('button', { name: /Frühjahrsputz/ }).first()).toBeVisible();
 });
 
@@ -84,7 +84,7 @@ test('eigenes Board als Vorlage speichern, daraus ein neues Board anlegen, die V
   const board = (await (await request.post('/api/boards', { data: { name: source } })).json()) as { id: string };
   boardIds.push(board.id);
   const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string }[] };
-  await request.post(`/api/boards/${board.id}/cards`, { data: { title: 'Vorlagen-Karte', columnId: view.columns[0]!.id } });
+  await request.post(`/api/boards/${board.id}/cards`, { data: { title: 'Vorlagen-Aufgabe', columnId: view.columns[0]!.id } });
 
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
   await openSwitcher(page);
@@ -111,7 +111,7 @@ test('eigenes Board als Vorlage speichern, daraus ein neues Board anlegen, die V
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('button', { name: 'Neues Board erstellen' }).click();
   await page.getByRole('radiogroup', { name: 'Vorlage für das neue Board' }).getByRole('radio', { name: tplName }).click();
-  await expect(page.getByTestId('template-preview')).toContainText('0 Karten');
+  await expect(page.getByTestId('template-preview')).toContainText('0 Aufgaben');
   await page.getByLabel('Name des neuen Boards').fill(name);
   await page.getByLabel('Name des neuen Boards').press('Enter');
   await expect(page.getByTestId('board-name')).toHaveText(name);

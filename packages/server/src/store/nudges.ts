@@ -37,7 +37,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
     return r ? toNudge(r) : undefined;
   };
 
-  /** Bis wann die Sperrzeit für dieses Paar an dieser Karte noch gilt (null = darf stupsen) */
+  /** Bis wann die Sperrzeit für dieses Paar an dieser Aufgabe noch gilt (null = darf stupsen) */
   function nudgeCooldownEnd(cardId: string, fromId: string, toId: string, nowMs: number): number | null {
     const last = one('select max(created_at) as t from nudges where card_id = ? and from_user = ? and to_user = ?', cardId, fromId, toId);
     if (!last?.t) return null;
@@ -62,7 +62,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
     const sender = one('select * from users where id = ?', fromId);
     if (!sender || sender.is_person !== 1) throw new ForbiddenError(t('Nur Personen von Stups können stupsen'));
     const card = visibleCardRow(cardId);
-    if (card.completed_at !== null || card.archived_at !== null) throw new ConflictError(t('Die Karte ist schon erledigt'));
+    if (card.completed_at !== null || card.archived_at !== null) throw new ConflictError(t('Die Aufgabe ist schon erledigt'));
 
     if (input.text !== undefined && input.text !== null && typeof input.text !== 'string') {
       throw new ValidationError(t('Der Text muss aus Zeichen bestehen'));
@@ -93,7 +93,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
           continue;
         }
         const to = typeof toId === 'string' ? one('select * from users where id = ?', toId) : undefined;
-        // Wer die Karte nicht sehen darf (privates Board), bekommt keinen Stups zu ihr
+        // Wer die Aufgabe nicht sehen darf (privates Board), bekommt keinen Stups zu ihr
         if (!to || to.is_person !== 1 || !canSeeBoard(toId, card.board_id)) {
           skipped.push({ to: toId, reason: 'no_person', retryAt: null });
           continue;
@@ -132,7 +132,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
     const card = visibleCardRow(cardId);
     const nowMs = now().getTime();
     const assigned = new Set(all('select user_id from card_assignees where card_id = ?', cardId).map((r) => r.user_id as string));
-    // Nur Personen, die das Board der Karte sehen
+    // Nur Personen, die das Board der Aufgabe sehen
     const others = all('select * from users where is_person = 1 and id <> ? order by created_at, rowid', fromId).filter((u) => canSeeBoard(u.id as string, card.board_id as string));
     const targets = others.map((u): NudgeTarget => {
       const cooldown = hasDevice(u) ? nudgeCooldownEnd(cardId, fromId, u.id, nowMs) : null;
@@ -159,7 +159,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
     return targets;
   }
 
-  /** Stupse, die jetzt zugestellt werden sollen (noch nicht beantwortet, Karte offen, Empfänger ist Person) */
+  /** Stupse, die jetzt zugestellt werden sollen (noch nicht beantwortet, Aufgabe offen, Empfänger ist Person) */
   function dueNudges(): DueNudge[] {
     return all(
       `select n.*, c.title as card_title, f.display_name as from_name
@@ -231,7 +231,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
   }
 
   /**
-   * Schließt alle offenen Stupse einer Karte. announce = die Karte wurde erledigt: Wer selbst erledigt hat, hat
+   * Schließt alle offenen Stupse einer Aufgabe. announce = die Aufgabe wurde erledigt: Wer selbst erledigt hat, hat
    * „erledigt" geantwortet, die übrigen sind geschlossen, und die Absender bekommen eine Rückmeldung.
    */
   function closeOpenNudges(cardId: string, byId: string | null, announce: boolean): void {
@@ -252,7 +252,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
   const closeNudgesOfUser = (userId: string) =>
     run("update nudges set reply = 'closed', reply_at = ? where reply is null and (from_user = ? or to_user = ?)", iso(), userId, userId);
 
-  /** Alle, die zu dieser Karte je einen Stups bekommen haben (für das Abräumen der Nachrichten) */
+  /** Alle, die zu dieser Aufgabe je einen Stups bekommen haben (für das Abräumen der Nachrichten) */
   const nudgeRecipients = (cardId: string): string[] =>
     all('select distinct to_user from nudges where card_id = ?', cardId).map((r) => r.to_user as string);
 
@@ -270,7 +270,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
     return { total, byUser };
   }
 
-  /** Offene Stupse mit Karte und Absender (für die Attribute der Sensoren) */
+  /** Offene Stupse mit Aufgabe und Absender (für die Attribute der Sensoren) */
   function openNudgeList(opts: { publicOnly?: boolean } = {}): { toId: string; card: string; from: string; since: string }[] {
     return all(
       `select n.to_user, n.created_at, c.title as card_title, f.display_name as from_name
@@ -318,7 +318,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
     return toUser(userRow(userId));
   }
 
-  /** Verlauf einer Karte aus den Stupsen: der Stups selbst, „Später" und „Mach ich" */
+  /** Verlauf einer Aufgabe aus den Stupsen: der Stups selbst, „Später" und „Mach ich" */
   function nudgeActivity(cardId: string): ActivityEntry[] {
     const out: ActivityEntry[] = [];
     for (const r of all(

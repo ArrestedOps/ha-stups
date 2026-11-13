@@ -36,7 +36,7 @@ describe('Eingebaute Vorlagen', () => {
       expect(new Set(data.categories.map((c) => c.name)).size).toBe(data.categories.length);
     });
 
-    it('Karten: Titel, gültige Verweise, nicht in der Erledigt-Spalte, Termin nur als Tage, Wiederholung nur mit Termin', () => {
+    it('Aufgaben: Titel, gültige Verweise, nicht in der Erledigt-Spalte, Termin nur als Tage, Wiederholung nur mit Termin', () => {
       expect(data.cards.length).toBeGreaterThanOrEqual(3);
       for (const card of data.cards) {
         expect(card.title.trim(), 'Titel').not.toBe('');

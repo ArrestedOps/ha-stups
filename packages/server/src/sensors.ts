@@ -64,7 +64,7 @@ export function createSensors(deps: SensorDeps) {
   async function publish(): Promise<void> {
     const nowMs = deps.now().getTime();
     const tz = deps.timeZone();
-    // Sensoren in Home Assistant liest jeder dort: nur Karten aus Boards, die alle sehen (nie aus privaten oder ausgewählten)
+    // Sensoren in Home Assistant liest jeder dort: nur Aufgaben aus Boards, die alle sehen (nie aus privaten oder ausgewählten)
     const cards = store.openDueCards({ publicOnly: true });
     const overdue = (list: OpenDueCard[]) => list.filter((c) => Date.parse(c.dueAt) < nowMs);
     const today = (list: OpenDueCard[]) =>
@@ -101,11 +101,11 @@ export function createSensors(deps: SensorDeps) {
         icon: 'mdi:hand-wave-outline',
       }),
     );
-    // Offene Karten, die ein Wächter angelegt hat
+    // Offene Aufgaben, die ein Wächter angelegt hat
     writes.push(
       ha.setState(`${sensorPrefix}waechter_offen`, String(store.openWatcherCardCount({ publicOnly: true })), {
-        friendly_name: `${sensorLabel} offene Wächter-Karten`,
-        unit_of_measurement: 'Karten',
+        friendly_name: `${sensorLabel} offene Wächter-Aufgaben`,
+        unit_of_measurement: 'Aufgaben',
         icon: 'mdi:eye-outline',
       }),
     );

@@ -23,7 +23,7 @@
     /** nur ein Symbol: quadratisch (40 × 40, klein 34 × 34) */
     square?: boolean;
     disabled?: boolean;
-    /** Zähler hinter dem Text (zum Beispiel Karten dieser Person) */
+    /** Zähler hinter dem Text (zum Beispiel Aufgaben dieser Person) */
     count?: number;
     /** für Chips, die sich ein- und ausschalten lassen (aria-pressed); ohne Angabe ein einfacher Knopf */
     pressed?: boolean;

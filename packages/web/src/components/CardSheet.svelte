@@ -44,8 +44,8 @@
   import Tile from './ui/Tile.svelte';
 
   /**
-   * `panel`: auf dem Desktop (Aufgaben) steht die Karte in der Detailspalte neben der Liste statt im Sheet: gleicher Inhalt und dieselbe
-   * Logik, aber eine eigene Kopfzeile („Karte“, Schließen) und unten „Stupsen“ und „Erledigt“. Alles speichert sofort.
+   * `panel`: auf dem Desktop (Aufgaben) steht die Aufgabe in der Detailspalte neben der Liste statt im Sheet: gleicher Inhalt und dieselbe
+   * Logik, aber eine eigene Kopfzeile („Aufgabe“, Schließen) und unten „Stupsen“ und „Erledigt“. Alles speichert sofort.
    */
   let { id, panel = false }: { id: string; panel?: boolean } = $props();
   const close = () => (panel ? closeDetail() : closeSheet());
@@ -83,7 +83,7 @@
   let newComment = $state('');
   let linkBusy = $state(false);
 
-  // Eine langsame ältere Antwort darf eine neuere (oder die einer anderen Karte) nicht überschreiben
+  // Eine langsame ältere Antwort darf eine neuere (oder die einer anderen Aufgabe) nicht überschreiben
   const latest = createLatest();
   async function load() {
     try {
@@ -111,7 +111,7 @@
   const firstOpen = $derived(columns.find((c) => !c.isDone) ?? columns[0]);
   const done = $derived(!!card && (column?.isDone ?? false) && card.completedAt !== null);
 
-  // Rolle „Kind": ansehen, eigene Karten abhaken, kommentieren, Fotos und Links anhängen; sonst nichts (der Server prüft es auch)
+  // Rolle „Kind": ansehen, eigene Aufgaben abhaken, kommentieren, Fotos und Links anhängen; sonst nichts (der Server prüft es auch)
   const child = $derived(ui.isChild);
   const mine = $derived(!!card && !!ui.me && card.assigneeIds.includes(ui.me.id));
   const canAct = $derived(!child || mine);
@@ -119,7 +119,7 @@
   const waiting = $derived(!!card && waitingForConfirmation(card));
   const requester = $derived(card ? ui.people.find((p) => p.id === card!.confirmRequestedBy) : undefined);
   const mayAnswer = $derived(waiting && mayConfirm(ui.me, can('confirm'), requester));
-  // Wohin die Karte verschoben werden darf; ihre aktuelle Spalte bleibt immer auswählbar
+  // Wohin die Aufgabe verschoben werden darf; ihre aktuelle Spalte bleibt immer auswählbar
   const targets = $derived(
     card
       ? columns.filter(
@@ -132,7 +132,7 @@
       : columns,
   );
 
-  // Symbol der Karte: antippen öffnet „Symbol wählen" (nicht für ein Kind: es ändert keine Karten)
+  // Symbol der Aufgabe: antippen öffnet „Symbol wählen" (nicht für ein Kind: es ändert keine Aufgaben)
   let symbolOpen = $state(false);
   const nudgeNames = $derived(
     card ? card.assigneeIds.filter((pid) => pid !== ui.me?.id).map((pid) => personById(pid)?.displayName ?? t('Jemand')).join(' & ') : '',
@@ -239,7 +239,7 @@
 
 {#snippet content()}
   {#if failed}
-    <p class="py-10 text-center text-fg2">{t('Diese Karte gibt es nicht mehr.')}</p>
+    <p class="py-10 text-center text-fg2">{t('Diese Aufgabe gibt es nicht mehr.')}</p>
   {:else if !card}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
@@ -406,7 +406,7 @@
         {#each card.links as link (link.id)}
           <ListRow title={link.title ?? host(link.url)} href={link.url}>
             {#snippet tile()}<Tile color={link.kind === 'maps' ? 'green' : 'blue'}><Icon name={link.kind === 'maps' ? 'map-pin' : 'link'} size={22} /></Tile>{/snippet}
-            {#snippet meta()}<span class="truncate">{link.kind === 'maps' ? `${t('In Karten öffnen')} · ` : ''}{host(link.url)}</span>{/snippet}
+            {#snippet meta()}<span class="truncate">{link.kind === 'maps' ? `${t('In Aufgaben öffnen')} · ` : ''}{host(link.url)}</span>{/snippet}
             {#snippet right()}
               <span class="flex text-text-soft2"><Icon name="external" size={18} stroke={2} /></span>
               {#if !child}
@@ -524,11 +524,11 @@
       </p>
 
       {#if ui.view && card.costCents !== null && !child}
-        <p class="px-1 text-[13px] text-fg2">{t('Kosten dieser Karte: {amount}', { amount: formatCost(card.costCents) })}</p>
+        <p class="px-1 text-[13px] text-fg2">{t('Kosten dieser Aufgabe: {amount}', { amount: formatCost(card.costCents) })}</p>
       {/if}
       {#if !child}
         <button class="mb-2 min-h-11 w-full text-[15px] text-fg2" onclick={() => removeCard(card!)}>
-          <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Karte löschen')}</span>
+          <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Aufgabe löschen')}</span>
         </button>
       {/if}
     </div>
@@ -536,9 +536,9 @@
 {/snippet}
 
 {#if panel}
-  <section class="flex h-full flex-col overflow-hidden rounded-[20px] border border-line bg-bg max-xl:shadow-[0_16px_48px_rgba(0,0,0,0.5)]" aria-label={t('Karte')}>
+  <section class="flex h-full flex-col overflow-hidden rounded-[20px] border border-line bg-bg max-xl:shadow-[0_16px_48px_rgba(0,0,0,0.5)]" aria-label={t('Aufgabe')}>
     <div class="flex h-14 shrink-0 items-center gap-2 pr-2 pl-4">
-      <h2 class="text-[12px] font-bold tracking-[0.12em] text-fg2 uppercase">{t('Karte')}</h2>
+      <h2 class="text-[12px] font-bold tracking-[0.12em] text-fg2 uppercase">{t('Aufgabe')}</h2>
       <span class="min-w-0 flex-1 truncate text-[13px] font-semibold text-sig-green" aria-live="polite">{saved ? t('Gespeichert') : ''}</span>
       <button class="flex h-10 w-10 items-center justify-center rounded-full text-text-soft hover:bg-surface2" aria-label={t('Schließen')} data-testid="detail-close" onclick={finish}>
         <Icon name="x" size={20} stroke={2} />

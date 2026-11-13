@@ -26,7 +26,7 @@ function setup() {
 const saturday: Recurrence = { type: 'fixed', freq: 'weekly', every: 1, weekdays: [6] };
 
 describe('Erledigen ohne Wiederholung', () => {
-  it('verschiebt die Karte an den Anfang der Erledigt-Spalte und protokolliert', () => {
+  it('verschiebt die Aufgabe an den Anfang der Erledigt-Spalte und protokolliert', () => {
     const { b, open, done } = setup();
     const old = store.createCard(b.id, { columnId: open.id, title: 'alt' }, rene.id);
     store.completeCard(old.id, { by: rene.id, source: 'app' });
@@ -62,7 +62,7 @@ describe('Erledigen ohne Wiederholung', () => {
     expect(store.listCompletions(card.id)).toHaveLength(1);
   });
 
-  it('markiert die Karte auch ohne Erledigt-Spalte als erledigt', () => {
+  it('markiert die Aufgabe auch ohne Erledigt-Spalte als erledigt', () => {
     const { b, open, done } = setup();
     store.updateColumn(done.id, { isDone: false });
     const card = store.createCard(b.id, { columnId: open.id, title: 'x' }, rene.id);
@@ -71,7 +71,7 @@ describe('Erledigen ohne Wiederholung', () => {
     expect(res.card.columnId).toBe(open.id);
   });
 
-  it('eine Karte in die Erledigt-Spalte ziehen erledigt sie, zurückziehen macht es rückgängig', () => {
+  it('eine Aufgabe in die Erledigt-Spalte ziehen erledigt sie, zurückziehen macht es rückgängig', () => {
     const { b, open, done } = setup();
     const card = store.createCard(b.id, { columnId: open.id, title: 'x' }, rene.id);
     const moved = store.moveCard(card.id, { columnId: done.id }, rene.id);
@@ -82,7 +82,7 @@ describe('Erledigen ohne Wiederholung', () => {
     expect(back.archivedAt).toBeNull();
   });
 
-  it('eine wiederkehrende Karte in die Erledigt-Spalte ziehen erledigt sie und legt die nächste Karte an', () => {
+  it('eine wiederkehrende Aufgabe in die Erledigt-Spalte ziehen erledigt sie und legt die nächste Aufgabe an', () => {
     const { b, open, done } = setup();
     const card = store.createCard(
       b.id,
@@ -99,7 +99,7 @@ describe('Erledigen ohne Wiederholung', () => {
 });
 
 describe('Erledigen mit Wiederholung', () => {
-  it('die erledigte Karte landet in „Erledigt", eine neue mit dem nächsten Termin oben in „Offen"', () => {
+  it('die erledigte Aufgabe landet in „Erledigt", eine neue mit dem nächsten Termin oben in „Offen"', () => {
     const { b, open, doing, done } = setup();
     const cat = store.addCategory(b.id, { name: 'Putzen', color: 'blue' });
     const card = store.createCard(
@@ -127,7 +127,7 @@ describe('Erledigen mit Wiederholung', () => {
 
     expect(res.nextDueAt).toBe('2026-10-31T09:00:00.000Z'); // Sa 31.10. 10:00 CET
 
-    // Die erledigte Karte bleibt mit allem, was an ihr hing, in „Erledigt" und wiederholt sich nicht mehr
+    // Die erledigte Aufgabe bleibt mit allem, was an ihr hing, in „Erledigt" und wiederholt sich nicht mehr
     expect(res.card).toMatchObject({
       id: card.id,
       columnId: done.id,
@@ -142,7 +142,7 @@ describe('Erledigen mit Wiederholung', () => {
       dueAt: '2026-10-24T08:00:00.000Z',
     });
 
-    // Die neue Karte trägt den nächsten Termin und die voreingestellten Felder
+    // Die neue Aufgabe trägt den nächsten Termin und die voreingestellten Felder
     const next = store.getCard(res.nextCardId!);
     expect(next).toMatchObject({
       columnId: open.id,
@@ -163,7 +163,7 @@ describe('Erledigen mit Wiederholung', () => {
     expect(order).toEqual([next.id, other.id]); // ganz oben
   });
 
-  it('liegt der nächste Termin nach heute, wartet die neue Karte in „Geplant"', () => {
+  it('liegt der nächste Termin nach heute, wartet die neue Aufgabe in „Geplant"', () => {
     const b = store.createBoard({ name: 'Mit Geplant', withPlanned: true });
     const cols = store.getBoardView(b.id).columns;
     const planned = cols.find((c) => c.isPlanned)!;
@@ -193,7 +193,7 @@ describe('Erledigen mit Wiederholung', () => {
     expect(store.completeCard(card.id, { by: rene.id, source: 'app' }).nextDueAt).toBe('2027-02-14T17:00:00.000Z');
   });
 
-  it('die erledigte Karte wird wie jede andere archiviert, die neue wiederkehrende nicht', () => {
+  it('die erledigte Aufgabe wird wie jede andere archiviert, die neue wiederkehrende nicht', () => {
     const { b, open } = setup();
     const card = store.createCard(
       b.id,
@@ -209,7 +209,7 @@ describe('Erledigen mit Wiederholung', () => {
 });
 
 describe('Rückgängig', () => {
-  it('stellt eine wiederkehrende Karte vollständig wieder her und entfernt die neue Karte', () => {
+  it('stellt eine wiederkehrende Aufgabe vollständig wieder her und entfernt die neue Aufgabe', () => {
     const { b, doing } = setup();
     const card = store.createCard(
       b.id,
@@ -231,12 +231,12 @@ describe('Rückgängig', () => {
     expect(undone.recurrence).toEqual(saturday);
     expect(undone.completedAt).toBeNull();
     expect(store.listCompletions(card.id)).toHaveLength(0);
-    // die neue Karte ist wieder weg
+    // die neue Aufgabe ist wieder weg
     expect(() => store.getCard(res.nextCardId!)).toThrow(NotFoundError);
     expect(store.getBoardView(b.id).cards.map((c) => c.id)).toEqual([card.id]);
   });
 
-  it('lässt sich nicht rückgängig machen, wenn die nächste Karte schon erledigt wurde', () => {
+  it('lässt sich nicht rückgängig machen, wenn die nächste Aufgabe schon erledigt wurde', () => {
     const { b, doing } = setup();
     const card = store.createCard(
       b.id,
@@ -249,7 +249,7 @@ describe('Rückgängig', () => {
     expect(store.getCard(first.nextCardId!).completedAt).not.toBeNull();
   });
 
-  it('stellt eine einmalige Karte wieder her', () => {
+  it('stellt eine einmalige Aufgabe wieder her', () => {
     const { b, open } = setup();
     const card = store.createCard(b.id, { columnId: open.id, title: 'x' }, rene.id);
     const res = store.completeCard(card.id, { by: rene.id, source: 'app' });
@@ -257,7 +257,7 @@ describe('Rückgängig', () => {
     expect(undone).toMatchObject({ columnId: open.id, completedAt: null });
   });
 
-  it('nur die letzte Erledigung einer Karte lässt sich rückgängig machen', () => {
+  it('nur die letzte Erledigung einer Aufgabe lässt sich rückgängig machen', () => {
     const { b, doing } = setup();
     const card = store.createCard(
       b.id,
@@ -273,7 +273,7 @@ describe('Rückgängig', () => {
   });
 });
 
-describe('Rückgängig mit bearbeiteter Folgekarte', () => {
+describe('Rückgängig mit bearbeiteter Folgeaufgabe', () => {
   function erledigt() {
     const { b, doing } = setup();
     const card = store.createCard(
@@ -293,13 +293,13 @@ describe('Rückgängig mit bearbeiteter Folgekarte', () => {
     }
   };
 
-  it('unberührt: die Folgekarte verschwindet wie bisher', () => {
+  it('unberührt: die Folgeaufgabe verschwindet wie bisher', () => {
     const { res, next } = erledigt();
     store.undoCompletion(res.completionId!);
     expect(exists(next)).toBe(false);
   });
 
-  it('ein Kommentar auf der Folgekarte verhindert das Löschen, nichts geht verloren', () => {
+  it('ein Kommentar auf der Folgeaufgabe verhindert das Löschen, nichts geht verloren', () => {
     const { res, next } = erledigt();
     store.addComment(next, rene.id, 'Bitte Fenster mit putzen');
     expect(() => store.undoCompletion(res.completionId!)).toThrow(ConflictError);
@@ -331,7 +331,7 @@ describe('Rückgängig mit bearbeiteter Folgekarte', () => {
 });
 
 describe('Archiv-Job', () => {
-  it('archiviert erledigte Karten nach der Frist des Boards und sonst nicht', () => {
+  it('archiviert erledigte Aufgaben nach der Frist des Boards und sonst nicht', () => {
     const { b, open } = setup();
     const a = store.createCard(b.id, { columnId: open.id, title: 'alt' }, rene.id);
     store.completeCard(a.id, { by: rene.id, source: 'app' });
@@ -354,7 +354,7 @@ describe('Archiv-Job', () => {
     expect(store.archiveDone()).toBe(0);
   });
 
-  it('eine wiederhergestellte Karte aus dem Archiv ist nicht mehr erledigt', () => {
+  it('eine wiederhergestellte Aufgabe aus dem Archiv ist nicht mehr erledigt', () => {
     const { b, open } = setup();
     const a = store.createCard(b.id, { columnId: open.id, title: 'alt' }, rene.id);
     store.completeCard(a.id, { by: rene.id, source: 'app' });

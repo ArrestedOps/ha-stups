@@ -18,13 +18,13 @@ test('Live-Sync: Änderung auf Gerät A erscheint auf Gerät B ohne Neuladen', a
     await expect(b.getByText('Offline')).toHaveCount(0);
 
     const title = `Sync ${Date.now().toString(36)}`;
-    await a.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+    await a.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
     await a.getByLabel('Was steht an?').fill(title);
     await a.getByRole('button', { name: 'Aufgabe anlegen' }).click();
 
     await expect(b.locator('[role=presentation]').filter({ hasText: title })).toBeVisible({ timeout: 8000 });
 
-    // und wieder zurück: A erledigt, B sieht die Karte nicht mehr in „Offen"
+    // und wieder zurück: A erledigt, B sieht die Aufgabe nicht mehr in „Offen"
     await a.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
     await expect(b.locator('[role=presentation]').filter({ hasText: title })).toHaveCount(0, { timeout: 8000 });
   } finally {

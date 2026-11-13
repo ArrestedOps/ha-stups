@@ -25,7 +25,7 @@ async function seed(request: APIRequestContext) {
   return { me, other, tag, boardId: board.id, mk };
 }
 
-test('Aufgaben: meine Karten in Gruppen (Überfällig, Heute, Diese Woche, Später), die der anderen nicht; Erledigen nimmt sie weg', async ({ page, request }) => {
+test('Aufgaben: meine Aufgaben in Gruppen (Überfällig, Heute, Diese Woche, Später), die der anderen nicht; Erledigen nimmt sie weg', async ({ page, request }) => {
   const s = await seed(request);
   const overdue = `Überfällig ${s.tag}`;
   const tomorrow = `Morgen ${s.tag}`;
@@ -57,7 +57,7 @@ test('Aufgaben: meine Karten in Gruppen (Überfällig, Heute, Diese Woche, Spät
   await expect(tasks.getByText(foreign)).toBeVisible();
   await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Meine' }).click();
 
-  // Erledigen per Kreis nimmt die Karte weg
+  // Erledigen per Kreis nimmt die Aufgabe weg
   await tasks.getByRole('checkbox', { name: `„${overdue}“ erledigen` }).click();
   await expect(tasks.getByText(overdue)).toHaveCount(0);
   const done = (await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string; completedAt: string | null }[] };
@@ -126,7 +126,7 @@ test('Aufgaben: „Fairness diese Woche" und „Bei den anderen" führen zu „D
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
-  await page.getByRole('button', { name: /Karten? offen/ }).click();
+  await page.getByRole('button', { name: /Aufgaben? offen/ }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText('Diese Woche', { exact: true }).first()).toBeVisible();
   await expect(dialog.getByTestId('fairness')).toBeVisible();

@@ -24,7 +24,7 @@
     {#each days as d (d.key)}
       <button
         class="flex h-[60px] flex-col items-center justify-center gap-0.5 rounded-[12px] border text-text-soft {d.today ? 'bg-accent-grad border-transparent !text-on-accent' : 'border-stat-line bg-surface'}"
-        aria-label={`${weekdayShort(d.key)} ${d.number}.${d.today ? `, ${t('Heute')}` : ''}${d.dots.length ? `, ${tn('{n} Karte', '{n} Karten', d.dots.length)}` : ''}`}
+        aria-label={`${weekdayShort(d.key)} ${d.number}.${d.today ? `, ${t('Heute')}` : ''}${d.dots.length ? `, ${tn('{n} Aufgabe', '{n} Aufgaben', d.dots.length)}` : ''}`}
         aria-current={d.today ? 'date' : undefined}
         onclick={() => onday(d.key)}
       >

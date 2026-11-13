@@ -131,16 +131,16 @@ describe('Dann: Fälligkeit als Chips', () => {
 });
 
 describe('Zusammenfassung', () => {
-  it('der Satz des Entwurfs: Auslöser, wer, Karte mit Fälligkeit; fett sind Entität, Schwelle, wer und Karte', () => {
+  it('der Satz des Entwurfs: Auslöser, wer, Aufgabe mit Fälligkeit; fett sind Entität, Schwelle, wer und Aufgabe', () => {
     const f = filled({ assignMode: 'rotation_present', doneOn: true, doneEntityId: 'binary_sensor.tuer', doneEntityName: 'Tür der Waschmaschine', doneKind: 'state', doneTo: 'on' });
     expect(summaryText(f, nameOf)).toBe(
-      'Wenn Waschmaschine Leistung länger als 3 Min. unter 5 W liegt, bekommt wer zu Hause ist, reihum die Karte „Waschmaschine ausräumen“ (fällig in 30 Min.). Sie erledigt sich, wenn Tür der Waschmaschine zu „on“ wechselt.',
+      'Wenn Waschmaschine Leistung länger als 3 Min. unter 5 W liegt, bekommt wer zu Hause ist, reihum die Aufgabe „Waschmaschine ausräumen“ (fällig in 30 Min.). Sie erledigt sich, wenn Tür der Waschmaschine zu „on“ wechselt.',
     );
     expect(summaryParts(f, nameOf).filter((p) => p.bold).map((p) => p.text)).toEqual(['Waschmaschine Leistung', '5 W', 'wer zu Hause ist, reihum', '„Waschmaschine ausräumen“']);
   });
 
   it('ohne Fälligkeit und ohne Erledigen kein Zusatz', () => {
-    expect(summaryText(filled({ dueKind: 'none' }), nameOf)).toBe('Wenn Waschmaschine Leistung länger als 3 Min. unter 5 W liegt, bekommt reihum jemand die Karte „Waschmaschine ausräumen“.');
+    expect(summaryText(filled({ dueKind: 'none' }), nameOf)).toBe('Wenn Waschmaschine Leistung länger als 3 Min. unter 5 W liegt, bekommt reihum jemand die Aufgabe „Waschmaschine ausräumen“.');
   });
 
   it('Erledigen mit Schwellwert', () => {
@@ -150,8 +150,8 @@ describe('Zusammenfassung', () => {
 });
 
 describe('Feinschliff-Chips', () => {
-  it('Vorgaben des Entwurfs: Sperrzeit 10, keine zweite Karte, kein Stupsen, erst beim 1. Mal', () => {
-    expect(fineChips(filled()).map((c) => c.label)).toEqual(['Name: Waschmaschine fertig', 'Kategorie: keine', 'Sperrzeit 10 Min.', 'Keine zweite Karte', 'Nicht stupsen', 'Erst beim 1. Mal']);
+  it('Vorgaben des Entwurfs: Sperrzeit 10, keine zweite Aufgabe, kein Stupsen, erst beim 1. Mal', () => {
+    expect(fineChips(filled()).map((c) => c.label)).toEqual(['Name: Waschmaschine fertig', 'Kategorie: keine', 'Sperrzeit 10 Min.', 'Keine zweite Aufgabe', 'Nicht stupsen', 'Erst beim 1. Mal']);
   });
 
   it('der Chip „Kategorie" nennt die gewählte Kategorie', () => {
@@ -162,7 +162,7 @@ describe('Feinschliff-Chips', () => {
 
   it('gesetzte Werte', () => {
     const chips = fineChips(filled({ cooldownMin: '15', dedupe: false, nudgeAfter: '60', count: '3' }));
-    expect(chips.map((c) => c.label)).toEqual(['Name: Waschmaschine fertig', 'Kategorie: keine', 'Sperrzeit 15 Min.', 'Zweite Karte erlaubt', 'Stupsen nach 60 Min.', 'Erst beim 3. Mal']);
+    expect(chips.map((c) => c.label)).toEqual(['Name: Waschmaschine fertig', 'Kategorie: keine', 'Sperrzeit 15 Min.', 'Zweite Aufgabe erlaubt', 'Stupsen nach 60 Min.', 'Erst beim 3. Mal']);
     expect(chips.map((c) => c.key)).toEqual(['name', 'category', 'cooldown', 'dedupe', 'nudge', 'count']);
   });
 
@@ -212,7 +212,7 @@ describe('Satz unter der Dauer', () => {
 import { fromWatcher } from '../src/lib/watchers';
 import type { WatcherItem } from '../src/lib/watcher-types';
 
-describe('Symbol der Karte bleibt beim Bearbeiten erhalten', () => {
+describe('Symbol der Aufgabe bleibt beim Bearbeiten erhalten', () => {
   const item = (icon?: string): WatcherItem =>
     ({
       id: 'w1',

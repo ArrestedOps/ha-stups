@@ -353,7 +353,7 @@ describe('Nachhaken: Planer', () => {
     });
   });
 
-  it('eine neue Karte einer Wiederholung bekommt die Erinnerungen und zählt von vorn', () => {
+  it('eine neue Aufgabe einer Wiederholung bekommt die Erinnerungen und zählt von vorn', () => {
     const c = card({ dueAt: '2026-11-04T09:00:00Z', recurrence: { type: 'fixed', freq: 'daily', every: 1 } });
     store.setReminder(c.id, rene.id, spec({ afterMin: 60, everyMin: 60, max: 4 }));
     const res = store.completeCard(c.id, { by: rene.id, source: 'app' });

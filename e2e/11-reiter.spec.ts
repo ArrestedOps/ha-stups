@@ -95,5 +95,5 @@ test('Die Einstellungen haben keine Zeile „Wächter", die Verwaltung öffnet i
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
-  await expect(page.getByRole('dialog').getByText('Karten, die von selbst aus Home Assistant entstehen')).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('Aufgaben, die von selbst aus Home Assistant entstehen')).toBeVisible();
 });

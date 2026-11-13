@@ -45,14 +45,14 @@ describe('Zurück-Knopf: was er tut, die Eingaben bleiben', () => {
   it('geht Schritt für Schritt zurück und behält das Formular', () => {
     const ed = editor(4);
     ed.form.name = 'Mein Wächter';
-    ed.form.title = 'Meine Karte';
+    ed.form.title = 'Meine Aufgabe';
     ed.goBack();
     expect(ed.step).toBe(3);
     ed.goBack();
     expect(ed.step).toBe(2);
     ed.goBack();
     expect(ed.step).toBe(1);
-    expect(ed.form).toMatchObject({ name: 'Mein Wächter', title: 'Meine Karte' });
+    expect(ed.form).toMatchObject({ name: 'Mein Wächter', title: 'Meine Aufgabe' });
   });
 
   it('schließt zuerst die offene Suche und bleibt im Schritt', () => {

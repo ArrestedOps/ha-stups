@@ -38,7 +38,7 @@ export function chipLabel(token: QuickToken, r: QuickResult, tz: string, nowMs =
   }
 }
 
-/** Was vor dem Anlegen geklärt werden muss: unbekannte oder mehrdeutige Personen (die Karte bekäme sonst keine Zuständigen und keine Erinnerung) */
+/** Was vor dem Anlegen geklärt werden muss: unbekannte oder mehrdeutige Personen (die Aufgabe bekäme sonst keine Zuständigen und keine Erinnerung) */
 export function blockingProblem(r: QuickResult): string | null {
   const bad = r.tokens.find((x) => x.kind === 'person' && x.status !== 'ok');
   if (!bad) return null;

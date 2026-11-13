@@ -4,7 +4,7 @@ import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import type { Card } from './types.js';
 
-/** Eine Karte auf der Startseite „Heute" */
+/** Eine Aufgabe auf der Startseite „Heute" */
 export interface TodayCard {
   id: string;
   title: string;
@@ -12,20 +12,20 @@ export interface TodayCard {
   boardName: string;
   dueAt: string | null;
   assigneeIds: string[];
-  /** Wächter, der die Karte angelegt hat (null: von Hand) */
+  /** Wächter, der die Aufgabe angelegt hat (null: von Hand) */
   watcherId: string | null;
   watcherName: string | null;
   createdAt: string;
-  /** Warum diese Person dran ist („reihum unter allen, die zu Hause sind"); nur bei Karten vom Haus */
+  /** Warum diese Person dran ist („reihum unter allen, die zu Hause sind"); nur bei Aufgaben vom Haus */
   why: string | null;
 }
 
 export interface Today {
-  /** Offene Karten von Wächtern, die mir zugewiesen sind oder noch niemandem (neueste zuerst) */
+  /** Offene Aufgaben von Wächtern, die mir zugewiesen sind oder noch niemandem (neueste zuerst) */
   house: TodayCard[];
-  /** Meine offenen Karten mit Termin bis Ende morgen, nach Termin */
+  /** Meine offenen Aufgaben mit Termin bis Ende morgen, nach Termin */
   mine: TodayCard[];
-  /** Offene Karten der anderen Personen (leer für ein Kind) */
+  /** Offene Aufgaben der anderen Personen (leer für ein Kind) */
   others: { personId: string; open: number }[];
 }
 
@@ -49,11 +49,11 @@ export function createToday(c: Ctx, late: unknown) {
     if (mode === 'rotation_present') return t('reihum unter allen, die zu Hause sind');
     if (mode === 'all_present') return t('weil du zu Hause bist');
     if (mode === 'first_home') return t('weil du als Erste oder Erster heimgekommen bist');
-    if (mode === 'fixed') return t('weil die Karte fest dir zugewiesen ist');
+    if (mode === 'fixed') return t('weil die Aufgabe fest dir zugewiesen ist');
     return null;
   }
 
-  /** Anfang des Tages nach morgen in Ortszeit: bis dahin (ausschließlich) gilt eine Karte als „heute oder morgen" */
+  /** Anfang des Tages nach morgen in Ortszeit: bis dahin (ausschließlich) gilt eine Aufgabe als „heute oder morgen" */
   function endOfTomorrow(nowMs: number, tz: string): number {
     const l = toLocal(nowMs, tz);
     const day = new Date(Date.UTC(l.y, l.m - 1, l.d + 2)); // läuft über Monats- und Jahresgrenzen von selbst über
@@ -62,7 +62,7 @@ export function createToday(c: Ctx, late: unknown) {
 
   function today(userId: string, nowMs = now().getTime(), tz = timeZone()): Today {
     const child = userById(userId)?.isChild === true;
-    // Karten, die auf Bestätigung warten, sind aus Sicht der Person erledigt
+    // Aufgaben, die auf Bestätigung warten, sind aus Sicht der Person erledigt
     // Nur Boards, die diese Person sieht (private Boards anderer erscheinen nie, auch nicht in den Zahlen der anderen)
     const seen = visibleBoardsSql(userId);
     const open = loadCards(
@@ -86,7 +86,7 @@ export function createToday(c: Ctx, late: unknown) {
 
     const mineCard = (card: Card) => card.assigneeIds.includes(userId);
     const house = open
-      // Ein Kind sieht nur Karten vom Haus, die ihm zugewiesen sind; Erwachsene auch die, die noch niemand übernommen hat
+      // Ein Kind sieht nur Aufgaben vom Haus, die ihm zugewiesen sind; Erwachsene auch die, die noch niemand übernommen hat
       .filter((card) => card.watcherId !== null && (mineCard(card) || (!child && card.assigneeIds.length === 0)))
       .sort((a, b) => (a.createdAt === b.createdAt ? 0 : a.createdAt < b.createdAt ? 1 : -1))
       .map((card) => view(card, true));

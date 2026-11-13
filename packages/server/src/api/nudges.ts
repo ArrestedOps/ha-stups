@@ -41,7 +41,7 @@ export function registerNudgeRoutes(app: FastifyInstance, k: ApiKit): void {
       const outcome = await deps.notifier.replyToNudge(nudge.id, me.id, kind);
       return { outcome };
     }
-    if (kind === 'DONE') return reply.code(501).send({ error: 'Erledigen läuft über die Karte' });
+    if (kind === 'DONE') return reply.code(501).send({ error: 'Erledigen läuft über die Aufgabe' });
     const r = store.replyNudge(nudge.id, me.id, kind === 'ACK' ? 'ack' : 'later');
     return { outcome: r.outcome === 'ok' ? (kind === 'ACK' ? 'acked' : 'postponed') : 'stale' };
   });

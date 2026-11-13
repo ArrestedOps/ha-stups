@@ -3,7 +3,7 @@
 
   /**
    * Ein Block im Formular „Neuer Wächter“ am Desktop: Fläche mit Rand, oben eine Nummer in der Akzentfarbe und der Titel („Wenn“, „Dann“,
-   * „Wer bekommt die Karte?“), darunter der Inhalt. Der Block ist eine Region mit dem Titel als Namen.
+   * „Wer bekommt die Aufgabe?“), darunter der Inhalt. Der Block ist eine Region mit dem Titel als Namen.
    */
   let { n, title, testid, children }: { n: number; title: string; testid?: string; children: Snippet } = $props();
   const uid = $props.id();

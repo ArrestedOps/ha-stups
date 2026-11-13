@@ -34,7 +34,7 @@
       </ListRow>
       <ListRow title={t('Archiv')} label={t('Archiv')} onclick={() => openSheet({ type: 'archive' })}>
         {#snippet tile()}<Tile color="gray"><Icon name="archive" size={22} stroke={1.8} /></Tile>{/snippet}
-        {#snippet meta()}{t('erledigte Karten dieses Boards')}{/snippet}
+        {#snippet meta()}{t('erledigte Aufgaben dieses Boards')}{/snippet}
         {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
       </ListRow>
     </div>

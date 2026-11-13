@@ -91,9 +91,9 @@ describe('Agenda auf Englisch', () => {
     setLanguage('en');
     const sections = groupByDay([card('a', '2026-11-01T08:00:00Z'), card('b', '2026-11-02T18:00:00Z'), card('c', '2026-11-02T19:00:00Z'), card('d', '2026-11-03T18:00:00Z')], NOW, TZ);
     expect(sections.map((s) => [s.title, s.sub])).toEqual([
-      ['Overdue', '1 card'],
-      ['Today', 'Mon 2 Nov · 2 cards'],
-      ['Tomorrow', 'Tue 3 Nov · 1 card'],
+      ['Overdue', '1 task'],
+      ['Today', 'Mon 2 Nov · 2 tasks'],
+      ['Tomorrow', 'Tue 3 Nov · 1 task'],
     ]);
     expect(dayLabel('2026-10-31', '2026-11-02')).toBe('Sat 31 Oct');
     expect(dayLabel('2027-01-02', '2026-11-02')).toBe('Sat 2 Jan 2027');

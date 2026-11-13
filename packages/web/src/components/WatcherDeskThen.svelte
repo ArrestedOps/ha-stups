@@ -14,7 +14,7 @@
   import WatcherCategoryField from './WatcherCategoryField.svelte';
 
   /**
-   * „Dann“ im Formular am Desktop: der Titel der Karte (mit Symbol-Kachel) und darunter die Auswahlfelder als Pillen: Board, Spalte, Fällig,
+   * „Dann“ im Formular am Desktop: der Titel der Aufgabe (mit Symbol-Kachel) und darunter die Auswahlfelder als Pillen: Board, Spalte, Fällig,
    * Priorität und Kategorie des Wächters (vorbelegt, mit „vorgeschlagen“, solange sie von der Vorlage oder der Entität stammt). Die Regeln
    * (Fälligkeit, Priorität, Symbol) sind dieselben wie im Assistenten; die Beschreibung steht unter „Mehr Einstellungen“.
    */
@@ -65,7 +65,7 @@
 </script>
 
 <DeskBlock n={2} title={t('Dann')} testid="desk-then">
-  <!-- Titel der Karte mit Symbol (Funken: automatisch erkannt) -->
+  <!-- Titel der Aufgabe mit Symbol (Funken: automatisch erkannt) -->
   <div class="focus-ring-in flex items-center gap-3 rounded-row border border-line bg-bg px-3 py-2">
     <button
       type="button"
@@ -79,8 +79,8 @@
         <span class="bg-accent-grad absolute -right-[5px] -bottom-[5px] flex h-[20px] w-[20px] items-center justify-center rounded-full border-2 border-bg !shadow-none" data-testid="symbol-spark"><Icon name="spark" size={11} fill /></span>
       {/if}
     </button>
-    <label class="sr-only" for="{uid}-title">{t('Titel der Karte')}</label>
-    <input id="{uid}-title" class="min-h-10 min-w-0 flex-1 bg-transparent text-[17px] font-bold outline-none placeholder:text-dim" bind:value={f.title} maxlength="200" placeholder={t('Titel der Karte, z. B. Waschmaschine ausräumen')} autocapitalize="sentences" data-testid="desk-title" />
+    <label class="sr-only" for="{uid}-title">{t('Titel der Aufgabe')}</label>
+    <input id="{uid}-title" class="min-h-10 min-w-0 flex-1 bg-transparent text-[17px] font-bold outline-none placeholder:text-dim" bind:value={f.title} maxlength="200" placeholder={t('Titel der Aufgabe, z. B. Waschmaschine ausräumen')} autocapitalize="sentences" data-testid="desk-title" />
   </div>
 
   <div class="flex flex-wrap items-start gap-2" data-testid="desk-pills">

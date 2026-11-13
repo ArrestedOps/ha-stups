@@ -155,7 +155,7 @@ describe('Zählt zur Fairness (Wächter)', () => {
     expect(patched.body.countsForFairness).toBe(false);
   });
 
-  it('Karten eines Wächters zählen nur, wenn Board UND Wächter zählen', async () => {
+  it('Aufgaben eines Wächters zählen nur, wenn Board UND Wächter zählen', async () => {
     const mk = async (name: string, counts: boolean) => {
       const id = (await call(chef, 'POST', '/api/watchers', input(pub, { name, countsForFairness: counts, assign: { mode: 'fixed', personIds: [ids.anna] } }))).body.id as string;
       await call(chef, 'POST', `/api/watchers/${id}/test`);
@@ -227,7 +227,7 @@ describe('Mitglied aus dem Board entfernen', () => {
     expect(data.get(c).status).toBe('assignees_missing');
   });
 
-  it('assignees_missing: der Wächter bleibt aktiv, legt aber keine Karten an (Lauf im Protokoll), auch Testen und „Jetzt erstellen" nicht', async () => {
+  it('assignees_missing: der Wächter bleibt aktiv, legt aber keine Aufgaben an (Lauf im Protokoll), auch Testen und „Jetzt erstellen" nicht', async () => {
     const { c } = await makeThree();
     await call(rene, 'PATCH', `/api/boards/${bad.board}`, { memberIds: [] });
     expect(data.get(c).active).toBe(true);
@@ -301,8 +301,8 @@ describe('Mitglied aus dem Board entfernen', () => {
   });
 });
 
-describe('Offene Karten eines Wächters in einem Board, das jemand nicht sieht', () => {
-  it('Wächter-Liste und Zuhause zeigen die Karte nicht', async () => {
+describe('Offene Aufgaben eines Wächters in einem Board, das jemand nicht sieht', () => {
+  it('Wächter-Liste und Zuhause zeigen die Aufgabe nicht', async () => {
     store.updateBoard(bad.board, { memberIds: [ids.anna, ids.chef] }, ids.rene);
     const id = (await call(chef, 'POST', '/api/watchers', input(bad, { assign: { mode: 'fixed', personIds: [ids.rene] } }))).body.id as string;
     await call(chef, 'POST', `/api/watchers/${id}/test`);
@@ -335,9 +335,9 @@ describe('Folgen für Wächter im Detail (Plan und Ausführung)', () => {
   }
 
   it('nur Wächter, die auf dieses Board zeigen und lesbar gespeichert sind, zählen (andere Boards, kaputtes JSON)', async () => {
-    const w = await watchersOnBad({ Eigener: rule({ mode: 'fixed', personIds: [ids.rene] }), 'Kaputte Karte': rule(), 'Kaputte Zuweisung': rule() });
+    const w = await watchersOnBad({ Eigener: rule({ mode: 'fixed', personIds: [ids.rene] }), 'Kaputte Aufgabe': rule(), 'Kaputte Zuweisung': rule() });
     await call(chef, 'POST', '/api/watchers', input(pub, { name: 'Anderes Board' }));
-    db.prepare("update watchers set card_json = 'kaputt' where id = ?").run(w['Kaputte Karte']!);
+    db.prepare("update watchers set card_json = 'kaputt' where id = ?").run(w['Kaputte Aufgabe']!);
     db.prepare("update watchers set assign_json = 'kaputt' where id = ?").run(w['Kaputte Zuweisung']!);
     const plan = store.previewBoardAccess(bad.board, { visibility: 'private' }, ids.rene);
     expect(plan.removedIds).toEqual([ids.anna]);
@@ -396,7 +396,7 @@ describe('Folgen für Wächter im Detail (Plan und Ausführung)', () => {
     expect(data.get(w.Fremder!).assign).toMatchObject({ fallback: 'fixed', fallbackPersonId: ids.chef });
   });
 
-  it('beim Ändern verlieren nur die Karten des Boards die Zuständigen; sie zählen als geändert und bekommen eine neue Fassung', () => {
+  it('beim Ändern verlieren nur die Aufgaben des Boards die Zuständigen; sie zählen als geändert und bekommen eine neue Fassung', () => {
     const mk = (target: { board: string; col: string }, title: string, assigneeIds: string[]) => store.createCard(target.board, { columnId: target.col, title, assigneeIds }, ids.rene).id;
     const c1 = mk(bad, 'Eins', [ids.anna, ids.rene]);
     const c2 = mk(bad, 'Zwei', [ids.anna]);

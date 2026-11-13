@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cardTitleWithEntity } from '../src/lib/cardTitle';
 
 // Gegenstück zu den Tests von cardTitleOf im Server (watcher-names-cleanup.test.ts): gleiche Regeln
-describe('Titel der Karte mit dem Namen der Entität (Vorschau im Editor)', () => {
+describe('Titel der Aufgabe mit dem Namen der Entität (Vorschau im Editor)', () => {
   it('hängt den Namen an', () => {
     expect(cardTitleWithEntity('Batterie wechseln', 'below', 'Nuki Türschloss')).toBe('Batterie wechseln: Nuki Türschloss');
     expect(cardTitleWithEntity(' Batterie wechseln ', 'state', 'sensor.nuki')).toBe('Batterie wechseln: sensor.nuki');
@@ -23,6 +23,6 @@ describe('Titel der Karte mit dem Namen der Entität (Vorschau im Editor)', () =
     expect(out.length).toBeLessThanOrEqual(40);
     expect(out.startsWith('Batterie wechseln: ')).toBe(true);
     expect(out.endsWith('…')).toBe(true);
-    expect(cardTitleWithEntity('Ein ziemlich langer Titel einer Karte', 'below', 'Flur', 40)).toBe('Ein ziemlich langer Titel einer Karte');
+    expect(cardTitleWithEntity('Ein ziemlich langer Titel einer Aufgabe', 'below', 'Flur', 40)).toBe('Ein ziemlich langer Titel einer Aufgabe');
   });
 });

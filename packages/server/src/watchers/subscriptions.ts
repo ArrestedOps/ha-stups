@@ -59,7 +59,7 @@ export function createSubscriptions(ctx: Ctx, calls: () => Parts) {
     syncPresenceSubscription();
   }
 
-  /** Das Abo auf „Person kommt nach Hause": nur, solange eine Karte auf die erste Heimkehr wartet */
+  /** Das Abo auf „Person kommt nach Hause": nur, solange eine Aufgabe auf die erste Heimkehr wartet */
   function syncPresenceSubscription(): void {
     const waiting = data.listWaiting();
     if (waiting.length === 0) {

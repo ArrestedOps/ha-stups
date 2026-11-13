@@ -49,7 +49,7 @@ test('Gefunden: Hinweis im Reiter Wächter, Treffer mit Begründung, Wächter au
   await dialog.getByRole('button', { name: 'Weiter: Wer' }).click();
   await dialog.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
   // Schritt 4: der Satz ist schon ausgefüllt
-  await expect(dialog.getByTestId('watcher-sentence')).toContainText('Wenn Steckdose Trockner Leistung länger als 3 Min. unter 5 W liegt, bekommt wer zu Hause ist, reihum die Karte „Wäsche aus dem Trockner holen“');
+  await expect(dialog.getByTestId('watcher-sentence')).toContainText('Wenn Steckdose Trockner Leistung länger als 3 Min. unter 5 W liegt, bekommt wer zu Hause ist, reihum die Aufgabe „Wäsche aus dem Trockner holen“');
   // Ehrlich beim Selbst-Erledigen: der Leistungssensor kann das Ausräumen nicht belegen
   await expect(dialog.getByRole('switch', { name: 'Automatisch erledigen' })).toBeDisabled();
   await expect(dialog.getByTestId('self-note')).toContainText('weiß nicht, ob jemand das Gerät schon ausgeräumt hat');

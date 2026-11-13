@@ -2,18 +2,18 @@ import { api, type Today } from './api';
 import type { ScheduleCard } from './schedule';
 
 const DAY = 86_400_000;
-/** so weit schaut die Liste voraus (Karten ohne Termin kommen in der Liste nicht vor, sie stehen in den Boards) */
+/** so weit schaut die Liste voraus (Aufgaben ohne Termin kommen in der Liste nicht vor, sie stehen in den Boards) */
 export const HORIZON_DAYS = 365 * 5;
 
 /**
- * Die Daten hinter „Aufgaben": heute (Vom Haus, Bei den anderen), offene Karten mit Termin und
+ * Die Daten hinter „Aufgaben": heute (Vom Haus, Bei den anderen), offene Aufgaben mit Termin und
  * zuletzt Erledigtes.
  */
 export const agenda = $state({
   today: null as Today | null,
   open: [] as ScheduleCard[],
   recentDone: [] as ScheduleCard[],
-  /** offene Karten ohne Termin: kommen nur mit dem Filter „Ohne Termin" in die Liste */
+  /** offene Aufgaben ohne Termin: kommen nur mit dem Filter „Ohne Termin" in die Liste */
   undated: [] as ScheduleCard[],
   failed: false,
   loaded: false,
@@ -36,7 +36,7 @@ export async function loadAgenda(): Promise<void> {
       api.today(signal),
       api.schedule({ to }, signal),
       // zuletzt Erledigtes (für „erledigt heute" und auf Wunsch die Gruppe Erledigt): nach dem Datum der Erledigung gefragt,
-      // nicht nach der Fälligkeit (sonst fehlten Karten, die vor Wochen fällig oder ohne Termin waren)
+      // nicht nach der Fälligkeit (sonst fehlten Aufgaben, die vor Wochen fällig oder ohne Termin waren)
       api.schedule({ completedSince: new Date(Date.now() - 7 * DAY).toISOString() }, signal),
       api.schedule({ undated: true }, signal),
     ]);

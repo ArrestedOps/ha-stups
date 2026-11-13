@@ -9,7 +9,7 @@
   import Tile from './ui/Tile.svelte';
 
   /**
-   * „Boards": nur noch die Auswahl (Name, offene Karten, wer es sieht), darunter „Neues Board erstellen", „Board-Einstellungen" und, wenn es
+   * „Boards": nur noch die Auswahl (Name, offene Aufgaben, wer es sieht), darunter „Neues Board erstellen", „Board-Einstellungen" und, wenn es
    * welche gibt, „Archivierte Boards". Oben rechts „Reihenfolge ändern". Die allgemeinen Einstellungen stehen nicht mehr hier (Profil oben).
    */
   const archived = $derived(ui.archivedBoards.length);

@@ -45,7 +45,7 @@
     reminder: ReminderSpec | null;
     onremind: (min: number | null) => unknown;
     onnag: (spec: ReminderSpec | null) => unknown;
-    /** Karte gibt es schon: ohne Termin zählt es ab jetzt (bei einer neuen Karte ab dem Anlegen) */
+    /** Aufgabe gibt es schon: ohne Termin zählt es ab jetzt (bei einer neuen Aufgabe ab dem Anlegen) */
     fromNow?: boolean;
   } = $props();
 

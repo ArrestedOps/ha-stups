@@ -95,7 +95,7 @@ export const ui = $state({
   filter: { categoryIds: [] as string[], onlyMine: false, personIds: [] as string[], nudged: false, search: '' },
   searchOpen: false,
   sheet: null as Sheet,
-  /** Karte, die gerade „hüpft" (nach dem Stupsen) */
+  /** Aufgabe, die gerade „hüpft" (nach dem Stupsen) */
   hop: null as string | null,
   /** Ansicht unten in der Leiste: Aufgaben, Boards oder Wächter */
   tab: 'tasks' as Tab,
@@ -110,7 +110,7 @@ export const ui = $state({
   dragging: false,
   /** ab 1024 px Breite: Seitenleiste, Detailspalte, alle Spalten nebeneinander, Ziehen mit der Maus (App.svelte hält es aktuell) */
   desktop: isDesktop(),
-  /** Desktop, Aufgaben: die Karte in der Detailspalte rechts (statt im Sheet); null: keine gewählt */
+  /** Desktop, Aufgaben: die Aufgabe in der Detailspalte rechts (statt im Sheet); null: keine gewählt */
   detailId: null as string | null,
   /** Desktop: Eingabe im Suchfeld oben (Aufgaben und Wächter; die Boards nutzen filter.search, das Blatt „Filter“ zeigt dasselbe Feld) */
   query: '',

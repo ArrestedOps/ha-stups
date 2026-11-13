@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 describe('kind und spoken an der Nachricht', () => {
-  it('fällige Karte: kind due und ein kurzer Satz mit Namen, deutsch', async () => {
+  it('fällige Aufgabe: kind due und ein kurzer Satz mit Namen, deutsch', async () => {
     store.createCard(boardId, { columnId: openCol, title: 'Bad putzen', dueAt: '2026-11-01T07:00:00Z', assigneeIds: [rene.id] }, rene.id);
     await notifier().tick();
     const m = to(rene.id)[0]!;
@@ -54,7 +54,7 @@ describe('kind und spoken an der Nachricht', () => {
     expect(m.spoken).toBe(`${rene.displayName}, Bad putzen ist fällig.`);
   });
 
-  it('dieselbe Karte in der Sprache des Empfängers (englisch)', async () => {
+  it('dieselbe Aufgabe in der Sprache des Empfängers (englisch)', async () => {
     store.setLanguage(rene.id, { choice: 'en', effective: 'en' });
     store.createCard(boardId, { columnId: openCol, title: 'Bad putzen', dueAt: '2026-11-01T07:00:00Z', assigneeIds: [rene.id] }, rene.id);
     await notifier().tick();
@@ -75,7 +75,7 @@ describe('kind und spoken an der Nachricht', () => {
     expect(nag).toMatchObject({ kind: 'due', spoken: `${conny.displayName}, Müll ist überfällig.` });
   });
 
-  it('Karte vom Wächter zugewiesen: kind watcher', async () => {
+  it('Aufgabe vom Wächter zugewiesen: kind watcher', async () => {
     const card = store.createCard(boardId, { columnId: openCol, title: 'Waschmaschine ausräumen', assigneeIds: [rene.id] }, rene.id);
     await notifier().notifyAssigned({ id: card.id, title: card.title, dueAt: null }, [rene.id]);
     expect(to(rene.id)[0]).toMatchObject({ kind: 'watcher', spoken: `${rene.displayName}, neue Aufgabe: Waschmaschine ausräumen.` });
@@ -89,7 +89,7 @@ describe('kind und spoken an der Nachricht', () => {
     expect(to(rene.id)[0]).toMatchObject({ kind: 'due', spoken: `${rene.displayName}, noch offen: Waschmaschine ausräumen.` });
   });
 
-  it('Stups mit Vorlage: kind nudge, Absender, Karte und Text im Satz, Kennung des Stupses dabei', async () => {
+  it('Stups mit Vorlage: kind nudge, Absender, Aufgabe und Text im Satz, Kennung des Stupses dabei', async () => {
     const card = store.createCard(boardId, { columnId: openCol, title: 'Müll rausbringen', assigneeIds: [rene.id, conny.id] }, rene.id);
     store.createNudges(card.id, rene.id, { to: [conny.id], template: 'think' });
     await notifier().tick();
@@ -101,7 +101,7 @@ describe('kind und spoken an der Nachricht', () => {
   });
 
   it('Stups mit eigenem Text: Sonderzeichen und Emoji fallen weg, lange Titel werden gekürzt', async () => {
-    const longTitle = 'Ein sehr langer Titel für eine Karte, die im Haus laut vorgelesen werden soll und deshalb gekürzt wird';
+    const longTitle = 'Ein sehr langer Titel für eine Aufgabe, die im Haus laut vorgelesen werden soll und deshalb gekürzt wird';
     const card = store.createCard(boardId, { columnId: openCol, title: longTitle, assigneeIds: [rene.id, conny.id] }, rene.id);
     store.createNudges(card.id, rene.id, { to: [conny.id], text: 'Bitte bis 18 Uhr 🙏 <b>danke</b>' });
     await notifier().tick();

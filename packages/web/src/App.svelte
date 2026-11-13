@@ -49,7 +49,7 @@
   onMount(init);
 
   // Aufgaben und die Glocke oben (Punkt für Ungelesenes aus dem Posteingang) laden im selben Takt: Auf „Aufgaben" laden sie bei jeder Änderung neu,
-  // auf den anderen Reitern höchstens alle 30 Sekunden (sonst holte jede Änderung einer Karte zusätzlich alle Termine aller Boards)
+  // auf den anderen Reitern höchstens alle 30 Sekunden (sonst holte jede Änderung einer Aufgabe zusätzlich alle Termine aller Boards)
   let lastAgenda = 0;
   let agendaTimer: ReturnType<typeof setTimeout> | null = null;
   $effect(() => {

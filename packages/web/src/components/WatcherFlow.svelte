@@ -35,8 +35,8 @@
   import Toggle from './ui/Toggle.svelte';
 
   /**
-   * Wächter bearbeiten als Ablauf (Entwurf WaechterC): vier Karten, die von oben nach unten verbunden sind (WENN, DANN KARTE, AN WEN, ERLEDIGT SICH
-   * SELBST), darunter der Feinschliff als Chips. „Ändern" klappt die Einstellungen der Karte auf (dieselben wie im Assistenten). Oben steht der
+   * Wächter bearbeiten als Ablauf (Entwurf WaechterC): vier Aufgaben, die von oben nach unten verbunden sind (WENN, DANN KARTE, AN WEN, ERLEDIGT SICH
+   * SELBST), darunter der Feinschliff als Chips. „Ändern" klappt die Einstellungen der Aufgabe auf (dieselben wie im Assistenten). Oben steht der
    * Satz als Zusammenfassung. Mitglieder sehen alles lesend, auch den Verlauf der Entität.
    */
   let { ed }: { ed: WatcherEditor } = $props();
@@ -58,7 +58,7 @@
   const threshold = $derived(f.kind === 'below' || f.kind === 'above' ? num(f.value) : null);
   const current = $derived(valueText(ed.history?.current ?? ed.item?.entityState ?? null, ed.history?.kind === 'state' ? null : unit));
   const board = $derived(ui.boards.find((b) => b.id === f.boardId));
-  /** Der Titel der Karte, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
+  /** Der Titel der Aufgabe, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
   const shownTitle = $derived(cardTitleWithEntity(f.title, f.kind, f.entityName || f.entityId) || '…');
   const look = $derived({ icon: f.icon || nameSymbol(f.title) || nameSymbol(f.entityName), iconColor: f.iconColor || null });
   const doneParts = $derived<Part[]>(
@@ -76,7 +76,7 @@
         : ed.item.status === 'entity_missing'
           ? t('Entität fehlt')
           : ed.item.status === 'assignees_missing'
-            ? t('Keine Karten: braucht neue Zuständige')
+            ? t('Keine Aufgaben: braucht neue Zuständige')
             : ed.item.status === 'target_missing'
             ? ed.item.pausedBy === 'archived'
               ? t('Board archiviert')
@@ -118,7 +118,7 @@
 
 {#snippet foot()}
   <div class="grid grid-cols-[1fr_1.4fr] gap-2">
-    <CtaButton ghost disabled={ed.busy} onclick={() => ed.test()}><span aria-hidden="true">{t('Testen')}</span><span class="sr-only">{t('Testen: Karte jetzt anlegen')}</span></CtaButton>
+    <CtaButton ghost disabled={ed.busy} onclick={() => ed.test()}><span aria-hidden="true">{t('Testen')}</span><span class="sr-only">{t('Testen: Aufgabe jetzt anlegen')}</span></CtaButton>
     <CtaButton disabled={ed.busy} onclick={() => ed.save()}>{ed.busy ? t('Speichert …') : t('Speichern')}</CtaButton>
   </div>
 {/snippet}
@@ -146,7 +146,7 @@
       {#if missing}
         <div class="flex flex-col gap-2 rounded-row border border-accent bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface))] px-4 py-3" role="alert" data-testid="assignees-missing">
           <p class="text-[15px] font-bold" data-testid="assignees-missing-title">{missingNote}</p>
-          <p class="text-[13px] text-fg2">{t('Wähle neue Zuständige, sonst legt der Wächter keine Karten an.')}</p>
+          <p class="text-[13px] text-fg2">{t('Wähle neue Zuständige, sonst legt der Wächter keine Aufgaben an.')}</p>
           {#if !readOnly}
             <button type="button" class="inline-flex h-11 items-center self-start rounded-xl bg-surface px-4 text-[15px] font-bold" data-testid="choose-assignees" onclick={chooseAssignees}>{t('Zuständige wählen')}</button>
           {/if}
@@ -179,7 +179,7 @@
         <div class="flow-link" aria-hidden="true"></div>
 
         <!-- DANN KARTE -->
-        <section class="flow-card" aria-label={t('Dann Karte')}>
+        <section class="flow-card" aria-label={t('Dann Aufgabe')}>
           <div class="flex items-center gap-2">{@render tag('then', t('DANN KARTE'))}{@render change('then')}</div>
           <ListRow wrap inset variant="task" title={shownTitle} check={{ done: false, label: t('Vorschau'), onchange: () => {}, disabled: true }}>
             {#snippet tile()}<CardTile card={look} />{/snippet}
@@ -228,7 +228,7 @@
             </span>
           </div>
           <p class="text-[15px] leading-[1.45] text-text-soft" data-testid="done-sum">
-            {#if doneParts.length > 0}{#each doneParts as p, i (i)}{#if p.bold}<b class="text-fg">{p.text}</b>{:else}{p.text}{/if}{/each}{:else if f.doneOn}{t('Noch keine Entität gewählt')}{:else}{t('Die Karte erledigst du selbst.')}{/if}
+            {#if doneParts.length > 0}{#each doneParts as p, i (i)}{#if p.bold}<b class="text-fg">{p.text}</b>{:else}{p.text}{/if}{/each}{:else if f.doneOn}{t('Noch keine Entität gewählt')}{:else}{t('Die Aufgabe erledigst du selbst.')}{/if}
           </p>
           {#if ed.selfNote && !f.doneOn}<p class="text-[13px] text-fg2" data-testid="self-note">{ed.selfNote}</p>{/if}
           {#if open === 'done' && f.doneOn}<div class="border-t border-line pt-3"><DoneEditor {ed} /></div>{/if}

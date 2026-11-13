@@ -21,13 +21,13 @@ export function ageText(sinceIso: string, nowMs = Date.now()): string {
   return tn('vor {n} Tag', 'vor {n} Tagen', Math.floor(hours / 24));
 }
 
-/** Die kleine Quellzeile unter einer Karte: das Board, bei Karten vom Haus der Wächter (die Oberfläche färbt ihn türkis) */
+/** Die kleine Quellzeile unter einer Aufgabe: das Board, bei Aufgaben vom Haus der Wächter (die Oberfläche färbt ihn türkis) */
 export function sourceLine(card: Pick<TodayCard, 'boardName' | 'watcherId' | 'watcherName'>): { text: string; house: boolean } {
   if (card.watcherId) return { text: card.watcherName ?? card.boardName, house: true };
   return { text: card.boardName, house: false };
 }
 
-/** Wie dringend ist der Termin? Bestimmt die Farbe der Uhrzeit (nicht mehr ein Balken links an der Karte) */
+/** Wie dringend ist der Termin? Bestimmt die Farbe der Uhrzeit (nicht mehr ein Balken links an der Aufgabe) */
 export function dueTone(dueAt: string | null, nowMs: number, startOfTomorrowMs: number): 'overdue' | 'today' | 'later' {
   if (!dueAt) return 'later';
   const ms = Date.parse(dueAt);

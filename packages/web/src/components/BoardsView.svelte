@@ -13,7 +13,7 @@
 
   /**
    * Der Reiter Boards nach dem Mockup (Boards): Kopf mit Titel, Board-Leiste, Chips (Meine, Alle, Personen, Filter), Kategorien-Chips,
-   * Spalten als Umschalter, Karten als Zeilen, „+". Suche, Stups-Filter und Kosten stehen hinter dem Filter-Knopf (Blatt „Filter").
+   * Spalten als Umschalter, Aufgaben als Zeilen, „+". Suche, Stups-Filter und Kosten stehen hinter dem Filter-Knopf (Blatt „Filter").
    * Ab 1024 px stehen die Spalten nebeneinander.
    */
   const desktop = $derived(ui.desktop);
@@ -111,7 +111,7 @@
                 {#if !ui.isChild && !col.isDone && !col.isPlanned}
                   <button
                     class="flex h-9 w-9 items-center justify-center rounded-[10px] bg-surface2 text-text-soft hover:text-fg"
-                    aria-label={t('Neue Karte in „{name}“', { name: col.name })}
+                    aria-label={t('Neue Aufgabe in „{name}“', { name: col.name })}
                     onclick={() => openSheet({ type: 'new', columnId: col.id, picked: true })}
                   >
                     <Icon name="plus" size={20} stroke={2} />

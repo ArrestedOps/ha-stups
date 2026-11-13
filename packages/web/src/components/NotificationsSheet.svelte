@@ -37,7 +37,7 @@
   // Beim Öffnen den neuesten Stand holen (die Kopfzeile lädt nur im Takt der Aufgaben)
   onMount(() => void loadInbox());
 
-  // Eine Karte öffnet die Karte; eine Mitteilung zu einem Wächter (ohne Karte) öffnet direkt den Wächter, im Editor mit dem Hinweis
+  // Eine Aufgabe öffnet die Aufgabe; eine Mitteilung zu einem Wächter (ohne Aufgabe) öffnet direkt den Wächter, im Editor mit dem Hinweis
   const open = (e: { cardId: string; boardId: string; watcherId: string | null }) => {
     if (e.watcherId) {
       openSheet({ type: 'watcher', id: e.watcherId });
@@ -71,7 +71,7 @@
         <p class="text-[14px] text-fg2">
           {inbox.failed && !inbox.loaded
             ? t('Beim Laden ist etwas schiefgegangen. Bitte gleich noch einmal versuchen.')
-            : t('Stupse, Antworten, Karten von Wächtern, Erledigtes und Kommentare der letzten 14 Tage erscheinen hier.')}
+            : t('Stupse, Antworten, Aufgaben von Wächtern, Erledigtes und Kommentare der letzten 14 Tage erscheinen hier.')}
         </p>
       </div>
     {:else}

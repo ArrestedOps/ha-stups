@@ -9,16 +9,16 @@ import { errorText, toast } from './toasts';
 let refreshing: Promise<void> | null = null;
 let again = false;
 let pendingRefresh = false;
-/** Was noch nachzuladen ist: alles, oder einzelne Karten (mehrere Meldungen während des Ladens fließen zusammen) */
+/** Was noch nachzuladen ist: alles, oder einzelne Aufgaben (mehrere Meldungen während des Ladens fließen zusammen) */
 const todo = { full: false, ids: new Set<string>() };
 
-/** Lädt nach: ohne Angabe alles, mit der Meldung des Servers nur die geänderten Karten (wenn der Server das sagen kann) */
+/** Lädt nach: ohne Angabe alles, mit der Meldung des Servers nur die geänderten Aufgaben (wenn der Server das sagen kann) */
 export function refresh(info?: SyncInfo): Promise<void> {
   const ids = info ? deltaIds(info.changes, info.gap) : null;
   if (ids === null) todo.full = true;
   else for (const id of ids) todo.ids.add(id);
   if (ui.dragging) {
-    pendingRefresh = true; // erst nach dem Loslassen, sonst springt die Karte unter dem Finger weg
+    pendingRefresh = true; // erst nach dem Loslassen, sonst springt die Aufgabe unter dem Finger weg
     return Promise.resolve();
   }
   return flush();
@@ -49,7 +49,7 @@ export function setDragging(on: boolean): void {
   ui.dragging = on;
   if (!on && pendingRefresh) {
     pendingRefresh = false;
-    void flush(); // was sich währenddessen angesammelt hat (nur Karten oder alles)
+    void flush(); // was sich währenddessen angesammelt hat (nur Aufgaben oder alles)
   }
 }
 
@@ -108,7 +108,7 @@ async function load(): Promise<void> {
 }
 
 /**
- * Nur die gemeldeten Karten nachladen (statt Board, Personen, Wächter und alle Karten). Alles, was dabei nicht
+ * Nur die gemeldeten Aufgaben nachladen (statt Board, Personen, Wächter und alle Aufgaben). Alles, was dabei nicht
  * eindeutig ist (Kosten, anderes Board, Fehler), lädt wie bisher alles neu.
  */
 async function loadCards(ids: string[]): Promise<void> {
@@ -132,7 +132,7 @@ async function loadCards(ids: string[]): Promise<void> {
 
 /**
  * Wie `act`, sagt aber, ob es geklappt hat. `act` gibt bei einem Fehler und bei einer Aktion ohne Ergebnis (löschen)
- * beide `undefined` zurück; wer danach etwas bestätigt („Karte gelöscht“, „Gespeichert“), braucht dieses Ergebnis.
+ * beide `undefined` zurück; wer danach etwas bestätigt („Aufgabe gelöscht“, „Gespeichert“), braucht dieses Ergebnis.
  */
 export async function actResult<T>(fn: () => Promise<T>): Promise<{ ok: true; value: T } | { ok: false }> {
   try {

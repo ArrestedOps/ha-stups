@@ -5,16 +5,16 @@ export interface FilterableCard {
   description: string | null;
   assigneeIds: string[];
   categoryIds: string[];
-  /** offene Stupse an der Karte */
+  /** offene Stupse an der Aufgabe */
   openNudges?: { toId: string }[];
 }
 
 export interface Filter {
   categoryIds: string[];
   onlyMine: boolean;
-  /** nur Karten dieser Personen (eine davon genügt); leer = alle */
+  /** nur Aufgaben dieser Personen (eine davon genügt); leer = alle */
   personIds?: string[];
-  /** nur Karten mit einem offenen Stups an mich */
+  /** nur Aufgaben mit einem offenen Stups an mich */
   nudged?: boolean;
   search: string;
 }
@@ -33,7 +33,7 @@ export function filterCards<T extends FilterableCard>(cards: T[], f: Filter, meI
 
 const dayKey = (ms: number, tz: string) => new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date(ms));
 
-/** Offene Karten mit Termin: überfällig (Termin vorbei) und heute noch fällig, nur die eigenen. */
+/** Offene Aufgaben mit Termin: überfällig (Termin vorbei) und heute noch fällig, nur die eigenen. */
 export function dueStats(
   cards: (FilterableCard & { dueAt: string | null; completedAt: string | null })[],
   meId: string | null,
@@ -59,7 +59,7 @@ export function countByColumn(cards: FilterableCard[], columnIds: string[]): Rec
   return counts;
 }
 
-/** Kosten aller Karten eines Boards: was noch offen ist und was schon erledigt ist (in Cent). */
+/** Kosten aller Aufgaben eines Boards: was noch offen ist und was schon erledigt ist (in Cent). */
 export function costTotals(
   cards: { columnId: string; costCents: number | null }[],
   doneColumnIds: Set<string>,
@@ -74,7 +74,7 @@ export function costTotals(
   return { open, done };
 }
 
-/** Versteckt der Personenfilter von Boards („Meine" oder gewählte Personen) eine Karte mit diesen Zuständigen? */
+/** Versteckt der Personenfilter von Boards („Meine" oder gewählte Personen) eine Aufgabe mit diesen Zuständigen? */
 export function hiddenByPerson(assigneeIds: string[], f: Pick<Filter, 'onlyMine' | 'personIds'>, meId: string | null): boolean {
   if (f.onlyMine && (!meId || !assigneeIds.includes(meId))) return true;
   return !!f.personIds?.length && !assigneeIds.some((id) => f.personIds!.includes(id));

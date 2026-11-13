@@ -8,7 +8,7 @@ import { dueFor } from './schedule.js';
 
 /** Wer nach der ersten Heimkehr noch dazukommen darf */
 const JOIN_WINDOW_MS = 2 * 60_000;
-/** So lange wartet eine Karte auf die erste heimkehrende Person */
+/** So lange wartet eine Aufgabe auf die erste heimkehrende Person */
 const WAIT_LIMIT_MS = 24 * 3_600_000;
 
 const stripMarker = (d: string | null): string | null => {
@@ -16,7 +16,7 @@ const stripMarker = (d: string | null): string | null => {
   return t === '' ? null : t;
 };
 
-/** „Erste Person, die heimkommt": Karten, die auf eine Heimkehr warten, und der Rückfall nach 24 Stunden */
+/** „Erste Person, die heimkommt": Aufgaben, die auf eine Heimkehr warten, und der Rückfall nach 24 Stunden */
 export function createWaiting(ctx: Ctx, calls: () => Parts) {
   const { deps, store, data, now, timeZone, personStates, peopleOf } = ctx;
 

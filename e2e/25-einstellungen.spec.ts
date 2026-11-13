@@ -70,7 +70,7 @@ test('Nichts geht verloren: Sprache und Farbe, Termine, Dashboard, Benachrichtig
 
   await d.getByRole('button', { name: 'Warum kommt nichts an?' }).click();
   await expect(d.getByTestId('push-ok')).toBeVisible();
-  await expect(d.getByText('Nächste Karten mit Termin')).toBeVisible();
+  await expect(d.getByText('Nächste Aufgaben mit Termin')).toBeVisible();
   await back(page);
 
   await d.getByRole('button', { name: 'Papierkorb, Archiv, Umzug' }).click();

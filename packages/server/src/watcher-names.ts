@@ -4,13 +4,13 @@ import { watcherTemplates } from './watcher-templates.js';
 
 /**
  * Namen von Wächtern. Ein neuer Wächter aus einer Vorlage heißt wie die Vorlage („Batterie schwach"); welches Gerät er beobachtet, steht
- * in der Liste immer darunter (`subject`). Der Kartentitel nennt das Gerät weiter, damit er in den Aufgaben unterscheidbar bleibt.
+ * in der Liste immer darunter (`subject`). Der Aufgabentitel nennt das Gerät weiter, damit er in den Aufgaben unterscheidbar bleibt.
  */
 
 /** Das Gerät unter dem Namen in Listen: der Friendly Name der beobachteten Entität, ohne ihn die Entitäts-ID */
 export const subjectOf = (seen: { name?: string } | null, entityId: string): string => seen?.name?.trim() || entityId;
 
-/** Die Namen und Kartentitel der Vorlagen in beiden Sprachen (ein Wächter, der in der anderen Sprache angelegt wurde, zählt genauso) */
+/** Die Namen und Aufgabentitel der Vorlagen in beiden Sprachen (ein Wächter, der in der anderen Sprache angelegt wurde, zählt genauso) */
 function templateTexts(pick: (draft: { name: string; card: { title: string } }) => string): string[] {
   const texts = new Set<string>();
   for (const lang of ['de', 'en'] as const) {
@@ -23,7 +23,7 @@ export const templateNames = (): string[] => templateTexts((d) => d.name);
 export const templateCardTitles = (): string[] => templateTexts((d) => d.card.title);
 
 /**
- * Der Titel der Karte, die ein Wächter anlegt: die Vorlage im Wächter bleibt sauber („Batterie wechseln"), die Karte bekommt zur Laufzeit den
+ * Der Titel der Aufgabe, die ein Wächter anlegt: die Vorlage im Wächter bleibt sauber („Batterie wechseln"), die Aufgabe bekommt zur Laufzeit den
  * Namen der Entität dazu („Batterie wechseln: Nuki Türschloss"), damit man in den Aufgaben sieht, um welches Gerät es geht. Nichts wird
  * angehängt bei Kalender und Vorhersage (die Entität ist dort kein Gerät), ohne Entitätsnamen oder wenn der Name schon im Titel steht
  * (kein „Batterie: Nuki: Nuki"). Gegenstück zu web/src/lib/cardTitle.ts (gleiche Regeln, gleiche Tests); die Vorschau im Editor nutzt es.
@@ -47,7 +47,7 @@ export function cardTitleOf(title: string, kind: string, entityName: string, max
 }
 
 /**
- * Frühere Versionen hängten das Gerät an den Namen und den Kartentitel („Trockner fertig: Nachfrage mw50gdjw"). Gibt den Text der Vorlage zurück, wenn `name`
+ * Frühere Versionen hängten das Gerät an den Namen und den Aufgabentitel („Trockner fertig: Nachfrage mw50gdjw"). Gibt den Text der Vorlage zurück, wenn `name`
  * **genau** das ist, was diese Regel aus dem Namen einer Vorlage und dem Gerät der Entität machte, sonst `null`. Eigene Namen und alles, was
  * nicht sicher passt, bleiben stehen. Das Gerät kommt aus dem Friendly Name (falls bekannt) oder der Entitäts-ID.
  */

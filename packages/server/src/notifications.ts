@@ -23,7 +23,7 @@ export interface NotifierDeps {
   retryDelaysMin?: number[];
   /** Steht vor der Kennung jedes Knopfs (die Beta: BETA_), damit sich normale App und Beta nicht in die Quere kommen */
   actionPrefix?: string;
-  /** "Erst vorschlagen": die Person übernimmt die Karte (wirft, wenn schon jemand schneller war) */
+  /** "Erst vorschlagen": die Person übernimmt die Aufgabe (wirft, wenn schon jemand schneller war) */
   claim?: (cardId: string, userId: string) => Promise<unknown>;
 }
 
@@ -102,7 +102,7 @@ export function createNotifier(deps: NotifierDeps) {
     };
   }
 
-  /** Eine Karte ist (von einem Wächter) jemandem zugewiesen worden: gleich Bescheid sagen, ohne auf die Fälligkeit zu warten */
+  /** Eine Aufgabe ist (von einem Wächter) jemandem zugewiesen worden: gleich Bescheid sagen, ohne auf die Fälligkeit zu warten */
   async function notifyAssigned(card: { id: string; title: string; dueAt: string | null }, userIds: string[]): Promise<void> {
     const nowMs = deps.now().getTime();
     for (const id of userIds) {
@@ -114,7 +114,7 @@ export function createNotifier(deps: NotifierDeps) {
         const due = card.dueAt ? formatDue(Date.parse(card.dueAt), nowMs, deps.timeZone()) : '';
         const m: PushMessage = {
           title: card.title,
-          body: card.dueAt ? t('Neue Karte für dich · fällig {due}', { due }) : t('Neue Karte für dich'),
+          body: card.dueAt ? t('Neue Aufgabe für dich · fällig {due}', { due }) : t('Neue Aufgabe für dich'),
           tag: cardTag(card.id),
           group: GROUP,
           open: { cardId: card.id },
@@ -122,17 +122,17 @@ export function createNotifier(deps: NotifierDeps) {
           kind: 'watcher',
           spoken: t('{name}, neue Aufgabe: {title}.', { name: nameOf(id), title: speakable(card.title) }),
         };
-        // „Erledigt" gilt für einen bestimmten Termin; ohne Termin bleibt es beim Öffnen der Karte
+        // „Erledigt" gilt für einen bestimmten Termin; ohne Termin bleibt es beim Öffnen der Aufgabe
         if (card.dueAt) m.actions = [doneAction(card.id, card.dueAt)];
         return m;
       });
       if (await send(id, message)) {
-        log.info(`Push (neue Karte) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
+        log.info(`Push (neue Aufgabe) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
       }
     }
   }
 
-  /** "Erst vorschlagen": alle, die zu Hause sind, fragen, wer die Karte übernimmt (Knopf „Übernehmen") */
+  /** "Erst vorschlagen": alle, die zu Hause sind, fragen, wer die Aufgabe übernimmt (Knopf „Übernehmen") */
   async function notifySuggest(card: { id: string; title: string }, userIds: string[]): Promise<void> {
     for (const id of userIds) {
       if (!push.canReach(id, 'watcher')) {
@@ -177,7 +177,7 @@ export function createNotifier(deps: NotifierDeps) {
     if (attempts > delays.length) {
       store.claimNotification(k, 'failed'); // aufgeben, nicht endlos weiter versuchen
       retries.delete(retryKey);
-      log.warn(`Push (${k.kind}) für Karte ${k.cardId} endgültig fehlgeschlagen`);
+      log.warn(`Push (${k.kind}) für Aufgabe ${k.cardId} endgültig fehlgeschlagen`);
     } else {
       retries.set(retryKey, { attempts, nextAt: nowMs + delays[attempts - 1]! * MINUTE });
     }
@@ -223,7 +223,7 @@ export function createNotifier(deps: NotifierDeps) {
 
   /**
    * Sonntags-Zusammenfassung (nur für Personen, die sie eingeschaltet haben): eine wertschätzende Nachricht je Woche, ab 18:00
-   * Ortszeit innerhalb von vier Stunden, nicht in der Ruhezeit der Person, nie bei null erledigten Karten. Nur aufs Handy.
+   * Ortszeit innerhalb von vier Stunden, nicht in der Ruhezeit der Person, nie bei null erledigten Aufgaben. Nur aufs Handy.
    */
   async function weeklySummaries(nowMs: number, tz: string): Promise<number> {
     const local = toLocal(nowMs, tz);
@@ -362,7 +362,7 @@ export function createNotifier(deps: NotifierDeps) {
     if (!store.mayConfirm(user.id, card.confirmRequestedBy, false)) return 'ignored';
     const res = store.answerConfirmation(cardId, answer, 'push');
     await confirmationAnswered({ cardId, childId: res.childId, byId: user.id, outcome: answer === 'confirm' ? 'confirmed' : 'rejected' });
-    log.info(`Karte „${card.title}" ${answer === 'confirm' ? 'bestätigt' : 'zurückgegeben'} von ${user.name}`);
+    log.info(`Aufgabe „${card.title}" ${answer === 'confirm' ? 'bestätigt' : 'zurückgegeben'} von ${user.name}`);
     return answer === 'confirm' ? 'confirmed' : 'rejected';
   }
 
@@ -446,7 +446,7 @@ export function createNotifier(deps: NotifierDeps) {
   // ---------- Nachhaken ----------
 
   /**
-   * Die Nachricht „noch offen“: bei Wächter-Karten wie der bisherige Stups („Denkst du dran?“), bei Aufgaben nach dem Termin „Überfällig seit …“.
+   * Die Nachricht „noch offen“: bei Wächter-Aufgaben wie der bisherige Stups („Denkst du dran?“), bei Aufgaben nach dem Termin „Überfällig seit …“.
    * „Erledigt“ gibt es nur für Zuständige und nur mit Termin (die Aktion gilt für einen bestimmten Termin).
    */
   function reminderPayload(r: DueReminder, userId: string, nowMs: number, tz: string): PushMessage {
@@ -469,7 +469,7 @@ export function createNotifier(deps: NotifierDeps) {
 
   /**
    * Nachhaken: „Wenn nicht erledigt“ (Tabelle card_reminders, für Aufgaben persönlich, für Wächter an die jeweils Zuständigen). Fällig, wenn der
-   * Zeitpunkt da ist und die Karte noch offen ist; danach der nächste Zeitpunkt, bis zur Höchstzahl. Erledigte, gelöschte und archivierte Karten
+   * Zeitpunkt da ist und die Aufgabe noch offen ist; danach der nächste Zeitpunkt, bis zur Höchstzahl. Erledigte, gelöschte und archivierte Aufgaben
    * liefert der Store nicht mehr: damit endet alles von selbst. In der Ruhezeit einer Person kommt nichts (sie wartet bis zum Ende).
    */
   async function deliverReminders(nowMs: number, tz: string): Promise<number> {
@@ -517,7 +517,7 @@ export function createNotifier(deps: NotifierDeps) {
           retries.set(retryKey, { attempts, nextAt: nowMs + delays[attempts - 1]! * MINUTE });
           continue;
         }
-        log.warn(`Nachhaken für Karte ${r.cardId} endgültig fehlgeschlagen`);
+        log.warn(`Nachhaken für Aufgabe ${r.cardId} endgültig fehlgeschlagen`);
       }
       retries.delete(retryKey);
       sent += delivered;
@@ -534,7 +534,7 @@ export function createNotifier(deps: NotifierDeps) {
     return sent;
   }
 
-  /** Entfernt die Nachrichten einer Karte von allen Geräten der Zuständigen. */
+  /** Entfernt die Nachrichten einer Aufgabe von allen Geräten der Zuständigen. */
   async function clearFor(cardId: string, assigneeIds?: string[]): Promise<void> {
     let ids = assigneeIds;
     if (!ids) {
@@ -544,17 +544,17 @@ export function createNotifier(deps: NotifierDeps) {
         return;
       }
     }
-    // Auch wer nur einen Stups zu dieser Karte bekommen hat, soll die Nachricht los werden
+    // Auch wer nur einen Stups zu dieser Aufgabe bekommen hat, soll die Nachricht los werden
     const everyone = [...new Set([...ids, ...store.nudgeRecipients(cardId)])];
     await Promise.allSettled(everyone.map((id) => push.clear(id, cardTag(cardId))));
   }
 
-  /** „Erledigt · nächste Karte Sa 10:00" statt der Erinnerung: gleiches Tag ersetzt die alte Nachricht, ohne Button und ohne Ton. */
+  /** „Erledigt · nächste Aufgabe Sa 10:00" statt der Erinnerung: gleiches Tag ersetzt die alte Nachricht, ohne Button und ohne Ton. */
   async function confirmRepeat(cardId: string, title: string, assigneeIds: string[], nextDueAt: string): Promise<void> {
     const payload = (id: string): PushMessage =>
       inLang(id, () => ({
         title,
-        body: t('Erledigt · nächste Karte {when}', { when: formatDue(Date.parse(nextDueAt), deps.now().getTime(), deps.timeZone()) }),
+        body: t('Erledigt · nächste Aufgabe {when}', { when: formatDue(Date.parse(nextDueAt), deps.now().getTime(), deps.timeZone()) }),
         tag: cardTag(cardId),
         group: GROUP,
         level: 'passive',
@@ -648,7 +648,7 @@ export function createNotifier(deps: NotifierDeps) {
     return p;
   };
 
-  /** Der Store meldet, welche Stupse durch das Erledigen einer Karte geschlossen wurden: „… hat erledigt ✓" an die Absender. */
+  /** Der Store meldet, welche Stupse durch das Erledigen einer Aufgabe geschlossen wurden: „… hat erledigt ✓" an die Absender. */
   function nudgesClosed(list: ClosedNudge[]): Promise<void> {
     return track(
       (async () => {
@@ -702,7 +702,7 @@ export function createNotifier(deps: NotifierDeps) {
       else await clearFor(card.id, card.assigneeIds);
       await idle(); // Rückmeldungen an die Absender
       deps.onChange?.();
-      log.info(`Karte „${card.title}" per Stups erledigt von ${user.name}`);
+      log.info(`Aufgabe „${card.title}" per Stups erledigt von ${user.name}`);
       return 'completed';
     }
 
@@ -729,7 +729,7 @@ export function createNotifier(deps: NotifierDeps) {
         await deps.claim(claim[1]!, user.id);
         return 'claimed';
       } catch {
-        return 'taken'; // jemand war schneller (oder die Karte ist erledigt): für den Knopf kein Fehler
+        return 'taken'; // jemand war schneller (oder die Aufgabe ist erledigt): für den Knopf kein Fehler
       }
     }
     const cm = new RegExp(`^${aPrefix}${CONFIRM_PREFIX}(YES|NO):(.+)$`).exec(a.action);
@@ -764,11 +764,11 @@ export function createNotifier(deps: NotifierDeps) {
       await clearFor(cardId, card.assigneeIds);
     }
     deps.onChange?.();
-    log.info(`Karte „${card.title}" per Push erledigt von ${user.name}`);
+    log.info(`Aufgabe „${card.title}" per Push erledigt von ${user.name}`);
     return 'completed';
   }
 
-  /** Antwort auf einen Stups aus der App (Karte oben in Aufgaben): dieselben Regeln und Rückmeldungen wie der Tipp in der Push-Nachricht */
+  /** Antwort auf einen Stups aus der App (Aufgabe oben in Aufgaben): dieselben Regeln und Rückmeldungen wie der Tipp in der Push-Nachricht */
   const replyToNudge = (nudgeId: string, personId: string, kind: 'DONE' | 'ACK' | 'LATER'): Promise<ActionResult> => handleNudgeAction(kind, nudgeId, { id: '', title: '', action: '', personId } as PushAction);
 
   return { tick, handleAction, replyToNudge, clearFor, nudgesClosed, notifyAssigned, notifySuggest, suggestClosed, confirmationRequested, confirmationAnswered, idle };

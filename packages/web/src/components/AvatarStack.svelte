@@ -4,7 +4,7 @@
   import Avatar from './Avatar.svelte';
 
   type Person = { id?: string; displayName: string; color: string | null; avatarRev?: number | null };
-  // Die Zuständigen einer Karte als überlappende Kreise (höchstens drei breit, siehe lib/avatarStack.ts); für Screenreader steht jeder Name im Text
+  // Die Zuständigen einer Aufgabe als überlappende Kreise (höchstens drei breit, siehe lib/avatarStack.ts); für Screenreader steht jeder Name im Text
   let { people, size = 28 }: { people: Person[]; size?: number } = $props();
   const plan = $derived(stackPlan(people.length));
   const names = $derived(people.map((p) => p.displayName).join(', '));

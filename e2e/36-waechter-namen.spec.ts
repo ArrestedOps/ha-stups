@@ -60,9 +60,9 @@ async function setupHit(page: Page, hitText: string | RegExp, boardId: string) {
   await d.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
 }
 
-test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Namen und Kartentitel, auch in der Übersicht', async ({ page, request }) => {
+test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Namen und Aufgabentitel, auch in der Übersicht', async ({ page, request }) => {
   await clearWatchers(request);
-  // Werte neu setzen: unter 20 % legt ein neuer Batterie-Wächter nach 10 Minuten seit der letzten Änderung sofort eine Karte an (dann stünde er unter „Wartet")
+  // Werte neu setzen: unter 20 % legt ein neuer Batterie-Wächter nach 10 Minuten seit der letzten Änderung sofort eine Aufgabe an (dann stünde er unter „Wartet")
   await request.post(`${MOCK}/mock/state`, { data: { entityId: IPHONE, state: '14' } });
   await request.post(`${MOCK}/mock/state`, { data: { entityId: BAD, state: '12' } });
   const b = await board(request);
@@ -82,7 +82,7 @@ test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Name
   await expect(page.getByText('Wächter gespeichert').first()).toBeVisible();
 
   const items = (await watchers(request)).filter((w) => [IPHONE, BAD].includes(w.trigger.entityId));
-  // der Wächter heißt wie die Vorlage (das Gerät steht darunter), der Kartentitel der Vorlage bleibt sauber (die Karte bekommt den Namen der Entität erst, wenn sie entsteht)
+  // der Wächter heißt wie die Vorlage (das Gerät steht darunter), der Aufgabentitel der Vorlage bleibt sauber (die Aufgabe bekommt den Namen der Entität erst, wenn sie entsteht)
   expect(items.map((w) => [w.name, w.card.title]).sort()).toEqual([
     ['Batterie schwach', 'Batterie wechseln'],
     ['Batterie schwach', 'Batterie wechseln'],
@@ -121,7 +121,7 @@ test('Zurück im Assistenten: in jedem Schritt da, Eingaben bleiben, am Anfang z
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
   await expect(d.getByTestId('wizard-question')).toContainText('Welche Aufgabe');
   await expect(back).toBeVisible(); // Schritt 2
-  await d.getByLabel('Titel der Karte').fill('Mein eigener Titel');
+  await d.getByLabel('Titel der Aufgabe').fill('Mein eigener Titel');
   await d.getByTestId('then-editor').getByLabel('Board', { exact: true }).selectOption(b.boardId);
   await d.getByRole('button', { name: 'Weiter: Wer' }).click();
   await expect(back).toBeVisible(); // Schritt 3
@@ -134,12 +134,12 @@ test('Zurück im Assistenten: in jedem Schritt da, Eingaben bleiben, am Anfang z
   await expect(d.getByTestId('wizard-question')).toContainText('Wer soll');
   await back.click();
   await expect(d.getByTestId('wizard-question')).toContainText('Welche Aufgabe');
-  await expect(d.getByLabel('Titel der Karte')).toHaveValue('Mein eigener Titel');
+  await expect(d.getByLabel('Titel der Aufgabe')).toHaveValue('Mein eigener Titel');
   await back.click();
   await expect(d.getByTestId('graph-card')).toContainText('Bad Fenster Batterie');
   // vor wieder: der Titel ist noch da
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
-  await expect(d.getByLabel('Titel der Karte')).toHaveValue('Mein eigener Titel');
+  await expect(d.getByLabel('Titel der Aufgabe')).toHaveValue('Mein eigener Titel');
   await back.click();
 
   // am ersten Schritt: zurück zur Auswahl „Gefunden"
@@ -173,7 +173,7 @@ test('Entität von Hand gewählt (Vorlage ohne Treffer): der Name bleibt der der
   await d.getByLabel('Entität suchen').fill('iphone rene');
   await d.getByTestId('entity-picker').getByRole('button', { name: /iPhone Rene Battery Level/ }).click();
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
-  await expect(d.getByLabel('Titel der Karte')).toHaveValue('Batterie wechseln');
+  await expect(d.getByLabel('Titel der Aufgabe')).toHaveValue('Batterie wechseln');
   await d.getByTestId('then-editor').getByLabel('Board', { exact: true }).selectOption(b.boardId);
   await d.getByRole('button', { name: 'Weiter: Wer' }).click();
   await d.getByRole('button', { name: 'Weiter: Feinschliff' }).click();

@@ -6,7 +6,7 @@ import type { TaskStats } from './tasks';
 
 /**
  * Die drei Blätter hinter der Zahlenleiste in Aufgaben (Heute fällig, Überfällig, Heute erledigt): reine Funktionen, die Uhr und Zeitzone
- * kommen als Parameter (Rechner UTC, Haushalt zum Beispiel Europe/Berlin). Alle Blätter beziehen sich auf die **eigenen** Karten, wie die Leiste
+ * kommen als Parameter (Rechner UTC, Haushalt zum Beispiel Europe/Berlin). Alle Blätter beziehen sich auf die **eigenen** Aufgaben, wie die Leiste
  * (`taskStats` in tasks.ts); die Zahl der Leiste und die Zahl im Blatt kommen aus derselben Regel.
  */
 
@@ -26,7 +26,7 @@ export interface TodaySheet {
   total: number;
 }
 
-/** Heute fällig: die offenen wie die Leiste sie zählt, dazu die heute erledigten Karten mit Termin heute („1 davon schon erledigt") */
+/** Heute fällig: die offenen wie die Leiste sie zählt, dazu die heute erledigten Aufgaben mit Termin heute („1 davon schon erledigt") */
 export function todaySheet(cards: ScheduleCard[], meId: string | null, nowMs: number, tz = deviceTz()): TodaySheet {
   const todayKey = dayKeyOf(nowMs, tz);
   const open: ScheduleCard[] = [];
@@ -43,12 +43,12 @@ export function todaySheet(cards: ScheduleCard[], meId: string | null, nowMs: nu
   return { open, done, total: open.length + done.length };
 }
 
-/** Überfällig: eigene offene Karten, deren Termin vorbei ist, die älteste zuerst (die Zahl der Leiste) */
+/** Überfällig: eigene offene Aufgaben, deren Termin vorbei ist, die älteste zuerst (die Zahl der Leiste) */
 export function overdueSheet(cards: ScheduleCard[], meId: string | null, nowMs: number): ScheduleCard[] {
   return cards.filter((c) => mine(c, meId) && !c.completedAt && !!c.dueAt && Date.parse(c.dueAt) < nowMs).sort(byDue);
 }
 
-/** Heute erledigt: eigene Karten, heute (Tag im Haushalt) erledigt, nach Erledigungszeit (die Zahl „Erledigt heute" der Leiste) */
+/** Heute erledigt: eigene Aufgaben, heute (Tag im Haushalt) erledigt, nach Erledigungszeit (die Zahl „Erledigt heute" der Leiste) */
 export function doneSheet(cards: ScheduleCard[], meId: string | null, nowMs: number, tz = deviceTz()): ScheduleCard[] {
   const todayKey = dayKeyOf(nowMs, tz);
   return cards.filter((c) => mine(c, meId) && !!c.completedAt && dayKeyOf(Date.parse(c.completedAt), tz) === todayKey).sort(byDone);
@@ -71,7 +71,7 @@ export function doneProgress(stats: TaskStats): DoneProgress {
 
 export type Since = { kind: 'today' } | { kind: 'yesterday' } | { kind: 'days'; n: number };
 
-/** Wie lange eine Karte überfällig ist, nach Kalendertagen im Haushalt (nicht nach 24-Stunden-Blöcken: die Zeitumstellung zählt nicht mit) */
+/** Wie lange eine Aufgabe überfällig ist, nach Kalendertagen im Haushalt (nicht nach 24-Stunden-Blöcken: die Zeitumstellung zählt nicht mit) */
 export function overdueSince(dueAt: string, nowMs: number, tz = deviceTz()): Since {
   const days = Math.round((Date.parse(`${dayKeyOf(nowMs, tz)}T00:00:00Z`) - Date.parse(`${dayKeyOf(Date.parse(dueAt), tz)}T00:00:00Z`)) / 86_400_000);
   return days <= 0 ? { kind: 'today' } : days === 1 ? { kind: 'yesterday' } : { kind: 'days', n: days };
@@ -89,10 +89,10 @@ export const timeOfDay = (iso: string, tz = deviceTz()): string => toInputValue(
 export type ShiftTarget = 'today' | 'tomorrow' | 'weekend';
 
 /**
- * Das neue Fälligkeitsdatum beim Verschieben einer überfälligen Karte: gleiche Uhrzeit (Ortszeit des Haushalts, Sekunden bleiben) an
+ * Das neue Fälligkeitsdatum beim Verschieben einer überfälligen Aufgabe: gleiche Uhrzeit (Ortszeit des Haushalts, Sekunden bleiben) an
  * - `tomorrow`: dem morgigen Tag,
  * - `weekend`: dem nächsten Samstag nach heute (am Samstag und Sonntag der folgende),
- * - `today`: dem heutigen Tag. Ist die Uhrzeit schon vorbei, die nächste volle Stunde (spätestens 23:59), sonst bliebe die Karte überfällig.
+ * - `today`: dem heutigen Tag. Ist die Uhrzeit schon vorbei, die nächste volle Stunde (spätestens 23:59), sonst bliebe die Aufgabe überfällig.
  * Eine Uhrzeit, die es durch die Zeitumstellung nicht gibt (02:30 am letzten Märzsonntag), rückt hinter die Lücke.
  */
 export function shiftDue(dueAt: string, target: ShiftTarget, nowMs: number, tz = deviceTz()): string {

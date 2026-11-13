@@ -32,7 +32,7 @@ export function boardColorKey(boards: { id: string; color: string | null }[], bo
   return ring[(i < 0 ? 0 : i) % ring.length]!;
 }
 
-/** Gültiger Farbname, sonst grau (für die Punkte an den Karten: var(--c-<name>-fg)) */
+/** Gültiger Farbname, sonst grau (für die Punkte an den Aufgaben: var(--c-<name>-fg)) */
 export const catKey = (color: string): string => (CATEGORY_COLORS.includes(color as never) ? color : 'gray');
 
 export const catClass = (color: string): string => `cat cat-${CATEGORY_COLORS.includes(color as never) ? color : 'gray'}`;

@@ -8,7 +8,7 @@
   import Icon from '../Icon.svelte';
   import Chip from '../ui/Chip.svelte';
 
-  /** Kategorien der neuen Karte wählen, oder gleich hier eine anlegen */
+  /** Kategorien der neuen Aufgabe wählen, oder gleich hier eine anlegen */
   let { fields, onsave }: { fields: CardFields; onsave: (patch: CardPatch) => unknown } = $props();
 
   function toggleCategory(id: string) {
@@ -21,7 +21,7 @@
   let catBusy = $state(false);
   const shownCatColor = $derived(catColor ?? nextCategoryColor((ui.view?.categories ?? []).map((c) => c.color)));
 
-  /** Anlegen und gleich für diese Karte wählen; gibt es den Namen schon, wird die vorhandene gewählt */
+  /** Anlegen und gleich für diese Aufgabe wählen; gibt es den Namen schon, wird die vorhandene gewählt */
   async function addCategory(e: Event) {
     e.preventDefault();
     const n = catName.trim();

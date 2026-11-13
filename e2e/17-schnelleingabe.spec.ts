@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { openBoards } from './helpers';
 
-// Schnell-Eingabe im Fenster „Neue Karte": eine Zeile Text wird zur fertigen Karte.
+// Schnell-Eingabe im Fenster „Neue Aufgabe": eine Zeile Text wird zur fertigen Aufgabe.
 const unique = (base: string) => `${base} ${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
 
 async function ownBoard(request: APIRequestContext, page: Page, name: string) {
@@ -14,11 +14,11 @@ async function ownBoard(request: APIRequestContext, page: Page, name: string) {
 async function openNew(page: Page) {
   await page.goto('/');
   await openBoards(page);
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   return page.getByLabel('Was steht an?');
 }
 
-test('Eine Zeile wird zur Karte: Titel, Termin, Zuständige, Kategorie, Wiederholung, Priorität', async ({ page, request }) => {
+test('Eine Zeile wird zur Aufgabe: Titel, Termin, Zuständige, Kategorie, Wiederholung, Priorität', async ({ page, request }) => {
   const boardId = await ownBoard(request, page, unique('Schnell'));
   const input = await openNew(page);
   const title = unique('Müll raus');
@@ -39,13 +39,13 @@ test('Eine Zeile wird zur Karte: Titel, Termin, Zuständige, Kategorie, Wiederho
   await expect(page.getByRole('radiogroup', { name: 'Priorität' }).getByRole('radio', { name: 'Hoch' })).toHaveAttribute('aria-checked', 'true');
 
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
 
   const view = (await (await request.get(`/api/boards/${boardId}`)).json()) as {
     cards: { id: string; title: string; dueAt: string; priority: string; assigneeIds: string[]; categoryIds: string[]; recurrence: unknown }[];
   };
   const card = view.cards.find((c) => c.title === title)!;
-  expect(card, 'Karte mit sauberem Titel (ohne die erkannten Wörter)').toBeTruthy();
+  expect(card, 'Aufgabe mit sauberem Titel (ohne die erkannten Wörter)').toBeTruthy();
   expect(card.priority).toBe('high');
   expect(card.assigneeIds).toHaveLength(1);
   expect(card.categoryIds).toHaveLength(1);
@@ -67,7 +67,7 @@ test('Ein Tipp auf einen Chip nimmt ihn zurück: „Montag" gehört dann zum Tit
   const title = unique('Montag Besprechung');
   await input.fill(title);
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
 });
 
 test('Von Hand geänderte Felder überschreibt die Schnell-Eingabe nicht mehr', async ({ page, request }) => {
@@ -81,7 +81,7 @@ test('Von Hand geänderte Felder überschreibt die Schnell-Eingabe nicht mehr', 
   // weiter tippen: das „!" ist noch da, soll aber „Hoch" nicht mehr auf „Mittel" zurücksetzen
   await input.fill('Paket abholen ! heute 23 Uhr');
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
   const view = (await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { title: string; priority: string }[] };
   expect(view.cards.find((c) => c.title === 'Paket abholen')!.priority).toBe('high');
 });
@@ -97,7 +97,7 @@ test('Unbekannte Person: Warnung, Anlegen gesperrt, bis man sie weglässt', asyn
   await expect(page.getByRole('button', { name: 'Aufgabe anlegen' })).toBeEnabled();
 });
 
-test('Unbekannte Kategorie: Rückfrage, dann wird sie angelegt und der Karte gegeben', async ({ page, request }) => {
+test('Unbekannte Kategorie: Rückfrage, dann wird sie angelegt und der Aufgabe gegeben', async ({ page, request }) => {
   const boardId = await ownBoard(request, page, unique('Kategorie'));
   const input = await openNew(page);
   const title = unique('Reise planen');
@@ -107,7 +107,7 @@ test('Unbekannte Kategorie: Rückfrage, dann wird sie angelegt und der Karte geg
   const dialog = page.getByRole('alertdialog');
   await expect(dialog).toContainText('„Reisen“ gibt es in diesem Board noch nicht');
   await dialog.getByRole('button', { name: 'Anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
   const view = (await (await request.get(`/api/boards/${boardId}`)).json()) as { categories: { id: string; name: string }[]; cards: { title: string; categoryIds: string[] }[] };
   const reisen = view.categories.find((c) => c.name === 'Reisen')!;
   expect(reisen).toBeTruthy();
@@ -121,7 +121,7 @@ test('Ohne besondere Wörter ist es das alte Titelfeld: nichts wird verändert',
   await input.fill(title);
   await expect(page.getByTestId('quick-chip')).toHaveCount(0);
   await input.press('Enter');
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
   const view = (await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { title: string; dueAt: string | null }[] };
   expect(view.cards.find((c) => c.title === title)).toMatchObject({ dueAt: null });
 });
@@ -135,7 +135,7 @@ test('Standard-Uhrzeit: nur ein Datum bekommt die eingestellte Uhrzeit', async (
     await input.fill(`${title} übermorgen`);
     await expect(page.getByTestId('quick-chip')).toContainText('07:30');
     await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-    await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
     const view = (await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { title: string; dueAt: string }[] };
     const due = view.cards.find((c) => c.title === title)!.dueAt;
     const [h, m] = await page.evaluate((iso) => [new Date(iso as string).getHours(), new Date(iso as string).getMinutes()], due);

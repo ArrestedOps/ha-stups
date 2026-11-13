@@ -265,7 +265,7 @@ export function createBoards(c: Ctx, late: unknown) {
     return updateBoardWithEffects(id, patch, by).board;
   }
 
-  /** Ein Board (ohne Karten); Zugriffsprüfung macht der Aufrufer */
+  /** Ein Board (ohne Aufgaben); Zugriffsprüfung macht der Aufrufer */
   const getBoard = (id: string): Board => toBoard(visibleBoard(id));
 
   function deleteBoard(id: string): void {
@@ -296,9 +296,9 @@ export function createBoards(c: Ctx, late: unknown) {
     all('select * from columns where board_id = ? and deleted_at is null order by position, id', boardId);
 
   /**
-   * Öffnet erledigte (nicht archivierte) Karten wieder, weil ihre Spalte keine „Erledigt“-Spalte mehr ist oder sie in eine
-   * offene Spalte verschoben wurden. Sonst blieben erledigte Karten in offenen Spalten stehen, und der Geplant-Abgleich
-   * und die Zahl der offenen Karten würden sie falsch behandeln.
+   * Öffnet erledigte (nicht archivierte) Aufgaben wieder, weil ihre Spalte keine „Erledigt“-Spalte mehr ist oder sie in eine
+   * offene Spalte verschoben wurden. Sonst blieben erledigte Aufgaben in offenen Spalten stehen, und der Geplant-Abgleich
+   * und die Zahl der offenen Aufgaben würden sie falsch behandeln.
    */
   function reopenCompleted(cardIds: string[], fromName: string, toName: string): void {
     for (const cardId of cardIds) {
@@ -378,18 +378,18 @@ export function createBoards(c: Ctx, late: unknown) {
 
   const plannedColumn = (boardId: string): Row | undefined => visibleColumns(boardId).find((c) => c.is_planned === 1);
 
-  /** Die Spalte, in die neue Karten kommen: die erste, die weder „Erledigt" noch „Geplant" ist */
+  /** Die Spalte, in die neue Aufgaben kommen: die erste, die weder „Erledigt" noch „Geplant" ist */
   const inboxColumn = (boardId: string): Row | undefined =>
     visibleColumns(boardId).find((c) => c.is_done !== 1 && c.is_planned !== 1);
 
-  /** Termin heute oder später als heute? Dann ist die Karte „geplant", nicht „offen". */
+  /** Termin heute oder später als heute? Dann ist die Aufgabe „geplant", nicht „offen". */
   function isFutureDue(dueAt: string | null): boolean {
     return dueAt !== null && Date.parse(dueAt) >= startOfTomorrow(now().getTime(), timeZone());
   }
 
   /**
-   * Hält „Offen" und „Geplant" sauber: Karten mit Termin nach heute wandern nach „Geplant",
-   * Karten in „Geplant" ohne Termin oder mit Termin heute oder früher zurück nach „Offen".
+   * Hält „Offen" und „Geplant" sauber: Aufgaben mit Termin nach heute wandern nach „Geplant",
+   * Aufgaben in „Geplant" ohne Termin oder mit Termin heute oder früher zurück nach „Offen".
    * Andere Spalten (z. B. „In Arbeit") bleiben unangetastet.
    */
   function syncPlannedBoard(boardId: string): number {
@@ -420,7 +420,7 @@ export function createBoards(c: Ctx, late: unknown) {
     return moved;
   }
 
-  /** Alle Boards abgleichen. Gibt die Zahl der verschobenen Karten zurück. */
+  /** Alle Boards abgleichen. Gibt die Zahl der verschobenen Aufgaben zurück. */
   function syncPlanned(): number {
     return tx(() => all('select id from boards where deleted_at is null and archived_at is null').reduce((n, b) => n + syncPlannedBoard(b.id), 0));
   }
@@ -482,7 +482,7 @@ export function createBoards(c: Ctx, late: unknown) {
       );
       if (cards.length > 0) {
         if (!moveToColumnId) {
-          throw new ConflictError(t('Die Spalte enthält Karten. Bitte eine Spalte zum Verschieben wählen'));
+          throw new ConflictError(t('Die Spalte enthält Aufgaben. Bitte eine Spalte zum Verschieben wählen'));
         }
         const target = visibleColumn(moveToColumnId);
         if (target.board_id !== col.board_id || target.id === id) {
@@ -561,7 +561,7 @@ export function createBoards(c: Ctx, late: unknown) {
     };
   }
 
-  /** Boards, in denen der Person Karten zugewiesen sind (auch erledigte und archivierte); für Kinder mit „nur eigene Boards" */
+  /** Boards, in denen der Person Aufgaben zugewiesen sind (auch erledigte und archivierte); für Kinder mit „nur eigene Boards" */
   function boardIdsWithCardsOf(userId: string): string[] {
     return all(
       `select distinct c.board_id as id from cards c
@@ -572,7 +572,7 @@ export function createBoards(c: Ctx, late: unknown) {
     ).map((r) => r.id as string);
   }
 
-  /** Das Board einer Karte (für die Rechte-Prüfung); null, wenn es die Karte nicht gibt */
+  /** Das Board einer Aufgabe (für die Rechte-Prüfung); null, wenn es die Aufgabe nicht gibt */
   const boardIdOfCard = (cardId: string): string | null =>
     (one('select board_id from cards where id = ? and deleted_at is null', cardId)?.board_id as string | undefined) ?? null;
 

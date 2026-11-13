@@ -9,11 +9,11 @@ import { fallbackOf, nextOf } from './assign.js';
 import type { Ctx } from './context.js';
 import { minutes } from './schedule.js';
 
-/** „Erst vorschlagen" (Übernehmen, Rückfall nach 30 Minuten) und „Weitergeben" einer Karte vom Haus */
+/** „Erst vorschlagen" (Übernehmen, Rückfall nach 30 Minuten) und „Weitergeben" einer Aufgabe vom Haus */
 export function createSuggest(ctx: Ctx) {
   const { deps, store, data, now, timeZone, enqueue, peopleOf, personStates } = ctx;
 
-  /** Die erste Person, die auf „Übernehmen" tippt, bekommt die Karte; jede weitere erfährt, wer schneller war */
+  /** Die erste Person, die auf „Übernehmen" tippt, bekommt die Aufgabe; jede weitere erfährt, wer schneller war */
   function claim(cardId: string, userId: string): Promise<{ ok: true }> {
     return enqueue(async () => {
       const card = store.getCard(cardId);
@@ -23,7 +23,7 @@ export function createSuggest(ctx: Ctx) {
       if (user.isChild) throw new ForbiddenError(t('Das darf ein Kind nicht'));
       if (!row || card.completedAt || card.assigneeIds.length > 0) {
         const taken = card.assigneeIds[0] ? store.userById(card.assigneeIds[0])?.displayName : undefined;
-        throw new ConflictError(taken ? t('{name} hat die Karte schon übernommen', { name: taken }) : t('Die Karte ist nicht mehr offen'));
+        throw new ConflictError(taken ? t('{name} hat die Aufgabe schon übernommen', { name: taken }) : t('Die Aufgabe ist nicht mehr offen'));
       }
       store.transaction(() => {
         store.updateCard(card.id, { assigneeIds: [userId] });
@@ -37,7 +37,7 @@ export function createSuggest(ctx: Ctx) {
     });
   }
 
-  /** Nach 30 Minuten ohne „Übernehmen" greift der Rückfall des Wächters; Vorschläge zu erledigten oder schon vergebenen Karten verfallen */
+  /** Nach 30 Minuten ohne „Übernehmen" greift der Rückfall des Wächters; Vorschläge zu erledigten oder schon vergebenen Aufgaben verfallen */
   function checkSuggestions(nowMs: number): void {
     for (const row of data.listSuggest()) {
       let w: Watcher;
@@ -72,21 +72,21 @@ export function createSuggest(ctx: Ctx) {
   }
 
   /**
-   * Eine Karte vom Haus an die nächste Person der Rotation dieses Wächters weitergeben: derselbe Kreis und dieselbe Anwesenheitsregel
-   * wie beim Zuweisen, ohne Personen mit „wenig Zeit" und ohne die, die die Karte schon haben. Die Rotation rückt nicht weiter
-   * (wer weitergibt, bleibt beim nächsten Mal dran), und es zählt nicht als erledigt. Gibt es niemanden, bleibt die Karte: `{ to: null }`.
+   * Eine Aufgabe vom Haus an die nächste Person der Rotation dieses Wächters weitergeben: derselbe Kreis und dieselbe Anwesenheitsregel
+   * wie beim Zuweisen, ohne Personen mit „wenig Zeit" und ohne die, die die Aufgabe schon haben. Die Rotation rückt nicht weiter
+   * (wer weitergibt, bleibt beim nächsten Mal dran), und es zählt nicht als erledigt. Gibt es niemanden, bleibt die Aufgabe: `{ to: null }`.
    */
   function pass(cardId: string, byUserId: string): Promise<{ to: string | null }> {
     return enqueue(async () => {
       const card = store.getCard(cardId);
-      if (card.completedAt) throw new ConflictError(t('Die Karte ist schon erledigt'));
-      if (!card.watcherId) throw new ConflictError(t('Nur Karten vom Haus lassen sich weitergeben'));
-      if (!card.assigneeIds.includes(byUserId)) throw new ForbiddenError(t('Die Karte ist dir nicht zugewiesen'));
+      if (card.completedAt) throw new ConflictError(t('Die Aufgabe ist schon erledigt'));
+      if (!card.watcherId) throw new ConflictError(t('Nur Aufgaben vom Haus lassen sich weitergeben'));
+      if (!card.assigneeIds.includes(byUserId)) throw new ForbiddenError(t('Die Aufgabe ist dir nicht zugewiesen'));
       let w: Watcher;
       try {
         w = data.get(card.watcherId);
       } catch {
-        throw new ConflictError(t('Den Wächter dieser Karte gibt es nicht mehr'));
+        throw new ConflictError(t('Den Wächter dieser Aufgabe gibt es nicht mehr'));
       }
       const people = peopleOf(w);
       const rule = w.assign;

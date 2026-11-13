@@ -11,7 +11,7 @@
   const item = $derived(viewer ? viewer.items[viewer.index] : null);
   const isPdf = $derived(item?.mime === 'application/pdf');
   const many = $derived((viewer?.items.length ?? 0) > 1);
-  /** Karten-Anhänge liegen unter api/attachments/, andere Bilder (Rückmeldungen) bringen ihre Adresse mit und lassen sich hier nicht entfernen */
+  /** Aufgaben-Anhänge liegen unter api/attachments/, andere Bilder (Rückmeldungen) bringen ihre Adresse mit und lassen sich hier nicht entfernen */
   const src = $derived(item ? (item.url ?? `api/attachments/${item.id}`) : '');
 
   let zoomed = $state(false);
@@ -24,14 +24,14 @@
     return [who, when, item.size > 0 ? formatBytes(item.size) : ''].filter(Boolean).join(' • ');
   });
 
-  /** Entfernen: mit Rückfrage; ein Kind darf es nicht (wie am Karten-Fenster) */
+  /** Entfernen: mit Rückfrage; ein Kind darf es nicht (wie am Aufgaben-Fenster) */
   function removeItem() {
     if (!item || ui.isChild) return;
     const id = item.id;
     const name = item.filename;
     ui.confirm = {
       title: t('Anhang entfernen?'),
-      text: t('„{name}“ wird von der Karte entfernt.', { name }),
+      text: t('„{name}“ wird von der Aufgabe entfernt.', { name }),
       label: t('Entfernen'),
       run: async () => {
         closeViewer();
@@ -65,7 +65,7 @@
   function onKey(e: KeyboardEvent) {
     if (!viewer) return;
     if (e.key === 'Escape') {
-      // Escape schließt nur das Foto, nicht auch noch die Karte dahinter
+      // Escape schließt nur das Foto, nicht auch noch die Aufgabe dahinter
       e.stopImmediatePropagation();
       closeViewer();
     }

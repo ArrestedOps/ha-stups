@@ -166,7 +166,7 @@ describe('erster Termin ohne Termin', () => {
   });
 });
 
-describe('Beispiele der drei Karten (live gerechnet)', () => {
+describe('Beispiele der drei Aufgaben (live gerechnet)', () => {
   const due = '2026-11-14T09:00:00.000Z'; // Sa 14.11. 10:00 Berlin
   const e = { ...withBase(emptyEditor(), 'weekly', 2), weekdays: [6], tolerance: 3 };
 
@@ -181,7 +181,7 @@ describe('Beispiele der drei Karten (live gerechnet)', () => {
     expect(shortWhen(ex.tolerant!.late.nextIso, TZ)).toBe('Sa 5.12.');
   });
 
-  it('die Toleranz-Karte gibt es nur bei wöchentlich und monatlich', () => {
+  it('die Toleranz-Aufgabe gibt es nur bei wöchentlich und monatlich', () => {
     for (const freq of ['hourly', 'daily', 'yearly'] as const) expect(lateExamples(withBase(emptyEditor(), freq, 1), due, TZ)!.tolerant, freq).toBeUndefined();
     expect(lateExamples(withBase(emptyEditor(), 'monthly', 1), due, TZ)!.tolerant).toBeDefined();
     expect(lateExamples(emptyEditor(), due, TZ)).toBeNull();

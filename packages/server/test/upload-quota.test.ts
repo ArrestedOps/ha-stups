@@ -38,13 +38,13 @@ describe('Upload-Obergrenzen', () => {
     expect(createUploadQuota(undefined, { parallel: 5 }).limits).toEqual({ ...DEFAULT_UPLOAD_LIMITS, parallel: 5 });
   });
 
-  describe('je Karte', () => {
+  describe('je Aufgabe', () => {
     it('Anzahl: an der Grenze gesperrt, knapp darunter frei', () => {
       const q = createUploadQuota(undefined, { cardFiles: 3 });
       q.begin('a', { files: 2, bytes: 0 })();
       const err = thrown(() => q.begin('a', { files: 3, bytes: 0 }));
       expect(err.status).toBe(413);
-      expect(err.message).toBe('Diese Karte hat schon 3 Anhänge, mehr sind nicht erlaubt');
+      expect(err.message).toBe('Diese Aufgabe hat schon 3 Anhänge, mehr sind nicht erlaubt');
     });
 
     it('Größe: an der Grenze gesperrt, knapp darunter frei, Meldung nennt die Megabyte', () => {
@@ -52,13 +52,13 @@ describe('Upload-Obergrenzen', () => {
       q.begin('a', { files: 0, bytes: 5 * MB - 1 })();
       const err = thrown(() => q.begin('a', { files: 0, bytes: 5 * MB }));
       expect(err.status).toBe(413);
-      expect(err.message).toBe('Die Anhänge dieser Karte sind schon 5 MB groß, mehr ist nicht erlaubt');
+      expect(err.message).toBe('Die Anhänge dieser Aufgabe sind schon 5 MB groß, mehr ist nicht erlaubt');
     });
 
     it('Größe: Standard sind 200 MB', () => {
       const q = createUploadQuota();
       const err = thrown(() => q.begin('a', { files: 0, bytes: 200 * MB }));
-      expect(err.message).toBe('Die Anhänge dieser Karte sind schon 200 MB groß, mehr ist nicht erlaubt');
+      expect(err.message).toBe('Die Anhänge dieser Aufgabe sind schon 200 MB groß, mehr ist nicht erlaubt');
     });
 
     it('wouldExceedCard: genau voll passt, ein Byte mehr nicht', () => {

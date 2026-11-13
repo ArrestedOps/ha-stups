@@ -11,7 +11,7 @@ export function moveItem<T>(list: T[], index: number, dir: -1 | 1): T[] {
   return next;
 }
 
-/** Zweite Zeile eines Boards in der Auswahl: offene Karten, dahinter klein, wer es sieht (Alle: nichts) */
+/** Zweite Zeile eines Boards in der Auswahl: offene Aufgaben, dahinter klein, wer es sieht (Alle: nichts) */
 export function boardMeta(board: Pick<BoardSummary, 'openCards' | 'visibility' | 'ownerId' | 'memberIds'>, people: User[]): { open: string; who: string | null } {
   const open = t('{n} offen', { n: board.openCards });
   if (board.visibility === 'private') return { open, who: `🔒 ${t('nur ich')}` };

@@ -14,7 +14,7 @@
   /**
    * Der Inhalt von „Gefunden", im Fenster der App (FoundSheet) und im Schritt „Dein erster Wächter" der Einrichtung: Stups hat in Home Assistant
    * nachgesehen und zeigt, wozu ein Wächter passen würde (Waschmaschine, Trockner, Abfallkalender …), dazu „Auch ohne Gerät" (wiederkehrende
-   * Karten aus Vorlage) und alle Vorlagen. Nur für Administratoren.
+   * Aufgaben aus Vorlage) und alle Vorlagen. Nur für Administratoren.
    * `onsetup`: „Einrichten" bei einem Treffer; `ontemplate`: eine Vorlage ohne Gerät aus „Alle Vorlagen ansehen".
    */
   let { onsetup, ontemplate }: { onsetup: (s: WatcherSuggestion) => void; ontemplate: (tpl: WatcherTemplate) => void } = $props();
@@ -68,7 +68,7 @@
     }
   }
 
-  /** Eine wiederkehrende Karte aus der Vorlage: morgen zur Standard-Uhrzeit, danach wie die Wiederholung es sagt */
+  /** Eine wiederkehrende Aufgabe aus der Vorlage: morgen zur Standard-Uhrzeit, danach wie die Wiederholung es sagt */
   async function createRecurring(tpl: WatcherTemplate) {
     if (!tpl.recurring || !boardId || busy) return;
     busy = tpl.id;
@@ -79,7 +79,7 @@
       const [h, m] = (ui.settings?.defaultDueTime ?? '09:00').split(':').map(Number) as [number, number];
       const due = new Date(startOfTomorrow() + (h * 60 + m) * 60_000);
       await api.createCard(boardId, { columnId: column.id, title: tpl.recurring.title, dueAt: due.toISOString(), recurrence: tpl.recurring.recurrence as unknown as Recurrence });
-      toast(t('Karte „{title}“ angelegt', { title: tpl.recurring.title }));
+      toast(t('Aufgabe „{title}“ angelegt', { title: tpl.recurring.title }));
       await refresh();
     } catch (e) {
       toast(e instanceof Error ? e.message : t('Anlegen fehlgeschlagen'), { tone: 'error' });
@@ -124,7 +124,7 @@
   {/if}
 
   {#if recurring.length > 0}
-    <Group title={t('Auch ohne Gerät')} hint={t('Kein Gerät nötig: eine Karte, die sich in diesem Rhythmus von selbst wiederholt. Sie wird auf dem gewählten Board angelegt.')}>
+    <Group title={t('Auch ohne Gerät')} hint={t('Kein Gerät nötig: eine Aufgabe, die sich in diesem Rhythmus von selbst wiederholt. Sie wird auf dem gewählten Board angelegt.')}>
       {#if ui.boards.length > 1}
         <div class="flex items-center justify-between gap-3 px-4 py-2">
           <span class="text-[15px]">{t('Auf Board')}</span>

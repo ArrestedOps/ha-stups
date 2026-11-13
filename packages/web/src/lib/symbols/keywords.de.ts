@@ -299,7 +299,7 @@ export const DE: Record<string, readonly string[]> = {
   'motorbike': ['Motorrad', 'motorrad', 'roller', 'moped', 'motorradtour', 'helm', 'mofa', 'führerschein'],
   'bicycle-electric': ['E-Bike', 'e-bike', 'pedelec', 'fahrradakku', 'fahrradwerkstatt', 'fahrradladen', 'radwartung'],
   'bed-double-outline': ['Hotel', 'hotel', 'übernachtung', 'unterkunft', 'buchung', 'ferienwohnung', 'hotelzimmer', 'zimmer buchen', 'urlaub planen'],
-  'map-outline': ['Karte', 'karte', 'stadtplan', 'reiseplanung', 'landkarte', 'wanderkarte', 'sehenswürdigkeiten'],
+  'map-outline': ['Aufgabe', 'karte', 'stadtplan', 'reiseplanung', 'landkarte', 'wanderkarte', 'sehenswürdigkeiten'],
   'traffic-light-outline': ['Verkehr', 'verkehr', 'bußgeld', 'knöllchen', 'blitzer', 'strafzettel', 'punkte', 'fahrverbot'],
   'earth': ['Ausland', 'ausland', 'weltweit', 'international', 'fernreise', 'reiseplanung ausland', 'auslandsreise', 'impfungen reise'],
   'flag-outline': ['Ziel', 'ziel', 'markierung', 'meilenstein', 'abschließen', 'abgabe', 'termin ende'],

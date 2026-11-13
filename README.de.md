@@ -10,7 +10,7 @@
 
 <p align="center">
   Stups macht aus dem, was dein Smart Home längst weiß, Aufgaben, gibt sie der richtigen Person und erinnert freundlich.<br>
-  Die Waschmaschine ist fertig, wer zu Hause ist bekommt die Karte, mit „Erledigt“-Knopf auf dem Sperrbildschirm.<br>
+  Die Waschmaschine ist fertig, wer zu Hause ist bekommt die Aufgabe, mit „Erledigt“-Knopf auf dem Sperrbildschirm.<br>
   <sub>Aufgaben, Boards und Kalender gibt es natürlich auch, direkt in Home Assistant.</sub>
 </p>
 
@@ -34,16 +34,16 @@
 ## Warum Stups
 
 ### 🏠 Es weiß, was dein Haus gerade macht
-Home Assistant weiß längst, dass die Waschmaschine fertig ist, morgen die Tonne rausmuss und die Batterie am Türschloss bei 8 % ist. **Wächter** machen daraus von selbst Karten und geben sie reihum und fair an die, die zu Hause sind. Stups **findet passende Geräte selbst** (Waschmaschine, Trockner, Müllkalender, Regen, Batterien, Saugroboter). Einrichten in vier Schritten, mit dem Verlauf der Entität der letzten drei Stunden und einem **Probelauf über die letzten 7 Tage**, bevor es live geht. Ohne YAML, ohne Automationen, die du pflegen musst.
+Home Assistant weiß längst, dass die Waschmaschine fertig ist, morgen die Tonne rausmuss und die Batterie am Türschloss bei 8 % ist. **Wächter** machen daraus von selbst Aufgaben und geben sie reihum und fair an die, die zu Hause sind. Stups **findet passende Geräte selbst** (Waschmaschine, Trockner, Müllkalender, Regen, Batterien, Saugroboter). Einrichten in vier Schritten, mit dem Verlauf der Entität der letzten drei Stunden und einem **Probelauf über die letzten 7 Tage**, bevor es live geht. Ohne YAML, ohne Automationen, die du pflegen musst.
 
 ### 👉 Ein Stups statt Nörgeln
 Jemand hat seine Aufgabe vergessen? Schick einen **Stups**: ein freundliches „Denkst du dran?“ mit den Knöpfen **Erledigt**, **Mach ich** und **Später** direkt in der Nachricht. Sperrzeiten und Ruhezeit pro Person sorgen dafür, dass sich keiner genervt fühlt. Du kannst dich auch **selbst stupsen** („erinnere mich in 2 Stunden nochmal, höchstens 3 ×“).
 
 ### ✅ Erledigt mit einem Tipp, vom Sperrbildschirm
-Push-Erinnerungen über die Home-Assistant-Companion-App: zur Fälligkeit, vorab, nachhakend bei Überfälligkeit und als Morgen-Zusammenfassung. **„Erledigt“ geht direkt in der Nachricht.** Wiederkehrende Aufgaben legen die nächste Karte von selbst an.
+Push-Erinnerungen über die Home-Assistant-Companion-App: zur Fälligkeit, vorab, nachhakend bei Überfälligkeit und als Morgen-Zusammenfassung. **„Erledigt“ geht direkt in der Nachricht.** Wiederkehrende Aufgaben legen die nächste Aufgabe von selbst an.
 
 ### ⚡ Schnell-Eingabe, die mitdenkt
-Tippe `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` und bekomm eine fertige Karte mit Termin, Zuständigem, Kategorie, Wiederholung und Priorität. Deutsch und Englisch, verstanden schon beim Tippen.
+Tippe `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` und bekomm eine fertige Aufgabe mit Termin, Zuständigem, Kategorie, Wiederholung und Priorität. Deutsch und Englisch, verstanden schon beim Tippen.
 
 ### ⚖️ Fair, ohne Rangliste
 **Diese Woche** zeigt, wer wie viel getan hat, gewichtet nach Aufwand (klein, mittel, groß). Keine Plätze, keine Medaillen, keine Prozente: Es geht darum, die Last zu *sehen*, nicht um einen Wettbewerb. Rotationen überspringen, wer diese Woche „wenig Zeit“ hat.
@@ -52,12 +52,12 @@ Tippe `Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!` und bekomm eine fe
 Alles liegt in deinem Home Assistant (SQLite im Add-on-Speicher, Teil des normalen Backups). Kein Konto, keine Cloud, kein Tracking. **Private Boards** sieht nur du, auch kein Administrator. Es werden keine Schriften oder Skripte aus dem Internet geladen.
 
 ### 👨‍👩‍👧 Gebaut für eine ganze Familie
-- **Rolle Kind:** Kinder sehen und haken nur ihre eigenen Karten ab. Mit Bestätigung wartet die Karte, bis ein Elternteil „Passt“ oder „Nochmal“ sagt.
+- **Rolle Kind:** Kinder sehen und haken nur ihre eigenen Aufgaben ab. Mit Bestätigung wartet die Aufgabe, bis ein Elternteil „Passt“ oder „Nochmal“ sagt.
 - **Haus-Kanäle:** Ein Stups kann auch eine Ansage auf einem Lautsprecher sein oder eine Lampe, die in deiner Farbe leuchtet, für Kinder ohne Handy.
 - **Berechtigungen** für einzelne Personen (Wächter, Einstellungen, Personen …), ohne sie zu Administratoren zu machen.
 
 ### 📱 Fühlt sich an wie eine echte App
-Fürs iPhone gebaut: Dunkel- und Hellmodus, Wischen verschiebt Karten, Live-Sync zwischen allen Geräten, Deutsch und English (auch die Push-Nachrichten). Am Desktop gibt es eine **Seitenleiste** mit Suche (Strg/Cmd + K), ein Kanban über die volle Breite und eine Detailspalte.
+Fürs iPhone gebaut: Dunkel- und Hellmodus, Wischen verschiebt Aufgaben, Live-Sync zwischen allen Geräten, Deutsch und English (auch die Push-Nachrichten). Am Desktop gibt es eine **Seitenleiste** mit Suche (Strg/Cmd + K), ein Kanban über die volle Breite und eine Detailspalte.
 
 <p align="center">
   <img src="docs/images/waechter-dunkel.png" alt="Wächter, dunkel" width="23%">
@@ -78,16 +78,16 @@ Das Haus erkennt, Stups verteilt und erinnert, und das Board ist einfach der Ort
 
 | | |
 |---|---|
-| **Wächter** | Karten aus Entitäten von Home Assistant: vorgeschlagene Geräte, Assistent in vier Schritten, Ablauf-Editor, Probelauf über 7 Tage, „Weitergeben“, „Erst vorschlagen“ (wer zuerst tippt, übernimmt), Stupsen nach einer Weile. |
+| **Wächter** | Aufgaben aus Entitäten von Home Assistant: vorgeschlagene Geräte, Assistent in vier Schritten, Ablauf-Editor, Probelauf über 7 Tage, „Weitergeben“, „Erst vorschlagen“ (wer zuerst tippt, übernimmt), Stupsen nach einer Weile. |
 | **Push und Stupsen** | Companion-App-Nachrichten mit Aktionsknöpfen, Tageszusammenfassung, Nachhaken, Stupse mit Sperr- und Ruhezeit. |
-| **Aufgaben (Startseite)** | Was für dich dran ist: Karten vom Haus oben, deine Zahlen (heute fällig, überfällig, heute erledigt), die Woche, ein Banner, wenn dich jemand gestupst hat, und deine Karten gruppiert nach Überfällig, Heute, Diese Woche, Später. Chips schalten zwischen Meine, Alle und jeder Person um. |
-| **Boards** | Mehrere Boards mit eigenen Spalten und Kategorien. Karten mit Zuständigen, Termin, Priorität, Kosten, Aufwand, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt. Archivieren, duplizieren oder als Vorlage speichern (Haushalt, Umzug, Renovierung und mehr). |
+| **Aufgaben (Startseite)** | Was für dich dran ist: Aufgaben vom Haus oben, deine Zahlen (heute fällig, überfällig, heute erledigt), die Woche, ein Banner, wenn dich jemand gestupst hat, und deine Aufgaben gruppiert nach Überfällig, Heute, Diese Woche, Später. Chips schalten zwischen Meine, Alle und jeder Person um. |
+| **Boards** | Mehrere Boards mit eigenen Spalten und Kategorien. Aufgaben mit Zuständigen, Termin, Priorität, Kosten, Aufwand, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt. Archivieren, duplizieren oder als Vorlage speichern (Haushalt, Umzug, Renovierung und mehr). |
 | **Private und geteilte Boards** | Sichtbar für „Nur ich“, „Alle in Stups“ oder „Ausgewählte Personen“. Kinder können eigene private Boards anlegen. |
-| **Kalender** | Tag, Woche, Monat oder Liste. Auf einen freien Zeitpunkt tippen legt eine Karte dafür an. Filter nach Person und Board. |
-| **Wiederkehrende Aufgaben** | Fester Rhythmus oder ab Erledigung, auch stündlich (auf Wunsch nur im Zeitfenster), mit „kleine Verspätung ist okay“. Jede Option zeigt ein Beispiel live. Die erledigte Karte behält ihren Verlauf, die nächste entsteht. |
+| **Kalender** | Tag, Woche, Monat oder Liste. Auf einen freien Zeitpunkt tippen legt eine Aufgabe dafür an. Filter nach Person und Board. |
+| **Wiederkehrende Aufgaben** | Fester Rhythmus oder ab Erledigung, auch stündlich (auf Wunsch nur im Zeitfenster), mit „kleine Verspätung ist okay“. Jede Option zeigt ein Beispiel live. Die erledigte Aufgabe behält ihren Verlauf, die nächste entsteht. |
 | **Fairness** | Aufwand pro Person für diese Woche oder diesen Monat, optionale Zusammenfassung am Sonntagabend, Schalter je Board. |
 | **Personen und Zugriff** | Jeder bekommt ein Bild (aus Home Assistant oder hochgeladen). Du bestimmst, wer die App öffnen darf. Rollen: Administrator, Mitglied, Kind. |
-| **Sensoren für Home Assistant** | Überfällige und heute fällige Karten, gesamt und pro Person, und offene Stupse. Für Dashboards und Automationen. |
+| **Sensoren für Home Assistant** | Überfällige und heute fällige Aufgaben, gesamt und pro Person, und offene Stupse. Für Dashboards und Automationen. |
 | **Feedback** | Fehler melden oder Ideen schicken, direkt in der App; es bleibt auf deiner Installation. |
 
 ## In 3 Minuten installiert

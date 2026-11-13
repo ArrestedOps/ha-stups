@@ -3,11 +3,11 @@ import { shiftBatch, undoShifts, type ShiftRecord } from '../src/lib/undoShift';
 
 /**
  * „Rückgängig" nach „Überfällige verschieben": zurückgesetzt wird nur, was noch so dasteht, wie die Aktion es hinterlassen hat.
- * Hat jemand inzwischen einen anderen Termin gesetzt, bleibt die neuere Entscheidung; ein Fehler bei einer Karte bricht die anderen nicht ab.
+ * Hat jemand inzwischen einen anderen Termin gesetzt, bleibt die neuere Entscheidung; ein Fehler bei einer Aufgabe bricht die anderen nicht ab.
  */
-const rec = (id: string, from: string, to: string): ShiftRecord => ({ id, title: `Karte ${id}`, from, to });
+const rec = (id: string, from: string, to: string): ShiftRecord => ({ id, title: `Aufgabe ${id}`, from, to });
 
-/** Ein Server aus dem Speicher: Karten mit Termin und Version, `update` prüft die Vorbedingung wie der echte */
+/** Ein Server aus dem Speicher: Aufgaben mit Termin und Version, `update` prüft die Vorbedingung wie der echte */
 function fake(cards: Record<string, { dueAt: string | null; version: number }>, opts: { failOn?: string; raceOn?: string } = {}) {
   const calls: { id: string; dueAt: string; expectedVersion: number }[] = [];
   return {
@@ -50,13 +50,13 @@ describe('undoShifts', () => {
     expect(s.cards['a']).toEqual({ dueAt: '2026-11-09T09:00:00.000Z', version: 4 }); // unberührt
   });
 
-  it('wurde die Karte zwischen Lesen und Schreiben geändert (409), zählt das als Konflikt, nicht als Fehler', async () => {
+  it('wurde die Aufgabe zwischen Lesen und Schreiben geändert (409), zählt das als Konflikt, nicht als Fehler', async () => {
     const s = fake({ a: { dueAt: A.to, version: 1 }, b: { dueAt: B.to, version: 1 } }, { raceOn: 'a' });
     const r = await undoShifts([A, B], s.io);
     expect(r).toEqual({ restored: [B], conflicts: [A], failed: 0 });
   });
 
-  it('ein Fehler bei einer Karte bricht die anderen nicht ab (Teilerfolg), eine gelöschte Karte zählt als Fehler', async () => {
+  it('ein Fehler bei einer Aufgabe bricht die anderen nicht ab (Teilerfolg), eine gelöschte Aufgabe zählt als Fehler', async () => {
     const C = rec('c', '2026-11-03T09:00:00.000Z', '2026-11-04T11:00:00.000Z');
     const s = fake({ a: { dueAt: A.to, version: 1 }, c: { dueAt: C.to, version: 1 } }, { failOn: 'a' });
     const r = await undoShifts([A, B, C], s.io); // b gibt es nicht mehr
@@ -65,7 +65,7 @@ describe('undoShifts', () => {
     expect(r.failed).toBe(2);
   });
 
-  it('eine Karte ohne Termin ist inzwischen geändert worden: Konflikt', async () => {
+  it('eine Aufgabe ohne Termin ist inzwischen geändert worden: Konflikt', async () => {
     const s = fake({ a: { dueAt: null, version: 2 } });
     expect(await undoShifts([A], s.io)).toEqual({ restored: [], conflicts: [A], failed: 0 });
   });
@@ -78,7 +78,7 @@ describe('shiftBatch (Überfällige verschieben mit der gesehenen Version)', () 
     { id: 'b', title: 'B', dueAt: '2026-11-06T09:00:00.000Z', version: 7 },
   ];
 
-  it('schreibt jede Karte mit der Version, die die Liste gesehen hat, als Vorbedingung', async () => {
+  it('schreibt jede Aufgabe mit der Version, die die Liste gesehen hat, als Vorbedingung', async () => {
     const calls: { id: string; patch: { dueAt: string; expectedVersion?: number } }[] = [];
     const r = await shiftBatch(items, 'tomorrow', NOW, async (id, patch) => void calls.push({ id, patch }));
     expect(r.failed).toBe(0);
@@ -89,7 +89,7 @@ describe('shiftBatch (Überfällige verschieben mit der gesehenen Version)', () 
     ]);
   });
 
-  it('eine Karte, die inzwischen jemand geändert hat (409), bleibt, wie sie ist; die übrigen werden verschoben', async () => {
+  it('eine Aufgabe, die inzwischen jemand geändert hat (409), bleibt, wie sie ist; die übrigen werden verschoben', async () => {
     const r = await shiftBatch(items, 'tomorrow', NOW, async (id) => {
       if (id === 'a') throw Object.assign(new Error('geändert'), { status: 409 });
     });

@@ -30,9 +30,9 @@
     left?: Snippet;
     right?: Snippet;
     hideClose?: boolean;
-    /** so hoch wie der Inhalt (Aktionsblatt wie das Karten-Menü); sonst von der Kopfzeile des Geräts bis unten, wie in den Mockups */
+    /** so hoch wie der Inhalt (Aktionsblatt wie das Aufgaben-Menü); sonst von der Kopfzeile des Geräts bis unten, wie in den Mockups */
     fit?: boolean;
-    /** Schrift des Titels (Standard: 17 px, fett); das Karten-Fenster zeigt dort klein „Gespeichert" */
+    /** Schrift des Titels (Standard: 17 px, fett); das Aufgaben-Fenster zeigt dort klein „Gespeichert" */
     titleClass?: string;
     /** großer Knopf am Fuß, fest über dem Inhalt (der Inhalt lässt unten Platz dafür) */
     footer?: Snippet;

@@ -10,7 +10,7 @@ import { parseWatcher } from '../src/watcher-types.js';
 import { createWatchers, type Watchers } from '../src/watchers.js';
 import { FakeHa } from './helpers/fake-ha.js';
 
-// Weitergeben: die Karte vom Haus geht an die nächste Person der Rotation, ohne dass die Rotation weiterrückt
+// Weitergeben: die Aufgabe vom Haus geht an die nächste Person der Rotation, ohne dass die Rotation weiterrückt
 const ENTITY = 'sensor.wm';
 let t: number;
 let store: Store;
@@ -43,7 +43,7 @@ beforeEach(() => {
   engine.start();
 });
 
-/** Ein Wächter mit einer offenen Karte, die Anna hat */
+/** Ein Wächter mit einer offenen Aufgabe, die Anna hat */
 async function setup(assign: Record<string, unknown>): Promise<{ w: Watcher; card: Card }> {
   const w = data.create(
     parseWatcher({
@@ -88,7 +88,7 @@ describe('Weitergeben', () => {
     expect(await engine.pass(card.id, anna)).toEqual({ to: conny });
   });
 
-  it('niemand sonst im Kreis oder da: die Karte bleibt bei mir', async () => {
+  it('niemand sonst im Kreis oder da: die Aufgabe bleibt bei mir', async () => {
     const { card } = await setup({ mode: 'rotation', personIds: [anna] });
     expect(await engine.pass(card.id, anna)).toEqual({ to: null });
     expect(store.getCard(card.id).assigneeIds).toEqual([anna]);
@@ -101,7 +101,7 @@ describe('Weitergeben', () => {
     expect(await engine.pass(second.card.id, anna)).toEqual({ to: null });
   });
 
-  it('nicht meine Karte: verboten; keine Karte vom Haus oder schon erledigt: Konflikt', async () => {
+  it('nicht meine Aufgabe: verboten; keine Aufgabe vom Haus oder schon erledigt: Konflikt', async () => {
     const { card } = await setup({ mode: 'rotation', personIds: [anna, ben, conny] });
     await expect(engine.pass(card.id, ben)).rejects.toBeInstanceOf(ForbiddenError);
     const plain = store.createCard(boardId, { columnId, title: 'Normal', assigneeIds: [anna] }, null);
@@ -110,7 +110,7 @@ describe('Weitergeben', () => {
     await expect(engine.pass(card.id, anna)).rejects.toBeInstanceOf(ConflictError);
   });
 
-  it('zweimal hintereinander: die zweite Anfrage bekommt einen Konflikt (die Karte gehört schon Ben)', async () => {
+  it('zweimal hintereinander: die zweite Anfrage bekommt einen Konflikt (die Aufgabe gehört schon Ben)', async () => {
     const { card } = await setup({ mode: 'rotation', personIds: [anna, ben, conny] });
     await engine.pass(card.id, anna);
     await expect(engine.pass(card.id, anna)).rejects.toBeInstanceOf(ForbiddenError);
@@ -128,7 +128,7 @@ describe('Schnittstelle', () => {
     await app.register(apiRoutes, { store, watchers: engine, watcherData: data, directory: { isAdmin: async () => false, persons: async () => [] } });
   });
 
-  it('Anna gibt weiter, Ben nicht (nicht seine Karte), ein Kind nie', async () => {
+  it('Anna gibt weiter, Ben nicht (nicht seine Aufgabe), ein Kind nie', async () => {
     const { card } = await setup({ mode: 'rotation', personIds: [anna, ben, conny] });
     expect((await post(as('u-ben'), card.id)).statusCode).toBe(403);
     store.setChild(conny, { isChild: true });

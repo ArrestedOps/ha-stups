@@ -41,7 +41,7 @@ export function createViews(ctx: Ctx, calls: () => Parts) {
         suggestedCategory: categoryOfWatcher(w, seenOf(w.trigger.entityId)),
         /** Bei `target_missing`: Board archiviert oder gelöscht (sonst null) */
         pausedBy: w.status === 'target_missing' ? store.targetGone(w.card.boardId) : null,
-        /** die offene Karte dieses Wächters, falls es eine gibt */
+        /** die offene Aufgabe dieses Wächters, falls es eine gibt */
         openCard: open ? { id: open.id, title: open.title, boardId: open.boardId, assigneeIds: open.assigneeIds, waiting: waiting.has(open.id) } : null,
       };
     });
@@ -59,7 +59,7 @@ export function createViews(ctx: Ctx, calls: () => Parts) {
       const open = store.openCardOfWatcher(w.id);
       const counter = w.trigger.count > 1 ? counterOf(w.id) : 0;
       const nextEvent = w.active ? (mem.nextEvents.get(w.id) ?? null) : null;
-      // Ein ausgeschalteter Wächter läuft nie „gerade" und zählt nicht „bald"; nur seine noch offene Karte wartet weiter auf jemanden
+      // Ein ausgeschalteter Wächter läuft nie „gerade" und zählt nicht „bald"; nur seine noch offene Aufgabe wartet weiter auf jemanden
       let phase: HomePhase;
       let since: string | null;
       if (w.active) {

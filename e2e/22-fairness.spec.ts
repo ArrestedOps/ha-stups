@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import { openBoards } from './helpers';
 
-// Fairness: Aufwand an der Karte setzen und die Seite „Diese Woche". Die Zahlen werden gegen den Stand VOR dem Test
+// Fairness: Aufwand an der Aufgabe setzen und die Seite „Diese Woche". Die Zahlen werden gegen den Stand VOR dem Test
 // verglichen (der Server ist mit anderen Tests geteilt) und hängen nicht von der Tageszeit ab.
 test.describe.configure({ mode: 'serial' });
 
@@ -43,7 +43,7 @@ async function openWeek(page: import('@playwright/test').Page, request: APIReque
   await expect(page.getByTestId('fairness')).toBeVisible();
 }
 
-test('Aufwand an der Karte wählen: gespeichert und als Chip zu sehen', async ({ page, request }) => {
+test('Aufwand an der Aufgabe wählen: gespeichert und als Chip zu sehen', async ({ page, request }) => {
   const b = await board(request);
   const title = `Groß ${unique()}`;
   const card = (await (await request.post(`/api/boards/${b.id}/cards`, { data: { title, columnId: b.columnId } })).json()) as { id: string };

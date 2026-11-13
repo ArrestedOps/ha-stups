@@ -1,5 +1,5 @@
 /**
- * Der Titel der Karte, die ein Wächter anlegt: die Vorlage im Wächter bleibt sauber („Batterie wechseln"), die Karte bekommt zur Laufzeit
+ * Der Titel der Aufgabe, die ein Wächter anlegt: die Vorlage im Wächter bleibt sauber („Batterie wechseln"), die Aufgabe bekommt zur Laufzeit
  * den Namen der Entität dazu („Batterie wechseln: Nuki Türschloss"), damit man in den Aufgaben sieht, um welches Gerät es geht. Gegenstück
  * zu `cardTitleOf` in server/src/watcher-names.ts (gleiche Regeln, gleiche Tests); die Vorschau im Editor zeigt damit den fertigen Titel.
  * Nichts wird angehängt bei Kalender und Vorhersage (die Entität ist dort kein Gerät), ohne Entitätsnamen oder wenn der Name schon im Titel steht.

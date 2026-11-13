@@ -29,7 +29,7 @@ interface Look {
   accent2: [l: number, c: number];
   /** Das dunklere Ende des Verlaufs auf Flächen mit Schrift (Verlauf: accent → end); die Schrift bleibt an jedem Punkt lesbar */
   end: [l: number, c: number];
-  /** Schrift in Akzentfarbe, muss auf Karten und Hintergrund lesbar sein */
+  /** Schrift in Akzentfarbe, muss auf Aufgaben und Hintergrund lesbar sein */
   text: [l: number, c: number];
   glowAlpha: number;
   shadowAlpha: number;

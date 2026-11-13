@@ -95,7 +95,7 @@ beforeEach(() => {
 });
 
 describe('Ausgeschaltet (Beta)', () => {
-  it('legt keine Karte an und weist keine zu, solange die Wächter aus sind; danach läuft alles wie sonst', async () => {
+  it('legt keine Aufgabe an und weist keine zu, solange die Wächter aus sind; danach läuft alles wie sonst', async () => {
     const w = await create();
     enabled = false;
     await done(w);
@@ -116,7 +116,7 @@ describe('Ausgeschaltet (Beta)', () => {
 });
 
 describe('Auslösen', () => {
-  it('legt bei Erfüllung der Bedingung eine Karte an, mit Termin ab jetzt und der festen Person', async () => {
+  it('legt bei Erfüllung der Bedingung eine Aufgabe an, mit Termin ab jetzt und der festen Person', async () => {
     const w = await create();
     await done(w);
     expect(cards()).toHaveLength(1);
@@ -180,7 +180,7 @@ describe('Pegel beim Anlegen schon über der Grenze', () => {
     expect(data.runs(w.id)[0]).toMatchObject({ result: 'created' });
   });
 
-  it('steht der Wert erst kurz so, kommt die Karte nach der Wartezeit (Takt), nicht früher', async () => {
+  it('steht der Wert erst kurz so, kommt die Aufgabe nach der Wartezeit (Takt), nicht früher', async () => {
     ha.set(BATT, '1', '2026-11-04T09:58:00Z', { device_class: 'battery', unit_of_measurement: '%' });
     const w = await battery();
     expect(cards()).toHaveLength(0);
@@ -214,7 +214,7 @@ describe('Pegel beim Anlegen schon über der Grenze', () => {
     expect(cards()).toHaveLength(0);
   });
 
-  it('Ändern eines Wächters, der schon ausgelöst hat, legt keine zweite Karte an', async () => {
+  it('Ändern eines Wächters, der schon ausgelöst hat, legt keine zweite Aufgabe an', async () => {
     ha.set(BATT, '1', '2026-11-04T09:00:00Z', { device_class: 'battery', unit_of_measurement: '%' });
     const w = await battery();
     expect(cards()).toHaveLength(1);
@@ -277,7 +277,7 @@ describe('Nachfrage nach dem Speichern (metNow)', () => {
     expect(await engine.onSaved(w.id)).toBeNull();
   });
 
-  it('gibt es schon eine offene Karte des Wächters, wird nicht gefragt', async () => {
+  it('gibt es schon eine offene Aufgabe des Wächters, wird nicht gefragt', async () => {
     const w = door('on');
     await engine.onSaved(w.id);
     ha.set(DOOR, 'off');
@@ -293,8 +293,8 @@ describe('Nachfrage nach dem Speichern (metNow)', () => {
     expect(await engine.onSaved(w.id)).toBeNull();
   });
 
-  describe('fireNow (Ja, Karte erstellen)', () => {
-    it('legt die Karte über den normalen Weg an: Zuweisung, Fälligkeit, Lauf mit Hinweis', async () => {
+  describe('fireNow (Ja, Aufgabe erstellen)', () => {
+    it('legt die Aufgabe über den normalen Weg an: Zuweisung, Fälligkeit, Lauf mit Hinweis', async () => {
       const w = door('off', { card: { boardId, columnId, title: 'Tür schließen', due: { kind: 'in', minutes: 30 } } });
       await engine.onSaved(w.id);
       await engine.fireNow(w.id);
@@ -307,14 +307,14 @@ describe('Nachfrage nach dem Speichern (metNow)', () => {
       expect(assigned.map((a) => a.ids)).toEqual([[anna]]);
     });
 
-    it('ist keine Testkarte (kein Hinweis in der Beschreibung)', async () => {
+    it('ist keine Testaufgabe (kein Hinweis in der Beschreibung)', async () => {
       const w = door('off');
       await engine.onSaved(w.id);
       await engine.fireNow(w.id);
       expect(cards()[0]!.description ?? '').not.toMatch(/Test/);
     });
 
-    it('gilt die Bedingung nicht mehr, gibt es eine freundliche Absage und keine Karte', async () => {
+    it('gilt die Bedingung nicht mehr, gibt es eine freundliche Absage und keine Aufgabe', async () => {
       const w = door('off');
       await engine.onSaved(w.id);
       ha.set(DOOR, 'on');
@@ -322,15 +322,15 @@ describe('Nachfrage nach dem Speichern (metNow)', () => {
       expect(cards()).toHaveLength(0);
     });
 
-    it('gibt es schon eine offene Karte, gibt es eine Absage und keine zweite', async () => {
+    it('gibt es schon eine offene Aufgabe, gibt es eine Absage und keine zweite', async () => {
       const w = door('off');
       await engine.onSaved(w.id);
       await engine.fireNow(w.id);
-      await expect(engine.fireNow(w.id)).rejects.toMatchObject({ status: 409, message: expect.stringMatching(/offene Karte/) });
+      await expect(engine.fireNow(w.id)).rejects.toMatchObject({ status: 409, message: expect.stringMatching(/offene Aufgabe/) });
       expect(cards()).toHaveLength(1);
     });
 
-    it('die Sperrzeit eines früheren Auslösens hält die ausdrücklich gewünschte Karte nicht auf', async () => {
+    it('die Sperrzeit eines früheren Auslösens hält die ausdrücklich gewünschte Aufgabe nicht auf', async () => {
       const w = door('off', { cooldownMin: 60 });
       await engine.onSaved(w.id);
       await engine.fireNow(w.id);
@@ -372,7 +372,7 @@ describe('Neustart-fest', () => {
     ha.reconnect();
     await engine.idle();
     expect(cards()).toHaveLength(1);
-    // noch einmal verbinden: derselbe Zustand, keine zweite Karte
+    // noch einmal verbinden: derselbe Zustand, keine zweite Aufgabe
     ha.reconnect();
     await engine.idle();
     expect(cards()).toHaveLength(1);
@@ -421,7 +421,7 @@ describe('Neustart-fest', () => {
   });
 });
 
-describe('Sperrzeit, Doppelkarten, Zähler', () => {
+describe('Sperrzeit, Doppelaufgaben, Zähler', () => {
   it('eine flatternde Entität löst in der Sperrzeit nicht noch einmal aus', async () => {
     const w = await create({ dedupe: false });
     await done(w);
@@ -436,7 +436,7 @@ describe('Sperrzeit, Doppelkarten, Zähler', () => {
     expect(cards()).toHaveLength(2);
   });
 
-  it('solange die Karte offen ist, entsteht keine neue; der Verlauf vermerkt es', async () => {
+  it('solange die Aufgabe offen ist, entsteht keine neue; der Verlauf vermerkt es', async () => {
     const w = await create({ cooldownMin: 0 });
     await done(w);
     await running(w);
@@ -447,7 +447,7 @@ describe('Sperrzeit, Doppelkarten, Zähler', () => {
     expect(data.runsOfCard(cards()[0]!.id).map((r) => r.result)).toEqual(['created', 'retriggered']);
   });
 
-  it('der Verlauf der Karte nennt den Wächter und was er danach getan hat', async () => {
+  it('der Verlauf der Aufgabe nennt den Wächter und was er danach getan hat', async () => {
     const w = await create({ cooldownMin: 0 });
     await done(w);
     await running(w);
@@ -457,7 +457,7 @@ describe('Sperrzeit, Doppelkarten, Zähler', () => {
     expect(activity.find((a) => a.kind === 'watcher')).toMatchObject({ text: 'Erneut ausgelöst' });
   });
 
-  it('ist die Karte erledigt, entsteht beim nächsten Mal wieder eine', async () => {
+  it('ist die Aufgabe erledigt, entsteht beim nächsten Mal wieder eine', async () => {
     const w = await create({ cooldownMin: 0 });
     await done(w);
     store.completeCard(cards()[0]!.id, { by: anna, source: 'app' });
@@ -467,7 +467,7 @@ describe('Sperrzeit, Doppelkarten, Zähler', () => {
     expect(cards()).toHaveLength(2);
   });
 
-  it('„neue Karte trotzdem anlegen" schaltet die Doppelkarten-Regel ab', async () => {
+  it('„neue Aufgabe trotzdem anlegen" schaltet die Doppelaufgaben-Regel ab', async () => {
     const w = await create({ cooldownMin: 0, dedupe: false });
     await done(w);
     await running(w);
@@ -496,7 +496,7 @@ describe('Sperrzeit, Doppelkarten, Zähler', () => {
       });
     };
 
-    it('zählt, bis die Karte beim N-ten Mal entsteht', async () => {
+    it('zählt, bis die Aufgabe beim N-ten Mal entsteht', async () => {
       const w = await mk();
       await cycle(w);
       await cycle(w);
@@ -507,14 +507,14 @@ describe('Sperrzeit, Doppelkarten, Zähler', () => {
       expect(engine.counterOf(w.id)).toBe(3);
     });
 
-    it('läuft der Zähler bei offener Karte weiter, entsteht keine zweite; der Stand steht im Verlauf', async () => {
+    it('läuft der Zähler bei offener Aufgabe weiter, entsteht keine zweite; der Stand steht im Verlauf', async () => {
       const w = await mk();
       for (let i = 0; i < 5; i += 1) await cycle(w);
       expect(cards()).toHaveLength(1);
       expect(data.runs(w.id)[0]).toMatchObject({ result: 'retriggered', note: '5 Auslösungen seit dem letzten Zurücksetzen' });
     });
 
-    it('wird die Karte erledigt, beginnt die Zählung von vorn', async () => {
+    it('wird die Aufgabe erledigt, beginnt die Zählung von vorn', async () => {
       const w = await mk();
       for (let i = 0; i < 3; i += 1) await cycle(w);
       store.completeCard(cards()[0]!.id, { by: anna, source: 'app' });
@@ -621,7 +621,7 @@ describe('Zuweisung', () => {
     expect(cards()[0]!.assigneeIds).toEqual([]);
   });
 
-  it('niemand: Karte bleibt unzugewiesen', async () => {
+  it('niemand: Aufgabe bleibt unzugewiesen', async () => {
     const w = await create({ assign: { mode: 'none', personIds: [] } });
     await done(w);
     expect(cards()[0]!.assigneeIds).toEqual([]);
@@ -642,7 +642,7 @@ describe('Wer zuerst nach Hause kommt', () => {
     await engine.idle();
   };
 
-  it('ist schon jemand da, geht die Karte wie bei „abwechselnd unter den Anwesenden" sofort an eine anwesende Person', async () => {
+  it('ist schon jemand da, geht die Aufgabe wie bei „abwechselnd unter den Anwesenden" sofort an eine anwesende Person', async () => {
     home('ben', true);
     const w = await mk();
     await finish(w);
@@ -650,7 +650,7 @@ describe('Wer zuerst nach Hause kommt', () => {
     expect(data.listWaiting()).toEqual([]);
   });
 
-  it('ist niemand da, erscheint die Karte unzugewiesen mit Hinweis und ohne Push', async () => {
+  it('ist niemand da, erscheint die Aufgabe unzugewiesen mit Hinweis und ohne Push', async () => {
     const w = await mk();
     await finish(w);
     const c = cards()[0]!;
@@ -663,7 +663,7 @@ describe('Wer zuerst nach Hause kommt', () => {
     expect(ha.subs.has('presence')).toBe(true);
   });
 
-  it('die erste Heimkehr bekommt die Karte und die Nachricht; die Fälligkeit zählt ab der Zuweisung', async () => {
+  it('die erste Heimkehr bekommt die Aufgabe und die Nachricht; die Fälligkeit zählt ab der Zuweisung', async () => {
     const w = await create({
       trigger: { entityId: 'vacuum.s7', kind: 'state', to: 'docked' },
       card: { boardId, columnId, title: 'Staubbehälter leeren', description: 'Bitte leeren', due: { kind: 'in', minutes: 30 } },
@@ -681,7 +681,7 @@ describe('Wer zuerst nach Hause kommt', () => {
     expect(assigned.map((a) => a.ids)).toEqual([[conny]]);
   });
 
-  it('kommen zwei fast gleichzeitig an (innerhalb von 2 Minuten), bekommen beide die Karte, danach niemand mehr', async () => {
+  it('kommen zwei fast gleichzeitig an (innerhalb von 2 Minuten), bekommen beide die Aufgabe, danach niemand mehr', async () => {
     const w = await mk();
     await finish(w);
     ha.arrive('person.anna');
@@ -708,7 +708,7 @@ describe('Wer zuerst nach Hause kommt', () => {
     expect(assigned).toHaveLength(1);
   });
 
-  it('wird die Karte vorher von Hand zugewiesen oder erledigt, endet das Warten', async () => {
+  it('wird die Aufgabe vorher von Hand zugewiesen oder erledigt, endet das Warten', async () => {
     const w = await mk({ cooldownMin: 0 });
     await finish(w);
     store.updateCard(cards()[0]!.id, { assigneeIds: [ben] });
@@ -729,7 +729,7 @@ describe('Wer zuerst nach Hause kommt', () => {
     expect(store.getCard(cards()[0]!.id).assigneeIds).toEqual([ben]);
   });
 
-  it('nach 24 Stunden ohne Heimkehr bleibt die Karte unzugewiesen (Vorgabe), ohne Hinweis', async () => {
+  it('nach 24 Stunden ohne Heimkehr bleibt die Aufgabe unzugewiesen (Vorgabe), ohne Hinweis', async () => {
     const w = await mk();
     await finish(w);
     advance(24 * 60 + 1);
@@ -751,16 +751,16 @@ describe('Wer zuerst nach Hause kommt', () => {
     const w2 = await create({
       trigger: { entityId: 'vacuum.s7', kind: 'state', to: 'idle' },
       assign: { mode: 'first_home', personIds: [], waitFallback: 'fixed', fallbackPersonId: ben },
-      card: { boardId, columnId, title: 'Zweite Karte', due: { kind: 'none' } },
+      card: { boardId, columnId, title: 'Zweite Aufgabe', due: { kind: 'none' } },
     });
     ha.emit(fireKey(w2), 'idle');
     await engine.idle();
     advance(24 * 60 + 1);
     await engine.tick();
-    expect(store.getCard(cards().find((c) => c.title.startsWith('Zweite Karte'))!.id).assigneeIds).toEqual([ben]);
+    expect(store.getCard(cards().find((c) => c.title.startsWith('Zweite Aufgabe'))!.id).assigneeIds).toEqual([ben]);
   });
 
-  it('nur Personen aus dem Kreis des Wächters bekommen die Karte', async () => {
+  it('nur Personen aus dem Kreis des Wächters bekommen die Aufgabe', async () => {
     const w = await mk({ personIds: [ben] });
     await finish(w);
     ha.arrive('person.anna');
@@ -773,7 +773,7 @@ describe('Wer zuerst nach Hause kommt', () => {
 });
 
 describe('Fälligkeit, Spalte und Test', () => {
-  it('„morgen 08:00" gilt in der Ortszeit; die Karte kommt dann nach „Geplant"', async () => {
+  it('„morgen 08:00" gilt in der Ortszeit; die Aufgabe kommt dann nach „Geplant"', async () => {
     const w = await create({ card: { boardId, columnId, title: 'Mülltonne', due: { kind: 'at', day: 'tomorrow', time: '08:00' } } });
     await done(w);
     const c = cards()[0]!;
@@ -782,14 +782,14 @@ describe('Fälligkeit, Spalte und Test', () => {
     expect(c.columnId).toBe(planned.id);
   });
 
-  it('ist als Spalte „Geplant" gewählt, der Termin aber heute, landet die Karte in „Offen"', async () => {
+  it('ist als Spalte „Geplant" gewählt, der Termin aber heute, landet die Aufgabe in „Offen"', async () => {
     const planned = store.getBoardView(boardId).columns.find((x) => x.isPlanned)!;
     const w = await create({ card: { boardId, columnId: planned.id, title: 'x', due: { kind: 'in', minutes: 5 } } });
     await done(w);
     expect(cards()[0]!.columnId).toBe(columnId);
   });
 
-  it('„Testen" legt eine Karte mit Vermerk an, ohne Sperrzeit, Zähler oder Doppelkarten-Regel zu beachten', async () => {
+  it('„Testen" legt eine Aufgabe mit Vermerk an, ohne Sperrzeit, Zähler oder Doppelaufgaben-Regel zu beachten', async () => {
     const w = await create({ trigger: { entityId: ENTITY, kind: 'below', value: 5, count: 3 } });
     await engine.test(w.id);
     await engine.test(w.id);
@@ -800,11 +800,11 @@ describe('Fälligkeit, Spalte und Test', () => {
   });
 });
 
-describe('Stupsen, wenn noch offen (Erinnerung der Karte)', () => {
+describe('Stupsen, wenn noch offen (Erinnerung der Aufgabe)', () => {
   const rows = () =>
     (db.prepare('select * from card_reminders order by rowid').all() as any[]).map((r) => ({ user: r.user_id, anchor: r.anchor, after: r.after_min, every: r.every_min, max: r.max_count, anchorAt: r.anchor_at }));
 
-  it('legt beim Anlegen der Karte eine Erinnerung an die Zuständigen an, mit der Regel des Wächters', async () => {
+  it('legt beim Anlegen der Aufgabe eine Erinnerung an die Zuständigen an, mit der Regel des Wächters', async () => {
     const w = await create({ nudge: { afterMin: 60, everyMin: 30, max: 3 } });
     await done(w);
     expect(rows()).toEqual([{ user: null, anchor: 'created', after: 60, every: 30, max: 3, anchorAt: new Date(t).toISOString() }]);
@@ -832,7 +832,7 @@ describe('Stupsen, wenn noch offen (Erinnerung der Karte)', () => {
     expect(rows()).toMatchObject([{ user: null, anchor: 'created', after: 30, every: null, max: 1, anchorAt: new Date(t).toISOString() }]);
   });
 
-  it('Testkarten stupsen nicht', async () => {
+  it('Testaufgaben stupsen nicht', async () => {
     const w = await create({ nudge: { afterMin: 5, everyMin: null, max: 1 } });
     await engine.test(w.id);
     expect(rows()).toEqual([]);
@@ -848,7 +848,7 @@ describe('Anwesende', () => {
 });
 
 describe('Erledigt sich selbst', () => {
-  it('wenn die zweite Bedingung eintritt, wird die offene Karte erledigt', async () => {
+  it('wenn die zweite Bedingung eintritt, wird die offene Aufgabe erledigt', async () => {
     ha.set('binary_sensor.tuer', 'off');
     const w = await create({ done: { entityId: 'binary_sensor.tuer', kind: 'state', to: 'on' } });
     await done(w);
@@ -859,7 +859,7 @@ describe('Erledigt sich selbst', () => {
     expect(data.runs(w.id)[0]!.result).toBe('auto_done');
   });
 
-  it('ohne offene Karte oder bei einem anderen Zustand passiert nichts', async () => {
+  it('ohne offene Aufgabe oder bei einem anderen Zustand passiert nichts', async () => {
     ha.set('binary_sensor.tuer', 'off');
     const w = await create({ done: { entityId: 'binary_sensor.tuer', kind: 'state', to: 'on' } });
     ha.emit(`w:${w.id}:done`, 'on');
@@ -883,7 +883,7 @@ describe('Fehlerfälle', () => {
     expect(data.get(w.id).status).toBe('ok');
   });
 
-  it('Board gelöscht: der Wächter pausiert mit Hinweis, keine Karte, der Fehler steht im Verlauf', async () => {
+  it('Board gelöscht: der Wächter pausiert mit Hinweis, keine Aufgabe, der Fehler steht im Verlauf', async () => {
     const w = await create();
     store.deleteBoard(boardId);
     await done(w);

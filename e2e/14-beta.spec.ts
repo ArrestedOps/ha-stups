@@ -35,7 +35,7 @@ test('Sensoren der Beta heißen sensor.stups_beta_…, die der normalen App komm
   expect(ids.filter((id) => id.startsWith('sensor.stups_') && !id.startsWith('sensor.stups_beta_'))).toEqual([]);
 });
 
-test('Solange die Wächter aus sind, legen sie keine Karten an; nach dem Einschalten schon', async ({ page, request }) => {
+test('Solange die Wächter aus sind, legen sie keine Aufgaben an; nach dem Einschalten schon', async ({ page, request }) => {
   const boards = (await (await page.request.get('/api/boards')).json()) as { id: string }[];
   const view = (await (await page.request.get(`/api/boards/${boards[0]!.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
   const columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;

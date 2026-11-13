@@ -6,15 +6,15 @@ import type { Internals } from './internals.js';
 export type FairnessPeriod = 'week' | 'month';
 
 export interface FairnessCounts {
-  /** erledigte Karten */
+  /** erledigte Aufgaben */
   done: number;
-  /** Summe des Aufwands der erledigten Karten (klein 1, mittel 2, groß 3; ohne Angabe mittel) */
+  /** Summe des Aufwands der erledigten Aufgaben (klein 1, mittel 2, groß 3; ohne Angabe mittel) */
   effort: number;
-  /** von Hand angelegte Karten (ohne Wiederholungen und Wächter-Karten) */
+  /** von Hand angelegte Aufgaben (ohne Wiederholungen und Wächter-Aufgaben) */
   created: number;
   /** Stupse, auf die die Person mit „Mach ich" oder „Erledigt" geantwortet hat */
   nudgesAnswered: number;
-  /** erledigte Karten, die ein Wächter angelegt hat */
+  /** erledigte Aufgaben, die ein Wächter angelegt hat */
   watcherCards: number;
 }
 
@@ -34,11 +34,11 @@ export interface Fairness {
   /** In der Reihenfolge der Personenliste, nicht nach Wert sortiert */
   people: FairnessPerson[];
   total: FairnessCounts;
-  /** Wie viele Karten in dem Zeitraum von Wächtern kamen ("vom Haus") */
+  /** Wie viele Aufgaben in dem Zeitraum von Wächtern kamen ("vom Haus") */
   houseCards: number;
 }
 
-/** Wer erledigt wie viel? Zahlen aus den Erledigungen, Karten und Stupsen; nur Personen, über alle Boards. */
+/** Wer erledigt wie viel? Zahlen aus den Erledigungen, Aufgaben und Stupsen; nur Personen, über alle Boards. */
 export function createFairness(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { now, timeZone, all, one } = c;
@@ -63,8 +63,8 @@ export function createFairness(c: Ctx, late: unknown) {
     const { from, to } = bounds(period, now().getTime(), timeZone());
     const f = new Date(from).toISOString();
     const t = new Date(to).toISOString();
-    // Was nicht zählt: private Boards (nie), Boards, die ausgenommen sind, und Wächter, die ausgenommen sind (nur ihre Karten). Die Abfrage
-    // läuft über das Board der Karte und gilt darum rückwirkend: Wer ein Board später ausnimmt, nimmt auch die alten Zahlen heraus.
+    // Was nicht zählt: private Boards (nie), Boards, die ausgenommen sind, und Wächter, die ausgenommen sind (nur ihre Aufgaben). Die Abfrage
+    // läuft über das Board der Aufgabe und gilt darum rückwirkend: Wer ein Board später ausnimmt, nimmt auch die alten Zahlen heraus.
     const counts = `b.archived_at is null and b.visibility <> 'private' and b.counts_for_fairness = 1 and (c.watcher_id is null or coalesce(w.counts_for_fairness, 1) = 1)`;
     const joins = `join boards b on b.id = c.board_id left join watchers w on w.id = c.watcher_id`;
     const by = <T extends object>(rows: T[], key: keyof T) => new Map(rows.map((r) => [r[key] as string, r]));

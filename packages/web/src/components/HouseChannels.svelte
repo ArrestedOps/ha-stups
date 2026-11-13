@@ -6,7 +6,7 @@
   import { toast } from '../lib/store.svelte';
 
   /**
-   * Haus-Kanäle einer Person (Ansage über einen Lautsprecher, Lampe): Stups, Erinnerung und Wächter-Karte kommen im Haus an,
+   * Haus-Kanäle einer Person (Ansage über einen Lautsprecher, Lampe): Stups, Erinnerung und Wächter-Aufgabe kommen im Haus an,
    * nicht nur aufs Handy. Nur für Administratoren, nur mit Home Assistant. Gespeichert wird sofort beim Ändern.
    */
   let {
@@ -28,7 +28,7 @@
   const unmatched = $derived(house.unmatched.includes(person.id));
 
   const KINDS: HouseKind[] = ['nudge', 'due', 'watcher'];
-  const kindLabel = (k: HouseKind) => ({ nudge: t('Stupse'), due: t('Fälligkeiten'), watcher: t('Wächter-Karten') })[k];
+  const kindLabel = (k: HouseKind) => ({ nudge: t('Stupse'), due: t('Fälligkeiten'), watcher: t('Wächter-Aufgaben') })[k];
   const typeLabel = (type: HouseType) => (type === 'speak' ? t('Ansage') : t('Lampe'));
   const VOLUMES = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
@@ -81,7 +81,7 @@
 
 <div data-testid="house-{person.id}">
   <p class="mb-1.5 text-[13px] font-semibold text-fg2">{t('Haus')}</p>
-  <p class="mb-2 text-[13px] text-fg2">{t('Stupse, Erinnerungen und Wächter-Karten im Haus: als Ansage über einen Lautsprecher oder als Lampe, die kurz aufleuchtet.')}</p>
+  <p class="mb-2 text-[13px] text-fg2">{t('Stupse, Erinnerungen und Wächter-Aufgaben im Haus: als Ansage über einen Lautsprecher oder als Lampe, die kurz aufleuchtet.')}</p>
 
   {#each channels as c (c.id)}
     <div class="mb-3 rounded-xl border border-line px-3 py-2" data-testid="house-channel-{c.id}">

@@ -8,12 +8,12 @@ import { keywords } from './words.svelte';
 export type SymbolSection = 'haus' | 'kueche' | 'garten' | 'familie' | 'technik' | 'weg';
 
 export interface SymbolInfo {
-  /** mdi-Name ohne Präfix, z. B. `washing-machine` (so steht er an der Karte) */
+  /** mdi-Name ohne Präfix, z. B. `washing-machine` (so steht er an der Aufgabe) */
   id: string;
   section: SymbolSection;
 }
 
-/** Das Standardsymbol „Aufgabe“ (Haken), auch für Karten ohne Symbol */
+/** Das Standardsymbol „Aufgabe“ (Haken), auch für Aufgaben ohne Symbol */
 export const DEFAULT_SYMBOL = 'checkbox-marked-outline';
 /** Standardfarbe: Orange */
 export const DEFAULT_COLOR: TileColor = 'orange';
@@ -21,7 +21,7 @@ export const DEFAULT_COLOR: TileColor = 'orange';
 export const SECTIONS = catalog.sections as SymbolSection[];
 export const SYMBOLS: SymbolInfo[] = (catalog.icons as [string, SymbolSection][]).map(([id, section]) => ({ id, section }));
 
-/** Farbe eines Bereichs, wenn die Karte keine feste Farbe hat („Auto“): wie im Mockup */
+/** Farbe eines Bereichs, wenn die Aufgabe keine feste Farbe hat („Auto“): wie im Mockup */
 const SECTION_COLOR: Record<SymbolSection, TileColor> = {
   haus: 'orange',
   kueche: 'blue',
@@ -43,7 +43,7 @@ export const symbolById = (id: string | null | undefined): SymbolInfo | undefine
 /** Pfad des Symbols; unbekannte Namen (etwa aus einer neueren Fassung oder von Home Assistant) zeigen das Standardsymbol */
 export const symbolPath = (id: string | null | undefined): string => PATHS[id && byId.has(id) ? id : DEFAULT_SYMBOL]!;
 
-/** Welche Kachelfarbe eine Karte hat: feste Farbe, sonst die des Bereichs ihres Symbols, ohne Symbol Orange */
+/** Welche Kachelfarbe eine Aufgabe hat: feste Farbe, sonst die des Bereichs ihres Symbols, ohne Symbol Orange */
 export function symbolColor(card: { icon: string | null; iconColor: string | null }): TileColor {
   if (card.iconColor && (ICON_COLORS as string[]).includes(card.iconColor)) return card.iconColor as TileColor;
   const s = symbolById(card.icon);

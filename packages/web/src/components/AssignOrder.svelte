@@ -8,7 +8,7 @@
   /**
    * Die Reihenfolge der Personen („An wen"): Foto oder Initiale, Name darunter, Pfeile dazwischen; wer als Nächstes dran ist, trägt einen
    * orangen Ring, wer nicht zu Hause ist, ist blass und steht als „… unterwegs" rechts. Zeigt nur an, schaltet nichts weiter.
-   * `boxed`: eigene gestrichelte Fläche (Assistent), sonst steht die Reihe in der Karte des Ablaufs.
+   * `boxed`: eigene gestrichelte Fläche (Assistent), sonst steht die Reihe in der Aufgabe des Ablaufs.
    */
   let { order, boxed = false }: { order: OrderView | null; boxed?: boolean } = $props();
 

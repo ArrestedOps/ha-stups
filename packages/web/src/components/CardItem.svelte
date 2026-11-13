@@ -25,11 +25,11 @@
   // ---------- Wischen: Finger nach rechts in den nächsten Status, Finger nach links in den vorigen ----------
   const THRESHOLD = 96;
   const columns = $derived(ui.view?.columns ?? []);
-  // Ein Kind verschiebt keine Karten (auch nicht durch Wischen); es hakt nur eigene ab
+  // Ein Kind verschiebt keine Aufgaben (auch nicht durch Wischen); es hakt nur eigene ab
   const rightTarget = $derived(ui.isChild ? null : swipeTarget(columns, card.columnId, 'right'));
   const leftTarget = $derived(ui.isChild ? null : swipeTarget(columns, card.columnId, 'left'));
   const waiting = $derived(waitingForConfirmation(card));
-  // Erwachsene dürfen eine wartende Karte auch gleich erledigen; ein Kind wartet auf die Antwort
+  // Erwachsene dürfen eine wartende Aufgabe auch gleich erledigen; ein Kind wartet auf die Antwort
   const canTick = $derived(!isDoneColumn && (!ui.isChild || (!waiting && !!ui.me && card.assigneeIds.includes(ui.me.id))));
 
   let dx = $state(0);
@@ -73,7 +73,7 @@
     }
     if (mode === 'h') {
       const t = mx > 0 ? rightTarget : leftTarget;
-      // ohne Ziel gibt die Karte nur ein wenig nach (Gummiband)
+      // ohne Ziel gibt die Aufgabe nur ein wenig nach (Gummiband)
       dx = t ? Math.max(-width * 0.7, Math.min(width * 0.7, mx)) : mx * 0.2;
     }
   }
@@ -81,7 +81,7 @@
   function settle(fire: 'left' | 'right' | null) {
     animating = true;
     if (fire) {
-      dx = (fire === 'right' ? 1 : -1) * width; // 'right' = nächster Status = Karte fliegt nach rechts raus
+      dx = (fire === 'right' ? 1 : -1) * width; // 'right' = nächster Status = Aufgabe fliegt nach rechts raus
       setTimeout(async () => {
         await swipeCard(card, fire);
         dx = 0;

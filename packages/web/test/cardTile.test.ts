@@ -15,11 +15,11 @@ describe('tileColorOf', () => {
   });
 });
 
-describe('cardTile: Symbol und Farbe der Kachel einer Karte', () => {
-  it('ohne Symbol: „Aufgabe“ (Haken), orange, auch für Wächter-Karten und Wiederholungen', () => {
+describe('cardTile: Symbol und Farbe der Kachel einer Aufgabe', () => {
+  it('ohne Symbol: „Aufgabe“ (Haken), orange, auch für Wächter-Aufgaben und Wiederholungen', () => {
     expect(cardTile({ icon: null, iconColor: null })).toEqual({ icon: 'checkbox-marked-outline', color: 'orange' });
   });
-  it('das Symbol der Karte, Farbe nach Bereich (Auto)', () => {
+  it('das Symbol der Aufgabe, Farbe nach Bereich (Auto)', () => {
     expect(cardTile({ icon: 'leaf', iconColor: null })).toEqual({ icon: 'leaf', color: 'green' });
     expect(cardTile({ icon: 'washing-machine', iconColor: null })).toEqual({ icon: 'washing-machine', color: 'orange' });
     expect(cardTile({ icon: 'car-outline', iconColor: null })).toEqual({ icon: 'car-outline', color: 'red' });

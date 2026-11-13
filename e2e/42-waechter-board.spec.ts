@@ -25,7 +25,7 @@ const watcher = async (request: APIRequestContext, id: string) => ((await (await
 const input = (name: string, assign: object) => ({
   name,
   trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 },
-  card: { boardId, columnId, title: `${name} Karte`, due: { kind: 'none' } },
+  card: { boardId, columnId, title: `${name} Aufgabe`, due: { kind: 'none' } },
   assign,
 });
 
@@ -63,7 +63,7 @@ test('Wächter-Editor: Board-Auswahl mit „Wer sieht es", private Boards nicht 
   await expect(d.getByTestId('fairness-row')).toBeVisible();
   await expect(d.getByTestId('fairness-row').getByRole('switch')).toHaveAttribute('aria-checked', 'true');
   // Dann ändern: die Auswahl nennt, wer das Board sieht; ein privates Board steht da, ist aber nicht wählbar
-  await d.getByRole('region', { name: 'Dann Karte' }).getByRole('button', { name: 'Ändern' }).click();
+  await d.getByRole('region', { name: 'Dann Aufgabe' }).getByRole('button', { name: 'Ändern' }).click();
   const select = d.locator('select[aria-label="Board"]');
   await expect(select.locator('option', { hasText: `Bad ${tag}` })).toHaveText(`Bad ${tag} · Rene, Conny`);
   const priv = select.locator('option', { hasText: `Privat ${tag}` });
@@ -112,7 +112,7 @@ test('Conny aus dem Board entfernen: Dialog mit allen betroffenen Wächtern „j
   await expect(waschRow).toContainText('Rene (reihum)');
   const heizRow = dialog.getByTestId('access-list').locator('li', { hasText: `Heizung ${tag}` });
   await expect(heizRow).toHaveAttribute('data-missing', '');
-  await expect(heizRow).toContainText('niemand: Wächter legt keine Karten an, bis neue Zuständige gewählt sind');
+  await expect(heizRow).toContainText('niemand: Wächter legt keine Aufgaben an, bis neue Zuständige gewählt sind');
   // noch nichts geändert
   expect((await watcher(request, heizung)).status).toBe('ok');
   await dialog.getByTestId('access-confirm').click();
@@ -125,7 +125,7 @@ test('Wächter ohne Zuständige: ganz oben mit rotem Rand und Grund als Text; di
   const problems = page.getByTestId('home-problems');
   await expect(problems).toBeVisible();
   const row = problems.getByTestId('watcher-row').filter({ hasText: `Heizung ${tag}` });
-  await expect(row).toContainText('Keine Karten: braucht neue Zuständige');
+  await expect(row).toContainText('Keine Aufgaben: braucht neue Zuständige');
   await expect(row.locator('.row-problem')).toHaveCount(1);
   // oben: vor allem anderen, auch vor der Liste mit den Kategorien
   const first = await page.getByTestId('home').evaluate((home) => {

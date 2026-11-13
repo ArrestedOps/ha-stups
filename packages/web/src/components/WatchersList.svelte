@@ -60,7 +60,7 @@
     w.status === 'target_missing'
       ? pausedText(w)
       : w.status === 'assignees_missing'
-        ? t('Keine Karten: braucht neue Zuständige')
+        ? t('Keine Aufgaben: braucht neue Zuständige')
         : w.status === 'entity_missing'
         ? t('Die Entität gibt es in Home Assistant nicht')
         : w.active && !w.subscribed
@@ -79,7 +79,7 @@
     <div class="mt-4 rounded-[20px] border border-line bg-surface p-5">
       <p class="text-[17px] font-semibold">{t('Noch kein Wächter')}</p>
       <p class="mt-1 text-[15px] text-fg2">
-        {t('Ein Wächter beobachtet zum Beispiel die Waschmaschine und legt von selbst die Karte „ausräumen" an, für jemanden, der gerade zu Hause ist.')}
+        {t('Ein Wächter beobachtet zum Beispiel die Waschmaschine und legt von selbst die Aufgabe „ausräumen" an, für jemanden, der gerade zu Hause ist.')}
       </p>
       {#if !admin}
         <p class="mt-3 text-[15px]" data-testid="watchers-empty-member">{t('Ein Administrator von Home Assistant kann Wächter einrichten. Sobald es welche gibt, siehst du sie hier.')}</p>

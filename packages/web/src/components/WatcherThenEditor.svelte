@@ -17,8 +17,8 @@
   import { symbolName } from '../lib/symbols/library';
 
   /**
-   * „Dann": welche Karte entstehen soll. Im Assistenten (Schritt 2) mit der Vorschau „So erscheint sie"; im Ablauf klappt es in der Karte DANN KARTE
-   * auf (`preview` aus: die Vorschau steht schon in der Karte).
+   * „Dann": welche Aufgabe entstehen soll. Im Assistenten (Schritt 2) mit der Vorschau „So erscheint sie"; im Ablauf klappt es in der Aufgabe DANN KARTE
+   * auf (`preview` aus: die Vorschau steht schon in der Aufgabe).
    */
   let { ed, preview = true }: { ed: WatcherEditor; preview?: boolean } = $props();
 
@@ -26,7 +26,7 @@
   const board = $derived(ui.boards.find((b) => b.id === f.boardId));
   const column = $derived(ed.view?.columns.find((c) => c.id === f.columnId));
   const auto = $derived(f.icon ? null : (nameSymbol(f.title) ?? nameSymbol(f.entityName)));
-  /** Der Titel der Karte, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
+  /** Der Titel der Aufgabe, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
   const shownTitle = $derived(cardTitleWithEntity(f.title, f.kind, f.entityName || f.entityId) || '…');
   const look = $derived({ icon: f.icon || auto, iconColor: f.iconColor || null });
   let symbolOpen = $state(false);
@@ -58,7 +58,7 @@
 </script>
 
 <div class="flex flex-col gap-3.5" data-testid="then-editor">
-  <!-- Titel der Karte mit Symbol (Funken: automatisch erkannt) -->
+  <!-- Titel der Aufgabe mit Symbol (Funken: automatisch erkannt) -->
   <div class="focus-ring-in flex items-center gap-3 rounded-row border border-line bg-surface px-3.5 py-3">
     <button
       type="button"
@@ -73,7 +73,7 @@
       {/if}
     </button>
     <span class="flex min-w-0 flex-1 flex-col gap-1.5">
-      <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="watcher-card-title">{t('Titel der Karte')}</label>
+      <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="watcher-card-title">{t('Titel der Aufgabe')}</label>
       <input id="watcher-card-title" class="min-h-6 w-full bg-transparent text-[18px] font-bold placeholder:text-dim" bind:value={f.title} maxlength="200" placeholder={t('z. B. Waschmaschine ausräumen')} autocapitalize="sentences" />
     </span>
   </div>

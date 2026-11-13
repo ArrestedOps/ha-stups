@@ -5,27 +5,32 @@ export async function openBoards(page: Page): Promise<void> {
   const nav = page.getByRole('navigation', { name: /^(Ansicht|View)$/ });
   await nav.getByRole('button', { name: 'Boards' }).click();
   await expect(nav.getByRole('button', { name: 'Boards' })).toHaveAttribute('aria-current', 'page');
+  // Handy: die Liste der Boards ist die Startseite, ein Tipp auf das (gemerkte) Board öffnet seine Spalten
+  const list = page.getByTestId('board-list');
+  await expect(list.or(page.getByTestId('boards-scroll')).or(page.getByTestId('kanban')).first()).toBeVisible();
+  if (await list.count()) {
+    const current = list.locator('[aria-current="true"]');
+    await ((await current.count()) ? current.first() : list.getByRole('button').first()).click();
+    await expect(page.getByTestId('boards-scroll')).toBeVisible();
+  }
   // Boards startet bei „Meine"; die Tests brauchen alle Aufgaben (ein Kind hat keine Personen-Chips)
   const all = page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Alle', exact: true });
   if (await all.count()) await all.click();
 }
 
 /**
- * Nach der ersten Anmeldung in einem frischen Container zeigt Stups die Einrichtung (46-onboarding.spec.ts testet sie): Wer die App
- * danach braucht, überspringt sie. Ist sie nicht da (Bestand, Mitglied mit Status), passiert nichts.
+ * Wessen Aufgaben die Liste in Aufgaben zeigt: „Alle“, „Meine“ oder der Name einer Person. Handy: das Menü „Meine Aufgaben ▾“;
+ * Desktop: die Einträge unter „Personen“ in der Seitenleiste.
  */
-export async function skipOnboarding(page: Page): Promise<void> {
-  const dialog = page.getByRole('dialog', { name: 'Einrichtung' });
-  const nav = page.getByRole('navigation', { name: 'Ansicht' });
-  await expect(dialog.or(nav)).toBeVisible();
-  if ((await dialog.count()) === 0) return;
-  const skip = dialog.getByRole('button', { name: 'Überspringen' });
-  if (await skip.count()) return skip.click(); // Administrator: Willkommen
-  // Mitglied: „Handy verbinden", dann „Farbe wählen" (ein Kind hat nur den ersten Schritt)
-  await dialog.getByRole('button', { name: 'Später' }).click();
-  const done = dialog.getByRole('button', { name: 'Zu den Aufgaben' });
-  await expect(done.or(nav)).toBeVisible();
-  if (await done.count()) await done.click();
+export async function setScope(page: Page, who: string): Promise<void> {
+  const button = page.getByTestId('scope-button');
+  if (await button.count()) {
+    await button.click();
+    const label = who === 'Alle' ? 'Alle Aufgaben' : who === 'Meine' ? 'Meine Aufgaben' : `Aufgaben von ${who}`;
+    await page.getByRole('menuitemradio', { name: label }).click();
+  } else {
+    await page.getByTestId('sidebar').getByRole('button', { name: who, exact: true }).click();
+  }
 }
 
 /**
@@ -34,7 +39,7 @@ export async function skipOnboarding(page: Page): Promise<void> {
  */
 export async function openTasksView(page: Page, view: 'Liste' | 'Tag' | 'Woche' | 'Monat', all = true): Promise<void> {
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
-  if (all) await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Alle', exact: true }).click();
+  if (all) await setScope(page, 'Alle');
   if (view === 'Liste') return;
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Kalender' }).click();
   await page.getByRole('radiogroup', { name: 'Ansicht' }).getByRole('radio', { name: view, exact: true }).click();

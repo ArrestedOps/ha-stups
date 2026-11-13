@@ -1,6 +1,7 @@
 <script lang="ts">
   import { columnForNew } from '../lib/calendar';
   import { t, tn } from '../lib/i18n/index.svelte';
+  import { boardColorKey } from '../lib/colors';
   import { openSheet, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
@@ -23,6 +24,7 @@
 
   const newColumn = $derived(columnForNew(view?.columns ?? [], false));
   const canCreate = $derived(!!view && !!newColumn && !ui.isChild);
+  const boardKey = $derived(boardColorKey(ui.boards, ui.boardId ?? ''));
   const onList = $derived(ui.tab === 'tasks' && !ui.tasksCalendar);
 
   const value = $derived(ui.tab === 'boards' ? ui.filter.search : ui.query);
@@ -44,7 +46,7 @@
 
 <header class="flex shrink-0 items-start gap-4 pt-6 pb-5" data-testid="desktop-header">
   <div class="min-w-0 flex-1">
-    <h1 class="flex items-baseline gap-3 truncate text-[30px] leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{page.title}{#if onList}<span class="text-[14px] font-medium tracking-normal text-text-soft">{tn('{n} Aufgabe', '{n} Aufgaben', ui.taskCount)}</span>{/if}</h1>
+    <h1 class="flex items-baseline gap-3 truncate text-[30px] leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{#if ui.tab === 'boards' && board}<i class="block h-3 w-3 shrink-0 rounded-full" style:background="var(--c-{boardKey}-fg)" aria-hidden="true"></i>{/if}{page.title}{#if ui.tab === 'boards' && board}<span class="text-[14px] font-medium tracking-normal text-text-soft">{t('{n} offen', { n: board.openCards })}</span>{/if}{#if onList}<span class="text-[14px] font-medium tracking-normal text-text-soft">{tn('{n} Aufgabe', '{n} Aufgaben', ui.taskCount)}</span>{/if}</h1>
     <p class="mt-1 truncate text-[14px] text-fg2" data-testid={page.subTestid}>{page.sub}</p>
   </div>
 
@@ -68,7 +70,7 @@
       id="desktop-search"
       type="search"
       class="desktop-search min-w-0 flex-1 bg-transparent text-[15px] font-medium text-fg outline-none placeholder:text-dim"
-      placeholder="{t('Suchen')} …"
+      placeholder={ui.tab === 'boards' ? t('In diesem Board filtern') : ui.tab === 'watchers' ? t('Wächter, Geräte und Räume suchen') : onList ? t('Aufgaben filtern') : `${t('Suchen')} …`}
       aria-label={t('Suchen')}
       autocomplete="off"
       {value}

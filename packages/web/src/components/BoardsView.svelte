@@ -111,16 +111,17 @@
       <div class="flex shrink-0 flex-col gap-3">{@render head()}</div>
       <!-- Kanban über die ganze Breite: Spalten gleich breit (mindestens 264 px, danach scrollt die Fläche seitlich), Kopf mit Name, Zähler und „+“ -->
       <div class="mt-4 min-h-0 flex-1 overflow-x-auto pb-6" data-testid="kanban">
-        <div class="grid h-full min-w-0 grid-flow-col auto-cols-[minmax(264px,1fr)] gap-4">
+        <div class="grid h-full min-w-0 grid-flow-col auto-cols-[minmax(264px,1fr)] items-start gap-3.5">
           {#each columns as col (col.id)}
-            <section class="flex min-h-0 flex-col rounded-[20px] border border-line bg-surface/40" aria-label={col.name}>
-              <div class="flex h-14 shrink-0 items-center gap-2 pr-2 pl-4">
+            <section class="flex min-h-0 flex-col self-start rounded-[16px] bg-surface2/70 max-h-full" aria-label={col.name}>
+              <div class="flex h-12 shrink-0 items-center gap-2 pr-2 pl-4">
+                <i class="block h-2.5 w-2.5 shrink-0 rounded-full" style:background="var(--c-{['blue', 'orange', 'purple', 'green'][columns.indexOf(col) % 4]}-fg)" aria-hidden="true"></i>
                 <h2 class="min-w-0 truncate text-[15px] font-bold">{col.name}</h2>
-                <span class="inline-flex h-[22px] min-w-6 shrink-0 items-center justify-center rounded-full bg-count px-2 text-[12px] font-bold text-text-soft" data-testid="column-count">{counts[col.id] ?? 0}</span>
+                <span class="shrink-0 text-[14px] text-text-soft tabular-nums" data-testid="column-count">{counts[col.id] ?? 0}</span>
                 <span class="flex-1"></span>
                 {#if !ui.isChild && !col.isDone && !col.isPlanned}
                   <button
-                    class="flex h-9 w-9 items-center justify-center rounded-[10px] bg-surface2 text-text-soft hover:text-fg"
+                    class="flex h-8 w-8 items-center justify-center rounded-[8px] text-text-soft hover:bg-surface hover:text-fg"
                     aria-label={t('Neue Aufgabe in „{name}“', { name: col.name })}
                     onclick={() => openSheet({ type: 'new', columnId: col.id, picked: true })}
                   >

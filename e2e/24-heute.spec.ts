@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, setScope } from './helpers';
 
 // Aufgaben: was ist für mich dran, was haben die anderen. Der Test-Server meldet jeden als „rene" an (eine Person, ohne Home Assistant Administrator).
 // Der Server wird mit anderen Tests geteilt: eindeutige Titel, Termine mit festem Abstand zu „jetzt" (nicht abhängig von der Tageszeit:
@@ -53,9 +53,9 @@ test('Aufgaben: meine Aufgaben in Gruppen (Überfällig, Heute, Diese Woche, Sp�
   await expect(page.getByRole('group', { name: 'Deine Zahlen' })).toBeVisible();
 
   // „Alle" zeigt auch die der anderen
-  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Alle', exact: true }).click();
+  await setScope(page, 'Alle');
   await expect(tasks.getByText(foreign)).toBeVisible();
-  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Meine' }).click();
+  await setScope(page, 'Meine');
 
   // Erledigen per Kreis nimmt die Aufgabe weg
   await tasks.getByRole('checkbox', { name: `„${overdue}“ erledigen` }).click();
@@ -99,7 +99,7 @@ test('Aufgaben: von oben nach unten Kopf, Zahlenkacheln, Chips, dann die Gruppen
     await y(page.getByRole('heading', { name: 'Aufgaben' })),
     await y(page.getByTestId('tasks-sub')),
     await y(page.getByRole('group', { name: 'Deine Zahlen' })),
-    await y(page.getByRole('group', { name: 'Personen' })),
+    await y(page.getByTestId('scope-button')),
     await y(page.getByTestId('group-overdue')),
   ];
   expect(order, 'Reihenfolge der Bereiche von oben nach unten').toEqual([...order].sort((a, b) => a - b));

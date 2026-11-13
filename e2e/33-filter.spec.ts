@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { setScope } from './helpers';
 
 // Filter für Aufgaben und Kalender (Phase 6a): Wer, Wann, Boards, Priorität, Außerdem, Sortierung, Trefferzahl; die Wahl bleibt auf dem Gerät.
 // Der Server wird mit anderen Tests geteilt: eigenes Board mit eindeutigem Namen, Termine mit großem Abstand zu „jetzt"
@@ -45,7 +46,7 @@ test('Filter: Wann, Board, Priorität und Trefferzahl; „Ohne Termin" holt Aufg
   const s = await seed(request);
   await page.goto('/');
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
-  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Alle', exact: true }).click();
+  await setScope(page, 'Alle');
   const tasks = page.getByTestId('tasks');
   await expect(tasks.getByText(s.t.alt)).toBeVisible();
   await expect(page.getByTestId('filter-count')).toHaveCount(0);

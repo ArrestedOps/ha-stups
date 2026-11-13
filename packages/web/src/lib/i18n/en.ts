@@ -258,6 +258,8 @@ export const en: Catalog = {
   'Name des neuen Boards': 'Name of the new board',
   'Tag': 'Day',
   '3 Tage': '3 days',
+  'Aufgaben filtern': 'Filter tasks',
+  'In diesem Board filtern': 'Filter this board',
   'Gruppieren': 'Group by',
   'Alle offen': 'All open',
   'Gestupst': 'Nudged',
@@ -1541,7 +1543,6 @@ export const en: Catalog = {
   // Desktop-Ansicht (ab 1024 px)
   'Strg': 'Ctrl',
   'Keine Treffer': 'No matches',
-  'Wähle eine Aufgabe, um Details zu sehen.': 'Select a task to see its details.',
   'Neue Aufgabe in „{name}“': 'New task in “{name}”',
   'Mitteilungen, {n} ungelesen': ['Notifications, {n} unread', 'Notifications, {n} unread'],
   'privat': 'private',

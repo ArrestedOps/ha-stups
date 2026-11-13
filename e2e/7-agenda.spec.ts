@@ -1,4 +1,4 @@
-import { openList, openBoards } from './helpers';
+import { openList, openBoards, setScope } from './helpers';
 import { expect, test, type APIRequestContext } from '@playwright/test';
 
 test.describe.configure({ timeout: 90_000 });
@@ -34,7 +34,7 @@ test('Agenda: Aufgaben aller Boards nach Tagen, Filter nach Person und Board', a
   for (const title of Object.values(s.t)) await expect(agenda.getByText(title)).toBeVisible();
 
   // Person: nur Conny
-  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
+  await setScope(page, 'Conny');
   await expect(agenda.getByText(s.t.fenster)).toBeVisible();
   await expect(agenda.getByText(s.t.elektriker)).toBeHidden();
   await expect(agenda.getByText(s.t.papier)).toBeHidden();
@@ -56,13 +56,11 @@ test('Agenda: Aufgaben aller Boards nach Tagen, Filter nach Person und Board', a
   await page.getByRole('dialog').getByRole('button', { name: /Aufgaben? anzeigen/ }).click();
 
   // Nach dem Neuladen ist wieder „Meine" gewählt (Start immer bei Meine), eine andere Personenwahl bleibt nicht stehen
-  await page.getByTestId('tasks').getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
+  await setScope(page, 'Conny');
   await page.reload();
   await expect(page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByTestId('tasks')).toBeVisible();
-  const people = page.getByTestId('tasks').getByRole('group', { name: 'Personen' });
-  await expect(people.getByRole('button', { name: 'Meine' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(people.getByRole('button', { name: /Conny/ })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByTestId('scope-button')).toContainText('Meine Aufgaben');
 });
 
 test('Agenda: Aufgabe aus einem anderen Board öffnen und von dort erledigen', async ({ page, request }) => {

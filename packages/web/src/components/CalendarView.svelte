@@ -8,6 +8,7 @@
     dayKeyOf,
     dayNumber,
     inMonth,
+    isoWeek,
     layoutDay,
     minutesOfDay,
     monthGrid,
@@ -21,7 +22,6 @@
   } from '../lib/calendar';
   import { boardColorKey, filterSchedule, type ScheduleCard } from '../lib/schedule';
   import { activeScheduleFilter, filterContext, openCardAnywhere, openSheet, ui } from '../lib/store.svelte';
-  import { tileColorOf } from '../lib/cardTile';
   import Icon from './Icon.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
   import TaskRow from './TaskRow.svelte';
@@ -143,15 +143,15 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
-  <div class="mt-3 flex items-center gap-1.5">
-    <button class="flex h-11 w-11 items-center justify-center text-text-soft2" aria-label={t('Zurück')} onclick={() => (day = step(mode, day, -1))}>
-      <span class="flex h-9 w-9 items-center justify-center rounded-full bg-(--soft-btn)"><Icon name="chevron-left" size={20} stroke={2.4} /></span>
+  <div class="mt-3 flex items-center gap-1">
+    <button class="flex h-11 w-9 items-center justify-center text-accent-text" aria-label={t('Zurück')} onclick={() => (day = step(mode, day, -1))}>
+      <Icon name="chevron-left" size={22} stroke={2.6} />
     </button>
-    <h2 class="min-w-0 flex-1 truncate text-center text-[15px] font-bold" aria-live="polite">{rangeTitle(mode, day)}</h2>
-    <button class="flex h-11 w-11 items-center justify-center text-text-soft2" aria-label={t('Weiter')} onclick={() => (day = step(mode, day, 1))}>
-      <span class="flex h-9 w-9 items-center justify-center rounded-full bg-(--soft-btn)"><Icon name="chevron-right" size={20} stroke={2.4} /></span>
+    <h2 class="min-w-0 flex-1 truncate text-center text-[17px] font-bold lg:text-[15px]" aria-live="polite">{rangeTitle(mode, day)}{#if mode === 'week' || mode === 'days3'}<span class="ml-2 text-[15px] font-medium text-text-soft"> KW {isoWeek(day)}</span>{/if}</h2>
+    <button class="flex h-11 w-9 items-center justify-center text-accent-text" aria-label={t('Weiter')} onclick={() => (day = step(mode, day, 1))}>
+      <Icon name="chevron-right" size={22} stroke={2.6} />
     </button>
-    <button class="border-line-chip inline-flex h-[34px] shrink-0 items-center rounded-full border bg-surface px-3 text-[13px] font-semibold text-text-soft" onclick={() => (day = todayKey())}>{t('Heute')}</button>
+    <button class="inline-flex h-9 shrink-0 items-center rounded-full bg-accent/12 px-3.5 text-[15px] font-semibold text-accent-text" onclick={() => (day = todayKey())}>{t('Heute')}</button>
   </div>
 
   {#if failed}
@@ -196,12 +196,13 @@
       <span></span>
       {#each days as d (d)}
         <button
-          class="flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] {d === day ? 'bg-accent-grad glow-day' : 'text-fg2'}"
+          class="flex flex-col items-center gap-0.5 rounded-xl py-1 text-[12px] font-medium {d === today ? 'text-accent-text' : 'text-text-soft'}"
+          aria-current={d === day ? 'date' : undefined}
           onclick={() => openDay(d)}
           aria-label={t('Tag {day} öffnen', { day: dayLabel(d) })}
         >
           {weekdayShort(d)}
-          <b class="text-[15px] font-bold {d === day ? '' : d === today ? 'text-accent-text' : 'text-fg'}">{dayNumber(d)}</b>
+          <b class="flex h-8 min-w-8 items-center justify-center rounded-full text-[17px] font-bold {d === today ? 'bg-brand-dot text-on-accent' : d === day ? 'bg-surface2 text-fg' : 'text-fg'}">{dayNumber(d)}</b>
         </button>
       {/each}
     </div>
@@ -234,7 +235,10 @@
                 {#each placed.get(d) ?? [] as p (p.card.id)}
                   {@const c = p.card}
                   <button
-                    class="tile tile-{tileColorOf(color(c))} absolute z-[2] overflow-hidden !rounded-lg px-[5px] py-1 text-left {c.completedAt ? 'opacity-60' : ''}"
+                    class="absolute z-[2] overflow-hidden rounded-lg border-l-[3px] px-[5px] py-1 text-left {c.completedAt ? 'opacity-60' : ''}"
+                    style:background="color-mix(in srgb, var(--c-{color(c)}-fg) 15%, var(--surface))"
+                    style:border-left-color="var(--c-{color(c)}-fg)"
+                    style:color="var(--c-{color(c)}-fg)"
                     style:top="{(p.top / 60) * HOUR_PX + 1}px"
                     style:height="{Math.max((p.height / 60) * HOUR_PX - 3, 24)}px"
                     style:left="calc({(p.col / p.cols) * 100}% + 2px)"

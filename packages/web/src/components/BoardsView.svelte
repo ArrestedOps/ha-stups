@@ -3,7 +3,10 @@
   import { countByColumn, filterCards } from '../lib/filters';
   import { scrollStrip } from '../lib/scrollStrip';
   import { toggleId } from '../lib/schedule';
-  import { openSheet, ui } from '../lib/store.svelte';
+  import { openSheet, selectBoard, ui } from '../lib/store.svelte';
+  import { boardColorKey } from '../lib/schedule';
+  import { tileColorOf } from '../lib/cardTile';
+  import Tile from './ui/Tile.svelte';
   import Avatar from './Avatar.svelte';
   import ColumnList from './ColumnList.svelte';
   import ColumnTabs from './ColumnTabs.svelte';
@@ -17,6 +20,12 @@
    * Ab 1024 px stehen die Spalten nebeneinander.
    */
   const desktop = $derived(ui.desktop);
+  /** Handy: die Liste der Boards ist die Startseite, ein Tipp öffnet das Board (mit „‹ Boards“ oben) */
+  let showList = $state(true);
+  async function openBoard(id: string) {
+    await selectBoard(id);
+    showList = false;
+  }
   const view = $derived(ui.view);
   const columns = $derived(view?.columns ?? []);
   const board = $derived(ui.boards.find((b) => b.id === ui.boardId));
@@ -41,19 +50,20 @@
 </script>
 
 {#snippet head()}
-  <TopBar title="Boards" sub={t('Organisiere deine Aufgaben in Kanban-Boards.')} />
-
-  <!-- Board-Leiste: ein Tipp öffnet „Board wechseln" (Desktop: die Seitenleiste wechselt das Board, der Name steht in der Kopfzeile) -->
-  {#if !desktop}
-    <button
-      class="flex h-[52px] w-full min-w-0 items-center gap-2.5 rounded-row border border-line-chip bg-surface px-4 text-left text-[17px] font-semibold"
-      onclick={() => openSheet({ type: 'boards' })}
-      aria-label={t('Board wechseln')}
-    >
-      <span class="shrink-0 text-text-soft"><Icon name="layers" size={22} /></span>
-      <span class="min-w-0 flex-1 truncate" data-testid="board-name">{board?.name ?? 'Stups'}</span>
-      <span class="shrink-0 text-text-soft"><Icon name="chevron-down" size={20} stroke={2} /></span>
-    </button>
+  {#if desktop}
+    <TopBar title="Boards" sub={t('Organisiere deine Aufgaben in Kanban-Boards.')} />
+  {:else}
+    <!-- Handy: zurück zur Liste der Boards, darunter der Name des Boards als große Überschrift (ein Tipp darauf wechselt das Board) -->
+    <div>
+      <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[17px] font-semibold text-accent-text" onclick={() => (showList = true)}>
+        <Icon name="chevron-left" size={22} stroke={2.4} />Boards
+      </button>
+      <button class="flex w-full min-w-0 items-center gap-2 text-left" onclick={() => openSheet({ type: 'boards' })} aria-label={t('Board wechseln')}>
+        <h1 class="min-w-0 truncate text-[34px] leading-[1.12] font-bold tracking-[0.012em]" data-testid="board-name">{board?.name ?? 'Stups'}</h1>
+        <span class="shrink-0 text-text-soft"><Icon name="chevron-down" size={22} stroke={2.2} /></span>
+      </button>
+      <p class="sr-only">{t('Organisiere deine Aufgaben in Kanban-Boards.')}</p>
+    </div>
   {/if}
 
   {#if view}
@@ -121,6 +131,32 @@
               <div class="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 pb-3" data-testid="column-list-{col.id}"><ColumnList columnId={col.id} /></div>
             </section>
           {/each}
+        </div>
+      </div>
+    {:else if showList}
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab" data-testid="boards-overview">
+        <div class="flex flex-col gap-3">
+          <TopBar title="Boards" sub={t('Organisiere deine Aufgaben in Kanban-Boards.')} />
+          <ul class="list-group !mt-0" data-testid="board-list">
+            {#each ui.boards as b, i (b.id)}
+              <li>
+                <button class="flex h-[46px] w-full items-center gap-3 px-3.5 text-left" aria-current={b.id === ui.boardId ? 'true' : undefined} onclick={() => void openBoard(b.id)}>
+                  <Tile color={tileColorOf(boardColorKey(b.color, i))} px={30} radius={7}><Icon name="layers" size={18} /></Tile>
+                  <span class="min-w-0 flex-1 truncate text-[17px]">{b.name}</span>
+                  <span class="shrink-0 text-[17px] text-text-soft tabular-nums">{t('{n} offen', { n: b.openCards })}</span>
+                  <span class="shrink-0 text-text-soft2"><Icon name="chevron-right" size={16} stroke={2.2} /></span>
+                </button>
+              </li>
+            {/each}
+          </ul>
+          <ul class="list-group !mt-0">
+            <li>
+              <button class="flex h-[46px] w-full items-center gap-3 px-3.5 text-left text-[17px] font-medium text-accent-text" onclick={() => openSheet({ type: 'newBoard' })}>
+                <span class="flex h-[30px] w-[30px] items-center justify-center"><Icon name="plus" size={22} stroke={2.2} /></span>{t('Neues Board')}
+              </button>
+            </li>
+          </ul>
+          <p class="px-1 text-[14px] text-text-soft">{t('Tippe ein Board an, um seine Spalten zu sehen.')}</p>
         </div>
       </div>
     {:else}

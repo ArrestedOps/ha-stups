@@ -4,7 +4,6 @@
   import { bellText } from '../lib/inbox';
   import { t, tn } from '../lib/i18n/index.svelte';
   import { feat, goToDashboard, openSheet, ui } from '../lib/store.svelte';
-  import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
   import SymbolIcon from './SymbolIcon.svelte';
 
@@ -21,10 +20,10 @@
 <!-- Auf dem Desktop (ab 1024 px) steht der Kopf in DesktopHeader.svelte, über allen Reitern; hier bleibt nichts -->
 {#if !ui.desktop}
 <div>
-  <div class="flex h-11 items-center gap-0.5 px-0.5">
-    <img src={logo} alt="" class="block h-8 w-8 rounded-lg" width="32" height="32" />
-    <span class="ml-2 text-[24px] font-extrabold tracking-tight" aria-hidden="true">stups<span class="text-brand-dot">.</span></span>
-    {#if feat.beta}<span class="ml-1.5 rounded-md bg-brand-dot/20 px-1.5 py-0.5 text-[11px] leading-none font-extrabold tracking-wider text-brand-dot uppercase" data-testid="beta-badge">{t('Beta')}</span>{/if}
+  <div class="flex h-11 items-center gap-2 px-0.5">
+    <img src={logo} alt="" class="block h-[34px] w-[34px] rounded-[9px]" width="34" height="34" />
+    <span class="sr-only">stups.</span>
+    {#if feat.beta}<span class="ml-1 rounded-md bg-brand-dot/20 px-1.5 py-0.5 text-[11px] leading-none font-extrabold tracking-wider text-brand-dot uppercase" data-testid="beta-badge">{t('Beta')}</span>{/if}
     <span class="flex-1"></span>
     {#if !ui.online}
       <span class="mr-1 flex items-center gap-1.5 rounded-full bg-surface2 px-3 py-1 text-[13px] text-fg2" role="status">
@@ -32,29 +31,24 @@
       </span>
     {/if}
     {#if feat.haUi}
-      <button class="flex h-11 w-11 items-center justify-center rounded-full text-text-soft" aria-label={t('Zurück zu Home Assistant')} data-testid="home-button" onclick={goToDashboard}>
-        <SymbolIcon id="home-assistant" size={26} />
+      <button class="top-circle top-circle-ha" aria-label={t('Zurück zu Home Assistant')} data-testid="home-button" onclick={goToDashboard}>
+        <SymbolIcon id="home-assistant" size={22} />
       </button>
     {/if}
     <button
-      class="relative flex h-11 w-11 items-center justify-center rounded-full text-text-soft"
+      class="top-circle relative"
       aria-label={unseen > 0 ? tn('Mitteilungen, {n} ungelesen', 'Mitteilungen, {n} ungelesen', unseen) : t('Mitteilungen')}
       data-testid="bell"
       onclick={() => openSheet({ type: 'notifications' })}
     >
-      <Icon name="bell" size={24} />
-      {#if unseen > 0}<span class="bell-count absolute top-[6px] right-[7px]" data-testid="bell-dot" aria-hidden="true">{bellText(unseen)}</span>{/if}
+      <Icon name="bell" size={20} />
+      {#if unseen > 0}<span class="bell-count absolute -top-1 -right-1" data-testid="bell-dot" aria-hidden="true">{bellText(unseen)}</span>{/if}
     </button>
-    <button class="flex h-11 w-11 items-center justify-center rounded-full text-text-soft" aria-label={t('Einstellungen öffnen')} onclick={() => openSheet({ type: 'settings' })}>
-      <Icon name="gear" size={24} />
+    <button class="top-circle" aria-label={t('Einstellungen öffnen')} onclick={() => openSheet({ type: 'settings' })}>
+      <Icon name="gear" size={20} />
     </button>
-    {#if ui.me}
-      <button class="ml-px -mr-[3px] flex h-11 w-11 items-center justify-center" aria-label={t('Profil öffnen')} onclick={() => openSheet({ type: 'settings' })}>
-        <Avatar person={ui.me} size={38} ring={2} />
-      </button>
-    {/if}
   </div>
-  <h1 class="mt-1 px-0.5 text-[34px] leading-[1.1] font-bold tracking-[0.01em]">{title}</h1>
+  <h1 class="mt-1.5 px-0.5 text-[34px] leading-[1.12] font-bold tracking-[0.012em]">{title}</h1>
   <p class="sr-only" data-testid={subTestid}>{sub}</p>
 </div>
 {/if}

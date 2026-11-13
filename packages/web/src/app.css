@@ -70,6 +70,8 @@
   --bg: #000000;
   --bg-dim: #000000; /* hinter Sheets */
   --surface: #1c1c1e;
+  --ha: #4cc8f4;
+  --ha-soft: rgba(24, 188, 242, 0.2);
   --surface2: #2c2c2e;
   --border: #38383a;
   --track: #48484a; /* Schalter aus, Griff am Sheet */
@@ -178,6 +180,8 @@
 @media (prefers-color-scheme: light) {
   :root {
     color-scheme: light;
+    --ha: #0a7fae;
+    --ha-soft: rgba(24, 188, 242, 0.16);
     --bg: #f2f2f7;
     --bg-dim: #e5e5ea;
     --surface: #ffffff;
@@ -281,7 +285,7 @@
  */
 .list-group { display: flex; flex-direction: column; gap: 0 !important; margin-top: 8px; border-radius: var(--radius-row); background: var(--surface); overflow: hidden; }
 .list-group > li { position: relative; }
-.list-group > li + li::before { content: ''; position: absolute; top: 0; right: 0; left: 52px; height: 0.5px; background: var(--sep); z-index: 1; }
+.list-group > li + li::before { content: ''; position: absolute; top: 0; right: 0; left: 54px; height: 0.5px; background: var(--sep); z-index: 1; }
 .list-group [data-variant], .list-group .rounded-row { border-color: transparent !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
 .list-group .row-current, .list-group .row-new { background: color-mix(in srgb, var(--accent) 12%, transparent) !important; box-shadow: inset 3px 0 0 var(--brand-dot) !important; }
 
@@ -658,3 +662,28 @@
   .pb-tabbar { padding-bottom: 32px; }
   .pb-fab { padding-bottom: 32px; }
 }
+
+/* Runde Knöpfe der Kopfzeile (Handy): 36 px, graue Fläche; Home Assistant hellblau */
+.top-circle {
+  display: inline-flex;
+  height: 36px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--surface2);
+  color: var(--text);
+}
+.top-circle-ha {
+  background: var(--ha-soft);
+  color: var(--ha);
+}
+
+/* Aufgabe, die jemand an mich gestupst hat: leichte orange Fläche und ein Balken links */
+.list-group [data-variant].row-nudged,
+.row-nudged {
+  background: color-mix(in srgb, var(--brand-dot) 10%, var(--surface)) !important;
+  box-shadow: inset 3px 0 0 var(--brand-dot);
+}
+.top-circle { position: relative; }
+.top-circle::after { content: ''; position: absolute; inset: -4px; }

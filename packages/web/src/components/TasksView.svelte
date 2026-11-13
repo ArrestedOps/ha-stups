@@ -10,7 +10,7 @@
   import { matchesQuery } from '../lib/search';
   import { scrollStrip } from '../lib/scrollStrip';
   import type { StatsKind } from '../lib/statsSheets';
-  import { groupTasks, nudgesToMe, parseTasksView, taskStats, type TaskGroupKey, type TasksView } from '../lib/tasks';
+  import { groupTasks, nudgesToMe, parseTasksView, taskStats, type TasksView } from '../lib/tasks';
   import { ageText, sourceLine } from '../lib/today';
     import { activeScheduleFilter, claimCard, closeDetail, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
@@ -145,15 +145,6 @@
   let closed = $state<string[]>([]);
   const toggleGroup = (key: string) => (closed = toggleId(closed, key));
 
-  const GROUP_ICON: Record<TaskGroupKey, { icon: string; tone: 'red' | 'orange' | 'blue' | 'soft' | 'green' }> = {
-    overdue: { icon: 'alert', tone: 'red' },
-    today: { icon: 'calendar', tone: 'orange' },
-    week: { icon: 'calendar', tone: 'blue' },
-    later: { icon: 'calendar', tone: 'soft' },
-    undated: { icon: 'calendar', tone: 'soft' },
-    done: { icon: 'done', tone: 'green' },
-  };
-
   /** Desktop: Pfeil auf und ab springt in der Liste von Zeile zu Zeile (Enter öffnet sie in der Detailspalte) */
   function arrows(e: KeyboardEvent) {
     if (!ui.desktop || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') || e.altKey || e.metaKey || e.ctrlKey) return;
@@ -169,8 +160,25 @@
 
   const done = (c: TodayCard) => void completeCard(c);
   const openHouse = (c: TodayCard) => void openCardAnywhere(c);
+  /** Handy: Beschriftung und Menü des Bereichs-Chips */
+  let scopeOpen = $state(false);
+  const scopeText = $derived.by(() => {
+    if (!personFilterActive(sf)) return t('Alle Aufgaben');
+    if (sf.personIds.length === 1) {
+      if (sf.personIds[0] === meId) return t('Meine Aufgaben');
+      const p = ui.people.find((x) => x.id === sf.personIds[0]);
+      if (p) return t('Aufgaben von {name}', { name: p.displayName });
+    }
+    return t('Mehrere Personen');
+  });
   /** Ein Stups: die Aufgabe öffnen (dort die Antwort); mehrere: die Liste der Mitteilungen */
 </script>
+
+{#snippet scopeItem(label: string, on: boolean, run: () => void)}
+  <button class="flex h-11 w-full items-center justify-between gap-3 px-4 text-left text-[16px]" role="menuitemradio" aria-checked={on} onclick={() => { run(); scopeOpen = false; }}>
+    {label}{#if on}<Icon name="check" size={18} stroke={2.6} />{/if}
+  </button>
+{/snippet}
 
 {#snippet filterButton(count: number, small: boolean)}
   <!-- Knopf „Filter" (wie im Mockup neben den Chips): mit gesetztem Filter Umriss und Zähler -->
@@ -197,8 +205,20 @@
     <!-- Kalender: eigene Seite unter Aufgaben (Zurück, Titel, Monat, Tag/Woche/Monat) -->
     <div class="flex min-h-0 flex-1 flex-col px-3 pt-[calc(var(--safe-top)+8px)] lg:px-0 lg:pt-0" data-testid="calendar-page">
       <div class="flex flex-col gap-3">
-        <div>
-          <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[16px] font-semibold text-accent-text lg:hidden" onclick={back}>
+        <!-- Handy: Titel mittig und der Filter rechts (wie die Navigationsleiste im Entwurf); Desktop: Titel in der Kopfzeile -->
+        <div class="relative flex h-11 items-center justify-center lg:hidden">
+          <h1 class="text-[17px] font-semibold">{t('Kalender')}</h1>
+          <span class="absolute right-0.5 inline-flex" data-testid="filter-button">
+            <span class="relative inline-flex">
+              <button class="top-circle {activeFilterCount(sf) > 0 ? 'ring-2 ring-accent' : ''}" aria-label={activeFilterCount(sf) > 0 ? t('Filter, {n} aktiv', { n: activeFilterCount(sf) }) : t('Filter')} onclick={() => openSheet({ type: 'filter' })}>
+                <Icon name="sliders" size={20} stroke={2} />
+              </button>
+              {#if activeFilterCount(sf) > 0}<span class="bell-count pointer-events-none absolute -top-1 -right-1" data-testid="filter-count" aria-hidden="true">{activeFilterCount(sf)}</span>{/if}
+            </span>
+          </span>
+        </div>
+        <div class="max-lg:hidden">
+          <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[16px] font-semibold text-accent-text" onclick={back}>
             <Icon name="chevron-left" size={22} stroke={2.2} />{t('Aufgaben')}
           </button>
           <div class="flex items-end justify-between gap-2">
@@ -209,18 +229,18 @@
             </div>
           </div>
         </div>
-        <Segmented items={VIEWS} value={calMode} label={t('Ansicht')} small onchange={(v) => setCalMode(v as CalMode)} />
+        <Segmented items={ui.desktop ? VIEWS : [...VIEWS, { id: 'list', label: t('Liste') }]} value={calMode} label={t('Ansicht')} small onchange={(v) => (v === 'list' ? back() : setCalMode(v as CalMode))} />
       </div>
       <CalendarView mode={calMode} bind:day onopenday={openDay} />
     </div>
   {:else}
     <div class="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab lg:-mx-1 lg:px-1 lg:pt-0" data-testid="tasks" role="presentation" onkeydown={arrows}>
-      <div class="flex flex-col gap-3.5">
-        <TopBar title={t('Aufgaben')} sub={t('Deine Aufgaben, Termine und To-dos an einem Ort.')} subTestid="tasks-sub" />
+      <div class="flex flex-col gap-3">
+        <div class="order-[-10]"><TopBar title={t('Aufgaben')} sub={t('Deine Aufgaben, Termine und To-dos an einem Ort.')} subTestid="tasks-sub" /></div>
         {#if !ui.desktop && loaded}
-          <label class="flex h-11 items-center gap-2 rounded-[12px] bg-surface2 px-3 text-fg2">
-            <Icon name="search" size={18} stroke={2} />
-            <input class="h-full min-w-0 flex-1 bg-transparent text-[16px] text-fg outline-none placeholder:text-fg2" type="search" enterkeyhint="search" placeholder="{t('Suchen')} …" aria-label={t('Aufgaben durchsuchen')} bind:value={phoneQuery} />
+          <label class="order-[-8] flex h-9 items-center gap-1.5 rounded-[10px] bg-surface2 px-2.5 text-text-soft">
+            <Icon name="search" size={17} stroke={2} />
+            <input class="h-full min-w-0 flex-1 bg-transparent text-[17px] text-fg outline-none placeholder:text-text-soft" type="search" enterkeyhint="search" placeholder="{t('Suchen')} …" aria-label={t('Aufgaben durchsuchen')} bind:value={phoneQuery} />
           </label>
         {/if}
 
@@ -229,6 +249,7 @@
         {:else if !loaded}
           <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
         {:else}
+          <div class="max-lg:order-[-6] lg:order-[-9]">
           <StatsBar
             label={t('Deine Zahlen')}
             onselect={(id) => (id === 'week' ? openCalendar('week') : openSheet({ type: 'stats', kind: id as StatsKind }))}
@@ -239,12 +260,48 @@
               { id: 'done', label: t('Erledigt heute'), value: stats.done, icon: 'done', color: 'gray' },
             ]}
           />
+          </div>
 
           {#if nudges.length > 0}
-            <StupsCard {nudges} />
+            <div class="max-lg:order-[-7] lg:order-[-8]"><StupsCard {nudges} /></div>
           {/if}
+          <!-- Handy: ein Bereichs-Chip („Meine Aufgaben ▾“) mit Menü und der Filter-Knopf; Desktop: die Chips unten -->
+          <div class="relative flex items-center justify-between gap-2 lg:hidden order-[-9]">
+            {#if !ui.isChild}
+              <button
+                class="inline-flex h-9 items-center gap-1 rounded-full bg-surface2 px-3.5 text-[15px] font-semibold"
+                aria-haspopup="menu"
+                aria-expanded={scopeOpen}
+                data-testid="scope-button"
+                onclick={() => (scopeOpen = !scopeOpen)}
+              >{scopeText}<Icon name="chevron-down" size={16} stroke={2.4} /></button>
+              {#if scopeOpen}
+                <button class="fixed inset-0 z-40 cursor-default" aria-label={t('Schließen')} tabindex="-1" onclick={() => (scopeOpen = false)}></button>
+                <div class="absolute top-11 left-0 z-50 min-w-[230px] overflow-hidden rounded-[14px] bg-surface py-1 shadow-[0_10px_30px_rgba(0,0,0,0.22)]" role="menu" aria-label={t('Personen')}>
+                  {@render scopeItem(t('Alle Aufgaben'), !personFilterActive(sf), () => setScheduleFilter({ personIds: [], unassigned: false }))}
+                  {#if ui.me?.isPerson}
+                    {@render scopeItem(t('Meine Aufgaben'), sf.personIds.length === 1 && sf.personIds[0] === ui.me.id, () => setScheduleFilter({ personIds: [ui.me!.id], unassigned: false }))}
+                  {/if}
+                  {#each people as p (p.id)}
+                    {@render scopeItem(t('Aufgaben von {name}', { name: p.displayName }), sf.personIds.length === 1 && sf.personIds[0] === p.id, () => setScheduleFilter({ personIds: [p.id], unassigned: false }))}
+                  {/each}
+                </div>
+              {/if}
+            {:else}
+              <span></span>
+            {/if}
+            <span class="relative inline-flex shrink-0" data-testid="filter-button">
+              <button class="top-circle {extraFilter > 0 ? 'ring-2 ring-accent' : ''}" aria-label={extraFilter > 0 ? t('Filter, {n} aktiv', { n: extraFilter }) : t('Filter')} onclick={() => openSheet({ type: 'filter' })}>
+                <Icon name="sliders" size={20} stroke={2} />
+              </button>
+              {#if extraFilter > 0}
+                <span class="bell-count pointer-events-none absolute -top-1 -right-1" data-testid="filter-count" aria-hidden="true">{extraFilter}</span>
+              {/if}
+            </span>
+          </div>
+
           {#if !ui.isChild}
-            <div class="flex items-center gap-2">
+            <div class="items-center gap-2 max-lg:hidden lg:order-[-7] lg:flex">
               <div class="no-scrollbar -ml-3 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-3" role="group" aria-label={t('Personen')} use:scrollStrip={sf.personIds.join() + sf.unassigned}>
                 <Chip active={!personFilterActive(sf)} pressed={!personFilterActive(sf)} onclick={() => setScheduleFilter({ personIds: [], unassigned: false })}>
                   <Icon name="user" size={20} />{t('Alle')}
@@ -264,7 +321,7 @@
             </div>
           {:else}
             <!-- Kind: kein „Wer", der Knopf steht allein rechts -->
-            <div class="flex justify-end">{@render filterButton(extraFilter, false)}</div>
+            <div class="flex justify-end max-lg:hidden lg:order-[-7]">{@render filterButton(extraFilter, false)}</div>
           {/if}
 
           {#if house.length > 0}
@@ -304,14 +361,12 @@
                 title={g.title}
                 count={g.cards.length}
                 tone={g.key === 'overdue' ? 'danger' : undefined}
-                icon={GROUP_ICON[g.key].icon}
-                iconTone={GROUP_ICON[g.key].tone}
-                large
+                plain
                 open={isOpen}
                 ontoggle={() => toggleGroup(g.key)}
               />
               {#if isOpen}
-                <ul class="list-group">
+                <ul class="list-group !mt-0">
                   {#each g.cards as c (c.id)}<li><TaskRow card={c} {nowMs} /></li>{/each}
                 </ul>
               {/if}

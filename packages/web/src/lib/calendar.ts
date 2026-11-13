@@ -162,3 +162,11 @@ export function rangeTitle(mode: CalMode, key: string): string {
 
 export const weekdayShort = (key: string): string => names().weekdaysShort[utc(key).getUTCDay()]!;
 export const dayNumber = (key: string): number => parts(key)[2];
+
+/** ISO-Kalenderwoche (Montag als Wochenbeginn, die Woche mit dem ersten Donnerstag ist Woche 1) */
+export function isoWeek(key: string): number {
+  const d = utc(key);
+  const thursday = new Date(d.getTime() + (3 - weekdayIndex(key)) * 86_400_000);
+  const jan1 = Date.UTC(thursday.getUTCFullYear(), 0, 1);
+  return Math.floor((thursday.getTime() - jan1) / 86_400_000 / 7) + 1;
+}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { columnForNew } from '../lib/calendar';
   import { visibleTabs } from '../lib/tabs';
@@ -41,6 +42,7 @@
     void left.length;
     void right.length;
     place();
+    void tick().then(place);
     window.addEventListener('resize', place);
     return () => window.removeEventListener('resize', place);
   });

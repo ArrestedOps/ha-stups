@@ -14,7 +14,6 @@
   import { categoryKeyOf, COL_LAST, COL_MID, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
   import { noteText, RUN_TEXT } from '../lib/watchers';
   import { askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openSettings, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
-  import robot from '../assets/waechter-robot.webp';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
   import WatcherDesk from './WatcherDesk.svelte';
@@ -61,7 +60,8 @@
   const nowMs = $derived((void data, void clock.tick, Date.now()));
   const allItems = $derived(data?.items ?? []);
   /** Desktop: das Suchfeld oben filtert nach Name, Gerät, Kategorie, offener Aufgabe und der Aufgabe, die danach kommt */
-  const query = $derived(ui.desktop ? ui.query.trim() : '');
+  let phoneQuery = $state('');
+  const query = $derived((ui.desktop ? ui.query : phoneQuery).trim());
   const items = $derived(query ? allItems.filter((i) => matchesQuery(query, i.name, i.subject, i.entity, i.category, i.openCard?.title, i.nextCard)) : allItems);
   const layout = $derived(watcherLayout(items));
   const names = (ids: string[]) => ids.map((id) => personById(id)?.displayName ?? '?').join(', ');
@@ -317,21 +317,17 @@
           </div>
         {/if}
       {:else}
-        <!-- „Deine Wächter": Aufgabe mit dem Roboter (Text echt und übersetzbar, nur der Roboter ist ein Bild) -->
-        <div class="relative h-[88px] min-w-0 overflow-hidden rounded-[18px]" style="background-image: var(--banner-warm)" data-testid="watchers-hero">
-          <img
-            src={robot}
-            alt=""
-            width="264"
-            height="176"
-            class="absolute inset-y-0 right-0 h-full w-auto [mask-image:linear-gradient(to_right,transparent,black_45%)]"
-            data-testid="watchers-robot"
-          />
-          <div class="relative flex h-full max-w-[64%] flex-col justify-center gap-0.5 pl-4">
-            <h2 class="text-[17px] leading-tight font-extrabold tracking-tight text-on-banner">{t('Deine Wächter')}</h2>
-            <p class="text-[12px] leading-[1.3] text-(--banner-warm-sub)">{t('Behalten dein Zuhause im Blick und erstellen automatisch Aufgaben – direkt aus Home Assistant.')}</p>
-          </div>
-        </div>
+        <!-- Handy: Suche und die Zahlen („111 Wächter · 10 aktuell · 1 aus“) statt des Banners mit dem Roboter -->
+        <label class="flex h-9 items-center gap-1.5 rounded-[10px] bg-surface2 px-2.5 text-text-soft">
+          <Icon name="search" size={17} stroke={2} />
+          <input class="h-full min-w-0 flex-1 bg-transparent text-[17px] text-fg outline-none placeholder:text-text-soft" type="search" enterkeyhint="search" placeholder={t('Wächter, Geräte und Räume suchen')} aria-label={t('Wächter suchen')} bind:value={phoneQuery} />
+        </label>
+        {#if data?.available && allItems.length > 0}
+          <p class="flex flex-wrap items-baseline gap-x-2.5 px-1" data-testid="watchers-summary">
+            <span class="text-[20px] font-bold">{tn('{n} Wächter', '{n} Wächter', summary.total)}</span>
+            <span class="text-[15px] text-text-soft">{[summary.current > 0 ? t('{n} aktuell', { n: summary.current }) : '', summary.off > 0 ? t('{n} aus', { n: summary.off }) : ''].filter(Boolean).join(' · ')}</span>
+          </p>
+        {/if}
       {/if}
 
       {#if !ui.desktop && can('watchers') && found > 0 && data?.available}

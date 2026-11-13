@@ -324,7 +324,7 @@ test.describe('Befehlspalette', () => {
     await expect(palette).toBeVisible();
     await expect(palette.getByRole('combobox').or(palette.getByRole('textbox'))).toBeFocused();
     await page.keyboard.type('kalender');
-    await expect(palette.getByRole('option', { name: /Kalender/ })).toBeVisible();
+    await expect(palette.getByRole('option').filter({ hasText: 'G C' })).toBeVisible();
     await page.keyboard.press('Enter');
     await expect(palette).toHaveCount(0);
     await expect(page.getByTestId('calendar-page')).toBeVisible();

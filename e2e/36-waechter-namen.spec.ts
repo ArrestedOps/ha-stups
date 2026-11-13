@@ -160,6 +160,7 @@ test('Zurück im Assistenten: in jedem Schritt da, Eingaben bleiben, am Anfang z
 
   // Escape und „Schließen" schließen den Assistenten ganz
   await d.getByTestId('found-hit').filter({ hasText: 'Bad Fenster Batterie' }).getByRole('button', { name: 'Einrichten' }).click();
+  await expect(d.getByTestId('wizard-question').or(d.getByTestId('entity-picker'))).toBeVisible(); // erst warten, bis der Assistent offen ist
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });

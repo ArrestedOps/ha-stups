@@ -9,7 +9,7 @@
   import { nudgesToMe, taskStats } from '../lib/tasks';
   import { deviceTz } from '../lib/datetime';
   import { categoryKeyOf } from '../lib/watcherList';
-  import { activeScheduleFilter, feat, goTasks, goToDashboard, openSettings, openSheet, selectBoard, selectTab, setScheduleFilter, ui } from '../lib/store.svelte';
+  import { activeScheduleFilter, feat, goTasks, goToDashboard, openSettings, openSheet, selectBoard, selectTab, setPersonScope, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
   import SymbolIcon from './SymbolIcon.svelte';
@@ -18,7 +18,7 @@
   /**
    * Seitenleiste auf dem Desktop (ab 1024 px, 264 px breit, fest), wie im Entwurf: oben Logo mit Home Assistant, Glocke und Zahnrad, die Suche,
    * dann „Aufgaben“ (Alle offen, Gestupst, Heute, Überfällig, Diese Woche, Erledigt: sie wählen die Ansicht der Liste), „Boards“, „Mehr“
-   * (Kalender), „Wächter“ (Filter und Kategorien der Tabelle) und „Personen“ (Meine, Alle, die anderen: sie wählen, wessen Aufgaben die Liste zeigt), unten die angemeldete Person.
+   * (Kalender), „Wächter“ (Filter und Kategorien der Tabelle) und oben das Feld „Ansicht für“ (Alle, Meine, die anderen: wessen Aufgaben und Wächter alle Seiten zeigen), unten die angemeldete Person.
    * Die Reiter bleiben als Navigation „Ansicht“ erreichbar; `aria-current` wie die Leiste am Handy.
    */
   type TaskView = typeof ui.taskView;
@@ -80,14 +80,13 @@
   }
   const people = $derived(ui.people.filter((p) => p.isPerson && p.id !== meId));
   const onlyId = $derived(sf.personIds.length === 1 ? sf.personIds[0] : null);
-  const pickPerson = (ids: string[]) => {
-    setScheduleFilter({ personIds: ids, unassigned: false });
-    // dieselbe Wahl gilt für das Kanban eines Boards (eigener Filter dort)
-    const mine = ids.length === 1 && ids[0] === meId;
-    ui.filter.onlyMine = mine;
-    ui.filter.personIds = mine ? [] : ids;
-    if (ui.tab !== 'tasks' && ui.tab !== 'boards') goTasks('list');
-  };
+  const whoText = $derived(
+    sf.personIds.length === 0
+      ? t('Aufgaben und Wächter aller Personen')
+      : onlyId === meId
+        ? t('Deine Aufgaben und Wächter')
+        : t('Aufgaben und Wächter von {name}', { name: ui.people.find((p) => p.id === onlyId)?.displayName ?? '…' }),
+  );
 
   const role = $derived(ui.isChild ? t('Kind') : ui.isAdmin ? t('Administrator') : t('Mitglied'));
   const dot = (id: string, color: string | null) => categoryFg(boardColorKey(color, ui.boards.findIndex((b) => b.id === id)));
@@ -122,6 +121,23 @@
     <Icon name="search" size={16} stroke={2} /><span class="flex-1 text-left">{t('Suchen oder Befehl')}</span>
     <kbd class="rounded-md bg-surface px-1.5 py-px font-sans text-[11px] font-semibold" aria-hidden="true">{mac ? '⌘ K' : `${t('Strg')} K`}</kbd>
   </button>
+
+  {#if !ui.isChild}
+    <!-- „Ansicht für“: wessen Aufgaben und Wächter alle Seiten zeigen. Ganz oben, damit man sieht, dass es für alles gilt; der Klartext darunter nennt die Wahl. -->
+    <div class="order-5 mx-1.5 mt-1 mb-1.5 rounded-[12px] bg-surface px-2.5 pt-2.5 pb-2" role="group" aria-label={t('Ansicht für')} data-testid="side-who">
+      <p class="mb-2 text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Ansicht für')}</p>
+      <div class="flex flex-wrap items-center gap-1.5">
+        <button class="flex h-8 min-w-8 items-center justify-center rounded-full bg-surface2 px-2.5 text-[12.5px] font-bold {onlyId === null && sf.personIds.length === 0 ? 'ring-[2.5px] ring-accent' : ''}" aria-pressed={sf.personIds.length === 0} aria-label={t('Alle')} onclick={() => setPersonScope([])}>{t('Alle')}</button>
+        {#if ui.me?.isPerson}
+          <button class="rounded-full {onlyId === ui.me.id ? 'ring-[2.5px] ring-accent ring-offset-2 ring-offset-surface' : ''}" aria-pressed={onlyId === ui.me.id} aria-label={t('Meine')} title={t('Meine')} onclick={() => setPersonScope([ui.me!.id])}><Avatar person={ui.me} size={32} /></button>
+        {/if}
+        {#each people as p (p.id)}
+          <button class="rounded-full {onlyId === p.id ? 'ring-[2.5px] ring-accent ring-offset-2 ring-offset-surface' : ''}" aria-pressed={onlyId === p.id} aria-label={p.displayName} title={p.displayName} onclick={() => setPersonScope([p.id])}><Avatar person={p} size={32} /></button>
+        {/each}
+      </div>
+      <p class="mt-2 text-[12.5px] text-fg2" data-testid="side-who-text">{whoText}</p>
+    </div>
+  {/if}
 
   <!-- Die Navigationen stehen mit display: contents in einer Spalte; style:order stellt die Reihenfolge des Entwurfs her: Aufgaben, Boards, Mehr, Wächter, Personen -->
   <nav class="contents" aria-label={t('Ansicht')}>
@@ -162,22 +178,6 @@
       {/each}
     {/if}
 
-    {#if !ui.isChild}
-      <p class="side-head mt-4" style:order="40">{t('Personen')}</p>
-      {#if ui.me?.isPerson}
-        <button style:order="40" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={onlyId === ui.me.id} onclick={() => pickPerson([ui.me!.id])}>
-          <Avatar person={ui.me} size={20} /><span class="min-w-0 flex-1 truncate text-left">{t('Meine')}</span>
-        </button>
-      {/if}
-      <button style:order="40" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={sf.personIds.length === 0} onclick={() => pickPerson([])}>
-        <Icon name="user" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{t('Alle')}</span>
-      </button>
-      {#each people as p (p.id)}
-        <button style:order="40" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={onlyId === p.id} onclick={() => pickPerson([p.id])}>
-          <Avatar person={p} size={20} /><span class="min-w-0 flex-1 truncate text-left">{p.displayName}</span>
-        </button>
-      {/each}
-    {/if}
   </nav>
 
   <nav class="contents" aria-labelledby="side-boards">

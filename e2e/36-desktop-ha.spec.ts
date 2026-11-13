@@ -272,3 +272,40 @@ test('Wächter am Desktop: Filter in der Seitenleiste, aufgeklappter Ablauf bear
   for (const id of ids) await request.delete(`/api/watchers/${id}`);
   await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '12' } }); // andere Tests erwarten den Stand von vorher
 });
+
+test('Ansicht für: das Feld oben in der Seitenleiste filtert Wächter (und Aufgaben) nach Person, ein Chip zeigt es und hebt es auf', async ({ page, request }) => {
+  const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
+  const rene = people.find((p) => p.name === 'Rene')!;
+  const conny = people.find((p) => p.name === 'Conny')!;
+  const tag = Date.now().toString(36);
+  const board = (await (await request.post('/api/boards', { data: { name: `Ansicht ${tag}` } })).json()) as { id: string };
+  const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
+  const columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;
+  await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '80' } });
+  const ids: string[] = [];
+  for (const [name, who] of [[`FürRene ${tag}`, rene], [`FürConny ${tag}`, conny]] as const) {
+    const r = await request.post('/api/watchers', {
+      data: { name, trigger: { entityId: 'sensor.bad_batterie', kind: 'below', value: 10, forMin: 10 }, card: { boardId: board.id, columnId, title: `Akku ${name}`, due: { kind: 'none' } }, assign: { mode: 'fixed', personIds: [who.id] } },
+    });
+    expect(r.status()).toBe(201);
+    ids.push(((await r.json()) as { id: string }).id);
+  }
+  await page.goto('/');
+  await sideNav(page).getByRole('button', { name: 'Wächter' }).click();
+  const who = page.getByTestId('side-who');
+  await expect(who).toBeVisible();
+  await expect(who).toContainText('Ansicht für');
+  // Standard: meine (Rene): nur sein Wächter, der Chip nennt es
+  await who.getByRole('button', { name: 'Alle', exact: true }).click();
+  await expect(page.getByTestId('watcher-row')).toHaveCount(2);
+  await expect(page.getByTestId('scope-chip')).toHaveCount(0);
+  await who.getByRole('button', { name: 'Conny' }).click();
+  await expect(page.getByTestId('watcher-row')).toHaveCount(1);
+  await expect(page.getByTestId('watcher-row')).toContainText(`FürConny ${tag}`);
+  await expect(page.getByTestId('scope-chip')).toContainText('Nur Conny');
+  await expect(page.getByTestId('side-who-text')).toContainText('Conny');
+  await page.getByTestId('scope-chip').getByRole('button', { name: 'Filter aufheben' }).click();
+  await expect(page.getByTestId('watcher-row')).toHaveCount(2);
+  for (const id of ids) await request.delete(`/api/watchers/${id}`);
+  await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '12' } });
+});

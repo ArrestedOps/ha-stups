@@ -13,7 +13,7 @@
   import type { SavedWatcher } from '../lib/watcher-types';
   import { categoryKeyOf, COL_LAST, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
   import { noteText, RUN_TEXT } from '../lib/watchers';
-  import { askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
+  import { activeScheduleFilter, askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
   import WatcherDesk from './WatcherDesk.svelte';
@@ -59,7 +59,11 @@
   });
 
   const nowMs = $derived((void data, void clock.tick, Date.now()));
-  const allItems = $derived(data?.items ?? []);
+  /** Desktop: die Wahl „Ansicht für“ in der Seitenleiste filtert die Wächter nach den Zuständigen (leere Liste bei „reihum“ heißt alle, bei „niemand“ keiner) */
+  const personScope = $derived(ui.desktop ? activeScheduleFilter().personIds : []);
+  const forScope = (i: HomeItem): boolean =>
+    personScope.length === 0 || (i.assign.personIds.length === 0 ? i.assign.mode !== 'fixed' && i.assign.mode !== 'none' : i.assign.personIds.some((id) => personScope.includes(id)));
+  const allItems = $derived((data?.items ?? []).filter(forScope));
   /** Desktop: das Suchfeld oben filtert nach Name, Gerät, Kategorie, offener Aufgabe und der Aufgabe, die danach kommt */
   let phoneQuery = $state('');
   const query = $derived((ui.desktop ? ui.query : phoneQuery).trim());

@@ -113,6 +113,14 @@ export function filterContext(): FilterContext {
 /** Der Filter von Aufgaben und Kalender, wie er für diese Rolle gilt (ein Kind: ohne „Wer" und „nur von Wächtern") */
 export const activeScheduleFilter = (): ScheduleFilter => effectiveFilter(ui.sf, ui.isChild);
 
+/** Wessen Aufgaben und Wächter die Ansicht zeigt (Seitenleiste „Ansicht für“): leer heißt alle; dieselbe Wahl gilt für das Kanban eines Boards */
+export function setPersonScope(ids: string[]): void {
+  setScheduleFilter({ personIds: ids, unassigned: false });
+  const mine = ids.length === 1 && ids[0] === ui.me?.id;
+  ui.filter.onlyMine = mine;
+  ui.filter.personIds = mine ? [] : ids;
+}
+
 /** Ändert den Filter von Agenda und Kalender und merkt ihn sich auf diesem Gerät */
 export function setScheduleFilter(patch: Partial<ScheduleFilter>): void {
   ui.sf = { ...ui.sf, ...patch };

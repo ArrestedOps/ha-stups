@@ -46,6 +46,7 @@
     onsave,
     onmove,
     readonly = false,
+    grid = false,
   }: {
     card: CardFields;
     /** Spalten, die zur Wahl stehen */
@@ -55,6 +56,8 @@
     onmove: (columnId: string) => void;
     /** Nur ansehen (Rolle „Kind"): eine Zeile mit den Werten statt der Knöpfe */
     readonly?: boolean;
+    /** Desktop (aufgeklappte Aufgabe): die Eigenschaften als Raster aus Feldern, Beschriftung oben, Wert darunter; das Feld klappt als Streifen darunter auf */
+    grid?: boolean;
   } = $props();
 
   const column = $derived(ui.view?.columns.find((c) => c.id === card.columnId));
@@ -144,6 +147,19 @@
     void saveDue({ dueAt: null, recurrence: null, remindBeforeMin: null });
   }
 
+  /** Die Eigenschaften unter „Status“ in einer Reihenfolge, als Liste (Handy, Sheet) oder als Raster (aufgeklappte Aufgabe) */
+  const facts = $derived<{ name: string; label: string; value: string; tone?: string; avatars?: boolean; empty?: boolean }[]>([
+    { name: 'due', label: t('Fällig'), value: card.dueAt ? formatDue(card.dueAt) + (late ? ` · ${t('überfällig')}` : '') : t('Kein Termin'), tone: late ? 'text-danger' : '', empty: !card.dueAt },
+    { name: 'who', label: t('Zuständig'), value: people.length ? people.map((p) => p.displayName).join(' & ') : t('Niemand'), avatars: true, empty: people.length === 0 },
+    { name: 'rec', label: t('Wiederholung'), value: card.recurrence ? describeRecurrence(card.recurrence) : t('Nie'), empty: !card.recurrence },
+    { name: 'rem', label: t('Erinnerung'), value: card.remindBeforeMin ? t('{lead} vorher', { lead: formatLead(card.remindBeforeMin) }) : card.reminder ? t('Nachhaken') : t('Keine'), empty: !card.remindBeforeMin && !card.reminder },
+    { name: 'prio', label: t('Priorität'), value: card.priority ? (PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? '') : t('Normal'), empty: !card.priority },
+    { name: 'cat', label: t('Kategorie'), value: catNames.length ? catNames.join(', ') : t('Keine'), empty: catNames.length === 0 },
+    { name: 'effort', label: t('Aufwand'), value: card.effort ? (EFFORTS.find((e) => e[0] === card.effort)?.[1] ?? '') : t('Nicht angegeben'), empty: !card.effort },
+    { name: 'cost', label: t('Kosten'), value: card.costCents !== null ? formatCost(card.costCents) : t('Nicht angegeben'), empty: card.costCents === null },
+    ...(card.confirm !== undefined && hasChild ? [{ name: 'confirm', label: t('Bestätigung'), value: confirmLabel === t('Bestätigung') ? t('Vorgabe der Person') : confirmLabel, empty: card.confirm === null }] : []),
+  ]);
+
   // „Termin wählen“: Monatskalender und Uhrzeit-Rad (Termin-Fenster)
   let dateOpen = $state(false);
 </script>
@@ -172,6 +188,37 @@
   </div>
 {:else}
 <!-- Eigenschaften als gruppierte Liste wie in iOS: links der Name, rechts der Wert. Antippen klappt darunter das Feld auf (immer nur eines). -->
+{#if grid}
+  <div class="grid grid-cols-2 gap-2 xl:grid-cols-4" role="group" aria-label={t('Eigenschaften')}>
+    <label class="relative block min-w-0 rounded-[12px] border border-line bg-surface px-3 py-2.5 text-left hover:border-accent focus-within:border-accent">
+      <span class="block text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Status')}</span>
+      <span class="mt-0.5 flex min-h-6 items-center gap-1.5 truncate text-[15px] font-semibold"><Icon name="kanban" size={15} stroke={2} />{column?.name ?? 'Status'}</span>
+      <select class="absolute inset-0 h-full w-full cursor-pointer opacity-0" value={card.columnId} aria-label={t('Status der Aufgabe')} onchange={(e) => onmove(e.currentTarget.value)}>
+        {#each targets as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
+      </select>
+    </label>
+    {#each facts as f (f.name)}
+      <button
+        type="button"
+        class="min-w-0 rounded-[12px] border bg-surface px-3 py-2.5 text-left hover:border-accent {panel === f.name ? 'border-accent ring-1 ring-accent' : 'border-line'}"
+        aria-expanded={panel === f.name}
+        aria-label="{f.label}: {f.value}"
+        onclick={() => toggle(f.name)}
+      >
+        <span class="block text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase" aria-hidden="true">{f.label}</span>
+        <span class="mt-0.5 flex min-h-6 items-center gap-1.5 truncate text-[15px] font-semibold {f.tone || (f.empty ? 'text-hint font-medium' : '')}" aria-hidden="true">
+          {#if f.avatars && people.length}
+            <span class="flex shrink-0 items-center -space-x-1.5">{#each people.slice(0, 3) as p (p.id)}<Avatar person={p} size={22} ring={1.5} />{/each}</span>
+          {/if}
+          <span class="truncate">{f.value}</span>
+        </span>
+      </button>
+    {/each}
+  </div>
+  {#if panel}
+    <div class="mt-2 rounded-[12px] border border-accent bg-surface p-3.5">{@render editor(panel)}</div>
+  {/if}
+{:else}
 <div class="list-group kv mt-0" role="group" aria-label={t('Eigenschaften')}>
   <div>
     <label class="relative flex min-h-[46px] items-center gap-3 px-4 text-[16px]">
@@ -184,18 +231,11 @@
     </label>
   </div>
 
-  {@render row('due', t('Fällig'), card.dueAt ? formatDue(card.dueAt) + (late ? ` · ${t('überfällig')}` : '') : t('Kein Termin'), late ? 'text-danger' : '')}
-  {@render row('who', t('Zuständig'), people.length ? people.map((p) => p.displayName).join(' & ') : t('Niemand'), '', true)}
-  {@render row('rec', t('Wiederholung'), card.recurrence ? describeRecurrence(card.recurrence) : t('Nie'))}
-  {@render row('rem', t('Erinnerung'), card.remindBeforeMin ? t('{lead} vorher', { lead: formatLead(card.remindBeforeMin) }) : card.reminder ? t('Nachhaken') : t('Keine'))}
-  {@render row('prio', t('Priorität'), card.priority ? (PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? '') : t('Normal'))}
-  {@render row('cat', t('Kategorie'), catNames.length ? catNames.join(', ') : t('Keine'))}
-  {@render row('effort', t('Aufwand'), card.effort ? (EFFORTS.find((e) => e[0] === card.effort)?.[1] ?? '') : t('Nicht angegeben'))}
-  {@render row('cost', t('Kosten'), card.costCents !== null ? formatCost(card.costCents) : t('Nicht angegeben'))}
-  {#if card.confirm !== undefined && hasChild}
-    {@render row('confirm', t('Bestätigung'), confirmLabel === t('Bestätigung') ? t('Vorgabe der Person') : confirmLabel)}
-  {/if}
+  {#each facts as f (f.name)}
+    {@render row(f.name, f.label, f.value, f.tone, f.avatars)}
+  {/each}
 </div>
+{/if}
 {/if}
 
 {#snippet row(name: string, label: string, value: string, tone = '', avatars = false)}

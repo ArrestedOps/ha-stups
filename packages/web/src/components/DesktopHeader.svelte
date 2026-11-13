@@ -2,7 +2,7 @@
   import { columnForNew } from '../lib/calendar';
   import { t, tn } from '../lib/i18n/index.svelte';
   import { boardColorKey } from '../lib/colors';
-  import { openSheet, ui } from '../lib/store.svelte';
+  import { activeScheduleFilter, openSheet, setPersonScope, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
 
   /**
@@ -26,6 +26,11 @@
   const canCreate = $derived(!!view && !!newColumn && !ui.isChild);
   const boardKey = $derived(boardColorKey(ui.boards, ui.boardId ?? ''));
   const onList = $derived(ui.tab === 'tasks' && !ui.tasksCalendar);
+  /** Die Wahl „Ansicht für“ in der Seitenleiste, als Chip neben dem Titel, damit man sieht, warum etwas fehlt (leer bei „Alle“) */
+  const scopeIds = $derived(activeScheduleFilter().personIds);
+  const scopeName = $derived(
+    scopeIds.length === 0 ? '' : scopeIds.length === 1 && scopeIds[0] === ui.me?.id ? t('Nur meine') : t('Nur {name}', { name: scopeIds.map((id) => ui.people.find((p) => p.id === id)?.displayName ?? '…').join(', ') }),
+  );
 
   const value = $derived(ui.tab === 'boards' ? ui.filter.search : ui.query);
   function setValue(v: string) {
@@ -51,6 +56,12 @@
       <h1 class="truncate text-[30px] leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{page.title}</h1>
       {#if ui.tab === 'boards' && board}<span class="shrink-0 text-[14px] font-medium text-text-soft">{t('{n} offen', { n: board.openCards })}</span>{/if}
       {#if onList}<span class="shrink-0 text-[14px] font-medium text-text-soft">{tn('{n} Aufgabe', '{n} Aufgaben', ui.taskCount)}</span>{/if}
+      {#if scopeName}
+        <span class="inline-flex h-7 shrink-0 items-center gap-1 self-center rounded-full bg-accent-soft pr-1 pl-3 text-[12.5px] font-bold text-accent-text" data-testid="scope-chip">
+          {scopeName}
+          <button class="flex h-5 w-5 items-center justify-center rounded-full hover:bg-surface2" aria-label={t('Filter aufheben')} onclick={() => setPersonScope([])}><Icon name="x" size={12} stroke={2.6} /></button>
+        </span>
+      {/if}
     </div>
     <p class="mt-1 truncate text-[14px] text-fg2" data-testid={page.subTestid}>{page.sub}</p>
   </div>

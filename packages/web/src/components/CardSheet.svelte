@@ -136,6 +136,9 @@
       : columns,
   );
 
+  // aufgeklappte Aufgabe: rechts Kommentare oder Verlauf
+  let side = $state<'c' | 'h'>('c');
+
   // Symbol der Aufgabe: antippen öffnet „Symbol wählen" (nicht für ein Kind: es ändert keine Aufgaben)
   let symbolOpen = $state(false);
   const nudgeNames = $derived(
@@ -241,8 +244,8 @@
   {:else if !card}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
-    <div class={inline ? 'grid items-start gap-x-8 gap-y-3.5 pt-1 xl:grid-cols-2' : 'flex flex-col gap-3.5 pt-1'}>
-      <div class="flex min-w-0 flex-col gap-3.5">
+    <div class={inline ? 'flex flex-col gap-5 pt-1' : 'flex flex-col gap-3.5 pt-1'}>
+      <div class={inline ? 'flex min-w-0 flex-col gap-3.5' : 'contents'}>
       <div class="flex items-center gap-3">
         {#if child}
           <CardTile {card} size="lg" glyph={28} />
@@ -287,7 +290,7 @@
       {/if}
 
       <div>
-        <CardProps card={card} {targets} onsave={save} onmove={(columnId) => moveCard(card!, columnId)} readonly={child} />
+        <CardProps card={card} {targets} onsave={save} onmove={(columnId) => moveCard(card!, columnId)} readonly={child} grid={inline} />
       </div>
 
       {#if !inline && canFinish}
@@ -358,7 +361,8 @@
       {/if}
 
       </div>
-      <div class="flex min-w-0 flex-col gap-3.5">
+      <div class={inline ? 'grid items-start gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]' : 'contents'}>
+      <div class={inline ? 'flex min-w-0 flex-col gap-3.5' : 'contents'}>
       <!-- Beschreibung: das Feld trägt seine Beschriftung in sich -->
       <div class="flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3 focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent/20">
         <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="card-desc">{t('Beschreibung')}</label>
@@ -380,6 +384,7 @@
 
       <section aria-label={t('Checkliste')}>
         <SectionHeader title={t('Checkliste')} count={card.checklist.total ? `${card.checklist.done}/${card.checklist.total}` : undefined} />
+        {#if inline && card.checklist.total > 0}<div class="mt-2 h-[5px] overflow-hidden rounded-[3px] bg-surface2" aria-hidden="true"><i class="block h-full rounded-[3px] bg-sig-green" style:width="{Math.round((card.checklist.done / card.checklist.total) * 100)}%"></i></div>{/if}
         <div class="mt-2 flex flex-col divide-y divide-line overflow-hidden rounded-row border border-line bg-surface">
           {#each card.checklistItems as item (item.id)}
             <div class="flex min-h-[52px] items-center gap-3 px-3 text-[15px]">
@@ -499,6 +504,15 @@
         </div>
       </section>
 
+      </div>
+      <div class={inline ? 'flex min-w-0 flex-col gap-3.5' : 'contents'}>
+      {#if inline}
+        <div class="flex gap-1 border-b border-line" role="tablist" aria-label={t('Kommentare und Verlauf')}>
+          <button type="button" role="tab" aria-selected={side === 'c'} class="h-9 border-b-2 px-3 text-[14px] font-semibold {side === 'c' ? 'border-accent text-fg' : 'border-transparent text-fg2'}" onclick={() => (side = 'c')}>{t('Kommentare')}{comments.length ? ` · ${comments.length}` : ''}</button>
+          <button type="button" role="tab" aria-selected={side === 'h'} class="h-9 border-b-2 px-3 text-[14px] font-semibold {side === 'h' ? 'border-accent text-fg' : 'border-transparent text-fg2'}" onclick={() => (side = 'h')}>{t('Verlauf')}</button>
+        </div>
+      {/if}
+      {#if !inline || side === 'c'}
       <section aria-label={t('Kommentare')} class="flex flex-col gap-2">
         <SectionHeader title={t('Kommentare')} count={comments.length || undefined} />
         {#each comments as c (c.id)}
@@ -529,8 +543,9 @@
           </form>
         {/if}
       </section>
+      {/if}
 
-      {#if card.activity.length}
+      {#if card.activity.length && (!inline || side === 'h')}
         <section aria-label={t('Verlauf')}>
           <SectionHeader title={t('Verlauf')} />
           <div class="flex flex-col gap-2.5 px-1.5 py-1">
@@ -557,6 +572,7 @@
           <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Aufgabe löschen')}</span>
         </button>
       {/if}
+      </div>
       </div>
     </div>
   {/if}

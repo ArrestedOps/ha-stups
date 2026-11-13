@@ -174,3 +174,41 @@ test('Einstellungen › Home Assistant: „Dashboard" (Ziel des Home-Knopfs) und
   await expect(toggle).toHaveAttribute('aria-checked', before === 'true' ? 'false' : 'true');
   await toggle.click(); // zurück, der Merkzettel gehört dem Gerät
 });
+
+test('Aufgaben: nach rechts wischen erledigt, nach links liegen „Später“ und „Löschen“ bereit', async ({ page, request }) => {
+  const s = await seed(request);
+  const done = `Wischen ${s.tag}`;
+  const later = `Spaeter ${s.tag}`;
+  await s.mk(done, { assigneeIds: [s.me], dueAt: new Date(Date.now() + 2 * 3_600_000).toISOString() });
+  const l = await s.mk(later, { assigneeIds: [s.me], dueAt: new Date(Date.now() + 3 * 3_600_000).toISOString() });
+  await page.goto('/');
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
+  const tasks = page.getByTestId('tasks');
+  // Zeigerereignisse wie von einem Finger (die Maus des Testbrowsers löst auf dem emulierten Handy keine aus)
+  const drag = async (title: string, dx: number) => {
+    const el = tasks.getByText(title, { exact: true });
+    const box = (await el.boundingBox())!;
+    const x = box.x + 40;
+    const y = box.y + box.height / 2;
+    const fire = (type: string, cx: number) =>
+      el.dispatchEvent(type, { pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: cx, clientY: y, bubbles: true });
+    await fire('pointerdown', x);
+    for (const f of [0.25, 0.5, 0.75, 1]) await fire('pointermove', x + dx * f);
+    await fire('pointerup', x + dx);
+  };
+  // nach links: die Knöpfe bleiben offen
+  await drag(later, -200);
+  await expect(tasks.getByRole('button', { name: 'Später', exact: true })).toBeVisible();
+  await expect(tasks.getByRole('button', { name: 'Löschen', exact: true })).toBeVisible();
+  // „Später“ setzt den Termin auf morgen
+  const before = ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { id: string; dueAt: string }[] }).cards.find((c) => c.id === l.id)!.dueAt;
+  await tasks.getByRole('button', { name: 'Später', exact: true }).click();
+  await expect
+    .poll(async () => ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { id: string; dueAt: string }[] }).cards.find((c) => c.id === l.id)!.dueAt)
+    .not.toBe(before);
+  // nach rechts: erledigt
+  await drag(done, 260);
+  await expect(tasks.getByText(done, { exact: true })).toHaveCount(0);
+  const cards = ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string; completedAt: string | null }[] }).cards;
+  expect(cards.find((c) => c.title === done)?.completedAt).not.toBeNull();
+});

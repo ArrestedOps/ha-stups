@@ -1,11 +1,12 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
   import type { ScheduleCard } from '../lib/schedule';
-  import { activeScheduleFilter, completeCard, openCardAnywhere, openCardMenuAnywhere, personById, ui } from '../lib/store.svelte';
+  import { activeScheduleFilter, completeCard, openCardAnywhere, openCardMenuAnywhere, personById, removeCard, shiftCards, ui } from '../lib/store.svelte';
   import AvatarStack from './AvatarStack.svelte';
   import CardMeta from './CardMeta.svelte';
   import Icon from './Icon.svelte';
   import ListRow from './ui/ListRow.svelte';
+  import SwipeActions from './SwipeActions.svelte';
   import CardTile from './CardTile.svelte';
 
   /**
@@ -30,6 +31,7 @@
 
 {#snippet symbol()}<CardTile {card} />{/snippet}
 
+{#snippet row()}
 <ListRow
   variant="task"
   tile={card.icon ? symbol : undefined}
@@ -62,3 +64,13 @@
     {/if}
   {/snippet}
 </ListRow>
+{/snippet}
+
+{#if ui.desktop || ui.isChild || done}
+  {@render row()}
+{:else}
+  <!-- Handy: nach rechts wischen erledigt, nach links liegen „Später“ (Termin auf morgen) und „Löschen“ bereit -->
+  <SwipeActions onlead={() => void completeCard(card)} onlater={() => void shiftCards([card], 'tomorrow')} ondelete={() => removeCard(card)}>
+    {@render row()}
+  </SwipeActions>
+{/if}

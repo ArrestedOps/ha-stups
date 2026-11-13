@@ -4,6 +4,14 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.1
+
+**Neues Design (iOS-Stil), am Handy und am Desktop.** Aufgaben, Boards, Kalender und Wächter sind neu gestaltet: Tab-Leiste mit Aufgaben | Boards | + | Kalender | Wächter, Kopfzeile mit Stups-Logo, Home-Assistant-Symbol, Glocke und Zahnrad, gruppierte Listen, flaches Orange. Am Desktop gibt es Seitenleiste, Aufgaben-Tabelle mit Gruppierung, Schnellerfassung, Kontextmenü, Befehlspalette (Strg/Cmd+K) und Tastenkürzel (G dann T/B/C/W, „/“ für die Suche).
+
+**Weitere Änderungen.** Aufgaben lassen sich am Handy nach links und rechts wischen. Der Kalender zeigt am Handy standardmäßig drei Tage (wischbar). Die Stups-Karte zeigt Antworten an. Wächter sind am Handy in Kategorien-Seiten gegliedert; am Desktop gibt es Mehrfachauswahl. „Karte“ heißt überall „Aufgabe“. Der Server liefert für offene Stups zusätzlich Zeit, Vorlage und Text.
+
+**Bitte prüfen (Testliste):** (1) Am iPhone: Wischen in der Aufgabenliste, Dreitage-Kalender, Kategorien bei den Wächtern. (2) Am Desktop: Seitenleiste, Aufgaben-Tabelle, Befehlspalette, Kontextmenü. (3) Hell und Dunkel: Lesbarkeit und Tippflächen. (4) Alle Felder beim Anlegen einer Aufgabe und eines Wächters sind weiterhin da. Bekannt: Safari/WebKit wurde hier nur in Chromium getestet.
+
 ## 1.41.1-beta.3
 
 **Aufgeräumt, an der App ändert sich nichts.** Zwei Stellen in der Oberfläche, an denen sich Dateien gegenseitig importierten, sind aufgelöst: Zwei Hilfsfunktionen liegen jetzt dort, wo sie hingehören, ihr Inhalt ist unverändert. Ein neuer Test lässt solche Importzyklen in Server und Oberfläche künftig nicht mehr zu. Vier Funktionen, die nirgends mehr benutzt wurden, sind entfernt. Verhalten und Texte sind unverändert; Tests und Browser-Tests laufen wie vorher.

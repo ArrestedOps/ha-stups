@@ -76,7 +76,7 @@ test('Vorgang (Leistung) unter der Schwelle: auch hier entsteht die Aufgabe glei
   const s = await setup(request);
   await setState(request, `sensor.nachfrage_leistung_${s.tag}`, '2.4', { friendly_name: `Nachfrage Trockner ${s.tag}`, unit_of_measurement: 'W', device_class: 'power' });
   const title = `Trockner leeren ${s.tag}`;
-  await createWatcher(page, s, { search: `nachfrage trockner ${s.tag}`, entity: /Nachfrage Trockner/, threshold: '5', title });
+  await createWatcher(page, s, { search: `nachfrage trockner ${s.tag}`, entity: /Nachfrage Trockner/, threshold: '5', wait: 'sofort', title });
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
   await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([`${title}: Nachfrage Trockner ${s.tag}`]);
 });

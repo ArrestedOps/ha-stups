@@ -514,7 +514,7 @@
       {/if}
       {#if !inline || side === 'c'}
       <section aria-label={t('Kommentare')} class="flex flex-col gap-2">
-        <SectionHeader title={t('Kommentare')} count={comments.length || undefined} />
+        {#if !inline}<SectionHeader title={t('Kommentare')} count={comments.length || undefined} />{/if}
         {#each comments as c (c.id)}
           {@const author = personByName(c.authorName)}
           <div class="flex gap-2.5 rounded-row border border-line bg-surface p-3">
@@ -547,7 +547,7 @@
 
       {#if card.activity.length && (!inline || side === 'h')}
         <section aria-label={t('Verlauf')}>
-          <SectionHeader title={t('Verlauf')} />
+          {#if !inline}<SectionHeader title={t('Verlauf')} />{/if}
           <div class="flex flex-col gap-2.5 px-1.5 py-1">
             {#each card.activity as a (a.id)}
               {@const d = describeActivity(a)}

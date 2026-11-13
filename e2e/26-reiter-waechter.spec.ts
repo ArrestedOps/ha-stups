@@ -34,7 +34,7 @@ test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Aufgab
   const s = await setup(request);
   await setState(request, 'person.rene', 'home');
   await setState(request, 'person.conny', 'not_home');
-  await setState(request, 'sensor.waschmaschine_leistung', '2');
+  await setState(request, 'sensor.waschmaschine_leistung', '120'); // beim Anlegen noch nicht erfüllt (sonst löste der Wächter gleich aus)
   const name = `Maschine ${s.tag}`;
   const title = `Aufhängen ${s.tag}`;
   const created = await request.post('/api/watchers', {

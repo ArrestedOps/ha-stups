@@ -226,39 +226,21 @@ test('Von Hand geänderter Name und Titel bleiben, auch wenn danach eine andere 
   await expect(desk(page).getByTestId('desk-name')).toHaveValue('Mein Name');
 });
 
-test('Zustand schon erreicht: dieselbe Rückfrage wie im Assistenten; „Nein“ legt keine Aufgabe an, „Ja“ genau eine', async ({ page, request }) => {
+test('Zustand schon erreicht: die Aufgabe entsteht beim Anlegen gleich, ohne Rückfrage, genau eine', async ({ page, request }) => {
   const s = await setup(request);
   const door = `binary_sensor.formular_${s.tag}`;
   await setState(request, door, 'off', { friendly_name: `Formular Tür ${s.tag}` });
   const title = `Tür schließen ${s.tag}`;
   await openList(page, s);
-
-  async function create() {
-    await openDesk(page);
-    await pickEntity(page, `formular tür ${s.tag}`, /Formular Tür/);
-    await page.getByRole('radiogroup', { name: 'Bedingung' }).getByRole('radio', { name: 'ist' }).click();
-    await desk(page).getByLabel('Zielzustand').fill('off');
-    await desk(page).getByLabel('Titel der Aufgabe').fill(title);
-    await page.getByTestId('desk-then').getByLabel('Board', { exact: true }).selectOption(s.boardId);
-    await page.getByTestId('desk-submit').click();
-    await expect(page.getByText('Wächter gespeichert').first()).toBeVisible();
-  }
-
-  await create();
-  const ask = page.getByRole('alertdialog');
-  await expect(desk(page)).toHaveCount(0);
-  await expect(ask).toContainText(`Formular Tür ${s.tag} ist gerade aus – die Bedingung ist also schon erfüllt. Soll jetzt eine Aufgabe „${title}“ erstellt werden?`);
-  await ask.getByRole('button', { name: 'Nein, erst beim nächsten Mal' }).click();
-  await expect(ask).toHaveCount(0);
-  expect(await cardsOf(request, s.boardId)).toHaveLength(0);
-
-  // zweiter Versuch (gleicher Wächter noch da): einen neuen Wächter für „Ja“ anlegen
-  await clear(request);
-  await page.reload();
-  await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  await create();
-  await ask.getByRole('button', { name: 'Ja, Aufgabe erstellen' }).click();
-  await expect(page.getByText('Aufgabe angelegt', { exact: true })).toBeVisible();
+  await openDesk(page);
+  await pickEntity(page, `formular tür ${s.tag}`, /Formular Tür/);
+  await page.getByRole('radiogroup', { name: 'Bedingung' }).getByRole('radio', { name: 'ist' }).click();
+  await desk(page).getByLabel('Zielzustand').fill('off');
+  await desk(page).getByLabel('Titel der Aufgabe').fill(title);
+  await page.getByTestId('desk-then').getByLabel('Board', { exact: true }).selectOption(s.boardId);
+  await page.getByTestId('desk-submit').click();
+  await expect(page.getByText('Wächter gespeichert').first()).toBeVisible();
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
   await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([`${title}: Formular Tür ${s.tag}`]);
 });
 

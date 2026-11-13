@@ -8,7 +8,9 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Wächter lösen beim Anlegen gleich aus.** Gilt die Bedingung schon (Batterie bei 16 %, Grenze 20 %; Tür schon im Zielzustand), entsteht die Aufgabe sofort, nach der Wartezeit ab der letzten Änderung. Die Rückfrage gibt es nur noch beim Ändern eines vorhandenen Wächters. **Aufgeklappter Wächter am Desktop:** Wenn, Dann, Wer und Erledigt sich selbst stehen untereinander, der Schalter „Erledigt sich selbst“ wird nicht mehr abgeschnitten, „Ändern“ zerstört das Layout nicht mehr.
 
-**Bitte prüfen (Testliste):** (1) Wächter für eine Batterie anlegen, die schon unter der Grenze liegt: Aufgabe entsteht. (2) Wächter für einen Zustand anlegen, der schon gilt: Aufgabe entsteht. (3) Wächter aufklappen › „Wer“ › „Ändern“: Layout bleibt heil. (4) Schalter „Erledigt sich selbst“ vollständig sichtbar.
+**Desktop: „Ansicht für“.** Oben in der Seitenleiste wählst du, wessen Aufgaben und Wächter alle Seiten zeigen (Alle, du, die anderen); ein Chip „Nur Ben ✕“ neben dem Titel zeigt den Filter. Die Gruppe „Personen“ unten entfällt. **Aufgeklappte Aufgabe:** Eigenschaften als Raster aus Feldern, links Notiz, Checkliste mit Fortschritt und Links, rechts Kommentare und Verlauf als Reiter.
+
+**Bitte prüfen (Testliste):** (0) Ansicht für: Person wählen, Aufgaben und Wächter filtern, Chip hebt auf; Aufgabe aufklappen, Felder anklicken und ändern. (1) Wächter für eine Batterie anlegen, die schon unter der Grenze liegt: Aufgabe entsteht. (2) Wächter für einen Zustand anlegen, der schon gilt: Aufgabe entsteht. (3) Wächter aufklappen › „Wer“ › „Ändern“: Layout bleibt heil. (4) Schalter „Erledigt sich selbst“ vollständig sichtbar.
 
 ## 1.42.0-beta.7
 

@@ -198,6 +198,7 @@ test('Eigene Automation: das Ereignis stups_create_card legt eine Aufgabe an, oh
 test('„Testen" legt eine Aufgabe an (Reiter Wächter › Wächter öffnen)', async ({ page, request }) => {
   const s = await setup(request);
   await setState(request, 'person.rene', 'home');
+  await setState(request, 'sensor.waschmaschine_leistung', '120'); // beim Anlegen nicht erfüllt: nur „Testen“ legt die Aufgabe an
   const created = await request.post('/api/watchers', {
     data: {
       name: `Test ${s.tag}`,

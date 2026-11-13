@@ -1145,6 +1145,7 @@ export const en: Catalog = {
   'Aufgaben und Wächter von {name}': 'Tasks and watchers of {name}',
   'Nur meine': 'Only mine',
   'Nur {name}': 'Only {name}',
+  'Filter aufheben': 'Clear filter',
   'Mehr': 'More',
   'Menü der Kategorie': 'Category menu',
   'Alle pausieren': 'Pause all',

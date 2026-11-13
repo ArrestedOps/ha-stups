@@ -2,6 +2,7 @@ import { dayKeyOf } from './calendar';
 import { deviceTz } from './datetime';
 import { t } from './i18n/index.svelte';
 import { sortCards, type ScheduleCard, type SortKey, whenBounds } from './schedule';
+import type { Card } from './api';
 
 /** Die Ansichten in Aufgaben: die gruppierte Liste und die Kalenderansichten Tag, Woche, Monat */
 export type TasksView = 'list' | 'day' | 'days3' | 'week' | 'month';
@@ -87,9 +88,9 @@ export function taskStats(cards: ScheduleCard[], meId: string | null, nowMs: num
 }
 
 /** Aufgaben, bei denen ein Stups an mich offen ist (für das Banner oben): mit den Absendern, ohne Doppelte; Erledigtes zählt nicht */
-export function nudgesToMe(cards: ScheduleCard[], meId: string | null): { card: ScheduleCard; fromIds: string[] }[] {
+export function nudgesToMe<C extends Pick<Card, 'completedAt' | 'openNudges'>>(cards: C[], meId: string | null): { card: C; fromIds: string[] }[] {
   if (!meId) return [];
-  const out: { card: ScheduleCard; fromIds: string[] }[] = [];
+  const out: { card: C; fromIds: string[] }[] = [];
   for (const card of cards) {
     if (card.completedAt) continue;
     const fromIds = [...new Set((card.openNudges ?? []).filter((n) => n.toId === meId).map((n) => n.fromId))];

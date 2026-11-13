@@ -72,6 +72,8 @@ test('Glocke: ein Stups an mich setzt den Punkt, Blatt und Banner zeigen ihn, ei
     await conny.getByTestId('bell').click();
     await conny.getByTestId('notifications').getByRole('button', { name: /Rene stupst dich/ }).filter({ hasText: title }).click();
     await expect(conny.getByRole('dialog').locator('input, textarea').first()).toHaveValue(title);
+    // In den Details steht der Stups als orange Karte mit den Antworten
+    await expect(conny.getByRole('dialog').getByTestId('stups-card')).toContainText('Rene stupst dich!');
   } finally {
     await context.close();
   }

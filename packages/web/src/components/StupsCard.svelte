@@ -1,7 +1,7 @@
 <script lang="ts">
   import { api } from '../lib/api';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import type { ScheduleCard } from '../lib/schedule';
+  import type { Card } from '../lib/api';
   import { completeCard, openCardAnywhere, personById, refresh, toast, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import Icon from './Icon.svelte';
@@ -10,7 +10,7 @@
    * Der Stups an mich, oben in Aufgaben: orange Aufgabe mit winkender Hand, Absender, Aufgabe und den drei Antworten wie in der
    * Push-Nachricht (Erledigt, Mach ich, Später). Mehrere Stupse: „+N“ klappt die weiteren auf.
    */
-  let { nudges, onopen, bar = false }: { nudges: { card: ScheduleCard; fromIds: string[] }[]; onopen?: (card: ScheduleCard) => void; /** Desktop: eine waagrechte Leiste statt der Karte */ bar?: boolean } = $props();
+  let { nudges, onopen, bar = false }: { nudges: { card: Card; fromIds: string[] }[]; onopen?: (card: Card) => void; /** Desktop: eine waagrechte Leiste statt der Karte */ bar?: boolean } = $props();
 
   let all = $state(false);
   let busy = $state<string | null>(null);
@@ -28,9 +28,9 @@
   }
 
   /** Der Stups dieser Aufgabe an mich (die Antwort geht auf seine Kennung) */
-  const mine = (c: ScheduleCard) => c.openNudges.find((n) => n.toId === ui.me?.id);
+  const mine = (c: Card) => c.openNudges.find((n) => n.toId === ui.me?.id);
 
-  async function reply(c: ScheduleCard, kind: 'done' | 'ack' | 'later') {
+  async function reply(c: Card, kind: 'done' | 'ack' | 'later') {
     busy = c.id;
     try {
       if (kind === 'done') {

@@ -27,6 +27,7 @@
     ui,
   } from '../lib/store.svelte';
   import { cardTargets } from '../lib/swipe';
+  import { nudgesToMe } from '../lib/tasks';
   import { isFuture } from '../lib/datetime';
   import { canNudge } from '../lib/nudge';
   import Icon from './Icon.svelte';
@@ -41,6 +42,7 @@
   import SymbolSheet from './SymbolSheet.svelte';
   import Avatar from './Avatar.svelte';
   import Banner from './ui/Banner.svelte';
+  import StupsCard from './StupsCard.svelte';
   import ListRow from './ui/ListRow.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
   import Tile from './ui/Tile.svelte';
@@ -151,6 +153,10 @@
     }
     close();
   }
+  // Ein Stups an mich zu dieser Aufgabe: die orange Karte mit den Antworten, wie in der Liste
+  const stupsToMe = $derived(
+    card && !card.completedAt && ui.me ? nudgesToMe([card], ui.me.id) : [],
+  );
   const canStupse = $derived(!!card && !child && !card.completedAt && !!ui.me?.isPerson && canNudge(card, ui.me.id));
 
   const save = (patch: Parameters<typeof api.updateCard>[1]) => act(() => api.updateCard(id, patch));
@@ -274,6 +280,10 @@
           }}
         ></textarea>
       </div>
+
+      {#if stupsToMe.length > 0}
+        <StupsCard nudges={stupsToMe} onopen={() => {}} />
+      {/if}
 
       <div>
         <CardProps card={card} {targets} onsave={save} onmove={(columnId) => moveCard(card!, columnId)} readonly={child} />

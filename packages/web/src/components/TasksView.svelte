@@ -233,19 +233,9 @@
     <!-- Kalender: eigene Seite unter Aufgaben (Zurück, Titel, Monat, Tag/Woche/Monat) -->
     <div class="flex min-h-0 flex-1 flex-col px-3 pt-[calc(var(--safe-top)+8px)] lg:px-0 lg:pt-0" data-testid="calendar-page">
       <div class="flex flex-col gap-3">
-        <!-- Handy: Titel mittig und der Filter rechts (wie die Navigationsleiste im Entwurf); Desktop: Titel in der Kopfzeile -->
+        <!-- Handy: derselbe Kopf wie auf allen Reitern (Logo, Home Assistant, Glocke, Zahnrad), darunter der Titel -->
         {#if !ui.desktop}
-        <div class="relative flex h-11 items-center justify-center">
-          <h1 class="text-[17px] font-semibold">{t('Kalender')}</h1>
-          <span class="absolute right-0.5 inline-flex" data-testid="filter-button">
-            <span class="relative inline-flex">
-              <button class="top-circle {activeFilterCount(sf) > 0 ? 'ring-2 ring-accent' : ''}" aria-label={activeFilterCount(sf) > 0 ? t('Filter, {n} aktiv', { n: activeFilterCount(sf) }) : t('Filter')} onclick={() => openSheet({ type: 'filter' })}>
-                <Icon name="sliders" size={20} stroke={2} />
-              </button>
-              {#if activeFilterCount(sf) > 0}<span class="bell-count pointer-events-none absolute -top-1 -right-1" data-testid="filter-count" aria-hidden="true">{activeFilterCount(sf)}</span>{/if}
-            </span>
-          </span>
-        </div>
+        <TopBar title={t('Kalender')} sub={t('Deine Aufgaben, Termine und To-dos an einem Ort.')} />
         {:else}
         <!-- Desktop (Entwurf): Pfeile und „Heute“, Zeitraum mit Kalenderwoche, rechts Tag, 3 Tage, Woche, Monat -->
         <div class="flex items-center gap-3" data-testid="calendar-head">
@@ -261,7 +251,17 @@
         </div>
         {/if}
         {#if !ui.desktop}
-          <Segmented items={[...VIEWS, { id: 'list', label: t('Liste') }]} value={calMode} label={t('Ansicht')} small onchange={(v) => (v === 'list' ? back() : setCalMode(v as CalMode))} />
+          <div class="flex items-center gap-2">
+            <div class="min-w-0 flex-1"><Segmented items={[...VIEWS, { id: 'list', label: t('Liste') }]} value={calMode} label={t('Ansicht')} small onchange={(v) => (v === 'list' ? back() : setCalMode(v as CalMode))} /></div>
+            <span class="inline-flex" data-testid="filter-button">
+              <span class="relative inline-flex">
+                <button class="top-circle {activeFilterCount(sf) > 0 ? 'ring-2 ring-accent' : ''}" aria-label={activeFilterCount(sf) > 0 ? t('Filter, {n} aktiv', { n: activeFilterCount(sf) }) : t('Filter')} onclick={() => openSheet({ type: 'filter' })}>
+                  <Icon name="sliders" size={20} stroke={2} />
+                </button>
+                {#if activeFilterCount(sf) > 0}<span class="bell-count pointer-events-none absolute -top-1 -right-1" data-testid="filter-count" aria-hidden="true">{activeFilterCount(sf)}</span>{/if}
+              </span>
+            </span>
+          </div>
         {/if}
       </div>
       <div class="flex min-h-0 flex-1 gap-6">

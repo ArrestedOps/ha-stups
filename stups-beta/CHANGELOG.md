@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.4
+
+**Zeilen am Handy zeigen, wem eine Aufgabe gehört.** Aufgaben und Karten im Board zeigen die Zuständigen als Bilder und mit Vornamen, neben Datum und Kategorie. Der Kalender hat am Handy den gleichen Kopf wie die anderen Reiter. Am Desktop wird das Zahnrad in der Seitenleiste nicht mehr abgeschnitten, und es gibt keinen Seitwärts-Balken mehr.
+
+**Bitte prüfen (Testliste):** (1) Aufgaben (Handy): Bild und Vorname der Zuständigen in jeder Zeile, auch bei „Meine Aufgaben“. (2) Board (Handy): dasselbe. (3) Kalender (Handy): Logo, Home Assistant, Glocke, Zahnrad oben. (4) Desktop in der Beta: Kopf der Seitenleiste vollständig, kein Balken unten.
+
 ## 1.42.0-beta.3
 
 **Einstellungen, Mitteilungen, Startseiten im neuen Stil.** Einstellungen: einzeilige Zeilen mit Wert rechts, „Fertig“ oben rechts. Mitteilungen: eine gruppierte Liste, „Alle als gelesen markieren“ unten. „Noch kein Zugriff“ und Anmeldung ohne Leuchten. **Wächter:** Kategorien haben ein „…“-Menü (alle pausieren, alle aktivieren, neuer Wächter in der Kategorie); der „Wer“-Schritt zeigt Zeilen mit Symbol, der letzte Schritt beginnt mit WENN / DANN / WER.

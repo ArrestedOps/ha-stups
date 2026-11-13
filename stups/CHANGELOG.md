@@ -15,6 +15,7 @@
 - **Task details.** The properties are now a grouped list (Due, Assignee, Repeat, Reminder, Priority, …) with the value on the right; tapping a row opens its editor below it. On the phone a big **Done** button and **Move to tomorrow** sit under the list, and a nudge sent to you shows as the orange card with the three replies. On the desktop the details fill the full height on the right, next to the list.
 - **New watcher assistant.** Templates as a list with icon and one-line explanation, a single progress bar (“Step 2 of 4”) and a plain “Back” in the header.
 - **Settings, notifications and start screens.** Settings rows are single-line with the value on the right and **Done** at the top right; notifications are one grouped list with **Mark all as read** at the bottom; “No access yet” and sign-in lose the glow. Watcher categories have a **…** menu (pause all, turn all on, new watcher in this category); the last wizard step starts with a short WHEN / THEN / WHO summary.
+- **Phone list rows.** Tasks and board cards now always show who is assigned, as photos and as first names in the line below, next to the date and the category. The calendar page gets the same header as every other tab (logo, Home Assistant, bell, settings). On the desktop the sidebar header no longer cuts off the gear and no longer scrolls sideways.
 
 ## 1.41.1
 

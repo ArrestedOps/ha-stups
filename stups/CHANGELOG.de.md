@@ -15,6 +15,7 @@
 - **Aufgaben-Details.** Die Eigenschaften stehen jetzt als gruppierte Liste (Fällig, Zuständig, Wiederholung, Erinnerung, Priorität, …) mit dem Wert rechts; ein Tipp auf die Zeile öffnet darunter das Feld. Am Handy folgen unter der Liste ein großer Knopf **Erledigt** und **Auf morgen verschieben**, ein Stups an dich erscheint als orange Karte mit den drei Antworten. Am Desktop füllen die Details die ganze Höhe rechts neben der Liste.
 - **Neuer Wächter-Assistent.** Vorlagen als Liste mit Symbol und einer Zeile Erklärung, eine einzige Fortschrittsleiste („Schritt 2 von 4“) und ein schlichtes „Zurück“ in der Kopfzeile.
 - **Einstellungen, Mitteilungen und Startseiten.** Zeilen der Einstellungen sind einzeilig mit dem Wert rechts und **Fertig** oben rechts; Mitteilungen sind eine gruppierte Liste mit **Alle als gelesen markieren** unten; „Noch kein Zugriff“ und die Anmeldung kommen ohne Leuchten aus. Wächter-Kategorien haben ein **…**-Menü (alle pausieren, alle aktivieren, neuer Wächter in der Kategorie); der letzte Schritt des Assistenten beginnt mit einer kurzen Zusammenfassung WENN / DANN / WER.
+- **Zeilen am Handy.** Aufgaben und Karten im Board zeigen jetzt immer, wem sie zugeordnet sind: als Bilder und mit Vornamen in der Zeile darunter, neben Datum und Kategorie. Der Kalender bekommt am Handy denselben Kopf wie alle Reiter (Logo, Home Assistant, Glocke, Einstellungen). Am Desktop schneidet die Kopfzeile der Seitenleiste das Zahnrad nicht mehr ab und scrollt nicht mehr zur Seite.
 
 ## 1.41.1
 

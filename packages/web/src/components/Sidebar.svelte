@@ -70,12 +70,14 @@
   const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 </script>
 
-<aside class="fixed inset-y-0 left-0 z-30 flex w-64 flex-col gap-px overflow-y-auto border-r border-line bg-bg px-2.5 pt-4 pb-3" data-testid="sidebar">
-  <div class="flex h-10 items-center gap-2 px-1.5">
-    <img src={logo} alt="" class="block h-7 w-7 rounded-[7px]" width="28" height="28" />
-    <span class="text-[20px] font-extrabold tracking-tight" aria-hidden="true">stups<span class="text-brand-dot">.</span></span>
+<aside class="fixed inset-y-0 left-0 z-30 flex w-64 flex-col gap-px overflow-x-hidden overflow-y-auto border-r border-line bg-bg px-2.5 pt-4 pb-3" data-testid="sidebar">
+  <div class="flex h-10 items-center gap-1 px-1">
+    <img src={logo} alt="" class="mr-1 block h-7 w-7 shrink-0 rounded-[7px]" width="28" height="28" />
+    <span class="flex shrink-0 flex-col items-start leading-none">
+      <span class="text-[20px] font-extrabold tracking-tight" aria-hidden="true">stups<span class="text-brand-dot">.</span></span>
+      {#if feat.beta}<span class="mt-px text-[9px] leading-none font-extrabold tracking-[0.14em] text-brand-dot uppercase" data-testid="beta-badge">{t('Beta')}</span>{/if}
+    </span>
     <span class="sr-only">stups.</span>
-    {#if feat.beta}<span class="ml-1 rounded-md bg-brand-dot/20 px-1.5 py-0.5 text-[11px] leading-none font-extrabold tracking-wider text-brand-dot uppercase" data-testid="beta-badge">{t('Beta')}</span>{/if}
     <span class="flex-1"></span>
     {#if feat.haUi}
       <button class="side-icon text-[var(--ha)]" aria-label={t('Zurück zu Home Assistant')} data-testid="home-button" onclick={goToDashboard}><SymbolIcon id="home-assistant" size={20} /></button>

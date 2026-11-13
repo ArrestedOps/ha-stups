@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
   import type { ScheduleCard } from '../lib/schedule';
-  import { activeScheduleFilter, completeCard, openCardAnywhere, openCardMenuAnywhere, personById, removeCard, shiftCards, ui } from '../lib/store.svelte';
+  import { completeCard, openCardAnywhere, openCardMenuAnywhere, personById, removeCard, shiftCards, ui } from '../lib/store.svelte';
   import AvatarStack from './AvatarStack.svelte';
   import CardMeta from './CardMeta.svelte';
   import Icon from './Icon.svelte';
@@ -22,11 +22,6 @@
   const categories = $derived(card.categories ?? []);
   /** an mich gestupst: die Zeile hebt sich ab (Entwurf) */
   const nudged = $derived(!done && (card.openNudges ?? []).some((n) => n.toId === ui.me?.id));
-  /** „Meine Aufgaben“ und nur ich zuständig: das Bild entfällt (es wäre überall dasselbe) */
-  const onlyMine = $derived.by(() => {
-    const sf = activeScheduleFilter();
-    return sf.personIds.length === 1 && sf.personIds[0] === ui.me?.id && card.assigneeIds.length === 1 && card.assigneeIds[0] === ui.me?.id;
-  });
 </script>
 
 {#snippet symbol()}<CardTile {card} />{/snippet}
@@ -49,10 +44,10 @@
   onclick={() => void openCardAnywhere(card)}
 >
   {#snippet meta()}
-    <CardMeta {card} {done} {overdue} {nowMs} {categories} quietDue wrap={!ui.desktop} showBoard={ui.boards.length > 1} />
+    <CardMeta {card} {done} {overdue} {nowMs} {categories} quietDue wrap={!ui.desktop} showBoard={ui.boards.length > 1} people={ui.desktop ? [] : assignees} />
   {/snippet}
   {#snippet right()}
-    {#if !onlyMine}<AvatarStack people={assignees} />{/if}
+    <AvatarStack people={assignees} />
     {#if !ui.isChild}
       <button
         class="flex h-11 w-7 shrink-0 items-center justify-center text-text-soft2"

@@ -46,7 +46,7 @@ describe('Stups anlegen', () => {
     const r = store.createNudges(c.id, rene.id, { to: [conny.id], template: 'think' });
     expect(r.skipped).toEqual([]);
     expect(r.sent).toEqual([{ nudgeId: expect.any(String), to: conny.id, status: 'sent', deliverAt: now.toISOString() }]);
-    expect(store.getCard(c.id).openNudges).toEqual([{ id: r.sent[0]!.nudgeId, fromId: rene.id, toId: conny.id, delivered: false }]);
+    expect(store.getCard(c.id).openNudges).toEqual([{ id: r.sent[0]!.nudgeId, fromId: rene.id, toId: conny.id, delivered: false, at: expect.any(String), template: expect.anything(), text: expect.any(String) }]);
     expect(store.getBoardView(boardId).cards[0]!.openNudges).toHaveLength(1);
   });
 

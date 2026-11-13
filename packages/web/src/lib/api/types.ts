@@ -607,6 +607,10 @@ export interface OpenNudge {
   toId: string;
   /** schon als Push zugestellt */
   delivered: boolean;
+  /** wann gestupst (ISO), Schnellauswahl und eigener Text */
+  at?: string;
+  template?: string | null;
+  text?: string | null;
 }
 
 export interface NudgeTarget {

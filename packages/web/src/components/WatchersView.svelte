@@ -233,7 +233,7 @@
       {/each}
     </ul>
   {:else}
-    <ul class="mt-2 flex flex-col gap-2">
+    <ul class="list-group {problem ? 'ring-1 ring-danger' : ''}">
       {#each list as i (i.watcherId)}
         <li data-testid="watcher-row"><WatcherRow item={i} {nowMs} {current} {canToggle} busy={busy.includes(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} /></li>
       {/each}
@@ -436,7 +436,7 @@
           <section aria-label={t('Wartet auf jemanden')} data-testid="home-waiting">
             <SectionHeader title={t('Wartet auf jemanden')} icon="alert" iconTone="red" count={layout.waiting.length} large open={!closed.includes('waiting')} ontoggle={() => toggle('waiting')} />
             {#if !closed.includes('waiting')}
-              <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
+              <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3 max-lg:list-group max-lg:!mt-0 max-lg:!gap-0">
                 {#each layout.waiting as i (i.watcherId)}
                   {@const card = i.openCard!}
                   {@const canStupse = canNudge(card, ui.me?.id ?? null)}
@@ -462,7 +462,7 @@
                       {/snippet}
                       {#snippet right()}
                         {#if canStupse}
-                          <button class="bg-accent-grad glow-pill flex h-[34px] shrink-0 items-center gap-[5px] rounded-[12px] pr-3 pl-2.5 text-[13px] font-bold" onclick={() => openSheet({ type: 'nudge', id: card.id })}>
+                          <button class="flex h-[34px] shrink-0 items-center gap-[5px] rounded-full bg-accent/14 pr-3.5 pl-3 text-[14px] font-semibold text-accent-text" onclick={() => openSheet({ type: 'nudge', id: card.id })}>
                             <Icon name="burst" size={15} stroke={2.2} />{t('Stupsen')}
                           </button>
                         {:else}

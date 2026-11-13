@@ -79,7 +79,7 @@ describe('POST /api/cards/:id/nudge', () => {
     expect(ticks).toBe(1);
 
     const board = (await call(anna, 'GET', `/api/boards/${store.listBoards(null)[0]!.id}`)).body;
-    expect(board.cards[0].openNudges).toEqual([{ id: r.body.sent[0].nudgeId, fromId: annaId, toId: benId, delivered: false }]);
+    expect(board.cards[0].openNudges).toEqual([{ id: r.body.sent[0].nudgeId, fromId: annaId, toId: benId, delivered: false, at: expect.any(String), template: 'think', text: 'Denkst du dran?' }]);
   });
 
   it('die Sperrzeit gilt auf dem Server: 409 mit dem Zeitpunkt, ab wann es wieder geht', async () => {

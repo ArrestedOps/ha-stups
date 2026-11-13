@@ -71,11 +71,11 @@ export function createCards(c: Ctx, late: unknown) {
     }
     const nudges = group(
       all(
-        `select card_id, id, from_user, to_user, delivered_round from nudges where reply is null and card_id in (${sub}) order by created_at, rowid`,
+        `select card_id, id, from_user, to_user, delivered_round, template, text, created_at from nudges where reply is null and card_id in (${sub}) order by created_at, rowid`,
         ...params,
       ),
       'card_id',
-      (r): OpenNudge => ({ id: r.id, fromId: r.from_user, toId: r.to_user, delivered: r.delivered_round >= 0 }),
+      (r): OpenNudge => ({ id: r.id, fromId: r.from_user, toId: r.to_user, delivered: r.delivered_round >= 0, at: r.created_at, template: r.template ?? null, text: r.text ?? null }),
     );
     const commentCounts = new Map<string, number>();
     for (const r of all(

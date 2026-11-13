@@ -84,6 +84,11 @@ export interface OpenNudge {
   toId: string;
   /** schon als Push zugestellt */
   delivered: boolean;
+  /** wann gestupst (ISO) */
+  at: string;
+  /** Schnellauswahl (zum Beispiel „think“) und eigener Text; höchstens einer von beiden */
+  template: string | null;
+  text: string | null;
 }
 
 export interface NudgeSent {

@@ -13,6 +13,18 @@
 - **“Card” is now “Task”** everywhere (app, messages, guide).
 - **Search on the phone** under the title on Tasks.
 
+## 1.41.1
+
+Fixes after a review. No new features.
+
+- **Privacy.** “Recognise icons from titles” showed administrators the titles of cards from other people's private boards and could set icons there. Both now only apply to boards you may see yourself.
+- **Recently done** also shows what was finished today when the card was due weeks ago or never had a date: it asks for the completion date, not the due date.
+- **Phones in the setup.** The last phone can be deselected again and is saved that way. “Ann” no longer finds a phone called “Anna's iPhone”, and a device that matches the names of two people is preselected for neither. A child can send the test message to their own phone in the setup; adding the phone stays an adult's job, and the text says so. The error text is “The test message could not be sent” and names the reason; the final page only promises “From now on your home speaks up by itself” if a watcher was set up.
+- **Working at the same time.** “Undo” after “Move overdue” only restores cards whose date is still as the move left it. If someone has set another date in the meantime, their decision stands, and Stups says so. “Move all overdue to today/tomorrow/weekend” and “Tomorrow” write with the version the list has seen: a card changed in the meantime stays as it is, and the message says it could not be moved. An error on one card no longer stops the others.
+- **Tasks load faster and completely.** The date list was silently cut off at 2000 cards. It now arrives page by page and complete; with 6000 cards the server needs about a third of the time. Quick successive changes reload once instead of several times, and outdated requests are cancelled.
+- **Docker no longer runs as root.** Without Home Assistant, a small entry point hands the data folder to the user `node` (ID 1000) and starts Stups as that user. Existing data and a new volume both work; folders that cannot be handed over (network drive) run as root as before, with a note in the log. **Nothing changes in the Home Assistant add-on**: it stays root, like every add-on.
+- **Smaller things.** Calendar and Tasks assign cards just before and after midnight to the right day. Import cycles between files in the server and the interface are resolved, and a new test prevents new ones.
+
 ## 1.41.0
 
 - **Setup on first start.** The first time an administrator opens Stups, a short setup (about three minutes) guides them: **Who lives here?** (the people from Home Assistant are preselected, phones are detected from Home Assistant's own assignment, anyone without a phone gets a link to the Companion App, and you mark the children), **Your first watcher** (the same “Found” list and assistant as under Watchers), **Test message** (a real example of the message a new card sends, with a preview like on the iPhone) and **Done**. Every step can be skipped; where you stopped is saved on the server, so you can carry on on another device. Members see a short version. Existing installations do not show it by themselves; it can be opened at any time under *Settings › Help and data › Go through the setup again* (not for children).

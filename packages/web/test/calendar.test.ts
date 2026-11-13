@@ -150,3 +150,25 @@ describe('parseCalendarView', () => {
     for (const bad of [null, undefined, '', 'week', 'agenda', 'x']) expect(parseCalendarView(bad as string | null), String(bad)).toBe('week');
   });
 });
+
+describe('3-Tage-Ansicht', () => {
+  it('zeigt den gewählten Tag und die zwei folgenden und blättert um drei Tage', () => {
+    expect(visibleDays('days3', '2026-11-04')).toEqual(['2026-11-04', '2026-11-05', '2026-11-06']);
+    expect(visibleDays('days3', '2026-11-30')).toEqual(['2026-11-30', '2026-12-01', '2026-12-02']);
+    expect(step('days3', '2026-11-04', 1)).toBe('2026-11-07');
+    expect(step('days3', '2026-11-04', -1)).toBe('2026-11-01');
+  });
+
+  it('Titel über den Zeitraum und Zeitraum für die Abfrage', () => {
+    expect(rangeTitle('days3', '2026-11-04')).toMatch(/4–6 Nov 2026|4.–6. Nov 2026/);
+    expect(rangeTitle('days3', '2026-11-30')).toContain('Dez');
+    const r = rangeFor('days3', '2026-11-04', 'UTC');
+    expect(r.from).toBe('2026-11-04T00:00:00.000Z');
+    expect(r.to).toBe('2026-11-07T00:00:00.000Z');
+  });
+
+  it('wird als Ansicht erkannt', async () => {
+    const { parseCalendarView } = await import('../src/lib/calendar');
+    expect(parseCalendarView('days3')).toBe('days3');
+  });
+});

@@ -36,12 +36,14 @@
    */
 
   // ---------- Ansicht: Liste oder Kalender ----------
+  /** Ohne gemerkte Ansicht: auf dem Handy 3 Tage (genug Platz zum Lesen), am Desktop die Woche */
+  const fallbackMode = (): CalMode => (typeof window !== 'undefined' && window.matchMedia?.('(min-width: 1024px)').matches ? 'week' : 'days3');
   const rememberedMode = (() => {
     try {
       const v = parseTasksView(localStorage.getItem('stups.calmode'));
-      return v === 'list' ? 'week' : v;
+      return v === 'list' ? fallbackMode() : v;
     } catch {
-      return 'week';
+      return fallbackMode();
     }
   })();
   let view = $state<TasksView>('list');
@@ -50,6 +52,7 @@
 
   const VIEWS = $derived([
     { id: 'day', label: t('Tag') },
+    { id: 'days3', label: t('3 Tage') },
     { id: 'week', label: t('Woche') },
     { id: 'month', label: t('Monat') },
   ]);

@@ -2,14 +2,14 @@ import { fromInputValue, deviceTz } from './datetime';
 import { dayOfMonth, names } from './i18n/names';
 import type { ScheduleCard } from './schedule';
 
-export type CalMode = 'day' | 'week' | 'month';
+export type CalMode = 'day' | 'days3' | 'week' | 'month';
 
 /** Die Ansichten des Kalenders: Tag, Woche, Monat und die Liste (die frühere Agenda: alle Aufgaben mit Termin nach Tagen) */
 export type CalView = CalMode | 'list';
 
 /** Die gemerkte Ansicht von diesem Gerät; Unbekanntes oder nichts ergibt die Woche */
 export function parseCalendarView(raw: string | null | undefined): CalView {
-  return raw === 'day' || raw === 'month' || raw === 'list' ? raw : 'week';
+  return raw === 'day' || raw === 'days3' || raw === 'month' || raw === 'list' ? raw : 'week';
 }
 
 const parts = (key: string): [number, number, number] => {
@@ -55,6 +55,7 @@ export const inMonth = (day: string, key: string): boolean => monthOf(day) === m
 /** Einen Schritt vor oder zurück: Tag, Woche oder Monat */
 export function step(mode: CalMode, key: string, dir: 1 | -1): string {
   if (mode === 'day') return addDays(key, dir);
+  if (mode === 'days3') return addDays(key, 3 * dir);
   if (mode === 'week') return addDays(key, 7 * dir);
   const [y, m, d] = parts(key);
   const target = new Date(Date.UTC(y, m - 1 + dir, 1));
@@ -65,6 +66,7 @@ export function step(mode: CalMode, key: string, dir: 1 | -1): string {
 /** Sichtbare Tage der Ansicht (für den Monat inklusive der grauen Randtage) */
 export function visibleDays(mode: CalMode, key: string): string[] {
   if (mode === 'day') return [key];
+  if (mode === 'days3') return [key, addDays(key, 1), addDays(key, 2)];
   if (mode === 'week') return weekDays(key);
   return monthGrid(key).flat();
 }
@@ -150,9 +152,9 @@ export function rangeTitle(mode: CalMode, key: string): string {
   const { weekdaysShort, monthsShort, monthsLong } = names();
   if (mode === 'month') return `${monthsLong[m - 1]} ${y}`;
   if (mode === 'day') return `${weekdaysShort[utc(key).getUTCDay()]} ${dayOfMonth(d)} ${monthsShort[m - 1]} ${y}`;
-  const days = weekDays(key);
+  const days = visibleDays(mode, key);
   const [, m1, d1] = parts(days[0]!);
-  const [y2, m2, d2] = parts(days[6]!);
+  const [y2, m2, d2] = parts(days[days.length - 1]!);
   return m1 === m2
     ? `${dayOfMonth(d1)}–${dayOfMonth(d2)} ${monthsShort[m2 - 1]} ${y2}`
     : `${dayOfMonth(d1)} ${monthsShort[m1 - 1]} – ${dayOfMonth(d2)} ${monthsShort[m2 - 1]} ${y2}`;

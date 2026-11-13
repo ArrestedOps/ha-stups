@@ -21,6 +21,7 @@
   import WatcherRow from './WatcherRow.svelte';
   import WatcherTableRow from './WatcherTableRow.svelte';
   import Banner from './ui/Banner.svelte';
+  import Segmented from './ui/Segmented.svelte';
   import ListRow from './ui/ListRow.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
   import Tile from './ui/Tile.svelte';
@@ -76,6 +77,31 @@
     memo = toggleGroup(memo, key, open(key));
     saveCollapse(memo);
   }
+
+  // Handy: eine Kategorie öffnet als eigene Seite (einheitlich für alle, auch mit 100 Batterien): Suche, Filter, „Mehr anzeigen“
+  const PAGE_SIZE = 30;
+  let page = $state<string | null>(null);
+  let pageQuery = $state('');
+  let pageFilter = $state<'all' | 'active' | 'off'>('all');
+  let pageLimit = $state(PAGE_SIZE);
+  const pageGroup = $derived(page ? (layout.groups.find((g) => g.key === page) ?? null) : null);
+  function openPage(key: string) {
+    page = key;
+    pageQuery = '';
+    pageFilter = 'all';
+    pageLimit = PAGE_SIZE;
+  }
+  const pageItems = $derived.by(() => {
+    const g = pageGroup;
+    if (!g) return [];
+    const q = pageQuery.trim();
+    return g.items.filter((i) => (pageFilter === 'all' || (pageFilter === 'active' ? i.active : !i.active)) && (!q || matchesQuery(q, i.name, i.subject, i.entity, i.openCard?.title, i.nextCard)));
+  });
+  const pageCounts = $derived({ all: pageGroup?.items.length ?? 0, active: pageGroup?.items.filter((i) => i.active).length ?? 0, off: pageGroup?.items.filter((i) => !i.active).length ?? 0 });
+  const groupSummary = (list: HomeItem[]) => {
+    const off = list.filter((i) => !i.active).length;
+    return [tn('{n} Wächter', '{n} Wächter', list.length), off > 0 ? t('{n} aus', { n: off }) : ''].filter(Boolean).join(' · ');
+  };
 
   /** Wie viele Wächter noch genau wie ihre Vorlage heißen und das Gerät nicht nennen (Sammelknopf, nur Administratoren) */
   /** Wie viele Wächter noch keine Kategorie haben (Sammelknopf „Kategorien vorschlagen", nur mit dem Recht „watchers") */
@@ -190,6 +216,52 @@
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col lg:max-w-none">
   <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab lg:-mx-1 lg:px-1 lg:pt-0" data-testid="home">
     <div class="flex flex-col gap-3.5">
+      {#if !ui.desktop && pageGroup}
+        <!-- Kategorie als eigene Seite (Handy) -->
+        <div data-testid="watcher-page" class="flex flex-col gap-3">
+          <div>
+            <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[16px] font-semibold text-accent-text" onclick={() => (page = null)}>
+              <Icon name="chevron-left" size={22} stroke={2.2} />{t('Wächter')}
+            </button>
+            <h1 class="mt-0.5 text-[30px] leading-[1.1] font-extrabold tracking-tight">{pageGroup.name ?? t('Ohne Kategorie')}</h1>
+            <p class="mt-1 text-[14px] text-fg2">{groupSummary(pageGroup.items)}</p>
+          </div>
+          {#if pageGroup.items.length > 8}
+            <label class="flex h-11 items-center gap-2 rounded-[12px] bg-surface2 px-3 text-fg2">
+              <Icon name="search" size={18} stroke={2} />
+              <input class="h-full min-w-0 flex-1 bg-transparent text-[16px] text-fg outline-none placeholder:text-fg2" type="search" enterkeyhint="search" placeholder={t('Wächter suchen')} aria-label={t('Wächter suchen')} bind:value={pageQuery} oninput={() => (pageLimit = PAGE_SIZE)} />
+            </label>
+            <Segmented
+              items={[
+                { id: 'all', label: `${t('Alle')} · ${pageCounts.all}` },
+                { id: 'active', label: `${t('Aktiv')} · ${pageCounts.active}` },
+                { id: 'off', label: `${t('Aus')} · ${pageCounts.off}` },
+              ]}
+              value={pageFilter}
+              label={t('Anzeigen')}
+              small
+              onchange={(v) => {
+                pageFilter = v as typeof pageFilter;
+                pageLimit = PAGE_SIZE;
+              }}
+            />
+          {/if}
+          {#if pageItems.length === 0}
+            <p class="py-8 text-center text-fg2">{t('Keine Treffer')}</p>
+          {:else}
+            <ul class="list-group">
+              {#each pageItems.slice(0, pageLimit) as i (i.watcherId)}
+                <li data-testid="watcher-row"><WatcherRow item={i} {nowMs} current={false} {canToggle} busy={busy.includes(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} /></li>
+              {/each}
+            </ul>
+            {#if pageItems.length > pageLimit}
+              <button class="flex h-12 items-center justify-center rounded-[12px] bg-surface text-[15px] font-semibold text-accent-text" onclick={() => (pageLimit += PAGE_SIZE)}>
+                {t('Mehr anzeigen ({n})', { n: pageItems.length - pageLimit })}
+              </button>
+            {/if}
+          {/if}
+        </div>
+      {:else}
       <TopBar title={t('Wächter')} sub={t('Automatische Aufgaben aus Home Assistant.')} />
 
       {#if ui.desktop}
@@ -384,6 +456,22 @@
           {/each}
 
           {#if layout.groups.length > 0}
+            {#if !ui.desktop}
+              <section aria-label={t('Kategorien')} data-testid="watcher-categories">
+                <SectionHeader title={t('Kategorien')} count={layout.groups.length} large />
+                <ul class="list-group">
+                  {#each layout.groups as g (g.key)}
+                    <li data-testid="watcher-category" data-category={g.name ?? ''}>
+                      <ListRow title={g.name ?? t('Ohne Kategorie')} label={t('Kategorie {name} öffnen', { name: g.name ?? t('Ohne Kategorie') })} onclick={() => openPage(g.key)}>
+                        {#snippet tile()}<Tile color="gray"><Icon name="folder" size={24} /></Tile>{/snippet}
+                        {#snippet meta()}<span class="min-w-0 truncate">{groupSummary(g.items)}</span>{/snippet}
+                        {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
+                      </ListRow>
+                    </li>
+                  {/each}
+                </ul>
+              </section>
+            {:else}
             <section aria-label={t('Kategorien')} class="flex flex-col gap-3" data-testid="watcher-categories">
               {#each layout.groups as g (g.key)}
                 <div data-testid="watcher-category" data-category={g.name ?? ''}>
@@ -392,6 +480,7 @@
                 </div>
               {/each}
             </section>
+            {/if}
           {/if}
         </div>
 
@@ -417,6 +506,7 @@
           {#snippet tile()}<Tile color="gray"><Icon name="settings" size={24} /></Tile>{/snippet}
           {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
         </ListRow>
+      {/if}
       {/if}
     </div>
   </div>

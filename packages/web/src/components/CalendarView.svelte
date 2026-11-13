@@ -117,6 +117,19 @@
     onopenday(d);
   }
 
+  /** Wischen nach links/rechts blättert (3 Tage, Woche, Tag); nur eine überwiegend waagrechte Bewegung zählt */
+  let touch: { x: number; y: number } | null = null;
+  const swipeStart = (e: TouchEvent) => (touch = e.touches.length === 1 ? { x: e.touches[0]!.clientX, y: e.touches[0]!.clientY } : null);
+  function swipeEnd(e: TouchEvent) {
+    const start = touch;
+    touch = null;
+    const end = e.changedTouches[0];
+    if (!start || !end) return;
+    const dx = end.clientX - start.x;
+    const dy = end.clientY - start.y;
+    if (Math.abs(dx) > 56 && Math.abs(dx) > Math.abs(dy) * 1.6) day = step(mode, day, dx < 0 ? 1 : -1);
+  }
+
   const dayLabel = (d: string) => `${weekdayShort(d)} ${dayNumber(d)}`;
 
   /** Monat: die Aufgaben des gewählten Tages und seine Überschrift („Freitag, 31. Januar") */
@@ -193,7 +206,7 @@
       {/each}
     </div>
 
-    <div class="mt-3 min-h-0 flex-1 overflow-hidden rounded-row border border-line bg-surface">
+    <div class="mt-3 min-h-0 flex-1 overflow-hidden rounded-row border border-line bg-surface" role="presentation" ontouchstart={swipeStart} ontouchend={swipeEnd}>
       <div bind:this={scroller} class="h-full overflow-y-auto overscroll-contain" data-testid="calendar-grid">
         <div class="relative flex" style:height="{24 * HOUR_PX}px">
           <div class="relative w-[34px] shrink-0">

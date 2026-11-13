@@ -4,11 +4,11 @@ import { t } from './i18n/index.svelte';
 import { sortCards, type ScheduleCard, type SortKey, whenBounds } from './schedule';
 
 /** Die Ansichten in Aufgaben: die gruppierte Liste und die Kalenderansichten Tag, Woche, Monat */
-export type TasksView = 'list' | 'day' | 'week' | 'month';
+export type TasksView = 'list' | 'day' | 'days3' | 'week' | 'month';
 
 /** Die gemerkte Ansicht von diesem Gerät (auch ein alter Merkzettel des Kalenders); Unbekanntes oder nichts ergibt die Liste */
 export function parseTasksView(raw: string | null | undefined): TasksView {
-  return raw === 'day' || raw === 'week' || raw === 'month' ? raw : 'list';
+  return raw === 'day' || raw === 'days3' || raw === 'week' || raw === 'month' ? raw : 'list';
 }
 
 export type TaskGroupKey = 'overdue' | 'today' | 'week' | 'later' | 'undated' | 'done';

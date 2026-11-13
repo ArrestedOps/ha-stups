@@ -80,7 +80,6 @@
     ['medium', t('Mittel')],
     ['large', t('Groß')],
   ]);
-  const effortLabel = $derived(card.effort ? (EFFORTS.find((e) => e[0] === card.effort)?.[1] ?? '') : t('Aufwand'));
 
   // Bestätigung: nur sinnvoll, wenn der Aufgabe ein Kind zugewiesen ist
   const hasChild = $derived(ui.people.some((p) => p.isChild && card.assigneeIds.includes(p.id)));

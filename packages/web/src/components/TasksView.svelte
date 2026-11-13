@@ -14,7 +14,6 @@
     import { activeScheduleFilter, claimCard, closeDetail, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import CalendarView from './CalendarView.svelte';
-  import CardSheet from './CardSheet.svelte';
   import FeedbackLink from './FeedbackLink.svelte';
   import Icon from './Icon.svelte';
   import type { ScheduleCard } from '../lib/schedule';

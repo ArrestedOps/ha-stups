@@ -8,6 +8,8 @@
 - **“Nudge” card on Tasks.** When someone nudged you, a card at the top lets you answer right there: **Done**, **On it** or **Later**. The card disappears after your reply and the row keeps a quiet trace with **Undo**.
 - **Calendar.** Day, **3 days** (the default on the phone, swipe to page), week and month. On the desktop the calendar has its own entry in the sidebar.
 - **Watchers as pages.** Every category opens as its own page, the same for all of them, with search, a filter (All · Active · Off) and “Show more” for large categories such as batteries.
+- **Swipe on tasks (phone).** Swipe right to complete, swipe left for **Later** (moves the due date to tomorrow) and **Delete**.
+- **Desktop.** A sidebar with the views (All open, Nudged, Today, Overdue, This week, Done), Boards, More and People; tasks as a table with a nudge bar and a quick-add line; calendar with a mini month and board selection; watchers with a list on the left (All, With a problem, Waiting, Running, Soon, Paused, categories); a command palette (**Ctrl/Cmd+K**), **/** focuses the filter field and **G** then **T / B / C / W** switches page.
 - **“Card” is now “Task”** everywhere (app, messages, guide).
 - **Search on the phone** under the title on Tasks.
 

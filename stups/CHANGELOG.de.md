@@ -8,6 +8,8 @@
 - **Stups-Karte bei Aufgaben.** Hat dich jemand angestupst, antwortest du direkt oben: **Erledigt**, **Mach ich** oder **Später**. Nach der Antwort verschwindet die Karte, die Zeile behält eine leise Spur mit **Rückgängig**.
 - **Kalender.** Tag, **3 Tage** (Standard auf dem Handy, Wischen blättert), Woche und Monat. Am Desktop hat der Kalender einen eigenen Eintrag in der Seitenleiste.
 - **Wächter als Seiten.** Jede Kategorie öffnet als eigene Seite, bei allen gleich, mit Suche, Filter (Alle · Aktiv · Aus) und „Mehr anzeigen“ bei großen Kategorien wie Batterien.
+- **Wischen bei Aufgaben (Handy).** Nach rechts wischen erledigt, nach links liegen **Später** (Termin auf morgen) und **Löschen** bereit.
+- **Desktop.** Seitenleiste mit den Ansichten (Alle offen, Gestupst, Heute, Überfällig, Diese Woche, Erledigt), Boards, Mehr und Personen; Aufgaben als Tabelle mit Stups-Leiste und Schnellzeile; Kalender mit Mini-Monat und Board-Auswahl; Wächter mit Auswahl links (Alle, Mit Problem, Wartet, Läuft gerade, Kommt bald, Pausiert, Kategorien); Befehlspalette (**Strg/Cmd+K**), **/** fokussiert das Filterfeld, **G** dann **T / B / C / W** wechselt die Seite.
 - **„Karte“ heißt jetzt „Aufgabe“** überall (App, Nachrichten, Anleitung).
 - **Suche am Handy** unter dem Titel bei Aufgaben.
 

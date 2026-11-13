@@ -98,8 +98,8 @@ test('Aufgaben: von oben nach unten Kopf, Zahlenkacheln, Chips, dann die Gruppen
     await y(page.getByRole('button', { name: 'Einstellungen öffnen' })),
     await y(page.getByRole('heading', { name: 'Aufgaben' })),
     await y(page.getByTestId('tasks-sub')),
-    await y(page.getByRole('group', { name: 'Deine Zahlen' })),
     await y(page.getByTestId('scope-button')),
+    await y(page.getByRole('group', { name: 'Deine Zahlen' })),
     await y(page.getByTestId('group-overdue')),
   ];
   expect(order, 'Reihenfolge der Bereiche von oben nach unten').toEqual([...order].sort((a, b) => a - b));
@@ -129,7 +129,7 @@ test('Aufgaben: „Fairness diese Woche" und „Bei den anderen" führen zu „D
   await expect(page.getByRole('dialog').getByTestId('fairness')).toBeVisible();
 });
 
-test('Kopfzeile auf allen drei Reitern: Logo, Glocke, Zahnrad und Profilbild, kein „‹ Dashboard" mehr', async ({ page }) => {
+test('Kopfzeile auf allen drei Reitern: Logo, Glocke und Zahnrad, kein „‹ Dashboard" mehr', async ({ page }) => {
   await page.goto('/');
   await openBoards(page);
   const nav = page.getByRole('navigation', { name: 'Ansicht' });
@@ -138,12 +138,11 @@ test('Kopfzeile auf allen drei Reitern: Logo, Glocke, Zahnrad und Profilbild, ke
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Mitteilungen/ })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Einstellungen öffnen' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Profil öffnen' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Dashboard', exact: true })).toHaveCount(0);
   }
 });
 
-test('Glocke: Zahnrad und Profilbild öffnen die Einstellungen, die Glocke die Mitteilungen (nach „Alle gelesen“ kein Punkt, Chips wie im Entwurf)', async ({ page, request }) => {
+test('Glocke: das Zahnrad öffnet die Einstellungen, die Glocke die Mitteilungen (nach „Alle gelesen“ kein Punkt, Chips wie im Entwurf)', async ({ page, request }) => {
   // Andere Tests lassen Ereignisse für diese Person zurück: erst alles lesen, dann zählt nur, was jetzt dazukommt
   expect((await request.put('/api/me/inbox-seen', { data: {} })).status()).toBe(200);
   await page.goto('/');
@@ -157,8 +156,6 @@ test('Glocke: Zahnrad und Profilbild öffnen die Einstellungen, die Glocke die M
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await expect(page.getByRole('dialog', { name: 'Einstellungen' })).toBeVisible();
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Profil öffnen' }).click();
   await expect(page.getByRole('dialog', { name: 'Einstellungen' }).getByTestId('settings-head')).toBeVisible();
 });
 

@@ -8,7 +8,6 @@
   import { t, tn } from '../lib/i18n/index.svelte';
   import { activeFilterCount, DEFAULT_FILTER, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId } from '../lib/schedule';
   import { matchesQuery } from '../lib/search';
-  import { scrollStrip } from '../lib/scrollStrip';
   import type { StatsKind } from '../lib/statsSheets';
   import { groupTasks, nudgesToMe, parseTasksView, taskStats, type TasksView } from '../lib/tasks';
   import { ageText, sourceLine } from '../lib/today';
@@ -328,30 +327,6 @@
             </span>
           </div>
 
-          {#if !ui.isChild}
-            <div class="hidden items-center gap-2">
-              <div class="no-scrollbar -ml-3 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-3" role="group" aria-label={t('Personen')} use:scrollStrip={sf.personIds.join() + sf.unassigned}>
-                <Chip active={!personFilterActive(sf)} pressed={!personFilterActive(sf)} onclick={() => setScheduleFilter({ personIds: [], unassigned: false })}>
-                  <Icon name="user" size={20} />{t('Alle')}
-                </Chip>
-                {#if ui.me?.isPerson}
-                  <Chip photo active={sf.personIds.includes(ui.me.id)} pressed={sf.personIds.includes(ui.me.id)} onclick={() => setScheduleFilter({ personIds: toggleId(sf.personIds, ui.me!.id) })}>
-                    <Avatar person={ui.me} size={32} />{t('Meine')}
-                  </Chip>
-                {/if}
-                {#each people as p (p.id)}
-                  <Chip photo active={sf.personIds.includes(p.id)} pressed={sf.personIds.includes(p.id)} onclick={() => setScheduleFilter({ personIds: toggleId(sf.personIds, p.id) })}>
-                    <Avatar person={p} size={32} />{p.displayName}
-                  </Chip>
-                {/each}
-              </div>
-              {@render filterButton(extraFilter, false)}
-            </div>
-          {:else}
-            <!-- Kind: kein „Wer", der Knopf steht allein rechts -->
-            <div class="hidden justify-end">{@render filterButton(extraFilter, false)}</div>
-          {/if}
-
           {#if ui.desktop}
             <!-- Desktop (Entwurf): Stups-Leiste, Schnellzeile, Tabelle mit den Spalten Aufgabe, Board, Fällig, Wer; die Ansicht wählt die Seitenleiste -->
             {#if nudges.length > 0 && (ui.taskView === 'all' || ui.taskView === 'nudged')}<StupsCard bar {nudges} />{/if}
@@ -371,6 +346,7 @@
                     }
                   }}
                 />
+                {@render filterButton(extraFilter, true)}
               </label>
             {/if}
             <div class="grid px-4 text-[12px] font-medium text-text-soft" style:grid-template-columns="minmax(0,1fr) 170px 150px 92px" aria-hidden="true">

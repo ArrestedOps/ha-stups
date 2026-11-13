@@ -53,17 +53,14 @@
   {#if desktop}
     <TopBar title="Boards" sub={t('Organisiere deine Aufgaben in Kanban-Boards.')} />
   {:else}
-    <!-- Handy: zurück zur Liste der Boards, darunter der Name des Boards als große Überschrift (ein Tipp darauf wechselt das Board) -->
-    <div>
-      <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[17px] font-semibold text-accent-text" onclick={() => (showList = true)}>
-        <Icon name="chevron-left" size={22} stroke={2.4} />Boards
-      </button>
-      <button class="flex w-full min-w-0 items-center gap-2 text-left" onclick={() => openSheet({ type: 'boards' })} aria-label={t('Board wechseln')}>
-        <h1 class="min-w-0 truncate text-[34px] leading-[1.12] font-bold tracking-[0.012em]" data-testid="board-name">{board?.name ?? 'Stups'}</h1>
-        <span class="shrink-0 text-text-soft"><Icon name="chevron-down" size={22} stroke={2.2} /></span>
-      </button>
-      <p class="sr-only">{t('Organisiere deine Aufgaben in Kanban-Boards.')}</p>
-    </div>
+    <!-- Handy: „‹ Boards“ statt des Logos, darunter der Name des Boards als große Überschrift (ein Tipp darauf wechselt das Board) -->
+    <TopBar
+      title={board?.name ?? 'Stups'}
+      sub={t('Organisiere deine Aufgaben in Kanban-Boards.')}
+      back={{ label: 'Boards', onclick: () => (showList = true) }}
+      titleButton={{ label: t('Board wechseln'), onclick: () => openSheet({ type: 'boards' }) }}
+      titleTestid="board-name"
+    />
   {/if}
 
   {#if view}

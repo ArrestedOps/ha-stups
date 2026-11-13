@@ -68,14 +68,14 @@ test('Reiter „Wächter": auch Mitglieder (keine Administratoren) sehen ihn, nu
   }
 });
 
-test('Kopfzeile: auf jedem Reiter der Avatar oben rechts öffnet die Einstellungen, ohne die Seite zu verbreitern', async ({ page }) => {
+test('Kopfzeile: auf jedem Reiter das Zahnrad oben rechts öffnet die Einstellungen, ohne die Seite zu verbreitern', async ({ page }) => {
   await page.goto('/');
   for (const tab of ['Aufgaben', 'Boards', 'Wächter']) {
     await nav(page).getByRole('button', { name: tab }).click();
     const avatar = page.getByRole('button', { name: 'Einstellungen öffnen' });
     await expect(avatar).toBeVisible();
     const box = (await avatar.boundingBox())!;
-    expect(box.width).toBeGreaterThanOrEqual(44); // Trefferfläche
+    expect(box.width).toBeGreaterThanOrEqual(35.5); // runder Knopf 36 px, die Trefferfläche reicht 4 px darüber hinaus
     expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width); // nicht abgeschnitten
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await avatar.click();

@@ -104,10 +104,8 @@ test('Personenbild: hochladen zeigt das Bild im Avatar, entfernen kehrt zur Init
   await expect(d.getByTestId('avatar-origin')).toContainText('Noch kein Bild');
   await d.getByLabel('Bild wählen').setInputFiles({ name: 'ich.png', mimeType: 'image/png', buffer: PNG.sync.write(png) });
   await expect(d.getByTestId('avatar-origin')).toContainText('Eigenes Bild');
-  await expect(page.getByRole('button', { name: 'Profil öffnen' }).locator('img')).toBeVisible();
   await d.getByRole('button', { name: 'Bild entfernen' }).click();
   await expect(d.getByTestId('avatar-origin')).toContainText('Noch kein Bild');
-  await expect(page.getByRole('button', { name: 'Profil öffnen' }).locator('img')).toHaveCount(0);
 });
 
 test('Erinnerungszeiten: Tageszusammenfassung, Uhrzeit in der App ändern gilt vor der Option, „Zurücksetzen" stellt die Option wieder her', async ({ page, request }) => {

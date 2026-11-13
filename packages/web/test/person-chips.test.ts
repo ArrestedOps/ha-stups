@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 // Jede Person, die als Chip gewählt wird, zeigt ihr eigenes Bild (Avatar: Foto, sonst die farbige Initiale), nie ein allgemeines Personen-Symbol.
 // Nur „Alle" behält das Symbol. Quelltext-Test wie i18n-coverage: Chips mit einem Personennamen müssen einen Avatar enthalten.
-const FILES = ['TasksView.svelte', 'BoardsView.svelte', 'FilterSheet.svelte'];
+const FILES = ['BoardsView.svelte', 'FilterSheet.svelte'];
 
 describe('Personen-Chips zeigen das Bild der Person', () => {
   for (const file of FILES) {

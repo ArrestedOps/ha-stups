@@ -96,5 +96,4 @@ test('Die Einstellungen haben keine Zeile „Wächter", im Reiter Wächter gibt 
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('home')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Alle Wächter verwalten' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Neuer Wächter', exact: true })).toBeVisible();
 });

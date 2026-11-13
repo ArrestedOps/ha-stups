@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter": eigener Server mit nachgebautem Home Assistant (e2e/server-ha.mjs).
 const MOCK = 'http://127.0.0.1:18411';
@@ -74,7 +74,9 @@ test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Aufgabe erscheint liv
   await expect(dialog.getByTestId('watcher-sentence')).toContainText(`bekommt wer zu Hause ist, reihum die Aufgabe „${title}“`);
   await dialog.getByRole('button', { name: 'Wächter anlegen' }).click();
   await expect(page.getByText('Wächter gespeichert')).toBeVisible();
-  await expect(page.getByRole('button', { name: /Wächter Waschmaschine fertig bearbeiten/ })).toBeVisible();
+  // nach dem Speichern steht der Reiter Wächter wieder da, der neue Wächter ist angelegt
+  await expect(page.getByTestId('home')).toBeVisible();
+  await expect.poll(async () => ((await (await request.get('/api/watchers')).json()) as { items: { name: string }[] }).items.some((w) => w.name === 'Waschmaschine fertig')).toBe(true);
 
   // Conny sieht die Aufgabe, ohne neu zu laden
   const connyCtx = await browser.newContext({ baseURL: String(baseURL), extraHTTPHeaders: connyHeaders });
@@ -193,7 +195,7 @@ test('Eigene Automation: das Ereignis stups_create_card legt eine Aufgabe an, oh
   expect(await cardsOf(request, s.boardId)).toHaveLength(1);
 });
 
-test('„Testen" legt eine Aufgabe an (Einstellungen › Wächter)', async ({ page, request }) => {
+test('„Testen" legt eine Aufgabe an (Reiter Wächter › Wächter öffnen)', async ({ page, request }) => {
   const s = await setup(request);
   await setState(request, 'person.rene', 'home');
   const created = await request.post('/api/watchers', {
@@ -210,7 +212,8 @@ test('„Testen" legt eine Aufgabe an (Einstellungen › Wächter)', async ({ pa
   await page.goto('/');
   await openBoards(page);
   await openWatchersPage(page);
-  await page.getByRole('button', { name: new RegExp(`Wächter Test ${s.tag} bearbeiten`) }).click();
+  await openWatcherCategory(page, /Ohne Kategorie/);
+  await page.getByRole('button', { name: new RegExp(`Wächter Test ${s.tag} öffnen`) }).click();
   await page.getByRole('button', { name: /Testen: Aufgabe jetzt anlegen/ }).click();
   await expect(page.getByText('Testaufgabe angelegt')).toBeVisible();
 

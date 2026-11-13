@@ -135,13 +135,20 @@ describe('Nachfrage nach dem Speichern', () => {
   const DOOR = 'binary_sensor.tuer';
   const doorInput = (extra: Record<string, unknown> = {}) =>
     input({ name: 'Tür offen', trigger: { entityId: DOOR, kind: 'state', to: 'off', forMin: 0 }, card: { boardId, columnId, title: 'Tür schließen' }, ...extra });
+  /** Ein Wächter, dessen Zielzustand beim Anlegen noch nicht gilt (sonst löst er gleich aus): die Tür geht danach auf „aus“ */
+  const createUnmet = async (extra: Record<string, unknown> = {}): Promise<string> => {
+    ha.set(DOOR, 'on', '2026-11-04T08:00:00Z', { friendly_name: 'Tür Waschküche' });
+    const id = (await call(chef, 'POST', '/api/watchers', doorInput(extra))).body.id as string;
+    ha.set(DOOR, 'off', '2026-11-04T09:00:00Z', { friendly_name: 'Tür Waschküche' });
+    return id;
+  };
   const cardsNow = () => store.getBoardView(boardId).cards;
 
-  it('Anlegen: ein Zustandswächter, dessen Zielzustand schon gilt, meldet metNow, es entsteht keine Aufgabe', async () => {
+  it('Anlegen: ein Zustandswächter, dessen Zielzustand schon gilt, löst gleich aus (keine Rückfrage)', async () => {
     const res = await call(chef, 'POST', '/api/watchers', doorInput());
     expect(res.status).toBe(201);
-    expect(res.body.metNow).toEqual({ entityName: 'Tür Waschküche', stateText: 'aus', reason: 'already_met' });
-    expect(cardsNow()).toHaveLength(0);
+    expect(res.body.metNow).toBeNull();
+    expect(cardsNow()).toHaveLength(1);
   });
 
   it('Anlegen: nicht erfüllt, dann metNow null', async () => {
@@ -157,7 +164,7 @@ describe('Nachfrage nach dem Speichern', () => {
   });
 
   it('Ändern: nur den Namen, dann keine Rückfrage; Zielzustand oder Entität geändert, dann schon', async () => {
-    const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+    const id = await createUnmet();
     expect((await call(chef, 'PATCH', `/api/watchers/${id}`, { name: 'Tür auf' })).body.metNow).toBeNull();
     expect((await call(chef, 'PATCH', `/api/watchers/${id}`, { cooldownMin: 30, card: { boardId, columnId, title: 'Anderer Titel' } })).body.metNow).toBeNull();
     // gleiche Bedingung noch einmal gespeichert (z. B. Assistent ohne Änderung): keine Rückfrage
@@ -184,7 +191,7 @@ describe('Nachfrage nach dem Speichern', () => {
 
   describe('POST /api/watchers/:id/fire-now', () => {
     it('legt die Aufgabe an, mit Zuweisung und dem Hinweis im Lauf', async () => {
-      const id = (await call(chef, 'POST', '/api/watchers', doorInput({ assign: { mode: 'fixed', personIds: [annaId] } }))).body.id;
+      const id = await createUnmet({ assign: { mode: 'fixed', personIds: [annaId] } });
       const res = await call(chef, 'POST', `/api/watchers/${id}/fire-now`);
       expect(res.status).toBe(200);
       expect(res.body.openCard).toMatchObject({ title: 'Tür schließen: Tür Waschküche', assigneeIds: [annaId] });
@@ -194,13 +201,13 @@ describe('Nachfrage nach dem Speichern', () => {
     });
 
     it('wer keine Wächter ändern darf, bekommt 403 (und es entsteht nichts)', async () => {
-      const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+      const id = await createUnmet();
       expect((await call(anna, 'POST', `/api/watchers/${id}/fire-now`)).status).toBe(403);
       expect(cardsNow()).toHaveLength(0);
     });
 
     it('gilt die Bedingung nicht mehr: 409 mit freundlichem Text', async () => {
-      const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+      const id = await createUnmet();
       ha.set(DOOR, 'on', '2026-11-04T09:30:00Z');
       const res = await call(chef, 'POST', `/api/watchers/${id}/fire-now`);
       expect(res.status).toBe(409);
@@ -209,7 +216,7 @@ describe('Nachfrage nach dem Speichern', () => {
     });
 
     it('gibt es schon eine offene Aufgabe: 409', async () => {
-      const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+      const id = await createUnmet();
       expect((await call(chef, 'POST', `/api/watchers/${id}/fire-now`)).status).toBe(200);
       const again = await call(chef, 'POST', `/api/watchers/${id}/fire-now`);
       expect(again.status).toBe(409);

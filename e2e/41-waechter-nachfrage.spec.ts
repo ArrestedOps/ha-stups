@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
-// Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Nach dem Speichern fragt die App, ob die Aufgabe jetzt entstehen soll,
-// wenn die Bedingung schon erfüllt ist und der Wächter nicht von selbst auslöst (Zustand, Vorgang). Pegel (Batterie) lösen selbst aus.
+// Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Beim Anlegen löst ein Wächter, dessen Bedingung schon gilt (Zustand, Vorgang,
+// Pegel), gleich aus; die Rückfrage gibt es nur noch beim Ändern eines vorhandenen Wächters.
 const MOCK = 'http://127.0.0.1:18411';
 test.describe.configure({ timeout: 90_000, mode: 'serial' });
 
@@ -51,50 +51,17 @@ const door = async (request: APIRequestContext, tag: string, state = 'off') => {
   await setState(request, `binary_sensor.nachfrage_${tag}`, state, { friendly_name: `Nachfrage Tür ${tag}` });
 };
 
-test('Zustand schon erreicht: Frage mit Gerät, Zustand und Aufgabentitel; „Nein“ legt keine Aufgabe an', async ({ page, request }) => {
+test('Zustand schon erreicht: die Aufgabe entsteht beim Anlegen gleich, ohne Rückfrage, und nur einmal', async ({ page, request }) => {
   const s = await setup(request);
   await door(request, s.tag);
   const title = `Tür schließen ${s.tag}`;
   await createWatcher(page, s, { search: `nachfrage tür ${s.tag}`, entity: /Nachfrage Tür/, state: 'off', title });
-
-  const ask = page.getByRole('alertdialog');
-  await expect(ask).toBeVisible();
-  await expect(ask).toContainText(`Nachfrage Tür ${s.tag} ist gerade aus – die Bedingung ist also schon erfüllt. Soll jetzt eine Aufgabe „${title}“ erstellt werden?`);
-  await expect(ask.getByRole('button', { name: 'Ja, Aufgabe erstellen' })).toBeVisible();
-  await ask.getByRole('button', { name: 'Nein, erst beim nächsten Mal' }).click();
-  await expect(ask).toHaveCount(0);
-  expect(await cardsOf(request, s.boardId)).toHaveLength(0);
-});
-
-test('„Ja, Aufgabe erstellen“ legt die Aufgabe an (mit Hinweis im Lauf), und das nur einmal', async ({ page, request }) => {
-  const s = await setup(request);
-  await door(request, s.tag);
-  const title = `Tür schließen ${s.tag}`;
-  await createWatcher(page, s, { search: `nachfrage tür ${s.tag}`, entity: /Nachfrage Tür/, state: 'off', title });
-
-  const ask = page.getByRole('alertdialog');
-  await ask.getByRole('button', { name: 'Ja, Aufgabe erstellen' }).click();
-  await expect(ask).toHaveCount(0);
-  await expect(page.getByText('Aufgabe angelegt', { exact: true })).toBeVisible();
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
   await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([`${title}: Nachfrage Tür ${s.tag}`]);
-
+  // ein zweites Auslösen gibt es nicht: eine offene Aufgabe genügt
   const watcher = ((await (await request.get('/api/watchers')).json()) as { items: { id: string; card: { title: string } }[] }).items.find((w) => w.card.title === title)!;
-  const runs = (await (await request.get(`/api/watchers/${watcher.id}/runs`)).json()) as { result: string; note: string | null }[];
-  expect(runs[0]).toMatchObject({ result: 'created', note: 'beim Anlegen, auf Nachfrage' });
-  // ein zweites „Ja“ (etwa aus einem alten Dialog) gibt es nicht: eine offene Aufgabe genügt
   expect((await request.post(`/api/watchers/${watcher.id}/fire-now`)).status()).toBe(409);
   expect(await cardsOf(request, s.boardId)).toHaveLength(1);
-});
-
-test('Escape heißt „Nein“', async ({ page, request }) => {
-  const s = await setup(request);
-  await door(request, s.tag);
-  await createWatcher(page, s, { search: `nachfrage tür ${s.tag}`, entity: /Nachfrage Tür/, state: 'off', title: `Tür schließen ${s.tag}` });
-  const ask = page.getByRole('alertdialog');
-  await expect(ask).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(ask).toHaveCount(0);
-  expect(await cardsOf(request, s.boardId)).toHaveLength(0);
 });
 
 test('Zustand noch nicht erreicht: keine Frage', async ({ page, request }) => {
@@ -105,14 +72,13 @@ test('Zustand noch nicht erreicht: keine Frage', async ({ page, request }) => {
   expect(await cardsOf(request, s.boardId)).toHaveLength(0);
 });
 
-test('Vorgang (Leistung) unter der Schwelle: auch hier die Frage, mit dem Wert und der Einheit', async ({ page, request }) => {
+test('Vorgang (Leistung) unter der Schwelle: auch hier entsteht die Aufgabe gleich', async ({ page, request }) => {
   const s = await setup(request);
   await setState(request, `sensor.nachfrage_leistung_${s.tag}`, '2.4', { friendly_name: `Nachfrage Trockner ${s.tag}`, unit_of_measurement: 'W', device_class: 'power' });
-  await createWatcher(page, s, { search: `nachfrage trockner ${s.tag}`, entity: /Nachfrage Trockner/, threshold: '5', title: `Trockner leeren ${s.tag}` });
-  const ask = page.getByRole('alertdialog');
-  await expect(ask).toContainText(`Nachfrage Trockner ${s.tag} ist gerade 2,4 W`);
-  await ask.getByRole('button', { name: 'Nein, erst beim nächsten Mal' }).click();
-  expect(await cardsOf(request, s.boardId)).toHaveLength(0);
+  const title = `Trockner leeren ${s.tag}`;
+  await createWatcher(page, s, { search: `nachfrage trockner ${s.tag}`, entity: /Nachfrage Trockner/, threshold: '5', title });
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  await expect.poll(async () => (await cardsOf(request, s.boardId)).map((c) => c.title)).toEqual([`${title}: Nachfrage Trockner ${s.tag}`]);
 });
 
 test('Pegel (Batterie) unter der Grenze: keine Frage, die Aufgabe kommt sofort', async ({ page, request }) => {

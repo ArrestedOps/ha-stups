@@ -186,12 +186,89 @@ svg { display: block; }
 .act .row { cursor: default; }
 .empty { padding: 28px; text-align: center; color: var(--label2); }
 .toast { margin-top: 14px; color: var(--label2); font-size: 12.5px; }
+
+/* Ablauf untereinander (statt vier Karten nebeneinander): jede Karte so breit wie der Inhalt, Ändern klappt den Editor in der Karte auf */
+.flowv { display: flex; flex-direction: column; max-width: 860px; }
+.flowv .fc { padding: 14px 16px 16px; }
+.flowv .join { align-self: center; width: 2px; height: 16px; background: linear-gradient(180deg, var(--off-bg), var(--accent)); }
+.flowv .fh { min-height: 30px; }
+.flowv .fh .tag { flex: none; }
+.flowv .fh .sw { margin-left: auto; }
+.edit { display: none; border-top: .5px solid var(--sep); padding-top: 12px; }
+.fc.editing .edit { display: block; }
+.opts { display: flex; flex-direction: column; background: var(--card); border-radius: 10px; box-shadow: 0 0 0 .5px var(--sep); overflow: hidden; }
+.opt { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 14px; text-align: left; width: 100%; }
+.opt + .opt { border-top: .5px solid var(--sep); }
+.opt .rd { width: 20px; height: 20px; border-radius: 50%; box-shadow: 0 0 0 2px var(--label3) inset; flex: none; }
+.opt[aria-checked="true"] .rd { box-shadow: 0 0 0 6px var(--accent) inset; }
+.opt b { display: block; font-weight: 600; } .opt small { display: block; color: var(--label2); font-size: 12.5px; }
+.fieldrow { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 13px; color: var(--label2); }
+.fieldrow .chip { height: 32px; }
+
+/* Aufgaben */
+.pbar { display: flex; align-items: center; gap: 6px; }
+.pbar .pc { height: 34px; padding: 0 12px 0 4px; border-radius: 17px; background: var(--card); box-shadow: 0 0 0 .5px var(--sep); display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
+.pbar .pc.all { padding: 0 14px; }
+.pbar .pc[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); box-shadow: 0 0 0 1.5px var(--accent) inset; }
+.pbar .pc .av { box-shadow: none; }
+.trow { display: grid; grid-template-columns: 28px minmax(0, 1fr) 150px 160px 80px; align-items: center; column-gap: 14px; padding: 0 16px; height: 56px; width: 100%; text-align: left; }
+.trow:hover { background: var(--card2); }
+.titem + .titem { border-top: .5px solid var(--sep); }
+.titem.open > .trow { background: var(--accent-soft); }
+.trow .t { font-weight: 600; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.circle { width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 0 0 1.75px var(--label3) inset; }
+.late { color: var(--bad); font-weight: 600; }
+.bd { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--label2); }
+.bd i { width: 9px; height: 9px; border-radius: 50%; }
+.tdet { display: none; background: var(--bg); padding: 16px 20px 22px; border-top: .5px solid var(--sep); }
+.titem.open .tdet { display: block; }
+.thead { display: flex; align-items: center; gap: 12px; }
+.thead .tile { width: 44px; height: 44px; border-radius: 11px; background: #e07a1f; }
+.thead input { flex: 1; min-width: 0; font: 800 22px/1.2 var(--font); letter-spacing: -.01em; border: 0; background: none; color: var(--label); padding: 4px 6px; border-radius: 8px; outline: none; }
+.thead input:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+.thead .btn { height: 38px; padding: 0 16px; border-radius: 19px; font-size: 13.5px; }
+.tsub { margin: 4px 0 14px 56px; color: var(--label2); font-size: 13px; display: flex; gap: 14px; flex-wrap: wrap; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.fact { background: var(--card); border-radius: 12px; padding: 10px 12px 11px; text-align: left; box-shadow: 0 0 0 .5px var(--sep); min-width: 0; transition: box-shadow .15s; }
+.fact:hover, .fact[aria-expanded="true"] { box-shadow: 0 0 0 1.5px var(--accent) inset; }
+.fact small { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--label2); margin-bottom: 3px; }
+.fact b { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px; min-height: 24px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fact b.none { color: var(--label3); font-weight: 500; }
+.fact b .av { width: 22px; height: 22px; font-size: 10px; box-shadow: none; }
+.fact b .dotc { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.fed { display: none; margin-top: 8px; background: var(--card); border-radius: 12px; box-shadow: 0 0 0 1.5px var(--accent) inset; padding: 12px 14px; }
+.fed.on { display: block; }
+.fed .row2 { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fed .lbl2 { font-size: 12.5px; color: var(--label2); margin-bottom: 8px; display: block; }
+.tbody { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; margin-top: 18px; align-items: start; }
+.box { background: var(--card); border-radius: 12px; box-shadow: 0 0 0 .5px var(--sep); }
+.box h3 { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--label2); padding: 12px 14px 0; display: flex; align-items: center; gap: 8px; }
+.box h3 .cnt { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 600; }
+.box textarea { display: block; width: 100%; min-height: 84px; border: 0; background: none; padding: 8px 14px 12px; font: 14.5px/1.5 var(--font); color: var(--label); resize: vertical; outline: none; }
+.col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.prog { height: 5px; background: var(--off-bg); border-radius: 3px; margin: 10px 14px 4px; overflow: hidden; } .prog i { display: block; height: 100%; background: var(--ok); border-radius: 3px; transition: width .2s; }
+.ci { display: flex; align-items: center; gap: 12px; padding: 0 14px; min-height: 44px; width: 100%; text-align: left; }
+.ci + .ci { border-top: .5px solid var(--sep); }
+.ci .circle { width: 20px; height: 20px; flex: none; }
+.ci[aria-checked="true"] .circle { background: var(--ok); box-shadow: none; position: relative; } .ci[aria-checked="true"] .circle::after { content: ''; position: absolute; left: 6px; top: 3px; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(40deg); }
+.ci[aria-checked="true"] span { color: var(--label3); text-decoration: line-through; }
+.addrow { display: flex; align-items: center; gap: 10px; padding: 0 14px; min-height: 44px; color: var(--accent-text); font-weight: 600; border-top: .5px solid var(--sep); }
+.addrow input { flex: 1; border: 0; background: none; font: inherit; color: var(--label); outline: none; min-width: 0; }
+.tabs { display: flex; gap: 4px; padding: 8px 10px 0; border-bottom: .5px solid var(--sep); }
+.tabs button { height: 34px; padding: 0 12px; font-weight: 600; font-size: 13.5px; color: var(--label2); border-bottom: 2px solid transparent; }
+.tabs button[aria-selected="true"] { color: var(--label); border-bottom-color: var(--accent); }
+.cm { display: flex; gap: 10px; padding: 12px 14px; } .cm + .cm { border-top: .5px solid var(--sep); }
+.cm p { margin: 2px 0 0; font-size: 14px; } .cm small { color: var(--label2); font-size: 12.5px; }
+.compose { display: flex; gap: 8px; padding: 10px 12px; border-top: .5px solid var(--sep); }
+.compose input { flex: 1; min-width: 0; height: 38px; border-radius: 19px; border: 0; background: var(--card2); padding: 0 14px; font: inherit; color: var(--label); outline: none; }
+.hist { padding: 6px 14px 12px; font-size: 13px; color: var(--label2); display: flex; flex-direction: column; gap: 8px; } .hist i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--off); margin-right: 8px; }
+.pgsw { margin-left: 8px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
 <div class="note">
-  <span><b>Mockup Desktop Wächter</b> · klickbar: Zeilen aufklappen, Gruppen einklappen, Reiter Aktivität, hell/dunkel</span>
-  <span class="tg">
+  <span><b>Mockup Desktop Wächter und Aufgaben</b> · klickbar: Zeilen aufklappen, „Ändern“, Felder anklicken, Reiter, hell/dunkel</span>
+  <span class="tg"><button class="chip" id="g-w" aria-pressed="true">Seite Wächter</button><button class="chip" id="g-t" aria-pressed="false">Seite Aufgaben</button>
     <button class="chip" id="t-light" aria-pressed="false">Hell</button>
     <button class="chip" id="t-dark" aria-pressed="false">Dunkel</button>
   </span>
@@ -202,6 +279,8 @@ svg { display: block; }
   <div><b>Alle Zeilen 60 px</b>Name und Gerät je eine Zeile, die Bedingung eine Zeile. Der volle Text steht beim Aufklappen.</div>
   <div><b>Aufklappen statt Fenster</b>Ein Klick öffnet den Ablauf direkt unter der Zeile: Wenn, Dann, Wer, Erledigt sich selbst. Bearbeiten und Speichern ohne Wechsel der Seite.</div>
   <div><b>Aktivität als Reiter</b>Gleiche Tabelle wie die Wächter, kein eigener Kartenstil am Seitenende.</div>
+  <div><b>Neu: Ablauf untereinander</b>Wenn, Dann, Wer, Erledigt sich selbst stehen untereinander mit Verbindern. „Ändern“ klappt den Editor in der Karte auf, nichts wird gequetscht. Der Schalter sitzt immer rechts in der Karte.</div>
+  <div><b>Neu: Seite Aufgaben</b>Oben die Personen-Leiste (Alle, Meine, Anna, Ben, Mia) statt der Gruppe in der Seitenleiste. Aufgeklappt: Titel und Aktionen in einer Kopfzeile, die Eigenschaften als Felder-Raster (Label oben, Wert darunter), darunter links Notiz, Checkliste, Links, rechts Kommentare und Verlauf als Reiter. Oben rechts auf „Seite Aufgaben“ umschalten.</div>
 </div>
 
 <div class="stage"><div class="app">
@@ -217,7 +296,7 @@ svg { display: block; }
     <button class="sbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Suchen oder Befehl<kbd>Strg K</kbd></button>
 
     <p class="hd pri">Aufgaben</p>
-    <button class="it"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg>Alle offen<span class="n">12</span></button>
+    <button class="it" id="s-tasks"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg>Alle offen<span class="n">12</span></button>
     <button class="it"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V5a1.5 1.5 0 0 1 3 0v5M11 10V4a1.5 1.5 0 0 1 3 0v6M14 10V6a1.5 1.5 0 0 1 3 0v8c0 4-2 6-5 6s-5-2-6-4l-2-4a1.5 1.5 0 0 1 3-1l1 2"/></svg>Gestupst<span class="n hot">1</span></button>
     <button class="it"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Heute<span class="n">1</span></button>
     <button class="it"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>Überfällig<span class="n hot">2</span></button>
@@ -240,14 +319,10 @@ svg { display: block; }
     <p class="hd">Mehr</p>
     <button class="it"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Kalender</button>
 
-    <p class="hd">Personen</p>
-    <button class="it"><span class="av" style="background:#c8501a;width:20px;height:20px;box-shadow:none;font-size:10px">A</span>Meine</button>
-    <button class="it"><span class="av" style="background:#2f7ee8;width:20px;height:20px;box-shadow:none;font-size:10px">B</span>Ben</button>
-
     <div class="foot"><span class="av" style="background:#7b7b84;box-shadow:none">H</span><span class="cell">HomeAssistant · Administrator</span></div>
   </aside>
 
-  <main class="main">
+  <main class="main" id="pg-w">
     <div class="top">
       <div>
         <h1>Wächter</h1>
@@ -280,6 +355,20 @@ svg { display: block; }
         <div id="acts"></div>
       </div>
     </section>
+  </main>
+
+  <main class="main" id="pg-t" hidden>
+    <div class="top">
+      <div><h1>Alle offen <span style="font-size:14px;font-weight:500;color:var(--label2)" id="tcount"></span></h1><p>Deine Aufgaben, Termine und To-dos an einem Ort.</p></div>
+      <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input placeholder="Aufgaben filtern" aria-label="Aufgaben filtern"><kbd>Strg K</kbd></label>
+      <button class="btn pri"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Neue Aufgabe</button>
+    </div>
+    <div class="bar">
+      <div class="pbar" id="pbar" role="group" aria-label="Wessen Aufgaben"></div>
+      <span class="sp" style="flex:1"></span>
+      <div class="seg" role="tablist" aria-label="Gruppieren"><button aria-pressed="true">Fälligkeit</button><button aria-pressed="false">Board</button></div>
+    </div>
+    <div id="tlist"></div>
   </main>
 </div></div>
 
@@ -315,21 +404,27 @@ function svg(p) { return '<svg width="20" height="20" viewBox="0 0 24 24" fill="
 function detail(w) {
   return '<div class="det" id="det' + w.id + '">' +
     '<div class="dh"><div class="sentence"><b>' + esc(w.cond) + '</b>, bekommt <b>' + esc(w.who.split('').map(function (c) { return P[c][1]; }).join(' und ')) + '</b> die Aufgabe <b>„' + esc(w.next) + '“</b>. Sie erledigt sich, sobald die Bedingung nicht mehr zutrifft.</div></div>' +
-    '<div class="flow">' +
+    '<div class="flowv">' +
       '<div class="fc"><div class="fh"><span class="tag when">WENN</span><span class="pill ok"><i></i>jetzt ' + esc(w.cur) + '</span><button class="chg">Ändern</button></div>' +
         '<div class="ent"><span class="tile ' + w.tile + '">' + svg(w.ic) + '</span><div style="min-width:0"><b style="display:block;font-size:13.5px">' + esc(w.name) + '</b><small>' + esc(w.dev) + '</small></div></div>' +
         '<div class="ln">' + esc(w.cond) + '</div>' +
-        '<div class="graph"><svg viewBox="0 0 200 64" preserveAspectRatio="none"><path d="M0 46 L40 44 L80 47 L120 42 L160 30 L200 ' + (50 - w.pct / 3) + '" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div></div>' +
+        '<div class="graph"><svg viewBox="0 0 200 64" preserveAspectRatio="none"><path d="M0 46 L40 44 L80 47 L120 42 L160 30 L200 ' + (50 - w.pct / 3) + '" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div>' +
+        '<div class="edit"><div class="fieldrow"><span>Auslösen, wenn der Wert</span><button class="chip" aria-pressed="true">unter</button><button class="chip" aria-pressed="false">über</button><span>20 %</span><span>mindestens</span><button class="chip" aria-pressed="true">10 Min.</button><button class="chip" aria-pressed="false">30 Min.</button></div></div></div>' +
+      '<span class="join" aria-hidden="true"></span>' +
       '<div class="fc"><div class="fh"><span class="tag then">DANN AUFGABE</span><button class="chg">Ändern</button></div>' +
         '<div class="mini"><span class="ck"></span><span>' + esc(w.next) + '</span></div>' +
-        '<div class="ln"><b>Board</b> Haushalt · Spalte Offen<br><b>Fällig</b> sofort<br><b>Priorität</b> Mittel</div></div>' +
-      '<div class="fc"><div class="fh"><span class="tag who">AN WEN</span><button class="chg">Ändern</button></div>' +
-        '<div class="ln"><b>Abwechselnd</b>, nur wer zu Hause ist</div>' +
-        '<div class="order"><div class="o">' + w.who.split('').map(function (c, i) { return '<span class="av" style="background:' + P[c][0] + '">' + c + '</span>' + P[c][1] + (i ? '' : '<em>als Nächstes</em>'); }).join('</div><div class="o">') + '</div></div></div>' +
-      '<div class="fc"><div class="fh"><span class="tag done">ERLEDIGT SICH SELBST</span><button class="sw" role="switch" aria-checked="true" aria-label="Automatisch erledigen" style="margin-left:auto"></button></div>' +
-        '<div class="ln">wenn die Bedingung nicht mehr zutrifft (Leistung wieder über 5 W).</div></div>' +
+        '<div class="ln"><b>Board</b> Haushalt · Spalte Offen &nbsp;·&nbsp; <b>Fällig</b> sofort &nbsp;·&nbsp; <b>Priorität</b> Mittel</div>' +
+        '<div class="edit"><div class="fieldrow"><span>Titel</span><input class="inp" value="' + esc(w.next) + '" aria-label="Titel der Aufgabe" style="flex:1;height:36px;border-radius:10px;border:0;background:var(--card);box-shadow:0 0 0 .5px var(--sep);padding:0 12px;font:inherit;color:var(--label)"></div></div></div>' +
+      '<span class="join" aria-hidden="true"></span>' +
+      '<div class="fc"><div class="fh"><span class="tag who">AN WEN</span><span class="muted" style="font-size:13px">abwechselnd, nur wer zu Hause ist</span><button class="chg">Ändern</button></div>' +
+        '<div class="order"><div class="o">' + w.who.split('').map(function (c, i) { return '<span class="av" style="background:' + P[c][0] + '">' + c + '</span>' + P[c][1] + (i ? '' : '<em>als Nächstes</em>'); }).join('</div><div class="o">') + '</div></div>' +
+        '<div class="edit"><div class="opts" role="radiogroup" aria-label="Zuweisung">' +
+          [['Immer dieselbe Person', 'z. B. immer Ben'], ['Abwechselnd, egal wer da ist', 'reihum, auch wenn jemand unterwegs ist'], ['Eine anwesende Person, abwechselnd', 'reihum, nur wer zu Hause ist'], ['Wer zuerst heimkommt', 'ideal, wenn die Maschine läuft, während alle weg sind'], ['Alle, die gerade da sind', 'wer zuerst abhakt, hat es erledigt'], ['Erst vorschlagen', 'alle Anwesenden fragen, wer übernimmt'], ['Niemand', 'Aufgabe landet nur auf dem Board']].map(function (o, i) { return '<button class="opt" role="radio" aria-checked="' + (i === 2) + '"><span class="rd"></span><span><b>' + o[0] + '</b><small>' + o[1] + '</small></span></button>'; }).join('') +
+        '</div></div></div>' +
+      '<span class="join" aria-hidden="true"></span>' +
+      '<div class="fc"><div class="fh"><span class="tag done">ERLEDIGT SICH SELBST</span><span class="muted" style="font-size:13px">wenn die Bedingung nicht mehr zutrifft</span><button class="sw" role="switch" aria-checked="true" aria-label="Automatisch erledigen"></button></div></div>' +
     '</div>' +
-    '<div class="fine"><span class="lbl">Feinschliff</span><button class="chip">Name</button><button class="chip">Kategorie: ' + esc(w.g) + '</button><button class="chip">Sperrzeit 10 Min.</button><button class="chip">Keine zweite Aufgabe</button><button class="chip">Stupsen nach 30 Min.</button><button class="chip">Zählt zur Fairness</button></div>' +
+    '<div class="fine" style="max-width:860px"><span class="lbl">Feinschliff</span><button class="chip">Name</button><button class="chip">Kategorie: ' + esc(w.g) + '</button><button class="chip">Sperrzeit 10 Min.</button><button class="chip">Keine zweite Aufgabe</button><button class="chip">Stupsen nach 30 Min.</button><button class="chip">Zählt zur Fairness</button></div>' +
     '<div class="runs"><h4>Letzte Läufe</h4><div class="run"><span>' + esc(w.last) + '</span><span>Aufgabe angelegt: ' + esc(w.next) + '</span><span>' + esc(P[w.who[0]][1]) + '</span></div><div class="run"><span>vor 4 Tg.</span><span>Übersprungen: Sperrzeit</span><span></span></div></div>' +
     '<div class="acts"><button class="btn pri">Speichern</button><button class="btn">Testen</button><span class="sp"></span><button class="btn">' + (w.on ? 'Pausieren' : 'Aktivieren') + '</button><button class="btn del">Löschen</button></div>' +
   '</div>';
@@ -391,5 +486,83 @@ function show(v) { document.getElementById('v-w').hidden = v !== 'w'; document.g
 document.getElementById('tab-w').onclick = function () { show('w'); };
 document.getElementById('tab-a').onclick = function () { show('a'); };
 render();
+
+/* ---------- Aufgaben ---------- */
+var PP = { A: ['#c8501a', 'Anna'], B: ['#2f7ee8', 'Ben'], M: ['#c42b6a', 'Mia'] };
+var T = [
+  { id: 1, g: 'Überfällig', t: 'Müll rausbringen', bd: ['Haushalt', '#e07a1f'], due: 'heute 13:47', late: 1, who: 'A', rep: 'alle 2 Tage', prio: 'Hoch', cat: ['Putzen', '#2f9e57'] },
+  { id: 2, g: 'Überfällig', t: 'Paket abholen', bd: ['Einkauf', '#2f7ee8'], due: 'heute 17:30', late: 1, who: 'A', rep: '', prio: '', cat: null, open: 1 },
+  { id: 3, g: 'Heute', t: 'Wäsche aufhängen', bd: ['Haushalt', '#e07a1f'], due: 'heute 18:30', who: 'AB', rep: '', prio: 'Mittel', cat: ['Familie', '#c42b6a'] },
+  { id: 4, g: 'Diese Woche', t: 'Fenster putzen', bd: ['Haushalt', '#e07a1f'], due: 'morgen 11:00', who: 'AB', rep: 'wöchentlich', prio: '', cat: ['Putzen', '#2f9e57'] },
+  { id: 5, g: 'Diese Woche', t: 'Elektriker Termin', bd: ['Umbau', '#2f7ee8'], due: 'Sa 09:00', who: 'A', rep: '', prio: 'Hoch', cat: null }
+];
+var tstate = { open: 2, person: 'meine', fed: null, tab: 'c', done: [1] };
+function pav(w) { return '<span class="avs">' + w.split('').map(function (c) { return '<span class="av" style="background:' + PP[c][0] + '" title="' + PP[c][1] + '">' + c + '</span>'; }).join('') + '</span>'; }
+function pbar() {
+  var h = '<button class="pc all" data-p="alle" aria-pressed="' + (tstate.person === 'alle') + '">Alle</button><button class="pc all" data-p="meine" aria-pressed="' + (tstate.person === 'meine') + '">Meine</button>';
+  Object.keys(PP).forEach(function (k) { h += '<button class="pc" data-p="' + k + '" aria-pressed="' + (tstate.person === k) + '"><span class="av" style="background:' + PP[k][0] + '">' + k + '</span>' + PP[k][1] + '</button>'; });
+  document.getElementById('pbar').innerHTML = h;
+}
+function fact(key, label, val, none) { return '<button class="fact" data-f="' + key + '" aria-expanded="' + (tstate.fed === key) + '"><small>' + label + '</small><b class="' + (none ? 'none' : '') + '">' + val + '</b></button>'; }
+function fedHtml() {
+  var k = tstate.fed; if (!k) return '';
+  var chips = function (a, on) { return a.map(function (x, i) { return '<button class="chip" aria-pressed="' + (i === on) + '">' + x + '</button>'; }).join(''); };
+  var body = { due: '<span class="lbl2">Fällig</span><div class="row2">' + chips(['Heute 18:00', 'Morgen 09:00', 'Am Wochenende', 'Kalender …', 'Kein Termin'], 0) + '</div>', who: '<span class="lbl2">Zuständig</span><div class="row2">' + Object.keys(PP).map(function (c, i) { return '<button class="pc" style="height:34px;padding:0 12px 0 4px;border-radius:17px;box-shadow:0 0 0 .5px var(--sep);display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:13px" aria-pressed="' + (i === 0) + '"><span class="av" style="background:' + PP[c][0] + ';box-shadow:none">' + c + '</span>' + PP[c][1] + '</button>'; }).join('') + '</div>', rep: '<span class="lbl2">Wiederholung</span><div class="row2">' + chips(['Nie', 'Täglich', 'Wöchentlich', 'Monatlich', 'Eigene …'], 0) + '</div>', rem: '<span class="lbl2">Erinnerung</span><div class="row2">' + chips(['Keine', 'Zur Fälligkeit', '15 Min. vorher', '1 Std. vorher', 'Nachhaken …'], 0) + '</div>', prio: '<span class="lbl2">Priorität</span><div class="row2">' + chips(['Keine', 'Niedrig', 'Mittel', 'Hoch'], 0) + '</div>', cat: '<span class="lbl2">Kategorie</span><div class="row2">' + ['Putzen', 'Familie', 'Technik', 'Garten'].map(function (c) { return '<button class="chip" aria-pressed="false">' + c + '</button>'; }).join('') + '<button class="chip">+ Neue Kategorie</button></div>', eff: '<span class="lbl2">Aufwand (zählt in der Fairness)</span><div class="row2">' + chips(['Nicht angegeben', 'Klein', 'Mittel', 'Groß'], 0) + '</div>', cost: '<span class="lbl2">Kosten in Euro</span><div class="row2"><input placeholder="z. B. 49,90" aria-label="Kosten in Euro" style="height:36px;border-radius:10px;border:0;background:var(--card2);padding:0 12px;font:inherit;color:var(--label);width:160px"></div>' }[k];
+  return '<div class="fed on">' + body + '</div>';
+}
+function tdetail(x) {
+  return '<div class="tdet"><div class="thead"><span class="tile">' + svg('batt').replace('<path d="M7 7h9a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zM20 11v2"/>', '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/>') + '</span><input value="' + esc(x.t) + '" aria-label="Titel"><button class="pill ' + (x.late ? 'bad' : 'info') + '" style="height:30px">' + (x.late ? 'Überfällig' : 'Offen') + '</button><button class="btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 11V5a1.5 1.5 0 0 1 3 0v5M11 10V4a1.5 1.5 0 0 1 3 0v6M14 10V6a1.5 1.5 0 0 1 3 0v8c0 4-2 6-5 6s-5-2-6-4l-2-4a1.5 1.5 0 0 1 3-1l1 2"/></svg>Stupsen</button><button class="btn pri"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>Erledigt</button><button class="ic" aria-label="Mehr">⋯</button><button class="ic" aria-label="Schließen" data-close>✕</button></div>' +
+    '<div class="tsub"><span>Angelegt von Anna · gestern</span><span class="bd"><i style="background:' + x.bd[1] + '"></i>' + x.bd[0] + ' · Offen</span></div>' +
+    '<div class="facts">' + fact('due', 'Fällig', x.late ? '<span class="late">' + x.due + ' · überfällig</span>' : x.due) + fact('who', 'Zuständig', pav(x.who) + ' ' + x.who.split('').map(function (c) { return PP[c][1]; }).join(', ')) + fact('rep', 'Wiederholung', x.rep || 'Nie', !x.rep) + fact('rem', 'Erinnerung', 'Keine', true) +
+      fact('prio', 'Priorität', x.prio || 'Normal', !x.prio) + fact('cat', 'Kategorie', x.cat ? '<i class="dotc" style="background:' + x.cat[1] + '"></i>' + x.cat[0] : 'Keine', !x.cat) + fact('eff', 'Aufwand', 'Nicht angegeben', true) + fact('cost', 'Kosten', 'Nicht angegeben', true) + '</div>' + fedHtml() +
+    '<div class="tbody"><div class="col">' +
+      '<div class="box"><h3>Notiz</h3><textarea aria-label="Notiz" placeholder="Details, Maße, Hinweise …">Abholschein liegt auf dem Küchentisch. Paketshop hat bis 19 Uhr offen.</textarea></div>' +
+      '<div class="box"><h3>Checkliste <span class="cnt" id="cn">1/3</span></h3><div class="prog"><i id="pg" style="width:33%"></i></div><div id="cl"></div><div class="addrow"><span>＋</span><input placeholder="Punkt hinzufügen" aria-label="Neuer Eintrag"></div></div>' +
+      '<div class="box"><h3>Links und Anhänge</h3><div class="addrow" style="border-top:0"><span>🔗</span><input placeholder="Website oder Maps-Link einfügen" aria-label="Neuer Link"></div></div>' +
+    '</div><div class="col"><div class="box"><div class="tabs" role="tablist"><button role="tab" data-tab="c" aria-selected="' + (tstate.tab === 'c') + '">Kommentare · 2</button><button role="tab" data-tab="h" aria-selected="' + (tstate.tab === 'h') + '">Verlauf</button></div>' +
+      (tstate.tab === 'c' ? '<div class="cm"><span class="av" style="background:#2f7ee8">B</span><div><b>Ben</b> <small>gestern 20:14</small><p>Ich kann es morgen früh holen.</p></div></div><div class="cm"><span class="av" style="background:#c8501a">A</span><div><b>Anna</b> <small>gestern 20:20</small><p>Super, danke!</p></div></div><div class="compose"><input placeholder="Kommentar schreiben …" aria-label="Neuer Kommentar"><button class="btn pri" style="height:38px;border-radius:19px;padding:0 16px">Senden</button></div>' : '<div class="hist"><span><i></i>Angelegt von Anna · gestern 19:02</span><span><i></i>Termin auf heute 17:30 gesetzt · gestern 19:03</span><span><i></i>Wurde überfällig · heute 17:31</span></div>') +
+    '</div></div></div></div>';
+}
+var CL = [['Abholschein suchen', 1], ['Personalausweis mitnehmen', 0], ['Paketshop-Öffnungszeiten prüfen', 0]];
+function clHtml() { return CL.map(function (c, i) { return '<button class="ci" role="checkbox" aria-checked="' + !!c[1] + '" data-ci="' + i + '"><span class="circle"></span><span>' + c[0] + '</span></button>'; }).join(''); }
+function trender() {
+  var list = T.filter(function (x) { return tstate.person === 'alle' || (tstate.person === 'meine' ? x.who.indexOf('A') >= 0 : x.who.indexOf(tstate.person) >= 0); });
+  var g = {}; list.forEach(function (x) { (g[x.g] = g[x.g] || []).push(x); });
+  var h = '';
+  Object.keys(g).forEach(function (k) {
+    h += '<div class="grp" style="' + (k === 'Überfällig' ? 'color:var(--bad)' : '') + '"><button style="cursor:default">' + k + '</button><span class="c">' + g[k].length + '</span></div><div class="card">' + g[k].map(function (x) {
+      var open = tstate.open === x.id;
+      return '<div class="titem' + (open ? ' open' : '') + '" data-tid="' + x.id + '"><div class="trow" role="button" tabindex="0" aria-expanded="' + open + '"><span class="circle"></span><span class="t">' + esc(x.t) + '</span><span class="bd"><i style="background:' + x.bd[1] + '"></i>' + esc(x.bd[0]) + '</span><span class="' + (x.late ? 'late' : 'muted') + '">' + esc(x.due) + '</span>' + pav(x.who) + '</div>' + (open ? tdetail(x) : '') + '</div>';
+    }).join('') + '</div>';
+  });
+  document.getElementById('tlist').innerHTML = h || '<div class="empty card">Hier ist nichts offen.</div>';
+  document.getElementById('tcount').textContent = list.length + ' Aufgaben';
+  var cl = document.getElementById('cl'); if (cl) cl.innerHTML = clHtml();
+  var done = CL.filter(function (c) { return c[1]; }).length; var cn = document.getElementById('cn'); if (cn) { cn.textContent = done + '/' + CL.length; document.getElementById('pg').style.width = (done / CL.length * 100) + '%'; }
+  pbar();
+}
+document.addEventListener('click', function (e) {
+  var t = e.target, el;
+  if ((el = t.closest('.chg'))) { var fc = el.closest('.fc'); fc.classList.toggle('editing'); el.textContent = fc.classList.contains('editing') ? 'Fertig' : 'Ändern'; return; }
+  if ((el = t.closest('.opt'))) { el.parentNode.querySelectorAll('.opt').forEach(function (o) { o.setAttribute('aria-checked', o === el); }); return; }
+  if ((el = t.closest('.fed .chip, .fed .pc'))) { var sib = el.parentNode.querySelectorAll(el.className.indexOf('pc') >= 0 ? '.pc' : '.chip'); if (el.className.indexOf('pc') >= 0) el.setAttribute('aria-pressed', el.getAttribute('aria-pressed') !== 'true'); else { sib.forEach(function (o) { o.setAttribute('aria-pressed', o === el); }); } return; }
+  if ((el = t.closest('#pg-w .fine .chip, #pg-w .fieldrow .chip'))) { return; }
+  if (t.closest('#pg-t')) {
+    if ((el = t.closest('[data-p]'))) { tstate.person = el.dataset.p; trender(); return; }
+    if ((el = t.closest('[data-f]'))) { tstate.fed = tstate.fed === el.dataset.f ? null : el.dataset.f; trender(); return; }
+    if ((el = t.closest('[data-ci]'))) { var i = +el.dataset.ci; CL[i][1] = CL[i][1] ? 0 : 1; trender(); return; }
+    if ((el = t.closest('[data-tab]'))) { tstate.tab = el.dataset.tab; trender(); return; }
+    if (t.closest('[data-close]')) { tstate.open = null; tstate.fed = null; trender(); return; }
+    if (t.closest('.tdet')) return;
+    if ((el = t.closest('.titem'))) { var id = +el.dataset.tid; tstate.open = tstate.open === id ? null : id; tstate.fed = null; trender(); return; }
+  }
+  if (t.id === 'g-w' || t.id === 'g-t' || t.id === 's-tasks') { page(t.id === 'g-w' ? 'w' : 't'); return; }
+});
+function page(p) {
+  document.getElementById('pg-w').hidden = p !== 'w'; document.getElementById('pg-t').hidden = p !== 't';
+  document.getElementById('g-w').setAttribute('aria-pressed', p === 'w'); document.getElementById('g-t').setAttribute('aria-pressed', p === 't');
+  document.querySelectorAll('.side .it').forEach(function (b) { if (p === 't') b.setAttribute('aria-current', b.id === 's-tasks' ? 'page' : 'false'); });
+  if (p === 'w') render(); else trender();
+}
 </script>
 </body></html>

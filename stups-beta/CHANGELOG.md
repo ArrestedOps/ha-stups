@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.8
+
+**Wächter lösen beim Anlegen gleich aus.** Gilt die Bedingung schon (Batterie bei 16 %, Grenze 20 %; Tür schon im Zielzustand), entsteht die Aufgabe sofort, nach der Wartezeit ab der letzten Änderung. Die Rückfrage gibt es nur noch beim Ändern eines vorhandenen Wächters. **Aufgeklappter Wächter am Desktop:** Wenn, Dann, Wer und Erledigt sich selbst stehen untereinander, der Schalter „Erledigt sich selbst“ wird nicht mehr abgeschnitten, „Ändern“ zerstört das Layout nicht mehr.
+
+**Bitte prüfen (Testliste):** (1) Wächter für eine Batterie anlegen, die schon unter der Grenze liegt: Aufgabe entsteht. (2) Wächter für einen Zustand anlegen, der schon gilt: Aufgabe entsteht. (3) Wächter aufklappen › „Wer“ › „Ändern“: Layout bleibt heil. (4) Schalter „Erledigt sich selbst“ vollständig sichtbar.
+
 ## 1.42.0-beta.7
 
 **Aufgaben am Desktop klappen unter ihrer Zeile auf**, wie die Wächter: zwei Spalten (links Eigenschaften, rechts Beschreibung, Checkliste, Links, Kommentare), „Erledigt“, „Stupsen“ und Schließen in einer Leiste oben. Zweiter Klick, Esc oder das X klappen sie zu. Die Detailspalte rechts gibt es nicht mehr. Am Handy ändert sich nichts.

@@ -243,6 +243,16 @@ describe('Nachfrage nach dem Speichern (metNow)', () => {
     expect(await engine.onSaved(w.id)).toEqual({ entityName: 'Waschmaschine Leistung', stateText: '2,4 W', reason: 'already_met' });
   });
 
+  it('beim Anlegen löst eine schon erfüllte Bedingung gleich aus (Zustand und Vorgang), nach der Wartezeit ab der letzten Änderung', async () => {
+    const w = door('off');
+    expect(await engine.onSaved(w.id, { created: true })).toBeNull();
+    expect(cards()).toHaveLength(1);
+    ha.set(ENTITY, '2.4', '2026-11-04T09:00:00Z', { device_class: 'power', unit_of_measurement: 'W', friendly_name: 'Waschmaschine Leistung' });
+    const p = watcher({ name: 'Maschine', card: { boardId, columnId, title: 'Ausräumen' } });
+    expect(await engine.onSaved(p.id, { created: true })).toBeNull();
+    expect(cards()).toHaveLength(2);
+  });
+
   it('ohne Friendly Name steht die Entitäts-ID da', async () => {
     ha.set(DOOR, 'off');
     const w = watcher({ trigger: { entityId: DOOR, kind: 'state', to: 'off', forMin: 0 } });

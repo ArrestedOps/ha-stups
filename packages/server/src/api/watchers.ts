@@ -233,8 +233,8 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     const config = parseWatcher(raw);
     checkWatcherTargets(req, config);
     const created = data.create(config);
-    // `metNow`: die Bedingung gilt schon und es löst nichts von selbst aus, die Oberfläche fragt, ob die Aufgabe jetzt entstehen soll
-    const metNow = await engine.onSaved(created.id);
+    // Beim Anlegen löst ein Wächter, dessen Bedingung schon gilt, gleich aus (`metNow` bleibt dann leer)
+    const metNow = await engine.onSaved(created.id, { created: true });
     return reply.code(201).send({ ...watcherView(created.id), metNow });
   });
   app.patch<{ Params: Params }>('/api/watchers/:id', async (req) => {

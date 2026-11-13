@@ -60,11 +60,13 @@ export function createEvaluate(ctx: Ctx, calls: () => Parts) {
   }
 
   /**
-   * Nach dem Anlegen oder Ändern: Startzustand prüfen (kein Auslösen, wenn die Bedingung schon erfüllt ist, außer bei Pegeln) und
-   * abonnieren. Antwort: `MetNow`, wenn die Bedingung schon erfüllt ist, nichts von selbst ausgelöst hat und keine Aufgabe des Wächters
-   * offen ist, sonst null.
+   * Nach dem Anlegen oder Ändern: Startzustand prüfen und abonnieren. Beim **Anlegen** (`created`) löst ein Wächter, dessen Bedingung schon
+   * erfüllt ist, gleich aus (nach der Wartezeit, gerechnet ab der letzten Änderung des Werts): wer einen Wächter für „Batterie unter 20 %“
+   * anlegt, während sie bei 16 % steht, bekommt die Aufgabe. Beim **Ändern** und Wiedereinschalten löst nur ein Pegel selbst aus; bei einem
+   * Zustand oder Vorgang bleibt es bei der Rückfrage. Antwort: `MetNow`, wenn die Bedingung schon erfüllt ist, nichts von selbst ausgelöst hat
+   * und keine Aufgabe des Wächters offen ist, sonst null.
    */
-  async function onSaved(id: string): Promise<MetNow | null> {
+  async function onSaved(id: string, opts: { created?: boolean } = {}): Promise<MetNow | null> {
     let metNow: MetNow | null = null;
     await guarded('Speichern', async () => {
       const w = data.get(id);
@@ -90,13 +92,16 @@ export function createEvaluate(ctx: Ctx, calls: () => Parts) {
         const nowMs = now().getTime();
         // Ein Pegel (Batterie, Temperatur), der beim ersten Anlegen schon über der Grenze liegt, ist ein Befund: die Aufgabe kommt sofort
         // (nach der Wartezeit, gerechnet ab der letzten Änderung des Werts). Vorgänge und Unbekanntes warten auf den nächsten Wechsel.
-        const levelNow = met && (w.trigger.kind === 'below' || w.trigger.kind === 'above') && measuresLevel(s, w.trigger.entityId) && !data.getState(id).lastFireAt;
-        const since = met ? metSinceOf(levelNow ? 'state' : w.trigger.kind, s, nowMs) : null;
-        data.patchState(id, { armed: levelNow || !met, metSince: since });
+        const neverFired = !data.getState(id).lastFireAt;
+        const levelNow = met && (w.trigger.kind === 'below' || w.trigger.kind === 'above') && measuresLevel(s, w.trigger.entityId) && neverFired;
+        // Beim Anlegen gilt dasselbe für jede Bedingung auf dem Zustand (Zustand, Vorgang, Pegel): erfüllt heißt auslösen
+        const auto = levelNow || (opts.created === true && met && w.active && checksState(w) && neverFired);
+        const since = met ? metSinceOf(auto ? 'state' : w.trigger.kind, s, nowMs) : null;
+        data.patchState(id, { armed: auto || !met, metSince: since });
         if (w.status === 'entity_missing') data.setStatus(id, 'ok');
-        if (levelNow && since && nowMs - Date.parse(since) >= minutes(w.trigger.forMin)) await calls().fire(w);
+        if (auto && since && nowMs - Date.parse(since) >= minutes(w.trigger.forMin)) await calls().fire(w);
         // Schon erfüllt und kein automatisches Auslösen: die Oberfläche darf fragen (nur wenn noch keine Aufgabe des Wächters offen ist)
-        if (met && !levelNow && w.active && checksState(w) && !store.openCardOfWatcher(id)) {
+        if (met && !auto && w.active && checksState(w) && !store.openCardOfWatcher(id)) {
           metNow = { entityName: s.name ?? w.trigger.entityId, stateText: stateText(s.state, s.unit), reason: 'already_met' };
         }
       }

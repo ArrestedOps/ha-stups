@@ -232,7 +232,7 @@ test('Erledigte Aufgabe: nicht mehr „überfällig", zeigt die Erledigt-Zeit un
   await card(page, title).getByText(title).click();
   await expect(page.getByTestId('done-note')).toContainText('Erledigt heute');
   // exakter Name: ohne den Zusatz „· überfällig"
-  await expect(page.getByRole('button', { name: '15. Jan 2020 09:00', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Fällig: 15. Jan 2020 09:00', exact: true })).toBeVisible();
   const verlauf = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Verlauf' }) });
   await expect(verlauf).toContainText('Angelegt');
   await expect(verlauf).toContainText('Erledigt');

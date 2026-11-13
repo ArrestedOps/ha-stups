@@ -108,7 +108,7 @@ test.describe('Aufbau', () => {
     // schmal: die Detailspalte legt sich über die Liste statt sie zu quetschen
     const detail = page.getByTestId('detail');
     await expect(detail).toBeVisible();
-    expect((await detail.boundingBox())!.width).toBe(380);
+    expect((await detail.boundingBox())!.width).toBe(400);
     expect((await page.getByTestId('tasks').boundingBox())!.width).toBeGreaterThan(600);
     await noHorizontalScroll(page);
     await page.keyboard.press('Escape');
@@ -147,7 +147,7 @@ test.describe('Aufgaben', () => {
     await first.click();
     const detail = page.getByTestId('detail');
     await expect(detail).toBeVisible();
-    expect((await detail.boundingBox())!.width).toBe(380);
+    expect((await detail.boundingBox())!.width).toBe(400);
     await expect(dialog(page)).toHaveCount(0);
     await expect(detail.getByLabel('Titel')).toHaveValue(s.cards[0]!.title);
     await expect(detail.getByLabel('Eintrag', { exact: true })).toHaveValue('Abholschein suchen');

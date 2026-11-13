@@ -129,7 +129,7 @@ test('Auswahlfelder zeigen den Wert und einen Pfeil; die Wahl am (durchsichtigen
   const { boardId, openId } = await typicalBoard(request, page, 'Auswahl', 1);
   const card = (await (await request.post(`/api/boards/${boardId}/cards`, { data: { columnId: openId, title: 'Mit Termin', dueAt: new Date(Date.now() + 3 * DAY).toISOString() } })).json()) as { id: string };
   await page.goto(`/?card=${card.id}`);
-  await page.getByRole('button', { name: /^Erinnerung|Vorab|vorher|Nachhaken/ }).first().click();
+  await page.getByRole('button', { name: /^Erinnerung: / }).click();
   const select = page.getByLabel('Vorab-Erinnerung');
   const shown = select.locator('xpath=..').getByTestId('select-value');
   await expect(shown).toHaveText('Nur zur Fälligkeit');

@@ -77,7 +77,7 @@ test('Aufgabe: Erinnerung öffnen, ändern und ausschalten; „Eigene …“ zei
   expect(made.reminder).toMatchObject({ afterMin: 60 });
 
   await page.goto(`/?card=${made.id}`);
-  await page.getByRole('button', { name: /^Nachhaken$/ }).click();
+  await page.getByRole('button', { name: /^Erinnerung: Nachhaken$/ }).click();
   const editor = page.getByTestId('reminder-editor');
   await expect(editor.getByTestId('nag-first').getByRole('button', { name: 'Nach 1 Std.', exact: true })).toHaveAttribute('aria-pressed', 'true');
 
@@ -89,7 +89,7 @@ test('Aufgabe: Erinnerung öffnen, ändern und ausschalten; „Eigene …“ zei
 
   await editor.getByTestId('nag-first').getByRole('button', { name: 'Aus', exact: true }).click();
   await expect.poll(async () => (await cardOf(request, boardId, title)).reminder).toBeNull();
-  await expect(page.getByRole('button', { name: /^Erinnerung$/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Erinnerung: Keine$/ })).toBeVisible();
 });
 
 test('Ohne Termin zählt es ab dem Anlegen, der Ablauf sagt es', async ({ page, request }) => {
@@ -97,7 +97,7 @@ test('Ohne Termin zählt es ab dem Anlegen, der Ablauf sagt es', async ({ page, 
   const view = (await (await request.get(`/api/boards/${boardId}`)).json()) as { columns: { id: string }[] };
   const made = (await (await request.post(`/api/boards/${boardId}/cards`, { data: { columnId: view.columns[0]!.id, title: unique('Ohne Termin') } })).json()) as ApiCard;
   await page.goto(`/?card=${made.id}`);
-  await page.getByRole('button', { name: /^Erinnerung$/ }).click();
+  await page.getByRole('button', { name: /^Erinnerung: / }).click();
   await page.getByTestId('nag-first').getByRole('button', { name: 'Nach 1 Std.', exact: true }).click();
   await expect(page.getByTestId('nag-plan')).toContainText('Dein Ablauf (ab jetzt)');
   await expect.poll(async () => ((await (await request.get(`/api/cards/${made.id}`)).json()) as ApiCard).reminder).toMatchObject({ anchor: 'created', afterMin: 60 });

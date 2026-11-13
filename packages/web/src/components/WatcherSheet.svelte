@@ -17,6 +17,7 @@
     template = undefined,
     hit = undefined,
     personIds = undefined,
+    category = undefined,
     onsaved = undefined,
     onback = undefined,
   }: {
@@ -24,13 +25,14 @@
     template?: string;
     hit?: { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft };
     personIds?: string[];
+    category?: string;
     onsaved?: (saved: SavedWatcher) => void;
     onback?: () => void;
   } = $props();
 
   // svelte-ignore state_referenced_locally
   const ed = new WatcherEditor(id, { onsaved, onback });
-  onMount(() => void ed.load(template, hit, personIds));
+  onMount(() => void ed.load(template, hit, personIds, category));
 
   // Spalten und Kategorien des gewählten Boards
   $effect(() => {

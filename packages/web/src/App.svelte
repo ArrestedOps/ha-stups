@@ -204,7 +204,7 @@
   {:else if ui.sheet?.type === 'people'}
     <Lazy load={loadPeopleSheet} />
   {:else if ui.sheet?.type === 'watcher'}
-    {#key ui.sheet.id ?? 'neu'}<Lazy load={loadWatcherSheet} props={{ id: ui.sheet.id, template: ui.sheet.template, hit: ui.sheet.hit }} />{/key}
+    {#key ui.sheet.id ?? 'neu'}<Lazy load={loadWatcherSheet} props={{ id: ui.sheet.id, template: ui.sheet.template, hit: ui.sheet.hit, category: ui.sheet.category }} />{/key}
   {:else if ui.sheet?.type === 'found'}
     <Lazy load={loadFoundSheet} />
   {:else if ui.sheet?.type === 'nudge'}

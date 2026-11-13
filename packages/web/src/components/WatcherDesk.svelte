@@ -39,7 +39,7 @@
 
   onMount(() => {
     void (async () => {
-      await ed.load(init.template, init.hit, init.personIds);
+      await ed.load(init.template, init.hit, init.personIds, init.category);
       if (!ed.form.boardId) ed.form.boardId = ui.boardId ?? ui.boards[0]?.id ?? '';
       await tick();
       // Mit einem Treffer ist die Entität schon gewählt: das Feld nimmt den Fokus, ohne die Liste aufzuklappen

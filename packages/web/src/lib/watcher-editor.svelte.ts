@@ -4,7 +4,7 @@ import { t } from './i18n/index.svelte';
 import type { EntityHistory } from './history';
 import { can, closeSheet, openSettings, openSheet, toast, ui } from './store.svelte';
 import type { OrderView, TemplateDraft, WatcherSuggestion, WatcherTemplate } from './watcher-types';
-import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, type WatcherForm } from './watchers';
+import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, withCategory, type WatcherForm } from './watchers';
 import { askCard, metNowOf } from './watcher-ask';
 import { backAction } from './watcher-wizard';
 
@@ -84,7 +84,7 @@ export class WatcherEditor {
   personName = (pid: string): string => ui.people.find((p) => p.id === pid)?.displayName ?? '?';
 
   /** `personIds`: wer bei „Wer kommt infrage?" schon gewählt ist (die Einrichtung wählt die Personen vor, die im ersten Schritt dabei sind) */
-  async load(template: string | undefined, hit: Hit | undefined, personIds?: string[]): Promise<void> {
+  async load(template: string | undefined, hit: Hit | undefined, personIds?: string[], category?: string): Promise<void> {
     try {
       if (this.id) {
         const res = await api.watchers();
@@ -111,6 +111,7 @@ export class WatcherEditor {
     const wanted = !this.id && template ? this.templates.find((x) => x.id === template) : undefined;
     if (wanted) this.applyTemplate(wanted, hit);
     if (!this.id && personIds && personIds.length > 0) this.form.personIds = personIds;
+    if (!this.id && category) this.form = withCategory(this.form, category);
   }
 
   // ---------- Vom Server nachladen (die Oberfläche ruft sie aus ihren Effekten auf) ----------

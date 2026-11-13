@@ -12,7 +12,8 @@
   import ListRow from './ui/ListRow.svelte';
   import SymbolIcon from './SymbolIcon.svelte';
   import Tile, { TILE_COLORS } from './ui/Tile.svelte';
-  import { nameSymbol } from '../lib/watcher-flow';
+  import { cardTitleWithEntity } from '../lib/cardTitle';
+  import { modeSummary, nameSymbol, whenParts } from '../lib/watcher-flow';
   import CtaButton from './ui/CtaButton.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
 
@@ -89,6 +90,15 @@
       {:else if ed.step === 3}
         <WatcherWhoEditor {ed} />
       {:else}
+        <!-- Kurzfassung wie im Entwurf: WENN, DANN, WER als drei beschriftete Zeilen -->
+        <dl class="rounded-row bg-surface px-4 py-3.5" data-testid="wizard-brief">
+          <dt class="text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Wenn')}</dt>
+          <dd class="mb-2.5 text-[16px] font-semibold wrap-anywhere">{#each whenParts(f) as p, i (i)}{p.text}{/each}</dd>
+          <dt class="text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Dann')}</dt>
+          <dd class="mb-2.5 text-[16px] font-semibold wrap-anywhere">{t('Aufgabe „{title}“', { title: cardTitleWithEntity(f.title, f.kind, f.entityName || f.entityId) || '…' })}</dd>
+          <dt class="text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Wer')}</dt>
+          <dd class="text-[16px] font-semibold wrap-anywhere">{modeSummary(f.assignMode)}</dd>
+        </dl>
         <WatcherFineEditor {ed} />
         <SectionHeader title={t('Zusammenfassung')} />
         <WatcherSummary form={f} personName={ed.personName} />

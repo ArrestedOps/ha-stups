@@ -21,6 +21,7 @@
   const people = $derived(ed.people);
   const restricted = $derived(!!ed.board && ed.board.visibility !== 'all');
   const options = $derived(modeOptions());
+  const MODE_ICON: Record<string, string> = { fixed: 'flag', rotation: 'user', rotation_present: 'user', first_home: 'home', all_present: 'bell', suggest: 'repeat', none: 'layers' };
   const toggle = (id: string) => (f.personIds = f.personIds.includes(id) ? f.personIds.filter((x) => x !== id) : [...f.personIds, id]);
 
   const hint = $derived(
@@ -56,11 +57,12 @@
         type="button"
         role="radio"
         aria-checked={on}
-        class="flex min-h-[52px] w-full items-center gap-3 px-4 py-2 text-left text-[17px] {on ? 'font-semibold' : ''}"
+        class="flex min-h-[60px] w-full items-center gap-3 px-4 py-2 text-left text-[16px] {on ? 'font-semibold' : ''}"
         onclick={() => (f.assignMode = o.mode)}
       >
-        <span class="h-5 w-5 shrink-0 rounded-full {on ? 'border-[6px] border-brand-dot' : 'border-2 border-ring'}"></span>
-        <span>{o.title}<span class="mt-[3px] block text-[12.5px] font-medium text-fg2">{o.meta}</span></span>
+        <Tile size="sm" color={on ? 'orange' : 'gray'}><Icon name={MODE_ICON[o.mode]} size={20} stroke={1.9} /></Tile>
+        <span class="min-w-0 flex-1">{o.title}<span class="mt-[2px] block text-[12.5px] leading-[1.35] font-medium text-fg2">{o.meta}</span></span>
+        <span class="h-5 w-5 shrink-0 rounded-full {on ? 'border-[6px] border-brand-dot' : 'border-2 border-ring'}" aria-hidden="true"></span>
       </button>
     {/each}
   </div>

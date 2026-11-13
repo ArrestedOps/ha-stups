@@ -90,6 +90,32 @@ test('Kategorien sind eigene Seiten (einheitlich), gleiche Namen ohne Beachtung 
   await clear(request);
 });
 
+test('Kategorie-Seite: Menü „…“ pausiert und aktiviert alle Wächter der Kategorie', async ({ page, request }) => {
+  await clear(request);
+  const s = await setup(request);
+  for (const [name, entity] of [
+    [`Eins ${s.tag}`, 'sensor.bad_batterie'],
+    [`Zwei ${s.tag}`, 'sensor.iphone_rene_battery_level'],
+  ] as const) {
+    expect((await request.post('/api/watchers', { data: make(s, name, entity, { category: 'Menü' }) })).status()).toBe(201);
+  }
+  await openList(page, s);
+  await openWatcherCategory(page, 'Menü');
+  const sub = page.getByTestId('watcher-page');
+  await sub.getByTestId('category-menu').click();
+  await page.getByRole('menuitem', { name: 'Alle pausieren' }).click();
+  await expect.poll(async () => (await watchers(request)).filter((w) => w.category === 'Menü' && !w.active).length).toBe(2);
+  await sub.getByTestId('category-menu').click();
+  await expect(page.getByRole('menuitem', { name: 'Alle pausieren' })).toHaveCount(0);
+  await page.getByRole('menuitem', { name: 'Alle aktivieren' }).click();
+  await expect.poll(async () => (await watchers(request)).filter((w) => w.category === 'Menü' && w.active).length).toBe(2);
+  // Neuer Wächter in dieser Kategorie: der Assistent trägt sie schon
+  await sub.getByTestId('category-menu').click();
+  await page.getByRole('menuitem', { name: /^Neuer Wächter in „Menü“/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Neuer Wächter' })).toBeVisible();
+  await clear(request);
+});
+
 test('Schalter: aus löst nicht mehr aus (der Server entscheidet), an wieder; die Zeile bleibt sichtbar, gedämpft, „Aus"', async ({ page, request }) => {
   await clear(request);
   const s = await setup(request);

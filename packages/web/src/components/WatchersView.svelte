@@ -13,7 +13,7 @@
   import type { SavedWatcher } from '../lib/watcher-types';
   import { categoryKeyOf, COL_LAST, COL_MID, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
   import { noteText, RUN_TEXT } from '../lib/watchers';
-  import { askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openSettings, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
+  import { askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openNewWatcher, openSettings, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
   import WatcherDesk from './WatcherDesk.svelte';
@@ -125,6 +125,12 @@
     for (const g of byKey.values()) g.items.sort((a, b) => a.name.localeCompare(b.name) || (a.subject ?? '').localeCompare(b.subject ?? '') || a.watcherId.localeCompare(b.watcherId));
     return [...byKey.values()].sort((a, b) => (a.name === null ? 1 : b.name === null ? -1 : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })));
   });
+  // Menü „…“ der Kategorie-Seite: alle pausieren oder aktivieren, neuer Wächter in dieser Kategorie
+  let pageMenu = $state(false);
+  async function pageActive(on: boolean) {
+    pageMenu = false;
+    for (const i of pageGroup?.items ?? []) if (i.active !== on) await setActive(i, on);
+  }
   const pageGroup = $derived(page ? (phoneGroups.find((g) => g.key === page) ?? null) : null);
   function openPage(key: string) {
     page = key;
@@ -260,10 +266,30 @@
       {#if !ui.desktop && pageGroup}
         <!-- Kategorie als eigene Seite (Handy) -->
         <div data-testid="watcher-page" class="flex flex-col gap-3">
-          <div>
+          <div class="relative">
             <button class="-ml-1 inline-flex h-11 items-center gap-0.5 text-[16px] font-semibold text-accent-text" onclick={() => (page = null)}>
               <Icon name="chevron-left" size={22} stroke={2.2} />{t('Wächter')}
             </button>
+            {#if canToggle}
+              <div class="absolute top-0 right-0">
+                <button class="top-circle flex h-10 w-10 items-center justify-center rounded-full bg-surface2" aria-label={t('Menü der Kategorie')} aria-expanded={pageMenu} data-testid="category-menu" onclick={() => (pageMenu = !pageMenu)}>
+                  <Icon name="more" size={20} stroke={2.4} />
+                </button>
+                {#if pageMenu}
+                  <div class="absolute top-11 right-0 z-30 flex w-64 flex-col overflow-hidden rounded-[14px] bg-surface text-[16px] shadow-[0_10px_30px_rgba(0,0,0,0.25)]" role="menu">
+                    {#if pageGroup.items.some((i) => i.active)}
+                      <button class="flex min-h-12 items-center px-4 text-left" role="menuitem" onclick={() => void pageActive(false)}>{t('Alle pausieren')}</button>
+                    {/if}
+                    {#if pageGroup.items.some((i) => !i.active)}
+                      <button class="flex min-h-12 items-center border-t border-line px-4 text-left" role="menuitem" onclick={() => void pageActive(true)}>{t('Alle aktivieren')}</button>
+                    {/if}
+                    {#if can('watchers')}
+                      <button class="flex min-h-12 items-center border-t border-line px-4 text-left" role="menuitem" onclick={() => { pageMenu = false; openNewWatcher(pageGroup.name ? { category: pageGroup.name } : {}); }}>{pageGroup.name ? t('Neuer Wächter in „{name}“', { name: pageGroup.name }) : t('Neuer Wächter')}</button>
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+            {/if}
             <h1 class="mt-0.5 text-[30px] leading-[1.1] font-extrabold tracking-tight">{pageGroup.name ?? t('Ohne Kategorie')}</h1>
             <p class="mt-1 text-[14px] text-fg2">{groupSummary(pageGroup.items)}</p>
           </div>

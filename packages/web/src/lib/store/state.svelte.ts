@@ -25,7 +25,7 @@ export type Sheet =
   | { type: 'boardSettings'; boardId?: string }
   | { type: 'settings'; page?: SettingsPageId }
   | { type: 'people' }
-  | { type: 'watcher'; id: string | null; template?: string; /** geöffnet aus Einstellungen › Wächter oder aus „Gefunden": dorthin geht Zurück */ from?: 'settings' | 'found'; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
+  | { type: 'watcher'; id: string | null; template?: string; category?: string; /** geöffnet aus Einstellungen › Wächter oder aus „Gefunden": dorthin geht Zurück */ from?: 'settings' | 'found'; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
   | { type: 'found' }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
@@ -63,6 +63,8 @@ export interface NewWatcherRequest {
   hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft };
   /** Wer bei „Wer kommt infrage?" vorgewählt ist (die Einrichtung) */
   personIds?: string[];
+  /** Kategorie, die der neue Wächter gleich trägt (aus dem Menü einer Kategorie) */
+  category?: string;
 }
 
 export const ui = $state({

@@ -49,14 +49,14 @@
 {/snippet}
 
 <div class="flex flex-col gap-3.5" data-testid="who-editor">
-  <div class="flex flex-col gap-2" role="radiogroup" aria-label={t('Zuweisung')}>
+  <div class="list-group !mt-0" role="radiogroup" aria-label={t('Zuweisung')}>
     {#each options as o (o.mode)}
       {@const on = f.assignMode === o.mode}
       <button
         type="button"
         role="radio"
         aria-checked={on}
-        class="flex min-h-row w-full items-center gap-3 rounded-row border px-3.5 py-2.5 text-left text-[15px] font-bold {on ? 'pick-on' : 'border-line bg-surface'}"
+        class="flex min-h-[52px] w-full items-center gap-3 px-4 py-2 text-left text-[17px] {on ? 'font-semibold' : ''}"
         onclick={() => (f.assignMode = o.mode)}
       >
         <span class="h-5 w-5 shrink-0 rounded-full {on ? 'border-[6px] border-brand-dot' : 'border-2 border-ring'}"></span>

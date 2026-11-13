@@ -24,7 +24,7 @@
   import { ui } from '../lib/store.svelte';
   import NumberField from './NumberField.svelte';
   import SelectField from './SelectField.svelte';
-  import Chip from './ui/Chip.svelte';
+  import Icon from './Icon.svelte';
   import ListRow from './ui/ListRow.svelte';
 
   /**
@@ -170,6 +170,12 @@
   );
 </script>
 
+{#snippet choice(label: string, on: boolean, run: () => void)}
+  <button type="button" class="flex h-[46px] w-full items-center justify-between px-4 text-left text-[17px]" aria-pressed={on} onclick={run}>
+    {label}{#if on}<span class="text-accent-text"><Icon name="check" size={20} stroke={2.6} /></span>{/if}
+  </button>
+{/snippet}
+
 <div class="flex flex-col gap-3" data-testid="reminder-editor">
   {#if dueAt}
     <ListRow title={t('Vorher erinnern')} wrap>
@@ -190,16 +196,16 @@
   {/if}
 
   <div class="px-1 text-[15px] font-extrabold tracking-tight">{t('Nachhaken, wenn nicht erledigt')}</div>
-  <div class="flex flex-wrap gap-2" role="group" aria-label={t('Nachhaken, wenn nicht erledigt')} data-testid="nag-first">
-    <Chip active={firstChoice === 'off'} pressed={firstChoice === 'off'} onclick={() => pickFirst('off')}>{t('Aus')}</Chip>
+  <div class="list-group !mt-0" role="group" aria-label={t('Nachhaken, wenn nicht erledigt')} data-testid="nag-first">
+    {@render choice(t('Aus'), firstChoice === 'off', () => pickFirst('off'))}
     {#each FIRST_PRESETS as p (p.id)}
-      <Chip active={firstChoice === p.id} pressed={firstChoice === p.id} onclick={() => pickFirst(p.id)}>{FIRST_LABEL[p.id]}</Chip>
+      {@render choice(FIRST_LABEL[p.id], firstChoice === p.id, () => pickFirst(p.id))}
     {/each}
-    <Chip active={firstChoice === 'custom'} pressed={firstChoice === 'custom'} onclick={() => pickFirst('custom')}>{t('Eigene …')}</Chip>
+    {@render choice(t('Eigene …'), firstChoice === 'custom', () => pickFirst('custom'))}
   </div>
 
   {#if firstChoice === 'custom' && spec}
-    <div class="flex items-center gap-2 rounded-row border border-line bg-surface px-3.5 py-3 text-[15px]" data-testid="nag-first-custom">
+    <div class="flex items-center gap-2 rounded-row bg-surface px-3.5 py-3 text-[15px]" data-testid="nag-first-custom">
       <span class="font-bold">{tx('Wiederholung', 'Nach')}</span>
       <NumberField bind:value={firstText} label={t('Zeit bis zum Nachhaken')} />
       <SelectField variant="box" value={firstUnit} label={t('Einheit')} onchange={(e) => { firstUnit = e.currentTarget.value as Unit; }}>
@@ -210,16 +216,16 @@
 
   {#if spec}
     <div class="px-1 pt-1 text-[15px] font-extrabold tracking-tight">{t('Danach wiederholen?')}</div>
-    <div class="flex flex-wrap gap-2" role="group" aria-label={t('Danach wiederholen?')} data-testid="nag-repeat">
-      <Chip active={repeatChoice === 'no'} pressed={repeatChoice === 'no'} onclick={() => pickRepeat('no')}>{t('Nein')}</Chip>
+    <div class="list-group !mt-0" role="group" aria-label={t('Danach wiederholen?')} data-testid="nag-repeat">
+      {@render choice(t('Nein'), repeatChoice === 'no', () => pickRepeat('no'))}
       {#each REPEAT_PRESETS as p (p.id)}
-        <Chip active={repeatChoice === p.id} pressed={repeatChoice === p.id} onclick={() => pickRepeat(p.id)}>{REPEAT_LABEL[p.id]}</Chip>
+        {@render choice(REPEAT_LABEL[p.id], repeatChoice === p.id, () => pickRepeat(p.id))}
       {/each}
-      <Chip active={repeatChoice === 'custom'} pressed={repeatChoice === 'custom'} onclick={() => pickRepeat('custom')}>{t('Eigene …')}</Chip>
+      {@render choice(t('Eigene …'), repeatChoice === 'custom', () => pickRepeat('custom'))}
     </div>
 
     {#if repeatChoice === 'custom' && spec.everyMin !== null}
-      <div class="flex items-center gap-2 rounded-row border border-line bg-surface px-3.5 py-3 text-[15px]" data-testid="nag-repeat-custom">
+      <div class="flex items-center gap-2 rounded-row bg-surface px-3.5 py-3 text-[15px]" data-testid="nag-repeat-custom">
         <span class="font-bold">{tx('Wiederholung', 'Alle')}</span>
         <NumberField bind:value={everyText} label={t('Abstand')} />
         <SelectField variant="box" value={everyUnit} label={t('Einheit')} onchange={(e) => { everyUnit = e.currentTarget.value as Unit; }}>
@@ -242,7 +248,7 @@
       </ListRow>
     {/if}
 
-    <div class="rounded-row border border-accent/40 bg-surface px-3.5 py-3" data-testid="nag-plan">
+    <div class="rounded-row bg-surface px-3.5 py-3" data-testid="nag-plan">
       <div class="text-[13px] text-fg2">{planTitle}</div>
       <div class="mt-2 flex flex-wrap gap-1.5">
         {#each steps as s, i (i)}

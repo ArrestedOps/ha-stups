@@ -230,7 +230,7 @@
 {/snippet}
 
 {#snippet radio(id: Handling, title: string, sub: string, body: import('svelte').Snippet | null)}
-  <div class="rounded-row border bg-surface {handling === id ? 'border-accent shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_16%,transparent)]' : 'border-line'}" data-handling={id}>
+  <div class="rounded-row bg-surface {handling === id ? 'ring-2 ring-accent' : ''}" data-handling={id}>
     <button type="button" role="radio" aria-checked={handling === id} class="flex min-h-14 w-full items-start gap-3 px-3.5 pt-3 pb-2.5 text-left" onclick={() => setHandling(id)}>
       <span class="mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 {handling === id ? 'border-accent' : 'border-ring'}">
         {#if handling === id}<span class="h-[10px] w-[10px] rounded-full bg-accent"></span>{/if}
@@ -247,7 +247,7 @@
 <div class="flex flex-col gap-3" data-testid="recurrence-editor">
   {#if editor.mode !== 'none' && current}
     <!-- Vorschau: der Rhythmus und die nächsten Termine -->
-    <div class="rounded-row border border-accent/40 bg-surface px-3.5 py-3" data-testid="recurrence-preview">
+    <div class="rounded-row bg-surface px-3.5 py-3" data-testid="recurrence-preview">
       <div class="text-[16px] font-extrabold tracking-tight">{describeRecurrence(current)}</div>
       <div class="mt-0.5 text-[13px] text-fg2">{auto ? t('Erster Termin wird automatisch gesetzt:') : t('Nächste Termine:')}</div>
       <div class="mt-2 flex flex-wrap gap-1.5">
@@ -257,15 +257,20 @@
   {/if}
 
   <div class="px-1 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Wie oft?')}</div>
-  <div class="flex flex-wrap gap-2" role="group" aria-label={t('Wie oft?')}>
+  <!-- Auswahlliste wie in iOS: eine Zeile je Rhythmus, die gewählte mit Haken -->
+  <div class="list-group !mt-0" role="group" aria-label={t('Wie oft?')}>
     {#each PRESETS as p (p.id)}
-      <Chip active={activeChip === p.id} pressed={activeChip === p.id} onclick={() => pick(p)}>{p.label()}</Chip>
+      <button type="button" class="flex h-[46px] w-full items-center justify-between px-4 text-left text-[17px]" aria-pressed={activeChip === p.id} onclick={() => pick(p)}>
+        {p.label()}{#if activeChip === p.id}<span class="text-accent-text"><Icon name="check" size={20} stroke={2.6} /></span>{/if}
+      </button>
     {/each}
-    <Chip active={activeChip === 'custom'} pressed={activeChip === 'custom'} onclick={openCustom}>{t('Eigene …')}</Chip>
+    <button type="button" class="flex h-[46px] w-full items-center justify-between px-4 text-left text-[17px]" aria-pressed={activeChip === 'custom'} onclick={openCustom}>
+      {t('Eigene …')}{#if activeChip === 'custom'}<span class="text-accent-text"><Icon name="check" size={20} stroke={2.6} /></span>{/if}
+    </button>
   </div>
 
   {#if activeChip === 'custom' && base}
-    <div class="flex items-center gap-2 rounded-row border border-line bg-surface px-3.5 py-3 text-[15px]" data-testid="recurrence-custom">
+    <div class="flex items-center gap-2 rounded-row bg-surface px-3.5 py-3 text-[15px]" data-testid="recurrence-custom">
       <span class="font-bold">{editor.mode === 'after' ? tx('Wiederholung', 'Nach') : tx('Wiederholung', 'Alle')}</span>
       <NumberField bind:value={everyText} label={t('Abstand')} />
       <SelectField variant="box" value={base.freq} onchange={(e) => { editor = withBase(editor, e.currentTarget.value as Freq, base.every); commit(); }} label={t('Einheit')}>
@@ -358,7 +363,7 @@
   {/if}
 
   {#if editor.mode !== 'none'}
-    <fieldset class="rounded-xl border border-line px-3 py-2" aria-label={t('Für die nächste Aufgabe übernehmen')}>
+    <fieldset class="rounded-row bg-surface px-4 py-2" aria-label={t('Für die nächste Aufgabe übernehmen')}>
       <legend class="px-1 text-[13px] font-semibold text-fg2">{t('Für die nächste Aufgabe übernehmen')}</legend>
       {#each CARRY_OPTIONS as o (o.field)}
         <label class="flex min-h-10 items-center justify-between gap-3 text-[15px]">

@@ -265,7 +265,7 @@
 
       {#if ed.item}
         <SectionHeader title={t('Status')} />
-        <div class="flex flex-col gap-2">
+        <div class="list-group !mt-0">
           <ListRow wrap title={t('Zähler')}>
             {#snippet right()}
               <span class="flex items-center gap-3 text-[14px] text-fg2">
@@ -294,7 +294,7 @@
         </div>
 
         {#if !readOnly}
-          <div class="flex flex-col gap-2">
+          <div class="list-group !mt-0">
             <ListRow wrap title={f.active ? t('Pausieren') : t('Wieder aktivieren')} onclick={() => ed.togglePause()}>
               {#snippet tile()}<Tile color="gray"><Icon name="bell-off" size={22} stroke={1.8} /></Tile>{/snippet}
             </ListRow>

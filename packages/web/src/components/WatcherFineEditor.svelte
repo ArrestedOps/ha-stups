@@ -35,7 +35,7 @@
   const showCount = $derived(f.kind !== 'calendar_event' && f.kind !== 'forecast');
 </script>
 
-<div class={columns ? 'grid grid-cols-1 gap-2 @min-[640px]:grid-cols-2' : 'flex flex-col gap-2'} data-testid="fine-editor">
+<div class={columns ? 'grid grid-cols-1 gap-2 @min-[640px]:grid-cols-2' : 'list-group !mt-0'} data-testid="fine-editor">
   <ListRow wrap title={t('Erledigt sich selbst')}>
     {#snippet tile()}<Tile color="blue"><Icon name="door" size={22} stroke={1.8} /></Tile>{/snippet}
     {#snippet meta()}<span class="wrap-anywhere">{doneMeta}</span>{/snippet}

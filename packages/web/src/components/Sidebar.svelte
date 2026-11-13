@@ -106,6 +106,10 @@
       </button>
     {/each}
 
+    <div class="side-head mt-4 flex items-center justify-between" style:order="20">
+      <button class="-mx-1 rounded-md px-1 text-left" id="side-boards" aria-current={ui.tab === 'boards' ? 'page' : undefined} onclick={() => selectTab('boards')}>Boards</button>
+      <button class="-mr-1 flex h-6 w-6 items-center justify-center rounded-md text-text-soft hover:bg-surface2" aria-label={t('Neues Board')} onclick={() => openSheet({ type: 'newBoard' })}><Icon name="plus" size={14} stroke={2.2} /></button>
+    </div>
     <p class="side-head mt-4" style:order="30">{t('Mehr')}</p>
     <button style:order="30" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-current={ui.tab === 'tasks' && ui.tasksCalendar ? 'page' : undefined} onclick={() => goTasks('calendar')}>
       <Icon name="calendar" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{t('Kalender')}</span>
@@ -115,9 +119,6 @@
         <Icon name="shield" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{t('Wächter')}</span>
       </button>
     {/if}
-    <button style:order="30" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium {ui.tab === 'boards' ? '' : 'sr-only'}" aria-current={ui.tab === 'boards' ? 'page' : undefined} onclick={() => selectTab('boards')} tabindex={ui.tab === 'boards' ? 0 : -1}>
-      <Icon name="layers" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">Boards</span>
-    </button>
 
     {#if !ui.isChild}
       <p class="side-head mt-4" style:order="40">{t('Personen')}</p>
@@ -138,10 +139,6 @@
   </nav>
 
   <nav class="contents" aria-labelledby="side-boards">
-    <p class="side-head mt-4 flex items-center justify-between" id="side-boards" style:order="20">
-      <span>Boards</span>
-      <button class="-mr-1 flex h-6 w-6 items-center justify-center rounded-md text-text-soft hover:bg-surface2" aria-label={t('Neues Board')} onclick={() => openSheet({ type: 'newBoard' })}><Icon name="plus" size={14} stroke={2.2} /></button>
-    </p>
     {#if showBoards}
       {#each ui.boards as b (b.id)}
         {@const current = ui.tab === 'boards' && b.id === ui.boardId}

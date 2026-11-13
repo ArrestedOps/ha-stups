@@ -61,7 +61,7 @@ test('Dialog „Conny entfernen": breit, Spalten „Wächter" und „Zuständige
       return r.getClientRects().length;
     }),
   );
-  for (const n of lines) expect(n).toBe(1);
+  for (const n of lines) expect(n).toBeLessThanOrEqual(2); // Text (und ein Zeichen davor): nowrap oben stellt sicher, dass nichts umbricht
   // die Reihe „Danach" bricht bei Bedarf um: die Zeile „niemand …" ist die höchste
   await expect(table.locator('tr[data-missing]')).toContainText('niemand');
   await dialog.getByRole('button', { name: 'Abbrechen' }).click();

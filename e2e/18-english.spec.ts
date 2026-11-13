@@ -89,7 +89,7 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   await noSideScroll(page);
 
   // Tag, Woche, Monat (der frühere Kalender): eine Seite unter Aufgaben, der Kalender-Knopf der Wochenleiste öffnet sie
-  await page.getByRole('button', { name: 'Open calendar' }).click();
+  await nav.getByRole('button', { name: 'Calendar' }).click();
   const views = page.getByRole('radiogroup', { name: 'View' });
   await expect(views.getByRole('radio', { name: 'Week', exact: true })).toBeVisible();
   await views.getByRole('radio', { name: 'Week', exact: true }).click();
@@ -97,14 +97,14 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   await noSideScroll(page);
   await views.getByRole('radio', { name: 'Month', exact: true }).click();
   await noSideScroll(page);
-  await page.getByRole('button', { name: 'Tasks', exact: true }).first().click(); // „‹ Tasks" oben links
+  await nav.getByRole('button', { name: 'Tasks' }).click();
 
   await nav.getByRole('button', { name: 'Watchers' }).click();
   await noGerman(page, 'Zuhause');
   await noSideScroll(page);
 
   await nav.getByRole('button', { name: 'Boards' }).click();
-  await page.getByTestId('board-list').getByRole('button').first().click();
+  await page.getByTestId('board-list').getByRole('button', { name: /English test 2/ }).click();
   await page.getByRole('group', { name: 'People' }).getByRole('button', { name: 'All', exact: true }).click(); // Boards starts at „Mine“
   await page.getByRole('button', { name: /^Dentist/ }).click();
   const dialog = page.getByRole('dialog');

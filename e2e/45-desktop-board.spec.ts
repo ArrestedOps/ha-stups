@@ -9,7 +9,7 @@ const tag = `${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
 const ENTITY = 'sensor.iphone_rene_battery_level';
 const created: string[] = [];
 const side = (page: Page) => page.getByTestId('sidebar');
-const sideBoards = (page: Page) => side(page).getByRole('navigation', { name: 'Boards' });
+const sideBoards = (page: Page) => side(page);
 
 type B = { id: string; name: string };
 const list = async (request: APIRequestContext) => (await (await request.get('/api/boards')).json()) as B[];

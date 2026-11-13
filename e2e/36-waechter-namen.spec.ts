@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Wächter aus Vorlagen nennen das Gerät, der Assistent hat in jedem Schritt ein
 // „Zurück", und Batterie-Wächter stehen unter „Ruhig" statt unter „Läuft gerade".
@@ -91,7 +91,8 @@ test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Name
   // Übersicht: beide stehen in der Kategorie „Batterien", nach Namen sortiert, mit dem aktuellen Wert
   await page.keyboard.press('Escape');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  const quiet = page.getByTestId('watcher-category').filter({ hasText: 'Batterien' });
+  await openWatcherCategory(page, 'Batterien');
+  const quiet = page.getByTestId('watcher-page');
   const rows = quiet.getByRole('button', { name: 'Wächter Batterie schwach öffnen' });
   await expect(rows).toHaveCount(2);
   await expect(rows.first()).toContainText('Bad Fenster Batterie');
@@ -195,7 +196,8 @@ test('Bestehende Wächter: Gerät immer unter dem Namen (nach Gerät sortiert), 
   await page.goto('/');
   await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  const quiet = page.getByTestId('watcher-categories');
+  await openWatcherCategory(page, 'Ohne Kategorie');
+  const quiet = page.getByTestId('watcher-page');
   // Zeile unter dem Namen: Friendly Name der Entität, alphabetisch (Bad, iPhone, sensor.flur …), eine Zeile
   const subjects = quiet.getByTestId('watcher-subject');
   await expect(subjects).toHaveCount(4);
@@ -236,7 +238,8 @@ test('Batterie über der Schwelle steht unter „Ruhig" mit dem Wert, nie unter 
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('watcher-categories')).toBeVisible();
   await expect(page.getByTestId('home-running')).toHaveCount(0);
-  await expect(page.getByTestId('watcher-categories').getByTestId('watcher-value')).toHaveText('26 %');
+  await openWatcherCategory(page, 'Ohne Kategorie');
+  await expect(page.getByTestId('watcher-page').getByTestId('watcher-value')).toHaveText('26 %');
   await request.post(`${MOCK}/mock/state`, { data: { entityId: FLUR, state: '85' } });
   await clearWatchers(request);
 });

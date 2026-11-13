@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter": nachgebautes Home Assistant (e2e/server-ha.mjs). Der Reiter Wächter zeigt den Zustand der Wächter;
 // Aufgaben zeigt, was vom Haus kam, mit Erledigen und Weitergeben.
@@ -53,7 +53,9 @@ test('Wächter: läuft gerade → wartet auf jemanden; Aufgaben zeigt die Aufgab
   await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   // Alle Wächter sind immer sichtbar: ohne Kategorie steht er unter „Ohne Kategorie"
-  await expect(page.getByTestId('watcher-categories')).toContainText(name);
+  await openWatcherCategory(page, 'Ohne Kategorie');
+  await expect(page.getByTestId('watcher-page')).toContainText(name);
+  await page.getByTestId('watcher-page').getByRole('button', { name: 'Wächter', exact: true }).click(); // zurück zur Übersicht
 
   // Die Maschine läuft: Leistung über der Schwelle
   await setState(request, 'sensor.waschmaschine_leistung', '120');

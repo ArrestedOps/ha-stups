@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant, Handy 390 × 844). Reiter Wächter: alle Wächter immer sichtbar, in Kategorien zum
 // Zu- und Aufklappen, je Wächter ein Schalter „aktiv/aus", Kategorie beim Anlegen vorgeschlagen, Sammelknopf „Kategorien vorschlagen".
@@ -101,6 +101,7 @@ test('Schalter: aus löst nicht mehr aus (der Server entscheidet), an wieder; di
   const cards = async () => ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string }[] }).cards.filter((c) => c.title.startsWith(`Aufgabe ${name}`));
 
   await openList(page, s);
+  await openWatcherCategory(page, 'Test');
   const sw = page.getByRole('switch', { name: `${name} aktiv` });
   await expect(sw).toBeEnabled();
   await expect(sw).toHaveAttribute('aria-checked', 'true');
@@ -137,11 +138,12 @@ test('Mitglied ohne Recht: der Schalter ist sichtbar, aber gesperrt; der Server 
   try {
     await conny.goto('/');
     await conny.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
+    // die Kategorien sind zu sehen, auch ohne Recht
+    await expect(conny.getByTestId('watcher-category').filter({ hasText: 'Test' })).toBeVisible();
+    await openWatcherCategory(conny, 'Test');
     const sw = conny.getByRole('switch', { name: `${name} aktiv` });
     await expect(sw).toBeVisible();
     await expect(sw).toBeDisabled();
-    // die Kategorien sind zu sehen, auch ohne Recht
-    await expect(conny.getByTestId('watcher-category').filter({ hasText: 'Test' })).toBeVisible();
     // Banner „Kategorien vorschlagen" nur mit Recht
     await expect(conny.getByTestId('home-categorize')).toHaveCount(0);
     expect((await ctx.request.patch(`/api/watchers/${id}`, { data: { active: false }, headers: { 'x-stups-client': 'e2e' } })).status()).toBe(403);
@@ -203,7 +205,8 @@ test('Neuer Wächter: die Kategorie wird vorgeschlagen und vorbelegt; eine eigen
   await expect(groups.nth(1)).toContainText('Haus & Garten');
 
   // 3) im Editor ändern (Chip „Kategorie: …"): wird zusammengelegt
-  await groups.nth(1).getByRole('button', { name: /^Wächter .* öffnen$/ }).click();
+  await openWatcherCategory(page, 'Haus & Garten');
+  await page.getByTestId('watcher-page').getByRole('button', { name: /^Wächter .* öffnen$/ }).click();
   await d.getByRole('button', { name: /^Kategorie: Haus & Garten$/ }).click();
   await d.getByTestId('category-field').locator('select').selectOption('Batterien');
   await d.getByRole('button', { name: 'Speichern', exact: true }).first().click();

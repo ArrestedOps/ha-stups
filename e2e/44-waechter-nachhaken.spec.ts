@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter“ (nachgebautes Home Assistant, Handy): Stupsen, wenn noch offen, als Aufgabe mit Zeilen und dem Beispiel darin;
 // die Regel kommt als Erinnerung an der Aufgabe beim Anlegen an.
@@ -32,6 +33,7 @@ test('Aufgabe mit Zeilen Nach / Wiederholen alle / Höchstens, Beispiel in der A
   await page.addInitScript((b) => localStorage.setItem('stups.board', b), s.boardId);
   await page.goto('/');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  await openWatcherCategory(page, 'Ohne Kategorie');
   await page.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
   const d = page.getByRole('dialog');
   await d.getByRole('group', { name: 'Feinschliff' }).getByRole('button', { name: 'Stupsen nach 30 Min., alle 30 Min., 3 ×' }).click();

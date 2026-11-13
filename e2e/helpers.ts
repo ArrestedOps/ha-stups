@@ -84,11 +84,16 @@ export async function pickDue(page: Page, due: string): Promise<void> {
 /** Das Fenster „Neue Aufgabe“ (der Titel steht im Feld „Was steht an?“) */
 export const newTaskSheet = (page: Page) => page.getByRole('dialog', { name: 'Neue Aufgabe' });
 
-/** Wächter am Handy: die Kategorie ist eine eigene Seite; öffnet sie (ohne Namen: die erste Kategorie). Am Desktop steht alles in der Tabelle, dort tut es nichts. */
+/**
+ * Wächter am Handy: die Kategorie ist eine eigene Seite; öffnet sie (ohne Namen: die erste Kategorie). Steht der Wächter oben in einem Bereich
+ * (Läuft gerade, Kommt bald, Wartet, Problem) und gibt es die Kategorie nicht, bleibt die Übersicht. Am Desktop steht alles in der Tabelle.
+ */
 export async function openWatcherCategory(page: Page, name?: string | RegExp): Promise<void> {
-  const cats = page.getByTestId('watcher-category');
   if ((await page.getByTestId('watcher-table-head').count()) > 0) return;
-  await expect(cats.first()).toBeVisible();
-  await (name ? cats.filter({ hasText: name }) : cats).first().getByRole('button').click();
+  await expect(page.getByTestId('watcher-list')).toBeVisible();
+  const cats = page.getByTestId('watcher-category');
+  const target = name ? cats.filter({ hasText: name }) : cats;
+  if ((await target.count()) === 0) return;
+  await target.first().getByRole('button').click();
   await expect(page.getByTestId('watcher-page')).toBeVisible();
 }

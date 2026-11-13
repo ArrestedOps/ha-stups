@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Wächter und die Personen eines Boards: Board-Auswahl mit „Wer sieht es", Zeile
 // „Zählt zur Fairness", Person aus dem Board entfernen (Dialog mit allen betroffenen Wächtern), Wächter ohne Zuständige (ganz oben mit rotem Rand,
@@ -58,6 +58,7 @@ async function openWatchers(page: Page) {
 
 test('Wächter-Editor: Board-Auswahl mit „Wer sieht es", private Boards nicht wählbar, „Wer?" nur aus dem Board, Zeile „Zählt zur Fairness"', async ({ page }) => {
   await openWatchers(page);
+  await openWatcherCategory(page);
   await page.getByRole('button', { name: `Wächter Waschmaschine ${tag} öffnen` }).click();
   const d = page.getByRole('dialog');
   await expect(d.getByTestId('fairness-row')).toBeVisible();

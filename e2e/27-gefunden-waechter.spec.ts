@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Gefunden: Stups erkennt Geräte und füllt den Assistenten vor;
 // „Testen" (Probelauf) rechnet die Regel auf die Historie der letzten 7 Tage.
@@ -69,7 +69,8 @@ test('Gefunden: Hinweis im Reiter Wächter, Treffer mit Begründung, Wächter au
   // Der Trockner steht jetzt im Reiter Wächter (ruhig) und fehlt in „Gefunden"
   await page.keyboard.press('Escape');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  await expect(page.getByTestId('watcher-categories')).toContainText('Trockner fertig');
+  await openWatcherCategory(page);
+  await expect(page.getByTestId('watcher-page')).toContainText('Trockner fertig');
 });
 
 test('Probelauf: ohne Historie ein Hinweis statt eines Diagramms; Wackeln wird genannt', async ({ page, request }) => {

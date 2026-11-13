@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Board löschen mit der Wahl je Wächter (Pausieren, Umziehen, Löschen), die
 // pausierten Wächter oben in der Liste mit rotem Rand („Pausiert: Board fehlt"), Wiederherstellen aus dem Papierkorb lässt sie wieder laufen;
@@ -98,6 +98,7 @@ test('Löschen: je Wächter Pausieren, Umziehen oder Löschen; pausierte stehen 
   expect(await watcher(request, pause)).toMatchObject({ active: true, pausedBy: null });
   await page.reload();
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  await openWatcherCategory(page);
   await expect(page.getByTestId('watcher-row').filter({ hasText: `Waschmaschine ${tag}` })).toBeVisible();
   await expect(page.getByTestId('home-problems').filter({ hasText: `Waschmaschine ${tag}` })).toHaveCount(0);
 });

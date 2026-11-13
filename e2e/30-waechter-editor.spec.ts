@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Wächter-Editor: Assistent in vier Schritten (mit „Reihum" vorausgewählt),
 // Ablauf beim Bearbeiten mit Verlauf der Entität, Mitglied nur lesend.
@@ -255,7 +255,8 @@ test('Sehr lange Entitätsnamen brechen um und machen die Seite nicht breiter (A
   await page.goto('/');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   // Die Batterie (Pegel, kein Vorgang) steht in ihrer Kategorie, nicht unter „Läuft gerade"
-  await expect(page.getByTestId('watcher-categories')).toContainText(name);
+  await openWatcherCategory(page, 'Ohne Kategorie');
+  await expect(page.getByTestId('watcher-page')).toContainText(name);
   await expect(page.getByTestId('home-running').filter({ hasText: name })).toHaveCount(0);
   await page.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
   const dialog = page.getByRole('dialog');

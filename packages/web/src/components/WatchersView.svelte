@@ -84,7 +84,19 @@
   let pageQuery = $state('');
   let pageFilter = $state<'all' | 'active' | 'off'>('all');
   let pageLimit = $state(PAGE_SIZE);
-  const pageGroup = $derived(page ? (layout.groups.find((g) => g.key === page) ?? null) : null);
+  /** Handy: alle Wächter einer Kategorie, auch die gerade laufenden oder wartenden (sie stehen oben zusätzlich); so wandert keiner beim Umschalten aus der Seite */
+  const phoneGroups = $derived.by(() => {
+    const byKey = new Map<string, { key: string; name: string | null; items: HomeItem[] }>();
+    for (const i of items) {
+      const key = categoryKeyOf(i.category);
+      let g = byKey.get(key);
+      if (!g) byKey.set(key, (g = { key, name: i.category?.trim() ? i.category.trim().replace(/\s+/g, ' ') : null, items: [] }));
+      g.items.push(i);
+    }
+    for (const g of byKey.values()) g.items.sort((a, b) => a.name.localeCompare(b.name) || (a.subject ?? '').localeCompare(b.subject ?? '') || a.watcherId.localeCompare(b.watcherId));
+    return [...byKey.values()].sort((a, b) => (a.name === null ? 1 : b.name === null ? -1 : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })));
+  });
+  const pageGroup = $derived(page ? (phoneGroups.find((g) => g.key === page) ?? null) : null);
   function openPage(key: string) {
     page = key;
     pageQuery = '';
@@ -455,12 +467,12 @@
             {/if}
           {/each}
 
-          {#if layout.groups.length > 0}
+          {#if ui.desktop ? layout.groups.length > 0 : phoneGroups.length > 0}
             {#if !ui.desktop}
               <section aria-label={t('Kategorien')} data-testid="watcher-categories">
-                <SectionHeader title={t('Kategorien')} count={layout.groups.length} large />
+                <SectionHeader title={t('Kategorien')} count={phoneGroups.length} large />
                 <ul class="list-group">
-                  {#each layout.groups as g (g.key)}
+                  {#each phoneGroups as g (g.key)}
                     <li data-testid="watcher-category" data-category={g.name ?? ''}>
                       <ListRow title={g.name ?? t('Ohne Kategorie')} label={t('Kategorie {name} öffnen', { name: g.name ?? t('Ohne Kategorie') })} onclick={() => openPage(g.key)}>
                         {#snippet tile()}<Tile color="gray"><Icon name="folder" size={24} /></Tile>{/snippet}

@@ -58,7 +58,7 @@
 
 {#snippet zone()}
   <div
-    class="flex min-h-28 flex-col gap-2 {ui.desktop ? 'flex-1' : ''}"
+    class="flex min-h-28 flex-col {ui.desktop ? 'flex-1 gap-2' : 'list-group !mt-0 !min-h-0'}"
     use:dndzone={{
       items,
       type: 'card',

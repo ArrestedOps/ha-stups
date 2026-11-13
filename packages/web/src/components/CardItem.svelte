@@ -194,8 +194,10 @@
         </div>
       </div>
     {:else}
+      {#snippet symbol()}<CardTile {card} />{/snippet}
       <ListRow
         variant="task"
+        tile={card.icon ? symbol : undefined}
         title={card.title}
         strike={isDoneColumn}
         check={{
@@ -207,11 +209,8 @@
         }}
         onclick={() => !suppressClick && openSheet({ type: 'card', id: card.id })}
       >
-        {#snippet tile()}
-          <CardTile {card} />
-        {/snippet}
         {#snippet meta()}
-          <span class="flex min-w-0 items-center gap-1.5">
+          <span class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0">
             {#if waiting}
               <span class="flex shrink-0 items-center gap-1 font-semibold text-accent-text" data-testid="card-waiting"><Icon name="clock" size={13} />{t('Wartet auf Bestätigung')}</span>
             {/if}
@@ -224,7 +223,7 @@
                 <Icon name="hand" size={12} />{t('Du hast {names} gestupst', { names: names(nudge.fromMe.map((n) => n.toId)) })}
               </span>
             {/if}
-            <CardMeta {card} done={isDoneColumn} {overdue} {categories} />
+            <CardMeta {card} done={isDoneColumn} {overdue} {categories} wrap showBoard={false} />
           </span>
         {/snippet}
         {#snippet right()}

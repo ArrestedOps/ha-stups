@@ -179,8 +179,9 @@ test('Aufgaben: nach rechts wischen erledigt, nach links liegen „Später“ un
   const s = await seed(request);
   const done = `Wischen ${s.tag}`;
   const later = `Spaeter ${s.tag}`;
-  await s.mk(done, { assigneeIds: [s.me], dueAt: new Date(Date.now() + 2 * 3_600_000).toISOString() });
-  const l = await s.mk(later, { assigneeIds: [s.me], dueAt: new Date(Date.now() + 3 * 3_600_000).toISOString() });
+  // beide Termine liegen in wenigen Minuten, also heute (+3 Stunden würde abends über Mitternacht reichen: dann wäre „morgen“ schon der Termin und „Später“ änderte nichts)
+  await s.mk(done, { assigneeIds: [s.me], dueAt: new Date(Date.now() + 2 * 60_000).toISOString() });
+  const l = await s.mk(later, { assigneeIds: [s.me], dueAt: new Date(Date.now() + 3 * 60_000).toISOString() });
   await page.goto('/');
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
   const tasks = page.getByTestId('tasks');

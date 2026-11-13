@@ -87,8 +87,9 @@ test('Reihenfolge ändern über die Seitenleiste: die Seitenleiste folgt, die Re
   await page.goto('/');
   await sideBoards(page).getByRole('button', { name: 'Reihenfolge ändern' }).click();
   const sheet = page.getByRole('dialog', { name: 'Reihenfolge' });
-  await sheet.getByRole('button', { name: `Zwei ${tag} nach oben` }).click();
-  await sheet.getByRole('button', { name: `Zwei ${tag} nach oben` }).click();
+  // „Zwei“ ganz nach oben schieben (wie viele Boards davor stehen, hängt von den anderen Tests ab)
+  const up = sheet.getByRole('button', { name: `Zwei ${tag} nach oben` });
+  for (let i = 0; i < 20 && (await up.isEnabled()); i += 1) await up.click();
   await sheet.getByRole('button', { name: 'Fertig' }).click();
   await expect.poll(async () => (await list(request)).map((x) => x.id).filter((id) => [a.id, b.id].includes(id))).toEqual([b.id, a.id]);
   const names = await sideBoards(page).getByRole('button', { name: new RegExp(`^(Eins|Zwei) ${tag}`) }).allInnerTexts();

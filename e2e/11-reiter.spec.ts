@@ -85,7 +85,7 @@ test('Kopfzeile: auf jedem Reiter das Zahnrad oben rechts öffnet die Einstellun
   }
 });
 
-test('Die Einstellungen haben keine Zeile „Wächter", die Verwaltung öffnet im Reiter Wächter über „Alle Wächter verwalten"', async ({ page }) => {
+test('Die Einstellungen haben keine Zeile „Wächter", im Reiter Wächter gibt es keinen Knopf „Alle Wächter verwalten" mehr', async ({ page }) => {
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
@@ -94,6 +94,7 @@ test('Die Einstellungen haben keine Zeile „Wächter", die Verwaltung öffnet i
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
-  await expect(page.getByRole('dialog').getByText('Aufgaben, die von selbst aus Home Assistant entstehen')).toBeVisible();
+  await expect(page.getByTestId('home')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Alle Wächter verwalten' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Neuer Wächter', exact: true })).toBeVisible();
 });

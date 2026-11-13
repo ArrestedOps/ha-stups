@@ -161,15 +161,12 @@ test('Wächter: „wer ist zu Hause" findet die Personen über ihren Namen, die 
   await expect.poll(completedAt, { timeout: 10_000 }).not.toBeNull();
 });
 
-test('Wächter zeigt beide Wächter, die Verwaltung öffnet über „Alle Wächter verwalten“', async ({ page }) => {
+test('Wächter zeigt beide Wächter und die letzte Aktivität', async ({ page }) => {
   await anmelden(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('home')).toContainText('Saugroboter');
   await expect(page.getByTestId('home')).toContainText('Zweiter Roboter');
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
-  await expect(page.getByTestId('watcher-card').filter({ hasText: 'Saugroboter' })).toBeVisible();
-  await expect(page.getByTestId('watcher-card').filter({ hasText: 'Zweiter Roboter' })).toBeVisible();
-  await expect(page.getByTestId('watcher-activity')).toContainText('Aufgabe angelegt');
+  await expect(page.getByTestId('home-activity')).toContainText('Aufgabe angelegt');
 });
 
 test('Sensoren: die Zähler stehen in Home Assistant (Zustände über den Token geschrieben)', async ({ request }) => {

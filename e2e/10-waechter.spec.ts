@@ -35,15 +35,14 @@ async function setup(request: APIRequestContext) {
 const cardsOf = async (request: APIRequestContext, boardId: string) =>
   ((await (await request.get(`/api/boards/${boardId}`)).json()) as { cards: { id: string; title: string; columnId: string; assigneeIds: string[]; completedAt: string | null; dueAt: string | null; watcherId: string | null }[] }).cards;
 
-/** Reiter Wächter › „Alle Wächter verwalten" (die Verwaltung; die Übersicht der Einstellungen hat keine Zeile Wächter mehr) */
+/** Reiter Wächter (dort wird alles verwaltet) */
 async function openWatchersPage(page: Page) {
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
 }
 
 async function openWatcherForm(page: Page) {
   await openWatchersPage(page);
-  await page.getByRole('button', { name: 'Wächter hinzufügen' }).first().click();
+  await page.getByRole('button', { name: 'Neuer Wächter', exact: true }).first().click();
 }
 
 test('Wächter anlegen (mit Vorlage), Ereignis simulieren: Aufgabe erscheint live bei beiden, zugewiesen und mit Push', async ({ page, browser, request, baseURL }) => {

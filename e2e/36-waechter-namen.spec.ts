@@ -45,7 +45,6 @@ async function openFound(page: Page, boardId: string) {
   await page.goto('/');
   await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
   await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
 }
 
@@ -75,7 +74,6 @@ test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Name
   await expect(page.getByText('Wächter gespeichert')).toBeVisible();
 
   // der zweite Sensor aus der Vorlage (nach dem Speichern steht die Seite Wächter wieder da)
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
   await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
   await setupHit(page, 'Bad Fenster Batterie', b.boardId);
   await d.getByRole('button', { name: 'Wächter anlegen' }).click();

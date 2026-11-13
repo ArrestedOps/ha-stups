@@ -19,7 +19,6 @@
   import SettingsHead from './settings/SettingsHead.svelte';
   import TemplatesPage from './settings/TemplatesPage.svelte';
   import VoicePage from './settings/VoicePage.svelte';
-  import WatchersPage from './settings/WatchersPage.svelte';
   import logo from '../assets/stups-icon.png';
   import Icon from './Icon.svelte';
   import PeopleSheet from './PeopleSheet.svelte';
@@ -91,8 +90,6 @@
   <AccountPage />
 {:else if page === 'people'}
   <PeopleSheet />
-{:else if page === 'watchers'}
-  <WatchersPage />
 {:else if page === 'templates'}
   <TemplatesPage />
 {:else if page === 'icons'}

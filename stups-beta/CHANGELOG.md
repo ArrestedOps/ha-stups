@@ -8,7 +8,9 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Aufgaben am Desktop klappen unter ihrer Zeile auf**, wie die Wächter: zwei Spalten (links Eigenschaften, rechts Beschreibung, Checkliste, Links, Kommentare), „Erledigt“, „Stupsen“ und Schließen in einer Leiste oben. Zweiter Klick, Esc oder das X klappen sie zu. Die Detailspalte rechts gibt es nicht mehr. Am Handy ändert sich nichts.
 
-**Bitte prüfen (Testliste):** (1) Desktop › Aufgaben: Zeile anklicken, aufgeklappter Bereich direkt darunter, Titel ändern, Kommentar schreiben, „Erledigt“. (2) Andere Zeile anklicken: die erste klappt zu. (3) Esc und X klappen zu. (4) Aufgabe aus der Befehlspalette (Strg K) öffnen. (5) Rechtsklick-Menü einer Zeile.
+**Handy:** „Alle Wächter verwalten“ gibt es nicht mehr (Duplikat des Reiters Wächter); „Wächter aus Vorlagen“ steht neben „Neuer Wächter“.
+
+**Bitte prüfen (Testliste):** (0) Handy › Wächter: „Neuer Wächter“ und „Wächter aus Vorlagen“ öffnen den Assistenten bzw. „Gefunden“. (1) Desktop › Aufgaben: Zeile anklicken, aufgeklappter Bereich direkt darunter, Titel ändern, Kommentar schreiben, „Erledigt“. (2) Andere Zeile anklicken: die erste klappt zu. (3) Esc und X klappen zu. (4) Aufgabe aus der Befehlspalette (Strg K) öffnen. (5) Rechtsklick-Menü einer Zeile.
 
 ## 1.42.0-beta.6
 

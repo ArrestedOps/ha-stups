@@ -19,6 +19,7 @@
 - **Wächter am Desktop.** Wächter sind eine eigene Gruppe in der Seitenleiste (unter Boards und Kalender) mit den Filtern (Mit Problem, Wartet, Läuft gerade, Kommt bald, Pausiert) und den Kategorien. Die Seite ist eine Tabelle in voller Breite mit gleich hohen Zeilen; ein Klick klappt den ganzen Ablauf (Wenn, Dann, Wer, Erledigt sich selbst) direkt unter der Zeile auf, dort lässt er sich bearbeiten und speichern, statt in einem Fenster. „Aktivität“ ist ein Reiter neben „Wächter“ mit derselben Tabelle.
 - **Lange Wächternamen.** Der Name bekommt in der Tabelle den meisten Platz: Die Bedingung steht jetzt in der Zelle des Namens (zweite Zeile, neben dem Gerät), und ein langer Name bricht auf zwei Zeilen um, statt abgeschnitten zu werden. Die Seitenleiste zeigt jedes Board mit dem Symbol aus den Board-Einstellungen, in der Farbe des Boards.
 - **Aufgaben am Desktop klappen auf.** Ein Klick auf eine Aufgabe öffnet sie direkt unter ihrer Zeile, in zwei Spalten (links die Eigenschaften, rechts Beschreibung, Checkliste, Links und Kommentare), wie bei den Wächtern. Ein zweiter Klick, Esc oder der Schließen-Knopf klappen sie wieder zu. Die Detailspalte rechts entfällt, die Liste behält ihre volle Breite.
+- **Handy: „Alle Wächter verwalten“ entfällt.** Im Reiter Wächter wird alles verwaltet (öffnen, ein- und ausschalten, hinzufügen), deshalb sind der zusätzliche Knopf und die Einstellungsseite dahinter weg. „Wächter aus Vorlagen“ steht jetzt neben „Neuer Wächter“ im Reiter Wächter.
 
 ## 1.41.1
 

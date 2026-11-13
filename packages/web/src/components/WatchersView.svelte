@@ -13,7 +13,7 @@
   import type { SavedWatcher } from '../lib/watcher-types';
   import { categoryKeyOf, COL_LAST, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
   import { noteText, RUN_TEXT } from '../lib/watchers';
-  import { askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openNewWatcher, openSettings, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
+  import { askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
   import WatcherDesk from './WatcherDesk.svelte';
@@ -533,7 +533,7 @@
             {t('Ein Wächter beobachtet zum Beispiel die Waschmaschine und legt von selbst die Aufgabe „ausräumen" an, für jemanden, der gerade zu Hause ist.')}
           </p>
           {#if can('watchers')}
-            <button class="bg-accent-grad glow-cta mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-btn text-[17px] font-extrabold" onclick={() => (ui.desktop ? openDesk() : openSettings('watchers'))}>
+            <button class="bg-accent-grad glow-cta mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-btn text-[17px] font-extrabold" onclick={() => (ui.desktop ? openDesk() : openSheet({ type: 'watcher', id: null }))}>
               <Icon name="eye" size={18} />{t('Wächter einrichten')}
             </button>
           {:else}
@@ -657,16 +657,12 @@
           <button class="flex h-[46px] w-full items-center gap-3 px-3.5 text-left text-[17px] font-medium text-accent-text" onclick={() => openSheet({ type: 'watcher', id: null })}>
             <span class="flex h-[30px] w-[30px] items-center justify-center"><Icon name="plus" size={22} stroke={2.2} /></span>{t('Neuer Wächter')}
           </button>
+          <button class="flex h-[46px] w-full items-center gap-3 px-3.5 text-left text-[17px] font-medium text-accent-text" onclick={() => openSheet({ type: 'found' })}>
+            <span class="flex h-[30px] w-[30px] items-center justify-center"><Icon name="eye" size={20} stroke={2} /></span>{t('Wächter aus Vorlagen')}
+          </button>
         </div>
       {/if}
 
-      {#if can('watchers') && !ui.desktop}
-        <!-- Verwalten, Gefunden und Vorlagen bleiben in den Einstellungen erreichbar (am Desktop ist die Seite selbst die Verwaltung) -->
-        <ListRow title={t('Alle Wächter verwalten')} onclick={() => openSettings('watchers')}>
-          {#snippet tile()}<Tile color="gray"><Icon name="settings" size={24} /></Tile>{/snippet}
-          {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>{/snippet}
-        </ListRow>
-      {/if}
       {/if}
     </div>
   </div>

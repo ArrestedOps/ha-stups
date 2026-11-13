@@ -194,7 +194,6 @@ test('Neuer Wächter: die Kategorie wird vorgeschlagen und vorbelegt; eine eigen
   const d = page.getByRole('dialog');
 
   async function setupHit(hitText: string) {
-    await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
     await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
     await d.getByTestId('found-hit').filter({ hasText: hitText }).getByRole('button', { name: 'Einrichten' }).click();
     await expect(d.getByTestId('graph-card')).toBeVisible();

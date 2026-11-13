@@ -19,6 +19,7 @@
 - **Watchers on the desktop.** Watchers are a group of their own in the sidebar (below Boards and Calendar) with the filters (With problem, Waiting, Running, Soon, Paused) and the categories. The page is one full-width table with rows of equal height; a click opens the whole flow (When, Then, Who, Done by itself) right below the row, where you can edit and save, instead of a window. “Activity” is a tab next to “Watchers” with the same table.
 - **Long watcher names.** The watcher name now gets the most room in the table: the condition moved into the name cell (second line, next to the device) and a long name wraps onto two lines instead of being cut off. The sidebar shows each board with the symbol chosen in the board settings, in the board colour.
 - **Tasks on the desktop open in place.** A click on a task opens it right below its row, in two columns (properties on the left; description, checklist, links and comments on the right), like the watchers. A second click, Esc or the close button folds it up again. The right-hand detail column is gone, so the list keeps its full width.
+- **Phone: no more “Manage all watchers”.** The Watchers tab is where you manage them (open, switch on and off, add), so the extra button and the settings page behind it are gone. “Watchers from templates” now sits next to “New watcher” on the Watchers tab.
 
 ## 1.41.1
 

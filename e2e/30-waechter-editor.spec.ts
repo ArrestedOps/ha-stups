@@ -225,8 +225,7 @@ test('ohne Verlauf: ein Hinweis statt des Diagramms, der Assistent bleibt bedien
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
-  await page.getByRole('button', { name: 'Wächter hinzufügen' }).first().click();
+  await page.getByRole('button', { name: 'Neuer Wächter', exact: true }).first().click();
   const d = page.getByRole('dialog');
   await d.getByRole('button', { name: 'Entität wählen' }).click();
   await d.getByLabel('Entität suchen').fill('bad fenster');

@@ -2,7 +2,7 @@ import { api, ApiError, type BoardView, type HaEntity, type SavedWatcher, type W
 import { boardCounts, boardPeople, watcherBoardOption } from './boardAccess';
 import { t } from './i18n/index.svelte';
 import type { EntityHistory } from './history';
-import { can, closeSheet, openSettings, openSheet, toast, ui } from './store.svelte';
+import { can, closeSheet, openSheet, toast, ui } from './store.svelte';
 import type { OrderView, TemplateDraft, WatcherSuggestion, WatcherTemplate } from './watcher-types';
 import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, withCategory, type WatcherForm } from './watchers';
 import { askCard, metNowOf } from './watcher-ask';
@@ -73,12 +73,10 @@ export class WatcherEditor {
     this.onback = opts.onback;
   }
 
-  /** Aus Einstellungen › Wächter geht es dorthin zurück; aus dem Reiter Wächter schließt es das Fenster, von anderswo geht es in die Einstellungen */
+  /** Schließt das Fenster (der Reiter Wächter steht darunter); in der Einrichtung bestimmt `onback`, wohin es geht */
   back = (): void => {
     if (this.onback) return this.onback();
-    const fromSettings = ui.sheet?.type === 'watcher' && ui.sheet.from === 'settings';
-    if (!fromSettings && ui.tab === 'watchers') closeSheet();
-    else openSettings('watchers');
+    closeSheet();
   };
 
   personName = (pid: string): string => ui.people.find((p) => p.id === pid)?.displayName ?? '?';

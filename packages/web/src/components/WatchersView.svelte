@@ -64,6 +64,8 @@
   const forScope = (i: HomeItem): boolean =>
     personScope.length === 0 || (i.assign.personIds.length === 0 ? i.assign.mode !== 'fixed' && i.assign.mode !== 'none' : i.assign.personIds.some((id) => personScope.includes(id)));
   const allItems = $derived((data?.items ?? []).filter(forScope));
+  /** Gibt es überhaupt Wächter (unabhängig von der Wahl „Ansicht für“)? Danach richten sich Leer-Zustand, Zahlen und Reiter. */
+  const hasAny = $derived((data?.items.length ?? 0) > 0);
   /** Desktop: das Suchfeld oben filtert nach Name, Gerät, Kategorie, offener Aufgabe und der Aufgabe, die danach kommt */
   let phoneQuery = $state('');
   const query = $derived((ui.desktop ? ui.query : phoneQuery).trim());
@@ -442,13 +444,13 @@
       {#if ui.desktop}
         <!-- Desktop: Leiste über der Liste: links die Zahlen, rechts „Gefunden“ und „Neuer Wächter“; der Knopf klappt das Formular darunter auf -->
         <div class="flex flex-wrap items-center gap-x-3 gap-y-2" data-testid="watchers-bar">
-          {#if data?.available && allItems.length > 0}
+          {#if data?.available && hasAny}
             <p class="flex min-w-0 flex-wrap items-baseline gap-x-2.5" data-testid="watchers-summary">
               <span class="text-[17px] font-extrabold tracking-tight">{tn('{n} Wächter', '{n} Wächter', summary.total)}</span>
               <span class="text-[14px] text-fg2">{[summary.current > 0 ? t('{n} aktuell', { n: summary.current }) : '', summary.off > 0 ? t('{n} aus', { n: summary.off }) : ''].filter(Boolean).join(' · ')}</span>
             </p>
           {/if}
-          {#if data?.available && allItems.length > 0}
+          {#if data?.available && hasAny}
             <Segmented items={[{ id: 'list', label: t('Wächter') }, { id: 'activity', label: t('Aktivität') }]} value={deskTab} label={t('Ansicht')} small onchange={(v) => (deskTab = v as typeof deskTab)} />
           {/if}
           <span class="flex-1"></span>
@@ -488,7 +490,7 @@
           <Icon name="search" size={17} stroke={2} />
           <input class="h-full min-w-0 flex-1 bg-transparent text-[17px] text-fg outline-none placeholder:text-text-soft" type="search" enterkeyhint="search" placeholder={t('Wächter, Geräte und Räume suchen')} aria-label={t('Wächter suchen')} bind:value={phoneQuery} />
         </label>
-        {#if data?.available && allItems.length > 0}
+        {#if data?.available && hasAny}
           <p class="flex flex-wrap items-baseline gap-x-2.5 px-1" data-testid="watchers-summary">
             <span class="text-[20px] font-bold">{tn('{n} Wächter', '{n} Wächter', summary.total)}</span>
             <span class="text-[15px] text-text-soft">{[summary.current > 0 ? t('{n} aktuell', { n: summary.current }) : '', summary.off > 0 ? t('{n} aus', { n: summary.off }) : ''].filter(Boolean).join(' · ')}</span>
@@ -530,7 +532,7 @@
           </p>
           <p class="mt-1 text-[15px] text-fg2">{t('Boards und Aufgaben funktionieren weiter. Sobald die Verbindung steht, erscheint hier wieder, was das Haus tut.')}</p>
         </div>
-      {:else if allItems.length === 0}
+      {:else if !hasAny}
         <div class="rounded-row bg-surface p-5" data-testid="home-empty">
           <p class="text-[17px] font-semibold">{t('Noch kein Wächter')}</p>
           <p class="mt-1 text-[15px] text-fg2">

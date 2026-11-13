@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { clock } from '../lib/clock.svelte';
   import { agenda } from '../lib/agenda.svelte';
   import { type TodayCard } from '../lib/api';
@@ -18,6 +19,7 @@
   import Icon from './Icon.svelte';
   import type { ScheduleCard } from '../lib/schedule';
   import TaskRow from './TaskRow.svelte';
+  import CardSheet from './CardSheet.svelte';
   import TaskTableRow from './TaskTableRow.svelte';
   import TopBar from './TopBar.svelte';
   import StupsCard from './StupsCard.svelte';
@@ -138,6 +140,12 @@
     }
     const gs = groupTasks(base, nowMs, tz, { withDone: v === 'done', sort: sf.sort });
     return gs.filter((g) => (v === 'all' ? g.key !== 'done' : v === 'done' ? g.key === 'done' : g.key === v));
+  });
+  // Die Aufgabe klappt unter ihrer Zeile auf: ins Bild scrollen, wenn sie unten herausragt
+  $effect(() => {
+    const id = ui.detailId;
+    if (!id || !ui.desktop) return;
+    void tick().then(() => document.querySelector('[data-testid="detail-row"]')?.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
   });
   const deskCount = $derived(deskGroups.reduce((n, g) => n + g.cards.length, 0));
   $effect(() => {
@@ -409,13 +417,21 @@
             <div class="grid px-4 text-[12px] font-medium text-text-soft" style:grid-template-columns="minmax(0,1fr) 170px 150px 92px" aria-hidden="true">
               <span class="pl-11">{t('Aufgabe')}</span><span>Board</span><span>{t('Fällig')}</span><span class="text-right">{t('Wer')}</span>
             </div>
+            {#if ui.detailId && !deskGroups.some((g) => g.cards.some((c) => c.id === ui.detailId))}
+              <div class="rounded-row bg-bg px-4 pt-3 pb-5 shadow-[inset_0_0_0_0.5px_var(--sep)]" data-testid="detail-row">{#key ui.detailId}<CardSheet inline id={ui.detailId} />{/key}</div>
+            {/if}
             {#each deskGroups as g (g.key)}
               {@const isOpen = !closed.includes(g.key)}
               <section aria-label={g.title} data-testid="group-{g.key}">
                 <SectionHeader title={g.title} count={g.cards.length} tone={g.key === 'overdue' ? 'danger' : undefined} plain open={isOpen} ontoggle={() => toggleGroup(g.key)} />
                 {#if isOpen}
                   <ul class="list-group !mt-0 desk-table">
-                    {#each g.cards as c (c.id)}<li><TaskTableRow card={c} {nowMs} showBoard /></li>{/each}
+                    {#each g.cards as c (c.id)}
+                      <li><TaskTableRow card={c} {nowMs} showBoard /></li>
+                      {#if ui.detailId === c.id}
+                        <li class="bg-bg px-4 pt-2 pb-5 shadow-[inset_0_0_0_0.5px_var(--sep)]" data-testid="detail-row">{#key c.id}<CardSheet inline id={c.id} />{/key}</li>
+                      {/if}
+                    {/each}
                   </ul>
                 {/if}
               </section>

@@ -286,8 +286,8 @@
 .list-group { display: flex; flex-direction: column; gap: 0 !important; margin-top: 8px; border-radius: var(--radius-row); background: var(--surface); overflow: hidden; }
 .list-group > li, .list-group > div { position: relative; }
 .list-group > li + li::before, .list-group > div + div::before { content: ''; position: absolute; top: 0; right: 0; left: 54px; height: 0.5px; background: var(--sep); z-index: 1; }
-.list-group [data-variant], .list-group .rounded-row { border-color: transparent !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
-.list-group .row-current, .list-group .row-new { background: color-mix(in srgb, var(--accent) 12%, transparent) !important; box-shadow: inset 3px 0 0 var(--brand-dot) !important; }
+.list-group :is([data-variant], .rounded-row):not([data-testid="detail-row"] *) { border-color: transparent !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+.list-group :is(.row-current, .row-new):not([data-testid="detail-row"] *) { background: color-mix(in srgb, var(--accent) 12%, transparent) !important; box-shadow: inset 3px 0 0 var(--brand-dot) !important; }
 
 /* Leuchtende Orange-Fläche: Knopf „+", aktiver Reiter, wichtige Knöpfe. Weiße Schrift darauf bleibt an jedem Punkt lesbar. */
 .bg-accent-grad {
@@ -696,8 +696,8 @@
 .desk-table > li + li::before { left: 0; }
 
 /* Symbol-Kacheln in gruppierten Listen: 32 px wie im Entwurf */
-.list-group .tile { width: 32px !important; height: 32px !important; border-radius: 8px !important; }
-.list-group .tile svg { width: 20px; height: 20px; }
+.list-group .tile:not([data-testid="detail-row"] *) { width: 32px !important; height: 32px !important; border-radius: 8px !important; }
+.list-group .tile:not([data-testid="detail-row"] *) svg { width: 20px; height: 20px; }
 
 /* Eigenschaften-Liste (Aufgabe): Zeilen ohne Kachel, die Trennlinie beginnt am Rand */
 .list-group.kv > li + li::before, .list-group.kv > div + div::before { left: 16px; }

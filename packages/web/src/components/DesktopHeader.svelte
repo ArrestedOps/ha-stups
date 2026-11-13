@@ -48,11 +48,11 @@
   <div class="min-w-0 flex-1">
     <div class="flex min-w-0 items-baseline gap-3">
       {#if ui.tab === 'boards' && board}<i class="block h-3 w-3 shrink-0 self-center rounded-full" style:background="var(--c-{boardKey}-fg)" aria-hidden="true"></i>{/if}
-      <h1 class="truncate {ui.detailId ? "text-[26px]" : "text-[30px]"} leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{page.title}</h1>
+      <h1 class="truncate text-[30px] leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{page.title}</h1>
       {#if ui.tab === 'boards' && board}<span class="shrink-0 text-[14px] font-medium text-text-soft">{t('{n} offen', { n: board.openCards })}</span>{/if}
-      {#if onList && !ui.detailId}<span class="shrink-0 text-[14px] font-medium text-text-soft">{tn('{n} Aufgabe', '{n} Aufgaben', ui.taskCount)}</span>{/if}
+      {#if onList}<span class="shrink-0 text-[14px] font-medium text-text-soft">{tn('{n} Aufgabe', '{n} Aufgaben', ui.taskCount)}</span>{/if}
     </div>
-    <p class="mt-1 truncate text-[14px] text-fg2 {ui.detailId ? 'max-xl:hidden xl:hidden' : ''}" data-testid={page.subTestid}>{page.sub}</p>
+    <p class="mt-1 truncate text-[14px] text-fg2" data-testid={page.subTestid}>{page.sub}</p>
   </div>
 
   {#if !ui.online}
@@ -64,12 +64,12 @@
   {#if onList}
     <div class="flex h-10 shrink-0 items-center gap-0.5 rounded-[10px] bg-surface2 p-0.5" role="radiogroup" aria-label={t('Gruppieren')}>
       {#each [['due', t('Fälligkeit')], ['board', 'Board']] as [id, label] (id)}
-        <button class="h-9 rounded-[8px] {ui.detailId ? 'px-2.5' : 'px-3'} text-[13px] font-semibold {ui.taskGroupBy === id ? 'bg-surface shadow-sm' : 'text-text-soft'}" role="radio" aria-checked={ui.taskGroupBy === id} onclick={() => (ui.taskGroupBy = id as 'due' | 'board')}>{label}</button>
+        <button class="h-9 rounded-[8px] px-3 text-[13px] font-semibold {ui.taskGroupBy === id ? 'bg-surface shadow-sm' : 'text-text-soft'}" role="radio" aria-checked={ui.taskGroupBy === id} onclick={() => (ui.taskGroupBy = id as 'due' | 'board')}>{label}</button>
       {/each}
     </div>
   {/if}
 
-  <label class="focus-ring-in flex h-12 w-[230px] shrink-0 items-center gap-2.5 rounded-[14px] border border-line-chip bg-surface px-3.5 text-text-soft hover:border-sep {ui.detailId ? 'w-[140px]' : 'xl:w-[340px]'}">
+  <label class="focus-ring-in flex h-12 w-[230px] shrink-0 items-center gap-2.5 rounded-[14px] border border-line-chip bg-surface px-3.5 text-text-soft hover:border-sep xl:w-[340px]">
     <Icon name="search" size={20} stroke={1.9} />
     <input
       id="desktop-search"
@@ -87,7 +87,7 @@
         <Icon name="x" size={16} stroke={2} />
       </button>
     {:else}
-      <kbd class="hidden shrink-0 {ui.detailId ? '' : 'xl:inline'} rounded-md border border-line-chip bg-bg px-1.5 py-0.5 font-sans text-[12px] font-semibold text-fg2" aria-hidden="true">{mac ? '⌘ K' : `${t('Strg')} K`}</kbd>
+      <kbd class="hidden shrink-0 xl:inline rounded-md border border-line-chip bg-bg px-1.5 py-0.5 font-sans text-[12px] font-semibold text-fg2" aria-hidden="true">{mac ? '⌘ K' : `${t('Strg')} K`}</kbd>
     {/if}
   </label>
 

@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.7
+
+**Aufgaben am Desktop klappen unter ihrer Zeile auf**, wie die Wächter: zwei Spalten (links Eigenschaften, rechts Beschreibung, Checkliste, Links, Kommentare), „Erledigt“, „Stupsen“ und Schließen in einer Leiste oben. Zweiter Klick, Esc oder das X klappen sie zu. Die Detailspalte rechts gibt es nicht mehr. Am Handy ändert sich nichts.
+
+**Bitte prüfen (Testliste):** (1) Desktop › Aufgaben: Zeile anklicken, aufgeklappter Bereich direkt darunter, Titel ändern, Kommentar schreiben, „Erledigt“. (2) Andere Zeile anklicken: die erste klappt zu. (3) Esc und X klappen zu. (4) Aufgabe aus der Befehlspalette (Strg K) öffnen. (5) Rechtsklick-Menü einer Zeile.
+
 ## 1.42.0-beta.6
 
 **Lange Wächternamen und Board-Symbole.** In der Wächter-Tabelle am Desktop steht die Bedingung jetzt in der zweiten Zeile unter dem Namen; ein langer Name bricht auf zwei Zeilen um und wird nicht mehr abgeschnitten. Alle Zeilen sind gleich hoch (64 px). Die Seitenleiste zeigt Boards mit dem Symbol aus den Board-Einstellungen in der Boardfarbe. Dazu: Wächter-Gruppe in der Seitenleiste, Ablauf klappt unter der Zeile auf, „Aktivität“ als Reiter (aus beta.5).

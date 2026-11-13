@@ -4,7 +4,7 @@
   import { formatDue } from '../lib/datetime';
   import { describeRecurrence } from '../lib/recurrence';
   import type { ScheduleCard } from '../lib/schedule';
-  import { completeCard, openCardAnywhere, openCardMenuAnywhere, openSheet, personById, shiftCards, ui } from '../lib/store.svelte';
+  import { closeDetail, completeCard, openCardAnywhere, openCardMenuAnywhere, openSheet, personById, shiftCards, ui } from '../lib/store.svelte';
   import { canNudge } from '../lib/nudge';
   import AvatarStack from './AvatarStack.svelte';
   import Icon from './Icon.svelte';
@@ -47,7 +47,7 @@
         <span class="h-[22px] w-[22px] rounded-full border-[1.75px] border-ring"></span>
       {/if}
     </button>
-    <button type="button" data-row-open aria-current={current ? 'true' : undefined} class="min-w-0 flex-1 text-left" onclick={() => void openCardAnywhere(card)}>
+    <button type="button" data-row-open aria-current={current ? 'true' : undefined} class="min-w-0 flex-1 text-left" onclick={() => (current ? closeDetail() : void openCardAnywhere(card))}>
       <span class="block truncate text-[15px] leading-tight {done ? 'text-hint line-through' : ''}">{card.title}</span>
       {#if hasSub}
         <span class="mt-0.5 flex flex-wrap items-center gap-x-3 text-[12px] leading-tight text-text-soft">

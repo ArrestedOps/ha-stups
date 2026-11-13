@@ -162,18 +162,12 @@
   {#if ui.desktop}
     <!-- Desktop: feste Seitenleiste, rechts davon Kopfzeile und Reiter (Inhalt höchstens 1560 px breit, bei sehr breiten Fenstern mittig) -->
     <Sidebar />
-    <div class="relative z-[1] h-full pl-64 {ui.detailId ? 'xl:pr-[400px]' : ''}">
+    <div class="relative z-[1] h-full pl-64">
       <div class="mx-auto flex h-full max-w-[1560px] flex-col px-8">
         <DesktopHeader />
         <div class="min-h-0 flex-1">{@render pages()}</div>
       </div>
     </div>
-    {#if ui.detailId}
-      <!-- Detailspalte (nur Desktop, Aufgaben): volle Höhe am rechten Rand. Ab 1280 px schiebt sie den Inhalt zur Seite, darunter legt sie sich darüber. -->
-      <aside class="fixed inset-y-0 right-0 z-20 w-[400px] max-w-full" aria-label={t('Aufgabe')} data-testid="detail">
-        {#key ui.detailId}<CardSheet id={ui.detailId} panel />{/key}
-      </aside>
-    {/if}
   {:else}
     {@render pages()}
 

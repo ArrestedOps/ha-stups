@@ -105,10 +105,10 @@ test.describe('Aufbau', () => {
     await expect(page.getByTestId('sidebar')).toBeVisible();
     await expect(page.getByTestId('tasks')).toBeVisible();
     await row(page, s.cards[0]!.title).click();
-    // schmal: die Detailspalte legt sich über die Liste statt sie zu quetschen
+    // schmal: die Aufgabe klappt unter ihrer Zeile auf, die Liste behält ihre Breite
     const detail = page.getByTestId('detail');
     await expect(detail).toBeVisible();
-    expect((await detail.boundingBox())!.width).toBe(400);
+    expect((await detail.boundingBox())!.width).toBeGreaterThan(600);
     expect((await page.getByTestId('tasks').boundingBox())!.width).toBeGreaterThan(600);
     await noHorizontalScroll(page);
     await page.keyboard.press('Escape');
@@ -139,15 +139,19 @@ test.describe('Aufbau', () => {
 });
 
 test.describe('Aufgaben', () => {
-  test('Klick auf die Zeile öffnet die Detailspalte neben der Liste (kein Sheet); Escape und Schließen leeren sie; ohne Auswahl steht ein Platzhalter da', async ({ page, request }) => {
+  test('Klick auf die Zeile klappt die Aufgabe darunter auf (kein Sheet, keine Spalte); Escape und Schließen klappen sie zu', async ({ page, request }) => {
     const s = await seed(request);
     await page.goto('/');
-    await expect(page.getByTestId('detail')).toHaveCount(0); // ohne Auswahl keine Spalte (die Liste nutzt die ganze Breite)
+    await expect(page.getByTestId('detail')).toHaveCount(0); // ohne Auswahl ist nichts aufgeklappt
     const first = row(page, s.cards[0]!.title);
     await first.click();
     const detail = page.getByTestId('detail');
     await expect(detail).toBeVisible();
-    expect((await detail.boundingBox())!.width).toBe(400);
+    // aufgeklappt direkt unter der Zeile der Aufgabe, in der Liste (kein Sheet, keine Spalte daneben)
+    const rowBox = (await first.boundingBox())!;
+    const detailBox = (await detail.boundingBox())!;
+    expect(detailBox.y).toBeGreaterThanOrEqual(rowBox.y + rowBox.height - 1);
+    expect(detailBox.width).toBeGreaterThan(600);
     await expect(dialog(page)).toHaveCount(0);
     await expect(detail.getByLabel('Titel')).toHaveValue(s.cards[0]!.title);
     await expect(detail.getByLabel('Eintrag', { exact: true })).toHaveValue('Abholschein suchen');
@@ -161,7 +165,7 @@ test.describe('Aufgaben', () => {
     // Escape schließt
     await page.keyboard.press('Escape');
     await expect(detail).toHaveCount(0);
-    await expect(page.getByTestId('detail')).toHaveCount(0); // ohne Auswahl keine Spalte (die Liste nutzt die ganze Breite)
+    await expect(page.getByTestId('detail')).toHaveCount(0);
     // Schließen-Knopf
     await first.click();
     await page.getByTestId('detail-close').click();

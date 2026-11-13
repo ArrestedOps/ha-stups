@@ -48,11 +48,11 @@
   import Tile from './ui/Tile.svelte';
 
   /**
-   * `panel`: auf dem Desktop (Aufgaben) steht die Aufgabe in der Detailspalte neben der Liste statt im Sheet: gleicher Inhalt und dieselbe
-   * Logik, aber eine eigene Kopfzeile („Aufgabe“, Schließen) und unten „Stupsen“ und „Erledigt“. Alles speichert sofort.
+   * `inline`: auf dem Desktop (Aufgaben) klappt die Aufgabe direkt unter ihrer Zeile auf statt in einem Sheet: gleicher Inhalt und dieselbe
+   * Logik, in zwei Spalten, mit „Stupsen“, „Erledigt“ und Schließen in einer Leiste oben. Alles speichert sofort.
    */
-  let { id, panel = false }: { id: string; panel?: boolean } = $props();
-  const close = () => (panel ? closeDetail() : closeSheet());
+  let { id, inline = false }: { id: string; inline?: boolean } = $props();
+  const close = () => (inline ? closeDetail() : closeSheet());
 
   // Jede Änderung speichert sofort. „Gespeichert" bestätigt das kurz, damit klar ist, dass nichts fehlt.
   let saved = $state(false);
@@ -241,7 +241,8 @@
   {:else if !card}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
-    <div class="flex flex-col gap-3.5 pt-1">
+    <div class={inline ? 'grid items-start gap-x-8 gap-y-3.5 pt-1 xl:grid-cols-2' : 'flex flex-col gap-3.5 pt-1'}>
+      <div class="flex min-w-0 flex-col gap-3.5">
       <div class="flex items-center gap-3">
         {#if child}
           <CardTile {card} size="lg" glyph={28} />
@@ -289,7 +290,7 @@
         <CardProps card={card} {targets} onsave={save} onmove={(columnId) => moveCard(card!, columnId)} readonly={child} />
       </div>
 
-      {#if !panel && canFinish}
+      {#if !inline && canFinish}
         <button
           class="bg-accent-grad flex min-h-[52px] w-full items-center justify-center gap-2 rounded-row text-[17px] font-semibold"
           data-testid="detail-done"
@@ -340,7 +341,7 @@
         </div>
       {/if}
 
-      {#if canStupse && !panel}
+      {#if canStupse && !inline}
         <Banner title={t('{names} stupsen', { names: nudgeNames })} sub={t('Freundlich erinnern, mit Antwort-Knöpfen')} onclick={() => openSheet({ type: 'nudge', id: card!.id })}>
           {#snippet leading()}<span class="text-banner-icon"><Icon name="hand" size={30} /></span>{/snippet}
           {#snippet trailing()}<Icon name="chevron-right" size={20} stroke={2} />{/snippet}
@@ -356,6 +357,8 @@
         </p>
       {/if}
 
+      </div>
+      <div class="flex min-w-0 flex-col gap-3.5">
       <!-- Beschreibung: das Feld trägt seine Beschriftung in sich -->
       <div class="flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3 focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent/20">
         <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="card-desc">{t('Beschreibung')}</label>
@@ -554,15 +557,25 @@
           <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Aufgabe löschen')}</span>
         </button>
       {/if}
+      </div>
     </div>
   {/if}
 {/snippet}
 
-{#if panel}
-  <section class="flex h-full flex-col overflow-hidden border-l border-line bg-bg max-xl:shadow-[-18px_0_50px_rgba(0,0,0,0.25)]" aria-label={t('Aufgabe')}>
-    <div class="flex h-16 shrink-0 items-center gap-1.5 border-b border-line pr-3.5 pl-5">
-      <h2 class="text-[13px] font-semibold text-fg2">{t('Aufgabe')}</h2>
-      <span class="min-w-0 flex-1 truncate pl-2 text-[13px] font-semibold text-sig-green" aria-live="polite">{saved ? t('Gespeichert') : ''}</span>
+{#if inline}
+  <section class="wrap-anywhere" aria-label={t('Aufgabe')} data-testid="detail">
+    <div class="flex items-center gap-2 pb-1">
+      <span class="min-w-0 flex-1 truncate text-[13px] font-semibold text-sig-green" aria-live="polite">{saved ? t('Gespeichert') : ''}</span>
+      {#if card && canStupse}
+        <button class="inline-flex h-10 items-center gap-2 rounded-full border border-line-chip bg-surface px-4 text-[14px] font-bold hover:border-sep" onclick={() => openSheet({ type: 'nudge', id: card!.id })}>
+          <Icon name="hand" size={16} />{t('Stupsen')}
+        </button>
+      {/if}
+      {#if card && canFinish}
+        <button class="bg-accent-grad inline-flex h-10 items-center gap-2 rounded-full px-5 text-[14px] font-bold hover:brightness-110" data-testid="detail-done" onclick={toggleDone}>
+          <Icon name={done ? 'undo' : 'check'} size={16} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
+        </button>
+      {/if}
       {#if card && !child}
         <button class="flex h-10 w-10 items-center justify-center rounded-full text-text-soft hover:bg-surface2" aria-label={t('Mehr')} title={t('Mehr')} onclick={() => void openCardMenuAnywhere(card!)}>
           <Icon name="more" size={20} stroke={2} />
@@ -572,21 +585,7 @@
         <Icon name="x" size={20} stroke={2} />
       </button>
     </div>
-    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 wrap-anywhere">{@render content()}</div>
-    {#if card && (canFinish || canStupse)}
-      <div class="flex shrink-0 gap-2.5 border-t border-line px-4 py-3.5">
-        {#if canStupse}
-          <button class="flex h-12 flex-1 items-center justify-center gap-2 rounded-[14px] border border-line-chip bg-surface text-[15px] font-extrabold hover:border-sep" onclick={() => openSheet({ type: 'nudge', id: card!.id })}>
-            <Icon name="hand" size={18} />{t('Stupsen')}
-          </button>
-        {/if}
-        {#if canFinish}
-          <button class="bg-accent-grad glow-pill flex h-12 flex-1 items-center justify-center gap-2 rounded-[14px] text-[15px] font-extrabold hover:brightness-110" data-testid="detail-done" onclick={toggleDone}>
-            <Icon name={done ? 'undo' : 'check'} size={18} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
-          </button>
-        {/if}
-      </div>
-    {/if}
+    {@render content()}
   </section>
 {:else}
   <Sheet title={saved ? t('Gespeichert') : t('Aufgabe')} titleClass={saved ? 'text-[13px] font-semibold text-sig-green' : ''} onclose={closeSheet} right={saveButton} hideClose>

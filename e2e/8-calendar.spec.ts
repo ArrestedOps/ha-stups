@@ -76,17 +76,21 @@ test('Kalender: auf einen freien Zeitpunkt tippen legt eine Aufgabe mit diesem T
   await openTasksView(page, 'Tag');
   await expect(block(page, s.t.conny, s.boardName)).toBeVisible();
 
-  // auf die Stunde scrollen und die Spalte dort antippen (erst warten, bis die Ansicht ihren Startpunkt angesprungen ist)
-  await page.waitForTimeout(400);
+  // auf die Stunde scrollen und die Spalte dort antippen (die Ansicht springt nach dem Laden einmal an ihren Startpunkt: dann noch einmal)
   const grid = page.getByTestId('calendar-grid');
-  await grid.evaluate((el, [px, h]) => (el.scrollTop = h * px), [HOUR_PX, hour - 1]);
-  const column = page.getByRole('button', { name: /^Neue Aufgabe am/ });
-  const box = (await column.boundingBox())!;
-  await page.mouse.click(box.x + box.width / 2, box.y + hour * HOUR_PX + 14);
+  await expect(async () => {
+    await grid.evaluate((el, [px, h]) => (el.scrollTop = h * px), [HOUR_PX, hour - 1]);
+    const column = page.getByRole('button', { name: /^Neue Aufgabe am/ });
+    const box = (await column.boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + hour * HOUR_PX + 14);
+    await expect(page.getByTestId('slot-time')).toBeVisible({ timeout: 1500 });
+  }).toPass({ timeout: 15_000 });
 
   await expect(page.getByTestId('slot-time')).toContainText(`${String(hour).padStart(2, '0')}:00`);
   await page.getByRole('textbox', { name: 'Titel' }).fill(title);
-  await page.getByRole('group', { name: 'Board' }).getByRole('button', { name: s.boardName }).click();
+  // das Board wählen, wenn es mehrere gibt (bei nur einem Board fehlt die Auswahl)
+  const boards = page.getByRole('group', { name: 'Board' });
+  if (await boards.count()) await boards.getByRole('button', { name: s.boardName }).click();
   await page.getByRole('button', { name: 'Anlegen' }).click();
   await expect(page.getByText('Aufgabe angelegt')).toBeVisible();
   await expect(block(page, title, s.boardName)).toBeVisible();

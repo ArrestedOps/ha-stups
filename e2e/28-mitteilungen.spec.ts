@@ -45,7 +45,7 @@ test('Glocke: ein Stups an mich setzt den Punkt, Blatt und Banner zeigen ihn, ei
     // eine kleine Zahl (ab 10 „9+"), der Screenreader nennt die Anzahl
     await expect(conny.getByTestId('bell-dot')).toHaveText(/^(\d|9\+)$/);
     await expect(conny.getByTestId('bell')).toHaveAccessibleName(/^Mitteilungen, \d+ ungelesen$/);
-    await expect(conny.getByRole('button', { name: /Rene stupst dich!/ })).toBeVisible();
+    await expect(conny.getByTestId('stups-card')).toContainText('Rene stupst dich!');
 
     // Das Blatt zeigt den Stups mit der Aufgabe; ein Tipp öffnet die Aufgabe
     await conny.getByTestId('bell').click();

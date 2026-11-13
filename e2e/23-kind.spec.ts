@@ -123,7 +123,7 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
 
     // Zwei Reiter (Aufgaben, Boards, kein Wächter); in Aufgaben kein „Wer"-Filter, kein „Vom Haus", keine Zeilen „Bei den anderen" und Fairness
     const nav = page.getByRole('navigation', { name: 'Ansicht' });
-    await expect(nav.getByRole('button')).toHaveText(['Aufgaben', 'Boards']);
+    await expect(nav.getByRole('button')).toHaveText(['Aufgaben', 'Boards', 'Kalender']);
     await expect(nav.getByRole('button', { name: 'Wächter' })).toHaveCount(0);
     await nav.getByRole('button', { name: 'Aufgaben' }).click();
     await expect(page.getByTestId('tasks-sub')).toBeVisible();

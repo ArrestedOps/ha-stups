@@ -1,7 +1,7 @@
 import { openSettingsPage } from './helpers';
 import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
 
-// Aufgaben: die drei Zahlen sind Knöpfe und öffnen je ein Blatt (Heute fällig, Überfällig, Heute erledigt).
+// Aufgaben: die vier Zahlen sind Knöpfe und öffnen je ein Blatt (Heute fällig, Überfällig, Heute erledigt).
 // Die Tests laufen mit eigenen Personen („Ich“ und ein Kind), damit die Zahlen und „Alle auf morgen“ keine Aufgaben anderer Tests treffen.
 test.describe.configure({ mode: 'serial' });
 
@@ -72,7 +72,7 @@ test('die drei Zahlen sind Knöpfe mit Namen und 44 px Höhe; jede öffnet ihr B
   const p = await asPerson(browser, baseURL, meHeaders, info.project.name === 'hell' ? 'light' : 'dark');
   try {
     const bar = p.page.getByRole('group', { name: 'Deine Zahlen' });
-    await expect(bar.getByRole('button')).toHaveCount(3);
+    await expect(bar.getByRole('button')).toHaveCount(4); // dazu „Diese Woche“, sie öffnet den Kalender
     for (const [id, name, title] of [['today', 'Heute fällig', 'Heute fällig'], ['overdue', 'Überfällig', 'Überfällig'], ['done', 'Erledigt heute', 'Heute erledigt']] as const) {
       const btn = p.page.getByTestId(`stat-${id}`);
       await expect(btn).toHaveAttribute('aria-label', new RegExp(`^${name}, \\d+$`));
@@ -100,7 +100,8 @@ test('Heute fällig: Zusammenfassung, Abhaken im Blatt, Tipp auf die Aufgabe öf
     await expect(s.getByText(`Abhaken ${tag}`)).toBeVisible();
     await expect(s.getByRole('heading', { name: 'Bis heute Abend' })).toBeVisible();
     await expect(s.getByText('0 davon schon erledigt, 2 offen.')).toBeVisible();
-    // nach Uhrzeit
+    // nach Uhrzeit (erst warten, bis das Blatt eingefahren ist)
+    await p.page.waitForTimeout(600);
     const ys = async (t: string) => (await s.getByText(t, { exact: true }).boundingBox())!.y;
     expect(await ys(`Abhaken ${tag}`)).toBeLessThan(await ys(`Öffnen ${tag}`));
 
@@ -274,7 +275,7 @@ test('Kind: eigene Aufgaben im Blatt, abhaken ja, aber kein „Morgen“ und kei
   await mk(request, `Fremd ${tag}`, { assigneeIds: [meId], dueAt: new Date(Date.now() - 2 * 86_400_000).toISOString() });
   const p = await asPerson(browser, baseURL, kidHeaders, info.project.name === 'hell' ? 'light' : 'dark');
   try {
-    await expect(p.page.getByRole('group', { name: 'Deine Zahlen' }).getByRole('button')).toHaveCount(3);
+    await expect(p.page.getByRole('group', { name: 'Deine Zahlen' }).getByRole('button')).toHaveCount(4);
     await p.page.getByTestId('stat-overdue').click();
     const s = sheet(p.page);
     await expect(s.getByText(`Kind alt ${tag}`, { exact: true })).toBeVisible();

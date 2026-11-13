@@ -38,7 +38,7 @@
   const people = $derived(f.assignMode === 'fixed' || f.assignMode === 'rotation' ? f.personIds.map(personById).filter((p) => p !== undefined) : []);
 </script>
 
-<aside class="flex min-w-0 flex-col gap-3 rounded-[20px] border border-line bg-surface px-4 py-4" aria-labelledby="desk-preview-t" data-testid="desk-preview">
+<aside class="flex min-w-0 flex-col gap-3 rounded-[16px] bg-surface px-4 py-4" aria-labelledby="desk-preview-t" data-testid="desk-preview">
   <h3 id="desk-preview-t" class="text-[12px] font-bold tracking-[0.08em] text-fg2 uppercase">{t('Vorschau')}</h3>
   <WatcherSummary form={f} personName={ed.personName} />
 

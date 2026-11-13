@@ -59,7 +59,7 @@
   {#if entityRow && ed.picking === 'trigger' && !ed.readOnly}
     <EntityPicker {ed} />
   {:else if !f.entityId && entityRow}
-    <button type="button" class="flex min-h-row py-2 w-full items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 text-left" onclick={() => ed.startPicking('trigger')}>
+    <button type="button" class="flex min-h-row py-2 w-full items-center gap-3 rounded-row bg-surface pr-2.5 pl-3 text-left" onclick={() => ed.startPicking('trigger')}>
       <Tile color="purple"><Icon name="search" size={22} stroke={1.8} /></Tile>
       <span class="flex min-w-0 flex-1 flex-col gap-1">
         <span class="wrap-anywhere text-[15px] font-bold tracking-tight">{t('Entität wählen')}</span>
@@ -72,7 +72,7 @@
       <EntityRow name={f.entityName || f.entityId} id={f.entityName ? f.entityId : ''} testid="when-entity" onchange={ed.readOnly ? undefined : () => ed.startPicking('trigger')} />
     {/if}
     {#if graph && f.kind !== 'calendar_event' && f.kind !== 'forecast'}
-      <div class="rounded-[20px] border border-line bg-surface px-3.5 pt-3.5 pb-2.5" data-testid="graph-card">
+      <div class="rounded-[16px] bg-surface px-3.5 pt-3.5 pb-2.5" data-testid="graph-card">
         <div class="flex items-center gap-3">
           <Tile color="purple">{#if icon}<SymbolIcon id={icon} size={24} />{:else}<Icon name="eye" size={24} />{/if}</Tile>
           <span class="flex min-w-0 flex-1 flex-col gap-1">
@@ -88,7 +88,7 @@
       </div>
     {/if}
     {#if f.kind === 'calendar_event'}
-      <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
+      <div class="flex min-h-row py-2 items-center gap-3 rounded-row bg-surface pr-3 pl-3.5">
         <span class="flex min-w-0 flex-1 flex-col gap-1">
           <span class="wrap-anywhere text-[15px] font-bold">{t('Wie viele Stunden vorher?')}</span>
           <span class="wrap-anywhere text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Aufgabe')}</span>
@@ -96,7 +96,7 @@
         <NumberField bind:value={f.leadHours} label={t('Vorlauf in Stunden')} unit={t('Std.')} />
       </div>
     {:else if f.kind === 'forecast'}
-      <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
+      <div class="flex min-h-row py-2 items-center gap-3 rounded-row bg-surface pr-3 pl-3.5">
         <span class="flex min-w-0 flex-1 flex-col gap-1">
           <span class="wrap-anywhere text-[15px] font-bold">{t('Regen in den nächsten …')}</span>
           <span class="wrap-anywhere text-[13px] text-fg2">{t('Stups schaut in die Vorhersage')}</span>
@@ -107,7 +107,7 @@
       <SectionHeader title={f.kind === 'state' ? t('Auslösen, wenn der Zustand …') : t('Auslösen, wenn der Wert …')} />
       <Segmented small items={KINDS} value={f.kind} label={t('Bedingung')} onchange={setKind} />
       {#if f.kind === 'state'}
-        <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-3 pl-3.5">
+        <div class="flex min-h-row py-2 items-center gap-3 rounded-row bg-surface pr-3 pl-3.5">
           <span class="flex min-w-0 flex-1 flex-col gap-1">
             <span class="wrap-anywhere text-[15px] font-bold">{t('Zustand')}</span>
             <span class="wrap-anywhere text-[13px] text-fg2">{t('grüne Linie im Verlauf')}</span>
@@ -120,7 +120,7 @@
           </div>
         {/if}
       {:else}
-        <div class="flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3.5">
+        <div class="flex min-h-row py-2 items-center gap-3 rounded-row bg-surface pr-2.5 pl-3.5">
           <span class="flex min-w-0 flex-1 basis-0 flex-col gap-1">
             <span class="wrap-anywhere text-[15px] font-bold">{t('Schwelle')}</span>
             <span class="wrap-anywhere text-[13px] text-fg2">{t('grüne Linie im Verlauf')}</span>

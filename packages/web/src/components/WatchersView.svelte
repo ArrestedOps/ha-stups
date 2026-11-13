@@ -318,7 +318,7 @@
           {#if can('watchers') && found > 0 && data?.available}
             <button
               type="button"
-              class="flex h-11 items-center gap-2 rounded-row border border-line bg-surface px-4 text-[15px] font-bold hover:bg-surface2"
+              class="flex h-11 items-center gap-2 rounded-row bg-surface px-4 text-[15px] font-bold hover:bg-surface2"
               data-testid="home-found"
               aria-label={tn('Gefunden: {n} weiteres Gerät', 'Gefunden: {n} weitere Geräte', found)}
               onclick={() => openSheet({ type: 'found' })}
@@ -386,7 +386,7 @@
       {:else if !data}
         <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
       {:else if !data.available}
-        <div class="rounded-row border border-line bg-surface p-5 text-center" data-testid="home-offline">
+        <div class="rounded-row bg-surface p-5 text-center" data-testid="home-offline">
           <Icon name="wifi-off" size={28} />
           <p class="mt-2 text-[17px] font-semibold">
             {data.lostSince ? t('Keine Verbindung zu Home Assistant seit {time}', { time: formatDue(data.lostSince, nowMs) }) : t('Keine Verbindung zu Home Assistant')}
@@ -394,7 +394,7 @@
           <p class="mt-1 text-[15px] text-fg2">{t('Boards und Aufgaben funktionieren weiter. Sobald die Verbindung steht, erscheint hier wieder, was das Haus tut.')}</p>
         </div>
       {:else if allItems.length === 0}
-        <div class="rounded-row border border-line bg-surface p-5" data-testid="home-empty">
+        <div class="rounded-row bg-surface p-5" data-testid="home-empty">
           <p class="text-[17px] font-semibold">{t('Noch kein Wächter')}</p>
           <p class="mt-1 text-[15px] text-fg2">
             {t('Ein Wächter beobachtet zum Beispiel die Waschmaschine und legt von selbst die Aufgabe „ausräumen" an, für jemanden, der gerade zu Hause ist.')}
@@ -449,7 +449,7 @@
           <section aria-label={t('Wartet auf jemanden')} data-testid="home-waiting">
             <SectionHeader title={t('Wartet auf jemanden')} count={layout.waiting.length} plain open={!closed.includes('waiting')} ontoggle={() => toggle('waiting')} />
             {#if !closed.includes('waiting')}
-              <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3 max-lg:list-group max-lg:!mt-0 max-lg:!gap-0">
+              <ul class={ui.desktop ? 'mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3' : 'list-group !mt-0'}>
                 {#each layout.waiting as i (i.watcherId)}
                   {@const card = i.openCard!}
                   {@const canStupse = canNudge(card, ui.me?.id ?? null)}

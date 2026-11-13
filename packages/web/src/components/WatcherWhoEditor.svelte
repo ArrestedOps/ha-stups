@@ -87,14 +87,14 @@
   {/if}
 
   {#if usesFallback(f.assignMode)}
-    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
+    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
       {@render selectRow(fallbackLabel, fallbackValue)}
       <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" bind:value={f.fallback} aria-label={t('Rückfall')}>
         {#each FALLBACKS as [v, label] (v)}<option value={v}>{label}</option>{/each}
       </select>
     </div>
   {:else if f.assignMode === 'first_home'}
-    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
+    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
       {@render selectRow(t('Nach 24 Stunden ohne Heimkehr'), waitValue)}
       <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" bind:value={f.waitFallback} aria-label={t('Rückfall nach 24 Stunden')}>
         {#each WAIT as [v, label] (v)}<option value={v}>{label}</option>{/each}
@@ -102,7 +102,7 @@
     </div>
   {/if}
   {#if showFixedPerson}
-    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
+    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
       {@render selectRow(t('Feste Person für den Rückfall'), personName(f.fallbackPersonId))}
       <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" bind:value={f.fallbackPersonId} aria-label={t('Person für den Rückfall')}>
         <option value="">{t('wählen …')}</option>

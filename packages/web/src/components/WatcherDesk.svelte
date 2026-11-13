@@ -173,7 +173,7 @@
           {#if more}
             <div id="{uid}-more" class="flex flex-col gap-3 px-4 pt-1 pb-4" data-testid="desk-more-body">
               <WatcherFineEditor {ed} name={false} category={false} columns />
-              <label class="focus-ring-in flex rounded-row border border-line bg-surface px-3.5 py-3">
+              <label class="focus-ring-in flex rounded-row bg-surface px-3.5 py-3">
                 <textarea class="min-h-[44px] w-full resize-none bg-transparent text-[15px] leading-[1.45] font-medium outline-none placeholder:text-dim" rows="2" bind:value={f.description} placeholder={t('Beschreibung (optional)')} aria-label={t('Beschreibung')}></textarea>
               </label>
               {#if ed.view?.categories.length}

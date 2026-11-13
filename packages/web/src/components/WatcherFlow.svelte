@@ -141,7 +141,7 @@
   {:else}
     <div class="flex flex-col gap-3.5 pt-1">
       {#if readOnly}
-        <p class="rounded-row border border-line bg-surface px-4 py-3 text-[15px]" data-testid="watcher-readonly">{t('Wächter ändern Administratoren und wer die Berechtigung „Wächter“ hat. Du kannst hier alles ansehen, auch den Verlauf.')}</p>
+        <p class="rounded-row bg-surface px-4 py-3 text-[15px]" data-testid="watcher-readonly">{t('Wächter ändern Administratoren und wer die Berechtigung „Wächter“ hat. Du kannst hier alles ansehen, auch den Verlauf.')}</p>
       {/if}
       {#if missing}
         <div class="flex flex-col gap-2 rounded-row border border-accent bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface))] px-4 py-3" role="alert" data-testid="assignees-missing">
@@ -244,7 +244,7 @@
       {#if fine === 'nudge' && !readOnly}
         <NudgeCard {ed} />
       {:else if fine && !readOnly}
-        <div class="flex items-center justify-between gap-3 rounded-row border border-line bg-surface px-3.5 py-3" data-testid="fine-panel">
+        <div class="flex items-center justify-between gap-3 rounded-row bg-surface px-3.5 py-3" data-testid="fine-panel">
           {#if fine === 'name'}
             <input class="min-h-11 w-full bg-transparent text-[16px] font-semibold placeholder:text-dim" bind:value={f.name} maxlength="80" placeholder={t('z. B. Waschmaschine fertig')} aria-label={t('Name des Wächters')} />
           {:else if fine === 'category'}

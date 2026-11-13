@@ -70,13 +70,13 @@
 
 <div data-testid="watchers">
   {#if data && !data.available}
-    <div class="mt-6 rounded-[20px] border border-line bg-surface p-5 text-center">
+    <div class="mt-6 rounded-[16px] bg-surface p-5 text-center">
       <Icon name="wifi-off" size={28} />
       <p class="mt-2 text-[17px] font-semibold">{t('Keine Verbindung zu Home Assistant')}</p>
       <p class="mt-1 text-[15px] text-fg2">{t('Wächter brauchen sie, um Entitäten zu beobachten. Sobald sie steht, erscheinen die Wächter hier.')}</p>
     </div>
   {:else if items.length === 0}
-    <div class="mt-4 rounded-[20px] border border-line bg-surface p-5">
+    <div class="mt-4 rounded-[16px] bg-surface p-5">
       <p class="text-[17px] font-semibold">{t('Noch kein Wächter')}</p>
       <p class="mt-1 text-[15px] text-fg2">
         {t('Ein Wächter beobachtet zum Beispiel die Waschmaschine und legt von selbst die Aufgabe „ausräumen" an, für jemanden, der gerade zu Hause ist.')}
@@ -101,7 +101,7 @@
     <ul class="space-y-3">
       {#each items as w (w.id)}
         {@const bad = problem(w)}
-        <li class="card-shadow overflow-hidden rounded-[20px] border border-line bg-surface {w.active ? '' : 'opacity-70'}" data-testid="watcher-card">
+        <li class="card-shadow overflow-hidden rounded-[16px] bg-surface {w.active ? '' : 'opacity-70'}" data-testid="watcher-card">
           <div class="flex items-start gap-3 p-4">
             <button
               class="flex min-w-0 flex-1 items-start gap-3 text-left disabled:opacity-100"
@@ -163,7 +163,7 @@
 
     {#if activity.length}
       <h2 class="mt-6 mb-2 px-1 text-[13px] font-semibold tracking-wide text-fg2 uppercase">{t('Letzte Aktivität')}</h2>
-      <ul class="divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface" data-testid="watcher-activity">
+      <ul class="divide-y divide-line overflow-hidden rounded-[16px] bg-surface" data-testid="watcher-activity">
         {#each activity as r (r.id)}
           <li class="px-4 py-2.5">
             <p class="text-[15px] font-medium">{r.watcherName}{r.subject ? ` (${r.subject})` : ''} · {RUN_TEXT[r.result] ?? r.result}</p>

@@ -54,7 +54,7 @@
   <Chip active={newCat} pressed={newCat} onclick={() => (newCat = !newCat)}><Icon name="plus" size={18} stroke={2} />{t('Neue Kategorie')}</Chip>
 </div>
 {#if newCat}
-  <div class="focus-ring-in flex flex-col gap-2.5 rounded-row border border-line bg-surface px-3.5 py-3" role="group" aria-label={t('Neue Kategorie')}>
+  <div class="focus-ring-in flex flex-col gap-2.5 rounded-row bg-surface px-3.5 py-3" role="group" aria-label={t('Neue Kategorie')}>
     <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="nc">{t('Neue Kategorie')}</label>
     <div class="flex items-center gap-2">
       <input

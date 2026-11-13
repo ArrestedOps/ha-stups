@@ -63,7 +63,7 @@ test('Wächter: Raster in zwei oder drei Spalten, alle Aufgaben einer Reihe glei
   expect(over).toBeLessThanOrEqual(0);
 
   // Suche: filtert die Wächter nach Namen
-  await page.keyboard.press('Control+k');
+  await page.keyboard.press('/');
   await page.keyboard.type('gibt-es-nicht');
   await expect(page.getByTestId('home-no-match')).toBeVisible();
   await page.keyboard.press('Escape');
@@ -168,7 +168,7 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
   const batt = page.getByTestId('watcher-category').nth(0);
   await batt.getByRole('button', { expanded: true }).click();
   await expect(batt.getByTestId('watcher-row')).toHaveCount(0);
-  await page.keyboard.press('Control+k');
+  await page.keyboard.press('/');
   await page.keyboard.type(`Handy ${tag}`);
   await expect(page.getByTestId('watcher-row')).toHaveCount(1);
   await expect(page.getByTestId('watcher-category').nth(0)).toContainText('Batterien');

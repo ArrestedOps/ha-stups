@@ -109,6 +109,8 @@ export const ui = $state({
   taskGroupBy: 'due' as 'due' | 'board',
   /** Desktop: wie viele Aufgaben die Liste gerade zeigt (für die Kopfzeile) */
   taskCount: 0,
+  /** Desktop: die Befehlspalette (Strg/Cmd + K) ist offen */
+  palette: false,
   /** Filter für Agenda und Kalender (Personen, Boards, Erledigtes) */
   sf: { ...DEFAULT_FILTER } as ScheduleFilter,
   /** zählt bei jedem Nachladen hoch, damit offene Detailansichten und die Agenda sich aktualisieren */

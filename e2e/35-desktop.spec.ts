@@ -197,11 +197,11 @@ test.describe('Aufgaben', () => {
     await expect(a).toBeFocused();
   });
 
-  test('Suche: Strg+K fokussiert das Feld, Tippen filtert die Liste, Escape leert, „N“ legt eine Aufgabe an (nicht in Feldern)', async ({ page, request }) => {
+  test('Suche: „/“ fokussiert das Feld, Tippen filtert die Liste, Escape leert, „N“ legt eine Aufgabe an (nicht in Feldern)', async ({ page, request }) => {
     const s = await seed(request);
     await page.goto('/');
     await expect(row(page, s.cards[0]!.title)).toBeVisible();
-    await page.keyboard.press('Control+k');
+    await page.keyboard.press('/');
     const search = page.getByRole('searchbox', { name: 'Suchen' });
     await expect(search).toBeFocused();
     await page.keyboard.type(s.cards[1]!.title.toLowerCase());
@@ -312,5 +312,25 @@ test.describe('Boards', () => {
     await page.mouse.up();
     await expect(page.getByTestId(`column-list-${target.id}`).getByText(title)).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId(`column-list-${s.columns[0]!.id}`).getByText(title)).toHaveCount(0);
+  });
+});
+
+test.describe('Befehlspalette', () => {
+  test('Strg+K öffnet sie, tippen filtert, Pfeil und Enter führen aus, Escape schließt', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByTestId('sidebar')).toBeVisible();
+    await page.keyboard.press('Control+k');
+    const palette = page.getByRole('dialog', { name: 'Befehlspalette' });
+    await expect(palette).toBeVisible();
+    await expect(palette.getByRole('combobox').or(palette.getByRole('textbox'))).toBeFocused();
+    await page.keyboard.type('kalender');
+    await expect(palette.getByRole('option', { name: /Kalender/ })).toBeVisible();
+    await page.keyboard.press('Enter');
+    await expect(palette).toHaveCount(0);
+    await expect(page.getByTestId('calendar-page')).toBeVisible();
+    await page.keyboard.press('Control+k');
+    await expect(palette).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(palette).toHaveCount(0);
   });
 });

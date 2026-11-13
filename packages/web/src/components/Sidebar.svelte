@@ -63,11 +63,6 @@
     selectTab('boards');
     void selectBoard(id);
   }
-  function focusSearch() {
-    const input = document.getElementById('desktop-search') as HTMLInputElement | null;
-    input?.focus();
-    input?.select();
-  }
   const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 </script>
 
@@ -88,8 +83,8 @@
     <button class="side-icon" aria-label={t('Einstellungen öffnen')} onclick={() => openSettings()}><Icon name="gear" size={20} /></button>
   </div>
 
-  <button class="mt-2 mb-2 flex h-9 shrink-0 items-center gap-2 rounded-[10px] bg-surface2 px-2.5 text-[14px] text-text-soft" onclick={focusSearch} aria-label={t('Suchen')}>
-    <Icon name="search" size={16} stroke={2} /><span class="flex-1 text-left">{t('Suchen')} …</span>
+  <button class="mt-2 mb-2 flex h-9 shrink-0 items-center gap-2 rounded-[10px] bg-surface2 px-2.5 text-[14px] text-text-soft" onclick={() => (ui.palette = true)} aria-label={t('Suchen oder Befehl')}>
+    <Icon name="search" size={16} stroke={2} /><span class="flex-1 text-left">{t('Suchen oder Befehl')}</span>
     <kbd class="rounded-md bg-surface px-1.5 py-px font-sans text-[11px] font-semibold" aria-hidden="true">{mac ? '⌘ K' : `${t('Strg')} K`}</kbd>
   </button>
 

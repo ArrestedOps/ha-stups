@@ -11,6 +11,7 @@
   import BoardSwitcher from './components/BoardSwitcher.svelte';
   import CardMenu from './components/CardMenu.svelte';
   import CardSheet from './components/CardSheet.svelte';
+  import CommandPalette from './components/CommandPalette.svelte';
   import ConfirmDialog from './components/ConfirmDialog.svelte';
   import Icon from './components/Icon.svelte';
   import Lightbox from './components/Lightbox.svelte';
@@ -84,7 +85,7 @@
   const typing = (el: EventTarget | null) => el instanceof HTMLElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable);
 
   /**
-   * Tasten des Desktops. Strg/Cmd + K: Suche. G dann T, B, C oder W: zu Aufgaben, Boards, Kalender, Wächter. N: neue Aufgabe (nicht in Eingabefeldern, nicht mit offenem Fenster). Escape: Detailspalte
+   * Tasten des Desktops. Strg/Cmd + K: Befehlspalette, „/“: Suchfeld. G dann T, B, C oder W: zu Aufgaben, Boards, Kalender, Wächter. N: neue Aufgabe (nicht in Eingabefeldern, nicht mit offenem Fenster). Escape: Detailspalte
    * schließen (nur wenn kein Fenster, Foto oder Rückfrage darüber liegt und Escape nicht schon etwas anderes getan hat). Im Capture,
    * damit ein Fenster, das Escape selbst schließt, die Detailspalte nicht gleich mit schließt.
    */
@@ -92,7 +93,7 @@
   let goAt = 0;
   function keydown(e: KeyboardEvent) {
     if (!ui.desktop || !ui.ready || ui.gate || !ui.allowed) return;
-    const modal = !!ui.sheet || !!ui.viewer || !!ui.confirm;
+    const modal = !!ui.sheet || !!ui.viewer || !!ui.confirm || ui.palette;
     if (!e.metaKey && !e.ctrlKey && !e.altKey && !typing(e.target) && !modal) {
       const key = e.key.toLowerCase();
       if (goAt && Date.now() - goAt < 1000 && 'tbcw'.includes(key) && key.length === 1) {
@@ -108,7 +109,10 @@
     }
     if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      if (modal) return;
+      if (modal && !ui.palette) return;
+      ui.palette = !ui.palette;
+    } else if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !typing(e.target) && !modal && !ui.palette) {
+      e.preventDefault();
       const input = document.getElementById('desktop-search') as HTMLInputElement | null;
       input?.focus();
       input?.select();
@@ -217,5 +221,6 @@
 
   <Lightbox />
   <ConfirmDialog />
+  {#if ui.desktop && ui.palette}<CommandPalette />{/if}
   <Toasts />
 {/if}

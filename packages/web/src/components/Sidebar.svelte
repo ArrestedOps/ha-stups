@@ -53,7 +53,11 @@
   const onlyId = $derived(sf.personIds.length === 1 ? sf.personIds[0] : null);
   const pickPerson = (ids: string[]) => {
     setScheduleFilter({ personIds: ids, unassigned: false });
-    if (ui.tab !== 'tasks') goTasks('list');
+    // dieselbe Wahl gilt für das Kanban eines Boards (eigener Filter dort)
+    const mine = ids.length === 1 && ids[0] === meId;
+    ui.filter.onlyMine = mine;
+    ui.filter.personIds = mine ? [] : ids;
+    if (ui.tab !== 'tasks' && ui.tab !== 'boards') goTasks('list');
   };
 
   const role = $derived(ui.isChild ? t('Kind') : ui.isAdmin ? t('Administrator') : t('Mitglied'));

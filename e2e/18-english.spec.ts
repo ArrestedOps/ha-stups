@@ -105,6 +105,7 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
 
   await nav.getByRole('button', { name: 'Boards' }).click();
   await page.getByTestId('board-list').getByRole('button', { name: /English test 2/ }).click();
+  await page.getByTestId('board-filter-toggle').click();
   await page.getByRole('group', { name: 'People' }).getByRole('button', { name: 'All', exact: true }).click(); // Boards starts at „Mine“
   await page.getByRole('button', { name: /^Dentist/ }).click();
   const dialog = page.getByRole('dialog');

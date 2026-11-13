@@ -111,6 +111,8 @@ export const ui = $state({
   taskCount: 0,
   /** Desktop: die Befehlspalette (Strg/Cmd + K) ist offen */
   palette: false,
+  /** Desktop: Rechtsklick-Menü einer Aufgabe (Zeigerstelle und Aufgabe) */
+  ctx: null as { x: number; y: number; card: import('../api').Card } | null,
   /** Filter für Agenda und Kalender (Personen, Boards, Erledigtes) */
   sf: { ...DEFAULT_FILTER } as ScheduleFilter,
   /** zählt bei jedem Nachladen hoch, damit offene Detailansichten und die Agenda sich aktualisieren */

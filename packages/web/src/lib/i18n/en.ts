@@ -258,6 +258,7 @@ export const en: Catalog = {
   'Name des neuen Boards': 'Name of the new board',
   'Tag': 'Day',
   '3 Tage': '3 days',
+  'Später (morgen)': 'Later (tomorrow)',
   'Schnellwahl': 'Quick pick',
   'Am Wochenende': 'On the weekend',
   'Morgen {time}': 'Tomorrow {time}',

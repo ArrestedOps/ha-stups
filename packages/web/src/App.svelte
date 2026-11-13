@@ -11,6 +11,7 @@
   import BoardSwitcher from './components/BoardSwitcher.svelte';
   import CardMenu from './components/CardMenu.svelte';
   import CardSheet from './components/CardSheet.svelte';
+  import CardContextMenu from './components/CardContextMenu.svelte';
   import CommandPalette from './components/CommandPalette.svelte';
   import ConfirmDialog from './components/ConfirmDialog.svelte';
   import Icon from './components/Icon.svelte';
@@ -222,5 +223,6 @@
   <Lightbox />
   <ConfirmDialog />
   {#if ui.desktop && ui.palette}<CommandPalette />{/if}
+  {#if ui.desktop && ui.ctx}<CardContextMenu />{/if}
   <Toasts />
 {/if}

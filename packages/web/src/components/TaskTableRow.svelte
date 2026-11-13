@@ -27,6 +27,8 @@
   class="group relative grid min-h-[52px] items-center gap-x-4 px-4 py-1.5 {nudgers.length > 0 && !done ? 'row-nudged' : ''} {current ? 'row-current' : 'hover:bg-surface2/60'}"
   style:grid-template-columns="minmax(0,1fr) 170px 150px 92px"
   data-testid="task-table-row"
+  role="presentation"
+  oncontextmenu={(e) => { if (ui.isChild) return; e.preventDefault(); ui.ctx = { x: e.clientX, y: e.clientY, card }; }}
 >
   <div class="flex min-w-0 items-center gap-3">
     <button

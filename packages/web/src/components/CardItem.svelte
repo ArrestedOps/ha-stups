@@ -137,6 +137,11 @@
     onpointermove={move}
     onpointerup={up}
     onpointercancel={cancel}
+    oncontextmenu={(e) => {
+      if (!ui.desktop || ui.isChild) return;
+      e.preventDefault();
+      ui.ctx = { x: e.clientX, y: e.clientY, card };
+    }}
     role="presentation"
   >
     {#if ui.desktop}

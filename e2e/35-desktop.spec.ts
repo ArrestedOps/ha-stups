@@ -334,3 +334,21 @@ test.describe('Befehlspalette', () => {
     await expect(palette).toHaveCount(0);
   });
 });
+
+test.describe('Rechtsklick-Menü', () => {
+  test('Rechtsklick auf eine Aufgabe öffnet ein Menü am Zeiger: Erledigt, Später, Löschen; Escape schließt', async ({ page, request }) => {
+    const s = await seed(request);
+    await page.goto('/');
+    const r = row(page, s.cards[0]!.title);
+    await expect(r).toBeVisible();
+    await r.click({ button: 'right' });
+    const menu = page.getByRole('menu', { name: 'Aufgaben-Menü' });
+    await expect(menu).toBeVisible();
+    for (const name of ['Öffnen', 'Erledigt', 'Löschen']) await expect(menu.getByRole('menuitem', { name })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await r.click({ button: 'right' });
+    await menu.getByRole('menuitem', { name: 'Erledigt' }).click();
+    await expect(row(page, s.cards[0]!.title)).toHaveCount(0);
+  });
+});

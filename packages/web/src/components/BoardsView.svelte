@@ -44,6 +44,14 @@
   const hiddenFilter = $derived(f.nudged || f.search.trim() !== '');
   const filterKey = $derived(`${f.categoryIds.join()}|${f.onlyMine}|${f.personIds.join()}`);
 
+  /** Handy: Personen- und Kategorie-Chips sind eingeklappt (wie im Entwurf), ein Knopf „Filter“ klappt sie auf */
+  let chipsOpen = $state(false);
+  const filterSummary = $derived(
+    [f.onlyMine ? t('Meine') : '', ...f.personIds.map((id) => ui.people.find((p) => p.id === id)?.displayName ?? ''), ...(view?.categories ?? []).filter((c) => f.categoryIds.includes(c.id)).map((c) => c.name)]
+      .filter(Boolean)
+      .join(', '),
+  );
+
   function toggleCategory(id: string) {
     ui.filter.categoryIds = toggleId(ui.filter.categoryIds, id);
   }
@@ -64,10 +72,21 @@
   {/if}
 
   {#if view}
-    <div class="flex flex-col gap-2">
+    {#if !desktop}
+      <button
+        type="button"
+        class="inline-flex h-9 max-w-full items-center gap-1.5 self-start rounded-full bg-surface2 px-3.5 text-[15px] font-semibold"
+        aria-expanded={chipsOpen}
+        data-testid="board-filter-toggle"
+        onclick={() => (chipsOpen = !chipsOpen)}
+      >
+        <Icon name="sliders" size={16} stroke={2.2} /><span class="min-w-0 truncate">{t('Filter')}{filterSummary ? ` · ${filterSummary}` : ''}</span><Icon name={chipsOpen ? 'chevron-up' : 'chevron-down'} size={16} stroke={2.4} />
+      </button>
+    {/if}
+    <div class="flex flex-col gap-2 {!desktop && !chipsOpen ? 'hidden' : ''}" data-testid="board-chips">
       {#if !ui.isChild}
         <div class="flex items-center gap-2">
-          <div class="no-scrollbar -ml-3 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-3" role="group" aria-label={t('Personen')} use:scrollStrip={filterKey}>
+          <div class="no-scrollbar -ml-3 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-3 {desktop ? 'hidden' : ''}" role="group" aria-label={t('Personen')} use:scrollStrip={filterKey}>
             <Chip
               active={!personActive}
               pressed={!personActive}
@@ -87,6 +106,7 @@
               </Chip>
             {/each}
           </div>
+          {#if desktop}<span class="flex-1"></span>{/if}
           <Chip square label={t('Filter')} outline={hiddenFilter} onclick={() => openSheet({ type: 'filter' })}><Icon name="sliders" size={20} /></Chip>
         </div>
       {/if}

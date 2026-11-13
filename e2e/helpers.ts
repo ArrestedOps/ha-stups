@@ -13,9 +13,16 @@ export async function openBoards(page: Page): Promise<void> {
     await ((await current.count()) ? current.first() : list.getByRole('button').first()).click();
     await expect(page.getByTestId('boards-scroll')).toBeVisible();
   }
-  // Boards startet bei „Meine"; die Tests brauchen alle Aufgaben (ein Kind hat keine Personen-Chips)
+  // Boards startet bei „Meine"; die Tests brauchen alle Aufgaben (ein Kind hat keine Personen-Chips). Am Handy sind die Chips eingeklappt.
+  await openBoardFilters(page);
   const all = page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Alle', exact: true });
   if (await all.count()) await all.click();
+}
+
+/** Handy: klappt die Personen- und Kategorie-Chips der Board-Seite auf (am Desktop stehen sie immer da) */
+export async function openBoardFilters(page: Page): Promise<void> {
+  const toggle = page.getByTestId('board-filter-toggle');
+  if ((await toggle.count()) > 0 && (await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
 }
 
 /**

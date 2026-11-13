@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.3
+
+**Einstellungen, Mitteilungen, Startseiten im neuen Stil.** Einstellungen: einzeilige Zeilen mit Wert rechts, „Fertig“ oben rechts. Mitteilungen: eine gruppierte Liste, „Alle als gelesen markieren“ unten. „Noch kein Zugriff“ und Anmeldung ohne Leuchten. **Wächter:** Kategorien haben ein „…“-Menü (alle pausieren, alle aktivieren, neuer Wächter in der Kategorie); der „Wer“-Schritt zeigt Zeilen mit Symbol, der letzte Schritt beginnt mit WENN / DANN / WER.
+
+**Bitte prüfen (Testliste):** (1) Einstellungen öffnen und schließen („Fertig“, Escape). (2) Glocke: Mitteilungen lesen, „Alle als gelesen markieren“. (3) Wächter-Kategorie › „…“: alle pausieren und wieder aktivieren, „Neuer Wächter in …“ trägt die Kategorie schon ein. (4) Neuer Wächter, Schritt 3 und 4.
+
 ## 1.42.0-beta.2
 
 **Aufgaben-Details im neuen Stil.** Die Eigenschaften stehen als gruppierte Liste (Fällig, Zuständig, Wiederholung, …); am Handy gibt es unter der Liste einen großen Knopf „Erledigt“ und „Auf morgen verschieben“, ein Stups an dich erscheint als orange Karte. Am Desktop füllen die Details die ganze Höhe rechts. **Wächter-Assistent:** Vorlagen als Liste, eine Fortschrittsleiste, „Zurück“ ohne „Schließen“.

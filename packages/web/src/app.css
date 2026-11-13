@@ -596,6 +596,7 @@
 }
 .side-item:hover,
 .side-board:hover { background: var(--surface); color: var(--text); }
+.side-item[aria-pressed='true'],
 .side-item[aria-current='page'] {
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   background: color-mix(in srgb, var(--accent) 14%, transparent);

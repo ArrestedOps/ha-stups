@@ -78,6 +78,22 @@
     saveCollapse(memo);
   }
 
+  // Desktop: die Liste links (Alle Wächter, Mit Problem, Wartet, Läuft gerade, Kommt bald, Pausiert, Kategorien) wählt, was die Tabelle zeigt
+  let scope = $state<string>('all');
+  const scopeAll = $derived(!ui.desktop || scope === 'all');
+  const scopeCats = $derived(layout.groups);
+  const paused = $derived(items.filter((i) => !i.active));
+  const deskGroups = $derived.by(() => {
+    if (!ui.desktop || scope === 'all') return layout.groups;
+    if (scope === 'paused') return paused.length ? [{ key: 'paused', name: t('Pausiert'), items: paused }] : [];
+    if (scope.startsWith('cat:')) return layout.groups.filter((g) => `cat:${g.key}` === scope);
+    return [];
+  });
+  $effect(() => {
+    // die gewählte Kategorie gibt es nicht mehr: zurück zu „Alle“
+    if (scope.startsWith('cat:') && !layout.groups.some((g) => `cat:${g.key}` === scope)) scope = 'all';
+  });
+
   // Handy: eine Kategorie öffnet als eigene Seite (einheitlich für alle, auch mit 100 Batterien): Suche, Filter, „Mehr anzeigen“
   const PAGE_SIZE = 30;
   let page = $state<string | null>(null);
@@ -380,16 +396,43 @@
           {/if}
         </div>
       {:else}
+        <div class={ui.desktop ? 'flex items-start gap-6' : 'contents'}>
+          {#if ui.desktop}
+            <!-- Desktop (Entwurf): links die Auswahl, rechts die Tabelle -->
+            <aside class="sticky top-0 flex w-[240px] shrink-0 flex-col gap-px" aria-label={t('Wächter filtern')} data-testid="watchers-panel">
+              {#each [
+                { id: 'all', label: t('Alle Wächter'), icon: 'shield', n: allItems.length, hot: false },
+                { id: 'problem', label: t('Mit Problem'), icon: 'alert', n: layout.problems.length, hot: true },
+                { id: 'waiting', label: t('Wartet auf jemanden'), icon: 'flag', n: layout.waiting.length, hot: false },
+                { id: 'running', label: t('Läuft gerade'), icon: 'play', n: layout.running.length, hot: false },
+                { id: 'soon', label: t('Kommt bald'), icon: 'calendar', n: layout.soon.length, hot: false },
+                { id: 'paused', label: t('Pausiert'), icon: 'pause', n: paused.length, hot: false },
+              ] as it (it.id)}
+                <button class="side-item h-9 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={scope === it.id} onclick={() => (scope = it.id)}>
+                  <Icon name={it.icon} size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{it.label}</span>
+                  {#if it.n > 0}<span class={it.hot ? 'bell-count' : 'text-[13px] text-text-soft tabular-nums'}>{it.n}</span>{/if}
+                </button>
+              {/each}
+              <p class="side-head mt-3">{t('Kategorien')}</p>
+              {#each scopeCats as g (g.key)}
+                <button class="side-item h-9 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={scope === `cat:${g.key}`} onclick={() => (scope = `cat:${g.key}`)}>
+                  <Icon name="folder" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{g.name ?? t('Ohne Kategorie')}</span>
+                  <span class="text-[13px] text-text-soft tabular-nums">{g.items.length}</span>
+                </button>
+              {/each}
+            </aside>
+          {/if}
+          <div class={ui.desktop ? 'flex min-w-0 flex-1 flex-col gap-3.5' : 'contents'}>
         {#if query && items.length === 0}
           <p class="py-10 text-center text-fg2" data-testid="home-no-match">{t('Keine Treffer')}</p>
         {/if}
         <!-- Wächter mit Problem (keine Zuständigen, Entität oder Ziel fehlt): ganz oben, vor allem anderen, mit rotem Rand und dem Grund als Text -->
-        {#if layout.problems.length > 0}
+        {#if layout.problems.length > 0 && (scopeAll || scope === 'problem')}
           <section class="@container" aria-label={t('Wächter mit Problem')} data-testid="home-problems">
             {@render rowList(layout.problems, false, true)}
           </section>
         {/if}
-        {#if layout.waiting.length > 0}
+        {#if layout.waiting.length > 0 && (scopeAll || scope === 'waiting')}
           <section aria-label={t('Wartet auf jemanden')} data-testid="home-waiting">
             <SectionHeader title={t('Wartet auf jemanden')} icon="alert" iconTone="red" count={layout.waiting.length} large open={!closed.includes('waiting')} ontoggle={() => toggle('waiting')} />
             {#if !closed.includes('waiting')}
@@ -455,7 +498,7 @@
           {/if}
 
           {#each [{ key: 'running', title: t('Läuft gerade'), icon: 'play', tone: 'green', list: layout.running, label: t('Läuft gerade') }, { key: 'soon', title: t('Kommt bald'), icon: 'calendar', tone: 'orange', list: layout.soon, label: t('Kommt bald') }] as sec (sec.key)}
-            {#if sec.list.length > 0}
+            {#if sec.list.length > 0 && (scopeAll || scope === sec.key)}
               <section aria-label={sec.label} data-testid="home-{sec.key}">
                 <SectionHeader title={sec.title} icon={sec.icon} iconTone={sec.tone as 'green' | 'orange'} count={sec.list.length} large open={!closed.includes(sec.key)} ontoggle={() => toggle(sec.key)} />
                 {#if !closed.includes(sec.key)}{@render rowList(sec.list, true)}{/if}
@@ -463,7 +506,7 @@
             {/if}
           {/each}
 
-          {#if ui.desktop ? layout.groups.length > 0 : phoneGroups.length > 0}
+          {#if ui.desktop ? deskGroups.length > 0 : phoneGroups.length > 0}
             {#if !ui.desktop}
               <section aria-label={t('Kategorien')} data-testid="watcher-categories">
                 <SectionHeader title={t('Kategorien')} count={phoneGroups.length} large />
@@ -481,7 +524,7 @@
               </section>
             {:else}
             <section aria-label={t('Kategorien')} class="flex flex-col gap-3" data-testid="watcher-categories">
-              {#each layout.groups as g (g.key)}
+              {#each deskGroups as g (g.key)}
                 <div data-testid="watcher-category" data-category={g.name ?? ''}>
                   <SectionHeader title={g.name ?? t('Ohne Kategorie')} icon="folder" iconTone="soft" count={g.items.length} large open={open(g.key)} ontoggle={() => toggleCategory(g.key)} />
                   {#if open(g.key)}{@render rowList(g.items, false)}{/if}
@@ -492,7 +535,7 @@
           {/if}
         </div>
 
-        {#if activity.length > 0}
+        {#if activity.length > 0 && scopeAll}
           <section aria-label={t('Letzte Aktivität')} data-testid="home-activity">
             <SectionHeader title={t('Letzte Aktivität')} large />
             <ul class="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3">
@@ -506,6 +549,8 @@
             </ul>
           </section>
         {/if}
+          </div>
+        </div>
       {/if}
 
       {#if can('watchers')}

@@ -121,9 +121,9 @@ describe('Wächter-Zeile in der Tabelle (Desktop)', () => {
   it('Spalten richten sich nach der Breite der Liste: schmal weniger, mit denselben Klassen wie der Kopf', () => {
     const out = table();
     expect(out).toContain('grid-cols-[minmax(0,1fr)_4.5rem_7rem_3.25rem]');
-    expect(out).toMatch(/class="hidden @min-\[700px\]:block[^"]*"[^>]*data-testid="watcher-condition"/);
-    expect(out).toMatch(/class="hidden @min-\[900px\]:block[^"]*"[^>]*data-testid="watcher-last"/);
-    expect(out).toMatch(/class="hidden @min-\[1100px\]:flex[^"]*"[^>]*data-testid="watcher-next"/);
+    expect(out).toMatch(/class="hidden @min-\[560px\]:block[^"]*"[^>]*data-testid="watcher-condition"/);
+    expect(out).toMatch(/class="hidden @min-\[640px\]:block[^"]*"[^>]*data-testid="watcher-last"/);
+    expect(out).toMatch(/class="hidden @min-\[820px\]:flex[^"]*"[^>]*data-testid="watcher-next"/);
   });
 
   it('Schalter: ohne Recht deaktiviert, ausgeschaltet gedämpft mit „Aus", die Zeile öffnet über den Namen', () => {

@@ -44,7 +44,7 @@
         <span class="h-[22px] w-[22px] rounded-full border-[1.75px] border-ring"></span>
       {/if}
     </button>
-    <button type="button" data-row-open class="min-w-0 flex-1 text-left" onclick={() => void openCardAnywhere(card)}>
+    <button type="button" data-row-open aria-current={current ? 'true' : undefined} class="min-w-0 flex-1 text-left" onclick={() => void openCardAnywhere(card)}>
       <span class="block truncate text-[15px] leading-tight {done ? 'text-hint line-through' : ''}">{card.title}</span>
       {#if hasSub}
         <span class="mt-0.5 flex flex-wrap items-center gap-x-3 text-[12px] leading-tight text-text-soft">

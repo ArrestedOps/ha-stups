@@ -57,15 +57,14 @@ test.describe('Aufbau', () => {
     const side = page.getByTestId('sidebar');
     await expect(side).toBeVisible();
     expect((await side.boundingBox())!.width).toBe(256);
-    await expect(sideNav(page).getByRole('button')).toHaveCount(3);
-    for (const name of ['Aufgaben', 'Boards', 'Wächter']) await expect(sideNav(page).getByRole('button', { name })).toBeVisible();
+    for (const name of ['Aufgaben', 'Gestupst', 'Heute', 'Überfällig', 'Diese Woche', 'Erledigt', 'Kalender', 'Wächter']) await expect(sideNav(page).getByRole('button', { name, exact: true })).toBeVisible();
     await expect(sideNav(page).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
-    await expect(page.getByRole('heading', { name: 'Aufgaben', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Alle offen' })).toBeVisible();
     await expect(page.getByTestId('new-task')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Neue Aufgabe', exact: true })).toHaveCount(0);
     // Person unten mit Zahnrad
     await expect(page.getByTestId('side-user')).toContainText('Rene');
-    await expect(page.getByTestId('side-user').getByRole('button', { name: 'Einstellungen öffnen' })).toBeVisible();
+    await expect(page.getByTestId('sidebar').getByRole('button', { name: 'Einstellungen öffnen' })).toBeVisible();
 
     // Board über die Seitenleiste wählen: Reiter Boards, Titel = Name des Boards, sein Eintrag ist hervorgehoben
     await side.getByRole('navigation', { name: 'Boards' }).getByRole('button', { name: new RegExp(`^${s.boardName}`) }).click();

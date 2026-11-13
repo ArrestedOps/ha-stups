@@ -69,7 +69,7 @@ test('Erster Start mit Home Assistant: Einrichtung, dann Wächter-Reiter und Ver
     sensors: true,
     push: ['ha-notify'],
   });
-  await expect(nav(page).getByRole('button')).toHaveCount(3);
+  await expect(nav(page).getByRole('button')).toHaveCount(5);
   await expect(nav(page).getByRole('button', { name: 'Wächter' })).toBeVisible();
 
   const dialog = await einstellungen(page);

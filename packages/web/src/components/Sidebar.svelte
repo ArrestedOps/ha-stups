@@ -71,7 +71,7 @@
   const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 </script>
 
-<aside class="fixed inset-y-0 left-0 z-30 flex w-64 flex-col gap-0 overflow-y-auto border-r border-line bg-bg px-2.5 pt-4 pb-3" data-testid="sidebar">
+<aside class="fixed inset-y-0 left-0 z-30 flex w-64 flex-col gap-px overflow-y-auto border-r border-line bg-bg px-2.5 pt-4 pb-3" data-testid="sidebar">
   <div class="flex h-10 items-center gap-2 px-1.5">
     <img src={logo} alt="" class="block h-7 w-7 rounded-[7px]" width="28" height="28" />
     <span class="text-[20px] font-extrabold tracking-tight" aria-hidden="true">stups<span class="text-brand-dot">.</span></span>
@@ -88,15 +88,16 @@
     <button class="side-icon" aria-label={t('Einstellungen öffnen')} onclick={() => openSettings()}><Icon name="gear" size={20} /></button>
   </div>
 
-  <button class="mt-2 flex h-9 items-center gap-2 rounded-[10px] bg-surface2 px-2.5 text-[14px] text-text-soft" onclick={focusSearch} aria-label={t('Suchen')}>
+  <button class="mt-2 mb-2 flex h-9 shrink-0 items-center gap-2 rounded-[10px] bg-surface2 px-2.5 text-[14px] text-text-soft" onclick={focusSearch} aria-label={t('Suchen')}>
     <Icon name="search" size={16} stroke={2} /><span class="flex-1 text-left">{t('Suchen')} …</span>
     <kbd class="rounded-md bg-surface px-1.5 py-px font-sans text-[11px] font-semibold" aria-hidden="true">{mac ? '⌘ K' : `${t('Strg')} K`}</kbd>
   </button>
 
-  <nav class="mt-3 flex flex-col gap-px" aria-label={t('Ansicht')}>
-    <p class="side-head">{t('Aufgaben')}</p>
+  <!-- Die Navigationen stehen mit display: contents in einer Spalte; style:order stellt die Reihenfolge des Entwurfs her: Aufgaben, Boards, Mehr, Personen -->
+  <nav class="contents" aria-label={t('Ansicht')}>
+    <p class="side-head" style:order="10">{t('Aufgaben')}</p>
     {#each views as v (v.id)}
-      <button class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-label={v.id === 'all' ? t('Aufgaben') : undefined} aria-current={onTasks && ui.taskView === v.id ? 'page' : undefined} onclick={() => pickView(v.id)}>
+      <button style:order="10" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-label={v.id === 'all' ? t('Aufgaben') : undefined} aria-current={onTasks && ui.taskView === v.id ? 'page' : undefined} onclick={() => pickView(v.id)}>
         <Icon name={v.icon} size={18} stroke={1.8} />
         <span class="min-w-0 flex-1 truncate text-left">{v.label}</span>
         {#if v.n > 0}
@@ -105,64 +106,66 @@
       </button>
     {/each}
 
-    <p class="side-head mt-4 flex items-center justify-between" id="side-boards">
-      <span>Boards</span>
-      <button class="-mr-1 flex h-6 w-6 items-center justify-center rounded-md text-text-soft hover:bg-surface2" aria-label={t('Neues Board')} onclick={() => openSheet({ type: 'newBoard' })}><Icon name="plus" size={14} stroke={2.2} /></button>
-    </p>
-    {#if showBoards}
-      {#each ui.boards as b (b.id)}
-        {@const current = ui.tab === 'boards' && b.id === ui.boardId}
-        <button class="side-item side-board h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-current={current ? 'true' : undefined} onclick={() => openBoard(b.id)}>
-          <span class="h-2.5 w-2.5 shrink-0 rounded-full" style:background={dot(b.id, b.color)} aria-hidden="true"></span>
-          <span class="min-w-0 flex-1 truncate text-left">{b.name}</span>
-          <span class="shrink-0 text-[13px] text-text-soft tabular-nums" aria-label={t('{n} offen', { n: b.openCards })}>{b.openCards}</span>
-        </button>
-      {/each}
-      {#if !ui.isChild}
-        <button class="side-item h-8 gap-2.5 px-2.5 text-[13px] font-medium text-text-soft" onclick={() => openSheet({ type: 'boardSettings' })}><Icon name="gear" size={16} stroke={2} /><span class="min-w-0 truncate">{t('Board-Einstellungen')}</span></button>
-        {#if ui.archivedBoards.length > 0}
-          <button class="side-item h-8 gap-2.5 px-2.5 text-[13px] font-medium text-text-soft" onclick={() => openSheet({ type: 'archivedBoards' })}><Icon name="archive" size={16} stroke={2} /><span class="min-w-0 truncate">{t('Archivierte Boards')} ({ui.archivedBoards.length})</span></button>
-        {/if}
-        {#if ui.boards.length > 1}
-          <button class="side-item h-8 gap-2.5 px-2.5 text-[13px] font-medium text-text-soft" onclick={() => openSheet({ type: 'boardOrder' })}><Icon name="arrow-up" size={16} stroke={2} /><span class="min-w-0 truncate">{t('Reihenfolge ändern')}</span></button>
-        {/if}
-      {/if}
-    {/if}
-
-    <p class="side-head mt-4">{t('Mehr')}</p>
-    <button class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-current={ui.tab === 'tasks' && ui.tasksCalendar ? 'page' : undefined} onclick={() => goTasks('calendar')}>
+    <p class="side-head mt-4" style:order="30">{t('Mehr')}</p>
+    <button style:order="30" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-current={ui.tab === 'tasks' && ui.tasksCalendar ? 'page' : undefined} onclick={() => goTasks('calendar')}>
       <Icon name="calendar" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{t('Kalender')}</span>
     </button>
     {#if showWatchers}
-      <button class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-current={ui.tab === 'watchers' ? 'page' : undefined} onclick={() => selectTab('watchers')}>
+      <button style:order="30" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-current={ui.tab === 'watchers' ? 'page' : undefined} onclick={() => selectTab('watchers')}>
         <Icon name="shield" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{t('Wächter')}</span>
       </button>
     {/if}
-    <button class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium {ui.tab === 'boards' ? '' : 'sr-only'}" aria-current={ui.tab === 'boards' ? 'page' : undefined} onclick={() => selectTab('boards')} tabindex={ui.tab === 'boards' ? 0 : -1}>
+    <button style:order="30" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium {ui.tab === 'boards' ? '' : 'sr-only'}" aria-current={ui.tab === 'boards' ? 'page' : undefined} onclick={() => selectTab('boards')} tabindex={ui.tab === 'boards' ? 0 : -1}>
       <Icon name="layers" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">Boards</span>
     </button>
 
     {#if !ui.isChild}
-      <p class="side-head mt-4">{t('Personen')}</p>
+      <p class="side-head mt-4" style:order="40">{t('Personen')}</p>
       {#if ui.me?.isPerson}
-        <button class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={onlyId === ui.me.id} onclick={() => pickPerson([ui.me!.id])}>
+        <button style:order="40" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={onlyId === ui.me.id} onclick={() => pickPerson([ui.me!.id])}>
           <Avatar person={ui.me} size={20} /><span class="min-w-0 flex-1 truncate text-left">{t('Meine')}</span>
         </button>
       {/if}
-      <button class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={sf.personIds.length === 0} onclick={() => pickPerson([])}>
+      <button style:order="40" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={sf.personIds.length === 0} onclick={() => pickPerson([])}>
         <Icon name="user" size={18} stroke={1.8} /><span class="min-w-0 flex-1 truncate text-left">{t('Alle')}</span>
       </button>
       {#each people as p (p.id)}
-        <button class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={onlyId === p.id} onclick={() => pickPerson([p.id])}>
+        <button style:order="40" class="side-item h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-pressed={onlyId === p.id} onclick={() => pickPerson([p.id])}>
           <Avatar person={p} size={20} /><span class="min-w-0 flex-1 truncate text-left">{p.displayName}</span>
         </button>
       {/each}
     {/if}
   </nav>
 
-  <span class="flex-1"></span>
+  <nav class="contents" aria-labelledby="side-boards">
+    <p class="side-head mt-4 flex items-center justify-between" id="side-boards" style:order="20">
+      <span>Boards</span>
+      <button class="-mr-1 flex h-6 w-6 items-center justify-center rounded-md text-text-soft hover:bg-surface2" aria-label={t('Neues Board')} onclick={() => openSheet({ type: 'newBoard' })}><Icon name="plus" size={14} stroke={2.2} /></button>
+    </p>
+    {#if showBoards}
+      {#each ui.boards as b (b.id)}
+        {@const current = ui.tab === 'boards' && b.id === ui.boardId}
+        <button style:order="20" class="side-item side-board h-8 gap-2.5 px-2.5 text-[14px] font-medium" aria-current={current ? 'true' : undefined} onclick={() => openBoard(b.id)}>
+          <span class="h-2.5 w-2.5 shrink-0 rounded-full" style:background={dot(b.id, b.color)} aria-hidden="true"></span>
+          <span class="min-w-0 flex-1 truncate text-left">{b.name}</span>
+          <span class="shrink-0 text-[13px] text-text-soft tabular-nums" aria-label={t('{n} offen', { n: b.openCards })}>{b.openCards}</span>
+        </button>
+      {/each}
+      {#if !ui.isChild}
+        <button style:order="20" class="side-item h-8 gap-2.5 px-2.5 text-[13px] font-medium text-text-soft" onclick={() => openSheet({ type: 'boardSettings' })}><Icon name="gear" size={16} stroke={2} /><span class="min-w-0 truncate">{t('Board-Einstellungen')}</span></button>
+        {#if ui.archivedBoards.length > 0}
+          <button style:order="20" class="side-item h-8 gap-2.5 px-2.5 text-[13px] font-medium text-text-soft" onclick={() => openSheet({ type: 'archivedBoards' })}><Icon name="archive" size={16} stroke={2} /><span class="min-w-0 truncate">{t('Archivierte Boards')} ({ui.archivedBoards.length})</span></button>
+        {/if}
+        {#if ui.boards.length > 1}
+          <button style:order="20" class="side-item h-8 gap-2.5 px-2.5 text-[13px] font-medium text-text-soft" onclick={() => openSheet({ type: 'boardOrder' })}><Icon name="arrow-up" size={16} stroke={2} /><span class="min-w-0 truncate">{t('Reihenfolge ändern')}</span></button>
+        {/if}
+      {/if}
+    {/if}
+
+  </nav>
+  <span class="flex-1" style:order="90"></span>
   {#if ui.me}
-    <button class="mt-2 flex items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-left hover:bg-surface2" data-testid="side-user" aria-label={t('Profil öffnen')} onclick={() => openSettings()}>
+    <button style:order="95" class="mt-2 flex items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-left hover:bg-surface2" data-testid="side-user" aria-label={t('Profil öffnen')} onclick={() => openSettings()}>
       <Avatar person={ui.me} size={28} />
       <span class="min-w-0 truncate text-[13px] text-text-soft"><span class="font-semibold text-fg">{ui.me.displayName}</span> · {role}</span>
     </button>

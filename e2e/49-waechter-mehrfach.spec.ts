@@ -58,6 +58,8 @@ async function setup(request: APIRequestContext) {
 async function selectBoth(page: Page, names: string[], category: string) {
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   if ((page.viewportSize()?.width ?? 0) < 1024) await page.getByRole('button', { name: `Kategorie ${category} öffnen` }).click();
+  // Desktop: „Ansicht für“ steht auf „Nur meine“ und blendet Wächter ohne Zuständige aus; die Testwächter haben keine
+  else await page.getByTestId('side-who').getByRole('button', { name: 'Alle', exact: true }).click();
   await page.getByTestId('select-mode').click();
   for (const n of names) await page.getByRole('checkbox', { name: `${n} auswählen` }).check();
   await expect(page.getByTestId('selection-count')).toHaveText('2 ausgewählt');

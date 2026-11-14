@@ -1,17 +1,17 @@
 import type { BoardView, Card } from './api';
 
-/** Was der Server bei einer Meldung mitschickt: einzelne Karten oder „alles" */
+/** Was der Server bei einer Meldung mitschickt: einzelne Aufgaben oder „alles" */
 export interface Changes {
   full: boolean;
   cards: string[];
 }
 
-/** Einzelne Karten in einem Aufruf holen, nicht mehr als der Server erlaubt */
+/** Einzelne Aufgaben in einem Aufruf holen, nicht mehr als der Server erlaubt */
 export const MAX_DELTA_CARDS = 50;
 
 /**
- * Welche Karten nachgeladen werden. `null` heißt: alles neu laden (keine Angabe, „alles" gemeldet,
- * eine Lücke in der Nummerierung oder zu viele Karten auf einmal).
+ * Welche Aufgaben nachgeladen werden. `null` heißt: alles neu laden (keine Angabe, „alles" gemeldet,
+ * eine Lücke in der Nummerierung oder zu viele Aufgaben auf einmal).
  */
 export function deltaIds(changes: Changes | undefined, gap: boolean): string[] | null {
   if (!changes || changes.full || gap) return null;
@@ -22,8 +22,8 @@ export function deltaIds(changes: Changes | undefined, gap: boolean): string[] |
 const byPosition = (a: Card, b: Card) => (a.position < b.position ? -1 : a.position > b.position ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 /**
- * Setzt die frisch geholten Karten in die Ansicht ein: Karten der Liste, die der Server nicht mehr liefert
- * (gelöscht, archiviert), verschwinden; Karten eines anderen Boards gehören nicht hinein. Die Reihenfolge ist wie auf dem Server.
+ * Setzt die frisch geholten Aufgaben in die Ansicht ein: Aufgaben der Liste, die der Server nicht mehr liefert
+ * (gelöscht, archiviert), verschwinden; Aufgaben eines anderen Boards gehören nicht hinein. Die Reihenfolge ist wie auf dem Server.
  * `null`, wenn sich die Summe der Kosten ändern könnte: die steht nur im ganzen Board und lässt sich hier nicht nachrechnen.
  */
 export function applyCards(view: BoardView, ids: string[], fetched: Card[]): BoardView | null {

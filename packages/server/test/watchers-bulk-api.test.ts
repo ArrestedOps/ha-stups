@@ -197,7 +197,7 @@ describe('POST /api/watchers/bulk', () => {
     expect(await one(a)).toMatchObject({ status: 'ok' });
   });
 
-  it('Stupsen einer offenen Karte folgt der neuen Regel', async () => {
+  it('Stupsen einer offenen Aufgabe folgt der neuen Regel', async () => {
     const a = await create(battery(BAT_A, { nudge: { afterMin: 30, everyMin: null, max: 1 } }));
     await call(chef, 'POST', `/api/watchers/${a}/test`);
     const card = store.getBoardView(boardId).cards[0]!;
@@ -341,7 +341,7 @@ describe('POST /api/watchers/bulk-create', () => {
     expect((await list()).map((w) => w.countsForFairness)).toEqual([false, true]);
   });
 
-  it('eine Batterie, die schon leer ist, löst gleich eine Karte aus (wie beim Einzelanlegen)', async () => {
+  it('eine Batterie, die schon leer ist, löst gleich eine Aufgabe aus (wie beim Einzelanlegen)', async () => {
     ha.set(BAT_C, '3');
     await call(chef, 'POST', '/api/watchers/bulk-create', { base: base({ trigger: { entityId: BAT_A, kind: 'below', value: 20, forMin: 0 } }), devices: devices(BAT_A, BAT_C) });
     expect(store.getBoardView(boardId).cards).toHaveLength(1);

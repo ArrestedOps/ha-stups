@@ -6,7 +6,7 @@ import { type ApiKit } from './kit.js';
 
 /**
  * Mitteilungen (Glocke): der Posteingang der angemeldeten Person und ihr Gelesen-Marker.
- * Kind: erlaubt, aber der Store filtert auf Einträge zu eigenen (zugewiesenen) Karten (store/inbox.ts); fremde Boards erscheinen nie.
+ * Kind: erlaubt, aber der Store filtert auf Einträge zu eigenen (zugewiesenen) Aufgaben (store/inbox.ts); fremde Boards erscheinen nie.
  */
 export function registerInboxRoutes(app: FastifyInstance, k: ApiKit): void {
   const { store } = k;

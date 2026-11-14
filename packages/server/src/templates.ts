@@ -1,5 +1,5 @@
 /**
- * Eingebaute Board-Vorlagen: Spalten, Kategorien und Beispielkarten, zweisprachig. Beim Anlegen eines Boards wird eine Vorlage
+ * Eingebaute Board-Vorlagen: Spalten, Kategorien und Beispielaufgaben, zweisprachig. Beim Anlegen eines Boards wird eine Vorlage
  * in der Sprache der Person aufgelöst (`resolveTemplate`) und zu einem ganz normalen Board. Eigene Vorlagen (Tabelle
  * `board_templates`) haben dieselbe Form mit einfachen Texten (die Sprache des Speichernden).
  */
@@ -20,7 +20,7 @@ export interface TemplateData {
   cards: {
     title: string;
     description: string | null;
-    /** Index in `columns`; ein Termin nach heute schickt die Karte von selbst in „Geplant" */
+    /** Index in `columns`; ein Termin nach heute schickt die Aufgabe von selbst in „Geplant" */
     column: number;
     /** Indizes in `categories` */
     categories: number[];
@@ -30,7 +30,7 @@ export interface TemplateData {
     recurrence: Record<string, unknown> | null;
     /** Termin in ganzen Tagen ab heute (um die Standardzeit); null = ohne Termin */
     dueInDays: number | null;
-    /** Symbol und Farbe der Karte (Symbol-Bibliothek der Oberfläche); ältere eigene Vorlagen haben beides nicht */
+    /** Symbol und Farbe der Aufgabe (Symbol-Bibliothek der Oberfläche); ältere eigene Vorlagen haben beides nicht */
     icon?: string | null;
     iconColor?: string | null;
   }[];

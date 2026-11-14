@@ -8,7 +8,7 @@ const nav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
 test.describe('Start', () => {
   test('Drei Reiter, die App startet immer auf „Aufgaben": gemerkte alte Namen, Wächter und Boards ändern daran nichts', async ({ page }) => {
     await page.goto('/');
-    await expect(nav(page).getByRole('button')).toHaveText(['Aufgaben', 'Boards', 'Wächter']);
+    await expect(nav(page).getByRole('button')).toHaveText(['Aufgaben', 'Boards', '', 'Kalender', 'Wächter']);
     await expect(nav(page).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('heading', { name: 'Aufgaben' })).toBeVisible();
     // alte gemerkte Namen: Heute, Agenda und Kalender sind jetzt Aufgaben; Zuhause und „watchers" führen auch zu Aufgaben (Start)
@@ -32,13 +32,13 @@ test.describe('Start', () => {
     await expect(page.getByRole('heading', { name: 'Aufgaben' })).toBeVisible();
   });
 
-  test('Die frühere Kalenderansicht bleibt lesbar: gemerkte Monatsansicht öffnet der Kalender-Knopf, Aufgaben starten mit der Liste', async ({ page }) => {
+  test('Die frühere Kalenderansicht bleibt lesbar: gemerkte Monatsansicht öffnet der Reiter „Kalender“, Aufgaben starten mit der Liste', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => localStorage.setItem('stups.calmode', 'month'));
     await page.reload();
     await expect(page.getByTestId('tasks')).toBeVisible(); // Start ist die Liste
-    await page.getByRole('button', { name: 'Kalender öffnen' }).click();
-    await expect(page.getByRole('radio', { name: 'Monat' })).toHaveAttribute('aria-checked', 'true');
+    await nav(page).getByRole('button', { name: 'Kalender' }).click();
+    await expect(page.getByRole('radio', { name: 'Monat', exact: true })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByTestId('calendar-month')).toBeVisible();
   });
 });
@@ -68,14 +68,14 @@ test('Reiter „Wächter": auch Mitglieder (keine Administratoren) sehen ihn, nu
   }
 });
 
-test('Kopfzeile: auf jedem Reiter der Avatar oben rechts öffnet die Einstellungen, ohne die Seite zu verbreitern', async ({ page }) => {
+test('Kopfzeile: auf jedem Reiter das Zahnrad oben rechts öffnet die Einstellungen, ohne die Seite zu verbreitern', async ({ page }) => {
   await page.goto('/');
   for (const tab of ['Aufgaben', 'Boards', 'Wächter']) {
     await nav(page).getByRole('button', { name: tab }).click();
     const avatar = page.getByRole('button', { name: 'Einstellungen öffnen' });
     await expect(avatar).toBeVisible();
     const box = (await avatar.boundingBox())!;
-    expect(box.width).toBeGreaterThanOrEqual(44); // Trefferfläche
+    expect(box.width).toBeGreaterThanOrEqual(35.5); // runder Knopf 36 px, die Trefferfläche reicht 4 px darüber hinaus
     expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width); // nicht abgeschnitten
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await avatar.click();
@@ -85,15 +85,15 @@ test('Kopfzeile: auf jedem Reiter der Avatar oben rechts öffnet die Einstellung
   }
 });
 
-test('Die Einstellungen haben keine Zeile „Wächter", die Verwaltung öffnet im Reiter Wächter über „Alle Wächter verwalten"', async ({ page }) => {
+test('Die Einstellungen haben keine Zeile „Wächter", im Reiter Wächter gibt es keinen Knopf „Alle Wächter verwalten" mehr', async ({ page }) => {
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
+  await expect(page.getByRole('dialog', { name: 'Einstellungen' })).toBeVisible();
   await expect(page.getByRole('dialog').getByRole('button', { name: /^Wächter/ })).toHaveCount(0);
-  await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
-  await expect(page.getByRole('dialog').getByText('Karten, die von selbst aus Home Assistant entstehen')).toBeVisible();
+  await expect(page.getByTestId('home')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Alle Wächter verwalten' })).toHaveCount(0);
 });

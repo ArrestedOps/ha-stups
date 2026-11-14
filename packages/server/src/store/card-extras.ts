@@ -8,7 +8,7 @@ import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
 
-/** Anhänge, Kommentare, Checkliste und Links einer Karte */
+/** Anhänge, Kommentare, Checkliste und Links einer Aufgabe */
 export function createCardExtras(c: Ctx, late: unknown) {
   // Erst hier auf den vollen Typ gebracht: stünde Internals schon im Kopf, hinge sein Typ von sich selbst ab
   const s = late as Internals;
@@ -74,7 +74,7 @@ export function createCardExtras(c: Ctx, late: unknown) {
     const a = getAttachment(id);
     run('delete from attachments where id = ?', id);
     touchCard(a.cardId);
-    // Bei einer Wiederholung teilen sich Karten dieselbe Datei: gelöscht wird erst, wenn niemand sie mehr braucht
+    // Bei einer Wiederholung teilen sich Aufgaben dieselbe Datei: gelöscht wird erst, wenn niemand sie mehr braucht
     const used = (name: string) => !!one('select 1 as x from attachments where file = ? or thumb = ?', name, name);
     return { file: used(a.file) ? null : a.file, thumb: a.thumb && !used(a.thumb) ? a.thumb : null };
   }
@@ -156,11 +156,11 @@ export function createCardExtras(c: Ctx, late: unknown) {
     });
   }
 
-  /** Die Karte eines Links oder Kommentars (für die Zugriffsprüfung); null, wenn es ihn nicht gibt */
+  /** Die Aufgabe eines Links oder Kommentars (für die Zugriffsprüfung); null, wenn es ihn nicht gibt */
   const cardIdOfLink = (id: string): string | null => (one('select card_id from links where id = ?', id)?.card_id as string | undefined) ?? null;
   const cardIdOfComment = (id: string): string | null => (one('select card_id from comments where id = ?', id)?.card_id as string | undefined) ?? null;
 
-  /** Die Karte eines Checklistenpunkts (für die Rechte-Prüfung); null, wenn es ihn nicht gibt */
+  /** Die Aufgabe eines Checklistenpunkts (für die Rechte-Prüfung); null, wenn es ihn nicht gibt */
   const cardIdOfChecklistItem = (id: string): string | null => (one('select card_id from checklist_items where id = ?', id)?.card_id as string | undefined) ?? null;
 
   function itemRow(id: string): Row {

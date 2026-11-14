@@ -29,7 +29,7 @@ test.afterAll(async ({ request }) => {
   for (const id of created) await request.delete(`/api/boards/${id}`);
 });
 
-test('ein privates Board sieht nur sein Besitzer: Liste, Direktaufruf und Karten bei Conny nicht', async ({ browser, request }, info) => {
+test('ein privates Board sieht nur sein Besitzer: Liste, Direktaufruf und Aufgaben bei Conny nicht', async ({ browser, request }, info) => {
   const secret = `Geheim ${tag}`;
   const open = `Offen ${tag}`;
   const privateId = await board(request, secret, { visibility: 'private' });
@@ -120,7 +120,7 @@ test('später ändern: auf „Alle" stellen macht das Board für Conny sichtbar,
   }
 });
 
-test('Fairness: ein Board, das nicht zählt, nimmt seine erledigten Karten rückwirkend heraus', async ({ request }) => {
+test('Fairness: ein Board, das nicht zählt, nimmt seine erledigten Aufgaben rückwirkend heraus', async ({ request }) => {
   const id = await board(request, `Fair ${tag}`);
   const cols = ((await (await request.get(`/api/boards/${id}`)).json()) as { columns: { id: string }[] }).columns;
   const card = (await (await request.post(`/api/boards/${id}/cards`, { data: { title: `Zählt ${tag}`, columnId: cols[0]!.id } })).json()) as { id: string };
@@ -134,7 +134,7 @@ test('Fairness: ein Board, das nicht zählt, nimmt seine erledigten Karten rück
 });
 
 async function dateRowArrow(page: Page) {
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
 }
 
 test('Neue Aufgabe: ein Tipp auf den Pfeil der Zeile „Termin" öffnet die Terminwahl wie die Zeile selbst', async ({ page }) => {

@@ -5,7 +5,7 @@
 
   /**
    * Gemeinsam einrichten, Schritt 1: statt der einen Entität die Liste der gewählten Geräte aus „Gefunden“ mit ihrem aktuellen Wert. Einzelne
-   * lassen sich abwählen (mindestens eines bleibt). Die Werte des Auslösers darunter gelten für alle; Name und Kartentitel setzt Stups je Gerät.
+   * lassen sich abwählen (mindestens eines bleibt). Die Werte des Auslösers darunter gelten für alle; Name und Aufgabentitel setzt Stups je Gerät.
    */
   let { ed }: { ed: WatcherEditor } = $props();
   const title = $derived(ed.form.baseName ? ` · ${ed.form.baseName}` : '');
@@ -25,5 +25,5 @@
       </li>
     {/each}
   </ul>
-  <p class="px-3.5 pt-2 pb-3 text-[12.5px] leading-[1.45] text-hint">{t('Die Werte unten gelten für alle gewählten Geräte. Name und Titel der Karte setzt Stups je Gerät.')}</p>
+  <p class="px-3.5 pt-2 pb-3 text-[12.5px] leading-[1.45] text-hint">{t('Die Werte unten gelten für alle gewählten Geräte. Name und Titel der Aufgabe setzt Stups je Gerät.')}</p>
 </section>

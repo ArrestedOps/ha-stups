@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, setScope } from './helpers';
 
 // Aufgaben: was ist für mich dran, was haben die anderen. Der Test-Server meldet jeden als „rene" an (eine Person, ohne Home Assistant Administrator).
 // Der Server wird mit anderen Tests geteilt: eindeutige Titel, Termine mit festem Abstand zu „jetzt" (nicht abhängig von der Tageszeit:
@@ -25,7 +25,7 @@ async function seed(request: APIRequestContext) {
   return { me, other, tag, boardId: board.id, mk };
 }
 
-test('Aufgaben: meine Karten in Gruppen (Überfällig, Heute, Diese Woche, Später), die der anderen nicht; Erledigen nimmt sie weg', async ({ page, request }) => {
+test('Aufgaben: meine Aufgaben in Gruppen (Überfällig, Heute, Diese Woche, Später), die der anderen nicht; Erledigen nimmt sie weg', async ({ page, request }) => {
   const s = await seed(request);
   const overdue = `Überfällig ${s.tag}`;
   const tomorrow = `Morgen ${s.tag}`;
@@ -53,44 +53,40 @@ test('Aufgaben: meine Karten in Gruppen (Überfällig, Heute, Diese Woche, Spät
   await expect(page.getByRole('group', { name: 'Deine Zahlen' })).toBeVisible();
 
   // „Alle" zeigt auch die der anderen
-  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Alle', exact: true }).click();
+  await setScope(page, 'Alle');
   await expect(tasks.getByText(foreign)).toBeVisible();
-  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Meine' }).click();
+  await setScope(page, 'Meine');
 
-  // Erledigen per Kreis nimmt die Karte weg
+  // Erledigen per Kreis nimmt die Aufgabe weg
   await tasks.getByRole('checkbox', { name: `„${overdue}“ erledigen` }).click();
   await expect(tasks.getByText(overdue)).toHaveCount(0);
   const done = (await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string; completedAt: string | null }[] };
   expect(done.cards.find((c) => c.title === overdue)?.completedAt).not.toBeNull();
 });
 
-test('Aufgaben: Kalender-Knopf und „Monatsansicht" öffnen den Kalender (Tag, Woche, Monat), „‹ Aufgaben" führt zurück zur Liste', async ({ page }) => {
+test('Kalender: der Reiter „Kalender" öffnet ihn (Tag, 3 Tage, Woche, Monat), „‹ Aufgaben" führt zurück zur Liste', async ({ page }) => {
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
-  // Es gibt keinen Umschalter Liste/Tag/Woche/Monat mehr in der Liste
+  // Es gibt keinen Umschalter Liste/Tag/Woche/Monat in der Liste
   await expect(page.getByRole('radiogroup', { name: 'Ansicht' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Kalender öffnen' }).click();
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Kalender' }).click();
   const views = page.getByRole('radiogroup', { name: 'Ansicht' });
   await expect(page.getByRole('heading', { name: 'Kalender' })).toBeVisible();
-  await expect(views.getByRole('radio', { name: 'Woche' })).toHaveAttribute('aria-checked', 'true');
+  // auf dem Handy öffnet der Kalender mit 3 Tagen
+  await expect(views.getByRole('radio', { name: '3 Tage' })).toHaveAttribute('aria-checked', 'true');
   await expect(page.getByTestId('calendar-grid')).toBeVisible();
-  await views.getByRole('radio', { name: 'Monat' }).click();
+  await views.getByRole('radio', { name: 'Woche', exact: true }).click();
+  await expect(page.getByTestId('calendar-grid')).toBeVisible();
+  await views.getByRole('radio', { name: 'Monat', exact: true }).click();
   await expect(page.getByTestId('calendar-month')).toBeVisible();
-  await views.getByRole('radio', { name: 'Tag' }).click();
+  await views.getByRole('radio', { name: 'Tag', exact: true }).click();
   await expect(page.getByTestId('calendar-grid')).toBeVisible();
   await page.getByRole('button', { name: 'Aufgaben', exact: true }).first().click(); // „‹ Aufgaben" oben links
   await expect(page.getByTestId('tasks')).toBeVisible();
-  // die Wochenleiste: ein Tipp auf den Tag öffnet die Tagesansicht, „Monatsansicht" die Monatsansicht
-  await page.getByTestId('week-strip').getByRole('button', { name: /Heute/ }).click();
-  await expect(views.getByRole('radio', { name: 'Tag' })).toHaveAttribute('aria-checked', 'true');
-  await page.getByRole('button', { name: 'Aufgaben', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Monatsansicht' }).click();
-  await expect(views.getByRole('radio', { name: 'Monat' })).toHaveAttribute('aria-checked', 'true');
-  await expect(page.getByTestId('calendar-month')).toBeVisible();
 });
 
-test('Aufgaben: von oben nach unten Kopf, Zahlenleiste, Woche, Chips, dann die Gruppen (wie im Mockup)', async ({ page, request }) => {
+test('Aufgaben: von oben nach unten Kopf, Zahlenkacheln, Chips, dann die Gruppen (wie im Entwurf)', async ({ page, request }) => {
   const s = await seed(request);
   await s.mk(`Reihenfolge ${s.tag}`, { assigneeIds: [s.me], dueAt: new Date(Date.now() - 3_600_000).toISOString() });
   await page.goto('/');
@@ -102,16 +98,13 @@ test('Aufgaben: von oben nach unten Kopf, Zahlenleiste, Woche, Chips, dann die G
     await y(page.getByRole('button', { name: 'Einstellungen öffnen' })),
     await y(page.getByRole('heading', { name: 'Aufgaben' })),
     await y(page.getByTestId('tasks-sub')),
+    await y(page.getByTestId('scope-button')),
     await y(page.getByRole('group', { name: 'Deine Zahlen' })),
-    await y(page.getByTestId('week-strip')),
-    await y(page.getByRole('group', { name: 'Personen' })),
     await y(page.getByTestId('group-overdue')),
   ];
   expect(order, 'Reihenfolge der Bereiche von oben nach unten').toEqual([...order].sort((a, b) => a - b));
-  // Die Zahlenleiste hat drei Zellen, die Wochenleiste sieben Tage und den Kalender-Knopf
-  await expect(page.getByRole('group', { name: 'Deine Zahlen' }).getByText(/Heute fällig|Überfällig|Erledigt/)).toHaveCount(3);
-  // zwei Knöpfe oben (Monatsansicht und der Monat), sieben Tage und der Kalender-Knopf
-  await expect(page.getByTestId('week-strip').getByRole('button')).toHaveCount(10);
+  // Die Zahlen stehen in vier Kacheln: Heute fällig, Überfällig, Diese Woche, Erledigt heute
+  await expect(page.getByRole('group', { name: 'Deine Zahlen' }).getByText(/Heute fällig|Überfällig|Diese Woche|Erledigt/)).toHaveCount(4);
   // rechts neben den Chips der Filter-Knopf
   await expect(page.getByRole('button', { name: 'Filter' })).toBeVisible();
   // Zeile: Erledigt-Kreis, Titel, Mehr-Knopf
@@ -126,7 +119,7 @@ test('Aufgaben: „Fairness diese Woche" und „Bei den anderen" führen zu „D
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
-  await page.getByRole('button', { name: /Karten? offen/ }).click();
+  await page.getByRole('button', { name: /Aufgaben? offen/ }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText('Diese Woche', { exact: true }).first()).toBeVisible();
   await expect(dialog.getByTestId('fairness')).toBeVisible();
@@ -136,7 +129,7 @@ test('Aufgaben: „Fairness diese Woche" und „Bei den anderen" führen zu „D
   await expect(page.getByRole('dialog').getByTestId('fairness')).toBeVisible();
 });
 
-test('Kopfzeile auf allen drei Reitern: Logo, Glocke, Zahnrad und Profilbild, kein „‹ Dashboard" mehr', async ({ page }) => {
+test('Kopfzeile auf allen drei Reitern: Logo, Glocke und Zahnrad, kein „‹ Dashboard" mehr', async ({ page }) => {
   await page.goto('/');
   await openBoards(page);
   const nav = page.getByRole('navigation', { name: 'Ansicht' });
@@ -145,12 +138,11 @@ test('Kopfzeile auf allen drei Reitern: Logo, Glocke, Zahnrad und Profilbild, ke
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Mitteilungen/ })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Einstellungen öffnen' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Profil öffnen' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Dashboard', exact: true })).toHaveCount(0);
   }
 });
 
-test('Glocke: Zahnrad und Profilbild öffnen die Einstellungen, die Glocke die Mitteilungen (nach „Alle gelesen“ kein Punkt, Chips wie im Entwurf)', async ({ page, request }) => {
+test('Glocke: das Zahnrad öffnet die Einstellungen, die Glocke die Mitteilungen (nach „Alle gelesen“ kein Punkt, Chips wie im Entwurf)', async ({ page, request }) => {
   // Andere Tests lassen Ereignisse für diese Person zurück: erst alles lesen, dann zählt nur, was jetzt dazukommt
   expect((await request.put('/api/me/inbox-seen', { data: {} })).status()).toBe(200);
   await page.goto('/');
@@ -164,8 +156,6 @@ test('Glocke: Zahnrad und Profilbild öffnen die Einstellungen, die Glocke die M
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Einstellungen öffnen' }).click();
   await expect(page.getByRole('dialog', { name: 'Einstellungen' })).toBeVisible();
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Profil öffnen' }).click();
   await expect(page.getByRole('dialog', { name: 'Einstellungen' }).getByTestId('settings-head')).toBeVisible();
 });
 
@@ -183,4 +173,43 @@ test('Einstellungen › Home Assistant: „Dashboard" (Ziel des Home-Knopfs) und
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-checked', before === 'true' ? 'false' : 'true');
   await toggle.click(); // zurück, der Merkzettel gehört dem Gerät
+});
+
+test('Aufgaben: nach rechts wischen erledigt, nach links liegen „Später“ und „Löschen“ bereit', async ({ page, request }) => {
+  const s = await seed(request);
+  const done = `Wischen ${s.tag}`;
+  const later = `Spaeter ${s.tag}`;
+  // beide Termine liegen in wenigen Minuten, also heute (+3 Stunden würde abends über Mitternacht reichen: dann wäre „morgen“ schon der Termin und „Später“ änderte nichts)
+  await s.mk(done, { assigneeIds: [s.me], dueAt: new Date(Date.now() + 2 * 60_000).toISOString() });
+  const l = await s.mk(later, { assigneeIds: [s.me], dueAt: new Date(Date.now() + 3 * 60_000).toISOString() });
+  await page.goto('/');
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
+  const tasks = page.getByTestId('tasks');
+  // Zeigerereignisse wie von einem Finger (die Maus des Testbrowsers löst auf dem emulierten Handy keine aus)
+  const drag = async (title: string, dx: number) => {
+    const el = tasks.getByText(title, { exact: true });
+    const box = (await el.boundingBox())!;
+    const x = box.x + 40;
+    const y = box.y + box.height / 2;
+    const fire = (type: string, cx: number) =>
+      el.dispatchEvent(type, { pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: cx, clientY: y, bubbles: true });
+    await fire('pointerdown', x);
+    for (const f of [0.25, 0.5, 0.75, 1]) await fire('pointermove', x + dx * f);
+    await fire('pointerup', x + dx);
+  };
+  // nach links: die Knöpfe bleiben offen
+  await drag(later, -200);
+  await expect(tasks.getByRole('button', { name: 'Später', exact: true })).toBeVisible();
+  await expect(tasks.getByRole('button', { name: 'Löschen', exact: true })).toBeVisible();
+  // „Später“ setzt den Termin auf morgen
+  const before = ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { id: string; dueAt: string }[] }).cards.find((c) => c.id === l.id)!.dueAt;
+  await tasks.getByRole('button', { name: 'Später', exact: true }).click();
+  await expect
+    .poll(async () => ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { id: string; dueAt: string }[] }).cards.find((c) => c.id === l.id)!.dueAt)
+    .not.toBe(before);
+  // nach rechts: erledigt
+  await drag(done, 260);
+  await expect(tasks.getByText(done, { exact: true })).toHaveCount(0);
+  const cards = ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string; completedAt: string | null }[] }).cards;
+  expect(cards.find((c) => c.title === done)?.completedAt).not.toBeNull();
 });

@@ -9,7 +9,7 @@ export interface OrderEntry {
 
 export interface OrderView {
   mode: AssignMode;
-  /** Der Kreis in der Reihenfolge, in der die Karten verteilt werden, wer als Nächstes dran ist zuerst */
+  /** Der Kreis in der Reihenfolge, in der die Aufgaben verteilt werden, wer als Nächstes dran ist zuerst */
   circle: OrderEntry[];
   /** Es gibt eine Reihenfolge (reihum): die Oberfläche zeichnet Pfeile dazwischen */
   ordered: boolean;

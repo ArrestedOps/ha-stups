@@ -25,8 +25,8 @@ const later = (min: number) => {
   now = new Date(now.getTime() + min * 60_000);
 };
 
-describe('Aktivitätsverlauf einer Karte', () => {
-  it('beginnt mit „angelegt" und nennt, wer die Karte angelegt hat', () => {
+describe('Aktivitätsverlauf einer Aufgabe', () => {
+  it('beginnt mit „angelegt" und nennt, wer die Aufgabe angelegt hat', () => {
     const { b, open } = setup();
     const card = store.createCard(b.id, { columnId: open.id, title: 'Fenster' }, rene.id);
     expect(card.activity).toEqual([
@@ -120,7 +120,7 @@ describe('Aktivitätsverlauf einer Karte', () => {
     expect(back.activity[0]).toMatchObject({ kind: 'reopened', byName: 'Conny', to: open.name });
   });
 
-  it('eine Karte ohne Eintrag in der Tabelle (vor dieser Version) zeigt trotzdem „angelegt"', () => {
+  it('eine Aufgabe ohne Eintrag in der Tabelle (vor dieser Version) zeigt trotzdem „angelegt"', () => {
     const { b, open } = setup();
     const card = store.createCard(b.id, { columnId: open.id, title: 'Alt' }, null);
     expect(card.activity).toEqual([expect.objectContaining({ kind: 'created', byName: null })]);

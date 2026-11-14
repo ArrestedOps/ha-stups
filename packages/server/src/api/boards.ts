@@ -124,7 +124,7 @@ export function registerBoardRoutes(app: FastifyInstance, k: ApiKit): void {
   });
   /**
    * Was eine Änderung der Sichtbarkeit oder der Mitglieder bewirken würde, ohne sie auszuführen (für den Bestätigungsdialog): wer das
-   * Board nicht mehr sieht, welche Wächter das trifft (Zuständige jetzt und danach), wie viele Karten Zuständige verlieren und welche
+   * Board nicht mehr sieht, welche Wächter das trifft (Zuständige jetzt und danach), wie viele Aufgaben Zuständige verlieren und welche
    * Wächter verhindern, dass das Board privat wird. Query: `visibility`, `members` (Kennungen, getrennt durch Komma).
    */
   app.get<{ Params: Params; Querystring: { visibility?: string; members?: string } }>('/api/boards/:id/access-preview', async (req) => {
@@ -192,7 +192,7 @@ export function registerBoardRoutes(app: FastifyInstance, k: ApiKit): void {
     const b = body(req);
     return reply.code(201).send(store.duplicateBoard(req.params.id, { name: b.name, structure: b.structure, openCards: b.openCards, keepVisibility: b.keepVisibility }, req.user?.id ?? null));
   });
-  // Boards ohne Besitzer (die Person ist entfernt): niemand sieht sie; ein Administrator sieht nur Name und Zahl der Karten und darf sie löschen
+  // Boards ohne Besitzer (die Person ist entfernt): niemand sieht sie; ein Administrator sieht nur Name und Zahl der Aufgaben und darf sie löschen
   app.get('/api/admin/orphan-boards', async (req) => {
     requireAdmin(req);
     return store.orphanBoards();

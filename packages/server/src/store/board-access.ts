@@ -15,7 +15,7 @@ export interface WatcherImpact {
   before: string[];
   /** Zuständige danach */
   after: string[];
-  /** niemand bleibt: der Wächter legt keine Karten mehr an, bis neue Zuständige gewählt sind (Status `assignees_missing`) */
+  /** niemand bleibt: der Wächter legt keine Aufgaben mehr an, bis neue Zuständige gewählt sind (Status `assignees_missing`) */
   missing: boolean;
   /** Der Kreis ist leer („alle im Board"): er schrumpft nur mit dem Board, eingetragen wird nichts */
   circleEmpty: boolean;
@@ -31,7 +31,7 @@ export interface BoardAccessPlan {
   watchers: WatcherImpact[];
   /** Wächter, die verhindern, dass das Board privat wird (jeder, der auf das Board zeigt) */
   blocking: { id: string; name: string }[];
-  /** Karten dieses Boards, bei denen Zuständige entfernt werden */
+  /** Aufgaben dieses Boards, bei denen Zuständige entfernt werden */
   assigneeCards: number;
   /** Neue Regel je betroffenem Wächter (nur bei einem nicht leeren Kreis oder wegfallendem Rückfall) */
   rules: { watcherId: string; rule: AssignRule }[];
@@ -64,11 +64,11 @@ export function createBoardAccess(c: Ctx, late: unknown) {
   const { all, one, run, iso } = c;
   const { touchCard } = lazy(s, ['touchCard'] as const);
 
-  /** Alle Wächter, deren Karten auf dieses Board kommen */
+  /** Alle Wächter, deren Aufgaben auf dieses Board kommen */
   function watchersOfBoard(boardId: string): { id: string; name: string; assign: AssignRule }[] {
     return all('select id, name, card_json, assign_json from watchers order by position, created_at, rowid').flatMap((r) => {
       try {
-        // Das Board steht in der Vorlage der Karte (Spalte card_json); die Auswertung in Javascript hält sich nicht an JSON1
+        // Das Board steht in der Vorlage der Aufgabe (Spalte card_json); die Auswertung in Javascript hält sich nicht an JSON1
         const card = JSON.parse(r.card_json ?? '{}') as { boardId?: string };
         return card.boardId === boardId ? [{ id: r.id as string, name: r.name as string, assign: JSON.parse(r.assign_json) as AssignRule }] : [];
       } catch {
@@ -79,7 +79,7 @@ export function createBoardAccess(c: Ctx, late: unknown) {
 
   /**
    * Plant die Folgen einer Änderung der Personen eines Boards (ohne zu schreiben): wer nicht mehr sieht, welche Wächter das trifft,
-   * wer danach zuständig ist, und ob der Wächter dann keine Karten mehr anlegen kann. Wird das Board privat, verbietet jeder Wächter,
+   * wer danach zuständig ist, und ob der Wächter dann keine Aufgaben mehr anlegen kann. Wird das Board privat, verbietet jeder Wächter,
    * der darauf zeigt, die Änderung (`blocking`).
    */
   function planBoardAccess(boardId: string, input: { visibility: BoardVisibility; oldPeople: string[]; newPeople: string[] }): BoardAccessPlan {
@@ -143,7 +143,7 @@ export function createBoardAccess(c: Ctx, late: unknown) {
 
   /**
    * Führt den Plan aus: entfernt die Zuständigkeiten der Personen, die das Board nicht mehr sehen, und nimmt sie aus den Kreisen der
-   * Wächter. Bleibt bei einem Wächter niemand übrig, bekommt er `assignees_missing` (er legt keine Karten mehr an). Läuft in der
+   * Wächter. Bleibt bei einem Wächter niemand übrig, bekommt er `assignees_missing` (er legt keine Aufgaben mehr an). Läuft in der
    * Transaktion der Board-Änderung.
    */
   function applyBoardAccess(boardId: string, plan: BoardAccessPlan): BoardEffects {
@@ -222,7 +222,7 @@ export function createBoardAccess(c: Ctx, late: unknown) {
     return out;
   }
 
-  // ----- Boards ohne Besitzer (nur Name und Zahl der Karten, für Administratoren) -----
+  // ----- Boards ohne Besitzer (nur Name und Zahl der Aufgaben, für Administratoren) -----
 
   /** Private oder ausgewählte Boards, deren Besitzer keine Person in Stups mehr ist: niemand sieht sie, ein Administrator darf sie löschen */
   function orphanBoards(): { id: string; name: string; cards: number }[] {
@@ -234,7 +234,7 @@ export function createBoardAccess(c: Ctx, late: unknown) {
     ).map((r) => ({ id: r.id as string, name: r.name as string, cards: Number(r.cards) }));
   }
 
-  /** Löscht ein Board ohne Besitzer endgültig (samt Karten); ein anderes gibt es hier nicht */
+  /** Löscht ein Board ohne Besitzer endgültig (samt Aufgaben); ein anderes gibt es hier nicht */
   function deleteOrphanBoard(id: string): void {
     if (!orphanBoards().some((b) => b.id === id)) throw new NotFoundError(t('Board nicht gefunden'));
     run('delete from boards where id = ?', id);

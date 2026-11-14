@@ -14,7 +14,7 @@
 </script>
 
 <Page title={t('Termine')}>
-  <Group title={t('Vorgaben')} hint={t('Gilt für alle: Schreibst du beim Anlegen einer Karte nur ein Datum („morgen“) ohne Uhrzeit, bekommt der Termin diese Uhrzeit. Das ändern Administratoren und wer die Berechtigung „App-Einstellungen“ hat.')}>
+  <Group title={t('Vorgaben')} hint={t('Gilt für alle: Schreibst du beim Anlegen einer Aufgabe nur ein Datum („morgen“) ohne Uhrzeit, bekommt der Termin diese Uhrzeit. Das ändern Administratoren und wer die Berechtigung „App-Einstellungen“ hat.')}>
     <SettingRow label={t('Standard-Uhrzeit für Termine')}>
       <input
         type="time"

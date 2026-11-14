@@ -5,9 +5,44 @@ export async function openBoards(page: Page): Promise<void> {
   const nav = page.getByRole('navigation', { name: /^(Ansicht|View)$/ });
   await nav.getByRole('button', { name: 'Boards' }).click();
   await expect(nav.getByRole('button', { name: 'Boards' })).toHaveAttribute('aria-current', 'page');
-  // Boards startet bei „Meine"; die Tests brauchen alle Karten (ein Kind hat keine Personen-Chips)
+  // Handy: die Liste der Boards ist die Startseite, ein Tipp auf das (gemerkte) Board öffnet seine Spalten
+  const list = page.getByTestId('board-list');
+  await expect(list.or(page.getByTestId('boards-scroll')).or(page.getByTestId('kanban')).first()).toBeVisible();
+  if (await list.count()) {
+    const current = list.locator('[aria-current="true"]');
+    await ((await current.count()) ? current.first() : list.getByRole('button').first()).click();
+    await expect(page.getByTestId('boards-scroll')).toBeVisible();
+  }
+  // Boards startet bei „Meine"; die Tests brauchen alle Aufgaben (ein Kind hat keine Personen-Chips). Am Handy sind die Chips eingeklappt.
+  await openBoardFilters(page);
   const all = page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Alle', exact: true });
   if (await all.count()) await all.click();
+}
+
+/** Handy: klappt die Personen- und Kategorie-Chips der Board-Seite auf (am Desktop stehen sie immer da) */
+export async function openBoardFilters(page: Page): Promise<void> {
+  const toggle = page.getByTestId('board-filter-toggle');
+  if ((await toggle.count()) > 0 && (await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
+}
+
+/**
+ * Wessen Aufgaben die Liste in Aufgaben zeigt: „Alle“, „Meine“ oder der Name einer Person. Handy: das Menü „Meine Aufgaben ▾“;
+ * Desktop: die Einträge unter „Personen“ in der Seitenleiste.
+ */
+export async function setScope(page: Page, who: string): Promise<void> {
+  const button = page.getByTestId('scope-button');
+  const chips = page.getByRole('group', { name: 'Personen' });
+  if ((await button.count()) === 0 && (await page.getByTestId('board-filter-toggle').count()) > 0) {
+    // Board-Seite am Handy: die Chips (eingeklappt) wählen die Person
+    await openBoardFilters(page);
+    await chips.getByRole('button', { name: who, exact: false }).first().click();
+  } else if (await button.count()) {
+    await button.click();
+    const label = who === 'Alle' ? 'Alle Aufgaben' : who === 'Meine' ? 'Meine Aufgaben' : `Aufgaben von ${who}`;
+    await page.getByRole('menuitemradio', { name: label }).click();
+  } else {
+    await page.getByTestId('sidebar').getByRole('button', { name: who, exact: true }).click();
+  }
 }
 
 /**
@@ -30,14 +65,14 @@ export async function skipOnboarding(page: Page): Promise<void> {
 
 /**
  * Aufgaben öffnen, auf Wunsch „Alle“ statt „Meine“ wählen (die Standardwahl ist „Meine“; der Filter gilt auch im Kalender) und eine Ansicht
- * wählen: die Liste, oder Tag, Woche, Monat (der Kalender ist eine Seite unter Aufgaben, der Kalender-Knopf der Wochenleiste öffnet sie)
+ * wählen: die Liste, oder Tag, Woche, Monat (der Kalender ist eine Seite unter Aufgaben, der Reiter „Kalender“ in der Leiste öffnet sie)
  */
 export async function openTasksView(page: Page, view: 'Liste' | 'Tag' | 'Woche' | 'Monat', all = true): Promise<void> {
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
-  if (all) await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: 'Alle', exact: true }).click();
+  if (all) await setScope(page, 'Alle');
   if (view === 'Liste') return;
-  await page.getByRole('button', { name: 'Kalender öffnen' }).click();
-  await page.getByRole('radiogroup', { name: 'Ansicht' }).getByRole('radio', { name: view }).click();
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Kalender' }).click();
+  await page.getByRole('radiogroup', { name: 'Ansicht' }).getByRole('radio', { name: view, exact: true }).click();
 }
 
 /** Die Liste in Aufgaben (die frühere Agenda) öffnen, mit „Alle“ statt „Meine“ */
@@ -83,3 +118,17 @@ export async function pickDue(page: Page, due: string): Promise<void> {
 
 /** Das Fenster „Neue Aufgabe“ (der Titel steht im Feld „Was steht an?“) */
 export const newTaskSheet = (page: Page) => page.getByRole('dialog', { name: 'Neue Aufgabe' });
+
+/**
+ * Wächter am Handy: die Kategorie ist eine eigene Seite; öffnet sie (ohne Namen: die erste Kategorie). Steht der Wächter oben in einem Bereich
+ * (Läuft gerade, Kommt bald, Wartet, Problem) und gibt es die Kategorie nicht, bleibt die Übersicht. Am Desktop steht alles in der Tabelle.
+ */
+export async function openWatcherCategory(page: Page, name?: string | RegExp): Promise<void> {
+  if ((await page.getByTestId('watcher-table-head').count()) > 0) return;
+  await expect(page.getByTestId('watcher-list')).toBeVisible();
+  const cats = page.getByTestId('watcher-category');
+  const target = name ? cats.filter({ hasText: name }) : cats;
+  if ((await target.count()) === 0) return;
+  await target.first().getByRole('button').click();
+  await expect(page.getByTestId('watcher-page')).toBeVisible();
+}

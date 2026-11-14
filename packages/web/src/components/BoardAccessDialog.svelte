@@ -9,7 +9,7 @@
 
   /**
    * Zwei Dialoge zu den Personen eines Boards. `remove`: vor dem Entfernen von Personen (oder dem Wechsel auf „Nur ich") mit ALLEN betroffenen
-   * Wächtern, je Zeile „Zuständige jetzt → Danach"; bleibt niemand, steht es orange da (der Wächter legt dann keine Karten an). `blocked`: das
+   * Wächtern, je Zeile „Zuständige jetzt → Danach"; bleibt niemand, steht es orange da (der Wächter legt dann keine Aufgaben an). `blocked`: das
    * Board kann nicht privat werden, solange Wächter darauf zeigen (mit „Wächter öffnen"). Am Desktop breit (≈ 860 px): Wächter und
    * „Zuständige jetzt" in einer Zeile (nowrap, feste Breiten), nur „Danach" darf umbrechen.
    */
@@ -38,10 +38,10 @@
   const wide = $derived(ui.desktop);
   const sub = $derived(
     preview.watchers.length > 0
-      ? tn('Das ändert {n} Wächter. Es gehen keine Karten verloren.', 'Das ändert {n} Wächter. Es gehen keine Karten verloren.', preview.watchers.length)
+      ? tn('Das ändert {n} Wächter. Es gehen keine Aufgaben verloren.', 'Das ändert {n} Wächter. Es gehen keine Aufgaben verloren.', preview.watchers.length)
       : preview.assigneeCards > 0
-        ? t('Zuständigkeiten anderer werden entfernt. Es gehen keine Karten verloren.')
-        : t('Es gehen keine Karten verloren.'),
+        ? t('Zuständigkeiten anderer werden entfernt. Es gehen keine Aufgaben verloren.')
+        : t('Es gehen keine Aufgaben verloren.'),
   );
 
   function key(e: KeyboardEvent) {
@@ -69,7 +69,7 @@
         {#if kind === 'remove'}
           <p class="mt-1 text-[13px] text-fg2" data-testid="access-sub">{sub}</p>
         {:else}
-          <p class="mt-1 text-[14px] leading-[1.45] text-fg2">{t('Diese Wächter legen Karten in „{board}“ an. Ändere zuerst ihr Ziel-Board, dann kann das Board privat werden.', { board: boardName })}</p>
+          <p class="mt-1 text-[14px] leading-[1.45] text-fg2">{t('Diese Wächter legen Aufgaben in „{board}“ an. Ändere zuerst ihr Ziel-Board, dann kann das Board privat werden.', { board: boardName })}</p>
         {/if}
       </div>
     </div>
@@ -92,7 +92,7 @@
                 <td class="overflow-hidden py-2.5 pr-3 font-bold text-ellipsis whitespace-nowrap" title={w.name}>{w.name}</td>
                 <td class="overflow-hidden py-2.5 pr-3 text-ellipsis whitespace-nowrap" title={names(w.before)}>{names(w.before)}</td>
                 <td class="py-2.5">
-                  {#if w.missing}<span class="text-accent-text"><b>{t('niemand')}:</b> {t('Wächter legt keine Karten an, bis neue Zuständige gewählt sind')}</span>{:else}{afterText(w.after.map(name), w.mode)}{/if}
+                  {#if w.missing}<span class="text-accent-text"><b>{t('niemand')}:</b> {t('Wächter legt keine Aufgaben an, bis neue Zuständige gewählt sind')}</span>{:else}{afterText(w.after.map(name), w.mode)}{/if}
                 </td>
               </tr>
             {/each}
@@ -104,7 +104,7 @@
             <li class="flex flex-col gap-1 rounded-row border px-3 py-2.5 text-[14px] {w.missing ? 'border-accent bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface))]' : 'border-line bg-surface2'}" data-missing={w.missing ? '' : undefined}>
               <span class="font-bold">{w.name}</span>
               <span class="text-fg2">{names(w.before)} →</span>
-              {#if w.missing}<span class="text-accent-text"><b>{t('niemand')}:</b> {t('Wächter legt keine Karten an, bis neue Zuständige gewählt sind')}</span>{:else}<span>{afterText(w.after.map(name), w.mode)}</span>{/if}
+              {#if w.missing}<span class="text-accent-text"><b>{t('niemand')}:</b> {t('Wächter legt keine Aufgaben an, bis neue Zuständige gewählt sind')}</span>{:else}<span>{afterText(w.after.map(name), w.mode)}</span>{/if}
             </li>
           {/each}
         </ul>

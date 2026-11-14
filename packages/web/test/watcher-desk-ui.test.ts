@@ -40,14 +40,14 @@ beforeEach(() => {
 });
 
 describe('Formular „Neuer Wächter“ am Desktop: die Blöcke', () => {
-  it('Wenn, Dann und „Wer bekommt die Karte?“ mit Nummern, dazu Vorschau, Mehr Einstellungen und die Knöpfe unten', () => {
+  it('Wenn, Dann und „Wer bekommt die Aufgabe?“ mit Nummern, dazu Vorschau, Mehr Einstellungen und die Knöpfe unten', () => {
     const out = html(editor());
     for (const x of ['data-testid="desk-when"', 'data-testid="desk-then"', 'data-testid="desk-who"', 'data-testid="desk-preview"']) expect(out).toContain(x);
     expect(out).toMatch(/Wenn\s*<\/h3>/);
     expect(out).toMatch(/Dann\s*<\/h3>/);
-    expect(out).toContain('Wer bekommt die Karte?');
+    expect(out).toContain('Wer bekommt die Aufgabe?');
     expect(out).toContain('Vorschau');
-    expect(out).toContain('So erscheint die Karte');
+    expect(out).toContain('So erscheint die Aufgabe');
     for (const b of ['Probelauf', 'Abbrechen', 'Wächter anlegen']) expect(out).toContain(b);
     // Reihenfolge im Dokument = Tab-Reihenfolge: Wenn → Dann → Wer → Mehr → unten
     expect(out.indexOf('desk-when')).toBeLessThan(out.indexOf('desk-then'));
@@ -120,7 +120,7 @@ describe('Vorschau', () => {
   it('ohne Entität steht ein Hinweis statt des Verlaufs', () => {
     expect(html(editor())).toContain('Wähle eine Entität, dann erscheint ihr Verlauf.');
   });
-  it('mit Entität steht der Verlauf (die Karte „graph-card“)', () => {
+  it('mit Entität steht der Verlauf (die Aufgabe „graph-card“)', () => {
     const ed = editor();
     ed.applySuggestion(hit(7));
     expect(html(ed)).toContain('data-testid="entity-graph"');
@@ -186,7 +186,7 @@ describe('Englisch', () => {
     const ed = editor();
     ed.applySuggestion(hit(7));
     const out = html(ed);
-    for (const x of ['When</h3>', 'Then</h3>', 'Who gets the card?', 'More settings', 'Trial run', 'Cancel', 'suggested', 'rises above', 'falls below', 'Preview', 'How the card will look', 'New watcher']) expect(out).toContain(x);
+    for (const x of ['When</h3>', 'Then</h3>', 'Who gets the task?', 'More settings', 'Trial run', 'Cancel', 'suggested', 'rises above', 'falls below', 'Preview', 'How the task will look', 'New watcher']) expect(out).toContain(x);
     expect(out).not.toContain('Wächter anlegen');
   });
 });

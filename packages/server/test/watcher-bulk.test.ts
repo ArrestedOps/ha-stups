@@ -20,7 +20,7 @@ const config = (extra: Partial<WatcherConfig> = {}): WatcherConfig => ({
 });
 
 describe('applyBulkPatch', () => {
-  it('Board und Spalte ändern, Titel, Beschreibung und Symbol der Karte bleiben', () => {
+  it('Board und Spalte ändern, Titel, Beschreibung und Symbol der Aufgabe bleiben', () => {
     const out = applyBulkPatch(config(), { card: { boardId: 'b2', columnId: 'c2' } });
     expect(out.card).toMatchObject({ boardId: 'b2', columnId: 'c2', title: 'Batterie wechseln: Knopf', description: 'Neue Zellen im Schrank', icon: 'battery' });
   });
@@ -77,7 +77,7 @@ describe('parseBulkPatch', () => {
     expect(() => parseBulkPatch({ trigger: { leadMin: 10 } }, 'below')).toThrow(ValidationError);
     expect(() => parseBulkPatch({ trigger: { value: 10 } }, 'calendar_event')).toThrow(ValidationError);
   });
-  it('unbekannte Schlüssel: Fehler (Name, Entität, Kartentitel sind nie dabei)', () => {
+  it('unbekannte Schlüssel: Fehler (Name, Entität, Aufgabentitel sind nie dabei)', () => {
     expect(() => parseBulkPatch({ name: 'x' }, 'below')).toThrow(ValidationError);
     expect(() => parseBulkPatch({ trigger: { entityId: 'sensor.x' } }, 'below')).toThrow(ValidationError);
     expect(() => parseBulkPatch({ card: { title: 'x' } }, 'below')).toThrow(ValidationError);

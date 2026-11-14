@@ -1,5 +1,4 @@
-import { addDays, mondayOf } from './calendar';
-import { dayKeyOf } from './schedule';
+import { addDays, dayKeyOf, mondayOf } from './calendar';
 import { deviceTz } from './datetime';
 
 export interface ArchiveGroup<T> {
@@ -11,7 +10,7 @@ export interface ArchiveGroup<T> {
 
 /**
  * Das Archiv nach Erledigungstag: „Diese Woche" (ab Montag), davor je Monat, das Neueste zuerst.
- * Karten ohne Erledigungstag zählen nach dem Tag des Archivierens.
+ * Aufgaben ohne Erledigungstag zählen nach dem Tag des Archivierens.
  */
 export function groupArchive<T extends { completedAt: string | null; archivedAt: string | null }>(cards: T[], nowMs = Date.now(), tz = deviceTz()): ArchiveGroup<T>[] {
   const monday = mondayOf(dayKeyOf(nowMs, tz));

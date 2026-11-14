@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stups · Welt 5 · Puppenhaus</title>
+<!--
+  Mockup, kein Produktcode. Ein aufgeschnittenes Haus mit Bewohnern, am Abend (hell) oder in der Nacht (dunkel).
+  Das Licht im Raum zeigt, wo etwas wartet: orange blinkend = überfällig, warm gelb = ruhig. Tippe einen Raum an, die Aufgaben stehen rechts bzw. unten.
+  Hake etwas ab: Anna hüpft, das Licht beruhigt sich. Nach ein paar Sekunden winkt Ben aus dem Wohnzimmer: "Heute noch?".
+  Hinweis: Dafür bräuchte jede Karte einen Raum (Home Assistant kennt Bereiche, Stups bisher nicht für Karten).
+  Parameter: ?theme=light|dark. Respektiert "Bewegung reduzieren".
+-->
+<style>
+@font-face { font-family: "Schibsted Grotesk"; src: url("../fonts/schibsted-grotesk-latin-wght-normal.woff2") format("woff2"); font-weight: 400 900; font-display: swap; }
+:root {
+  --sky: #f7c3a6; --sky2: #fbd9c0; --sun: #ff9a3c; --ground: #5d9c6b; --ground2: #4a8a5a;
+  --wall: #1f3a68; --roof: #3e5c8a; --lamp-off: #fff3c4; --lamp-hot: #ff6a2b; --ink: #1f2f4d; --mute: #5a6b86;
+  --page: #fff6ee; --card: #ffffff; --line: #f0dccb; --accent: #c2410c; --glow: rgba(255, 214, 120, .55);
+  --r-kueche: #ffe7b8; --r-flur: #d6e6f7; --r-wohn: #cdebd3; --r-schlaf: #f8d7de; --r-bad: #cdeff0; --r-kind: #fff0a8;
+  --font: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sky: #131f3d; --sky2: #1b2a52; --sun: #e9e6d8; --ground: #1d4a3a; --ground2: #163c2f; --wall: #8fb0f0; --roof: #2a3f6c; --lamp-off: #ffd978; --ink: #eaf0fb; --mute: #a3b3d1; --page: #0c1530; --card: #15244a; --line: #243767; --accent: #ff9a62; --glow: rgba(255, 214, 120, .4);
+  --r-kueche: #3b3a4a; --r-flur: #2e3c5e; --r-wohn: #2d4a45; --r-schlaf: #4a3948; --r-bad: #2c4a52; --r-kind: #4d4a32; color-scheme: dark; } }
+:root[data-theme="dark"] { --sky: #131f3d; --sky2: #1b2a52; --sun: #e9e6d8; --ground: #1d4a3a; --ground2: #163c2f; --wall: #8fb0f0; --roof: #2a3f6c; --lamp-off: #ffd978; --ink: #eaf0fb; --mute: #a3b3d1; --page: #0c1530; --card: #15244a; --line: #243767; --accent: #ff9a62; --glow: rgba(255, 214, 120, .4);
+  --r-kueche: #3b3a4a; --r-flur: #2e3c5e; --r-wohn: #2d4a45; --r-schlaf: #4a3948; --r-bad: #2c4a52; --r-kind: #4d4a32; color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--page); }
+body { background: var(--page); color: var(--ink); font: 500 16px/1.35 var(--font); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+button:focus-visible, .room:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+svg { stroke-linecap: round; stroke-linejoin: round; }
+.num { font-variant-numeric: tabular-nums; }
+
+.app { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 100vh; }
+.app > *, .side > *, .side { min-width: 0; }
+.hero { position: relative; height: min(66vh, 560px); min-height: 430px; overflow: hidden; background: var(--sky); }
+.scene { position: absolute; inset: 0; width: 100%; height: 100%; }
+.top { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; z-index: 5; pointer-events: none; }
+.top > * { pointer-events: auto; }
+.wordmark { font: 800 24px/1 var(--font); letter-spacing: -0.03em; color: #1f2f4d; }
+.wordmark i { font-style: normal; color: #c2410c; }
+:root[data-theme="dark"] .wordmark { color: #fff; } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wordmark { color: #fff; } }
+.me { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #1f2f4d; color: #fff; font: 800 17px/1 var(--font); }
+:root[data-theme="dark"] .me { background: #fff; color: #0c1530; } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .me { background: #fff; color: #0c1530; } }
+
+/* Szene */
+.room { cursor: pointer; }
+.room .fill { stroke: var(--wall); stroke-width: 3; transition: filter .3s; }
+.room:hover .fill { filter: brightness(1.06); }
+.room .sel { fill: none; stroke: var(--accent); stroke-width: 5; opacity: 0; transition: opacity .25s; }
+.room.on .sel { opacity: 1; }
+.room text { font: 700 11px var(--font); fill: var(--ink); opacity: .75; pointer-events: none; }
+.furn { fill: none; stroke: var(--wall); stroke-width: 1.8; opacity: .55; }
+.lamp circle.b { fill: var(--lamp-off); stroke: var(--wall); stroke-width: 1.6; transition: fill .6s; }
+.lamp .glow { fill: var(--glow); stroke: none; transition: opacity .8s; }
+.lamp line { stroke: var(--wall); stroke-width: 1.4; }
+.room.hot .lamp circle.b { fill: var(--lamp-hot); animation: blink 1s ease-in-out infinite; }
+.room.hot .lamp .glow { fill: rgba(255, 106, 43, .38); animation: blinkg 1s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .45; } } @keyframes blinkg { 50% { opacity: .2; } }
+.mark { fill: var(--lamp-hot); stroke: none; opacity: 0; transition: opacity .4s; } .mark + text { opacity: 0 !important; }
+.room.hot .mark { opacity: 1; animation: nod 1.2s ease-in-out infinite; } .room.hot .markt { opacity: 1 !important; fill: #fff !important; }
+@keyframes nod { 50% { transform: translateY(-3px); } }
+.fig { transition: transform .3s; }
+.fig .body { fill: var(--c); stroke: var(--wall); stroke-width: 1.8; } .fig .head { fill: #ffe0bd; stroke: var(--wall); stroke-width: 1.8; }
+.bob { animation: bob 2.4s ease-in-out infinite; } .bob.b2 { animation-delay: -1.1s; } .bob.b3 { animation-delay: -.5s; }
+@keyframes bob { 50% { transform: translateY(-2.5px); } }
+.walk { animation: walk 14s ease-in-out infinite alternate; }
+@keyframes walk { 0%, 12% { transform: translateX(0); } 45%, 60% { transform: translateX(-62px); } 100% { transform: translateX(8px); } }
+.jump { animation: jump .6s ease-out; }
+@keyframes jump { 40% { transform: translateY(-16px); } }
+.wave { transform-box: view-box; transform-origin: 0 0; animation: wave .5s ease-in-out infinite alternate; }
+@keyframes wave { from { transform: rotate(-20deg); } to { transform: rotate(35deg); } }
+.smoke circle { fill: #fff; opacity: 0; animation: smoke 4s ease-out infinite; } :root[data-theme="dark"] .smoke circle { fill: #9fb2d6; }
+@keyframes smoke { from { transform: translate(0, 0) scale(.5); opacity: .8; } to { transform: translate(14px, -44px) scale(1.6); opacity: 0; } }
+.tail { transform-origin: 0 0; animation: tail 1.6s ease-in-out infinite alternate; } @keyframes tail { from { transform: rotate(-14deg); } to { transform: rotate(18deg); } }
+.stars { display: none; } .stars circle { fill: #fff; animation: tw 3s ease-in-out infinite; }
+:root[data-theme="dark"] .stars { display: block; } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .stars { display: block; } }
+@keyframes tw { 50% { opacity: .25; } }
+.spark { fill: #ffd23f; stroke: none; opacity: 0; } .spark.go { animation: spark .9s ease-out forwards; }
+@keyframes spark { from { opacity: 1; transform: scale(.2); } to { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.3); } }
+.vanish { transition: opacity .8s, transform .8s; } .vanish.gone { opacity: 0; transform: translate(40px, 0); }
+.bubble { position: absolute; z-index: 6; background: #1f2f4d; color: #fff; padding: 8px 12px; border-radius: 14px 14px 14px 3px; font: 700 14px/1.2 var(--font); opacity: 0; transform: translateY(6px) scale(.9); transition: opacity .3s, transform .3s; pointer-events: none; white-space: nowrap; }
+.bubble.on { opacity: 1; transform: none; }
+
+/* Inhalt */
+.main { padding: 16px; display: grid; gap: 20px; max-width: 720px; width: 100%; margin: 0 auto; }
+.main > * { min-width: 0; }
+.rname small { display: block; font: 600 15px/1.2 var(--font); color: var(--mute); }
+.rname h1 { font: 800 clamp(40px, 11vw, 56px)/0.98 var(--font); letter-spacing: -0.035em; margin-top: 4px; }
+.rname p { margin-top: 8px; color: var(--mute); font-size: 17px; max-width: 22em; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 18px; background: var(--card); font: 700 15px/1 var(--font); }
+.chip.warn { background: var(--lamp-hot); color: #1a0b02; }
+h2 { font: 800 20px/1.1 var(--font); letter-spacing: -0.02em; margin-bottom: 8px; }
+.tasks { display: grid; gap: 8px; }
+.task { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; background: var(--card); width: 100%; transition: opacity .4s; }
+.task .c { width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid var(--ink); display: grid; place-items: center; }
+.task .c svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 3.2; opacity: 0; }
+.task.done .c { background: var(--ink); color: var(--page); } .task.done .c svg { opacity: 1; } .task.done .n { text-decoration: line-through; opacity: .55; }
+.task .n { font: 700 18px/1.15 var(--font); } .task .m { font-size: 14px; color: var(--mute); margin-top: 2px; } .task .m b { color: var(--accent); }
+.task .who { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #c2410c; color: #fff; font: 800 12px/1 var(--font); }
+.empty { padding: 18px; border-radius: 18px; background: var(--card); color: var(--mute); }
+.nudge { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; background: #2563eb; color: #fff; }
+.nudge .a { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #2563eb; font: 800 15px/1 var(--font); flex: none; }
+.nudge button { margin-left: auto; height: 34px; padding: 0 14px; border-radius: 17px; background: #fff; color: #1d4ed8; font: 800 14px/1 var(--font); }
+.rooms { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.rooms::-webkit-scrollbar { display: none; }
+.rooms button { flex: none; height: 34px; padding: 0 14px; border-radius: 17px; background: var(--card); font: 700 14px/1 var(--font); display: inline-flex; align-items: center; gap: 6px; }
+.rooms button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+.rooms button i { font-style: normal; display: inline-grid; place-items: center; min-width: 20px; height: 20px; border-radius: 10px; background: var(--lamp-hot); color: #1a0b02; font-size: 12px; font-weight: 800; }
+.tabbar { position: sticky; bottom: 0; display: grid; grid-template-columns: repeat(3, 1fr); background: color-mix(in srgb, var(--page) 92%, transparent); backdrop-filter: blur(16px); border-top: 1px solid var(--line); padding: 4px 0 max(8px, env(safe-area-inset-bottom)); z-index: 20; margin-top: auto; }
+.tabbar button { display: grid; justify-items: center; gap: 2px; padding: 6px 0 2px; font: 600 12px/1.2 var(--font); color: var(--mute); }
+.tabbar button[aria-current="page"] { color: var(--ink); font-weight: 800; }
+.tabbar svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 2; }
+.side { display: flex; flex-direction: column; min-height: 0; }
+@media (min-width: 900px) {
+  .app { grid-template-columns: minmax(0, 1fr) 520px; height: 100vh; }
+  .hero { height: 100vh; min-height: 0; } .side { overflow-y: auto; } .top { padding: 20px 40px; } .main { padding: 40px 32px 24px; }
+}
+@media (prefers-reduced-motion: reduce) { .bob, .walk, .smoke circle, .tail, .wave, .room.hot .lamp circle.b, .room.hot .lamp .glow, .room.hot .mark, .stars circle { animation: none !important; } .smoke circle { opacity: .5; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="hero" id="hero" aria-label="Haus mit Räumen">
+    <svg class="scene" viewBox="0 0 360 440" preserveAspectRatio="xMidYMax slice" role="group" aria-label="Aufgeschnittenes Haus">
+      <rect x="-700" width="1760" height="440" fill="var(--sky)"/><rect x="-700" y="250" width="1760" height="190" fill="var(--sky2)"/>
+      <g class="stars"><circle cx="40" cy="60" r="1.6"/><circle cx="110" cy="34" r="1.2" style="animation-delay:.6s"/><circle cx="200" cy="60" r="1.8" style="animation-delay:1.2s"/><circle cx="320" cy="48" r="1.4" style="animation-delay:.3s"/><circle cx="260" cy="30" r="1.2" style="animation-delay:1.8s"/><circle cx="70" cy="110" r="1.2" style="animation-delay:2.1s"/></g>
+      <circle cx="408" cy="340" r="40" fill="var(--sun)" opacity=".9"/>
+      <path d="M-700 372 L0 372 Q90 356 180 368 T360 362 L1060 362 V440 H-700Z" fill="var(--ground)"/><path d="M-700 398 L0 398 Q120 384 220 394 T360 390 L1060 390 V440 H-700Z" fill="var(--ground2)"/>
+
+      <!-- Dach -->
+      <polygon points="18,134 180,54 342,134" fill="var(--roof)" stroke="var(--wall)" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="268" y="70" width="16" height="44" fill="var(--roof)" stroke="var(--wall)" stroke-width="3"/>
+      <g class="smoke"><circle cx="276" cy="66" r="6"/><circle cx="276" cy="66" r="6" style="animation-delay:1.3s"/><circle cx="276" cy="66" r="6" style="animation-delay:2.6s"/></g>
+      <circle cx="180" cy="104" r="12" fill="var(--lamp-off)" stroke="var(--wall)" stroke-width="3"/>
+      <!-- Katze auf dem Dach -->
+      <g transform="translate(96 94)"><ellipse cx="0" cy="0" rx="11" ry="7" fill="#f0a05a" stroke="var(--wall)" stroke-width="1.8"/><circle cx="-9" cy="-6" r="5.5" fill="#f0a05a" stroke="var(--wall)" stroke-width="1.8"/><path d="M-12 -10l1 -4 3 3M-7 -11l2 -4 2 4" fill="#f0a05a" stroke="var(--wall)" stroke-width="1.6"/><g class="tail"><path d="M10 -1c8 -2 12 -8 8 -14" fill="none" stroke="#f0a05a" stroke-width="4"/></g></g>
+
+      <!-- Obergeschoss -->
+      <g class="room" id="r-schlaf" data-r="schlaf" tabindex="0" role="button" aria-label="Schlafzimmer"><rect class="fill" x="30" y="132" width="105" height="120" fill="var(--r-schlaf)"/><text x="38" y="246">Schlafzimmer</text><rect class="furn" x="42" y="214" width="62" height="26" rx="4"/><rect class="furn" x="42" y="204" width="16" height="12" rx="3"/>
+        <g class="lamp"><line x1="90" y1="132" x2="90" y2="146"/><circle class="glow" cx="90" cy="152" r="22"/><circle class="b" cx="90" cy="152" r="6"/></g><g transform="translate(120 130)"><circle class="mark" cx="0" cy="0" r="8"/><text class="markt" x="0" y="4" text-anchor="middle" style="font-size:12px">!</text></g><rect class="sel" x="30" y="132" width="105" height="120"/></g>
+      <g class="room" id="r-bad" data-r="bad" tabindex="0" role="button" aria-label="Bad"><rect class="fill" x="135" y="132" width="80" height="120" fill="var(--r-bad)"/><text x="143" y="246">Bad</text><rect class="furn" x="146" y="220" width="58" height="22" rx="10"/><circle class="furn" cx="190" cy="190" r="9"/>
+        <g class="lamp"><line x1="175" y1="132" x2="175" y2="146"/><circle class="glow" cx="175" cy="152" r="20"/><circle class="b" cx="175" cy="152" r="6"/></g><g transform="translate(204 130)"><circle class="mark" cx="0" cy="0" r="8"/><text class="markt" x="0" y="4" text-anchor="middle" style="font-size:12px">!</text></g><rect class="sel" x="135" y="132" width="80" height="120"/></g>
+      <g class="room" id="r-kind" data-r="kind" tabindex="0" role="button" aria-label="Kinderzimmer"><rect class="fill" x="215" y="132" width="115" height="120" fill="var(--r-kind)"/><text x="223" y="246">Kinderzimmer</text><rect class="furn" x="226" y="214" width="46" height="26" rx="3"/><circle class="furn" cx="306" cy="228" r="11"/>
+        <g class="lamp"><line x1="272" y1="132" x2="272" y2="146"/><circle class="glow" cx="272" cy="152" r="22"/><circle class="b" cx="272" cy="152" r="6"/></g><g transform="translate(318 130)"><circle class="mark" cx="0" cy="0" r="8"/><text class="markt" x="0" y="4" text-anchor="middle" style="font-size:12px">!</text></g>
+        <g transform="translate(292 252)"><g class="fig bob b2" style="--c:#be185d"><rect class="body" x="-6" y="-24" width="12" height="16" rx="5"/><circle class="head" cx="0" cy="-30" r="7"/><path d="M-9 -22l-6 8M9 -22l6 8" stroke="var(--wall)" stroke-width="1.8" fill="none"/></g></g><rect class="sel" x="215" y="132" width="115" height="120"/></g>
+      <!-- Erdgeschoss -->
+      <g class="room" id="r-kueche" data-r="kueche" tabindex="0" role="button" aria-label="Küche"><rect class="fill" x="30" y="252" width="100" height="120" fill="var(--r-kueche)"/><text x="38" y="366">Küche</text><rect class="furn" x="36" y="326" width="58" height="26" rx="2"/><rect class="furn" x="100" y="300" width="24" height="52" rx="3"/>
+        <g class="lamp"><line x1="80" y1="252" x2="80" y2="266"/><circle class="glow" cx="80" cy="272" r="22"/><circle class="b" cx="80" cy="272" r="6"/></g><g transform="translate(118 250)"><circle class="mark" cx="0" cy="0" r="8"/><text class="markt" x="0" y="4" text-anchor="middle" style="font-size:12px">!</text></g><rect class="sel" x="30" y="252" width="100" height="120"/></g>
+      <g class="room" id="r-flur" data-r="flur" tabindex="0" role="button" aria-label="Flur"><rect class="fill" x="130" y="252" width="100" height="120" fill="var(--r-flur)"/><text x="138" y="270">Flur</text>
+        <g class="lamp"><line x1="180" y1="252" x2="180" y2="266"/><circle class="glow" cx="180" cy="272" r="24"/><circle class="b" cx="180" cy="272" r="6"/></g><g transform="translate(218 250)"><circle class="mark" cx="0" cy="0" r="8"/><text class="markt" x="0" y="4" text-anchor="middle" style="font-size:12px">!</text></g>
+        <g class="vanish" id="bin"><rect x="196" y="346" width="16" height="22" rx="3" fill="#3a8c5a" stroke="var(--wall)" stroke-width="1.8"/><rect x="194" y="342" width="20" height="5" rx="2" fill="#2d7048" stroke="var(--wall)" stroke-width="1.6"/></g>
+        <g class="vanish" id="box"><rect x="170" y="354" width="22" height="16" fill="#c9954f" stroke="var(--wall)" stroke-width="1.8"/><path d="M170 360h22M181 354v16" stroke="#9b6e2e" stroke-width="1.8"/></g>
+        <rect class="sel" x="130" y="252" width="100" height="120"/></g>
+      <g class="room" id="r-wohn" data-r="wohn" tabindex="0" role="button" aria-label="Wohnzimmer"><rect class="fill" x="230" y="252" width="100" height="120" fill="var(--r-wohn)"/><text x="238" y="366">Wohnzimmer</text><rect class="furn" x="248" y="334" width="62" height="22" rx="8"/><rect class="furn" x="250" y="300" width="22" height="18" rx="2"/><rect class="furn" x="302" y="288" width="20" height="26" rx="2"/>
+        <g class="lamp"><line x1="290" y1="252" x2="290" y2="266"/><circle class="glow" cx="290" cy="272" r="22"/><circle class="b" cx="290" cy="272" r="6"/></g><g transform="translate(318 250)"><circle class="mark" cx="0" cy="0" r="8"/><text class="markt" x="0" y="4" text-anchor="middle" style="font-size:12px">!</text></g>
+        <g transform="translate(272 346)"><g class="fig bob b3" style="--c:#2563eb"><rect class="body" x="-6" y="-24" width="12" height="16" rx="5"/><circle class="head" cx="0" cy="-30" r="7"/><path d="M-9 -22l-6 8" stroke="var(--wall)" stroke-width="1.8" fill="none"/><g transform="translate(8 -22)"><g class="wave" id="benArm" style="display:none"><path d="M0 0l7 -8" stroke="var(--wall)" stroke-width="1.8" fill="none"/></g></g></g></g><rect class="sel" x="230" y="252" width="100" height="120"/></g>
+      <!-- Türen -->
+      <rect x="127.5" y="334" width="5" height="38" fill="var(--r-flur)"/><rect x="227.5" y="334" width="5" height="38" fill="var(--r-wohn)"/><rect x="127.5" y="334" width="5" height="2" fill="var(--wall)"/><rect x="227.5" y="334" width="5" height="2" fill="var(--wall)"/>
+      <!-- Anna läuft -->
+      <g transform="translate(166 372)"><g class="walk"><g class="fig bob" style="--c:#c2410c"><g id="annaIn"><rect class="body" x="-6" y="-24" width="12" height="16" rx="5"/><circle class="head" cx="0" cy="-30" r="7"/><path d="M-9 -22l-6 8M9 -22l6 8" stroke="var(--wall)" stroke-width="1.8" fill="none"/></g></g></g></g>
+      <g id="sparks"></g>
+    </svg>
+    <header class="top"><span class="wordmark">stups<i>.</i></span><button class="me" aria-label="Konto: Anna">A</button></header>
+    <div class="bubble" id="bub"></div>
+  </section>
+
+  <div class="side">
+    <main class="main">
+      <div class="rname"><small id="sm">Zuhause, Donnerstag 17:42</small><h1 id="rh">Flur</h1><p id="rp">Zwei Dinge sind liegen geblieben.</p></div>
+      <div class="chips"><span class="chip warn" id="cw"><b class="num" id="nw">2</b>überfällig</span><span class="chip"><b class="num">0</b>heute</span><span class="chip"><b class="num" id="nd">1</b>erledigt</span></div>
+      <div id="nudge"></div>
+      <section><h2>Aufgaben im Raum</h2><div class="tasks" id="tasks"></div></section>
+      <section><h2>Alle Räume</h2><div class="rooms" id="rooms"></div></section>
+    </main>
+    <nav class="tabbar" aria-label="Hauptbereiche">
+      <button aria-current="page"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>Aufgaben</button>
+      <button><svg viewBox="0 0 24 24"><path d="m12 3.5 8.5 4.7L12 13 3.5 8.2 12 3.5Z"/><path d="m3.5 12.6 8.5 4.8 8.5-4.8"/></svg>Boards</button>
+      <button><svg viewBox="0 0 24 24"><path d="M12 3.5 19.5 6.5v5.6c0 4.2-3 7.4-7.5 8.4-4.5-1-7.5-4.2-7.5-8.4V6.5L12 3.5Z"/></svg>Wächter</button>
+    </nav>
+  </div>
+</div>
+
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var th = q.get('theme'); if (th === 'dark' || th === 'light') document.documentElement.dataset.theme = th;
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var NS = 'http://www.w3.org/2000/svg';
+  var rooms = {
+    flur: { n: 'Flur', tasks: [{ id: 'muell', t: 'Müll rausbringen', m: '<b>seit 16:17</b>, jede Woche, Hoch', late: 1 }, { id: 'paket', t: 'Paket abholen', m: '<b>seit 16:30</b>', late: 1 }, { id: 'elektro', t: 'Elektriker Termin', m: 'Sa 09:00' }] },
+    wohn: { n: 'Wohnzimmer', tasks: [{ id: 'fenster', t: 'Fenster putzen', m: 'morgen 10:00, mit Ben' }] },
+    kueche: { n: 'Küche', tasks: [{ id: 'spuel', t: 'Spülmaschine ausräumen', m: 'erledigt 08:05', done: 1 }, { id: 'geschenk', t: 'Geschenkpapier kaufen', m: 'morgen 18:00' }] },
+    schlaf: { n: 'Schlafzimmer', tasks: [{ id: 'heizung', t: 'Heizung entlüften', m: 'Mo 18:00' }] },
+    bad: { n: 'Bad', tasks: [{ id: 'rauch', t: 'Rauchmelder testen', m: 'So 11:00' }] },
+    kind: { n: 'Kinderzimmer', tasks: [] }
+  };
+  var cur = 'flur', order = ['flur', 'wohn', 'kueche', 'schlaf', 'bad', 'kind'];
+  var texts = { flur: 'Zwei Dinge sind liegen geblieben.', wohn: 'Hier wartet das Fenster auf morgen.', kueche: 'Das Geschirr ist erledigt.', schlaf: 'Nichts eilig.', bad: 'Nichts eilig.', kind: 'Alles erledigt. Mia hat aufgeräumt.' };
+
+  function lateIn(k) { return rooms[k].tasks.filter(function (t) { return t.late && !t.done; }).length; }
+  function render() {
+    order.forEach(function (k) { var g = document.getElementById('r-' + k); g.classList.toggle('on', k === cur); g.classList.toggle('hot', lateIn(k) > 0); });
+    var late = order.reduce(function (a, k) { return a + lateIn(k); }, 0), done = order.reduce(function (a, k) { return a + rooms[k].tasks.filter(function (t) { return t.done; }).length; }, 0);
+    document.getElementById('nw').textContent = late; document.getElementById('cw').style.display = late ? '' : 'none'; document.getElementById('nd').textContent = done;
+    document.getElementById('rh').textContent = rooms[cur].n;
+    document.getElementById('rp').textContent = lateIn(cur) ? (lateIn(cur) === 1 ? 'Eine Sache ist liegen geblieben.' : 'Zwei Dinge sind liegen geblieben.') : texts[cur];
+    var box = document.getElementById('tasks'); box.innerHTML = '';
+    if (!rooms[cur].tasks.length) { box.innerHTML = '<div class="empty">Hier ist nichts offen. Das Licht bleibt warm.</div>'; }
+    rooms[cur].tasks.forEach(function (t) {
+      var b = document.createElement('button'); b.className = 'task' + (t.done ? ' done' : ''); b.setAttribute('aria-label', t.t + (t.done ? ', erledigt. Wieder öffnen' : '. Erledigen'));
+      b.innerHTML = '<span class="c"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span><div class="n">' + t.t + '</div><div class="m">' + t.m + '</div></span><span class="who">A</span>';
+      b.addEventListener('click', function () { var was = lateIn(cur); t.done = !t.done; if (t.done && !calm) celebrate(was > lateIn(cur)); render(); sceneItems(); });
+      box.appendChild(b);
+    });
+    var rb = document.getElementById('rooms'); rb.innerHTML = '';
+    order.forEach(function (k) { var n = lateIn(k), b = document.createElement('button'); b.setAttribute('aria-pressed', k === cur); b.innerHTML = rooms[k].n + (n ? '<i>' + n + '</i>' : ''); b.addEventListener('click', function () { cur = k; render(); }); rb.appendChild(b); });
+  }
+  function sceneItems() {
+    var m = rooms.flur.tasks[0].done, p = rooms.flur.tasks[1].done;
+    document.getElementById('bin').classList.toggle('gone', !!m); document.getElementById('box').classList.toggle('gone', !!p);
+  }
+  function celebrate(calmed) {
+    var a = document.getElementById('annaIn'); a.classList.remove('jump'); void a.getBoundingClientRect(); a.classList.add('jump');
+    var g = document.getElementById('sparks'); g.innerHTML = '';
+    var base = { flur: [180, 300], wohn: [280, 300], kueche: [80, 300], schlaf: [82, 180], bad: [175, 180], kind: [272, 180] }[cur];
+    for (var i = 0; i < 8; i++) { var c = document.createElementNS(NS, 'circle'), ang = i / 8 * 6.283; c.setAttribute('class', 'spark go'); c.setAttribute('cx', base[0]); c.setAttribute('cy', base[1]); c.setAttribute('r', 3); c.style.setProperty('--dx', Math.cos(ang) * 30 + 'px'); c.style.setProperty('--dy', Math.sin(ang) * 30 + 'px'); g.appendChild(c); }
+  }
+  document.querySelectorAll('.room').forEach(function (g) {
+    g.addEventListener('click', function () { cur = g.dataset.r; render(); });
+    g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cur = g.dataset.r; render(); } });
+  });
+  function fit() { var sv = document.querySelector('.scene'); sv.setAttribute('preserveAspectRatio', innerWidth >= 900 ? 'xMidYMax meet' : 'xMidYMax slice'); }
+  fit(); addEventListener('resize', fit);
+  render(); sceneItems();
+
+  // Stups von Ben
+  function nudge() {
+    document.getElementById('benArm').style.display = '';
+    var bub = document.getElementById('bub'), hero = document.getElementById('hero'), svg = hero.querySelector('svg'), r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
+    var meet = innerWidth >= 900, sc = meet ? Math.min(r.width / vb.width, r.height / vb.height) : Math.max(r.width / vb.width, r.height / vb.height), ox = (r.width - vb.width * sc) / 2, oy = r.height - vb.height * sc;
+    bub.style.left = Math.min(r.width - 150, Math.max(8, ox + 272 * sc - 70)) + 'px'; bub.style.top = Math.max(60, oy + 296 * sc) + 'px'; bub.textContent = 'Heute noch?'; bub.classList.add('on');
+    document.getElementById('nudge').innerHTML = '<div class="nudge"><span class="a">B</span><div><b>Ben stupst dich</b><div style="font-size:14px;opacity:.9">Fenster putzen: „Heute noch?“</div></div><button>Bin dran</button></div>';
+    document.querySelector('#nudge button').addEventListener('click', function () { document.getElementById('nudge').innerHTML = ''; bub.textContent = 'Anna: Bin dran'; setTimeout(function () { bub.classList.remove('on'); document.getElementById('benArm').style.display = 'none'; }, 2200); });
+    setTimeout(function () { bub.classList.remove('on'); }, 9000);
+  }
+  setTimeout(nudge, calm ? 400 : 4500);
+})();
+</script>
+</body>
+</html>

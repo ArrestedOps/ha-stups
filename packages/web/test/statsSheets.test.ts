@@ -48,7 +48,7 @@ describe('todaySheet: Heute fällig', () => {
 });
 
 describe('overdueSheet: Überfällig', () => {
-  it('nur eigene offene Karten mit vergangenem Termin, älteste zuerst', () => {
+  it('nur eigene offene Aufgaben mit vergangenem Termin, älteste zuerst', () => {
     const cards = [
       mk('gestern', '2026-11-03T09:00:00Z'),
       mk('vorgestern', '2026-11-02T09:00:00Z'),
@@ -90,7 +90,7 @@ describe('shiftDue: Termin verschieben, Uhrzeit bleibt (Ortszeit des Haushalts)'
     expect(shiftDue('2026-11-02T17:30:00.000Z', 'today', NOW, TZ)).toBe('2026-11-04T17:30:00.000Z');
   });
 
-  it('auf heute: ist die Uhrzeit schon vorbei, die nächste volle Stunde (sonst bliebe die Karte überfällig)', () => {
+  it('auf heute: ist die Uhrzeit schon vorbei, die nächste volle Stunde (sonst bliebe die Aufgabe überfällig)', () => {
     expect(shiftDue('2026-11-02T07:00:00.000Z', 'today', NOW, TZ)).toBe('2026-11-04T11:00:00.000Z'); // jetzt 11:00 Berlin → 12:00
   });
 
@@ -145,7 +145,7 @@ describe('doneSheet und doneProgress: Heute erledigt', () => {
     mk('fremd', null, { completedAt: '2026-11-04T08:00:00Z', assigneeIds: ['x'] }),
     mk('offen', '2026-11-04T17:00:00Z'),
   ];
-  it('heute erledigte eigene Karten, nach Erledigungszeit', () => {
+  it('heute erledigte eigene Aufgaben, nach Erledigungszeit', () => {
     expect(ids(doneSheet(cards, ME, NOW, TZ))).toEqual(['grenze', 'frueh', 'spaet']);
   });
   it('die Zahl ist die der Leiste', () => {

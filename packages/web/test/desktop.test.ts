@@ -8,7 +8,7 @@ import TopBar from '../src/components/TopBar.svelte';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
 import { closeDetail, openCard, openSheet, selectTab, setDesktop, ui } from '../src/lib/store.svelte';
 
-// Die Desktop-Ansicht (ab 1024 px): Seitenleiste, Kopfzeile, Regel für Karten und Sheets. Auf dem Server gerendert, wie die übrigen Bausteine.
+// Die Desktop-Ansicht (ab 1024 px): Seitenleiste, Kopfzeile, Regel für Aufgaben und Sheets. Auf dem Server gerendert, wie die übrigen Bausteine.
 const me = { id: 'u1', displayName: 'Anna', name: 'anna', color: '#ff0000', isPerson: true } as never;
 const boards = [
   { id: 'b1', name: 'Haushalt', icon: null, color: null, openCards: 4 },
@@ -86,12 +86,11 @@ describe('Kopfzeile des Desktops', () => {
     expect(html()).toContain('data-testid="board-name"');
   });
 
-  it('Suche (Strg K), Home Assistant im Add-on und Glocke; Neue Aufgabe nur mit Board und für Erwachsene', () => {
+  it('Suche (Strg K); Neue Aufgabe nur mit Board und für Erwachsene (Home Assistant und Glocke stehen in der Seitenleiste)', () => {
     const out = html();
     expect(out).toContain('type="search"');
     expect(out).toContain('Strg K');
-    expect(out).toContain('data-testid="home-button"');
-    expect(out).toContain('data-testid="bell"');
+    expect(out).not.toContain('data-testid="bell"');
     expect(out).not.toContain('data-testid="new-task"'); // noch kein Board geladen
     ui.view = { columns: [{ id: 'c1', name: 'Offen', isDone: false, isPlanned: false }], cards: [], categories: [] } as never;
     expect(html()).toContain('data-testid="new-task"');
@@ -101,7 +100,7 @@ describe('Kopfzeile des Desktops', () => {
 
   it('ohne Home Assistant (eigener Container) kein Home-Knopf', () => {
     ui.caps = { auth: 'session' } as never;
-    expect(html()).not.toContain('home-button');
+    expect(render(Sidebar).body).not.toContain('home-button');
   });
 
   it('das Feld zeigt die Suche des Reiters: Boards filter.search, sonst query', () => {
@@ -121,7 +120,7 @@ describe('Kopfzeile des Desktops', () => {
   });
 });
 
-describe('Wo eine Karte aufgeht', () => {
+describe('Wo eine Aufgabe aufgeht', () => {
   it('Desktop, Aufgaben: in der Detailspalte, nicht im Sheet', () => {
     openCard('c1');
     expect(ui.detailId).toBe('c1');
@@ -158,7 +157,7 @@ describe('Wo eine Karte aufgeht', () => {
     expect(ui.query).toBe('');
   });
 
-  it('das Fenster wird schmaler oder breiter: die Karte wechselt zwischen Detailspalte und Sheet', () => {
+  it('das Fenster wird schmaler oder breiter: die Aufgabe wechselt zwischen Detailspalte und Sheet', () => {
     ui.detailId = 'c1';
     setDesktop(false);
     expect(ui.detailId).toBeNull();
@@ -169,7 +168,7 @@ describe('Wo eine Karte aufgeht', () => {
   });
 });
 
-describe('Karte im Kanban', () => {
+describe('Aufgabe im Kanban', () => {
   const card = { id: 'c', title: 'T', columnId: 'c', dueAt: '2026-11-06T10:00:00.000Z', priority: 'high', checklist: { done: 1, total: 2 }, commentCount: 0, linkCount: 0, attachmentCount: 0, assigneeIds: [], categoryIds: [], recurrence: null, watcherId: null, costCents: null, completedAt: null } as never;
 
   it('mit wrap brechen die Teile um (kein Abschneiden), ohne „•“ dazwischen', () => {

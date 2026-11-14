@@ -30,9 +30,9 @@ beforeEach(() => {
 const gate = (enabled = true): BetaGate =>
   createBetaGate({ enabled, settings: { get: (k) => store.rawSetting(k), put: (k, v) => store.putRawSetting(k, v) }, people: () => store.people().map((p) => p.id) });
 
-describe('Beta: Push und Wächter sind zunächst aus', () => {
-  it('Vorgabe: Push aus, Wächter aus', () => {
-    expect(gate().state()).toEqual({ push: { mode: 'off' }, watchers: false });
+describe('Beta: Push ist zunächst aus, die Wächter laufen', () => {
+  it('Vorgabe: Push aus, Wächter an', () => {
+    expect(gate().state()).toEqual({ push: { mode: 'off' }, watchers: true });
   });
 
   it('bei „aus" geht nichts raus und niemand gilt als erreichbar', async () => {
@@ -68,11 +68,15 @@ describe('Beta: Push und Wächter sind zunächst aus', () => {
     const g = gate();
     const seen: boolean[] = [];
     g.onWatchers((on) => seen.push(on));
+    expect(g.watchersEnabled()).toBe(true);
+    g.set({ watchers: false });
+    g.set({ watchers: false }); // keine Änderung, keine Meldung
     expect(g.watchersEnabled()).toBe(false);
     g.set({ watchers: true });
-    g.set({ watchers: true }); // keine Änderung, keine Meldung
+    expect(seen).toEqual([false, true]);
+    // ein neues Tor liest dieselbe Datenbank (Neustart)
     g.set({ watchers: false });
-    expect(seen).toEqual([true, false]);
+    expect(gate().watchersEnabled()).toBe(false);
   });
 
   it('prüft die Eingaben: unbekannte Person, unbekannter Modus', () => {
@@ -80,7 +84,7 @@ describe('Beta: Push und Wächter sind zunächst aus', () => {
     expect(() => g.set({ push: { mode: 'only', personId: 'gibt-es-nicht' } })).toThrow(/Person/);
     expect(() => g.set({ push: { mode: 'sonstwas' as 'all' } })).toThrow();
     expect(() => g.set({ watchers: 'ja' as unknown as boolean })).toThrow();
-    expect(g.state()).toEqual({ push: { mode: 'off' }, watchers: false });
+    expect(g.state()).toEqual({ push: { mode: 'off' }, watchers: true });
   });
 
   it('eine gespeicherte Person, die es nicht mehr gibt, gilt als „aus"', () => {

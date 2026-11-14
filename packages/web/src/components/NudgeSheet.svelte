@@ -117,29 +117,29 @@
           {@const hint = targetHint(p)}
           {#if hint}<p class="px-1 text-[13px] text-fg2"><b class="font-semibold text-fg">{p.name}:</b> {hint}</p>{/if}
         {/each}
-        <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Es bekommt jeder einen eigenen Stups. Pro Karte und Person geht höchstens einer alle 30 Minuten.')}</p>
+        <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Es bekommt jeder einen eigenen Stups. Pro Aufgabe und Person geht höchstens einer alle 30 Minuten.')}</p>
       </section>
 
       <section aria-label={t('Nachricht')} class="flex flex-col gap-3.5">
         <SectionHeader title={t('Nachricht')} />
-        <div class="flex flex-col gap-2" role="radiogroup" aria-label={t('Nachricht')}>
+        <div class="list-group !mt-0" role="radiogroup" aria-label={t('Nachricht')}>
           {#each TEMPLATES as k (k)}
             {@const on = template === k && !custom.trim()}
             <button
               type="button"
               role="radio"
               aria-checked={on}
-              class="flex h-14 w-full items-center gap-3 rounded-row border px-3.5 text-left text-[15px] font-semibold {on ? 'pick-on' : 'border-line bg-surface'}"
+              class="flex h-[46px] w-full items-center justify-between gap-3 px-4 text-left text-[17px]"
               onclick={() => {
                 template = k;
                 custom = '';
               }}
             >
-              <span class="h-5 w-5 shrink-0 rounded-full {on ? 'border-[6px] border-brand-dot' : 'border-2 border-ring'}"></span>{templateText(k)}
+              {templateText(k)}{#if on}<span class="text-accent-text"><Icon name="check" size={20} stroke={2.6} /></span>{/if}
             </button>
           {/each}
         </div>
-        <label class="flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3 focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent/20">
+        <label class="flex flex-col gap-1.5 rounded-row bg-surface px-4 py-3 focus-within:ring-2 focus-within:ring-accent">
           <span class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Eigener Text (optional)')}</span>
           <span class="flex items-center gap-3">
             <input
@@ -147,7 +147,7 @@
               maxlength={info.maxText}
               placeholder={t('z. B. Brauchst du noch was vom Baumarkt?')}
               enterkeyhint="send"
-              class="min-h-6 min-w-0 flex-1 bg-transparent text-[16px] font-semibold placeholder:text-dim"
+              class="min-h-6 min-w-0 flex-1 bg-transparent text-[17px] placeholder:text-dim"
               aria-label={t('Eigener Text')}
             />
             {#if custom}<span class="text-[13px] text-fg2">{custom.length}/{info.maxText}</span>{/if}
@@ -157,7 +157,7 @@
 
       <section aria-label={t('So kommt es an')} class="flex flex-col gap-3.5">
         <SectionHeader title={t('So kommt es an')} />
-        <div class="flex gap-2.5 rounded-[18px] border border-track bg-surface2 p-3" aria-label={t('Vorschau der Push-Nachricht')} data-testid="nudge-preview">
+        <div class="flex gap-2.5 rounded-[16px] bg-surface p-3" aria-label={t('Vorschau der Push-Nachricht')} data-testid="nudge-preview">
           <img src={logo} alt="" width="34" height="34" class="h-[34px] w-[34px] shrink-0 rounded-lg" />
           <div class="min-w-0 flex-1">
             <p class="truncate text-[14px] font-bold">{t('{names} stupst dich', { names: ui.me?.displayName ?? '' })}</p>

@@ -9,8 +9,8 @@ let db: DatabaseSync;
 let store: Store;
 let anna: string;
 let ben: string;
-let kim: string; // Kind, nur eigene Karten
-let leo: string; // Kind, nur eigene Karten
+let kim: string; // Kind, nur eigene Aufgaben
+let leo: string; // Kind, nur eigene Aufgaben
 let boardId: string;
 let col: string;
 
@@ -89,7 +89,7 @@ describe('Posteingang: was wer sieht', () => {
     expect(items(anna).map((i) => i.kind)).not.toContain('reply');
   });
 
-  it('Erledigung und Kommentar anderer auf meiner Karte; eigene Taten nicht', () => {
+  it('Erledigung und Kommentar anderer auf meiner Aufgabe; eigene Taten nicht', () => {
     const c = card({ assigneeIds: [anna] });
     at(T('10:10'));
     store.addComment(c.id, ben, 'Elektriker kommt erst am 3. Februar');
@@ -112,7 +112,7 @@ describe('Posteingang: was wer sieht', () => {
     expect(items(anna)[0]!.text!.endsWith('…')).toBe(true);
   });
 
-  it('Karten anderer, ohne Bezug zu mir, erscheinen nicht', () => {
+  it('Aufgaben anderer, ohne Bezug zu mir, erscheinen nicht', () => {
     const c = card({ assigneeIds: [ben] }, ben);
     store.addComment(c.id, kim, 'Hallo');
     store.createNudges(c.id, ben, { to: [kim], template: 'think' });
@@ -120,7 +120,7 @@ describe('Posteingang: was wer sieht', () => {
     expect(items(anna)).toEqual([]);
   });
 
-  it('eine Karte, die ich angelegt oder an der ich gestupst habe, gehört dazu', () => {
+  it('eine Aufgabe, die ich angelegt oder an der ich gestupst habe, gehört dazu', () => {
     const own = card({ assigneeIds: [ben] }, anna);
     const nudged = card({ assigneeIds: [ben], title: 'Fenster' }, ben);
     store.createNudges(nudged.id, anna, { to: [ben], template: 'think' });
@@ -129,7 +129,7 @@ describe('Posteingang: was wer sieht', () => {
     expect(items(anna).filter((i) => i.kind === 'comment').map((i) => i.cardId).sort()).toEqual([own.id, nudged.id].sort());
   });
 
-  it('Erinnerungen: nur gesendete, nur meine; Zusammenfassungen ohne Karte nicht', () => {
+  it('Erinnerungen: nur gesendete, nur meine; Zusammenfassungen ohne Aufgabe nicht', () => {
     const c = card({ assigneeIds: [anna] });
     at(T('10:40'));
     store.claimNotification({ cardId: c.id, userId: anna, kind: 'nag', key: 'k1' });
@@ -139,7 +139,7 @@ describe('Posteingang: was wer sieht', () => {
     expect(items(anna).map((i) => [i.kind, i.detail, i.dueAt])).toEqual([['reminder', 'nag', null]]);
   });
 
-  it('Änderungen anderer an meiner Karte: verschoben, wieder geöffnet; eigene nicht', () => {
+  it('Änderungen anderer an meiner Aufgabe: verschoben, wieder geöffnet; eigene nicht', () => {
     const c = card({ assigneeIds: [anna] });
     at(T('10:15'));
     const läuft = store.addColumn(boardId, { name: 'Läuft' }).id;
@@ -155,7 +155,7 @@ describe('Posteingang: was wer sieht', () => {
     expect(kinds.every(([who]) => who !== anna)).toBe(true);
   });
 
-  it('Wächter: Karte für mich, noch niemandem zugewiesene nur für Erwachsene, fremde nie', () => {
+  it('Wächter: Aufgabe für mich, noch niemandem zugewiesene nur für Erwachsene, fremde nie', () => {
     const mineCard = card({ assigneeIds: [anna] });
     const open = card({ title: 'Wäsche', assigneeIds: [] });
     const other = card({ title: 'Müll', assigneeIds: [ben] });
@@ -184,7 +184,7 @@ describe('Posteingang: was wer sieht', () => {
 });
 
 describe('Posteingang: Kind sieht nur Eigenes', () => {
-  it('fremde Karten, fremde Boards und fremde Wächter-Karten erscheinen nie', () => {
+  it('fremde Aufgaben, fremde Boards und fremde Wächter-Aufgaben erscheinen nie', () => {
     const second = store.createBoard({ name: 'Garten' });
     const col2 = store.getBoardView(second.id).columns[0]!.id;
     const own = card({ assigneeIds: [kim], title: 'Zimmer' });
@@ -202,7 +202,7 @@ describe('Posteingang: Kind sieht nur Eigenes', () => {
     expect(mine.length).toBeGreaterThan(0);
     expect([...new Set(mine.map((i) => i.cardId))]).toEqual([own.id]);
     expect(mine.map((i) => i.kind)).not.toContain('confirm');
-    // das zweite Kind sieht nur seine Rasen-Karte, nichts von den anderen
+    // das zweite Kind sieht nur seine Rasen-Aufgabe, nichts von den anderen
     expect([...new Set(items(leo).map((i) => i.cardId))]).toEqual([foreign.id]);
   });
 
@@ -214,7 +214,7 @@ describe('Posteingang: Kind sieht nur Eigenes', () => {
 });
 
 describe('Posteingang: gelöscht, archiviert, Fenster, Reihenfolge', () => {
-  it('gelöschte Karten und Boards im Papierkorb fallen weg, archivierte bleiben', () => {
+  it('gelöschte Aufgaben und Boards im Papierkorb fallen weg, archivierte bleiben', () => {
     const gone = card({ assigneeIds: [anna], title: 'Weg' });
     const kept = card({ assigneeIds: [anna], title: 'Archiv' });
     store.addComment(gone.id, ben, 'a');

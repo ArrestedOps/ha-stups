@@ -1,13 +1,15 @@
+import { dayKeyOf } from './calendar';
 import { deviceTz } from './datetime';
 import { t } from './i18n/index.svelte';
-import { dayKeyOf, sortCards, type ScheduleCard, type SortKey, whenBounds } from './schedule';
+import { sortCards, type ScheduleCard, type SortKey, whenBounds } from './schedule';
+import type { Card } from './api';
 
 /** Die Ansichten in Aufgaben: die gruppierte Liste und die Kalenderansichten Tag, Woche, Monat */
-export type TasksView = 'list' | 'day' | 'week' | 'month';
+export type TasksView = 'list' | 'day' | 'days3' | 'week' | 'month';
 
 /** Die gemerkte Ansicht von diesem Gerät (auch ein alter Merkzettel des Kalenders); Unbekanntes oder nichts ergibt die Liste */
 export function parseTasksView(raw: string | null | undefined): TasksView {
-  return raw === 'day' || raw === 'week' || raw === 'month' ? raw : 'list';
+  return raw === 'day' || raw === 'days3' || raw === 'week' || raw === 'month' ? raw : 'list';
 }
 
 export type TaskGroupKey = 'overdue' | 'today' | 'week' | 'later' | 'undated' | 'done';
@@ -19,8 +21,8 @@ export interface TaskGroup {
 }
 
 /**
- * Teilt Karten in Überfällig (Termin vorbei), Heute (noch heute), Diese Woche (ab morgen bis Sonntag), Später und Ohne Termin
- * (nur wenn der Filter „Ohne Termin" Karten ohne Termin hereinholt). Die Grenzen 00:00 gelten in der Zeitzone des Haushalts.
+ * Teilt Aufgaben in Überfällig (Termin vorbei), Heute (noch heute), Diese Woche (ab morgen bis Sonntag), Später und Ohne Termin
+ * (nur wenn der Filter „Ohne Termin" Aufgaben ohne Termin hereinholt). Die Grenzen 00:00 gelten in der Zeitzone des Haushalts.
  * Erledigte stehen nur mit `withDone` und dann in einer eigenen Gruppe am Ende. Innerhalb der Gruppen gilt `sort` (Standard: Fälligkeit).
  * Leere Gruppen fehlen.
  */
@@ -64,7 +66,7 @@ export interface TaskStats {
 }
 
 /**
- * Die drei Zahlen der Leiste oben: nur die eigenen (Karten, die der Person zugewiesen sind), ohne Vergleich mit anderen.
+ * Die drei Zahlen der Leiste oben: nur die eigenen (Aufgaben, die der Person zugewiesen sind), ohne Vergleich mit anderen.
  * „Erledigt" heißt: heute (in der Zeitzone des Haushalts) erledigt.
  */
 export function taskStats(cards: ScheduleCard[], meId: string | null, nowMs: number, tz = deviceTz()): TaskStats {
@@ -85,10 +87,10 @@ export function taskStats(cards: ScheduleCard[], meId: string | null, nowMs: num
   return out;
 }
 
-/** Karten, bei denen ein Stups an mich offen ist (für das Banner oben): mit den Absendern, ohne Doppelte; Erledigtes zählt nicht */
-export function nudgesToMe(cards: ScheduleCard[], meId: string | null): { card: ScheduleCard; fromIds: string[] }[] {
+/** Aufgaben, bei denen ein Stups an mich offen ist (für das Banner oben): mit den Absendern, ohne Doppelte; Erledigtes zählt nicht */
+export function nudgesToMe<C extends Pick<Card, 'completedAt' | 'openNudges'>>(cards: C[], meId: string | null): { card: C; fromIds: string[] }[] {
   if (!meId) return [];
-  const out: { card: ScheduleCard; fromIds: string[] }[] = [];
+  const out: { card: C; fromIds: string[] }[] = [];
   for (const card of cards) {
     if (card.completedAt) continue;
     const fromIds = [...new Set((card.openNudges ?? []).filter((n) => n.toId === meId).map((n) => n.fromId))];

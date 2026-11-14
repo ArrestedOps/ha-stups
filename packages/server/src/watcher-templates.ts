@@ -7,7 +7,7 @@ import type { AssignMode, DueRule } from './watcher-types.js';
 /**
  * Vorlagen für Wächter und ihre Erkennung: Stups sucht in den Entitäten von Home Assistant selbst, was zu einer Vorlage passt
  * ("Steckdose Trockner misst Leistung"), statt dass man Entitäts-ID, Schwellwert und Minuten kennen muss.
- * Dazu Vorlagen ohne Gerät: wiederkehrende Karten (Entkalken, Rauchmelder testen …), die kein Wächter brauchen.
+ * Dazu Vorlagen ohne Gerät: wiederkehrende Aufgaben (Entkalken, Rauchmelder testen …), die kein Wächter brauchen.
  */
 
 export type TemplateId =
@@ -55,7 +55,7 @@ export type TemplateId =
   | 'mattress'
   | 'fertilize';
 
-/** Wann sich die Karte von selbst erledigt: ein Wert, den der Sensor erreicht, oder ein Zustand (Fenster wieder zu) */
+/** Wann sich die Aufgabe von selbst erledigt: ein Wert, den der Sensor erreicht, oder ein Zustand (Fenster wieder zu) */
 export type DraftDone = { kind: 'above' | 'below'; value: number } | { kind: 'state'; to: string };
 
 /** Wie die Vorlage den Wächter vorbelegt (die Oberfläche übernimmt es ins Formular; der Mensch passt es an) */
@@ -68,7 +68,7 @@ export interface TemplateDraft {
     | { kind: 'forecast'; condition: 'rain'; hours: number };
   card: { title: string; due: DueRule };
   assign: { mode: AssignMode };
-  /** Karte erledigt sich von selbst, wenn die Entität diese Bedingung erreicht (nur wo der Sensor das belegen kann) */
+  /** Aufgabe erledigt sich von selbst, wenn die Entität diese Bedingung erreicht (nur wo der Sensor das belegen kann) */
   done: DraftDone | null;
 }
 
@@ -81,7 +81,7 @@ export interface WatcherTemplate {
   domain: string | null;
   search: string;
   draft: TemplateDraft | null;
-  /** Nur bei kind = recurring: die Karte, die sich von selbst wiederholt */
+  /** Nur bei kind = recurring: die Aufgabe, die sich von selbst wiederholt */
   recurring: { title: string; recurrence: Recurrence } | null;
   /** Kann der Sensor belegen, dass die Aufgabe erledigt ist? Sonst bleibt „Von selbst erledigen" aus, mit Begründung */
   canSelfComplete: boolean;
@@ -104,7 +104,7 @@ export interface Suggestion {
   variant: 'power' | 'status' | 'default' | 'level' | 'switch' | 'cover' | 'lock';
   /** Ersatz für den Entwurf der Vorlage (beim Programmstatus: Wechsel in „finished") */
   draft?: TemplateDraft;
-  /** Kurzer Gerätename für Name und Kartentitel des neuen Wächters ("iPhone Rene" statt "iPhone Rene Battery Level") */
+  /** Kurzer Gerätename für Name und Aufgabentitel des neuen Wächters ("iPhone Rene" statt "iPhone Rene Battery Level") */
   label: string;
 }
 
@@ -159,7 +159,7 @@ export function watcherTemplates(): WatcherTemplate[] {
       id: 'bins',
       kind: 'watcher',
       title: t('Tonnen rausstellen'),
-      hint: t('Kalender mit den Abfallterminen (zum Beispiel aus der Müllabfuhr-Integration). Am Vorabend entsteht die Karte.'),
+      hint: t('Kalender mit den Abfallterminen (zum Beispiel aus der Müllabfuhr-Integration). Am Vorabend entsteht die Aufgabe.'),
       domain: 'calendar',
       search: t('müll abfall'),
       draft: {
@@ -177,7 +177,7 @@ export function watcherTemplates(): WatcherTemplate[] {
       id: 'rain',
       kind: 'watcher',
       title: t('Wäsche rein, es regnet'),
-      hint: t('Wetter-Entität (weather): sobald in den nächsten Stunden Regen vorhergesagt ist, bekommt jemand die Karte.'),
+      hint: t('Wetter-Entität (weather): sobald in den nächsten Stunden Regen vorhergesagt ist, bekommt jemand die Aufgabe.'),
       domain: 'weather',
       search: '',
       draft: {
@@ -195,7 +195,7 @@ export function watcherTemplates(): WatcherTemplate[] {
       id: 'battery',
       kind: 'watcher',
       title: t('Batterie schwach'),
-      hint: t('Batterie-Sensor eines Geräts. Name und Karte nennen das Gerät dazu.'),
+      hint: t('Batterie-Sensor eines Geräts. Name und Aufgabe nennen das Gerät dazu.'),
       domain: 'sensor',
       search: t('batterie'),
       draft: {
@@ -203,7 +203,7 @@ export function watcherTemplates(): WatcherTemplate[] {
         trigger: { kind: 'below', value: 20, forMin: 10 },
         card: { title: t('Batterie wechseln'), due: { kind: 'none' } },
         assign: { mode: 'rotation_present' },
-        // ein neuer Satz Batterien zeigt sich im Sensor: die Karte erledigt sich von selbst
+        // ein neuer Satz Batterien zeigt sich im Sensor: die Aufgabe erledigt sich von selbst
         done: { kind: 'above', value: 50 },
       },
       recurring: null,
@@ -214,7 +214,7 @@ export function watcherTemplates(): WatcherTemplate[] {
       id: 'vacuum',
       kind: 'watcher',
       title: t('Saugroboter: Behälter leeren'),
-      hint: t('Staubsaugerroboter (vacuum). Nach 3 Reinigungen entsteht die Karte; wer zuerst nach Hause kommt, bekommt sie. Wird die Karte erledigt, beginnt die Zählung von vorn.'),
+      hint: t('Staubsaugerroboter (vacuum). Nach 3 Reinigungen entsteht die Aufgabe; wer zuerst nach Hause kommt, bekommt sie. Wird die Aufgabe erledigt, beginnt die Zählung von vorn.'),
       domain: 'vacuum',
       search: '',
       draft: {
@@ -229,28 +229,28 @@ export function watcherTemplates(): WatcherTemplate[] {
       whyNoSelfComplete: t('Der Roboter weiß nicht, ob jemand den Behälter geleert hat.'),
     },
     ...deviceTemplates(),
-    recurring('descale', t('Entkalken'), t('Kaffeemaschine, Wasserkocher oder Waschmaschine: alle 3 Monate eine Karte.'), t('Entkalken'), { type: 'fixed', freq: 'monthly', every: 3 }),
-    recurring('smoke', t('Rauchmelder testen'), t('Alle 6 Monate eine Karte, damit der Test nicht untergeht.'), t('Rauchmelder testen'), { type: 'fixed', freq: 'monthly', every: 6 }),
-    recurring('filter', t('Filter wechseln'), t('Luftreiniger, Dunstabzug oder Wasserfilter: alle 3 Monate eine Karte.'), t('Filter wechseln'), { type: 'fixed', freq: 'monthly', every: 3 }),
-    recurring('bedding', t('Bettwäsche wechseln'), t('Alle 2 Wochen eine Karte.'), t('Bettwäsche wechseln'), { type: 'fixed', freq: 'weekly', every: 2 }),
-    recurring('fridge_clean', t('Kühlschrank reinigen'), t('Alle 3 Monate eine Karte: auswischen und Abgelaufenes aussortieren.'), t('Kühlschrank reinigen'), { type: 'fixed', freq: 'monthly', every: 3 }),
-    recurring('oven_clean', t('Backofen reinigen'), t('Alle 3 Monate eine Karte.'), t('Backofen reinigen'), { type: 'fixed', freq: 'monthly', every: 3 }),
-    recurring('windows', t('Fenster putzen'), t('Alle 6 Monate eine Karte, zum Beispiel im Frühjahr und im Herbst.'), t('Fenster putzen'), { type: 'fixed', freq: 'monthly', every: 6 }),
-    recurring('radiators', t('Heizung entlüften'), t('Einmal im Jahr eine Karte, im Herbst vor der Heizperiode. Beim ersten Mal das Datum der Karte auf Oktober setzen.'), t('Heizung entlüften'), { type: 'fixed', freq: 'yearly', every: 1 }),
-    recurring('tyres', t('Reifen wechseln'), t('Alle 6 Monate eine Karte (Sommer- und Winterreifen). Beim ersten Mal das Datum auf Oktober oder April setzen, dann passt der Rhythmus.'), t('Reifen wechseln'), { type: 'fixed', freq: 'monthly', every: 6 }),
-    recurring('gutter', t('Dachrinne reinigen'), t('Einmal im Jahr eine Karte, am besten im Herbst nach dem Laubfall.'), t('Dachrinne reinigen'), { type: 'fixed', freq: 'yearly', every: 1 }),
-    recurring('washer_hygiene', t('Hygienewäsche Waschmaschine'), t('Jeden Monat eine Karte: ein heißer Waschgang ohne Wäsche gegen Geruch und Ablagerungen.'), t('Hygienewäsche Waschmaschine'), { type: 'fixed', freq: 'monthly', every: 1 }),
-    recurring('shower_head', t('Duschkopf entkalken'), t('Alle 3 Monate eine Karte.'), t('Duschkopf entkalken'), { type: 'fixed', freq: 'monthly', every: 3 }),
-    recurring('drains', t('Abflüsse reinigen'), t('Alle 2 Monate eine Karte: Siebe leeren, Abflüsse in Bad und Küche durchspülen.'), t('Abflüsse reinigen'), { type: 'fixed', freq: 'monthly', every: 2 }),
-    recurring('first_aid', t('Erste-Hilfe-Kasten prüfen'), t('Einmal im Jahr eine Karte: Inhalt und Verfallsdaten kontrollieren.'), t('Erste-Hilfe-Kasten prüfen'), { type: 'fixed', freq: 'yearly', every: 1 }),
-    recurring('extinguisher', t('Feuerlöscher prüfen'), t('Alle 2 Jahre eine Karte: Prüfplakette und Druck kontrollieren.'), t('Feuerlöscher prüfen'), { type: 'fixed', freq: 'yearly', every: 2 }),
-    recurring('mattress', t('Matratze wenden'), t('Alle 3 Monate eine Karte.'), t('Matratze wenden'), { type: 'fixed', freq: 'monthly', every: 3 }),
-    recurring('fertilize', t('Pflanzen düngen'), t('Alle 4 Wochen eine Karte, in der Wachstumszeit.'), t('Pflanzen düngen'), { type: 'fixed', freq: 'weekly', every: 4 }),
+    recurring('descale', t('Entkalken'), t('Kaffeemaschine, Wasserkocher oder Waschmaschine: alle 3 Monate eine Aufgabe.'), t('Entkalken'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('smoke', t('Rauchmelder testen'), t('Alle 6 Monate eine Aufgabe, damit der Test nicht untergeht.'), t('Rauchmelder testen'), { type: 'fixed', freq: 'monthly', every: 6 }),
+    recurring('filter', t('Filter wechseln'), t('Luftreiniger, Dunstabzug oder Wasserfilter: alle 3 Monate eine Aufgabe.'), t('Filter wechseln'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('bedding', t('Bettwäsche wechseln'), t('Alle 2 Wochen eine Aufgabe.'), t('Bettwäsche wechseln'), { type: 'fixed', freq: 'weekly', every: 2 }),
+    recurring('fridge_clean', t('Kühlschrank reinigen'), t('Alle 3 Monate eine Aufgabe: auswischen und Abgelaufenes aussortieren.'), t('Kühlschrank reinigen'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('oven_clean', t('Backofen reinigen'), t('Alle 3 Monate eine Aufgabe.'), t('Backofen reinigen'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('windows', t('Fenster putzen'), t('Alle 6 Monate eine Aufgabe, zum Beispiel im Frühjahr und im Herbst.'), t('Fenster putzen'), { type: 'fixed', freq: 'monthly', every: 6 }),
+    recurring('radiators', t('Heizung entlüften'), t('Einmal im Jahr eine Aufgabe, im Herbst vor der Heizperiode. Beim ersten Mal das Datum der Aufgabe auf Oktober setzen.'), t('Heizung entlüften'), { type: 'fixed', freq: 'yearly', every: 1 }),
+    recurring('tyres', t('Reifen wechseln'), t('Alle 6 Monate eine Aufgabe (Sommer- und Winterreifen). Beim ersten Mal das Datum auf Oktober oder April setzen, dann passt der Rhythmus.'), t('Reifen wechseln'), { type: 'fixed', freq: 'monthly', every: 6 }),
+    recurring('gutter', t('Dachrinne reinigen'), t('Einmal im Jahr eine Aufgabe, am besten im Herbst nach dem Laubfall.'), t('Dachrinne reinigen'), { type: 'fixed', freq: 'yearly', every: 1 }),
+    recurring('washer_hygiene', t('Hygienewäsche Waschmaschine'), t('Jeden Monat eine Aufgabe: ein heißer Waschgang ohne Wäsche gegen Geruch und Ablagerungen.'), t('Hygienewäsche Waschmaschine'), { type: 'fixed', freq: 'monthly', every: 1 }),
+    recurring('shower_head', t('Duschkopf entkalken'), t('Alle 3 Monate eine Aufgabe.'), t('Duschkopf entkalken'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('drains', t('Abflüsse reinigen'), t('Alle 2 Monate eine Aufgabe: Siebe leeren, Abflüsse in Bad und Küche durchspülen.'), t('Abflüsse reinigen'), { type: 'fixed', freq: 'monthly', every: 2 }),
+    recurring('first_aid', t('Erste-Hilfe-Kasten prüfen'), t('Einmal im Jahr eine Aufgabe: Inhalt und Verfallsdaten kontrollieren.'), t('Erste-Hilfe-Kasten prüfen'), { type: 'fixed', freq: 'yearly', every: 1 }),
+    recurring('extinguisher', t('Feuerlöscher prüfen'), t('Alle 2 Jahre eine Aufgabe: Prüfplakette und Druck kontrollieren.'), t('Feuerlöscher prüfen'), { type: 'fixed', freq: 'yearly', every: 2 }),
+    recurring('mattress', t('Matratze wenden'), t('Alle 3 Monate eine Aufgabe.'), t('Matratze wenden'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('fertilize', t('Pflanzen düngen'), t('Alle 4 Wochen eine Aufgabe, in der Wachstumszeit.'), t('Pflanzen düngen'), { type: 'fixed', freq: 'weekly', every: 4 }),
   ];
 }
 
 /**
- * Die Geräte-Vorlagen über die Auslöser, die es schon gibt (Zustand, über, unter). Titel, Karte, Wartezeit und Schwellwert sind
+ * Die Geräte-Vorlagen über die Auslöser, die es schon gibt (Zustand, über, unter). Titel, Aufgabe, Wartezeit und Schwellwert sind
  * Vorbelegungen: der Mensch passt sie im Assistenten an. `done` nur dort, wo der Sensor belegen kann, dass die Aufgabe erledigt ist.
  */
 function deviceTemplates(): WatcherTemplate[] {
@@ -283,7 +283,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'window_open',
       t('Fenster lange offen'),
-      t('Fenster-, Tür- oder Garagen-Sensor (binary_sensor). Ist es länger als 30 Minuten offen, entsteht die Karte; sie erledigt sich, sobald es wieder zu ist.'),
+      t('Fenster-, Tür- oder Garagen-Sensor (binary_sensor). Ist es länger als 30 Minuten offen, entsteht die Aufgabe; sie erledigt sich, sobald es wieder zu ist.'),
       'binary_sensor',
       t('fenster'),
       { kind: 'state', to: 'on', forMin: 30 },
@@ -294,7 +294,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'fridge_open',
       t('Kühlschranktür offen'),
-      t('Türsensor von Kühlschrank oder Gefriertruhe. Nach 5 Minuten offen entsteht die Karte; sie erledigt sich, sobald die Tür zu ist.'),
+      t('Türsensor von Kühlschrank oder Gefriertruhe. Nach 5 Minuten offen entsteht die Aufgabe; sie erledigt sich, sobald die Tür zu ist.'),
       'binary_sensor',
       t('kühlschrank'),
       { kind: 'state', to: 'on', forMin: 5 },
@@ -306,7 +306,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'leak',
       t('Wasserleck'),
-      t('Wassersensor (binary_sensor, Geräteklasse moisture). Sobald er Wasser meldet, bekommen alle Anwesenden die Karte.'),
+      t('Wassersensor (binary_sensor, Geräteklasse moisture). Sobald er Wasser meldet, bekommen alle Anwesenden die Aufgabe.'),
       'binary_sensor',
       t('wasser'),
       { kind: 'state', to: 'on', forMin: 0 },
@@ -318,7 +318,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'plant',
       t('Pflanze gießen'),
-      t('Bodenfeuchte-Sensor einer Pflanze (oder die Entität plant). Fällt die Feuchte unter 20 %, entsteht die Karte; sie erledigt sich, wenn der Boden wieder feucht ist.'),
+      t('Bodenfeuchte-Sensor einer Pflanze (oder die Entität plant). Fällt die Feuchte unter 20 %, entsteht die Aufgabe; sie erledigt sich, wenn der Boden wieder feucht ist.'),
       'sensor,plant',
       t('pflanze'),
       { kind: 'below', value: 20, forMin: 60 },
@@ -329,7 +329,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'humid',
       t('Lüften (Feuchte)'),
-      t('Luftfeuchte-Sensor eines Raums. Liegt sie 30 Minuten über 65 %, entsteht die Karte; sie erledigt sich, wenn sie unter 55 % fällt.'),
+      t('Luftfeuchte-Sensor eines Raums. Liegt sie 30 Minuten über 65 %, entsteht die Aufgabe; sie erledigt sich, wenn sie unter 55 % fällt.'),
       'sensor',
       t('luftfeuchte'),
       { kind: 'above', value: 65, forMin: 30 },
@@ -340,7 +340,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'co2',
       t('Lüften (CO₂)'),
-      t('CO₂-Sensor eines Raums. Liegt er 10 Minuten über 1200 ppm, entsteht die Karte; sie erledigt sich, wenn er unter 800 ppm fällt.'),
+      t('CO₂-Sensor eines Raums. Liegt er 10 Minuten über 1200 ppm, entsteht die Aufgabe; sie erledigt sich, wenn er unter 800 ppm fällt.'),
       'sensor',
       t('co2'),
       { kind: 'above', value: 1200, forMin: 10 },
@@ -351,7 +351,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'dehumidifier',
       t('Entfeuchter: Tank voll'),
-      t('Tank-Sensor des Entfeuchters (binary_sensor). Ist der Tank voll, entsteht die Karte; sie erledigt sich, sobald er wieder leer ist.'),
+      t('Tank-Sensor des Entfeuchters (binary_sensor). Ist der Tank voll, entsteht die Aufgabe; sie erledigt sich, sobald er wieder leer ist.'),
       'binary_sensor',
       t('entfeuchter tank'),
       { kind: 'state', to: 'on', forMin: 0 },
@@ -363,7 +363,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'robot_error',
       t('Roboter steckt fest'),
-      t('Saugroboter oder Mähroboter. Meldet er einen Fehler, entsteht die Karte; sie erledigt sich, sobald er wieder in der Station ist.'),
+      t('Saugroboter oder Mähroboter. Meldet er einen Fehler, entsteht die Aufgabe; sie erledigt sich, sobald er wieder in der Station ist.'),
       'vacuum,lawn_mower',
       '',
       { kind: 'state', to: 'error', forMin: 0 },
@@ -375,7 +375,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'filter_life',
       t('Filter verbraucht'),
-      t('Sensor mit der Restlaufzeit eines Filters in Prozent. Unter 10 % entsteht die Karte; sie erledigt sich, wenn der Wert nach dem Wechsel wieder hoch ist.'),
+      t('Sensor mit der Restlaufzeit eines Filters in Prozent. Unter 10 % entsteht die Aufgabe; sie erledigt sich, wenn der Wert nach dem Wechsel wieder hoch ist.'),
       'sensor',
       t('filter'),
       { kind: 'below', value: 10, forMin: 60 },
@@ -386,7 +386,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'toner',
       t('Toner oder Tinte fast leer'),
-      t('Füllstand von Toner oder Tinte eines Druckers in Prozent. Unter 15 % entsteht die Karte; sie erledigt sich, wenn die neue Patrone erkannt wird.'),
+      t('Füllstand von Toner oder Tinte eines Druckers in Prozent. Unter 15 % entsteht die Aufgabe; sie erledigt sich, wenn die neue Patrone erkannt wird.'),
       'sensor',
       t('toner'),
       { kind: 'below', value: 15, forMin: 60 },
@@ -397,7 +397,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'level',
       t('Füllstand niedrig'),
-      t('Füllstand von Pellets, Heizöl, Zisterne oder Futter in Prozent. Unter 20 % entsteht die Karte; sie erledigt sich, wenn der Wert nach dem Auffüllen wieder hoch ist.'),
+      t('Füllstand von Pellets, Heizöl, Zisterne oder Futter in Prozent. Unter 20 % entsteht die Aufgabe; sie erledigt sich, wenn der Wert nach dem Auffüllen wieder hoch ist.'),
       'sensor',
       t('füllstand'),
       { kind: 'below', value: 20, forMin: 60 },
@@ -408,7 +408,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'refill',
       t('Nachfüllen oder leeren'),
-      t('Meldung eines Geräts (zum Beispiel Home Connect), dass Salz, Klarspüler, Wassertank oder Kaffeesatz-Behälter dran sind. Die Karte erledigt sich, wenn die Meldung wieder weg ist.'),
+      t('Meldung eines Geräts (zum Beispiel Home Connect), dass Salz, Klarspüler, Wassertank oder Kaffeesatz-Behälter dran sind. Die Aufgabe erledigt sich, wenn die Meldung wieder weg ist.'),
       'binary_sensor',
       t('salz'),
       { kind: 'state', to: 'on', forMin: 0 },
@@ -420,7 +420,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'litter',
       t('Katzenklo voll'),
-      t('Behälter-Sensor eines Katzenklo-Roboters. Meldet er voll, entsteht die Karte; sie erledigt sich, sobald er wieder leer ist.'),
+      t('Behälter-Sensor eines Katzenklo-Roboters. Meldet er voll, entsteht die Aufgabe; sie erledigt sich, sobald er wieder leer ist.'),
       'binary_sensor',
       t('katzenklo'),
       { kind: 'state', to: 'on', forMin: 0 },
@@ -432,7 +432,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'ev_plug',
       t('E-Auto einstecken'),
-      t('Ladestand des Autos in Prozent. Unter 30 % entsteht die Karte; sie erledigt sich, sobald der Ladestand wieder steigt.'),
+      t('Ladestand des Autos in Prozent. Unter 30 % entsteht die Aufgabe; sie erledigt sich, sobald der Ladestand wieder steigt.'),
       'sensor',
       t('auto ladestand'),
       { kind: 'below', value: 30, forMin: 0 },
@@ -443,7 +443,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'mail',
       t('Post im Briefkasten'),
-      t('Briefkasten-Sensor (binary_sensor). Meldet er Post, entsteht die Karte.'),
+      t('Briefkasten-Sensor (binary_sensor). Meldet er Post, entsteht die Aufgabe.'),
       'binary_sensor',
       t('briefkasten'),
       { kind: 'state', to: 'on', forMin: 0 },
@@ -454,7 +454,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'garage_lock',
       t('Garage oder Haustür offen'),
-      t('Garagentor (cover) oder Türschloss (lock). Steht es länger als 30 Minuten offen oder unverschlossen, entsteht die Karte; sie erledigt sich, sobald es wieder zu ist.'),
+      t('Garagentor (cover) oder Türschloss (lock). Steht es länger als 30 Minuten offen oder unverschlossen, entsteht die Aufgabe; sie erledigt sich, sobald es wieder zu ist.'),
       'cover,lock',
       t('garage'),
       { kind: 'state', to: 'open', forMin: 30 },
@@ -465,7 +465,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'freezer_warm',
       t('Gefriertruhe zu warm'),
-      t('Temperatur-Sensor von Gefrierschrank oder -truhe. Über −15 °C entsteht die Karte.'),
+      t('Temperatur-Sensor von Gefrierschrank oder -truhe. Über −15 °C entsteht die Aufgabe.'),
       'sensor',
       t('gefrier'),
       { kind: 'above', value: -15, forMin: 30 },
@@ -477,7 +477,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'unavailable',
       t('Gerät nicht erreichbar'),
-      t('Ein Sensor (Batterie, Strom, Tür, Fenster) meldet „nicht verfügbar“. Nach einer Stunde entsteht die Karte.'),
+      t('Ein Sensor (Batterie, Strom, Tür, Fenster) meldet „nicht verfügbar“. Nach einer Stunde entsteht die Aufgabe.'),
       'sensor',
       '',
       { kind: 'state', to: 'unavailable', forMin: 60 },
@@ -488,7 +488,7 @@ function deviceTemplates(): WatcherTemplate[] {
     make(
       'update',
       t('Update verfügbar'),
-      t('Eine Update-Entität von Home Assistant (update). Steht ein Update an, entsteht die Karte; sie erledigt sich, sobald es eingespielt ist.'),
+      t('Eine Update-Entität von Home Assistant (update). Steht ein Update an, entsteht die Aufgabe; sie erledigt sich, sobald es eingespielt ist.'),
       'update',
       '',
       { kind: 'state', to: 'on', forMin: 0 },

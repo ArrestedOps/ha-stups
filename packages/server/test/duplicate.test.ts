@@ -20,7 +20,7 @@ function setup() {
   return { b, open: open!, planned: planned!, doing: doing!, done: done! };
 }
 
-describe('Karte duplizieren', () => {
+describe('Aufgabe duplizieren', () => {
   it('kopiert Felder, Zuweisung, Kategorien, Checkliste (zurückgesetzt) und Links, direkt hinter das Original', () => {
     const s = setup();
     const cat = store.addCategory(s.b.id, { name: 'Putzen', color: 'blue' });
@@ -78,7 +78,7 @@ describe('Karte duplizieren', () => {
     expect(store.getCard(orig.id).checklist).toEqual({ done: 1, total: 1 });
   });
 
-  it('die Kopie einer erledigten Karte ist offen und liegt in der ersten Spalte', () => {
+  it('die Kopie einer erledigten Aufgabe ist offen und liegt in der ersten Spalte', () => {
     const s = setup();
     const c = store.createCard(s.b.id, { columnId: s.open.id, title: 'x' }, rene.id);
     store.completeCard(c.id, { by: rene.id, source: 'app' });
@@ -87,14 +87,14 @@ describe('Karte duplizieren', () => {
     expect(copy.completedAt).toBeNull();
   });
 
-  it('die Kopie einer geplanten Karte bleibt in „Geplant"', () => {
+  it('die Kopie einer geplanten Aufgabe bleibt in „Geplant"', () => {
     const s = setup();
     const c = store.createCard(s.b.id, { columnId: s.open.id, title: 'später', dueAt: '2026-11-10T09:00:00Z' }, rene.id);
     expect(store.getCard(c.id).columnId).toBe(s.planned.id);
     expect(store.duplicateCard(c.id, rene.id).columnId).toBe(s.planned.id);
   });
 
-  it('kürzt zu lange Titel und meldet unbekannte Karten', () => {
+  it('kürzt zu lange Titel und meldet unbekannte Aufgaben', () => {
     const s = setup();
     const c = store.createCard(s.b.id, { columnId: s.open.id, title: 'x'.repeat(200) }, rene.id);
     expect(store.duplicateCard(c.id, rene.id).title.length).toBeLessThanOrEqual(200);

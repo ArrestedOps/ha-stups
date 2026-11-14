@@ -1,8 +1,8 @@
 import { openSettingsPage } from './helpers';
 import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
 
-// Aufgaben: die drei Zahlen sind Knöpfe und öffnen je ein Blatt (Heute fällig, Überfällig, Heute erledigt).
-// Die Tests laufen mit eigenen Personen („Ich“ und ein Kind), damit die Zahlen und „Alle auf morgen“ keine Karten anderer Tests treffen.
+// Aufgaben: die vier Zahlen sind Knöpfe und öffnen je ein Blatt (Heute fällig, Überfällig, Heute erledigt).
+// Die Tests laufen mit eigenen Personen („Ich“ und ein Kind), damit die Zahlen und „Alle auf morgen“ keine Aufgaben anderer Tests treffen.
 test.describe.configure({ mode: 'serial' });
 
 const TZ = 'Europe/Berlin';
@@ -31,7 +31,7 @@ async function mk(request: APIRequestContext, title: string, extra: Record<strin
   expect(res.status(), await res.text()).toBe(201);
   return (await res.json()) as { id: string; dueAt: string | null };
 }
-/** Wie viele überfällige offene Karten „Ich“ laut Server hat: so viele muss das Blatt „Überfällig“ zeigen, wenn es vollständig geladen ist */
+/** Wie viele überfällige offene Aufgaben „Ich“ laut Server hat: so viele muss das Blatt „Überfällig“ zeigen, wenn es vollständig geladen ist */
 const overdueCount = async (request: APIRequestContext) => {
   const res = await request.get(`/api/schedule?to=${encodeURIComponent(new Date().toISOString())}&limit=2000`);
   const list = (await res.json()) as { assigneeIds: string[]; completedAt: string | null; dueAt: string | null }[];
@@ -72,7 +72,7 @@ test('die drei Zahlen sind Knöpfe mit Namen und 44 px Höhe; jede öffnet ihr B
   const p = await asPerson(browser, baseURL, meHeaders, info.project.name === 'hell' ? 'light' : 'dark');
   try {
     const bar = p.page.getByRole('group', { name: 'Deine Zahlen' });
-    await expect(bar.getByRole('button')).toHaveCount(3);
+    await expect(bar.getByRole('button')).toHaveCount(4); // dazu „Diese Woche“, sie öffnet den Kalender
     for (const [id, name, title] of [['today', 'Heute fällig', 'Heute fällig'], ['overdue', 'Überfällig', 'Überfällig'], ['done', 'Erledigt heute', 'Heute erledigt']] as const) {
       const btn = p.page.getByTestId(`stat-${id}`);
       await expect(btn).toHaveAttribute('aria-label', new RegExp(`^${name}, \\d+$`));
@@ -88,7 +88,7 @@ test('die drei Zahlen sind Knöpfe mit Namen und 44 px Höhe; jede öffnet ihr B
   }
 });
 
-test('Heute fällig: Zusammenfassung, Abhaken im Blatt, Tipp auf die Karte öffnet sie', async ({ browser, baseURL, request }, info) => {
+test('Heute fällig: Zusammenfassung, Abhaken im Blatt, Tipp auf die Aufgabe öffnet sie', async ({ browser, baseURL, request }, info) => {
   // kurz vor Mitternacht gibt es kein „später heute“
   test.skip(dayKey(Date.now() + 45 * MIN) !== dayKey(Date.now()), 'kurz vor Mitternacht');
   const a = await mk(request, `Abhaken ${tag}`, { assigneeIds: [meId], dueAt: new Date(Date.now() + 20 * MIN).toISOString() });
@@ -100,7 +100,8 @@ test('Heute fällig: Zusammenfassung, Abhaken im Blatt, Tipp auf die Karte öffn
     await expect(s.getByText(`Abhaken ${tag}`)).toBeVisible();
     await expect(s.getByRole('heading', { name: 'Bis heute Abend' })).toBeVisible();
     await expect(s.getByText('0 davon schon erledigt, 2 offen.')).toBeVisible();
-    // nach Uhrzeit
+    // nach Uhrzeit (erst warten, bis das Blatt eingefahren ist)
+    await p.page.waitForTimeout(600);
     const ys = async (t: string) => (await s.getByText(t, { exact: true }).boundingBox())!.y;
     expect(await ys(`Abhaken ${tag}`)).toBeLessThan(await ys(`Öffnen ${tag}`));
 
@@ -143,7 +144,7 @@ test('Überfällig: „seit …“, die Zahl stimmt mit der Leiste, „Morgen“
     const moved = await get(p.request, a.id);
     expect(dayKey(Date.parse(moved.dueAt!))).toBe(addDay(dayKey(Date.now()), 1));
     expect(clock(moved.dueAt!)).toBe(clock(old));
-    expect(moved.columnId).toBe(plannedId); // der Server legt Karten mit Termin nach heute nach „Geplant“
+    expect(moved.columnId).toBe(plannedId); // der Server legt Aufgaben mit Termin nach heute nach „Geplant“
     const toast = p.page.getByRole('status');
     await expect(toast.getByText(`„Morgen ${tag}“ auf morgen verschoben`)).toBeVisible();
 
@@ -156,7 +157,7 @@ test('Überfällig: „seit …“, die Zahl stimmt mit der Leiste, „Morgen“
   }
 });
 
-test('Überfällig: „Alle auf heute“, „Alle auf morgen“, „Wochenende“ mit Hinweis und Rückgängig; wiederkehrende Karten bleiben wiederkehrend', async ({ browser, baseURL, request }, info) => {
+test('Überfällig: „Alle auf heute“, „Alle auf morgen“, „Wochenende“ mit Hinweis und Rückgängig; wiederkehrende Aufgaben bleiben wiederkehrend', async ({ browser, baseURL, request }, info) => {
   const t1 = new Date(Date.now() - 3 * 86_400_000).toISOString();
   const t2 = new Date(Date.now() - 5 * H).toISOString();
   const a = await mk(request, `Sammel A ${tag}`, { assigneeIds: [meId], dueAt: t1 });
@@ -178,7 +179,7 @@ test('Überfällig: „Alle auf heute“, „Alle auf morgen“, „Wochenende�
     await toast.getByRole('button', { name: 'Rückgängig' }).click();
     await expect.poll(async () => (await get(p.request, a.id)).dueAt).toBe(t1);
     await expect.poll(async () => (await get(p.request, b.id)).dueAt).toBe(t2);
-    // „Rückgängig“ setzt Karte für Karte zurück und die Liste lädt dazwischen: erst klicken, wenn das Blatt alle zeigt (sonst trifft „Wochenende“ nur die ersten)
+    // „Rückgängig“ setzt Aufgabe für Aufgabe zurück und die Liste lädt dazwischen: erst klicken, wenn das Blatt alle zeigt (sonst trifft „Wochenende“ nur die ersten)
     await expect.poll(() => s.getByRole('listitem').count()).toBe(await overdueCount(p.request));
 
     // Wochenende: der nächste Samstag
@@ -193,7 +194,7 @@ test('Überfällig: „Alle auf heute“, „Alle auf morgen“, „Wochenende�
     await expect.poll(async () => (await get(p.request, b.id)).dueAt).toBe(t2);
     await expect.poll(() => s.getByRole('listitem').count()).toBe(await overdueCount(p.request));
 
-    // Alle auf heute: der Termin ist nicht mehr vorbei, die Karten sind nicht mehr überfällig
+    // Alle auf heute: der Termin ist nicht mehr vorbei, die Aufgaben sind nicht mehr überfällig
     await s.getByRole('button', { name: 'Alle auf heute' }).click();
     await expect(s.getByTestId('stats-empty')).toBeVisible();
     await expect(s.getByText('Nichts überfällig 🎉')).toBeVisible();
@@ -220,7 +221,7 @@ test('„In der Liste filtern“ stellt den Filter der Liste: Heute bzw. Überf�
     await page.getByRole('dialog').getByRole('button', { name: 'In der Liste filtern' }).click();
     await expect(sheet(page)).toHaveCount(0);
     await expect(page.getByTestId('filter-count')).toHaveText('1');
-    await expect(page.getByRole('button', { name: 'Meine' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('scope-button')).toContainText('Meine Aufgaben');
     await expect(page.getByTestId('group-overdue').getByText(`Filter alt ${tag}`)).toBeVisible();
     await expect(page.getByTestId('group-today')).toHaveCount(0);
 
@@ -233,7 +234,7 @@ test('„In der Liste filtern“ stellt den Filter der Liste: Heute bzw. Überf�
   }
 });
 
-test('Heute erledigt: Ring, Uhrzeit, Rückgängig öffnet die Karte wieder, „Archiv öffnen“', async ({ browser, baseURL, request }, info) => {
+test('Heute erledigt: Ring, Uhrzeit, Rückgängig öffnet die Aufgabe wieder, „Archiv öffnen“', async ({ browser, baseURL, request }, info) => {
   const a = await mk(request, `Fertig ${tag}`, { assigneeIds: [meId], dueAt: new Date(Date.now() - 4 * H).toISOString() });
   const done = await request.post(`/api/cards/${a.id}/complete`, { headers: meHeaders });
   expect(done.status(), await done.text()).toBe(200);
@@ -269,12 +270,12 @@ test('Heute erledigt: Ring, Uhrzeit, Rückgängig öffnet die Karte wieder, „A
   }
 });
 
-test('Kind: eigene Karten im Blatt, abhaken ja, aber kein „Morgen“ und kein „Alle verschieben“', async ({ browser, baseURL, request }, info) => {
+test('Kind: eigene Aufgaben im Blatt, abhaken ja, aber kein „Morgen“ und kein „Alle verschieben“', async ({ browser, baseURL, request }, info) => {
   const a = await mk(request, `Kind alt ${tag}`, { assigneeIds: [kidId], dueAt: new Date(Date.now() - 2 * 86_400_000).toISOString() });
   await mk(request, `Fremd ${tag}`, { assigneeIds: [meId], dueAt: new Date(Date.now() - 2 * 86_400_000).toISOString() });
   const p = await asPerson(browser, baseURL, kidHeaders, info.project.name === 'hell' ? 'light' : 'dark');
   try {
-    await expect(p.page.getByRole('group', { name: 'Deine Zahlen' }).getByRole('button')).toHaveCount(3);
+    await expect(p.page.getByRole('group', { name: 'Deine Zahlen' }).getByRole('button')).toHaveCount(4);
     await p.page.getByTestId('stat-overdue').click();
     const s = sheet(p.page);
     await expect(s.getByText(`Kind alt ${tag}`, { exact: true })).toBeVisible();
@@ -282,7 +283,7 @@ test('Kind: eigene Karten im Blatt, abhaken ja, aber kein „Morgen“ und kein 
     await expect(s.getByText('seit 2 Tagen')).toBeVisible();
     await expect(s.getByRole('button', { name: /auf morgen verschieben|Alle auf|Wochenende/ })).toHaveCount(0);
     await expect(s.getByRole('group', { name: 'Alle verschieben' })).toHaveCount(0);
-    // Abhaken bleibt (ohne Bestätigungspflicht erledigt es die Karte)
+    // Abhaken bleibt (ohne Bestätigungspflicht erledigt es die Aufgabe)
     await s.getByRole('checkbox', { name: `„Kind alt ${tag}“ erledigen` }).click();
     await expect.poll(async () => (await get(p.request, a.id)).completedAt).not.toBeNull();
   } finally {
@@ -290,8 +291,8 @@ test('Kind: eigene Karten im Blatt, abhaken ja, aber kein „Morgen“ und kein 
   }
 });
 
-// Regression (CI um 23 Uhr): zwei Karten mit gleichem Titel und gleichem Termin ließen „Warum kommt nichts an?“ ewig laden
-test('Warum kommt nichts an?: zwei gleiche Karten mit gleichem Termin stören die Liste nicht', async ({ page, request }) => {
+// Regression (CI um 23 Uhr): zwei Aufgaben mit gleichem Titel und gleichem Termin ließen „Warum kommt nichts an?“ ewig laden
+test('Warum kommt nichts an?: zwei gleiche Aufgaben mit gleichem Termin stören die Liste nicht', async ({ page, request }) => {
   const due = new Date(Date.now() - 11 * H).toISOString();
   await mk(request, `Gleich ${tag}`, { dueAt: due });
   await mk(request, `Gleich ${tag}`, { dueAt: due });

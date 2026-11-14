@@ -19,9 +19,9 @@ beforeEach(() => {
 });
 
 describe('Kopfzeile', () => {
-  it('im Add-on: Logo, stups., dann Home, Glocke, Zahnrad, Profil (in dieser Reihenfolge)', () => {
+  it('im Add-on: Logo, dann Home, Glocke, Zahnrad (runde Knöpfe, kein Profilbild mehr) (in dieser Reihenfolge)', () => {
     const out = html();
-    const order = ['alt=""', 'stups<span', 'Zurück zu Home Assistant', 'data-testid="bell"', 'Einstellungen öffnen', 'Profil öffnen'].map((n) => at(out, n));
+    const order = ['alt=""', 'Zurück zu Home Assistant', 'data-testid="bell"', 'Einstellungen öffnen'].map((n) => at(out, n));
     expect(order.every((i) => i >= 0), JSON.stringify(order)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     expect(out).toContain('data-testid="home-button"');
@@ -38,7 +38,7 @@ describe('Kopfzeile', () => {
 
   it('der Home-Knopf ist 44 × 44 und hat einen Namen', () => {
     const btn = html().match(/<button[^>]*home-button[^>]*>/)![0];
-    expect(btn).toContain('h-11 w-11');
+    expect(btn).toContain('top-circle');
     expect(btn).toContain('aria-label="Zurück zu Home Assistant"');
   });
 

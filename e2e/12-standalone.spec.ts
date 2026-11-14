@@ -59,7 +59,7 @@ test('Erster Start: ohne Konto sperrt die API, die Einrichtung verlangt den Code
 
 test('Ohne Home Assistant: zwei Reiter (Aufgaben, Boards), kein Dashboard-Button, nichts von Home Assistant in den Einstellungen', async ({ page }) => {
   await melden(page, 'anna', PW);
-  await expect(nav(page).getByRole('button')).toHaveText(['Aufgaben', 'Boards']);
+  await expect(nav(page).getByRole('button')).toHaveText(['Aufgaben', 'Boards', '', 'Kalender']);
   await expect(nav(page).getByRole('button', { name: 'Wächter' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Dashboard' })).toHaveCount(0);
 
@@ -82,7 +82,7 @@ test('Ohne Home Assistant: zwei Reiter (Aufgaben, Boards), kein Dashboard-Button
   expect((await page.request.post('/api/auth/passkey/options', { headers: { 'x-stups-client': 'e2e' } })).status()).toBe(404);
 });
 
-test('Anmelden, Karte anlegen, nach dem Neuladen noch angemeldet; Abmelden sperrt wieder', async ({ page }) => {
+test('Anmelden, Aufgabe anlegen, nach dem Neuladen noch angemeldet; Abmelden sperrt wieder', async ({ page }) => {
   await melden(page, 'anna', 'falsches-passwort');
   await expect(page.getByRole('alert')).toContainText('Benutzername oder Passwort stimmt nicht');
   await page.getByLabel('Passwort', { exact: true }).fill(PW);
@@ -90,10 +90,10 @@ test('Anmelden, Karte anlegen, nach dem Neuladen noch angemeldet; Abmelden sperr
   await expect(nav(page)).toBeVisible();
   await openBoards(page);
 
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   await page.getByLabel('Was steht an?').fill('Fenster putzen');
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  // in der Liste suchen: Solange das Fenster „Neue Karte" ausblendet, steht der Titel noch einmal im Eingabefeld
+  // in der Liste suchen: Solange das Fenster „Neue Aufgabe" ausblendet, steht der Titel noch einmal im Eingabefeld
   await expect(page.getByRole('list').getByText('Fenster putzen')).toBeVisible();
 
   await page.reload();
@@ -247,7 +247,7 @@ test('ntfy: Thema eintragen, Test-Nachricht kommt an, der Knopf meldet sich zur�
   await expect(settings.getByTestId('ntfy-status')).toContainText('Anna: Thema eingetragen');
 });
 
-test('ntfy: ein Stups kommt mit drei Knöpfen an, „Erledigt" erledigt die Karte und räumt die Nachricht weg', async ({ page, request }) => {
+test('ntfy: ein Stups kommt mit drei Knöpfen an, „Erledigt" erledigt die Aufgabe und räumt die Nachricht weg', async ({ page, request }) => {
   await anmelden(page);
   const people = (await (await page.request.get('/api/people')).json()) as { id: string; name: string }[];
   const ben = people.find((p) => p.name === 'Ben')!;
@@ -286,7 +286,7 @@ test('ntfy: ein Stups kommt mit drei Knöpfen an, „Erledigt" erledigt die Kart
   expect((await tap(request, msg!.actions![0]!)).status()).toBe(200);
 });
 
-test('ntfy: „Mach ich" meldet dem Absender zurück, und der Link der Nachricht öffnet die Karte', async ({ page, request }) => {
+test('ntfy: „Mach ich" meldet dem Absender zurück, und der Link der Nachricht öffnet die Aufgabe', async ({ page, request }) => {
   await anmelden(page);
   const people = (await (await page.request.get('/api/people')).json()) as { id: string; name: string }[];
   const ben = people.find((p) => p.name === 'Ben')!;
@@ -309,7 +309,7 @@ test('ntfy: „Mach ich" meldet dem Absender zurück, und der Link der Nachricht
   expect(feedback).toMatchObject({ title: 'Pfand wegbringen', message: "Ben macht's 👍", priority: 2 });
   expect(feedback.actions).toBeUndefined();
 
-  // Der Link aus der Nachricht öffnet die Karte (angemeldet)
+  // Der Link aus der Nachricht öffnet die Aufgabe (angemeldet)
   await page.goto(msg!.click!);
   await expect(page.getByRole('dialog').getByLabel('Titel')).toHaveValue('Pfand wegbringen');
 });

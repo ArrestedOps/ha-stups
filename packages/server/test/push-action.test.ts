@@ -71,7 +71,7 @@ const card = (extra: object = {}) => store.createCard(boardId, { columnId: openC
 const press = (token: string) => app.inject({ method: 'POST', url: '/api/push/action', headers: { 'content-type': 'text/plain' }, payload: token });
 
 describe('Rückweg der Knöpfe (ntfy)', () => {
-  it('„Erledigt" erledigt die Karte für die Person im Token, ohne Sitzung und ohne Kopfzeile des Clients', async () => {
+  it('„Erledigt" erledigt die Aufgabe für die Person im Token, ohne Sitzung und ohne Kopfzeile des Clients', async () => {
     const c = card();
     const res = await press(tokens.sign({ personId: anna.id, action: `KANBAN_DONE:${c.id}:${DUE}` }));
     expect(res.statusCode).toBe(200);
@@ -113,7 +113,7 @@ describe('Rückweg der Knöpfe (ntfy)', () => {
     expect(store.getCard(c.id).completedAt).toBeNull();
   });
 
-  it('der Testknopf merkt sich den Zeitpunkt und fasst keine Karte an', async () => {
+  it('der Testknopf merkt sich den Zeitpunkt und fasst keine Aufgabe an', async () => {
     const c = card();
     expect(roundTrips.last(anna.id)).toBeNull();
     const res = await press(tokens.sign({ personId: anna.id, action: TEST_ACTION }));

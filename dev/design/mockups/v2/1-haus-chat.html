@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stups · Idee 1 · Haus-Chat</title>
+<!--
+  Mockup, kein Produktcode. Aufgaben als Unterhaltung mit Haus und Familie.
+  Das Haus meldet sich in Türkis (so heißt die zweite Stimme in der App schon), Personen schreiben in ihrer Farbe, man antwortet mit Tippen.
+  Das Eingabefeld ist die Schnelleingabe der App ("Müll morgen 19 Uhr @Ben #Haushalt").
+  Parameter: ?theme=light|dark. Nur Handy.
+-->
+<style>
+@font-face { font-family: "Figtree"; src: url("../fonts/figtree-latin-wght-normal.woff2") format("woff2"); font-weight: 300 900; font-display: swap; }
+:root {
+  --bg: #eceef1; --card: #ffffff; --ink: #000000; --mute: #5f6672; --line: #d9dce2;
+  --me: #c2410c; --on-me: #ffffff;
+  --haus: #0b7d6e; --haus-bg: #d9f1ec;
+  --ben: #2563eb; --ben-bg: #e0e9fd;
+  --bar: rgba(255,255,255,.92);
+  --font: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; /* Abstandsraster */
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #000000; --card: #1c1c1f; --ink: #ffffff; --mute: #a1a6b0; --line: #2c2d31;
+  --me: #ff8a50; --on-me: #1a0b02; --haus: #4fd6c0; --haus-bg: #0f2e29; --ben: #7aa2ff; --ben-bg: #1a2744; --bar: rgba(28,28,31,.92); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #000000; --card: #1c1c1f; --ink: #ffffff; --mute: #a1a6b0; --line: #2c2d31;
+  --me: #ff8a50; --on-me: #1a0b02; --haus: #4fd6c0; --haus-bg: #0f2e29; --ben: #7aa2ff; --ben-bg: #1a2744; --bar: rgba(28,28,31,.92); color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.35 var(--font); -webkit-font-smoothing: antialiased; max-width: 430px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--me); outline-offset: 2px; border-radius: 10px; }
+svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.num { font-variant-numeric: tabular-nums; }
+
+.top { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4) var(--s2); }
+.faces { display: flex; }
+.faces .f { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 800 14px/1 var(--font); box-shadow: 0 0 0 2.5px var(--bg); }
+.faces .f + .f { margin-left: -9px; }
+.faces .more { background: var(--card); color: var(--mute); font-size: 12px; }
+.top .t { flex: 1; min-width: 0; }
+.top h1 { font: 800 22px/1.1 var(--font); letter-spacing: -0.015em; }
+.top .s { font-size: 14px; color: var(--mute); }
+.iconbtn { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--card); }
+.iconbtn .pip { position: absolute; top: 8px; right: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--me); border: 2px solid var(--card); box-sizing: content-box; }
+
+.pills { display: flex; gap: var(--s2); padding: var(--s1) var(--s4) var(--s3); overflow: hidden; }
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 var(--s3); border-radius: 17px; background: var(--card); font: 600 14px/1 var(--font); white-space: nowrap; }
+.pill b { font-weight: 800; }
+.pill.hot { background: var(--me); color: var(--on-me); }
+
+.chat { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: var(--s3); padding: 0 var(--s4) var(--s3); overflow: hidden; }
+.day { align-self: center; font: 600 13px/1 var(--font); color: var(--mute); padding: 4px 0; }
+.sys { align-self: center; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--mute); }
+.sys svg { width: 16px; height: 16px; stroke-width: 2.6; color: var(--haus); }
+
+.row { display: flex; align-items: flex-end; gap: var(--s2); max-width: 92%; }
+.row.me { align-self: flex-end; flex-direction: row-reverse; }
+.av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 800 13px/1 var(--font); flex: none; }
+.av.haus { background: var(--haus); } .av.ben { background: #2563eb; }
+.av svg { width: 18px; height: 18px; }
+.bub { padding: 10px var(--s3) 8px var(--s4); border-radius: 20px 20px 20px 6px; background: var(--card); min-width: 0; }
+.row.me .bub { background: var(--me); color: var(--on-me); border-radius: 20px 20px 6px 20px; padding: 10px var(--s4); }
+.bub.haus { background: var(--haus-bg); }
+.bub.ben { background: var(--ben-bg); }
+.who { font: 700 13px/1 var(--font); margin-bottom: 4px; }
+.bub.haus .who { color: var(--haus); } .bub.ben .who { color: var(--ben); }
+.say { font: 600 18px/1.25 var(--font); }
+.ts { display: block; text-align: right; font-size: 12px; color: var(--mute); margin-top: 4px; }
+.row.me .ts { color: inherit; opacity: .8; }
+
+.task { display: flex; align-items: center; gap: var(--s3); margin-top: var(--s2); padding: 10px var(--s3); border-radius: 14px; background: var(--card); }
+.task .c { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--mute); flex: none; }
+.task .n { font: 700 16px/1.2 var(--font); }
+.task .m { font-size: 13px; color: var(--mute); display: flex; gap: var(--s2); align-items: center; }
+.task .m svg { width: 13px; height: 13px; }
+.task .m .hi { color: var(--me); font-weight: 700; }
+.ref { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 5px 10px 5px 8px; border-radius: 12px; background: var(--card); font: 600 14px/1 var(--font); }
+.ref svg { width: 15px; height: 15px; color: var(--me); }
+.acts { display: flex; gap: var(--s2); margin-top: var(--s2); }
+.acts button { flex: 1; height: 36px; border-radius: 18px; background: var(--card); font: 700 14px/1 var(--font); text-align: center; }
+.acts .go { background: var(--me); color: var(--on-me); }
+
+.suggest { display: flex; gap: var(--s2); padding: 0 var(--s4) var(--s2); }
+.chip { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 var(--s3); border-radius: 15px; border: 1.5px dashed var(--mute); font: 600 13px/1 var(--font); color: var(--mute); white-space: nowrap; }
+.composer { display: flex; align-items: center; gap: var(--s2); padding: 0 var(--s4) var(--s3); }
+.composer .plus { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--card); }
+.composer .field { flex: 1; height: 44px; border-radius: 22px; background: var(--card); display: flex; align-items: center; padding: 0 6px 0 var(--s4); color: var(--mute); font-size: 16px; }
+.composer .send { margin-left: auto; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--me); color: var(--on-me); }
+.composer .send svg { width: 20px; height: 20px; stroke-width: 2.6; }
+.tabbar { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--bar); border-top: 1px solid var(--line); padding: var(--s1) 0 max(var(--s2), env(safe-area-inset-bottom)); }
+.tabbar button { display: grid; justify-items: center; gap: 2px; padding: 6px 0 2px; font: 600 11px/1.2 var(--font); color: var(--mute); }
+.tabbar button[aria-current="page"] { color: var(--me); }
+.tabbar svg { width: 25px; height: 25px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11.2 12 4l8 7.2V20H4Z"/><path d="M10 20v-5.5h4V20"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 8.5 4.7L12 13 3.5 8.2 12 3.5Z"/><path d="m3.5 12.6 8.5 4.8 8.5-4.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19.5 6.5v5.6c0 4.2-3 7.4-7.5 8.4-4.5-1-7.5-4.2-7.5-8.4V6.5L12 3.5Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H18l-3-3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H6l3 3"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5.5 21V4h11l-2.2 4 2.2 4h-11"/></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <div class="faces" aria-hidden="true">
+    <span class="f" style="background:#c2410c">A</span><span class="f" style="background:#2563eb">B</span><span class="f" style="background:#be185d">M</span><span class="f more">+2</span>
+  </div>
+  <div class="t"><h1>Zuhause</h1><div class="s">5 Personen, 3 offen</div></div>
+  <button class="iconbtn" aria-label="Mitteilungen, 1 neue"><svg><use href="#i-bell"/></svg><span class="pip"></span></button>
+</header>
+
+<div class="pills" role="group" aria-label="Filter">
+  <button class="pill hot"><b class="num">2</b>überfällig</button>
+  <button class="pill"><b class="num">0</b>heute</button>
+  <button class="pill"><b class="num">1</b>erledigt</button>
+  <button class="pill">Meine</button>
+</div>
+
+<main class="chat" aria-label="Verlauf">
+  <div class="day">Gestern</div>
+  <div class="row">
+    <span class="av haus"><svg><use href="#i-home"/></svg></span>
+    <div class="bub haus"><div class="who">Dein Zuhause</div><div class="say">Rauchmelder testen ist erledigt. Danke, Ben.</div><span class="ts num">18:40</span></div>
+  </div>
+  <div class="day">Heute</div>
+  <div class="sys"><svg><use href="#i-check"/></svg>Spülmaschine ausräumen: erledigt von Anna, 08:05</div>
+
+  <div class="row">
+    <span class="av ben">B</span>
+    <div class="bub ben"><div class="who">Ben stupst dich</div><div class="say">Heute noch?</div>
+      <span class="ref"><svg><use href="#i-tasks"/></svg>Fenster putzen, morgen 10:00</span>
+      <span class="ts num">16:17</span></div>
+  </div>
+  <div class="row me"><div class="bub"><div class="say">Bin dran</div><span class="ts num">16:20</span></div></div>
+
+  <div class="row">
+    <span class="av haus"><svg><use href="#i-home"/></svg></span>
+    <div class="bub haus"><div class="who">Dein Zuhause</div><div class="say">Zwei Aufgaben sind überfällig.</div>
+      <div class="task"><span class="c"></span><div><div class="n">Müll rausbringen</div><div class="m"><span class="num">seit 16:17</span><svg><use href="#i-repeat"/></svg><span class="hi">Hoch</span></div></div></div>
+      <div class="task"><span class="c"></span><div><div class="n">Paket abholen</div><div class="m"><span class="num">seit 16:30</span></div></div></div>
+      <span class="ts num">17:42</span></div>
+  </div>
+</main>
+
+<div class="suggest" aria-label="Erkannt beim Tippen">
+  <span class="chip">morgen 19 Uhr</span><span class="chip">@Ben</span><span class="chip">#Haushalt</span>
+</div>
+<div class="composer">
+  <button class="plus" aria-label="Mehr"><svg><use href="#i-plus"/></svg></button>
+  <div class="field">Neue Aufgabe oder Stups …<button class="send" aria-label="Senden"><svg><use href="#i-up"/></svg></button></div>
+</div>
+<nav class="tabbar" aria-label="Hauptbereiche">
+  <button aria-current="page"><svg><use href="#i-tasks"/></svg>Aufgaben</button>
+  <button><svg><use href="#i-layers"/></svg>Boards</button>
+  <button><svg><use href="#i-shield"/></svg>Wächter</button>
+</nav>
+<script>try { var t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; } catch (e) {}</script>
+</body>
+</html>

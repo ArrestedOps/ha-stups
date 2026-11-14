@@ -15,7 +15,7 @@
   import Toggle from './ui/Toggle.svelte';
 
   /**
-   * „Wer bekommt die Karte?“ im Formular am Desktop: vier Arten als Segment (feste Person, wer zuerst heimkommt, fair im Wechsel, alle
+   * „Wer bekommt die Aufgabe?“ im Formular am Desktop: vier Arten als Segment (feste Person, wer zuerst heimkommt, fair im Wechsel, alle
    * Anwesenden), „Erst vorschlagen“ und „Niemand“ in einer Auswahl daneben. Darunter wie im Assistenten: wer infrage kommt (bei „Eine feste
    * Person“ Pflicht), die Reihenfolge mit Fotos und der Rückfall.
    */
@@ -44,7 +44,7 @@
 
   const hint = $derived(
     f.assignMode === 'first_home'
-      ? t('Ist niemand zu Hause, erscheint die Karte ohne Zuständige und ohne Push. Wer als Erstes heimkommt, bekommt sie (die Fälligkeit zählt ab dann).')
+      ? t('Ist niemand zu Hause, erscheint die Aufgabe ohne Zuständige und ohne Push. Wer als Erstes heimkommt, bekommt sie (die Fälligkeit zählt ab dann).')
       : f.assignMode === 'rotation' || f.assignMode === 'rotation_present'
         ? t('„Fair“ heißt hier reihum, nicht nach Aufwand gewichtet.')
         : f.assignMode === 'all_present'
@@ -52,7 +52,7 @@
           : f.assignMode === 'suggest'
             ? t('Alle Anwesenden bekommen die Frage „Wer übernimmt?“. Nach 30 Minuten ohne Antwort greift der Rückfall.')
             : f.assignMode === 'none'
-              ? t('Karte landet nur auf dem Board')
+              ? t('Aufgabe landet nur auf dem Board')
               : null,
   );
   const fallbackLabel = $derived(f.assignMode === 'suggest' ? t('Wenn sich niemand meldet') : t('Ist niemand zu Hause'));
@@ -61,7 +61,7 @@
   const WAIT = $derived<[string, string][]>([['none', t('unzugewiesen lassen')], ['all', t('an alle')], ['fixed', t('feste Person')]]);
 </script>
 
-<DeskBlock n={3} title={t('Wer bekommt die Karte?')} testid="desk-who">
+<DeskBlock n={3} title={t('Wer bekommt die Aufgabe?')} testid="desk-who">
   <Segmented small scroll items={ITEMS} value={mode} label={t('Zuweisung')} onchange={(id) => (ed.form = withDeskMode(f, id as DeskMode, me))} />
 
   <div class="flex flex-wrap items-center gap-x-4 gap-y-2">

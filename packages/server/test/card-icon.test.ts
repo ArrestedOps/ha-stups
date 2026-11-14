@@ -35,8 +35,8 @@ beforeEach(() => {
   openId = store.getBoardView(b.id).columns[0]!.id;
 });
 
-describe('Symbol und Farbe an der Karte', () => {
-  it('eine neue Karte hat keins (Standard „Aufgabe“)', () => {
+describe('Symbol und Farbe an der Aufgabe', () => {
+  it('eine neue Aufgabe hat keins (Standard „Aufgabe“)', () => {
     const c = store.createCard(boardId, { columnId: openId, title: 'A' }, rene);
     expect(c.icon).toBeNull();
     expect(c.iconColor).toBeNull();
@@ -90,7 +90,7 @@ describe('Symbol und Farbe an der Karte', () => {
     expect(store.duplicateCard(c.id, rene)).toMatchObject({ icon: 'leaf', iconColor: 'teal', iconSource: 'auto' });
   });
 
-  it('die nächste Karte einer Wiederholung hat immer dasselbe Symbol (auch ohne „übernehmen“)', () => {
+  it('die nächste Aufgabe einer Wiederholung hat immer dasselbe Symbol (auch ohne „übernehmen“)', () => {
     const c = store.createCard(
       boardId,
       {
@@ -108,7 +108,7 @@ describe('Symbol und Farbe an der Karte', () => {
     expect(store.getCard(done.nextCardId!)).toMatchObject({ icon: 'trash-can-outline', iconColor: 'red', iconSource: 'manual' });
   });
 
-  it('Rückgängig stellt die Karte samt Symbol wieder her', () => {
+  it('Rückgängig stellt die Aufgabe samt Symbol wieder her', () => {
     const c = store.createCard(boardId, { columnId: openId, title: 'A', icon: 'leaf' }, rene);
     const done = store.completeCard(c.id, { by: rene, source: 'app' });
     expect(store.getCard(c.id)).toMatchObject({ icon: 'leaf', iconSource: 'manual' });
@@ -143,7 +143,7 @@ describe('Symbol und Farbe an der Karte', () => {
     expect(store.getBoardView(board.id).cards[0]).toMatchObject({ title: 'Alt', icon: null, iconSource: null });
   });
 
-  it('eingebaute Vorlagen: Karten dürfen ein Symbol haben, die Form bleibt gültig', () => {
+  it('eingebaute Vorlagen: Aufgaben dürfen ein Symbol haben, die Form bleibt gültig', () => {
     const board = store.createBoardFromTemplate({ name: 'Zuhause', template: 'household', lang: 'de', by: rene });
     const cards = store.getBoardView(board.id).cards;
     expect(cards.find((c) => c.title === 'Müll rausbringen')).toMatchObject({ icon: 'trash-can-outline' });
@@ -151,8 +151,8 @@ describe('Symbol und Farbe an der Karte', () => {
   });
 });
 
-describe('Symbole erkennen (Stapel, nur Karten ohne Symbol)', () => {
-  it('listet Karten ohne Symbol (offen, erledigt, archiviert), nicht die im Papierkorb und nicht die mit Symbol', () => {
+describe('Symbole erkennen (Stapel, nur Aufgaben ohne Symbol)', () => {
+  it('listet Aufgaben ohne Symbol (offen, erledigt, archiviert), nicht die im Papierkorb und nicht die mit Symbol', () => {
     const a = store.createCard(boardId, { columnId: openId, title: 'Müll raus' }, rene);
     const b = store.createCard(boardId, { columnId: openId, title: 'Hat eins', icon: 'leaf' }, rene);
     const c = store.createCard(boardId, { columnId: openId, title: 'Gelöscht' }, rene);
@@ -165,7 +165,7 @@ describe('Symbole erkennen (Stapel, nur Karten ohne Symbol)', () => {
     expect(list.some((x) => x.id === b.id)).toBe(false);
   });
 
-  it('setzt die Quelle „auto“, aber nur bei Karten, die noch kein Symbol haben, und zählt', () => {
+  it('setzt die Quelle „auto“, aber nur bei Aufgaben, die noch kein Symbol haben, und zählt', () => {
     const a = store.createCard(boardId, { columnId: openId, title: 'Müll raus' }, rene);
     const b = store.createCard(boardId, { columnId: openId, title: 'Hat eins', icon: 'leaf' }, rene);
     const res = store.applyDetectedIcons([
@@ -178,7 +178,7 @@ describe('Symbole erkennen (Stapel, nur Karten ohne Symbol)', () => {
     expect(store.getCard(b.id)).toMatchObject({ icon: 'leaf', iconSource: 'manual' });
   });
 
-  it('lässt Änderungszeit und Fassung der Karten unverändert (kein Eingriff der Person)', () => {
+  it('lässt Änderungszeit und Fassung der Aufgaben unverändert (kein Eingriff der Person)', () => {
     const a = store.createCard(boardId, { columnId: openId, title: 'Müll raus' }, rene);
     now = new Date('2026-11-05T08:00:00Z');
     store.applyDetectedIcons([{ id: a.id, icon: 'trash-can-outline' }], rene);
@@ -196,7 +196,7 @@ describe('Symbole erkennen (Stapel, nur Karten ohne Symbol)', () => {
   });
 });
 
-describe('Wächter-Karten', () => {
+describe('Wächter-Aufgaben', () => {
   it('Tabelle: Name, Symbol der Entität, device_class, Domäne', () => {
     expect(watcherIcon({ entityId: 'sensor.waschmaschine_leistung' })).toBe('washing-machine');
     expect(watcherIcon({ entityId: 'sensor.xyz', name: 'Briefkasten Sensor' })).toBe('mailbox-outline');
@@ -211,7 +211,7 @@ describe('Wächter-Karten', () => {
     expect(watcherIcon({ entityId: 'sensor.a', deviceClass: 42, icon: 7, name: {} })).toBeNull();
   });
 
-  it('die Vorlage der Karte nimmt optional Symbol und Farbe an, ältere ohne beides', () => {
+  it('die Vorlage der Aufgabe nimmt optional Symbol und Farbe an, ältere ohne beides', () => {
     const base = { boardId: 'b', columnId: 'c', title: 'T', due: { kind: 'none' } };
     expect(parseTemplate(base)).not.toHaveProperty('icon', 'x');
     expect(parseTemplate({ ...base, icon: 'leaf', iconColor: 'green' })).toMatchObject({ icon: 'leaf', iconColor: 'green' });
@@ -219,7 +219,7 @@ describe('Wächter-Karten', () => {
     expect(() => parseTemplate({ ...base, iconColor: 'pink' })).toThrow(ValidationError);
   });
 
-  describe('Karte beim Auslösen', () => {
+  describe('Aufgabe beim Auslösen', () => {
     let ha: FakeHa;
     let data: WatcherData;
     let engineNow: number;
@@ -280,7 +280,7 @@ describe('Wächter-Karten', () => {
     });
   });
 
-  it('Karten aus Automationen: optionales Symbol (mdi:-Präfix erlaubt), Ungültiges wird ignoriert', async () => {
+  it('Aufgaben aus Automationen: optionales Symbol (mdi:-Präfix erlaubt), Ungültiges wird ignoriert', async () => {
     const ha = new FakeHa();
     const auto = createAutomationCards({ store, ha, now: () => now, presentPersonIds: async () => [] });
     auto.start();
@@ -375,7 +375,7 @@ describe('Schnittstelle', () => {
     expect(view.json().cards.find((c: { id: string }) => c.id === kidCard)).toMatchObject({ icon: 'leaf' });
   });
 
-  it('ein Kind sieht das Symbol seiner Karte, ändern darf es nicht', async () => {
+  it('ein Kind sieht das Symbol seiner Aufgabe, ändern darf es nicht', async () => {
     const seen = await call('GET', `/api/cards/${kidCard}`, kid);
     expect(seen.statusCode).toBe(200);
     expect(seen.json()).toMatchObject({ icon: 'leaf', iconColor: 'green' });

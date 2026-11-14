@@ -37,7 +37,7 @@
   // Beim Öffnen den neuesten Stand holen (die Kopfzeile lädt nur im Takt der Aufgaben)
   onMount(() => void loadInbox());
 
-  // Eine Karte öffnet die Karte; eine Mitteilung zu einem Wächter (ohne Karte) öffnet direkt den Wächter, im Editor mit dem Hinweis
+  // Eine Aufgabe öffnet die Aufgabe; eine Mitteilung zu einem Wächter (ohne Aufgabe) öffnet direkt den Wächter, im Editor mit dem Hinweis
   const open = (e: { cardId: string; boardId: string; watcherId: string | null }) => {
     if (e.watcherId) {
       openSheet({ type: 'watcher', id: e.watcherId });
@@ -48,13 +48,9 @@
   };
 </script>
 
-<Sheet title={t('Mitteilungen')} onclose={closeSheet}>
+<Sheet title={t('Mitteilungen')} onclose={closeSheet} hideClose>
   {#snippet right()}
-    <button
-      class="inline-flex h-11 items-center px-2 text-[14px] font-bold text-accent-text disabled:opacity-40"
-      disabled={unread() === 0}
-      data-testid="mark-all-read"
-      onclick={markAllRead}>{t('Alle gelesen')}</button>
+    <button class="inline-flex h-11 items-center px-2 text-[16px] font-bold text-accent-text" onclick={closeSheet}>{t('Fertig')}</button>
   {/snippet}
 
   <div class="flex flex-col gap-3.5 pt-1" data-testid="notifications">
@@ -71,17 +67,18 @@
         <p class="text-[14px] text-fg2">
           {inbox.failed && !inbox.loaded
             ? t('Beim Laden ist etwas schiefgegangen. Bitte gleich noch einmal versuchen.')
-            : t('Stupse, Antworten, Karten von Wächtern, Erledigtes und Kommentare der letzten 14 Tage erscheinen hier.')}
+            : t('Stupse, Antworten, Aufgaben von Wächtern, Erledigtes und Kommentare der letzten 14 Tage erscheinen hier.')}
         </p>
       </div>
     {:else}
       {#each groups as g (g.key)}
         <div class="flex flex-col gap-2" data-testid="inbox-group-{g.key}">
-          <SectionHeader title={GROUP[g.key]} />
+          <SectionHeader title={GROUP[g.key]} plain />
+          <div class="list-group !mt-0">
           {#each g.items as e (e.id)}
             {@const v = entryView(e, ctx)}
             {@const fresh = isUnread(e, inbox.seenAt)}
-            <ListRow title={v.title} highlight={fresh} onclick={() => open(e)}>
+            <ListRow title={v.title} onclick={() => open(e)}>
               {#snippet tile()}<Tile color={v.color}><Icon name={v.icon} size={22} /></Tile>{/snippet}
               {#snippet meta()}<span class="truncate">{v.meta}</span>{/snippet}
               {#snippet right()}
@@ -92,11 +89,18 @@
               {/snippet}
             </ListRow>
           {/each}
+          </div>
         </div>
       {/each}
       {#if inbox.hasMore && chip === 'all'}
         <button class="mx-auto min-h-11 rounded-full px-4 text-[14px] font-semibold text-accent-text" onclick={loadMoreInbox}>{t('Ältere laden')}</button>
       {/if}
     {/if}
+    <button
+      class="flex min-h-[52px] w-full items-center justify-center rounded-row bg-surface text-[16px] font-semibold text-accent-text disabled:opacity-40"
+      disabled={unread() === 0}
+      aria-label={t('Alle gelesen')}
+      data-testid="mark-all-read"
+      onclick={markAllRead}>{t('Alle als gelesen markieren')}</button>
   </div>
 </Sheet>

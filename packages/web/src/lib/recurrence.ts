@@ -219,7 +219,7 @@ export interface LateExamples {
 }
 
 /**
- * Beispiele für die drei Karten, mit der echten Regel und dem echten Termin gerechnet (dieselbe Funktion wie der Server):
+ * Beispiele für die drei Aufgaben, mit der echten Regel und dem echten Termin gerechnet (dieselbe Funktion wie der Server):
  * Erledigt 4 Tage nach dem Termin (stündlich: 30 Minuten danach); bei der Toleranz ein Beispiel innerhalb (Toleranz − 1 Tage) und eines darüber (Toleranz + 1).
  */
 export function lateExamples(e: RecurrenceEditor, dueIso: string, tz: string): LateExamples | null {

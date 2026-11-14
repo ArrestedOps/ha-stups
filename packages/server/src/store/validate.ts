@@ -71,7 +71,7 @@ export function parseIconSource(value: unknown): IconSource | null {
   return value;
 }
 
-/** „Bestätigung" an einer Karte: ein = braucht sie, aus = braucht sie nicht, leer = Vorgabe der zuständigen Person */
+/** „Bestätigung" an einer Aufgabe: ein = braucht sie, aus = braucht sie nicht, leer = Vorgabe der zuständigen Person */
 export function parseConfirm(value: unknown): 'on' | 'off' | null {
   if (value === null || value === undefined) return null;
   if (value !== 'on' && value !== 'off') throw new ValidationError(t('Die Bestätigung muss ein, aus oder leer (Vorgabe) sein'));
@@ -111,17 +111,11 @@ export function resolveCarry(raw: string | null | undefined): CarryField[] {
   }
 }
 
-export function parseBool(value: unknown, what: string): boolean {
-  if (value === undefined) return false;
-  if (typeof value !== 'boolean') throw new ValidationError(t('{what} muss wahr oder falsch sein', { what }));
-  return value;
-}
-
 export function isPosInt(n: unknown): n is number {
   return typeof n === 'number' && Number.isInteger(n) && n >= 1;
 }
 
-/** Obergrenze für „alle n …“: darüber rechnet der nächste Termin ins Ungültige, und die Karte ließe sich nie mehr erledigen */
+/** Obergrenze für „alle n …“: darüber rechnet der nächste Termin ins Ungültige, und die Aufgabe ließe sich nie mehr erledigen */
 const MAX_EVERY = 999;
 const MAX_TOLERANCE = 365;
 

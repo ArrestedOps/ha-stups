@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stups · Richtung A · Fahrplan</title>
+<!--
+  Mockup, kein Produktcode. Plan und Abgleich: dev/design/richtungen.md.
+  Ordnung nach Zeit: der Tag als Abfahrtstafel. Orange bedeutet in diesem Entwurf nur eines: Zeitdruck (verspätet, jetzt).
+  Unter 900 px Handy, darüber Desktop (ab 1240 px mit Detailspalte). Nur Hellthema.
+-->
+<style>
+@font-face { font-family: "Archivo"; src: url("fonts/archivo-latin-wdth-normal.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root {
+  --paper: #ffffff; --ink: #000000; --mute: #5c5c5c; --soft: #f2f2f2; --rule: #d0d0d0;
+  --sig: #f05400;           /* nur als Fläche, Schwarz darauf (6,2 : 1) */
+  --sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 40px; /* Abstandsraster */
+}
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--paper); }
+body { background: var(--paper); color: var(--ink); font: 400 16px/1.4 var(--sans); font-stretch: 100%; -webkit-font-smoothing: antialiased; }
+button { font: inherit; font-stretch: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; flex: none; }
+.cond { font-stretch: 64%; font-variant-numeric: tabular-nums lining-nums; }
+.mute { color: var(--mute); }
+
+/* ---------- Kopf ---------- */
+.top { display: flex; align-items: center; justify-content: space-between; padding: var(--s3) var(--s4); }
+.wordmark { font: 800 26px/1 var(--sans); font-stretch: 78%; letter-spacing: -0.01em; }
+.wordmark i { font-style: normal; color: var(--sig); }
+.nav, .search { display: none; }
+.newbtn { display: grid; place-items: center; width: 34px; height: 34px; background: var(--ink); color: var(--paper); }
+.newbtn svg { width: 20px; height: 20px; stroke-width: 2.5; }
+.newbtn .lbl { display: none; }
+.top .right { display: flex; align-items: center; gap: var(--s2); }
+.iconbtn { position: relative; display: grid; place-items: center; width: 40px; height: 40px; }
+.iconbtn .pip { position: absolute; top: 8px; right: 8px; width: 9px; height: 9px; background: var(--sig); }
+.me { display: grid; place-items: center; width: 34px; height: 34px; background: var(--ink); color: var(--paper); font: 700 15px/1 var(--sans); }
+
+/* ---------- Tafel (schwarzes Band) ---------- */
+.board { background: var(--ink); color: var(--paper); display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s4); padding: var(--s4) var(--s4) var(--s5); }
+.board .day { font: 700 26px/1.05 var(--sans); font-stretch: 78%; }
+.board .date { font-size: 16px; color: #d6d6d6; margin-top: 2px; }
+.board .clock { font: 800 92px/0.8 var(--sans); font-stretch: 62%; letter-spacing: -0.01em; font-variant-numeric: tabular-nums lining-nums; }
+
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); padding: var(--s4) var(--s4) var(--s3); }
+.chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px var(--s3); border: 2px solid var(--ink); font-size: 16px; min-height: 40px; align-items: center; }
+.chip b { font: 800 22px/1 var(--sans); font-stretch: 70%; }
+.chip.late { background: var(--sig); }
+.chip.filter { margin-left: auto; border-color: var(--rule); color: var(--mute); padding-inline: 10px; }
+.chip .fl { display: none; }
+
+.week { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 var(--s4); gap: 2px; }
+.week button { display: grid; justify-items: center; gap: 2px; padding: var(--s2) 0 var(--s2); }
+.week .wd { font: 600 13px/1 var(--sans); font-stretch: 75%; color: var(--mute); }
+.week .d { font: 700 22px/1 var(--sans); font-stretch: 70%; font-variant-numeric: tabular-nums lining-nums; }
+.week .on { background: var(--ink); color: var(--paper); }
+.week .on .wd { color: #d6d6d6; }
+.week .dots { display: flex; gap: 3px; height: 5px; }
+.week .dots b { width: 5px; height: 5px; background: var(--ink); }
+.week .on .dots b { background: var(--paper); }
+
+/* ---------- Zeitachse ---------- */
+.tl { margin-top: var(--s4); border-top: 2px solid var(--ink); list-style: none; padding: 0; }
+.slot { display: grid; grid-template-columns: 84px 1fr auto; align-items: stretch; border-bottom: 1px solid var(--rule); min-height: 72px; position: relative; }
+.slot .t { display: grid; place-items: center; font: 700 30px/1 var(--sans); font-stretch: 64%; font-variant-numeric: tabular-nums lining-nums; }
+.slot.late .t { background: var(--sig); }
+.slot .body { padding: var(--s3) var(--s3) var(--s3) var(--s3); display: grid; align-content: center; gap: 2px; }
+.slot .title { font: 650 18px/1.25 var(--sans); }
+.slot .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--s3); font-size: 14px; color: var(--mute); }
+.slot .meta .strong { color: var(--ink); font-weight: 600; }
+.slot .meta svg { width: 15px; height: 15px; }
+.slot .meta span { display: inline-flex; align-items: center; gap: 4px; }
+.tag { display: inline-flex; align-items: center; gap: 4px; border: 2px solid var(--ink); padding: 0 6px; font: 650 13px/1.5 var(--sans); color: var(--ink); }
+.tag svg { width: 13px; height: 13px; }
+.slot .act { display: grid; place-items: center; padding: 0 var(--s4) 0 var(--s2); }
+.check { display: grid; place-items: center; width: 30px; height: 30px; border: 2px solid var(--ink); }
+.check svg { width: 18px; height: 18px; stroke-width: 3; opacity: 0; }
+.slot.done .check { background: var(--ink); color: var(--paper); }
+.slot.done .check svg { opacity: 1; }
+.slot.done .t { color: var(--mute); }
+.slot.done .title { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--mute); }
+.slot.sel { background: var(--soft); box-shadow: inset 5px 0 0 var(--ink); }
+.now { display: grid; grid-template-columns: 84px 1fr; align-items: center; background: var(--sig); min-height: 40px; border-bottom: 1px solid var(--ink); }
+.now .t { text-align: center; font: 800 22px/1 var(--sans); font-stretch: 64%; font-variant-numeric: tabular-nums; }
+.now .w { font: 700 15px/1 var(--sans); padding-left: var(--s3); }
+.bar { background: var(--ink); color: var(--paper); font: 700 17px/1 var(--sans); font-stretch: 80%; padding: 10px var(--s4); }
+
+.tabbar { position: fixed; inset: auto 0 0 0; display: grid; grid-template-columns: repeat(3, 1fr); background: var(--paper); border-top: 2px solid var(--ink); }
+.tabbar button { display: grid; justify-items: center; gap: 2px; padding: 8px 0 max(10px, env(safe-area-inset-bottom)); font: 600 12px/1.2 var(--sans); color: var(--mute); }
+.tabbar button[aria-current="page"] { background: var(--ink); color: var(--paper); }
+.m-pad { padding-bottom: 150px; }
+.detail { display: none; }
+
+/* ---------- Desktop ---------- */
+@media (min-width: 900px) {
+  .tabbar { display: none; }
+  .m-pad { padding-bottom: 0; }
+  .app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+  .top { padding: 0 var(--s6); height: 68px; border-bottom: 2px solid var(--ink); gap: var(--s6); }
+  .nav { display: flex; align-self: stretch; gap: var(--s5); margin-right: auto; }
+  .nav button { display: flex; align-items: center; gap: var(--s2); padding: 0 2px; font: 600 16px/1 var(--sans); color: var(--mute); border-bottom: 4px solid transparent; margin-bottom: -2px; }
+  .nav button[aria-current="page"] { color: var(--ink); border-color: var(--ink); }
+  .search { display: flex; align-items: center; gap: var(--s2); width: 240px; height: 40px; padding: 0 var(--s3); border: 2px solid var(--rule); color: var(--mute); font-size: 15px; }
+  .search kbd { margin-left: auto; font: 600 12px var(--sans); border: 1px solid var(--rule); padding: 0 5px; }
+  .newbtn { display: inline-flex; width: auto; height: 44px; gap: var(--s2); padding: 0 var(--s4); font: 650 16px/1 var(--sans); white-space: nowrap; }
+  .newbtn .lbl { display: inline; }
+  .work { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .board { padding: var(--s5) var(--s6) var(--s5); }
+  .board .day { font-size: 40px; }
+  .board .date { font-size: 20px; }
+  .board .clock { font-size: 148px; }
+  .chips { padding: var(--s5) var(--s6) var(--s4); }
+  .chip.filter { padding-inline: var(--s3); }
+  .chip .fl { display: inline; }
+  .week { padding: 0 var(--s6); max-width: 760px; }
+  .tl { margin-top: var(--s5); }
+  .slot { grid-template-columns: 112px 1fr auto; min-height: 76px; }
+  .slot .t { font-size: 36px; }
+  .slot .body { padding-left: var(--s5); }
+  .slot .act { padding-right: var(--s6); }
+  .now { grid-template-columns: 112px 1fr; }
+  .bar { padding-inline: var(--s6); }
+}
+@media (min-width: 1240px) {
+  .work { grid-template-columns: minmax(0, 1fr) 440px; }
+  .detail { display: flex; flex-direction: column; gap: var(--s5); border-left: 2px solid var(--ink); padding: var(--s5) var(--s5) var(--s6); }
+  .detail .late-band { background: var(--sig); padding: var(--s3) var(--s4); font-weight: 650; font-size: 16px; }
+  .detail h2 { font: 800 46px/1 var(--sans); font-stretch: 72%; letter-spacing: -0.01em; }
+  .detail dl { display: grid; grid-template-columns: 120px 1fr; border-top: 2px solid var(--ink); }
+  .detail dt, .detail dd { padding: var(--s3) 0; border-bottom: 1px solid var(--rule); font-size: 16px; }
+  .detail dt { color: var(--mute); }
+  .detail dd { display: flex; align-items: center; gap: var(--s2); font-weight: 600; }
+  .detail .btns { display: grid; grid-template-columns: 1fr auto; gap: var(--s2); }
+  .detail .btns button { height: 48px; padding: 0 var(--s5); font: 650 16px/1 var(--sans); text-align: center; }
+  .detail .btns .go { background: var(--ink); color: var(--paper); }
+  .detail .btns .alt { border: 2px solid var(--ink); }
+  .detail h3 { font: 700 20px/1 var(--sans); font-stretch: 80%; margin-bottom: var(--s2); }
+  .detail .log { list-style: none; padding: 0; border-top: 2px solid var(--ink); }
+  .detail .log li { display: grid; grid-template-columns: 64px 1fr; gap: var(--s3); padding: var(--s2) 0; border-bottom: 1px solid var(--rule); font-size: 15px; }
+  .detail .log time { font: 700 20px/1.2 var(--sans); font-stretch: 64%; font-variant-numeric: tabular-nums lining-nums; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"/><path d="M10 19.5h4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="m8 12.2 3 3 5-6"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 8.5 4.7L12 13 3.5 8.2 12 3.5Z"/><path d="m3.5 12.6 8.5 4.8 8.5-4.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19.5 6.5v5.6c0 4.2-3 7.4-7.5 8.4-4.5-1-7.5-4.2-7.5-8.4V6.5L12 3.5Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.4-4.4"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H18l-3-3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H6l3 3"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <header class="top">
+    <span class="wordmark">stups<i>.</i></span>
+    <nav class="nav" aria-label="Hauptbereiche">
+      <button aria-current="page">Aufgaben</button><button>Boards</button><button>Wächter</button>
+    </nav>
+    <button class="search"><svg style="width:18px;height:18px"><use href="#i-search"/></svg>Suchen<kbd>Strg K</kbd></button>
+    <div class="right">
+      <button class="iconbtn" aria-label="Mitteilungen, 1 neue"><svg><use href="#i-bell"/></svg><span class="pip"></span></button>
+      <button class="newbtn"><svg><use href="#i-plus"/></svg><span class="lbl">Neue Aufgabe</span></button>
+      <button class="me" aria-label="Konto: Anna">A</button>
+    </div>
+  </header>
+
+  <div class="work">
+    <main class="m-pad">
+      <section class="board" aria-label="Heute">
+        <div><div class="day">Donnerstag</div><div class="date">5. November 2026</div></div>
+        <div class="clock" aria-label="Es ist 17:42">17:42</div>
+      </section>
+
+      <div class="chips">
+        <button class="chip late"><b>2</b>überfällig</button>
+        <button class="chip" aria-label="0 heute fällig"><b>0</b>heute</button>
+        <button class="chip"><b>1</b>erledigt</button>
+        <button class="chip filter" aria-label="Filter"><svg style="width:18px;height:18px"><use href="#i-sliders"/></svg><span class="fl">Filter</span></button>
+      </div>
+
+      <div class="week" role="group" aria-label="Tage dieser Woche">
+        <button><span class="wd">Mo</span><span class="d">2</span><span class="dots"></span></button>
+        <button><span class="wd">Di</span><span class="d">3</span><span class="dots"></span></button>
+        <button><span class="wd">Mi</span><span class="d">4</span><span class="dots"></span></button>
+        <button class="on" aria-pressed="true"><span class="wd">Do</span><span class="d">5</span><span class="dots"><b></b><b></b></span></button>
+        <button><span class="wd">Fr</span><span class="d">6</span><span class="dots"><b></b></span></button>
+        <button><span class="wd">Sa</span><span class="d">7</span><span class="dots"></span></button>
+        <button><span class="wd">So</span><span class="d">8</span><span class="dots"></span></button>
+      </div>
+
+      <ul class="tl" aria-label="Aufgaben nach Uhrzeit">
+        <li class="slot done">
+          <span class="t">08:05</span>
+          <div class="body"><div class="title">Spülmaschine ausräumen</div><div class="meta"><span>erledigt von Anna</span></div></div>
+          <div class="act"><span class="check"><svg><use href="#i-check"/></svg></span></div>
+        </li>
+        <li class="slot late sel">
+          <span class="t">16:17</span>
+          <div class="body"><div class="title">Müll rausbringen</div>
+            <div class="meta"><span class="strong">1 Std. 25 Min. überfällig</span><span role="img" aria-label="wiederholt sich wöchentlich"><svg><use href="#i-repeat"/></svg></span><span class="tag">Hoch</span></div></div>
+          <div class="act"><button class="check" aria-label="Müll rausbringen erledigen"><svg><use href="#i-check"/></svg></button></div>
+        </li>
+        <li class="slot late">
+          <span class="t">16:30</span>
+          <div class="body"><div class="title">Paket abholen</div>
+            <div class="meta"><span class="strong">1 Std. 12 Min. überfällig</span></div></div>
+          <div class="act"><button class="check" aria-label="Paket abholen erledigen"><svg><use href="#i-check"/></svg></button></div>
+        </li>
+        <li class="now"><span class="t">17:42</span><span class="w">Jetzt</span></li>
+        <li class="bar" role="presentation">Freitag, 6. November</li>
+        <li class="slot">
+          <span class="t">10:00</span>
+          <div class="body"><div class="title">Fenster putzen</div>
+            <div class="meta"><span>mit Ben</span><span class="tag"><svg><use href="#i-bell"/></svg>Ben hat dich gestupst</span></div></div>
+          <div class="act"><button class="check" aria-label="Fenster putzen erledigen"><svg><use href="#i-check"/></svg></button></div>
+        </li>
+      </ul>
+    </main>
+
+    <aside class="detail" aria-label="Details zur gewählten Aufgabe">
+      <div class="late-band">Verspätet seit 16:17</div>
+      <h2>Müll rausbringen</h2>
+      <dl>
+        <dt>Fällig</dt><dd class="cond" style="font-stretch:100%">heute, 16:17</dd>
+        <dt>Zuständig</dt><dd><span class="me" style="width:26px;height:26px;font-size:13px">A</span>Anna</dd>
+        <dt>Wiederholung</dt><dd>jeden Donnerstag</dd>
+        <dt>Priorität</dt><dd><span class="tag">Hoch</span></dd>
+        <dt>Board</dt><dd>Haushalt</dd>
+      </dl>
+      <div class="btns"><button class="go">Erledigt</button><button class="alt">Später</button></div>
+      <div>
+        <h3>Verlauf</h3>
+        <ul class="log">
+          <li><time>17:42</time><span>Seit 1 Std. 25 Min. überfällig</span></li>
+          <li><time>16:17</time><span>Fällig</span></li>
+          <li><time>Do</time><span>Letzte Woche von Anna erledigt</span></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Hauptbereiche">
+  <button aria-current="page"><svg><use href="#i-tasks"/></svg>Aufgaben</button>
+  <button><svg><use href="#i-layers"/></svg>Boards</button>
+  <button><svg><use href="#i-shield"/></svg>Wächter</button>
+</nav>
+</body>
+</html>

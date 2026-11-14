@@ -8,7 +8,7 @@
 
   /**
    * Probelauf: Stups wendet die Regel auf die Historie der letzten 7 Tage an und zeigt, wann der Wächter ausgelöst hätte. Nichts wird
-   * gespeichert. Das gibt Vertrauen, bevor der Wächter wirklich Karten anlegt. Im Assistenten löst der Knopf „Testen" am Fuß ihn aus
+   * gespeichert. Das gibt Vertrauen, bevor der Wächter wirklich Aufgaben anlegt. Im Assistenten löst der Knopf „Testen" am Fuß ihn aus
    * (`bind:this` und `run()`), im Ablauf hat der Abschnitt einen eigenen Knopf (`button`).
    */
   let { form, button = true }: { form: WatcherForm; button?: boolean } = $props();

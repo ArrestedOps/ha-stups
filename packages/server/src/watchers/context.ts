@@ -59,7 +59,7 @@ export function createContext(deps: WatcherDeps) {
 
   // ---------- Hilfen ----------
 
-  /** Personen, aus denen dieser Wächter wählen darf: die, die das Board seiner Karten sehen (auf einem privaten Board nur der Besitzer) */
+  /** Personen, aus denen dieser Wächter wählen darf: die, die das Board seiner Aufgaben sehen (auf einem privaten Board nur der Besitzer) */
   function peopleOf(w: Pick<Watcher, 'card'>): User[] {
     const seeing = new Set(store.boardPeopleIds(w.card.boardId));
     return store.people().filter((p) => seeing.has(p.id));
@@ -116,7 +116,7 @@ export function createContext(deps: WatcherDeps) {
 
   // ---------- Zähler ----------
 
-  /** Aktueller Zählerstand; wurde seit dem Zählen eine Karte des Wächters erledigt, beginnt er von vorn */
+  /** Aktueller Zählerstand; wurde seit dem Zählen eine Aufgabe des Wächters erledigt, beginnt er von vorn */
   function counterOf(id: string): number {
     const st = data.getState(id);
     if (st.counter > 0 && st.counterSince && store.watcherCardCompletedSince(id, st.counterSince)) {

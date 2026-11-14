@@ -1,7 +1,8 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openWatcherCategory } from './helpers';
 
-// Läuft nur im Projekt „waechter“ (nachgebautes Home Assistant, Handy): Stupsen, wenn noch offen, als Karte mit Zeilen und dem Beispiel darin;
-// die Regel kommt als Erinnerung an der Karte beim Anlegen an.
+// Läuft nur im Projekt „waechter“ (nachgebautes Home Assistant, Handy): Stupsen, wenn noch offen, als Aufgabe mit Zeilen und dem Beispiel darin;
+// die Regel kommt als Erinnerung an der Aufgabe beim Anlegen an.
 test.describe.configure({ timeout: 90_000, mode: 'serial' });
 
 const nav = (page: Page) => page.getByRole('navigation', { name: 'Ansicht' });
@@ -13,7 +14,7 @@ async function setup(request: APIRequestContext) {
   return { tag, boardId: board.id, columnId: view.columns.find((c) => !c.isDone && !c.isPlanned)!.id };
 }
 
-test('Karte mit Zeilen Nach / Wiederholen alle / Höchstens, Beispiel in der Karte; gespeichert als nudge', async ({ page, request }) => {
+test('Aufgabe mit Zeilen Nach / Wiederholen alle / Höchstens, Beispiel in der Aufgabe; gespeichert als nudge', async ({ page, request }) => {
   const s = await setup(request);
   const name = `Stups-Regel ${s.tag}`;
   const created = await request.post('/api/watchers', {
@@ -32,14 +33,15 @@ test('Karte mit Zeilen Nach / Wiederholen alle / Höchstens, Beispiel in der Kar
   await page.addInitScript((b) => localStorage.setItem('stups.board', b), s.boardId);
   await page.goto('/');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  await openWatcherCategory(page, 'Ohne Kategorie');
   await page.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
   const d = page.getByRole('dialog');
   await d.getByRole('group', { name: 'Feinschliff' }).getByRole('button', { name: 'Stupsen nach 30 Min., alle 30 Min., 3 ×' }).click();
   const card = d.getByTestId('nudge-card');
   for (const row of ['Nach', 'Wiederholen alle', 'leer = nur einmal', 'Höchstens']) await expect(card).toContainText(row);
-  await expect(card.getByTestId('nudge-example')).toContainText('Karte angelegt 12:00 → Stups 12:30 · 13:00 · 13:30 (letzter)');
-  await expect(card.getByTestId('nudge-example')).toContainText('Endet, sobald die Karte erledigt ist.');
-  // das alte Feld „Stupsen nach Minuten“ als eigene Zeile gibt es nicht mehr: alles steht in dieser einen Karte
+  await expect(card.getByTestId('nudge-example')).toContainText('Aufgabe angelegt 12:00 → Stups 12:30 · 13:00 · 13:30 (letzter)');
+  await expect(card.getByTestId('nudge-example')).toContainText('Endet, sobald die Aufgabe erledigt ist.');
+  // das alte Feld „Stupsen nach Minuten“ als eigene Zeile gibt es nicht mehr: alles steht in dieser einen Aufgabe
   await expect(d.getByTestId('nudge-card')).toHaveCount(1);
 
   // leer bei „Wiederholen alle“ = nur einmal: ein Stups, Höchstens gesperrt

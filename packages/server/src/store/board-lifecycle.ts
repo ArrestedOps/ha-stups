@@ -14,11 +14,11 @@ export type WatcherChoice = { action: 'pause' } | { action: 'move'; boardId: str
 /** Was das Löschen eines Boards betrifft (für den Bestätigungsdialog); `lock` sperrt es: das letzte sichtbare Board ist nicht löschbar */
 export interface BoardDeletePreview {
   cards: { total: number; open: number };
-  /** Offene Karten mit Wiederholung: Name und Regel */
+  /** Offene Aufgaben mit Wiederholung: Name und Regel */
   recurring: { id: string; title: string; recurrence: unknown }[];
-  /** Wächter, die Karten in dieses Board anlegen */
+  /** Wächter, die Aufgaben in dieses Board anlegen */
   watchers: { id: string; name: string; active: boolean }[];
-  /** Persönliche Erinnerungen (Nachhaken) an Karten des Boards */
+  /** Persönliche Erinnerungen (Nachhaken) an Aufgaben des Boards */
   reminders: number;
   lock: null | 'last';
 }
@@ -74,7 +74,7 @@ export function createBoardLifecycle(c: Ctx, late: unknown) {
 
   /**
    * Lässt die Wächter wieder laufen, die dieses Board pausiert hat (Board wiederhergestellt oder aus dem Archiv geholt): Status weg, an.
-   * Nur wenn das Board da ist und die Spalte der Karte noch in ihm liegt; sonst bleibt der Wächter pausiert.
+   * Nur wenn das Board da ist und die Spalte der Aufgabe noch in ihm liegt; sonst bleibt der Wächter pausiert.
    */
   function resumeWatchersOfBoard(boardId: string): string[] {
     const board = one('select deleted_at, archived_at from boards where id = ?', boardId);
@@ -148,7 +148,7 @@ export function createBoardLifecycle(c: Ctx, late: unknown) {
     throw new ValidationError(t('Unbekannte Wahl für einen Wächter'));
   }
 
-  /** Zieht einen Wächter in ein anderes Board um: Karten-Vorlage auf das Ziel, Zuständige nur aus den Personen dort (bleibt niemand: Status „braucht neue Zuständige") */
+  /** Zieht einen Wächter in ein anderes Board um: Aufgaben-Vorlage auf das Ziel, Zuständige nur aus den Personen dort (bleibt niemand: Status „braucht neue Zuständige") */
   function moveWatcher(watcherId: string, from: string, targetId: string): void {
     const row = one('select card_json, assign_json, status from watchers where id = ?', watcherId)!;
     const card = JSON.parse(row.card_json) as { boardId: string; columnId: string; categoryIds: string[] } & Record<string, unknown>;
@@ -173,7 +173,7 @@ export function createBoardLifecycle(c: Ctx, late: unknown) {
         personIds: circle,
         ...(dropFallback ? { fallbackPersonId: null, fallback: rule.fallback === 'fixed' ? 'none' : rule.fallback, waitFallback: rule.waitFallback === 'fixed' ? 'none' : rule.waitFallback } : {}),
       };
-      // Ein Kreis, der leer wird, hieße „alle": dahin fällt der Wächter nie zurück, er legt keine Karten an, bis neue Zuständige gewählt sind
+      // Ein Kreis, der leer wird, hieße „alle": dahin fällt der Wächter nie zurück, er legt keine Aufgaben an, bis neue Zuständige gewählt sind
       missing = rule.personIds.length > 0 && circle.length === 0;
     }
     const wasPaused = row.status === 'target_missing';

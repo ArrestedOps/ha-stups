@@ -37,7 +37,7 @@ describe('Migration 17', () => {
 });
 
 describe('Board aus einer eingebauten Vorlage', () => {
-  it('Haushalt: Spalten, Kategorien und Karten in der Sprache der Person, Zuordnung stimmt', () => {
+  it('Haushalt: Spalten, Kategorien und Aufgaben in der Sprache der Person, Zuordnung stimmt', () => {
     const board = store.createBoardFromTemplate({ name: 'Zuhause', template: 'household', lang: 'de', by: rene });
     const view = store.getBoardView(board.id);
     expect(view.board.name).toBe('Zuhause');
@@ -65,7 +65,7 @@ describe('Board aus einer eingebauten Vorlage', () => {
     expect(store.getBoardView(board.id).cards.some((c) => c.title === 'Take out the rubbish')).toBe(true);
   });
 
-  it('Termine: Tage ab heute um die Standardzeit; nach heute landet die Karte von selbst in „Geplant", heute in „Offen"', () => {
+  it('Termine: Tage ab heute um die Standardzeit; nach heute landet die Aufgabe von selbst in „Geplant", heute in „Offen"', () => {
     const board = store.createBoardFromTemplate({ name: 'Umzug', template: 'move', lang: 'de', by: rene });
     const view = store.getBoardView(board.id);
     const planned = view.columns.find((c) => c.isPlanned)!.id;
@@ -119,7 +119,7 @@ describe('Eigene Vorlagen', () => {
     return { board, cat };
   };
 
-  it('speichert Spalten, Kategorien und offene Karten, aber nichts Persönliches', () => {
+  it('speichert Spalten, Kategorien und offene Aufgaben, aber nichts Persönliches', () => {
     const { board } = build();
     const saved = store.saveBoardAsTemplate(board.id, 'Meine Renovierung', rene);
     expect(saved).toMatchObject({ name: 'Meine Renovierung', builtin: false, columns: 4, categories: 1, cards: 3 });

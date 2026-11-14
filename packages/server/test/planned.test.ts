@@ -52,7 +52,7 @@ describe('Spalte „Geplant"', () => {
     expect(cols.filter((c) => c.isPlanned).map((c) => c.name)).toEqual(['In Arbeit']);
   });
 
-  it('zählt Karten in „Geplant" nicht als offen', () => {
+  it('zählt Aufgaben in „Geplant" nicht als offen', () => {
     const s = board();
     card(s, s.open.id);
     card(s, s.open.id, { dueAt: NEXT_WEEK });
@@ -60,8 +60,8 @@ describe('Spalte „Geplant"', () => {
   });
 });
 
-describe('Karten sortieren sich nach dem Termin', () => {
-  it('neue Karte in „Offen" mit Termin nach heute landet in „Geplant", mit Termin heute oder ohne bleibt sie in „Offen"', () => {
+describe('Aufgaben sortieren sich nach dem Termin', () => {
+  it('neue Aufgabe in „Offen" mit Termin nach heute landet in „Geplant", mit Termin heute oder ohne bleibt sie in „Offen"', () => {
     const s = board();
     expect(where(card(s, s.open.id, { dueAt: NEXT_WEEK }).id)).toBe(s.planned.id);
     expect(where(card(s, s.open.id, { dueAt: TOMORROW }).id)).toBe(s.planned.id);
@@ -88,7 +88,7 @@ describe('Karten sortieren sich nach dem Termin', () => {
     expect(where(c.id)).toBe(s.open.id);
   });
 
-  it('Karten in „In Arbeit" bleiben, egal wie der Termin liegt', () => {
+  it('Aufgaben in „In Arbeit" bleiben, egal wie der Termin liegt', () => {
     const s = board();
     const c = card(s, s.doing.id, { dueAt: NEXT_WEEK });
     store.updateCard(c.id, { title: 'neu' });
@@ -96,7 +96,7 @@ describe('Karten sortieren sich nach dem Termin', () => {
     expect(where(c.id)).toBe(s.doing.id);
   });
 
-  it('am Tag der Fälligkeit rückt die Karte von selbst nach „Offen", nach oben', () => {
+  it('am Tag der Fälligkeit rückt die Aufgabe von selbst nach „Offen", nach oben', () => {
     const s = board();
     const old = card(s, s.open.id);
     const c = card(s, s.open.id, { dueAt: '2026-11-02T09:00:00Z' }); // Mo 02.11.
@@ -112,7 +112,7 @@ describe('Karten sortieren sich nach dem Termin', () => {
     expect(store.syncPlanned()).toBe(0);
   });
 
-  it('beim Verschieben: nicht passende Karten landen in der passenden Spalte', () => {
+  it('beim Verschieben: nicht passende Aufgaben landen in der passenden Spalte', () => {
     const s = board();
     const noDate = card(s, s.open.id);
     const future = card(s, s.open.id, { dueAt: NEXT_WEEK });
@@ -124,7 +124,7 @@ describe('Karten sortieren sich nach dem Termin', () => {
     expect(store.moveCard(future.id, { columnId: s.planned.id }).columnId).toBe(s.planned.id);
   });
 
-  it('eine wiederkehrende Karte wartet nach dem Erledigen in „Geplant", bis sie wieder dran ist', () => {
+  it('eine wiederkehrende Aufgabe wartet nach dem Erledigen in „Geplant", bis sie wieder dran ist', () => {
     const s = board();
     const c = card(s, s.doing.id, {
       dueAt: '2026-10-30T15:00:00Z', // heute 16:00
@@ -132,15 +132,15 @@ describe('Karten sortieren sich nach dem Termin', () => {
     });
     const res = store.completeCard(c.id, { by: rene.id, source: 'app' });
     expect(res.nextDueAt).toBe('2026-11-06T15:00:00.000Z');
-    expect(res.card.columnId).toBe(s.done.id); // die erledigte Karte
+    expect(res.card.columnId).toBe(s.done.id); // die erledigte Aufgabe
     expect(where(res.nextCardId!)).toBe(s.planned.id); // die nächste wartet in „Geplant"
-    // Rückgängig stellt die alte Spalte wieder her und entfernt die neue Karte
+    // Rückgängig stellt die alte Spalte wieder her und entfernt die neue Aufgabe
     store.undoCompletion(res.completionId!);
     expect(where(c.id)).toBe(s.doing.id);
     expect(() => store.getCard(res.nextCardId!)).toThrow();
   });
 
-  it('eine täglich wiederkehrende Karte ohne „Geplant"-Spalte geht wie bisher nach „Offen"', () => {
+  it('eine täglich wiederkehrende Aufgabe ohne „Geplant"-Spalte geht wie bisher nach „Offen"', () => {
     const plain = store.createBoard({ name: 'Alt' });
     const cols = store.getBoardView(plain.id).columns;
     const c = store.createCard(
@@ -157,7 +157,7 @@ describe('Karten sortieren sich nach dem Termin', () => {
     expect(store.getCard(res.nextCardId!).columnId).toBe(cols[0]!.id);
   });
 
-  it('beim Einschalten von „Geplant" für eine Spalte sortieren sich vorhandene Karten sofort ein', () => {
+  it('beim Einschalten von „Geplant" für eine Spalte sortieren sich vorhandene Aufgaben sofort ein', () => {
     const plain = store.createBoard({ name: 'Alt' });
     const [open, doing] = store.getBoardView(plain.id).columns;
     const c = store.createCard(plain.id, { columnId: open!.id, title: 'später', dueAt: NEXT_WEEK }, rene.id);
@@ -167,7 +167,7 @@ describe('Karten sortieren sich nach dem Termin', () => {
 });
 
 describe('Boards von früher', () => {
-  it('bekommen einmalig eine „Geplant"-Spalte hinter der ersten Spalte, und Karten sortieren sich ein', () => {
+  it('bekommen einmalig eine „Geplant"-Spalte hinter der ersten Spalte, und Aufgaben sortieren sich ein', () => {
     const plain = store.createBoard({ name: 'Alt' });
     const [open] = store.getBoardView(plain.id).columns;
     const c = store.createCard(plain.id, { columnId: open!.id, title: 'später', dueAt: NEXT_WEEK }, rene.id);

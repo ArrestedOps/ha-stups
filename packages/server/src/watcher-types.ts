@@ -12,7 +12,7 @@ export type ConditionKind = 'state' | 'above' | 'below';
  */
 export type TriggerKind = ConditionKind | 'calendar_event' | 'forecast';
 
-/** Das Stupsen eines Wächters: an die jeweils Zuständigen, endet mit der Erledigung der Karte */
+/** Das Stupsen eines Wächters: an die jeweils Zuständigen, endet mit der Erledigung der Aufgabe */
 export interface WatcherNudge {
   afterMin: number;
   everyMin: number | null;
@@ -29,15 +29,15 @@ export interface WatchTrigger {
   value: number | null;
   /** muss so viele Minuten ununterbrochen gelten */
   forMin: number;
-  /** erst beim N-ten Mal eine Karte (1 = jedes Mal) */
+  /** erst beim N-ten Mal eine Aufgabe (1 = jedes Mal) */
   count: number;
-  /** calendar_event: so viele Minuten vor dem Termin entsteht die Karte */
+  /** calendar_event: so viele Minuten vor dem Termin entsteht die Aufgabe */
   leadMin?: number;
   /** forecast: Regen in den nächsten so vielen Stunden */
   forecast?: { condition: 'rain'; hours: number };
 }
 
-/** Wann sich die Karte von selbst erledigt */
+/** Wann sich die Aufgabe von selbst erledigt */
 export interface DoneTrigger {
   entityId: string;
   kind: ConditionKind;
@@ -60,7 +60,7 @@ export interface CardTemplate {
   categoryIds: string[];
   priority: string | null;
   due: DueRule;
-  /** Symbol und Farbe der Karte; ohne Angabe nimmt der Wächter das Symbol der beobachteten Entität */
+  /** Symbol und Farbe der Aufgabe; ohne Angabe nimmt der Wächter das Symbol der beobachteten Entität */
   icon?: string | null;
   iconColor?: string | null;
 }
@@ -90,14 +90,14 @@ export interface WatcherConfig {
   done: DoneTrigger | null;
   /** Sperrzeit in Minuten */
   cooldownMin: number;
-  /** keine zweite Karte, solange die erste offen ist */
+  /** keine zweite Aufgabe, solange die erste offen ist */
   dedupe: boolean;
   /** Stupsen, wenn noch offen: nach `afterMin` Minuten, danach alle `everyMin` (null = nur einmal), höchstens `max` ×; null = nie */
   nudge: WatcherNudge | null;
   /** Kategorie zum Gruppieren in der Liste (frei wählbar, null = „Ohne Kategorie"); gleiche Namen legt die Daten-Schicht zusammen */
   category: string | null;
   /**
-   * Die Karten dieses Wächters zählen zur Fairness (zusätzlich zum Board: zählt das Board nicht, zählt auch der Wächter nicht). Ohne Angabe
+   * Die Aufgaben dieses Wächters zählen zur Fairness (zusätzlich zum Board: zählt das Board nicht, zählt auch der Wächter nicht). Ohne Angabe
    * beim Anlegen gilt der Wert des Boards; der gespeicherte Wert bleibt auch dann, wenn das Board gerade nicht zählt.
    */
   countsForFairness: boolean;
@@ -106,14 +106,14 @@ export interface WatcherConfig {
 /**
  * ok; entity_missing: die beobachtete Entität gibt es nicht (mehr); target_missing: Board oder Spalte gibt es nicht mehr (pausiert);
  * assignees_missing: es gibt keine gültigen Zuständigen mehr (zum Beispiel wurde die einzige Person aus dem Board genommen): der
- * Wächter bleibt aktiv, legt aber keine Karten an, bis neue Zuständige gespeichert sind.
+ * Wächter bleibt aktiv, legt aber keine Aufgaben an, bis neue Zuständige gespeichert sind.
  */
 export type WatcherStatus = 'ok' | 'entity_missing' | 'target_missing' | 'assignees_missing';
 
 const ENTITY_RE = /^[a-z0-9_]+\.[a-z0-9_]+$/;
 const HM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 export const MODES: AssignMode[] = ['fixed', 'rotation', 'rotation_present', 'all_present', 'first_home', 'suggest', 'none'];
-/** So lange wartet eine vorgeschlagene Karte auf ein „Übernehmen", dann greift der Rückfall des Wächters */
+/** So lange wartet eine vorgeschlagene Aufgabe auf ein „Übernehmen", dann greift der Rückfall des Wächters */
 export const SUGGEST_WAIT_MIN = 30;
 
 /** Wartezeit der Vorgabe: Zahlenwerte schwanken, Zustandswechsel gelten sofort */
@@ -217,7 +217,7 @@ function parseDue(raw: unknown): DueRule {
 }
 
 export function parseTemplate(raw: unknown): CardTemplate {
-  const o = obj(raw, t('Die Karte'));
+  const o = obj(raw, t('Die Aufgabe'));
   return {
     boardId: text(o.boardId, t('Das Board'), 100)!,
     columnId: text(o.columnId, t('Die Spalte'), 100)!,

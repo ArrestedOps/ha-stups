@@ -94,7 +94,7 @@ export function createTemplates(c: Ctx, late: unknown) {
       for (const card of data.cards) {
         const dueAt = card.dueInDays === null ? null : dueIn(card.dueInDays);
         let target = columns[card.column] ?? columns[0]!;
-        // „Geplant" nimmt nur Karten mit einem Termin nach heute; ein solcher Termin schickt die Karte dorthin, sonst bleibt sie offen
+        // „Geplant" nimmt nur Aufgaben mit einem Termin nach heute; ein solcher Termin schickt die Aufgabe dorthin, sonst bleibt sie offen
         if (dueAt && isFutureDue(dueAt) && planned >= 0) target = columns[planned]!;
         else if (target.isPlanned) target = columns[Math.max(firstOpen, 0)]!;
         const made = createCard(
@@ -119,7 +119,7 @@ export function createTemplates(c: Ctx, late: unknown) {
     });
   }
 
-  /** Speichert Spalten, Kategorien und offene Karten eines Boards als eigene Vorlage (ohne Zuweisungen, Anhänge, Kommentare, Erledigtes); `withCards: false`: nur Spalten und Kategorien */
+  /** Speichert Spalten, Kategorien und offene Aufgaben eines Boards als eigene Vorlage (ohne Zuweisungen, Anhänge, Kommentare, Erledigtes); `withCards: false`: nur Spalten und Kategorien */
   function saveBoardAsTemplate(boardId: string, name: unknown, by: string | null, opts: { withCards?: boolean } = {}): TemplateInfo {
     const view = getBoardView(boardId);
     const clean = cleanText(name, t('Der Name'), 60);

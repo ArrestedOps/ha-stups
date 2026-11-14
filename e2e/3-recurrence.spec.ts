@@ -11,7 +11,7 @@ type ApiCard = { id: string; title: string; dueAt: string; completedAt: string |
 const cardsWith = async (request: APIRequestContext, boardId: string, title: string) =>
   ((await (await request.get(`/api/boards/${boardId}`)).json()).cards as ApiCard[]).filter((c) => c.title === title);
 
-test('Wiederkehrende Karte: erledigt landet sie in „Erledigt", die nächste wartet in „Geplant"', async ({ page, request }) => {
+test('Wiederkehrende Aufgabe: erledigt landet sie in „Erledigt", die nächste wartet in „Geplant"', async ({ page, request }) => {
   const { boardId, openId } = await boardIds(request);
   const title = `Jede Woche ${Date.now().toString(36)}`;
   // Eine Minute überfällig: bleibt unabhängig von der Uhrzeit in „Offen" (ein Termin ab morgen ginge nach „Geplant")
@@ -31,15 +31,15 @@ test('Wiederkehrende Karte: erledigt landet sie in „Erledigt", die nächste wa
   await openBoards(page);
   await page.getByRole('tab', { name: /^Offen/ }).click();
   await page.getByRole('checkbox', { name: `„${title}“ erledigen` }).click();
-  await expect(page.getByRole('status').filter({ hasText: /Erledigt · nächste Karte/ })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: /Erledigt · nächste Aufgabe/ })).toBeVisible();
 
-  // Die erledigte Karte liegt in „Erledigt", mit der Zeit und ohne „überfällig"
+  // Die erledigte Aufgabe liegt in „Erledigt", mit der Zeit und ohne „überfällig"
   await page.getByRole('tab', { name: /^Erledigt/ }).click();
   const done = page.locator('[role=presentation]').filter({ hasText: title });
   await expect(done).toBeVisible();
   await expect(done.getByTestId('card-done-at')).toContainText('Erledigt heute');
 
-  // Die nächste Karte wartet mit dem Termin in einer Woche in „Geplant"
+  // Die nächste Aufgabe wartet mit dem Termin in einer Woche in „Geplant"
   await page.getByRole('tab', { name: /^Geplant/ }).click();
   await expect(page.locator('[role=presentation]').filter({ hasText: title })).toBeVisible();
 
@@ -53,7 +53,7 @@ test('Wiederkehrende Karte: erledigt landet sie in „Erledigt", die nächste wa
   expect(days).toBeLessThan(7.1);
 });
 
-test('„Rückgängig" nimmt die nächste Karte wieder weg', async ({ page, request }) => {
+test('„Rückgängig" nimmt die nächste Aufgabe wieder weg', async ({ page, request }) => {
   const { boardId, openId } = await boardIds(request);
   const title = `Rückgängig ${Date.now().toString(36)}`;
   await request.post(`/api/boards/${boardId}/cards`, {
@@ -89,7 +89,7 @@ test('Wiederholen: zwei schnelle Klicks bei langsamem Server überschreiben sich
   await page.getByRole('tab', { name: /^Offen/ }).click();
   await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
   await page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /jede Woche/ }).click();
-  const fieldset = page.getByRole('group', { name: 'Für die nächste Karte übernehmen' });
+  const fieldset = page.getByRole('group', { name: 'Für die nächste Aufgabe übernehmen' });
   await expect(fieldset).toBeVisible();
 
   // Der Server antwortet langsam: Der zweite Klick kommt, bevor der erste gespeichert und neu geladen ist
@@ -97,18 +97,18 @@ test('Wiederholen: zwei schnelle Klicks bei langsamem Server überschreiben sich
     if (route.request().method() === 'PATCH') await new Promise((r) => setTimeout(r, 800));
     await route.continue();
   });
-  await fieldset.getByLabel('Fotos und PDFs in die nächste Karte übernehmen').check();
-  await fieldset.getByLabel('Beschreibung in die nächste Karte übernehmen').uncheck();
+  await fieldset.getByLabel('Fotos und PDFs in die nächste Aufgabe übernehmen').check();
+  await fieldset.getByLabel('Beschreibung in die nächste Aufgabe übernehmen').uncheck();
 
   await expect
     .poll(async () => ((await (await request.get(`/api/cards/${card.id}`)).json()) as { carryOver: string[] }).carryOver, { timeout: 10_000 })
     .toEqual(['checklist', 'links', 'cost', 'attachments']);
   // und die Anzeige stimmt mit dem Gespeicherten überein
-  await expect(fieldset.getByLabel('Fotos und PDFs in die nächste Karte übernehmen')).toBeChecked();
-  await expect(fieldset.getByLabel('Beschreibung in die nächste Karte übernehmen')).not.toBeChecked();
+  await expect(fieldset.getByLabel('Fotos und PDFs in die nächste Aufgabe übernehmen')).toBeChecked();
+  await expect(fieldset.getByLabel('Beschreibung in die nächste Aufgabe übernehmen')).not.toBeChecked();
 });
 
-test('Wiederholen: Auswahl, was die nächste Karte übernimmt, wird gespeichert', async ({ page, request }) => {
+test('Wiederholen: Auswahl, was die nächste Aufgabe übernimmt, wird gespeichert', async ({ page, request }) => {
   const { boardId, openId } = await boardIds(request);
   const title = `Übernahme ${Date.now().toString(36)}`;
   const res = await request.post(`/api/boards/${boardId}/cards`, {
@@ -130,11 +130,11 @@ test('Wiederholen: Auswahl, was die nächste Karte übernimmt, wird gespeichert'
   await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
   await page.getByRole('group', { name: 'Eigenschaften' }).getByRole('button', { name: /jede Woche/ }).click();
 
-  const fieldset = page.getByRole('group', { name: 'Für die nächste Karte übernehmen' });
+  const fieldset = page.getByRole('group', { name: 'Für die nächste Aufgabe übernehmen' });
   await expect(fieldset).toBeVisible();
-  await expect(fieldset.getByLabel('Fotos und PDFs in die nächste Karte übernehmen')).not.toBeChecked();
-  await fieldset.getByLabel('Fotos und PDFs in die nächste Karte übernehmen').check();
-  await fieldset.getByLabel('Beschreibung in die nächste Karte übernehmen').uncheck();
+  await expect(fieldset.getByLabel('Fotos und PDFs in die nächste Aufgabe übernehmen')).not.toBeChecked();
+  await fieldset.getByLabel('Fotos und PDFs in die nächste Aufgabe übernehmen').check();
+  await fieldset.getByLabel('Beschreibung in die nächste Aufgabe übernehmen').uncheck();
 
   await expect
     .poll(async () => ((await (await request.get(`/api/cards/${card.id}`)).json()) as { carryOver: string[] }).carryOver)

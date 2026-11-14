@@ -28,7 +28,7 @@ describe('Wiederholung: Editor in der Oberfläche', () => {
     expect(out).not.toContain('Und wenn ich später fertig werde?');
   });
 
-  it('mit Toleranz: drei Karten, Toleranz-Zeile und die Beispiele aus der echten Regel', () => {
+  it('mit Toleranz: drei Aufgaben, Toleranz-Zeile und die Beispiele aus der echten Regel', () => {
     const raw = html(tolerant);
     const out = text(raw);
     expect(out).toContain('Plan bleibt fest');
@@ -40,8 +40,8 @@ describe('Wiederholung: Editor in der Oberfläche', () => {
     expect(out).toContain('Erledigt Mo 16.11. → nächstes Mal Sa 28.11.');
     expect(out).toContain('Mehr als 3 Tage zu spät: Plan beginnt neu, nächster Samstag nach 2 Wochen.');
     expect(out).toContain('Erledigt Mi 18.11. → nächstes Mal Sa 5.12.');
-    expect(out).toContain('Erledigt Mi 18.11. → nächstes Mal Sa 28.11.'); // Karte „Plan bleibt fest"
-    expect(out).toContain('Erledigt Mi 18.11. → nächstes Mal Mi 2.12.'); // Karte „Neu zählen"
+    expect(out).toContain('Erledigt Mi 18.11. → nächstes Mal Sa 28.11.'); // Aufgabe „Plan bleibt fest"
+    expect(out).toContain('Erledigt Mi 18.11. → nächstes Mal Mi 2.12.'); // Aufgabe „Neu zählen"
     expect(raw).toMatch(/role="radio"[^>]*aria-checked="true"[^>]*>[^]*?Kleine Verspätung ist okay/);
     expect(raw).toMatch(/aria-label="Toleranz in Tagen"/);
   });
@@ -75,7 +75,7 @@ describe('Wiederholung: Editor in der Oberfläche', () => {
     expect(win).toContain('value="20:00"');
   });
 
-  it('Neu zählen: die Karte ist gewählt, keine Wochentage', () => {
+  it('Neu zählen: die Aufgabe ist gewählt, keine Wochentage', () => {
     const raw = html({ type: 'after_completion', every: 2, unit: 'weeks' });
     const out = text(raw);
     expect(out).toContain('Immer alle 2 Wochen nach Erledigung.');

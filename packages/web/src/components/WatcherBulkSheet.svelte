@@ -21,7 +21,7 @@
    * Mehrere Wächter auf einmal bearbeiten. Das Fenster zeigt nur Felder, die für alle Ausgewählten passen (Auslöser-Felder nur bei gleicher
    * Auslöser-Art und Einheit), je Zeile den gemeinsamen Wert oder „verschieden“. „Ändern“ klappt das Feld auf (dieselben Bausteine wie die
    * Einzelbearbeitung); sobald man darin etwas anfasst, zählt das Feld als geändert. „Für alle übernehmen“ schickt nur die geänderten Felder:
-   * alles andere bleibt je Wächter, wie es ist. Entität, Name und Titel der Karte sind nie dabei.
+   * alles andere bleibt je Wächter, wie es ist. Entität, Name und Titel der Aufgabe sind nie dabei.
    */
   let { ids }: { ids: string[] } = $props();
 
@@ -163,7 +163,7 @@
         {#each ed.view?.columns ?? [] as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
       </SelectField>
     </div>
-    <p class="mt-2 text-[12.5px] leading-[1.45] text-hint">{t('Die Kategorien der Karten gehören zum alten Board und werden dabei geleert.')}</p>
+    <p class="mt-2 text-[12.5px] leading-[1.45] text-hint">{t('Die Kategorien der Aufgaben gehören zum alten Board und werden dabei geleert.')}</p>
   {:else if field === 'due'}
     <div class="flex flex-wrap items-center gap-2">
       <SelectField variant="box" label={t('Fällig')} value={dueCustom ? 'custom' : chip} onchange={setDue}>
@@ -189,7 +189,7 @@
   {:else if field === 'cooldown'}
     <NumberField bind:value={f.cooldownMin} label={t('Sperrzeit in Minuten')} unit={t('Min.')} placeholder="10" />
   {:else if field === 'dedupe'}
-    <label class="flex items-center gap-3 text-[15px]"><Toggle label={t('Keine Doppelkarten')} checked={f.dedupe} onchange={(v) => (f.dedupe = v)} />{t('solange eine offen ist')}</label>
+    <label class="flex items-center gap-3 text-[15px]"><Toggle label={t('Keine Doppelaufgaben')} checked={f.dedupe} onchange={(v) => (f.dedupe = v)} />{t('solange eine offen ist')}</label>
   {:else if field === 'fairness'}
     <label class="flex items-center gap-3 text-[15px]"><Toggle label={t('Zählt zur Fairness')} checked={f.countsForFairness ?? true} onchange={(v) => (f.countsForFairness = v)} />{t('Zählt das Board nicht mit, bleibt der Wert gespeichert, wirkt aber nicht.')}</label>
   {:else if field === 'threshold'}

@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { newTaskSheet, openBoards, openSettingsPage, pickDue } from './helpers';
 
-// Symbol pro Karte (Neues Design, Phase 3): erkennen, ändern, Farbe, Termin-Sheet, „Symbole aus Titeln erkennen“.
+// Symbol pro Aufgabe (Neues Design, Phase 3): erkennen, ändern, Farbe, Termin-Sheet, „Symbole aus Titeln erkennen“.
 // Jeder Test arbeitet auf einem eigenen Board mit eindeutigen Titeln (die Projekte teilen sich den Server).
 const unique = (base: string) => `${base} ${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
 
@@ -18,11 +18,11 @@ const cardsOf = async (request: APIRequestContext, boardId: string) =>
 async function openNew(page: Page) {
   await page.goto('/');
   await openBoards(page);
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   return page.getByLabel('Was steht an?');
 }
 
-test('Symbol wird aus dem Titel erkannt: Funken-Abzeichen, Chip „Symbol: …“, an der Karte gespeichert', async ({ page, request }) => {
+test('Symbol wird aus dem Titel erkannt: Funken-Abzeichen, Chip „Symbol: …“, an der Aufgabe gespeichert', async ({ page, request }) => {
   const board = await ownBoard(request, page, unique('Erkennen'));
   const input = await openNew(page);
   // ohne erkannten Teil: Standard „Aufgabe“, kein Funken
@@ -37,12 +37,12 @@ test('Symbol wird aus dem Titel erkannt: Funken-Abzeichen, Chip „Symbol: …�
   await expect(page.getByTestId('symbol-tile').locator('.tile-orange')).toHaveCount(1);
 
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
   const created = (await cardsOf(request, board.id)).find((c) => c.title === title)!;
   expect(created).toMatchObject({ icon: 'trash-can-outline', iconSource: 'auto', iconColor: null });
 });
 
-test('Der Chip „Symbol“ lässt sich entfernen: die Karte bekommt dann keins (Standard „Aufgabe“)', async ({ page, request }) => {
+test('Der Chip „Symbol“ lässt sich entfernen: die Aufgabe bekommt dann keins (Standard „Aufgabe“)', async ({ page, request }) => {
   const board = await ownBoard(request, page, unique('Entfernen'));
   const input = await openNew(page);
   const title = unique('Müll raus');
@@ -53,7 +53,7 @@ test('Der Chip „Symbol“ lässt sich entfernen: die Karte bekommt dann keins 
   await expect(page.getByTestId('symbol-spark')).toHaveCount(0);
   await expect(page.getByTestId('symbol-tile')).toHaveAttribute('aria-label', 'Symbol ändern, gerade: Aufgabe');
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
   expect((await cardsOf(request, board.id)).find((c) => c.title === title)).toMatchObject({ icon: null, iconSource: null });
 });
 
@@ -93,11 +93,11 @@ test('Symbol wählen: Suche findet „Wäsche“ bei der Waschmaschine, Farbe fe
   await expect(tile.locator('.tile-blue')).toHaveCount(1);
   await expect(page.getByTestId('symbol-spark')).toHaveCount(0); // von Hand gewählt: kein Funken
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
   expect((await cardsOf(request, board.id)).find((c) => c.title === title)).toMatchObject({ icon: 'washing-machine', iconColor: 'blue', iconSource: 'manual' });
 
   // „zuletzt benutzt“ merkt es sich (auf diesem Gerät)
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   await page.getByTestId('symbol-tile').click();
   await expect(page.getByRole('dialog', { name: 'Symbol wählen' }).getByRole('heading', { name: 'Zuletzt benutzt' })).toBeVisible();
 });
@@ -123,7 +123,7 @@ test('Symbol per Tastatur: Pfeiltasten im Raster, Eingabe wählt', async ({ page
   await expect(newTaskSheet(page)).toBeVisible();
 });
 
-test('Symbol an einer bestehenden Karte ändern, Farbe wechseln; ein erkanntes Symbol folgt dem Titel, ein gewähltes nicht', async ({ page, request }) => {
+test('Symbol an einer bestehenden Aufgabe ändern, Farbe wechseln; ein erkanntes Symbol folgt dem Titel, ein gewähltes nicht', async ({ page, request }) => {
   const board = await ownBoard(request, page, unique('Ändern'));
   const t1 = unique('Rasen mähen');
   const t2 = unique('Staubsauger leeren');
@@ -132,11 +132,11 @@ test('Symbol an einer bestehenden Karte ändern, Farbe wechseln; ein erkanntes S
   await page.goto('/');
   await openBoards(page);
   const row = (title: string) => page.locator('[role=presentation]').filter({ hasText: title });
-  // in der Liste: Symbol und Farbe der Karte (Gras: Bereich Garten, grün)
+  // in der Liste: Symbol und Farbe der Aufgabe (Gras: Bereich Garten, grün)
   await expect(row(t1).locator('.tile-green')).toHaveCount(1);
   await expect(row(t2).locator('.tile-orange')).toHaveCount(1);
 
-  // Karte öffnen, Symbol ändern
+  // Aufgabe öffnen, Symbol ändern
   await row(t1).getByText(t1).click();
   const dialog = page.getByRole('dialog').first();
   await expect(dialog.getByTestId('symbol-spark')).toBeVisible(); // erkannt
@@ -201,7 +201,7 @@ test('Termin-Sheet: Kalender und Uhrzeit per Tastatur, „Kein Termin“, „Gep
   await expect(dateSheet.locator('[data-day][aria-pressed=true]')).not.toHaveAttribute('data-day', today!);
   await page.keyboard.press('PageDown');
   await page.keyboard.press('PageDown');
-  // zwei Monate später: der Termin liegt nach heute, die Karte kommt von selbst nach „Geplant“
+  // zwei Monate später: der Termin liegt nach heute, die Aufgabe kommt von selbst nach „Geplant“
   await dateSheet.getByRole('button', { name: 'Übernehmen' }).click();
   await expect(sheet.getByRole('button', { name: /^Termin wählen, gerade: .*18:30/ })).toBeVisible();
   await expect(sheet.getByText('Spalte Geplant')).toBeVisible();
@@ -221,14 +221,14 @@ test('Termin-Sheet: Kalender und Uhrzeit per Tastatur, „Kein Termin“, „Gep
   await pickDue(page, todayLocal);
   await expect(sheet.getByText('Spalte Offen')).toBeVisible();
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
   const made = (await cardsOf(request, board.id)).find((c) => c.title === title)!;
   expect(made.dueAt).not.toBeNull();
   const hour = await page.evaluate((iso) => new Date(iso as string).getHours(), made.dueAt);
   expect(hour).toBe(23);
 });
 
-test('Einstellungen › Symbole: „Symbole aus Titeln erkennen“ mit Rückfrage und Ergebnis als Zahl, nur Karten ohne Symbol', async ({ page, request }) => {
+test('Einstellungen › Symbole: „Symbole aus Titeln erkennen“ mit Rückfrage und Ergebnis als Zahl, nur Aufgaben ohne Symbol', async ({ page, request }) => {
   const board = await ownBoard(request, page, unique('Stapel'));
   const mk = async (title: string, extra: Record<string, unknown> = {}) =>
     ((await (await request.post(`/api/boards/${board.id}/cards`, { data: { title, columnId: board.columnId, ...extra } })).json()) as { id: string }).id;
@@ -249,7 +249,7 @@ test('Einstellungen › Symbole: „Symbole aus Titeln erkennen“ mit Rückfrag
 
   await page2.getByRole('button', { name: 'Symbole aus Titeln erkennen' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Erkennen' }).click();
-  await expect(page.getByTestId('icons-result')).toContainText(/^\d+ Karten? (hat|haben) jetzt ein Symbol/);
+  await expect(page.getByTestId('icons-result')).toContainText(/^\d+ Aufgaben? (hat|haben) jetzt ein Symbol/);
   expect(await (await request.get(`/api/cards/${a}`)).json()).toMatchObject({ icon: 'trash-can-outline', iconSource: 'auto' });
   expect(await (await request.get(`/api/cards/${b}`)).json()).toMatchObject({ icon: 'cart-outline', iconSource: 'auto' });
   expect(await (await request.get(`/api/cards/${keep}`)).json()).toMatchObject({ icon: 'leaf', iconSource: 'manual' }); // blieb

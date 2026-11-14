@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stups · Welt 1 · Fallblatt</title>
+<!--
+  Mockup, kein Produktcode. Der Haushalt als Abfahrtstafel: Klappen rattern beim Öffnen durch und landen von links oben nach rechts unten.
+  Gelb heißt nur eines: verspätet. Tippe auf eine Zeile: Die Tafel klappt um (erledigt / wieder offen).
+  Nach ein paar Sekunden kommt ein Stups herein (Ben). Tippe darauf, um zu antworten. Oben rechts: Ton an/aus.
+  Parameter: ?theme=light|dark, ?still=1 (ohne Anfangsanimation). Respektiert "Bewegung reduzieren".
+-->
+<style>
+@font-face { font-family: "Archivo"; src: url("../fonts/archivo-latin-wdth-normal.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root {
+  --page: #d9dce0; --ink: #000; --mute: #4e535c; --line: #bfc4cb;
+  --housing: #1e1f22; --flap: #2f3136; --chr: #f4f4f2; --hinge: #141517;
+  --yellow: #ffd23f; --orange: #f05400; --blue: #2563eb; --dim-flap: #26282c; --dim-chr: #7b8089;
+  --font: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: #0d0e10; --ink: #f2f3f5; --mute: #9aa0aa; --line: #26282c; --housing: #1b1c1f; color-scheme: dark; } }
+:root[data-theme="dark"] { --page: #0d0e10; --ink: #f2f3f5; --mute: #9aa0aa; --line: #26282c; --housing: #1b1c1f; color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--page); }
+body { background: var(--page); color: var(--ink); font: 500 16px/1.35 var(--font); -webkit-font-smoothing: antialiased; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; border-radius: 6px; }
+svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.top { width: min(100vw - 24px, 1360px); display: flex; align-items: center; justify-content: space-between; padding: 14px 0 12px; }
+.wordmark { font: 800 26px/1 var(--font); font-stretch: 80%; letter-spacing: -0.01em; }
+.wordmark i { font-style: normal; color: var(--orange); }
+.right { display: flex; align-items: center; gap: 8px; }
+.ib { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 20px; border: 2px solid var(--ink); font: 700 14px/1 var(--font); }
+.ib[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+.me { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--orange); color: #000; font: 800 17px/1 var(--font); }
+
+/* ---------- Tafel ---------- */
+.boards { --gap: 2px; --cw: calc((min(100vw - 24px, 900px) - 60px) / 18); --ch: calc(var(--cw) * 1.58);
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; padding: 0 12px; }
+@media (min-width: 1000px) { .boards { --cw: calc((min(100vw - 24px, 1360px) / 2 - 8px - 60px) / 18); } }
+.board { position: relative; width: calc(var(--cw) * 18 + 17 * var(--gap) + 26px); background: var(--housing); border-radius: 14px; padding: 13px; display: grid; gap: 12px; align-content: start; }
+.board::before, .board::after { content: ""; position: absolute; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: #4a4d54; }
+.board::before { left: 6px; } .board::after { right: 6px; }
+.group { display: grid; gap: 4px; width: 100%; text-align: left; border-radius: 6px; padding: 0; }
+.group.tap { cursor: pointer; }
+.group.tap:hover .cell, .group.tap:focus-visible .cell { filter: brightness(1.18); }
+.line { display: flex; gap: var(--gap); }
+.cell { position: relative; width: var(--cw); height: var(--ch); perspective: 420px; font: 800 calc(var(--cw) * 1.12)/1 var(--font); font-stretch: 88%; font-variant-numeric: tabular-nums; }
+.cell .h { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: var(--flap); color: var(--chr); backface-visibility: hidden; }
+.cell .h span { position: absolute; left: 0; right: 0; height: 200%; display: grid; place-items: center; }
+.cell .t, .cell .ft { top: 0; border-radius: 3px 3px 0 0; } .cell .t span, .cell .ft span { top: 0; }
+.cell .b, .cell .fb { bottom: 0; border-radius: 0 0 3px 3px; } .cell .b span, .cell .fb span { bottom: 0; }
+.cell .ft { transform-origin: 50% 100%; visibility: hidden; }
+.cell .fb { transform-origin: 50% 0; transform: rotateX(90deg); visibility: hidden; }
+.cell.go .ft { visibility: visible; animation: ft .1s ease-in forwards; }
+.cell.go .fb { visibility: visible; animation: fb .1s ease-out .1s forwards; }
+@keyframes ft { to { transform: rotateX(-90deg); } }
+@keyframes fb { from { transform: rotateX(90deg); } to { transform: rotateX(0); } }
+.cell::after { content: ""; position: absolute; left: 0; right: 0; top: calc(50% - .5px); height: 1px; background: var(--hinge); z-index: 5; }
+.cell[data-k="y"] .h { background: var(--yellow); color: #000; }
+.cell[data-k="a"] .h { background: var(--orange); color: #000; }
+.cell[data-k="b"] .h { background: var(--blue); color: #fff; }
+.cell[data-k="d"] .h { background: var(--dim-flap); color: var(--dim-chr); }
+
+.under { width: min(100vw - 24px, 1360px); display: flex; justify-content: space-between; gap: 12px; padding: 14px 0 28px; font-size: 15px; color: var(--mute); }
+.under b { color: var(--ink); font-weight: 700; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<header class="top">
+  <span class="wordmark">stups<i>.</i></span>
+  <div class="right">
+    <button class="ib" id="snd" aria-pressed="false"><svg><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path id="wave" d="M16.5 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11" style="display:none"/></svg><span>Ton</span></button>
+    <button class="me" aria-label="Konto: Anna">A</button>
+  </div>
+</header>
+
+<main style="display:grid;justify-items:center">
+  <div class="boards"><div class="board" id="boardA" role="group" aria-label="Jetzt"></div><div class="board" id="boardB" role="group" aria-label="Diese Woche"></div></div>
+  <div class="under"><span>Tippe auf eine Zeile. Die Tafel klappt mit.</span><span><b>Gelb</b> bedeutet verspätet.</span></div>
+</main>
+
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var th = q.get('theme'); if (th === 'dark' || th === 'light') document.documentElement.dataset.theme = th;
+  var still = q.get('still') === '1' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var COLS = 18, ABC = ' ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ0123456789:.!?+-';
+  var sound = false, ac = null;
+
+  function click() {
+    if (!sound) return;
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      var n = Math.floor(ac.sampleRate * 0.012), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+      for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+      var s = ac.createBufferSource(), g = ac.createGain(); g.gain.value = 0.18; s.buffer = b; s.connect(g); g.connect(ac.destination); s.start();
+    } catch (e) {}
+  }
+
+  function Cell() {
+    var el = document.createElement('div'); el.className = 'cell'; el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = '<div class="h t"><span></span></div><div class="h b"><span></span></div><div class="h ft"><span></span></div><div class="h fb"><span></span></div>';
+    this.el = el; this.t = el.children[0].firstChild; this.b = el.children[1].firstChild; this.ft = el.children[2].firstChild; this.fb = el.children[3].firstChild;
+    this.ch = ' '; this.k = ''; this.timer = 0; this.paint(' ', ''); el.dataset.k = '';
+  }
+  Cell.prototype.paint = function (c) { this.t.textContent = c === ' ' ? '' : c; this.b.textContent = c === ' ' ? '' : c; };
+  Cell.prototype.step = function (c, k) {
+    var self = this, prev = this.ch === ' ' ? '' : this.ch, next = c === ' ' ? '' : c;
+    this.t.textContent = next; this.fb.textContent = next; this.ft.textContent = prev; this.b.textContent = prev;
+    if (k !== undefined) { this.el.dataset.k = k; this.k = k; }
+    this.el.classList.remove('go'); void this.el.offsetWidth; this.el.classList.add('go');
+    this.ch = c; click();
+    setTimeout(function () { self.b.textContent = next; self.el.classList.remove('go'); }, 205);
+  };
+  Cell.prototype.show = function (c, k, delay) {
+    if (this.ch === c && this.k === k) return;
+    clearTimeout(this.timer);
+    if (still) { this.paint(c); this.ch = c; this.k = k; this.el.dataset.k = k; return; }
+    var self = this, seq = [], i = 0, n = c === ' ' ? 1 : 2 + Math.floor(Math.random() * 5);
+    for (var j = 0; j < n - 1; j++) seq.push(ABC[1 + Math.floor(Math.random() * (ABC.length - 1))]);
+    seq.push(c);
+    function go() { self.step(seq[i], i === seq.length - 1 ? k : undefined); i++; if (i < seq.length) self.timer = setTimeout(go, 215); }
+    this.timer = setTimeout(go, delay || 0);
+  };
+
+  var boardA = document.getElementById('boardA'), boardB = document.getElementById('boardB');
+  var groups = [];
+  function addGroup(board, lines, tap, label) {
+    var g = document.createElement(tap ? 'button' : 'div'); g.className = 'group' + (tap ? ' tap' : '');
+    if (label) g.setAttribute('aria-label', label);
+    var ls = [];
+    for (var l = 0; l < lines; l++) {
+      var row = document.createElement('div'); row.className = 'line'; var cells = [];
+      for (var c = 0; c < COLS; c++) { var cell = new Cell(); row.appendChild(cell.el); cells.push(cell); }
+      g.appendChild(row); ls.push(cells);
+    }
+    board.appendChild(g); var o = { el: g, lines: ls }; groups.push(o); return o;
+  }
+
+  var tasks = [
+    { id: 't1', time: '16:17', who: 'A', title: 'MÜLL RAUSBRINGEN', st: 'late', hi: 1, name: 'Müll rausbringen' },
+    { id: 't2', time: '16:30', who: 'A', title: 'PAKET ABHOLEN', st: 'late', name: 'Paket abholen' },
+    { id: 't3', time: '10:00', who: 'AB', title: 'FENSTER PUTZEN', st: 'future', label: 'MORGEN', name: 'Fenster putzen' },
+    { id: 't5', time: '18:00', who: 'A', title: 'GESCHENKPAPIER', st: 'future', label: 'MORGEN', name: 'Geschenkpapier kaufen' },
+    { id: 't6', time: '09:00', who: 'A', title: 'ELEKTRIKER', st: 'future', label: 'SAMSTAG', name: 'Elektriker Termin' },
+    { id: 't4', time: '08:05', who: 'A', title: 'SPÜLMASCHINE', st: 'done', name: 'Spülmaschine ausräumen' }
+  ];
+  var clock = '17:42', nudge = 0;
+
+  function chars(parts) {
+    var out = [];
+    parts.forEach(function (p) { for (var i = 0; i < p[0].length; i++) out.push([p[0][i], p[1] || '']); });
+    while (out.length < COLS) out.push([' ', '']);
+    return out.slice(0, COLS);
+  }
+  function whoParts(w, dim) { return w.split('').map(function (x) { return [x, dim ? 'd' : x === 'A' ? 'a' : 'b']; }).concat(w.length < 2 ? [[' ', '']] : []); }
+  function linesFor(group) {
+    if (group.key === 'head') {
+      var late = tasks.filter(function (t) { return t.st === 'late'; }).length, done = tasks.filter(function (t) { return t.st === 'done'; }).length;
+      return [
+        chars([['DONNERSTAG', ''], ['   ', ''], [clock, '']]),
+        late ? chars([[late + ' VERSPÄTET', 'y']]) : chars([['ALLES RUHIG', '']]),
+        chars([['0 HEUTE ' + done + ' ERLEDIGT', '']])
+      ];
+    }
+    if (group.key === 'nudge') {
+      if (!nudge) return [chars([]), chars([])];
+      return [chars([['BEN', 'b'], [' STUPST DICH', '']]), nudge === 1 ? chars([['HEUTE NOCH?', '']]) : chars([['ANNA: ', 'a'], ['BIN DRAN', '']])];
+    }
+    if (group.key === 'wk') return [chars([['DIESE WOCHE', '']])];
+    var t = group.task, dim = t.st === 'done';
+    var stl = t.st === 'late' ? ['VERSPÄTET', 'y'] : t.st === 'done' ? ['FERTIG', 'd'] : [t.label, ''];
+    return [
+      chars([[t.time, dim ? 'd' : ''], [' ', '']].concat(whoParts(t.who, dim), [[' ', ''], stl])),
+      chars([[t.title, dim ? 'd' : '']].concat(t.hi && !dim ? [[' !', 'y']] : []))
+    ];
+  }
+  function sync(g, delay) {
+    var L = linesFor(g);
+    g.lines.forEach(function (cells, li) { cells.forEach(function (cell, ci) { var s = L[li][ci]; cell.show(s[0], s[1], (delay || 0) + li * 120 + ci * 28); }); });
+  }
+
+  var head = addGroup(boardA, 3, false, 'Überblick'); head.key = 'head';
+  var nd = addGroup(boardA, 2, true, 'Stups von Ben'); nd.key = 'nudge';
+  var wk = addGroup(boardB, 1, false, 'Diese Woche'); wk.key = 'wk';
+  var tg = tasks.map(function (t) { var g = addGroup(t.st === 'late' ? boardA : boardB, 2, true, t.name); g.key = 't'; g.task = t; return g; });
+
+  var base = 0;
+  groups.forEach(function (g, gi) { sync(g, base + gi * 240); });
+
+  function toggle(t) { t.st = t.st === 'done' ? (t.label ? 'future' : 'late') : 'done'; sync(head, 0); tg.forEach(function (g) { sync(g, 0); }); }
+  tg.forEach(function (g) { g.el.addEventListener('click', function () { toggle(g.task); g.el.setAttribute('aria-label', g.task.name + (g.task.st === 'done' ? ', erledigt' : '')); }); });
+  nd.el.addEventListener('click', function () { nudge = nudge === 1 ? 2 : 0; sync(nd, 0); });
+
+  setTimeout(function () { nudge = 1; sync(nd, 0); }, still ? 200 : 6200);
+  setTimeout(function () { clock = '17:43'; sync(head, 0); }, still ? 400 : 11000);
+
+  var snd = document.getElementById('snd');
+  snd.addEventListener('click', function () { sound = !sound; snd.setAttribute('aria-pressed', sound); document.getElementById('wave').style.display = sound ? '' : 'none'; if (sound) click(); });
+})();
+</script>
+</body>
+</html>

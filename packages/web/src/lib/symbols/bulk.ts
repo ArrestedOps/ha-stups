@@ -3,8 +3,8 @@ import { detectSymbol } from './detect';
 type Lang = 'de' | 'en';
 
 /**
- * „Symbole aus Titeln erkennen“ (Einstellungen): zu jeder Karte ohne Symbol das erkannte Symbol, erst in der Sprache der Oberfläche,
- * dann in der anderen (die Titel stehen so, wie jemand sie getippt hat). Karten, zu denen nichts passt, fehlen in `items`.
+ * „Symbole aus Titeln erkennen“ (Einstellungen): zu jeder Aufgabe ohne Symbol das erkannte Symbol, erst in der Sprache der Oberfläche,
+ * dann in der anderen (die Titel stehen so, wie jemand sie getippt hat). Aufgaben, zu denen nichts passt, fehlen in `items`.
  */
 export function detectForCards(cards: { id: string; title: string }[], lang: Lang): { items: { id: string; icon: string }[]; total: number; unmatched: number } {
   const other: Lang = lang === 'de' ? 'en' : 'de';

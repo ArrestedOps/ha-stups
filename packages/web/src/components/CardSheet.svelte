@@ -16,15 +16,18 @@
     completeCard,
     can,
     moveCard,
+    openCardMenuAnywhere,
     openSheet,
     openViewer,
     personById,
     refresh,
     removeCard,
+    shiftCards,
     toast,
     ui,
   } from '../lib/store.svelte';
   import { cardTargets } from '../lib/swipe';
+  import { nudgesToMe } from '../lib/tasks';
   import { isFuture } from '../lib/datetime';
   import { canNudge } from '../lib/nudge';
   import Icon from './Icon.svelte';
@@ -39,16 +42,17 @@
   import SymbolSheet from './SymbolSheet.svelte';
   import Avatar from './Avatar.svelte';
   import Banner from './ui/Banner.svelte';
+  import StupsCard from './StupsCard.svelte';
   import ListRow from './ui/ListRow.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
   import Tile from './ui/Tile.svelte';
 
   /**
-   * `panel`: auf dem Desktop (Aufgaben) steht die Karte in der Detailspalte neben der Liste statt im Sheet: gleicher Inhalt und dieselbe
-   * Logik, aber eine eigene Kopfzeile („Karte“, Schließen) und unten „Stupsen“ und „Erledigt“. Alles speichert sofort.
+   * `inline`: auf dem Desktop (Aufgaben) klappt die Aufgabe direkt unter ihrer Zeile auf statt in einem Sheet: gleicher Inhalt und dieselbe
+   * Logik, in zwei Spalten, mit „Stupsen“, „Erledigt“ und Schließen in einer Leiste oben. Alles speichert sofort.
    */
-  let { id, panel = false }: { id: string; panel?: boolean } = $props();
-  const close = () => (panel ? closeDetail() : closeSheet());
+  let { id, inline = false }: { id: string; inline?: boolean } = $props();
+  const close = () => (inline ? closeDetail() : closeSheet());
 
   // Jede Änderung speichert sofort. „Gespeichert" bestätigt das kurz, damit klar ist, dass nichts fehlt.
   let saved = $state(false);
@@ -83,7 +87,7 @@
   let newComment = $state('');
   let linkBusy = $state(false);
 
-  // Eine langsame ältere Antwort darf eine neuere (oder die einer anderen Karte) nicht überschreiben
+  // Eine langsame ältere Antwort darf eine neuere (oder die einer anderen Aufgabe) nicht überschreiben
   const latest = createLatest();
   async function load() {
     try {
@@ -111,7 +115,7 @@
   const firstOpen = $derived(columns.find((c) => !c.isDone) ?? columns[0]);
   const done = $derived(!!card && (column?.isDone ?? false) && card.completedAt !== null);
 
-  // Rolle „Kind": ansehen, eigene Karten abhaken, kommentieren, Fotos und Links anhängen; sonst nichts (der Server prüft es auch)
+  // Rolle „Kind": ansehen, eigene Aufgaben abhaken, kommentieren, Fotos und Links anhängen; sonst nichts (der Server prüft es auch)
   const child = $derived(ui.isChild);
   const mine = $derived(!!card && !!ui.me && card.assigneeIds.includes(ui.me.id));
   const canAct = $derived(!child || mine);
@@ -119,7 +123,7 @@
   const waiting = $derived(!!card && waitingForConfirmation(card));
   const requester = $derived(card ? ui.people.find((p) => p.id === card!.confirmRequestedBy) : undefined);
   const mayAnswer = $derived(waiting && mayConfirm(ui.me, can('confirm'), requester));
-  // Wohin die Karte verschoben werden darf; ihre aktuelle Spalte bleibt immer auswählbar
+  // Wohin die Aufgabe verschoben werden darf; ihre aktuelle Spalte bleibt immer auswählbar
   const targets = $derived(
     card
       ? columns.filter(
@@ -132,7 +136,10 @@
       : columns,
   );
 
-  // Symbol der Karte: antippen öffnet „Symbol wählen" (nicht für ein Kind: es ändert keine Karten)
+  // aufgeklappte Aufgabe: rechts Kommentare oder Verlauf
+  let side = $state<'c' | 'h'>('c');
+
+  // Symbol der Aufgabe: antippen öffnet „Symbol wählen" (nicht für ein Kind: es ändert keine Aufgaben)
   let symbolOpen = $state(false);
   const nudgeNames = $derived(
     card ? card.assigneeIds.filter((pid) => pid !== ui.me?.id).map((pid) => personById(pid)?.displayName ?? t('Jemand')).join(' & ') : '',
@@ -149,6 +156,10 @@
     }
     close();
   }
+  // Ein Stups an mich zu dieser Aufgabe: die orange Karte mit den Antworten, wie in der Liste
+  const stupsToMe = $derived(
+    card && !card.completedAt && ui.me ? nudgesToMe([card], ui.me.id) : [],
+  );
   const canStupse = $derived(!!card && !child && !card.completedAt && !!ui.me?.isPerson && canNudge(card, ui.me.id));
 
   const save = (patch: Parameters<typeof api.updateCard>[1]) => act(() => api.updateCard(id, patch));
@@ -222,16 +233,6 @@
 </script>
 
 <!-- Oben wie im Mockup: links „Erledigt", mittig klein „Gespeichert", rechts „Fertig" (schließt). Alles speichert sofort, „Fertig" schließt nur. Nichts liegt unten im Weg. -->
-{#snippet doneButton()}
-  {#if canFinish}
-    <button
-      class="ml-1 inline-flex h-9 items-center gap-1.5 rounded-full border border-track bg-surface px-3.5 text-[14px] font-bold"
-      onclick={toggleDone}
-    >
-      <Icon name={done ? 'undo' : 'check'} size={16} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
-    </button>
-  {/if}
-{/snippet}
 
 {#snippet saveButton()}
   <button class="inline-flex h-11 items-center px-2 text-[16px] font-bold text-accent-text" onclick={finish}>{t('Fertig')}</button>
@@ -239,11 +240,12 @@
 
 {#snippet content()}
   {#if failed}
-    <p class="py-10 text-center text-fg2">{t('Diese Karte gibt es nicht mehr.')}</p>
+    <p class="py-10 text-center text-fg2">{t('Diese Aufgabe gibt es nicht mehr.')}</p>
   {:else if !card}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
-    <div class="flex flex-col gap-3.5 pt-1">
+    <div class={inline ? 'flex flex-col gap-5 pt-1' : 'flex flex-col gap-3.5 pt-1'}>
+      <div class={inline ? 'flex min-w-0 flex-col gap-3.5' : 'contents'}>
       <div class="flex items-center gap-3">
         {#if child}
           <CardTile {card} size="lg" glyph={28} />
@@ -283,9 +285,34 @@
         ></textarea>
       </div>
 
+      {#if stupsToMe.length > 0}
+        <StupsCard nudges={stupsToMe} onopen={() => {}} />
+      {/if}
+
       <div>
-        <CardProps card={card} {targets} onsave={save} onmove={(columnId) => moveCard(card!, columnId)} readonly={child} />
+        <CardProps card={card} {targets} onsave={save} onmove={(columnId) => moveCard(card!, columnId)} readonly={child} grid={inline} />
       </div>
+
+      {#if !inline && canFinish}
+        <button
+          class="bg-accent-grad flex min-h-[52px] w-full items-center justify-center gap-2 rounded-row text-[17px] font-semibold"
+          data-testid="detail-done"
+          onclick={toggleDone}
+        >
+          <Icon name={done ? 'undo' : 'check'} size={18} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
+        </button>
+        {#if !done && card.dueAt && !child}
+          <button
+            class="flex min-h-[46px] w-full items-center gap-3 rounded-row bg-surface px-4 text-left text-[16px] text-accent-text"
+            onclick={async () => {
+              await shiftCards([card!], 'tomorrow');
+              close();
+            }}
+          >
+            <Icon name="clock" size={20} stroke={2} />{t('Auf morgen verschieben')}
+          </button>
+        {/if}
+      {/if}
 
       {#if waiting}
         <div class="rounded-xl bg-surface2 px-3.5 py-3" data-testid="confirm-note">
@@ -317,7 +344,7 @@
         </div>
       {/if}
 
-      {#if canStupse && !panel}
+      {#if canStupse && !inline}
         <Banner title={t('{names} stupsen', { names: nudgeNames })} sub={t('Freundlich erinnern, mit Antwort-Knöpfen')} onclick={() => openSheet({ type: 'nudge', id: card!.id })}>
           {#snippet leading()}<span class="text-banner-icon"><Icon name="hand" size={30} /></span>{/snippet}
           {#snippet trailing()}<Icon name="chevron-right" size={20} stroke={2} />{/snippet}
@@ -333,6 +360,9 @@
         </p>
       {/if}
 
+      </div>
+      <div class={inline ? 'grid items-start gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]' : 'contents'}>
+      <div class={inline ? 'flex min-w-0 flex-col gap-3.5' : 'contents'}>
       <!-- Beschreibung: das Feld trägt seine Beschriftung in sich -->
       <div class="flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3 focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent/20">
         <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="card-desc">{t('Beschreibung')}</label>
@@ -354,6 +384,7 @@
 
       <section aria-label={t('Checkliste')}>
         <SectionHeader title={t('Checkliste')} count={card.checklist.total ? `${card.checklist.done}/${card.checklist.total}` : undefined} />
+        {#if inline && card.checklist.total > 0}<div class="mt-2 h-[5px] overflow-hidden rounded-[3px] bg-surface2" aria-hidden="true"><i class="block h-full rounded-[3px] bg-sig-green" style:width="{Math.round((card.checklist.done / card.checklist.total) * 100)}%"></i></div>{/if}
         <div class="mt-2 flex flex-col divide-y divide-line overflow-hidden rounded-row border border-line bg-surface">
           {#each card.checklistItems as item (item.id)}
             <div class="flex min-h-[52px] items-center gap-3 px-3 text-[15px]">
@@ -406,7 +437,7 @@
         {#each card.links as link (link.id)}
           <ListRow title={link.title ?? host(link.url)} href={link.url}>
             {#snippet tile()}<Tile color={link.kind === 'maps' ? 'green' : 'blue'}><Icon name={link.kind === 'maps' ? 'map-pin' : 'link'} size={22} /></Tile>{/snippet}
-            {#snippet meta()}<span class="truncate">{link.kind === 'maps' ? `${t('In Karten öffnen')} · ` : ''}{host(link.url)}</span>{/snippet}
+            {#snippet meta()}<span class="truncate">{link.kind === 'maps' ? `${t('In Aufgaben öffnen')} · ` : ''}{host(link.url)}</span>{/snippet}
             {#snippet right()}
               <span class="flex text-text-soft2"><Icon name="external" size={18} stroke={2} /></span>
               {#if !child}
@@ -473,8 +504,17 @@
         </div>
       </section>
 
+      </div>
+      <div class={inline ? 'flex min-w-0 flex-col gap-3.5' : 'contents'}>
+      {#if inline}
+        <div class="flex gap-1 border-b border-line" role="tablist" aria-label={t('Kommentare und Verlauf')}>
+          <button type="button" role="tab" aria-selected={side === 'c'} class="h-9 border-b-2 px-3 text-[14px] font-semibold {side === 'c' ? 'border-accent text-fg' : 'border-transparent text-fg2'}" onclick={() => (side = 'c')}>{t('Kommentare')}{comments.length ? ` · ${comments.length}` : ''}</button>
+          <button type="button" role="tab" aria-selected={side === 'h'} class="h-9 border-b-2 px-3 text-[14px] font-semibold {side === 'h' ? 'border-accent text-fg' : 'border-transparent text-fg2'}" onclick={() => (side = 'h')}>{t('Verlauf')}</button>
+        </div>
+      {/if}
+      {#if !inline || side === 'c'}
       <section aria-label={t('Kommentare')} class="flex flex-col gap-2">
-        <SectionHeader title={t('Kommentare')} count={comments.length || undefined} />
+        {#if !inline}<SectionHeader title={t('Kommentare')} count={comments.length || undefined} />{/if}
         {#each comments as c (c.id)}
           {@const author = personByName(c.authorName)}
           <div class="flex gap-2.5 rounded-row border border-line bg-surface p-3">
@@ -503,10 +543,11 @@
           </form>
         {/if}
       </section>
+      {/if}
 
-      {#if card.activity.length}
+      {#if card.activity.length && (!inline || side === 'h')}
         <section aria-label={t('Verlauf')}>
-          <SectionHeader title={t('Verlauf')} />
+          {#if !inline}<SectionHeader title={t('Verlauf')} />{/if}
           <div class="flex flex-col gap-2.5 px-1.5 py-1">
             {#each card.activity as a (a.id)}
               {@const d = describeActivity(a)}
@@ -524,44 +565,46 @@
       </p>
 
       {#if ui.view && card.costCents !== null && !child}
-        <p class="px-1 text-[13px] text-fg2">{t('Kosten dieser Karte: {amount}', { amount: formatCost(card.costCents) })}</p>
+        <p class="px-1 text-[13px] text-fg2">{t('Kosten dieser Aufgabe: {amount}', { amount: formatCost(card.costCents) })}</p>
       {/if}
       {#if !child}
         <button class="mb-2 min-h-11 w-full text-[15px] text-fg2" onclick={() => removeCard(card!)}>
-          <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Karte löschen')}</span>
+          <span class="inline-flex items-center gap-2"><Icon name="trash" size={16} />{t('Aufgabe löschen')}</span>
         </button>
       {/if}
+      </div>
+      </div>
     </div>
   {/if}
 {/snippet}
 
-{#if panel}
-  <section class="flex h-full flex-col overflow-hidden rounded-[20px] border border-line bg-bg max-xl:shadow-[0_16px_48px_rgba(0,0,0,0.5)]" aria-label={t('Karte')}>
-    <div class="flex h-14 shrink-0 items-center gap-2 pr-2 pl-4">
-      <h2 class="text-[12px] font-bold tracking-[0.12em] text-fg2 uppercase">{t('Karte')}</h2>
+{#if inline}
+  <section class="wrap-anywhere" aria-label={t('Aufgabe')} data-testid="detail">
+    <div class="flex items-center gap-2 pb-1">
       <span class="min-w-0 flex-1 truncate text-[13px] font-semibold text-sig-green" aria-live="polite">{saved ? t('Gespeichert') : ''}</span>
-      <button class="flex h-10 w-10 items-center justify-center rounded-full text-text-soft hover:bg-surface2" aria-label={t('Schließen')} data-testid="detail-close" onclick={finish}>
+      {#if card && canStupse}
+        <button class="inline-flex h-10 items-center gap-2 rounded-full border border-line-chip bg-surface px-4 text-[14px] font-bold hover:border-sep" onclick={() => openSheet({ type: 'nudge', id: card!.id })}>
+          <Icon name="hand" size={16} />{t('Stupsen')}
+        </button>
+      {/if}
+      {#if card && canFinish}
+        <button class="bg-accent-grad inline-flex h-10 items-center gap-2 rounded-full px-5 text-[14px] font-bold hover:brightness-110" data-testid="detail-done" onclick={toggleDone}>
+          <Icon name={done ? 'undo' : 'check'} size={16} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
+        </button>
+      {/if}
+      {#if card && !child}
+        <button class="flex h-10 w-10 items-center justify-center rounded-full text-text-soft hover:bg-surface2" aria-label={t('Mehr')} title={t('Mehr')} onclick={() => void openCardMenuAnywhere(card!)}>
+          <Icon name="more" size={20} stroke={2} />
+        </button>
+      {/if}
+      <button class="flex h-10 w-10 items-center justify-center rounded-full text-text-soft hover:bg-surface2" aria-label={t('Schließen')} title={t('Schließen')} data-testid="detail-close" onclick={finish}>
         <Icon name="x" size={20} stroke={2} />
       </button>
     </div>
-    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 wrap-anywhere">{@render content()}</div>
-    {#if card && (canFinish || canStupse)}
-      <div class="flex shrink-0 gap-2.5 border-t border-line px-4 py-3.5">
-        {#if canStupse}
-          <button class="flex h-12 flex-1 items-center justify-center gap-2 rounded-[14px] border border-line-chip bg-surface text-[15px] font-extrabold hover:border-sep" onclick={() => openSheet({ type: 'nudge', id: card!.id })}>
-            <Icon name="hand" size={18} />{t('Stupsen')}
-          </button>
-        {/if}
-        {#if canFinish}
-          <button class="bg-accent-grad glow-pill flex h-12 flex-1 items-center justify-center gap-2 rounded-[14px] text-[15px] font-extrabold hover:brightness-110" data-testid="detail-done" onclick={toggleDone}>
-            <Icon name={done ? 'undo' : 'check'} size={18} stroke={2.6} />{done ? t('Wieder öffnen') : tx('Aktion', 'Erledigt')}
-          </button>
-        {/if}
-      </div>
-    {/if}
+    {@render content()}
   </section>
 {:else}
-  <Sheet title={saved ? t('Gespeichert') : ''} titleClass="text-[13px] font-semibold text-sig-green" onclose={closeSheet} left={doneButton} right={saveButton} hideClose>
+  <Sheet title={saved ? t('Gespeichert') : t('Aufgabe')} titleClass={saved ? 'text-[13px] font-semibold text-sig-green' : ''} onclose={closeSheet} right={saveButton} hideClose>
     {@render content()}
   </Sheet>
 {/if}

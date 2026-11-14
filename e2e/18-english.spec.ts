@@ -5,9 +5,9 @@ import { openBoards } from './helpers';
 // Läuft auf dem Server der anderen Projekte; die Person bleibt am Ende auf „Automatisch“, sonst würde die Wahl die anderen Projekte stören.
 
 /** Deutsche Wörter, die in den Kernabläufen nicht mehr auftauchen dürfen (die Spaltennamen sind Daten und stehen hier nicht zur Prüfung) */
-const GERMAN = /\b(Karte|Karten|Speichern|Abbrechen|Einstellungen|Löschen|Neue|Neues|Fertig|Heute|Morgen|überfällig|Wächter|Kalender|Zuständig|Wiederholung|Beschreibung|Anlegen|Zurück|Weiter|Suchen|Lädt|Rückgängig|Schließen)\b/;
+const GERMAN = /\b(Aufgabe|Aufgaben|Speichern|Abbrechen|Einstellungen|Löschen|Neue|Neues|Fertig|Heute|Morgen|überfällig|Wächter|Kalender|Zuständig|Wiederholung|Beschreibung|Anlegen|Zurück|Weiter|Suchen|Lädt|Rückgängig|Schließen)\b/;
 
-/** `scope`: nur diesen Teil prüfen (Agenda und Kalender zeigen auch Karten anderer Tests, das sind Daten) */
+/** `scope`: nur diesen Teil prüfen (Agenda und Kalender zeigen auch Aufgaben anderer Tests, das sind Daten) */
 async function noGerman(page: Page, where: string, scope = 'body') {
   const text = await page.evaluate((selector) => {
     const parts = [...document.querySelectorAll<HTMLElement>(selector)];
@@ -43,20 +43,20 @@ test('Englisches Gerät: Board, Schnell-Eingabe, Erledigen, alles auf Englisch',
   await noGerman(page, 'Board');
   await noSideScroll(page);
 
-  // Neue Karte mit der Schnell-Eingabe auf Englisch
-  await page.getByRole('button', { name: 'New card', exact: true }).click();
-  // „heute“, damit die Karte in der offenen Spalte landet (Termine nach heute kommen nach „Geplant“)
+  // Neue Aufgabe mit der Schnell-Eingabe auf Englisch
+  await page.getByRole('button', { name: 'New task', exact: true }).click();
+  // „heute“, damit die Aufgabe in der offenen Spalte landet (Termine nach heute kommen nach „Geplant“)
   await page.getByLabel('What needs doing?').fill('Take out trash today 11:59pm !!');
   const chips = page.getByTestId('quick-chip');
   await expect(chips.filter({ hasText: 'High priority' })).toHaveCount(1);
   await expect(chips.filter({ hasText: /\b23:59\b/ })).toHaveCount(1);
-  await noGerman(page, 'Neue Karte');
+  await noGerman(page, 'Neue Aufgabe');
   await noSideScroll(page);
   await page.getByRole('button', { name: 'Create task' }).click();
 
   const list = page.getByRole('list');
   await expect(list.getByText('Take out trash', { exact: true })).toBeVisible();
-  await noGerman(page, 'Karte in der Liste');
+  await noGerman(page, 'Aufgabe in der Liste');
 
   // Erledigen: Hinweis mit „Undo“
   await page.getByRole('checkbox', { name: /^Complete .Take out trash.$/ }).click();
@@ -64,11 +64,11 @@ test('Englisches Gerät: Board, Schnell-Eingabe, Erledigen, alles auf Englisch',
   await noGerman(page, 'Hinweis');
 });
 
-test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Einstellungen, Karten-Fenster', async ({ page, request }) => {
+test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Einstellungen, Aufgaben-Fenster', async ({ page, request }) => {
   const board = await (await request.post('/api/boards', { data: { name: 'English test 2' } })).json();
   const view = await (await request.get(`/api/boards/${board.id}`)).json();
   await request.post(`/api/boards/${board.id}/cards`, {
-    // Knapp überfällig statt „in 10 Minuten": ein Termin nach Mitternacht schickt die Karte nach „Planned", und der Test fände sie nicht in „Open"
+    // Knapp überfällig statt „in 10 Minuten": ein Termin nach Mitternacht schickt die Aufgabe nach „Planned", und der Test fände sie nicht in „Open"
     data: { title: 'Dentist', columnId: view.columns[0].id, dueAt: new Date(Date.now() - 60_000).toISOString() },
   });
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
@@ -81,14 +81,15 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   await noGerman(page, 'Aufgaben', 'header, nav');
   await noSideScroll(page);
   // die Liste (die frühere Agenda): Gruppen und Chips auf Englisch
-  await page.getByRole('group', { name: 'People' }).getByRole('button', { name: 'All', exact: true }).click();
+  await page.getByTestId('scope-button').click();
+  await page.getByRole('menuitemradio', { name: 'All tasks' }).click();
   await expect(page.getByTestId('tasks').getByText('Dentist').first()).toBeVisible();
   await expect(page.getByRole('group', { name: 'Your numbers' })).toBeVisible();
   await noGerman(page, 'Liste', 'header, nav');
   await noSideScroll(page);
 
   // Tag, Woche, Monat (der frühere Kalender): eine Seite unter Aufgaben, der Kalender-Knopf der Wochenleiste öffnet sie
-  await page.getByRole('button', { name: 'Open calendar' }).click();
+  await nav.getByRole('button', { name: 'Calendar' }).click();
   const views = page.getByRole('radiogroup', { name: 'View' });
   await expect(views.getByRole('radio', { name: 'Week', exact: true })).toBeVisible();
   await views.getByRole('radio', { name: 'Week', exact: true }).click();
@@ -96,19 +97,21 @@ test('Englisches Gerät: Aufgaben mit Liste und Kalenderansichten, Wächter, Ein
   await noSideScroll(page);
   await views.getByRole('radio', { name: 'Month', exact: true }).click();
   await noSideScroll(page);
-  await page.getByRole('button', { name: 'Tasks', exact: true }).first().click(); // „‹ Tasks" oben links
+  await nav.getByRole('button', { name: 'Tasks' }).click();
 
   await nav.getByRole('button', { name: 'Watchers' }).click();
   await noGerman(page, 'Zuhause');
   await noSideScroll(page);
 
   await nav.getByRole('button', { name: 'Boards' }).click();
+  await page.getByTestId('board-list').getByRole('button', { name: /English test 2/ }).click();
+  await page.getByTestId('board-filter-toggle').click();
   await page.getByRole('group', { name: 'People' }).getByRole('button', { name: 'All', exact: true }).click(); // Boards starts at „Mine“
   await page.getByRole('button', { name: /^Dentist/ }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText('Description')).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Mark as done' })).toBeVisible();
-  await noGerman(page, 'Karten-Fenster');
+  await noGerman(page, 'Aufgaben-Fenster');
   await noSideScroll(page);
   await dialog.getByRole('button', { name: 'Done', exact: true }).click(); // schließt das Fenster
 

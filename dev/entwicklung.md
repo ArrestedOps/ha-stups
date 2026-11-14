@@ -71,8 +71,30 @@ pnpm typecheck     # TypeScript und svelte-check
 pnpm test          # Server- und Oberflächen-Tests
 pnpm build         # baut die Oberfläche nach packages/server/web
 pnpm e2e           # Browser-Tests (einmal: pnpm exec playwright install webkit)
+pnpm mutation      # Mutationstests des Servers (dauert, Bericht: packages/server/reports/mutation/mutation.html)
 node e2e/screenshots.mjs   # Screenshots nach docs/images (nach pnpm build)
 ```
+
+### Claude Code: Svelte-MCP und Sprachserver
+
+Das Repository bringt für Claude Code zwei Dinge mit:
+
+- **Svelte-MCP** (`.mcp.json`): der offizielle Server `https://mcp.svelte.dev/mcp`. Claude Code fragt beim ersten Öffnen einmal nach der Freigabe.
+- **Sprachserver** (Plugin `stups-lsp` unter `dev/claude-plugins/`): TypeScript und Svelte, für Definition, Referenzen und Typ-Info. Die Server kommen als devDependencies mit `pnpm install`; global muss nichts installiert sein.
+
+Das Plugin installiert Claude Code nicht von selbst. Einmal je Klon, nach `pnpm install`:
+
+```bash
+claude plugin install stups-lsp --marketplace ./dev/claude-plugins --scope project
+```
+
+Danach Claude Code neu starten. Was man dazu wissen muss:
+
+- **Plugin ändern:** Nach Änderungen unter `dev/claude-plugins/stups-lsp/` die `version` in `plugin.json` und `marketplace.json` erhöhen, sonst bleibt die alte Fassung im Cache. Dann `claude plugin marketplace update stups` und `claude plugin update stups-lsp@stups --scope project`.
+- **TypeScript 6 im Wurzelverzeichnis:** Der TypeScript-Sprachserver braucht `tsserver.js`, das TypeScript 7 nicht mehr enthält. Er läuft deshalb mit `typescript` 6 aus dem Wurzelverzeichnis; `tsc` im Server-Paket bleibt TypeScript 7.
+- **Zwei Einstellungen in `.lsp.json` sind Absicht:** Ohne `useSyntaxServer: never` meldet der Server direkt nach dem Start nur die Fundstellen der geöffneten Datei. Ohne `typescript-svelte-plugin` fehlen bei Referenzen die `.svelte`-Dateien.
+- **`svelte` im Wurzelverzeichnis:** `svelte-language-server` bringt intern Svelte 4 mit. Die eigene devDependency sorgt dafür, dass `eslint-plugin-svelte` weiter Svelte 5 sieht.
+- **Deinstallieren:** `claude plugin uninstall stups-lsp@stups --scope project` leert `.claude/settings.json`; `git checkout .claude/settings.json` stellt sie wieder her.
 
 ### Store und API in Teilen (seit 1.12.0)
 
@@ -96,6 +118,10 @@ Die Teile sind Funktionen `createX(c: Ctx, late)`. Rufen sie Funktionen anderer 
 **`src/api/`** (die Routen): `api.ts` richtet Fehlerbehandlung, Zugriffsprüfung, Live-Sync ein und ruft die Registrierungen der Dateien auf (`settings`, `access`, `boards`, `cards`, `nudges`, `watchers`, `attachments`, `card-extras`, `trash`). Jede Datei bekommt ein kleines Paket gemeinsamer Hilfen (`ApiKit` in `api/kit.ts`: Abhängigkeiten, `body`, `requireAdmin`, `noContent`, …).
 
 **Absicherung:** `test/shape.test.ts` vergleicht die Namen aller Store-Methoden und alle Routen (mit allen Teilen, die nur mit bestimmten Abhängigkeiten existieren) mit `test/fixtures/*.json`. Eine Methode oder Route verschwindet oder kommt dazu, ohne dass jemand es merkt, geht damit nicht mehr. Bewusst ändern: `UPDATE_SHAPE=1 pnpm test` und die Dateien mitcommitten.
+
+**Importzyklen:** `test/import-cycles.test.ts` (Server-Tests) liest die Importe unter `packages/server/src` und `packages/web/src` und verbietet Zyklen zur Laufzeit. Typ-Importe (`import type`) und ein spätes `import()` zählen nicht: Die Typ-Zyklen über `store/internals.ts` und `watchers/parts.ts` sind gewollt. Meldet der Test einen Zyklus, zieht die Funktion um, die die Rückkante braucht (Beispiele: `act` liegt bei `refresh` in `lib/store/load.ts`, `dayKeyOf` bei der Tagesrechnung in `lib/calendar.ts`); ein Wieder-Export versteckt ihn nur.
+
+**Mutationstests:** `pnpm mutation` (Stryker, `packages/server/stryker.config.mjs`) verändert den Quelltext an je einer Stelle und lässt die Tests laufen, die diese Stelle berühren. Bleiben sie grün, prüft kein Test die Stelle („überlebt“). Geprüft werden die Module unter `mutate` (Rechte, Sichtbarkeit, Anmeldung, Netzgrenze, Zeitrechnung); der Bericht `packages/server/reports/mutation/mutation.html` zeigt jede überlebende Stelle im Quelltext. Ein zweiter Lauf prüft nur Geändertes (`incremental.json` daneben). Der Lauf gehört nicht zur CI (er dauert rund eine halbe Stunde) und sperrt nichts; auf GitHub startet ihn der Workflow „Mutationstests“ von Hand. Ein überlebender Mutant ist ein Auftrag für einen Test mit echter Prüfung, kein Ziel von 100 %: Gleichwertige Mutanten (die das Verhalten nicht ändern) bleiben stehen.
 
 ### Sprachen (seit 1.14.0)
 
@@ -131,7 +157,7 @@ Ansage und Lampe sind ein dritter Push-Weg (`house.ts`, `createHousePush`) neben
 Migrationen 17 (Vorlagen `board_templates`), 18 (`cards.effort`, `users.weekly_summary`), 19 (Kind: `users.is_child`, `child_scope`, `confirm_default`, Tabelle `child_confirmers`, `cards.confirm`, `confirm_requested_at`, `confirm_requested_by`).
 
 - **Vorlagen:** eingebaute in `templates.ts` (zweisprachig, `resolveTemplate` rechnet Termine ab heute aus), eigene in `store/templates.ts`; `POST /api/boards` nimmt `template`. Texte nach `currentLanguage()` zum Anlegen.
-- **Fairness:** `store/fairness.ts` zählt `completions` im Zeitraum (nach Bestätigung, auf `completed_by`), Gewichte `EFFORT_WEIGHT` (klein 1, mittel 2, groß 3, leer wie mittel). `GET /api/fairness`. Die Sonntagsnachricht ist `weeklySummaries` im Notifier (Sendeprotokoll `cardId: 'weekly'`).
+- **Fairness:** `store/fairness.ts` zählt `completions` im Zeitraum (nach Bestätigung, auf `completed_by`), Gewichte im SQL von `fairness` (klein 1, mittel 2, groß 3, leer wie mittel). `GET /api/fairness`. Die Sonntagsnachricht ist `weeklySummaries` im Notifier (Sendeprotokoll `cardId: 'weekly'`).
 - **Kind – Rechte:** `api/child-guard.ts` ist ein `preHandler` mit **Erlaubnisliste** (`ALLOWED`: Route → wie geprüft wird, ob die Karte dem Kind gehört). Was nicht dasteht, ist 403 „Das darf ein Kind nicht“, auch jede künftige Route. `test/child-guard.test.ts` geht alle Routen aus `test/fixtures/api-routes.json` durch. Wer eine Route für Kinder freigibt, ändert die Liste im Server **und** die im Test.
 - **Kind – Sichtbarkeit:** bei `child_scope = 'assigned'` filtert derselbe Wächter: 404 für fremde Boards, Karten, Kommentare, Erledigungen, Anhänge (`store.boardIdsWithCardsOf`, `boardIdOfCard`) und ein `preSerialization`-Filter für Boardliste, Agenda/Kalender und `GET /api/cards?ids`. Der Live-Sync meldet nur Kennungen; geholt wird über dieselben gefilterten Routen. `test/child-visibility.test.ts`.
 - **Bestätigung:** `store/confirmation.ts` (`needsConfirmation`, `requestConfirmation`, `answerConfirmation`, `confirmerIds`, `mayConfirm`). Das Erledigen eines Kindes mit Bestätigungspflicht wird in **drei** Wegen zur Anfrage umgebogen: `POST /api/cards/:id/complete` und im Notifier die Aktionen „Erledigt“ einer Erinnerung und eines Stupses (`requestInstead`). `completeCard` löscht die Anfrage mit; die Bestätigung ruft es mit `by = Kind`. Knöpfe in der Nachricht: `KANBAN_CONFIRM_YES|NO:<karte>` (`handleConfirmAction`). Ohne gewählte Bestätiger dürfen alle Erwachsenen (Abweichung vom Entwurf: Push kennt die Administratoren nicht). Erinnerung: Sendeprotokoll `kind = 'nag'`, Schlüssel `confirm:<Tag>`. Karten mit offener Anfrage fallen aus `openDueCards` (keine Mahnungen an das Kind).
@@ -261,7 +287,7 @@ Die Fachlogik (Store, Wiederholungen, Wächter-Regeln, Stupsen) kennt Home Assis
 
 `main.ts` erkennt die Betriebsart und verdrahtet die Adapter; `GET /api/capabilities` sagt der Oberfläche, was es gibt. Die Anmeldung wählt `runtime.identity.kind`: Add-on und die Entwicklungs-Schalter (`ENFORCE_INGRESS_IP=false`) nutzen Ingress, alles andere eigene Konten. Die Oberfläche blendet Home-Assistant-Teile nur bei eigener Anmeldung aus (`feat` in `lib/store/state.svelte.ts`); im Add-on bleibt alles sichtbar, auch wenn Home Assistant gerade nicht antwortet.
 
-Browser-Tests: Projekte `dunkel` und `hell` (Server ohne Home Assistant mit Entwicklungs-Benutzer), `waechter` (nachgebautes Home Assistant, `e2e/mock-ha.mjs`, wie im Add-on), `beta` (Beta-App: `STUPS_CHANNEL=beta`, Push und Wächter zunächst aus, nachgebautes Home Assistant, `e2e/server-beta.mjs`), `standalone-ha` (eigener Container mit `HA_URL` und `HA_TOKEN` gegen dasselbe Nachbau, Websocket unter `/api/websocket`) und `standalone` (`e2e/server-standalone.mjs`: eigener Container, Einrichtung mit Code, Anmeldung). Der Einrichtungscode wird aus dem Protokoll in eine Datei geschrieben, die der Test liest. Derselbe Server startet einen nachgebauten ntfy-Server (Port + 1, `/__published` und `/__deleted` zeigen, was ankam): die Tests prüfen Nachricht, Knöpfe und den Rückweg `POST /api/push/action`.
+Browser-Tests: Projekte `dunkel` und `hell` (Server ohne Home Assistant mit Entwicklungs-Benutzer), `waechter` (nachgebautes Home Assistant, `e2e/mock-ha.mjs`, wie im Add-on), `beta` (Beta-App: `STUPS_CHANNEL=beta`, Push zunächst aus, nachgebautes Home Assistant, `e2e/server-beta.mjs`), `standalone-ha` (eigener Container mit `HA_URL` und `HA_TOKEN` gegen dasselbe Nachbau, Websocket unter `/api/websocket`) und `standalone` (`e2e/server-standalone.mjs`: eigener Container, Einrichtung mit Code, Anmeldung). Der Einrichtungscode wird aus dem Protokoll in eine Datei geschrieben, die der Test liest. Derselbe Server startet einen nachgebauten ntfy-Server (Port + 1, `/__published` und `/__deleted` zeigen, was ankam): die Tests prüfen Nachricht, Knöpfe und den Rückweg `POST /api/push/action`.
 
 Knöpfe in ntfy-Nachrichten kommen ohne Sitzung zurück. `ntfy.ts` signiert dafür Person, Aktion und Ablaufzeit mit einem Geheimnis aus der Datenbank (`settings.pushSecret`), `push-action.ts` prüft und führt die Aktion über denselben `handleAction` aus wie bei Home Assistant. Der Pfad ist der einzige ohne Anmeldung (und ohne Kopfzeile des Clients) im Container.
 
@@ -306,7 +332,7 @@ Die CI bricht ab, wenn die Version nicht zum Branch passt (eine Beta-Version ohn
 
 - Push-Titel beginnen mit „Beta ·", Tags und Gruppen der Nachrichten heißen anders, die Knöpfe in Nachrichten tragen `BETA_` vor der Aktion (jede App verarbeitet nur ihre eigenen, auch wenn die Karte in beiden dieselbe Kennung hat).
 - Sensoren heißen `sensor.stups_beta_…` („Stups Beta …"), das Ereignis für Automationen `stups_beta_create_card`.
-- **Push und Wächter sind zunächst aus** (`beta-gate.ts`, Einstellungen › Beta, nur Administratoren): Push „Aus / Nur für mich / An", Wächter „an/aus". Der Server setzt das durch (nicht die Oberfläche): ohne Freigabe wird nichts gesendet, und die Wächter werten nichts aus.
+- **Push ist zunächst aus, die Wächter laufen** (`beta-gate.ts`, Einstellungen › Beta, nur Administratoren): Push „Aus / Nur für mich / An", Wächter „an/aus" (Vorgabe an; nur ein gespeichertes „off" schaltet sie ab). Der Server setzt das durch (nicht die Oberfläche): ohne Freigabe wird nichts gesendet, und bei ausgeschalteten Wächtern wertet nichts aus.
 - **Echte Daten zum Testen:** in der normalen App Einstellungen › Umzug › Export, **danach** die Beta zum ersten Mal starten (sie übernimmt den Export nur, wenn sie noch keine Daten hat). Neue Kopie: die Beta (nur die!) deinstallieren, neu exportieren, neu installieren.
 - Das Symbol mit „BETA"-Band erzeugt `node e2e/make-beta-icon.mjs` aus den Bildern der normalen App.
 

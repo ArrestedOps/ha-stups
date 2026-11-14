@@ -8,7 +8,7 @@
   import { arrowOnly, probeRight } from '../../lib/rowTap';
 
   /**
-   * Die eine Zeile für Aufgaben, Board-Karten, Wächter und Einstellungen: 68 px hoch, links optional der
+   * Die eine Zeile für Aufgaben, Board-Aufgaben, Wächter und Einstellungen: 68 px hoch, links optional der
    * Erledigt-Kreis und die Symbol-Kachel, Titel einzeilig, darunter die Meta-Zeile, rechts **genau ein** Element
    * (`right`: Foto, Stupsen, Pfeil, Zähler, Schalter, Wert oder kleiner Knopf).
    * Der Antippbereich (Kachel, Titel, Meta) ist ein Knopf, wenn `onclick` gesetzt ist, ein Link bei `href`.
@@ -29,6 +29,7 @@
     rightFull = false,
     dim = false,
     problem = false,
+    nudged = false,
     expanded,
     pressed,
     inset = false,
@@ -58,13 +59,15 @@
     rightFull?: boolean;
     /** Problem (zum Beispiel ein Wächter ohne Zuständige): roter Rand in der Farbe Gefahr, nicht Orange */
     problem?: boolean;
+    /** an mich gestupst: Fläche leicht orange, dazu ein Balken links (Entwurf) */
+    nudged?: boolean;
     /** gedämpft: ein ausgeschalteter Wächter (Kachel und Text blasser, der Rest der Zeile nicht) */
     dim?: boolean;
     /** der Antippbereich klappt etwas auf (aria-expanded) */
     expanded?: boolean;
     /** der Antippbereich ist eine Auswahl (aria-pressed): die gewählte Zeile */
     pressed?: boolean;
-    /** Zeile in einer Karte (Ablauf im Wächter-Editor): dunkler Grund, 64 px hoch statt 68 */
+    /** Zeile in einer Aufgabe (Ablauf im Wächter-Editor): dunkler Grund, 64 px hoch statt 68 */
     inset?: boolean;
     onclick?: (e: MouseEvent) => void;
     href?: string;
@@ -92,7 +95,7 @@
 </script>
 
 <div
-  class="flex w-full items-center rounded-row border text-fg {inset ? (wrap ? 'min-h-16 bg-bg py-2' : 'h-16 bg-bg') : wrap ? `min-h-row py-2.5 ${current ? '' : 'bg-surface'}` : current ? 'h-row' : 'h-row bg-surface'} {highlight ? 'row-new' : current ? 'row-current' : problem ? 'row-problem' : 'border-line'} {dashed ? 'border-dashed' : ''} {onclick || href ? 'row-hover' : ''} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'}"
+  class="flex w-full items-center rounded-row border text-fg {inset ? (wrap ? 'min-h-16 bg-bg py-2' : 'h-16 bg-bg') : wrap ? `min-h-row py-2.5 ${current ? '' : 'bg-surface'}` : current ? 'h-row' : 'h-row bg-surface'} {highlight ? 'row-new' : current ? 'row-current' : problem ? 'row-problem' : 'border-line'} {dashed ? 'border-dashed' : ''} {onclick || href ? 'row-hover' : ''} {check ? 'gap-2.5 pr-2 pl-0.5' : 'gap-3 pr-2.5 pl-3'} in-[.list-group]:h-auto in-[.list-group]:min-h-[60px] in-[.list-group]:py-2 {nudged ? 'row-nudged' : ''}"
   data-variant={variant}
   data-problem={problem ? '' : undefined}
 >
@@ -107,22 +110,22 @@
       onclick={check.onchange}
     >
       {#if check.done}
-        <span class="bg-accent-grad flex h-[22px] w-[22px] items-center justify-center rounded-full !shadow-none"><Icon name="check" size={14} /></span>
+        <span class="bg-accent-grad flex h-[22px] w-[22px] items-center justify-center rounded-full !shadow-none in-[.list-group]:h-7 in-[.list-group]:w-7"><Icon name="check" size={14} /></span>
       {:else if check.state === 'waiting'}
         <span class="flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-accent text-accent-text"><Icon name="clock" size={12} stroke={2.6} /></span>
       {:else if check.state === 'overdue'}
-        <span class="h-[22px] w-[22px] rounded-full border-2 border-ring"></span>
+        <span class="h-[22px] w-[22px] rounded-full border-2 border-ring in-[.list-group]:h-7 in-[.list-group]:w-7 in-[.list-group]:border-[1.75px]"></span>
       {:else}
-        <span class="h-[22px] w-[22px] rounded-full border-2 border-ring"></span>
+        <span class="h-[22px] w-[22px] rounded-full border-2 border-ring in-[.list-group]:h-7 in-[.list-group]:w-7 in-[.list-group]:border-[1.75px]"></span>
       {/if}
     </button>
   {/if}
 
   {#snippet body()}
     {#if tile}{#if dim}<span class="flex shrink-0 opacity-60">{@render tile()}</span>{:else}{@render tile()}{/if}{/if}
-    <span class="flex min-w-0 flex-1 flex-col gap-1 {dim ? 'opacity-70' : ''}">
-      <span class="{wrap ? 'wrap-anywhere' : 'truncate'} text-[15px] font-bold tracking-tight {variant === 'danger' ? 'text-danger' : ''} {strike ? 'text-hint line-through' : ''}">{title}</span>
-      {#if meta}<span class="flex items-center gap-1.5 text-[13px] text-fg2 {wrap ? 'flex-wrap' : 'truncate'}">{@render meta()}</span>{/if}
+    <span class="flex min-w-0 flex-1 flex-col gap-1 in-[.list-group]:gap-px {dim ? 'opacity-70' : ''}">
+      <span class="{wrap ? 'wrap-anywhere' : 'truncate'} text-[15px] font-bold tracking-tight in-[.list-group]:text-[17px] in-[.list-group]:leading-[1.25] in-[.list-group]:font-normal in-[.list-group]:tracking-normal {variant === 'danger' ? 'text-danger' : ''} {strike ? 'text-hint line-through' : ''}">{title}</span>
+      {#if meta}<span class="flex items-center gap-1.5 text-[13px] text-fg2 in-[.list-group]:flex-wrap in-[.list-group]:gap-x-2 in-[.list-group]:gap-y-0 in-[.list-group]:text-[15px] in-[.list-group]:tracking-normal {wrap ? 'flex-wrap' : 'truncate in-[.list-group]:overflow-visible in-[.list-group]:whitespace-normal'}">{@render meta()}</span>{/if}
     </span>
   {/snippet}
 

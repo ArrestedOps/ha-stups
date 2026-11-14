@@ -10,7 +10,11 @@
   import WatcherThenEditor from './WatcherThenEditor.svelte';
   import WatcherWhenEditor from './WatcherWhenEditor.svelte';
   import WatcherWhoEditor from './WatcherWhoEditor.svelte';
-  import Chip from './ui/Chip.svelte';
+  import ListRow from './ui/ListRow.svelte';
+  import SymbolIcon from './SymbolIcon.svelte';
+  import Tile, { TILE_COLORS } from './ui/Tile.svelte';
+  import { cardTitleWithEntity } from '../lib/cardTitle';
+  import { modeSummary, nameSymbol, whenParts } from '../lib/watcher-flow';
   import CtaButton from './ui/CtaButton.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
 
@@ -50,47 +54,33 @@
 {/snippet}
 
 {#snippet back()}
-  <button type="button" class="inline-flex h-11 items-center gap-0.5 pr-2 pl-0.5 text-[16px] font-semibold text-accent-text" aria-label={t('Zurück')} data-testid="wizard-back" onclick={() => ed.goBack()}>
-    <Icon name="chevron-left" size={22} stroke={2.2} />{t('Zurück')}
+  <button type="button" class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" aria-label={t('Zurück')} data-testid="wizard-back" onclick={() => ed.goBack()}>
+    {t('Zurück')}
   </button>
 {/snippet}
 
-{#snippet close()}
-  <button type="button" class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" data-testid="wizard-close" onclick={ed.back}>{t('Schließen')}</button>
-{/snippet}
-
-<Sheet title={t('Neuer Wächter')} onclose={ed.back} left={back} right={close} footer={ed.loading ? undefined : foot}>
+<Sheet title={t('Neuer Wächter')} onclose={ed.back} left={back} footer={ed.loading ? undefined : foot}>
   {#if ed.loading}
     <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
   {:else}
     <div class="flex flex-col gap-3.5 pt-1">
-      <nav class="grid grid-cols-4 gap-1.5" aria-label={t('Schritt {n} von 4', { n: ed.step })}>
-        {#each STEPS as label, i (i)}
-          {@const n = i + 1}
-          {@const state = n < ed.step ? 'done' : n === ed.step ? 'on' : 'todo'}
-          <button
-            type="button"
-            class="-my-[9px] flex flex-col justify-start gap-1.5 py-[9px] text-left text-[12px] font-semibold {state === 'done' ? 'text-step-done' : state === 'on' ? 'text-fg' : 'text-dim'}"
-            aria-current={state === 'on' ? 'step' : undefined}
-            disabled={n > ed.reached}
-            onclick={() => ed.goto(n)}
-          >
-            <span
-              class="block h-[5px] w-full rounded-[3px] {state === 'done' || (state === 'on' && n === 4) ? 'bg-brand-dot' : 'bg-surface2'}"
-              style={state === 'on' && n < 4 ? 'background-image: linear-gradient(90deg, var(--brand-dot) 55%, var(--surface2) 55%)' : undefined}
-            ></span>
-            <span>{n} · {label}</span>
-          </button>
-        {/each}
+      <nav class="flex items-center gap-2.5 text-[12.5px] font-semibold text-fg2" aria-label={t('Schritt {n} von 4', { n: ed.step })}>
+        <span class="shrink-0">{t('Schritt {n} von 4', { n: ed.step })}</span>
+        <span class="h-[5px] min-w-0 flex-1 overflow-hidden rounded-[3px] bg-surface2" aria-hidden="true"><i class="block h-full rounded-[3px] bg-brand-dot" style:width="{ed.step * 25}%"></i></span>
+        <span class="shrink-0" aria-current="step">{STEPS[ed.step - 1]}</span>
       </nav>
       <h1 class="mt-1.5 text-[26px] leading-[1.2] font-extrabold tracking-[-0.02em]" data-testid="wizard-question">{QUESTION}</h1>
 
       {#if ed.step === 1}
         {#if ed.templates.length > 0 && !f.entityId && ed.picking !== 'trigger'}
           <SectionHeader title={t('Vorlage')} />
-          <div class="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3" role="group" aria-label={t('Vorlage')}>
-            {#each ed.templates as tpl (tpl.id)}
-              <Chip small onclick={() => ed.applyTemplate(tpl)}>{tpl.title}</Chip>
+          <div class="list-group !mt-0" role="group" aria-label={t('Vorlage')}>
+            {#each ed.templates as tpl, i (tpl.id)}
+              {@const sym = nameSymbol(tpl.title)}
+              <ListRow wrap title={tpl.title} onclick={() => ed.applyTemplate(tpl)}>
+                {#snippet tile()}<Tile color={TILE_COLORS[i % TILE_COLORS.length]!}>{#if sym}<SymbolIcon id={sym} size={20} />{:else}<Icon name="eye" size={20} />{/if}</Tile>{/snippet}
+                {#snippet meta()}<span class="line-clamp-2 whitespace-normal">{tpl.hint}</span>{/snippet}
+              </ListRow>
             {/each}
           </div>
           <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Füllt die Schritte vor, alles bleibt änderbar. Danach noch die Entität wählen.')}</p>
@@ -102,6 +92,15 @@
       {:else if ed.step === 3}
         <WatcherWhoEditor {ed} />
       {:else}
+        <!-- Kurzfassung wie im Entwurf: WENN, DANN, WER als drei beschriftete Zeilen -->
+        <dl class="rounded-row bg-surface px-4 py-3.5" data-testid="wizard-brief">
+          <dt class="text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Wenn')}</dt>
+          <dd class="mb-2.5 text-[16px] font-semibold wrap-anywhere">{#each whenParts(f) as p, i (i)}{p.text}{/each}</dd>
+          <dt class="text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Dann')}</dt>
+          <dd class="mb-2.5 text-[16px] font-semibold wrap-anywhere">{t('Aufgabe „{title}“', { title: cardTitleWithEntity(f.title, f.kind, f.entityName || f.entityId) || '…' })}</dd>
+          <dt class="text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Wer')}</dt>
+          <dd class="text-[16px] font-semibold wrap-anywhere">{modeSummary(f.assignMode)}</dd>
+        </dl>
         <WatcherFineEditor {ed} />
         <SectionHeader title={t('Zusammenfassung')} />
         <WatcherSummary form={f} personName={ed.personName} />

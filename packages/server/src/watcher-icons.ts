@@ -1,5 +1,5 @@
 /**
- * Symbol einer Wächter-Karte aus der beobachteten Entität: erst ein Hinweis im Namen (Waschmaschine, Briefkasten …), dann das
+ * Symbol einer Wächter-Aufgabe aus der beobachteten Entität: erst ein Hinweis im Namen (Waschmaschine, Briefkasten …), dann das
  * Symbol der Entität selbst (`attributes.icon`, wenn es zur Bibliothek der Oberfläche gehört), dann `device_class`, dann die
  * Domäne. Die Namen sind die der Symbol-Bibliothek in packages/web/src/lib/symbols (ein Test der Oberfläche prüft, dass es sie
  * alle gibt). Keine Abhängigkeiten, damit der Test der Oberfläche die Datei lesen kann.

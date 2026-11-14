@@ -26,13 +26,13 @@ export interface WatcherDeps {
   ha: WatcherHa;
   now: () => Date;
   timeZone: () => string;
-  /** false = ausgeschaltet (Beta): keine Auswertung, keine Karten. Vorgabe: an */
+  /** false = ausgeschaltet (Beta): keine Auswertung, keine Aufgaben. Vorgabe: an */
   enabled?: () => boolean;
   /** Zeitlimit für eine Abfrage von Kalender oder Vorhersage in Millisekunden (Vorgabe 20 Sekunden) */
   pollTimeoutMs?: number;
-  /** Karte ist (jetzt) jemandem zugewiesen: hier geht die Push-Nachricht raus */
+  /** Aufgabe ist (jetzt) jemandem zugewiesen: hier geht die Push-Nachricht raus */
   onAssigned?: (card: Card, userIds: string[]) => void;
-  /** "Erst vorschlagen": die Karte ist noch niemandem zugewiesen, diese Personen (zu Hause) werden gefragt, wer sie übernimmt */
+  /** "Erst vorschlagen": die Aufgabe ist noch niemandem zugewiesen, diese Personen (zu Hause) werden gefragt, wer sie übernimmt */
   onSuggest?: (card: Card, userIds: string[]) => void;
   /** Der Vorschlag ist vorbei (übernommen oder Rückfall): die Frage bei den anderen wegräumen */
   onSuggestClosed?: (card: Card) => void;
@@ -47,14 +47,14 @@ export interface Seen {
   lastChanged: string | null;
   name?: string;
   unit?: string;
-  /** Für das Symbol der Karte (watcher-icons.ts) */
+  /** Für das Symbol der Aufgabe (watcher-icons.ts) */
   deviceClass?: string;
   icon?: string;
 }
 
 /**
  * Die Bedingung gilt beim Speichern schon, aber der Wächter löst nicht von selbst aus (Zustand, Vorgang, Unbekanntes): die Oberfläche
- * fragt dann, ob die Karte jetzt entstehen soll. `stateText` ist der Zustand in Worten („aus", „412 W").
+ * fragt dann, ob die Aufgabe jetzt entstehen soll. `stateText` ist der Zustand in Worten („aus", „412 W").
  */
 export interface MetNow {
   entityName: string;

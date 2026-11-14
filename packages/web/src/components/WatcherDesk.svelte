@@ -18,7 +18,7 @@
 
   /**
    * „Neuer Wächter“ am Desktop: ein Formular statt vier Schritte, aufgeklappt über der Liste der Wächter. Links die Blöcke Wenn, Dann und
-   * „Wer bekommt die Karte?“, darunter „Mehr Einstellungen“ (eingeklappt); rechts die Vorschau (bei weniger Platz darunter); unten Name,
+   * „Wer bekommt die Aufgabe?“, darunter „Mehr Einstellungen“ (eingeklappt); rechts die Vorschau (bei weniger Platz darunter); unten Name,
    * Probelauf, Abbrechen und „Wächter anlegen“. Zustand und Speichern gehören dem Editor (`ed`), derselbe wie im Assistenten am Handy:
    * so kommt auch hier die Rückfrage, wenn die Bedingung schon gilt. Der Entwurf geht beim Zuklappen verloren; wer schon etwas eingegeben
    * hat, wird vorher gefragt (Knopf, X und Escape).
@@ -39,7 +39,7 @@
 
   onMount(() => {
     void (async () => {
-      await ed.load(init.template, init.hit, init.personIds);
+      await ed.load(init.template, init.hit, init.personIds, init.category);
       if (!ed.form.boardId) ed.form.boardId = ui.boardId ?? ui.boards[0]?.id ?? '';
       await tick();
       // Mit einem Treffer ist die Entität schon gewählt: das Feld nimmt den Fokus, ohne die Liste aufzuklappen
@@ -141,7 +141,7 @@
   <header class="flex items-start gap-3">
     <div class="min-w-0 flex-1">
       <h2 id="{uid}-title" class="text-[22px] leading-tight font-extrabold tracking-tight">{t('Neuer Wächter')}</h2>
-      <p class="mt-0.5 text-[14px] text-fg2">{t('Beschreibe in einem Satz, wann welche Karte entstehen soll.')}</p>
+      <p class="mt-0.5 text-[14px] text-fg2">{t('Beschreibe in einem Satz, wann welche Aufgabe entstehen soll.')}</p>
     </div>
     <button type="button" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-text-soft hover:bg-surface2" aria-label={t('Schließen')} data-testid="desk-close" onclick={requestClose}>
       <Icon name="x" size={20} stroke={2.2} />
@@ -173,13 +173,13 @@
           {#if more}
             <div id="{uid}-more" class="flex flex-col gap-3 px-4 pt-1 pb-4" data-testid="desk-more-body">
               <WatcherFineEditor {ed} name={false} category={false} columns />
-              <label class="focus-ring-in flex rounded-row border border-line bg-surface px-3.5 py-3">
+              <label class="focus-ring-in flex rounded-row bg-surface px-3.5 py-3">
                 <textarea class="min-h-[44px] w-full resize-none bg-transparent text-[15px] leading-[1.45] font-medium outline-none placeholder:text-dim" rows="2" bind:value={f.description} placeholder={t('Beschreibung (optional)')} aria-label={t('Beschreibung')}></textarea>
               </label>
               {#if ed.view?.categories.length}
                 <div class="flex flex-col gap-2">
-                  <span class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Kategorien der Karte')}</span>
-                  <div class="flex flex-wrap gap-2" role="group" aria-label={t('Kategorien der Karte')}>
+                  <span class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Kategorien der Aufgabe')}</span>
+                  <div class="flex flex-wrap gap-2" role="group" aria-label={t('Kategorien der Aufgabe')}>
                     {#each ed.view.categories as c (c.id)}
                       {@const on = f.categoryIds.includes(c.id)}
                       <Chip small active={on} pressed={on} onclick={() => (f.categoryIds = on ? f.categoryIds.filter((x) => x !== c.id) : [...f.categoryIds, c.id])}>{c.name}</Chip>

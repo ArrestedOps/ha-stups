@@ -108,7 +108,7 @@ describe('Wächter anlegen und ändern', () => {
 });
 
 describe('Testen, Zähler, Läufe', () => {
-  it('„Testen" legt eine Karte an, „Zähler zurücksetzen" setzt auf null, die Läufe sind abrufbar', async () => {
+  it('„Testen" legt eine Aufgabe an, „Zähler zurücksetzen" setzt auf null, die Läufe sind abrufbar', async () => {
     const id = (await call(chef, 'POST', '/api/watchers', input({ trigger: { entityId: ENTITY, kind: 'below', value: 5, count: 3 } }))).body.id;
     const tested = await call(chef, 'POST', `/api/watchers/${id}/test`);
     expect(tested.status).toBe(200);
@@ -135,13 +135,20 @@ describe('Nachfrage nach dem Speichern', () => {
   const DOOR = 'binary_sensor.tuer';
   const doorInput = (extra: Record<string, unknown> = {}) =>
     input({ name: 'Tür offen', trigger: { entityId: DOOR, kind: 'state', to: 'off', forMin: 0 }, card: { boardId, columnId, title: 'Tür schließen' }, ...extra });
+  /** Ein Wächter, dessen Zielzustand beim Anlegen noch nicht gilt (sonst löst er gleich aus): die Tür geht danach auf „aus“ */
+  const createUnmet = async (extra: Record<string, unknown> = {}): Promise<string> => {
+    ha.set(DOOR, 'on', '2026-11-04T08:00:00Z', { friendly_name: 'Tür Waschküche' });
+    const id = (await call(chef, 'POST', '/api/watchers', doorInput(extra))).body.id as string;
+    ha.set(DOOR, 'off', '2026-11-04T09:00:00Z', { friendly_name: 'Tür Waschküche' });
+    return id;
+  };
   const cardsNow = () => store.getBoardView(boardId).cards;
 
-  it('Anlegen: ein Zustandswächter, dessen Zielzustand schon gilt, meldet metNow, es entsteht keine Karte', async () => {
+  it('Anlegen: ein Zustandswächter, dessen Zielzustand schon gilt, löst gleich aus (keine Rückfrage)', async () => {
     const res = await call(chef, 'POST', '/api/watchers', doorInput());
     expect(res.status).toBe(201);
-    expect(res.body.metNow).toEqual({ entityName: 'Tür Waschküche', stateText: 'aus', reason: 'already_met' });
-    expect(cardsNow()).toHaveLength(0);
+    expect(res.body.metNow).toBeNull();
+    expect(cardsNow()).toHaveLength(1);
   });
 
   it('Anlegen: nicht erfüllt, dann metNow null', async () => {
@@ -157,7 +164,7 @@ describe('Nachfrage nach dem Speichern', () => {
   });
 
   it('Ändern: nur den Namen, dann keine Rückfrage; Zielzustand oder Entität geändert, dann schon', async () => {
-    const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+    const id = await createUnmet();
     expect((await call(chef, 'PATCH', `/api/watchers/${id}`, { name: 'Tür auf' })).body.metNow).toBeNull();
     expect((await call(chef, 'PATCH', `/api/watchers/${id}`, { cooldownMin: 30, card: { boardId, columnId, title: 'Anderer Titel' } })).body.metNow).toBeNull();
     // gleiche Bedingung noch einmal gespeichert (z. B. Assistent ohne Änderung): keine Rückfrage
@@ -183,8 +190,8 @@ describe('Nachfrage nach dem Speichern', () => {
   });
 
   describe('POST /api/watchers/:id/fire-now', () => {
-    it('legt die Karte an, mit Zuweisung und dem Hinweis im Lauf', async () => {
-      const id = (await call(chef, 'POST', '/api/watchers', doorInput({ assign: { mode: 'fixed', personIds: [annaId] } }))).body.id;
+    it('legt die Aufgabe an, mit Zuweisung und dem Hinweis im Lauf', async () => {
+      const id = await createUnmet({ assign: { mode: 'fixed', personIds: [annaId] } });
       const res = await call(chef, 'POST', `/api/watchers/${id}/fire-now`);
       expect(res.status).toBe(200);
       expect(res.body.openCard).toMatchObject({ title: 'Tür schließen: Tür Waschküche', assigneeIds: [annaId] });
@@ -194,26 +201,26 @@ describe('Nachfrage nach dem Speichern', () => {
     });
 
     it('wer keine Wächter ändern darf, bekommt 403 (und es entsteht nichts)', async () => {
-      const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+      const id = await createUnmet();
       expect((await call(anna, 'POST', `/api/watchers/${id}/fire-now`)).status).toBe(403);
       expect(cardsNow()).toHaveLength(0);
     });
 
     it('gilt die Bedingung nicht mehr: 409 mit freundlichem Text', async () => {
-      const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+      const id = await createUnmet();
       ha.set(DOOR, 'on', '2026-11-04T09:30:00Z');
       const res = await call(chef, 'POST', `/api/watchers/${id}/fire-now`);
       expect(res.status).toBe(409);
-      expect(res.body.error).toBe('Die Bedingung ist nicht mehr erfüllt, darum entsteht keine Karte.');
+      expect(res.body.error).toBe('Die Bedingung ist nicht mehr erfüllt, darum entsteht keine Aufgabe.');
       expect(cardsNow()).toHaveLength(0);
     });
 
-    it('gibt es schon eine offene Karte: 409', async () => {
-      const id = (await call(chef, 'POST', '/api/watchers', doorInput())).body.id;
+    it('gibt es schon eine offene Aufgabe: 409', async () => {
+      const id = await createUnmet();
       expect((await call(chef, 'POST', `/api/watchers/${id}/fire-now`)).status).toBe(200);
       const again = await call(chef, 'POST', `/api/watchers/${id}/fire-now`);
       expect(again.status).toBe(409);
-      expect(again.body.error).toBe('Zu diesem Wächter gibt es schon eine offene Karte.');
+      expect(again.body.error).toBe('Zu diesem Wächter gibt es schon eine offene Aufgabe.');
       expect(cardsNow()).toHaveLength(1);
     });
 
@@ -224,7 +231,7 @@ describe('Nachfrage nach dem Speichern', () => {
 });
 
 describe('Reiter „Wächter"', () => {
-  it('zeigt je Wächter Zustand der Entität und die offene Karte; die Aktivität nennt die Wächter, alle dürfen sie sehen', async () => {
+  it('zeigt je Wächter Zustand der Entität und die offene Aufgabe; die Aktivität nennt die Wächter, alle dürfen sie sehen', async () => {
     const id = (await call(chef, 'POST', '/api/watchers', input())).body.id;
     expect((await call(anna, 'GET', '/api/watchers')).body.items[0]).toMatchObject({ entityState: '120', openCard: null });
 
@@ -250,7 +257,7 @@ describe('Entitäten suchen', () => {
     expect(res.body).toEqual([{ entityId: ENTITY, name: 'Waschmaschine Leistung', state: '120', unit: 'W', domain: 'sensor', category: 'Haushaltsgeräte' }]);
     expect((await call(chef, 'GET', '/api/ha/entities?q=wasch')).body.map((e: any) => e.entityId)).toEqual([ENTITY, 'binary_sensor.tuer']); // Treffer im Namen zuerst
     expect((await call(chef, 'GET', '/api/ha/entities?q=tür')).body.map((e: any) => e.entityId)).toEqual(['binary_sensor.tuer']);
-    // der kurze Gerätename für Name und Kartentitel von Wächtern
+    // der kurze Gerätename für Name und Aufgabentitel von Wächtern
     expect((await call(chef, 'GET', '/api/ha/entities?q=waschmaschine')).body[0]).toMatchObject({ name: 'Waschmaschine Leistung' });
     expect((await call(chef, 'GET', '/api/ha/entities?q=leistung waschmaschine')).body).toHaveLength(1);
   });

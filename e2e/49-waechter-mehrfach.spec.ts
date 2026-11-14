@@ -92,7 +92,7 @@ async function bulkFlow(page: Page, request: APIRequestContext, desktop: boolean
     const after = await s.state();
     expect(after.map((w) => w.assign)).toEqual([expect.objectContaining({ mode: 'fixed', personIds: [s.conny.id] }), expect.objectContaining({ mode: 'fixed', personIds: [s.conny.id] })]);
     expect(after.map((w) => w.name)).toEqual(s.names);
-    // nicht angefasst: jeder behält sein Board und den Kartentitel
+    // nicht angefasst: jeder behält sein Board und den Aufgabentitel
     expect(after.map((w) => w.card.boardId)).toEqual([s.boards[0]!.id, s.boards[1]!.id]);
     expect(after.map((w) => w.card.title)).toEqual([`Wechseln ${s.tag} 0`, `Wechseln ${s.tag} 1`]);
     // die Auswahl bleibt bis „Fertig“

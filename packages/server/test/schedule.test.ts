@@ -28,7 +28,7 @@ const add = (board: string, col: string, title: string, dueAt: string | null, ex
   store.createCard(board, { columnId: col, title, dueAt, ...extra }, rene.id);
 
 describe('Termine über alle Boards (Agenda und Kalender)', () => {
-  it('liefert Karten mit Termin aus allen Boards, nach Termin sortiert, mit Boardname und -farbe', () => {
+  it('liefert Aufgaben mit Termin aus allen Boards, nach Termin sortiert, mit Boardname und -farbe', () => {
     add(haushalt, colH, 'B', '2026-11-06T10:00:00Z');
     add(umbau, colU, 'A', '2026-11-05T10:00:00Z');
     add(haushalt, colH, 'ohne Termin', null);
@@ -62,7 +62,7 @@ describe('Termine über alle Boards (Agenda und Kalender)', () => {
     expect(store.listSchedule({ viewer: null, boardIds: [haushalt, umbau] })).toHaveLength(2);
   });
 
-  it('erledigte Karten nur auf Wunsch, gelöschte, archivierte und Karten gelöschter Boards nie', () => {
+  it('erledigte Aufgaben nur auf Wunsch, gelöschte, archivierte und Aufgaben gelöschter Boards nie', () => {
     const done = add(haushalt, colH, 'erledigt', '2026-11-05T10:00:00Z');
     store.completeCard(done.id, { by: rene.id, source: 'app' });
     const gone = add(haushalt, colH, 'gelöscht', '2026-11-05T11:00:00Z');
@@ -79,7 +79,7 @@ describe('Termine über alle Boards (Agenda und Kalender)', () => {
     expect(store.listSchedule({ viewer: null, includeDone: true }).map((c) => c.title)).toEqual(['erledigt', 'offen']);
   });
 
-  it('übernimmt Zuständige und offene Stupse der Karte', () => {
+  it('übernimmt Zuständige und offene Stupse der Aufgabe', () => {
     const c = add(haushalt, colH, 'X', '2026-11-05T10:00:00Z', { assigneeIds: [rene.id] });
     expect(store.listSchedule({ viewer: null })[0]).toMatchObject({ id: c.id, assigneeIds: [rene.id] });
   });
@@ -137,8 +137,8 @@ describe('Zuletzt erledigt (nach dem Datum der Erledigung, nicht nach der Fälli
   });
 });
 
-describe('Karten ohne Termin (Filter „Ohne Termin")', () => {
-  it('undated liefert nur offene Karten ohne Termin aus sichtbaren Boards, nach Anlage sortiert', () => {
+describe('Aufgaben ohne Termin (Filter „Ohne Termin")', () => {
+  it('undated liefert nur offene Aufgaben ohne Termin aus sichtbaren Boards, nach Anlage sortiert', () => {
     add(haushalt, colH, 'mit Termin', '2026-11-05T10:00:00Z');
     add(haushalt, colH, 'erste', null);
     now = new Date('2026-11-04T11:00:00Z');
@@ -148,7 +148,7 @@ describe('Karten ohne Termin (Filter „Ohne Termin")', () => {
     expect(store.listSchedule({ viewer: null, undated: true }).map((c) => c.title)).toEqual(['erste', 'zweite']);
     expect(store.listSchedule({ viewer: null, undated: true, includeDone: true }).map((c) => c.title)).toEqual(['erste', 'zweite']);
     expect(store.listSchedule({ viewer: null, undated: true, boardIds: [umbau] }).map((c) => c.title)).toEqual(['zweite']);
-    // ohne den Schalter bleibt alles beim Alten: nur Karten mit Termin
+    // ohne den Schalter bleibt alles beim Alten: nur Aufgaben mit Termin
     expect(store.listSchedule({ viewer: null }).map((c) => c.title)).toEqual(['mit Termin']);
   });
 });
@@ -176,7 +176,7 @@ describe('GET /api/schedule', () => {
     expect(r.body.map((c: { title: string }) => c.title)).toEqual(['H']);
   });
 
-  it('undated=1 liefert die Karten ohne Termin', async () => {
+  it('undated=1 liefert die Aufgaben ohne Termin', async () => {
     add(haushalt, colH, 'H', '2026-11-05T10:00:00Z');
     add(umbau, colU, 'offen ohne Termin', null);
     const r = await get('/api/schedule?undated=1');
@@ -198,7 +198,7 @@ describe('GET /api/schedule', () => {
 });
 
 describe('listSchedule: Seiten kommen aus der Datenbank, in genau der Reihenfolge der ganzen Liste', () => {
-  /** Gleiche Termine, verschiedene Anlagezeiten, ein gleicher Zeitpunkt (nur die Kennung entscheidet), Karten ohne Termin */
+  /** Gleiche Termine, verschiedene Anlagezeiten, ein gleicher Zeitpunkt (nur die Kennung entscheidet), Aufgaben ohne Termin */
   function seedTies() {
     add(haushalt, colH, 'B', '2026-11-06T10:00:00Z');
     add(haushalt, colH, 'A', '2026-11-05T10:00:00Z');
@@ -222,7 +222,7 @@ describe('listSchedule: Seiten kommen aus der Datenbank, in genau der Reihenfolg
     expect(store.listSchedule({ viewer: null, limit: 3, offset: whole.length })).toEqual([]);
   });
 
-  it('countSchedule zählt dieselben Karten wie die ganze Liste, unabhängig von Seite und Grenze', () => {
+  it('countSchedule zählt dieselben Aufgaben wie die ganze Liste, unabhängig von Seite und Grenze', () => {
     seedTies();
     expect(store.countSchedule({ viewer: null })).toBe(store.listSchedule({ viewer: null }).length);
     expect(store.countSchedule({ viewer: null, limit: 2, offset: 4 })).toBe(store.listSchedule({ viewer: null }).length);
@@ -230,7 +230,7 @@ describe('listSchedule: Seiten kommen aus der Datenbank, in genau der Reihenfolg
     expect(store.countSchedule({ viewer: null, boardIds: [umbau] })).toBe(store.listSchedule({ viewer: null, boardIds: [umbau] }).length);
   });
 
-  it('„Zuletzt erledigt": die zuletzt erledigte Karte zuerst, bei gleicher Zeit nach Kennung, auch seitenweise', () => {
+  it('„Zuletzt erledigt": die zuletzt erledigte Aufgabe zuerst, bei gleicher Zeit nach Kennung, auch seitenweise', () => {
     const cards = ['a', 'b', 'c', 'd', 'e'].map((t) => add(haushalt, colH, t, null));
     for (const [i, c] of cards.entries()) {
       now = new Date(`2026-11-04T10:0${i < 3 ? i : 2}:00Z`); // c, d, e gleichzeitig erledigt
@@ -260,7 +260,7 @@ describe('GET /api/schedule: Seiten statt stilles Abschneiden', () => {
     for (let i = 1; i <= n; i++) add(haushalt, colH, `K${i}`, `2026-11-${String(i + 4).padStart(2, '0')}T10:00:00Z`);
   };
 
-  it('jede Antwort nennt mit x-total-count, wie viele Karten es insgesamt gibt, auch ohne limit', async () => {
+  it('jede Antwort nennt mit x-total-count, wie viele Aufgaben es insgesamt gibt, auch ohne limit', async () => {
     seed(5);
     const r = await get('/api/schedule');
     expect(r.titles).toHaveLength(5);
@@ -285,25 +285,25 @@ describe('GET /api/schedule: Seiten statt stilles Abschneiden', () => {
     const mia = store.addPerson({ haUserId: 'ha-mia', name: 'Mia' });
     store.setChild(mia.id, { isChild: true, childScope: 'assigned' });
     for (const i of [1, 2, 3]) add(haushalt, colH, `fremd${i}`, `2026-11-0${i}T10:00:00Z`);
-    add(umbau, colU, 'Mias Karte', '2026-11-20T10:00:00Z', { assigneeIds: [mia.id] });
+    add(umbau, colU, 'Mias Aufgabe', '2026-11-20T10:00:00Z', { assigneeIds: [mia.id] });
     const miaH = { 'x-remote-user-id': 'ha-mia', 'x-remote-user-name': 'Mia', 'x-remote-user-display-name': 'Mia' };
     const p0 = await get('/api/schedule?limit=2&offset=0', miaH);
     const p1 = await get('/api/schedule?limit=2&offset=2', miaH);
     expect(p0.titles).toEqual([]); // die Seite ist roh voll, nach dem Filter leer
     expect(p0.total).toBe('4');
-    expect(p1.titles).toEqual(['Mias Karte']);
+    expect(p1.titles).toEqual(['Mias Aufgabe']);
   });
 });
 
-describe('Kategorien der Karten in der Terminliste (Aufgaben zeigt sie in der Zeile)', () => {
-  it('jede Karte bringt ihre Kategorien mit Name und Farbe mit, in der Reihenfolge der Karte; ohne Kategorie eine leere Liste', () => {
+describe('Kategorien der Aufgaben in der Terminliste (Aufgaben zeigt sie in der Zeile)', () => {
+  it('jede Aufgabe bringt ihre Kategorien mit Name und Farbe mit, in der Reihenfolge der Aufgabe; ohne Kategorie eine leere Liste', () => {
     const putzen = store.addCategory(haushalt, { name: 'Putzen', color: 'blue' });
     const familie = store.addCategory(haushalt, { name: 'Familie', color: 'pink' });
     add(haushalt, colH, 'mit zwei', '2026-11-05T10:00:00Z', { categoryIds: [familie.id, putzen.id] });
     add(haushalt, colH, 'ohne', '2026-11-06T10:00:00Z');
     const list = store.listSchedule({ viewer: null });
     const two = list.find((c) => c.title === 'mit zwei')!;
-    expect(two.categories.map((c) => c.id)).toEqual(two.categoryIds); // gleiche Reihenfolge wie an der Karte
+    expect(two.categories.map((c) => c.id)).toEqual(two.categoryIds); // gleiche Reihenfolge wie an der Aufgabe
     expect(two.categories).toHaveLength(2);
     expect(two.categories).toEqual(expect.arrayContaining([
       { id: familie.id, name: 'Familie', color: 'pink' },

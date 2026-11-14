@@ -39,15 +39,15 @@
 </script>
 
 <div class="flex flex-col gap-2" data-testid="entity-picker">
-  <label class="flex h-12 items-center gap-2.5 rounded-row border border-line bg-surface px-3.5 focus-ring-in">
+  <label class="flex h-12 items-center gap-2.5 rounded-row bg-surface px-3.5 focus-ring-in">
     <span class="flex shrink-0 text-text-soft2"><Icon name="search" size={18} stroke={2} /></span>
     <input class="min-w-0 flex-1 bg-transparent text-[16px] font-semibold placeholder:text-dim" bind:value={ed.query} placeholder={t('Entität suchen, z. B. waschmaschine')} aria-label={t('Entität suchen')} />
   </label>
   {#if error}<p class="px-1 text-[14px] text-danger">{error}</p>{/if}
-  <ul class="flex max-h-64 flex-col gap-2 overflow-y-auto">
+  <ul class="list-group !mt-0 max-h-64 overflow-y-auto">
     {#each results as e (e.entityId)}
       <li>
-        <button type="button" class="flex min-h-12 w-full items-center gap-2 rounded-row border border-line bg-surface px-3.5 py-1.5 text-left" onclick={() => ed.pick(e)}>
+        <button type="button" class="flex min-h-12 w-full items-center gap-2 px-3.5 py-1.5 text-left" onclick={() => ed.pick(e)}>
           <span class="min-w-0 flex-1">
             <span class="block wrap-anywhere text-[15px] font-bold">{e.name}</span>
             <span class="block wrap-anywhere text-[12px] text-fg2">{e.entityId}</span>

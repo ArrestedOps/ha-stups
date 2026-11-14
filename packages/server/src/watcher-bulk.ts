@@ -3,7 +3,7 @@ import { t } from './i18n/index.js';
 import type { AssignRule, CardTemplate, DueRule, WatchTrigger, WatcherConfig, WatcherNudge } from './watcher-types.js';
 
 /**
- * Mehrere Wächter auf einmal ändern: ein Teil-Patch, der nur anfasst, was angegeben ist. Entität, Name und Kartentitel setzt er nie
+ * Mehrere Wächter auf einmal ändern: ein Teil-Patch, der nur anfasst, was angegeben ist. Entität, Name und Aufgabentitel setzt er nie
  * (jeder Wächter behält seine). Werte-Grenzen prüft nicht dieses Modul: das Ergebnis läuft je Wächter durch `parseWatcher`.
  */
 export interface BulkPatch {
@@ -76,7 +76,7 @@ export function parseBulkPatch(raw: unknown, family: TriggerFamily | null): Bulk
     out.assign = raw.assign as unknown as AssignRule;
   }
   if (raw.card !== undefined) {
-    if (!isObj(raw.card)) throw invalid(t('Die Karte'));
+    if (!isObj(raw.card)) throw invalid(t('Die Aufgabe'));
     onlyKeys(raw.card, CARD_KEYS);
     out.card = { ...raw.card } as BulkPatch['card'];
   }
@@ -105,7 +105,7 @@ export function parseBulkPatch(raw: unknown, family: TriggerFamily | null): Bulk
   return out;
 }
 
-/** Wendet den Patch auf eine Konfiguration an (tief für card, trigger und done) und lässt Entität, Name und Kartentitel in Ruhe */
+/** Wendet den Patch auf eine Konfiguration an (tief für card, trigger und done) und lässt Entität, Name und Aufgabentitel in Ruhe */
 export function applyBulkPatch(config: WatcherConfig, patch: BulkPatch): WatcherConfig {
   const out: WatcherConfig = { ...config, trigger: { ...config.trigger }, card: { ...config.card }, done: config.done ? { ...config.done } : null };
   if (patch.active !== undefined) out.active = patch.active;

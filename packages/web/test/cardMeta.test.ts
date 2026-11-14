@@ -23,8 +23,8 @@ const base = {
 const kinds = (card: object, extra: { overdue?: boolean; isDone?: boolean } = {}) =>
   cardMeta({ ...base, ...card } as never, { overdue: false, isDone: false, ...extra }, fmt).map((m) => m.kind);
 
-describe('Meta-Zeile einer Karte', () => {
-  it('eine leere Karte hat keine Zeile', () => {
+describe('Meta-Zeile einer Aufgabe', () => {
+  it('eine leere Aufgabe hat keine Zeile', () => {
     expect(kinds({})).toEqual([]);
   });
 
@@ -44,13 +44,13 @@ describe('Meta-Zeile einer Karte', () => {
     expect(kinds(all)).toEqual(['done', 'due', 'watcher', 'recurrence', 'priority', 'checklist', 'comments', 'links', 'attachments', 'cost']);
   });
 
-  it('Termin: rot nur bei überfälliger offener Karte', () => {
+  it('Termin: rot nur bei überfälliger offener Aufgabe', () => {
     const due = { dueAt: '2026-11-04T10:00:00Z' };
     const get = (extra: { overdue?: boolean; isDone?: boolean }) =>
       cardMeta({ ...base, ...due } as never, { overdue: false, isDone: false, ...extra }, fmt).find((m) => m.kind === 'due');
     expect(get({ overdue: true })).toMatchObject({ kind: 'due', overdue: true, text: 'fällig 11-04' });
     expect(get({ overdue: false })).toMatchObject({ overdue: false });
-    // eine erledigte Karte ist nie „überfällig"
+    // eine erledigte Aufgabe ist nie „überfällig"
     expect(get({ overdue: true, isDone: true })).toMatchObject({ overdue: false });
   });
 
@@ -62,7 +62,7 @@ describe('Meta-Zeile einer Karte', () => {
     expect(get(null)).toBeUndefined();
   });
 
-  it('Zahlen und Texte kommen aus den Formatierern und der Karte', () => {
+  it('Zahlen und Texte kommen aus den Formatierern und der Aufgabe', () => {
     const meta = cardMeta(
       { ...base, checklist: { done: 1, total: 2 }, commentCount: 3, costCents: 4250, recurrence: { type: 'after', every: 2, unit: 'days' } } as never,
       { overdue: false, isDone: false },

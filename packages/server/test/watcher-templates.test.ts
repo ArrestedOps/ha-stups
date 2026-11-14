@@ -88,7 +88,7 @@ describe('Erkennung', () => {
     expect(list.find((s) => s.entityId === 'sensor.bad_batterie')?.reason).toBe('Bad Fenster Batterie: Batterie bei 12 %');
   });
 
-  it('jeder Treffer trägt den kurzen Gerätenamen für Name und Kartentitel (ohne Endungen wie Battery Level)', () => {
+  it('jeder Treffer trägt den kurzen Gerätenamen für Name und Aufgabentitel (ohne Endungen wie Battery Level)', () => {
     const list = detectSuggestions(
       [
         state('sensor.iphone_rene_battery_level', '14', { device_class: 'battery', friendly_name: 'iPhone Rene Battery Level' }),
@@ -322,7 +322,7 @@ describe('Neue Vorlagen: Erkennung', () => {
     expect(only([state('light.flur', 'unavailable')], 'unavailable')).toEqual([]);
   });
 
-  it('jede neue Vorlage hat Titel, Hinweis, Karte und eine ehrliche Aussage zum Erledigen (Begründung, wo nichts belegt werden kann)', () => {
+  it('jede neue Vorlage hat Titel, Hinweis, Aufgabe und eine ehrliche Aussage zum Erledigen (Begründung, wo nichts belegt werden kann)', () => {
     const news = watcherTemplates().filter((x) => x.kind === 'watcher').slice(7);
     expect(news).toHaveLength(19);
     for (const x of news) {

@@ -55,7 +55,7 @@
 
 <div>
   <SectionHeader title={t('Vorlagen')} />
-  <p class="px-1 pt-1 pb-2 text-[12.5px] leading-[1.45] text-hint">{t('Speichert Spalten, Kategorien und offene Karten dieses Boards, ohne Zuweisungen, Anhänge und Kommentare. Daraus lassen sich neue Boards anlegen.')}</p>
+  <p class="px-1 pt-1 pb-2 text-[12.5px] leading-[1.45] text-hint">{t('Speichert Spalten, Kategorien und offene Aufgaben dieses Boards, ohne Zuweisungen, Anhänge und Kommentare. Daraus lassen sich neue Boards anlegen.')}</p>
   <form onsubmit={save} class="flex items-end gap-2">
     <div class="min-w-0 flex-1"><Field id="template-name" label={t('Name der Vorlage')} bind:value={name} maxlength={60} enterkeyhint="done" /></div>
     <SubmitPill show={!!name.trim()} {busy} label={t('Speichern')} />

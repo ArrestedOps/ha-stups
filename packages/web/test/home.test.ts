@@ -13,7 +13,7 @@ const item = (over: Partial<HomeItem>): HomeItem => ({
   phase: 'quiet',
   since: null,
   progress: null,
-  nextCard: 'Karte',
+  nextCard: 'Aufgabe',
   entityMissing: false,
   openCard: null,
   nextEvent: null,
@@ -80,7 +80,7 @@ describe('durationText', () => {
   });
 });
 
-describe('openSinceText: „offen seit 12 Min." in der Zeile der wartenden Karte', () => {
+describe('openSinceText: „offen seit 12 Min." in der Zeile der wartenden Aufgabe', () => {
   const now = Date.parse('2026-11-04T12:00:00Z');
   it('Minuten, Stunden, gerade erst', async () => {
     const { openSinceText } = await import('../src/lib/home');

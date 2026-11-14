@@ -59,7 +59,7 @@ describe('Ereignis stups_create_card', () => {
     expect(betaHa.subs.get('stups_beta_create_card')!.payload).toEqual({ type: 'subscribe_events', event_type: 'stups_beta_create_card' });
   });
 
-  it('legt eine Karte an: Board und Spalte über den Namen, Personen über den Namen, Fälligkeit in Minuten', async () => {
+  it('legt eine Aufgabe an: Board und Spalte über den Namen, Personen über den Namen, Fälligkeit in Minuten', async () => {
     const auto = engine();
     await auto.handle({ board: 'haushalt', column: 'Offen', title: 'Müll rausbringen', description: 'Gelber Sack', assignees: ['anna', 'Ben'], due_in_minutes: 45 });
     expect(cards()).toHaveLength(1);
@@ -86,7 +86,7 @@ describe('Ereignis stups_create_card', () => {
     expect(auto.log()[0]!.note).toMatch(/Unbekannte Personen übersprungen: Niemand/);
   });
 
-  it('dedupe_key: zwei gleichzeitige Ereignisse (mit asynchroner Zuweisung) legen nur eine Karte an', async () => {
+  it('dedupe_key: zwei gleichzeitige Ereignisse (mit asynchroner Zuweisung) legen nur eine Aufgabe an', async () => {
     present = [anna];
     const auto = engine();
     await Promise.all([
@@ -98,7 +98,7 @@ describe('Ereignis stups_create_card', () => {
     expect(auto.log().filter((l) => l.result === 'duplicate')).toHaveLength(2);
   });
 
-  it('dedupe_key: solange die Karte offen ist, entsteht keine zweite; nach dem Erledigen wieder', async () => {
+  it('dedupe_key: solange die Aufgabe offen ist, entsteht keine zweite; nach dem Erledigen wieder', async () => {
     const auto = engine();
     await auto.handle({ title: 'Filter', dedupe_key: 'filter-luft' });
     await auto.handle({ title: 'Filter', dedupe_key: 'filter-luft' });
@@ -128,7 +128,7 @@ describe('Ereignis stups_create_card', () => {
 
   it('das Protokoll behält die letzten 20', async () => {
     const auto = engine();
-    for (let i = 0; i < 25; i += 1) await auto.handle({ title: `Karte ${i}`, dedupe_key: 'k' });
+    for (let i = 0; i < 25; i += 1) await auto.handle({ title: `Aufgabe ${i}`, dedupe_key: 'k' });
     expect(auto.log()).toHaveLength(20);
   });
 });

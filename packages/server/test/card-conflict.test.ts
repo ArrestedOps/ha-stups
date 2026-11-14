@@ -7,7 +7,7 @@ import { ingressAuth } from '../src/ingress.js';
 import { createStore, type Store } from '../src/store.js';
 
 /**
- * Konfliktschutz beim Ändern einer Karte: Wer mit `expectedVersion` schreibt, bekommt 409, wenn die Karte inzwischen jemand anderes
+ * Konfliktschutz beim Ändern einer Aufgabe: Wer mit `expectedVersion` schreibt, bekommt 409, wenn die Aufgabe inzwischen jemand anderes
  * geändert hat. Die neuere Änderung bleibt dann unberührt. Ohne `expectedVersion` gilt wie bisher: die letzte Änderung gewinnt.
  */
 const h = { 'x-remote-user-id': 'ha-anna', 'x-remote-user-name': 'Anna', 'x-remote-user-display-name': 'Anna' };
@@ -30,7 +30,7 @@ beforeEach(async () => {
 
 const patch = (payload: object) => app.inject({ method: 'PATCH', url: `/api/cards/${cardId}`, headers: h, payload });
 
-describe('expectedVersion beim Ändern einer Karte', () => {
+describe('expectedVersion beim Ändern einer Aufgabe', () => {
   it('passt die Version, wird geändert und die Version steigt; ohne Angabe gewinnt wie bisher die letzte Änderung', () => {
     const before = store.getCard(cardId);
     const after = store.updateCard(cardId, { title: 'Müll runter', expectedVersion: before.version });
@@ -58,7 +58,7 @@ describe('expectedVersion beim Ändern einer Karte', () => {
 });
 
 describe('PATCH /api/cards/:id mit expectedVersion', () => {
-  it('veraltet: 409 mit verständlicher Meldung und der aktuellen Version, die Karte bleibt wie sie ist', async () => {
+  it('veraltet: 409 mit verständlicher Meldung und der aktuellen Version, die Aufgabe bleibt wie sie ist', async () => {
     const stale = store.getCard(cardId).version;
     store.updateCard(cardId, { dueAt: '2026-11-07T10:00:00Z' }, annaId);
     const res = await patch({ dueAt: '2026-11-06T10:00:00Z', expectedVersion: stale });

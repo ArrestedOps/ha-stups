@@ -10,7 +10,7 @@ import { parseWatcher } from '../src/watcher-types.js';
 import { createWatchers, type Watchers } from '../src/watchers.js';
 import { FakeHa } from './helpers/fake-ha.js';
 
-// "Erst vorschlagen": die Karte entsteht ohne Zuständige, die Anwesenden werden gefragt, die erste Antwort gewinnt, nach 30 Minuten greift der Rückfall
+// "Erst vorschlagen": die Aufgabe entsteht ohne Zuständige, die Anwesenden werden gefragt, die erste Antwort gewinnt, nach 30 Minuten greift der Rückfall
 const ENTITY = 'sensor.wm';
 let t: number;
 let store: Store;
@@ -79,7 +79,7 @@ async function suggestWatcher(extra: Record<string, unknown> = {}): Promise<{ w:
   return { w, card: store.getBoardView(boardId).cards.at(-1)! };
 }
 
-describe('Karte entsteht ohne Zuständige', () => {
+describe('Aufgabe entsteht ohne Zuständige', () => {
   it('fragt alle Erwachsenen, die zu Hause sind (nicht Abwesende, nicht Kinder)', async () => {
     ha.set('person.ben', 'not_home');
     const { w, card } = await suggestWatcher();
@@ -101,7 +101,7 @@ describe('Karte entsteht ohne Zuständige', () => {
 });
 
 describe('Übernehmen', () => {
-  it('die erste Person bekommt die Karte, die Frage bei den anderen wird weggeräumt', async () => {
+  it('die erste Person bekommt die Aufgabe, die Frage bei den anderen wird weggeräumt', async () => {
     const { card } = await suggestWatcher();
     await engine.claim(card.id, ben);
     expect(store.getCard(card.id).assigneeIds).toEqual([ben]);
@@ -118,7 +118,7 @@ describe('Übernehmen', () => {
     expect(store.getCard(card.id).assigneeIds).toEqual([ben]);
   });
 
-  it('ein Kind übernimmt nicht; eine erledigte Karte lässt sich nicht mehr übernehmen', async () => {
+  it('ein Kind übernimmt nicht; eine erledigte Aufgabe lässt sich nicht mehr übernehmen', async () => {
     const { card } = await suggestWatcher();
     await expect(engine.claim(card.id, mia)).rejects.toBeInstanceOf(ForbiddenError);
     store.completeCard(card.id, { by: anna, source: 'app' });
@@ -148,14 +148,14 @@ describe('Rückfall nach 30 Minuten', () => {
     expect(data.runsOfCard(card.id).map((r) => r.result)).toContain('suggest_fallback');
   });
 
-  it('Rückfall „alle": alle im Kreis bekommen die Karte', async () => {
+  it('Rückfall „alle": alle im Kreis bekommen die Aufgabe', async () => {
     const { card } = await suggestWatcher({ fallback: 'all', personIds: [anna, ben] });
     advance(31);
     await engine.tick();
     expect(store.getCard(card.id).assigneeIds.sort()).toEqual([anna, ben].sort());
   });
 
-  it('Rückfall „keiner": die Karte bleibt offen und ohne Zuständige', async () => {
+  it('Rückfall „keiner": die Aufgabe bleibt offen und ohne Zuständige', async () => {
     const { card } = await suggestWatcher({ fallback: 'none' });
     advance(31);
     await engine.tick();
@@ -163,7 +163,7 @@ describe('Rückfall nach 30 Minuten', () => {
     expect(data.getSuggest(card.id)).toBeNull();
   });
 
-  it('wurde die Karte inzwischen von Hand zugewiesen oder erledigt, verfällt der Vorschlag ohne Rückfall', async () => {
+  it('wurde die Aufgabe inzwischen von Hand zugewiesen oder erledigt, verfällt der Vorschlag ohne Rückfall', async () => {
     const { card } = await suggestWatcher();
     store.updateCard(card.id, { assigneeIds: [ben] });
     advance(31);

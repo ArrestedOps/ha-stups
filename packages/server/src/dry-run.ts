@@ -15,7 +15,7 @@ export interface HistoryPoint {
 }
 
 export interface DryRunResult {
-  /** Wann der Wächter in dem Zeitraum eine Karte angelegt hätte */
+  /** Wann der Wächter in dem Zeitraum eine Aufgabe angelegt hätte */
   fired: { at: string }[];
   /** Wie oft es dabei weniger als 10 Minuten nach der vorigen Auslösung war */
   quick: number;

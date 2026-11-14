@@ -88,12 +88,12 @@ describe('toBulkPatch', () => {
     expect(p).toEqual({ trigger: { value: 15 }, cooldownMin: 30, done: { value: 60 } });
   });
 
-  it('Board setzt Spalte und leert die Kategorien der Karte (sie gehören dem alten Board)', () => {
+  it('Board setzt Spalte und leert die Kategorien der Aufgabe (sie gehören dem alten Board)', () => {
     const f = { ...form(), boardId: 'b2', columnId: 'c2', categoryIds: ['x'] };
     expect(toBulkPatch(f, new Set(['board']))).toEqual({ card: { boardId: 'b2', columnId: 'c2', categoryIds: [] } });
   });
 
-  it('Fälligkeit, Priorität, Stupsen, Doppelkarten, Fairness, aktiv, Kategorie', () => {
+  it('Fälligkeit, Priorität, Stupsen, Doppelaufgaben, Fairness, aktiv, Kategorie', () => {
     const f = { ...form(), dueKind: 'in' as const, dueMinutes: '45', priority: 'high' as const, nudgeAfter: '60', dedupe: false, countsForFairness: false, active: false, category: ' Akkus ' };
     const p = toBulkPatch(f, new Set(['due', 'priority', 'nudge', 'dedupe', 'fairness', 'active', 'category']));
     expect(p).toEqual({

@@ -23,7 +23,7 @@ const filled = (extra: Partial<WatcherForm> = {}): WatcherForm => ({
 describe('Vorschau-Satz', () => {
   it('Standardfall: Wartezeit, Schwellwert, anwesende Person, Fälligkeit', () => {
     expect(previewSentence(filled({ forMin: '3' }), nameOf)).toBe(
-      'Wenn Waschmaschine Leistung 3 Minuten unter 5 W liegt, bekommt eine anwesende Person abwechselnd die Karte „Waschmaschine ausräumen“ (fällig in 30 Min.).',
+      'Wenn Waschmaschine Leistung 3 Minuten unter 5 W liegt, bekommt eine anwesende Person abwechselnd die Aufgabe „Waschmaschine ausräumen“ (fällig in 30 Min.).',
     );
   });
 
@@ -39,20 +39,20 @@ describe('Vorschau-Satz', () => {
 
   it('Zähler und Saugroboter: wer zuerst nach Hause kommt', () => {
     const f = filled({ kind: 'state', to: 'docked', entityName: 'S7', entityUnit: '', count: '3', title: 'Staubbehälter leeren', dueKind: 'none', assignMode: 'first_home' });
-    expect(previewSentence(f, nameOf)).toBe('Wenn S7 zu „docked“ wechselt (beim 3. Mal), bekommt die Person, die als Erstes nach Hause kommt, die Karte „Staubbehälter leeren“.');
+    expect(previewSentence(f, nameOf)).toBe('Wenn S7 zu „docked“ wechselt (beim 3. Mal), bekommt die Person, die als Erstes nach Hause kommt, die Aufgabe „Staubbehälter leeren“.');
   });
 
   it('feste Personen, Rotation, alle Anwesenden, niemand; Fälligkeit „morgen 08:00"', () => {
     const s = (extra: Partial<WatcherForm>) => previewSentence(filled({ dueKind: 'at', dueDay: 'tomorrow', dueTime: '08:00', ...extra }), nameOf);
-    expect(s({ assignMode: 'fixed', personIds: ['a', 'b'] })).toContain('bekommt Anna, Ben die Karte');
-    expect(s({ assignMode: 'rotation', personIds: ['a', 'b'] })).toContain('bekommt abwechselnd Anna, Ben die Karte');
-    expect(s({ assignMode: 'all_present' })).toContain('bekommen alle Anwesenden die Karte');
-    expect(s({ assignMode: 'none' })).toContain('entsteht die Karte „Waschmaschine ausräumen“ ohne Zuständige');
+    expect(s({ assignMode: 'fixed', personIds: ['a', 'b'] })).toContain('bekommt Anna, Ben die Aufgabe');
+    expect(s({ assignMode: 'rotation', personIds: ['a', 'b'] })).toContain('bekommt abwechselnd Anna, Ben die Aufgabe');
+    expect(s({ assignMode: 'all_present' })).toContain('bekommen alle Anwesenden die Aufgabe');
+    expect(s({ assignMode: 'none' })).toContain('entsteht die Aufgabe „Waschmaschine ausräumen“ ohne Zuständige');
     expect(s({})).toMatch(/\(fällig morgen 08:00\)\.$/);
   });
 
   it('unfertige Eingaben zeigen Auslassungspunkte statt zu scheitern', () => {
-    expect(previewSentence({ ...emptyForm(), kind: 'below', assignMode: 'rotation_present' }, nameOf)).toBe('Wenn … 3 Minuten unter … liegt, bekommt eine anwesende Person abwechselnd die Karte „…“.');
+    expect(previewSentence({ ...emptyForm(), kind: 'below', assignMode: 'rotation_present' }, nameOf)).toBe('Wenn … 3 Minuten unter … liegt, bekommt eine anwesende Person abwechselnd die Aufgabe „…“.');
   });
 });
 

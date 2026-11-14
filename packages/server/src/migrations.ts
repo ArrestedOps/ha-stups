@@ -115,7 +115,7 @@ export const migrations: Migration[] = [
   },
   {
     version: 2,
-    // Zustand der Karte vor dem Erledigen, damit "Rückgängig" alles wiederherstellen kann
+    // Zustand der Aufgabe vor dem Erledigen, damit "Rückgängig" alles wiederherstellen kann
     sql: `alter table completions add column snapshot text;`,
   },
   {
@@ -126,7 +126,7 @@ export const migrations: Migration[] = [
       alter table cards add column cost_cents integer;
 
       -- Gesendete Erinnerungen: verhindert Doppelnachrichten, auch nach einem Neustart.
-      -- card_id ist bewusst kein Fremdschlüssel (Zusammenfassungen haben keine Karte).
+      -- card_id ist bewusst kein Fremdschlüssel (Zusammenfassungen haben keine Aufgabe).
       create table sent_notifications (
         id             integer primary key autoincrement,
         card_id        text not null,
@@ -173,7 +173,7 @@ export const migrations: Migration[] = [
   },
   {
     version: 5,
-    // "Geplant": Spalte nur für Karten mit Termin in der Zukunft
+    // "Geplant": Spalte nur für Aufgaben mit Termin in der Zukunft
     sql: `
       alter table columns add column is_planned integer not null default 0;
       create unique index ux_columns_one_planned
@@ -182,7 +182,7 @@ export const migrations: Migration[] = [
   },
   {
     version: 6,
-    // Verlauf einer Karte: Verschieben, Wieder-Öffnen und geänderte Fälligkeit.
+    // Verlauf einer Aufgabe: Verschieben, Wieder-Öffnen und geänderte Fälligkeit.
     // "angelegt" und "erledigt" kommen aus cards und completions und stehen hier nicht doppelt.
     sql: `
       create table card_events (
@@ -204,7 +204,7 @@ export const migrations: Migration[] = [
   },
   {
     version: 8,
-    // Wiederholung: Welche Felder die nächste Karte übernimmt (null = Voreinstellung) und von welcher Karte sie stammt.
+    // Wiederholung: Welche Felder die nächste Aufgabe übernimmt (null = Voreinstellung) und von welcher Aufgabe sie stammt.
     // repeated_from ist bewusst kein Fremdschlüssel: Die Vorgängerin darf später endgültig gelöscht werden.
     sql: `
       alter table cards add column carry_over text;
@@ -242,9 +242,9 @@ export const migrations: Migration[] = [
   },
   {
     version: 10,
-    // Wächter: Karten entstehen automatisch aus Zuständen in Home Assistant.
-    // Auslöser, Kartenvorlage und Zuweisung stehen als JSON (werden beim Speichern geprüft). Läufe halten die letzten 50
-    // je Wächter und liefern auch den Verlauf der Karte, damit card_events (mit check-Einschränkung) nicht umgebaut werden muss.
+    // Wächter: Aufgaben entstehen automatisch aus Zuständen in Home Assistant.
+    // Auslöser, Aufgabenvorlage und Zuweisung stehen als JSON (werden beim Speichern geprüft). Läufe halten die letzten 50
+    // je Wächter und liefern auch den Verlauf der Aufgabe, damit card_events (mit check-Einschränkung) nicht umgebaut werden muss.
     sql: `
       create table watchers (
         id             text primary key,
@@ -409,7 +409,7 @@ export const migrations: Migration[] = [
   },
   {
     version: 18,
-    // Aufwand je Karte (klein, mittel, groß; leer = mittel) für die Fairness-Ansicht, und die Sonntags-Zusammenfassung je Person
+    // Aufwand je Aufgabe (klein, mittel, groß; leer = mittel) für die Fairness-Ansicht, und die Sonntags-Zusammenfassung je Person
     sql: `
       alter table cards add column effort text check (effort in ('small', 'medium', 'large'));
       alter table users add column weekly_summary integer not null default 0;
@@ -417,7 +417,7 @@ export const migrations: Migration[] = [
   },
   {
     version: 19,
-    // Rolle „Kind": eingeschränkte Rechte, Sichtbarkeit (alle Boards oder nur Boards mit eigenen Karten), Bestätigung durch Eltern
+    // Rolle „Kind": eingeschränkte Rechte, Sichtbarkeit (alle Boards oder nur Boards mit eigenen Aufgaben), Bestätigung durch Eltern
     sql: `
       alter table users add column is_child integer not null default 0;
       alter table users add column child_scope text not null default 'all' check (child_scope in ('all', 'assigned'));
@@ -429,9 +429,9 @@ export const migrations: Migration[] = [
         primary key (child_id, user_id)
       );
 
-      -- Bestätigung je Karte: leer = Vorgabe der zuständigen Person, on = immer, off = nie
+      -- Bestätigung je Aufgabe: leer = Vorgabe der zuständigen Person, on = immer, off = nie
       alter table cards add column confirm text check (confirm in ('on', 'off'));
-      -- Das Kind hat „erledigt" gesagt, die Karte wartet auf Bestätigung
+      -- Das Kind hat „erledigt" gesagt, die Aufgabe wartet auf Bestätigung
       alter table cards add column confirm_requested_at text;
       alter table cards add column confirm_requested_by text references users(id) on delete set null;
     `,
@@ -481,9 +481,9 @@ export const migrations: Migration[] = [
   },
   {
     version: 22,
-    // Neues Design, Phase 3: Symbol und Farbe je Karte. icon = Name aus der Symbol-Bibliothek der Oberfläche (leer = Standard
+    // Neues Design, Phase 3: Symbol und Farbe je Aufgabe. icon = Name aus der Symbol-Bibliothek der Oberfläche (leer = Standard
     // „Aufgabe"), icon_color = eine der acht Kachelfarben (leer = Auto, nach Bereich des Symbols), icon_source = auto (aus dem Titel
-    // erkannt) oder manual (von Hand gewählt). Keine Massenänderung: vorhandene Karten bleiben leer.
+    // erkannt) oder manual (von Hand gewählt). Keine Massenänderung: vorhandene Aufgaben bleiben leer.
     sql: `
       alter table cards add column icon text;
       alter table cards add column icon_color text;
@@ -560,7 +560,7 @@ export const migrations: Migration[] = [
     // Boards: Sichtbarkeit und Fairness, dazu Wächter-Regeln. visibility: all (jeder mit Zugriff) | private (nur der Besitzer) | selected
     // (Besitzer und Mitglieder aus board_members). owner_id ist bei Bestandsboards null (sie bleiben für alle sichtbar). counts_for_fairness:
     // 0 nimmt das Board aus der Fairness-Auswertung (private Boards zählen nie, egal was hier steht). Am Wächter: counts_for_fairness (Bestand: 1)
-    // und assignees_missing (1 = es sind keine gültigen Zuständigen mehr da: der Wächter legt keine Karten an, bis neue gewählt sind).
+    // und assignees_missing (1 = es sind keine gültigen Zuständigen mehr da: der Wächter legt keine Aufgaben an, bis neue gewählt sind).
     // Die Läufe der Wächter bekommen das Ergebnis no_assignees (Tabellenumbau wie in Migration 20); watcher_notices sind die Mitteilungen
     // für die Glocke („braucht neue Zuständige", „läuft weiter mit …").
     sql: `
@@ -607,13 +607,13 @@ export const migrations: Migration[] = [
   },
   {
     version: 28,
-    // Nachhaken: eine Tabelle für alle Erinnerungen „wenn noch nicht erledigt“ (Aufgaben und Wächter). Je Karte und Person höchstens eine Zeile
+    // Nachhaken: eine Tabelle für alle Erinnerungen „wenn noch nicht erledigt“ (Aufgaben und Wächter). Je Aufgabe und Person höchstens eine Zeile
     // (user_id null = die jeweils Zuständigen, so beim Wächter; sonst eine Person, nur für sie sichtbar). anchor: due = ab Termin, created =
     // ab Anlegen/Zuweisen (anchor_at; ohne Termin zählt auch „due“ ab dem Anlegen). next_at bleibt leer, bis der Planer den ersten Zeitpunkt
     // rechnet; done = 1: alle Erinnerungen gesendet. at_time (HH:MM) gilt nur bei Tagen/Wochen; leer: die Uhrzeit aus overdue_nag_time.
     // Das alte „Täglich nachhaken, solange überfällig“ (cards.overdue_nag) wird eine persönliche Erinnerung je zuständiger Person: ab dem Tag
     // nach dem Termin, täglich, bis zu 99 ×. Am Wächter ersetzt nudge_json ({afterMin, everyMin, max}) die Spalte nudge_after_min (alter Wert N
-    // wird {afterMin: N, everyMin: null, max: 1}); offene Wächter-Karten mit noch ausstehendem Stups bekommen ihre Zeile.
+    // wird {afterMin: N, everyMin: null, max: 1}); offene Wächter-Aufgaben mit noch ausstehendem Stups bekommen ihre Zeile.
     sql: `
       create table card_reminders (
         id         text primary key,
@@ -656,7 +656,7 @@ export const migrations: Migration[] = [
   {
     version: 29,
     // Boards archivieren: archived_at (null = nicht archiviert). Ein archiviertes Board verschwindet aus Auswahl, Listen und Auswertungen, bleibt
-    // aber unverändert gespeichert (Karten, Spalten, Einstellungen) und lässt sich wiederherstellen. Die Reihenfolge der Boards (Spalte
+    // aber unverändert gespeichert (Aufgaben, Spalten, Einstellungen) und lässt sich wiederherstellen. Die Reihenfolge der Boards (Spalte
     // position) gibt es seit Anfang an und gilt für alle.
     sql: `
       alter table boards add column archived_at text;

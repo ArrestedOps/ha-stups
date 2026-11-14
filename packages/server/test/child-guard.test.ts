@@ -84,11 +84,11 @@ let app: FastifyInstance;
 let store: Store;
 let miaId: string;
 let boardId: string;
-let mine: string; // Karte, die Mia zugewiesen ist
-let others: string; // Karte, die Mia nicht zugewiesen ist
-let item: string; // Checklistenpunkt einer fremden Karte
+let mine: string; // Aufgabe, die Mia zugewiesen ist
+let others: string; // Aufgabe, die Mia nicht zugewiesen ist
+let item: string; // Checklistenpunkt einer fremden Aufgabe
 let myItem: string;
-let completion: string; // Erledigung einer fremden Karte
+let completion: string; // Erledigung einer fremden Aufgabe
 let myCompletion: string;
 
 const url = (route: string, id = 'x') => route.replace(/^\w+ /, '').replace(/:\w+/g, id);
@@ -159,7 +159,7 @@ describe('Ein Kind darf nur, was ausdrücklich erlaubt ist', () => {
     }
   });
 
-  it('erlaubte Änderungen nur an eigenen (zugewiesenen) Karten', async () => {
+  it('erlaubte Änderungen nur an eigenen (zugewiesenen) Aufgaben', async () => {
     const cardRoutes = ALLOWED_WRITES.filter((r) => r.includes('/cards/:id/'));
     for (const route of cardRoutes) {
       expect((await call(mia, route, others)).statusCode, `${route} fremd`).toBe(403);
@@ -167,7 +167,7 @@ describe('Ein Kind darf nur, was ausdrücklich erlaubt ist', () => {
     }
   });
 
-  it('Checklistenpunkte und Erledigungen: nur die der eigenen Karten', async () => {
+  it('Checklistenpunkte und Erledigungen: nur die der eigenen Aufgaben', async () => {
     expect((await call(mia, 'PATCH /api/checklist/:id', item)).statusCode).toBe(403);
     expect((await call(mia, 'PATCH /api/checklist/:id', myItem)).statusCode).not.toBe(403);
     expect((await call(mia, 'POST /api/completions/:id/undo', completion)).statusCode).toBe(403);
@@ -181,13 +181,13 @@ describe('Ein Kind darf nur, was ausdrücklich erlaubt ist', () => {
     expect(accent.statusCode).toBe(204);
   });
 
-  it('erledigen darf ein Kind seine Karte wirklich', async () => {
+  it('erledigen darf ein Kind seine Aufgabe wirklich', async () => {
     const res = await app.inject({ method: 'POST', url: `/api/cards/${mine}/complete`, headers: mia, payload: {} });
     expect(res.statusCode).toBe(200);
     expect(store.getCard(mine).completedAt).not.toBeNull();
   });
 
-  it('eine Karte nicht erledigen, die man nicht hat', async () => {
+  it('eine Aufgabe nicht erledigen, die man nicht hat', async () => {
     const res = await app.inject({ method: 'POST', url: `/api/cards/${others}/complete`, headers: mia, payload: {} });
     expect(res.statusCode).toBe(403);
     expect(store.getCard(others).completedAt).toBeNull();
@@ -211,7 +211,7 @@ describe('Eigene Boards eines Kindes („nur ich")', () => {
     expect(ok.json()).toMatchObject({ visibility: 'private', ownerId: miaId });
   });
 
-  it('im eigenen Board darf das Kind frei arbeiten, in anderen nur an zugewiesenen Karten', async () => {
+  it('im eigenen Board darf das Kind frei arbeiten, in anderen nur an zugewiesenen Aufgaben', async () => {
     const own = (await send(mia, 'POST', '/api/boards', { name: 'Meins', visibility: 'private' })).json() as { id: string };
     const col = store.getBoardView(own.id).columns[0]!.id;
     const card = await send(mia, 'POST', `/api/boards/${own.id}/cards`, { columnId: col, title: 'Mein Plan' });
@@ -219,7 +219,7 @@ describe('Eigene Boards eines Kindes („nur ich")', () => {
     const id = (card.json() as { id: string }).id;
     expect((await send(mia, 'PATCH', `/api/cards/${id}`, { title: 'Neu' })).statusCode).toBe(200);
     expect((await send(mia, 'PATCH', `/api/boards/${own.id}`, { name: 'Meins 2' })).statusCode).toBe(200);
-    // an der zugewiesenen Karte im geteilten Board bleibt es beim Erledigen
+    // an der zugewiesenen Aufgabe im geteilten Board bleibt es beim Erledigen
     expect((await send(mia, 'PATCH', `/api/cards/${mine}`, { title: 'x' })).statusCode).toBe(403);
     expect((await send(mia, 'POST', `/api/boards/${boardId}/cards`, { title: 'x' })).statusCode).toBe(403);
     expect((await send(mia, 'PATCH', `/api/boards/${boardId}`, { name: 'x' })).statusCode).toBe(403);
@@ -227,7 +227,7 @@ describe('Eigene Boards eines Kindes („nur ich")', () => {
     expect((await send(mia, 'PATCH', `/api/boards/${own.id}`, { visibility: 'all' })).statusCode).toBe(403);
   });
 
-  it('Erledigen im eigenen Board braucht keine Bestätigung (niemand sonst sieht die Karte)', async () => {
+  it('Erledigen im eigenen Board braucht keine Bestätigung (niemand sonst sieht die Aufgabe)', async () => {
     store.setChild(miaId, { isChild: true, confirmDefault: true });
     const own = (await send(mia, 'POST', '/api/boards', { name: 'Meins', visibility: 'private' })).json() as { id: string };
     const col = store.getBoardView(own.id).columns[0]!.id;
@@ -238,7 +238,7 @@ describe('Eigene Boards eines Kindes („nur ich")', () => {
     expect(store.getCard(id).completedAt).not.toBeNull();
   });
 
-  it('ein Kind sieht seine Boards „nur ich" auch mit „nur Boards mit eigenen Karten", Erwachsene nie', async () => {
+  it('ein Kind sieht seine Boards „nur ich" auch mit „nur Boards mit eigenen Aufgaben", Erwachsene nie', async () => {
     store.setChild(miaId, { isChild: true, childScope: 'assigned' });
     const own = (await send(mia, 'POST', '/api/boards', { name: 'Meins', visibility: 'private' })).json() as { id: string };
     expect(((await send(mia, 'GET', '/api/boards')).json() as { id: string }[]).map((b) => b.id)).toContain(own.id);
@@ -247,10 +247,120 @@ describe('Eigene Boards eines Kindes („nur ich")', () => {
   });
 });
 
+describe('Besitzprüfung eines Kindes im Detail', () => {
+  type Kind = 'boards' | 'columns' | 'categories' | 'cards';
+  const idRoutes = OWN_BOARD_ROUTES.filter((r) => r.includes(':id'));
+  const kindOf = (route: string) => /\/api\/(\w+)\/:id/.exec(route)![1] as Kind;
+  // Ein Board samt Spalte, Kategorie und Aufgabe
+  const setup = (board: { id: string }): Record<Kind, string> => {
+    const column = store.getBoardView(board.id).columns[0]!.id;
+    const category = store.addCategory(board.id, { name: 'Kat', color: '#ff0000' }).id;
+    const card = store.createCard(board.id, { columnId: column, title: 'K' }, miaId).id;
+    return { boards: board.id, columns: column, categories: category, cards: card };
+  };
+  const benId = () => store.people().find((p) => p.name === 'Ben')!.id;
+
+  it('in fremden Boards (für alle, auch mit dem Kind als Besitzer, oder privat von jemand anderem) bleibt jede eigene Route verboten', async () => {
+    const foreign = [
+      setup({ id: boardId }),
+      setup(store.createBoard({ name: 'Für alle, Mias', ownerId: miaId })),
+      setup(store.createBoard({ name: 'Bens', visibility: 'private', ownerId: benId() })),
+    ];
+    for (const ids of foreign) {
+      for (const route of idRoutes) {
+        const res = await call(mia, route, ids[kindOf(route)]);
+        expect(res.statusCode, `${route} fremd`).toBe(403);
+        expect(res.json().error).toMatch(/Kind/);
+      }
+    }
+  });
+
+  it('im eigenen Board „nur ich" ist jede eigene Route erlaubt', async () => {
+    for (const route of idRoutes) {
+      const ids = setup(store.createBoard({ name: 'Meins', visibility: 'private', ownerId: miaId }));
+      const res = await call(mia, route, ids[kindOf(route)]);
+      expect(res.statusCode, `${route} eigen → ${res.body}`).not.toBe(403);
+    }
+  });
+
+  it('ein Board, das es nicht gibt: die Route antwortet selbst mit „nicht gefunden", nicht der Wächter mit 403', async () => {
+    for (const route of idRoutes.filter((r) => kindOf(r) !== 'cards')) {
+      const res = await call(mia, route, 'gibt-es-nicht');
+      expect(res.statusCode, route).toBe(404);
+    }
+    for (const route of ['POST /api/cards/:id/complete', 'POST /api/cards/:id/comments', 'PATCH /api/checklist/:id', 'POST /api/completions/:id/undo']) {
+      const res = await call(mia, route, 'gibt-es-nicht');
+      expect(res.statusCode, route).toBe(404);
+    }
+  });
+
+  it('Routen ohne Besitzprüfung prüfen auch bei einer fremden Kennung nichts nach', async () => {
+    // Die Kennung einer fremden Erledigung würde eine Besitzprüfung auslösen; erlaubte Leserouten dürfen sie nie ablehnen
+    for (const route of ALLOWED_READS.filter((r) => r.includes(':id'))) {
+      const res = await call(mia, route, completion);
+      expect(res.statusCode, `${route} → ${res.body}`).not.toBe(403);
+    }
+  });
+
+  it('Boards anlegen: ohne Angabe, ohne Nutzlast oder für andere 403, nur „nur ich" 201', async () => {
+    const bare = await app.inject({ method: 'POST', url: '/api/boards', headers: mia });
+    expect(bare.statusCode).toBe(403);
+    expect(bare.json().error).toMatch(/Kind/);
+    const open = await app.inject({ method: 'POST', url: '/api/boards', headers: mia, payload: { name: 'Offen' } });
+    expect(open.statusCode).toBe(403);
+    const ok = await app.inject({ method: 'POST', url: '/api/boards', headers: mia, payload: { name: 'Meins', visibility: 'private' } });
+    expect(ok.statusCode).toBe(201);
+  });
+});
+
+describe('Kind mit „nur Boards mit eigenen Aufgaben"', () => {
+  let garden: string;
+  let gardenCard: string;
+  beforeEach(() => {
+    store.setChild(miaId, { isChild: true, childScope: 'assigned' });
+    garden = store.createBoard({ name: 'Garten' }).id;
+    const col = store.getBoardView(garden).columns[0]!.id;
+    gardenCard = store.createCard(garden, { columnId: col, title: 'Rasen' }, miaId).id;
+  });
+  const get = (url: string) => app.inject({ method: 'GET', url, headers: mia });
+
+  it('ein Board ohne eigene Aufgabe gibt es für das Kind nicht (404 mit Meldung), das mit eigener Aufgabe schon', async () => {
+    const hidden = await get(`/api/boards/${garden}`);
+    expect(hidden.statusCode).toBe(404);
+    expect(hidden.json().error).toBe('Board nicht gefunden');
+    expect((await get(`/api/boards/${boardId}`)).statusCode).toBe(200);
+  });
+
+  it('eine Aufgabe in einem fremden Board gibt es für das Kind nicht (404 mit Meldung)', async () => {
+    const hidden = await get(`/api/cards/${gardenCard}`);
+    expect(hidden.statusCode).toBe(404);
+    expect(hidden.json().error).toBe('Aufgabe nicht gefunden');
+    expect((await get(`/api/cards/${mine}`)).statusCode).toBe(200);
+  });
+
+  it('Boards, die dem Kind gehören, aber nicht „nur ich" sind, zählen nicht als eigene', async () => {
+    const forAll = store.createBoard({ name: 'Für alle, Mias', ownerId: miaId }).id;
+    const selected = store.createBoard({ name: 'Auswahl', visibility: 'selected', ownerId: miaId, memberIds: [] }).id;
+    const ids = ((await get('/api/boards')).json() as { id: string }[]).map((b) => b.id);
+    expect(ids).toContain(boardId);
+    expect(ids).not.toContain(forAll);
+    expect(ids).not.toContain(selected);
+    expect(ids).not.toContain(garden);
+  });
+
+  it('nur die Listen der Boards und Aufgaben werden gefiltert, andere Listen bleiben vollständig', async () => {
+    store.addComment(mine, store.people().find((p) => p.name === 'Ben')!.id, 'Hallo');
+    const comments = (await get(`/api/cards/${mine}/comments`)).json() as unknown[];
+    expect(comments).toHaveLength(1);
+    const people = (await get('/api/people')).json() as { name: string }[];
+    expect(people.map((p) => p.name).sort()).toEqual(['Admin', 'Ben', 'Mia']);
+  });
+});
+
 describe('Mitteilungen eines Kindes: nur Eigenes', () => {
   const inbox = async (who: object, qs = '') => (await app.inject({ method: 'GET', url: `/api/inbox${qs}`, headers: who as Record<string, string> })).json() as { items: { cardId: string; kind: string }[]; seenAt: string | null };
 
-  it('Einträge zu eigenen Karten erscheinen, fremde Karten, fremde Boards und fremde Stupse nie', async () => {
+  it('Einträge zu eigenen Aufgaben erscheinen, fremde Aufgaben, fremde Boards und fremde Stupse nie', async () => {
     const benId = store.people().find((p) => p.name === 'Ben')!.id;
     const garden = store.createBoard({ name: 'Garten' });
     const gardenCol = store.getBoardView(garden.id).columns[0]!.id;
@@ -258,7 +368,7 @@ describe('Mitteilungen eines Kindes: nur Eigenes', () => {
     for (const id of [mine, others, foreignBoard]) store.addComment(id, benId, 'Hallo');
     const kids = (await inbox(mia)).items;
     expect(kids.map((i) => [i.kind, i.cardId])).toEqual([['comment', mine]]);
-    // ein Erwachsener mit Bezug zu den Karten sieht seine, aber das Kind sieht nie mehr als das eigene
+    // ein Erwachsener mit Bezug zu den Aufgaben sieht seine, aber das Kind sieht nie mehr als das eigene
     expect((await inbox(mia, `?before=${encodeURIComponent('2000-01-01T00:00:00.000Z')}`)).items).toEqual([]);
     for (const i of kids) expect(i.cardId).not.toBe(others);
   });

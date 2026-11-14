@@ -23,27 +23,25 @@ async function embedded(page: Page, baseURL: string | undefined, defaultPanel: s
 
 const parentPath = (page: Page) => page.evaluate(() => window.location.pathname);
 
-test('Kopfzeile: auf allen drei Reitern steht Home links neben der Glocke, dann Zahnrad und Profil, jeder Knopf 44 × 44', async ({ page }) => {
+test('Kopfzeile: auf allen drei Reitern steht Home links neben der Glocke, dann das Zahnrad, jeder Knopf ein Kreis von 36 px', async ({ page }) => {
   await page.goto('/');
   const nav = page.getByRole('navigation', { name: 'Ansicht' });
   for (const tab of ['Aufgaben', 'Boards', 'Wächter']) {
     await nav.getByRole('button', { name: tab }).click();
     await expect(page.getByRole('heading', { name: tab, exact: true })).toBeVisible();
     const boxes = [];
-    for (const name of ['Zurück zu Home Assistant', /^Mitteilungen/, 'Einstellungen öffnen', 'Profil öffnen']) {
+    for (const name of ['Zurück zu Home Assistant', /^Mitteilungen/, 'Einstellungen öffnen']) {
       const box = await page.getByRole('button', { name }).boundingBox();
       expect(box, String(name)).not.toBeNull();
       boxes.push(box!);
     }
     for (let i = 1; i < boxes.length; i++) expect(boxes[i]!.x).toBeGreaterThan(boxes[i - 1]!.x + boxes[i - 1]!.width - 1);
     for (const b of boxes) {
-      expect(b.width).toBeGreaterThanOrEqual(43.5);
-      expect(b.height).toBeGreaterThanOrEqual(43.5);
+      expect(b.width).toBeGreaterThanOrEqual(35.5);
+      expect(b.height).toBeGreaterThanOrEqual(35.5);
     }
-    // alle in einer Zeile, rechts vom Logo und der Wortmarke
+    // alle in einer Zeile
     expect(new Set(boxes.map((b) => Math.round(b.y))).size).toBe(1);
-    const mark = await page.getByText('stups', { exact: false }).first().boundingBox();
-    expect(boxes[0]!.x).toBeGreaterThan(mark!.x + mark!.width);
   }
 });
 

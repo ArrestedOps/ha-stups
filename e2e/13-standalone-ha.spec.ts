@@ -69,7 +69,7 @@ test('Erster Start mit Home Assistant: Einrichtung, dann Wächter-Reiter und Ver
     sensors: true,
     push: ['ha-notify'],
   });
-  await expect(nav(page).getByRole('button')).toHaveCount(3);
+  await expect(nav(page).getByRole('button')).toHaveCount(5);
   await expect(nav(page).getByRole('button', { name: 'Wächter' })).toBeVisible();
 
   const dialog = await einstellungen(page);
@@ -129,7 +129,7 @@ test('Wächter: „wer ist zu Hause" findet die Personen über ihren Namen, die 
   await expect.poll(async () => (await cardsOf(page, boardId)).filter((c) => c.title.startsWith('Staubbehälter leeren')).length, { timeout: 15_000 }).toBe(1);
   expect((await cardsOf(page, boardId)).find((c) => c.title.startsWith('Staubbehälter leeren'))!.assigneeIds).toEqual([anna.id]);
 
-  // Jetzt nur Ben: Er bekommt die Karte und die Nachricht auf sein Handy, mit Link in Stups
+  // Jetzt nur Ben: Er bekommt die Aufgabe und die Nachricht auf sein Handy, mit Link in Stups
   await setState(request, 'person.anna', 'not_home');
   await setState(request, 'person.ben', 'home');
   await setState(request, 'vacuum.s8', 'cleaning');
@@ -144,7 +144,7 @@ test('Wächter: „wer ist zu Hause" findet die Personen über ihren Namen, die 
     .toEqual(['mobile_app_ben_e2e']);
   const [push] = (await (await request.get(`${MOCK}/mock/pushes`)).json()) as { title: string; message: string; data: { url: string; actions: unknown[] } }[];
   expect(push).toMatchObject({ title: expect.stringMatching(/^Filter wechseln/), data: { url: `${APP}/?card=${card.id}` } });
-  expect(push!.message).toMatch(/^Neue Karte für dich/);
+  expect(push!.message).toMatch(/^Neue Aufgabe für dich/);
   expect(push!.data.actions).toHaveLength(1);
 
   // Tippt Ben in der Companion App auf „Erledigt", kommt das Ereignis über die Verbindung zu Home Assistant zurück
@@ -161,15 +161,12 @@ test('Wächter: „wer ist zu Hause" findet die Personen über ihren Namen, die 
   await expect.poll(completedAt, { timeout: 10_000 }).not.toBeNull();
 });
 
-test('Wächter zeigt beide Wächter, die Verwaltung öffnet über „Alle Wächter verwalten“', async ({ page }) => {
+test('Wächter zeigt beide Wächter und die letzte Aktivität', async ({ page }) => {
   await anmelden(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('home')).toContainText('Saugroboter');
   await expect(page.getByTestId('home')).toContainText('Zweiter Roboter');
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
-  await expect(page.getByTestId('watcher-card').filter({ hasText: 'Saugroboter' })).toBeVisible();
-  await expect(page.getByTestId('watcher-card').filter({ hasText: 'Zweiter Roboter' })).toBeVisible();
-  await expect(page.getByTestId('watcher-activity')).toContainText('Karte angelegt');
+  await expect(page.getByTestId('home-activity')).toContainText('Aufgabe angelegt');
 });
 
 test('Sensoren: die Zähler stehen in Home Assistant (Zustände über den Token geschrieben)', async ({ request }) => {

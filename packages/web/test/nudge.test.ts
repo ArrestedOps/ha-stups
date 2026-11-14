@@ -3,7 +3,7 @@ import type { NudgeTarget } from '../src/lib/api';
 import { canNudge, clock, nudgeBadge, preselected, sentMessage, targetHint } from '../src/lib/nudge';
 
 describe('canNudge', () => {
-  it('nur bei Karten, die jemand anderem zugewiesen sind', () => {
+  it('nur bei Aufgaben, die jemand anderem zugewiesen sind', () => {
     expect(canNudge({ assigneeIds: ['conny'] }, 'rene')).toBe(true);
     expect(canNudge({ assigneeIds: ['rene', 'conny'] }, 'rene')).toBe(true);
     expect(canNudge({ assigneeIds: ['rene'] }, 'rene')).toBe(false);

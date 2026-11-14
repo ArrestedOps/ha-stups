@@ -47,23 +47,23 @@ describe('Beta: Push und Wächter einstellen', () => {
   it('jeder Angemeldete sieht den Stand (für das Band in der Oberfläche)', async () => {
     const r = await call(anna, 'GET', '/api/beta');
     expect(r.status).toBe(200);
-    expect(r.body).toEqual({ push: { mode: 'off' }, watchers: false });
+    expect(r.body).toEqual({ push: { mode: 'off' }, watchers: true });
   });
 
   it('nur Administratoren ändern ihn', async () => {
-    expect((await call(anna, 'PUT', '/api/beta', { watchers: true })).status).toBe(403);
-    expect((await call(anna, 'GET', '/api/beta')).body.watchers).toBe(false);
-    const r = await call(chef, 'PUT', '/api/beta', { watchers: true, push: { mode: 'only', personId: idOf('Chef') } });
+    expect((await call(anna, 'PUT', '/api/beta', { watchers: false })).status).toBe(403);
+    expect((await call(anna, 'GET', '/api/beta')).body.watchers).toBe(true);
+    const r = await call(chef, 'PUT', '/api/beta', { watchers: false, push: { mode: 'only', personId: idOf('Chef') } });
     expect(r.status).toBe(200);
-    expect(r.body).toEqual({ push: { mode: 'only', personId: idOf('Chef') }, watchers: true });
-    expect(changes).toEqual([true]);
+    expect(r.body).toEqual({ push: { mode: 'only', personId: idOf('Chef') }, watchers: false });
+    expect(changes).toEqual([false]);
   });
 
   it('weist Unsinn ab', async () => {
     expect((await call(chef, 'PUT', '/api/beta', { push: { mode: 'only', personId: 'x' } })).status).toBe(400);
     expect((await call(chef, 'PUT', '/api/beta', { push: { mode: 'vielleicht' } })).status).toBe(400);
     expect((await call(chef, 'PUT', '/api/beta', { watchers: 'ja' })).status).toBe(400);
-    expect((await call(chef, 'GET', '/api/beta')).body).toEqual({ push: { mode: 'off' }, watchers: false });
+    expect((await call(chef, 'GET', '/api/beta')).body).toEqual({ push: { mode: 'off' }, watchers: true });
   });
 
   it('die Fähigkeiten nennen den Kanal', async () => {

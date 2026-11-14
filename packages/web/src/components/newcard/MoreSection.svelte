@@ -6,7 +6,7 @@
   import Icon from '../Icon.svelte';
 
   /**
-   * „Mehr" beim Anlegen: Checkliste, Links und Anhänge. Die Listen gehören der Karte (der Aufrufer legt sie nach dem Anlegen an);
+   * „Mehr" beim Anlegen: Checkliste, Links und Anhänge. Die Listen gehören der Aufgabe (der Aufrufer legt sie nach dem Anlegen an);
    * `flush()` übernimmt, was getippt, aber noch nicht bestätigt ist.
    */
   let {
@@ -71,7 +71,7 @@
 </div>
 
 {#if showItems || items.length > 0}
-  <div class="flex flex-col rounded-row border border-line bg-surface" role="group" aria-label={t('Checkliste')}>
+  <div class="flex flex-col rounded-row bg-surface" role="group" aria-label={t('Checkliste')}>
     {#each items as item, i (i)}
       <div class="flex min-h-[46px] items-center gap-3 px-4">
         <Icon name="check" size={16} />
@@ -97,7 +97,7 @@
 {/if}
 
 {#if showAttach || urls.length > 0 || files.length > 0}
-  <div class="flex flex-col rounded-row border border-line bg-surface" role="group" aria-label={t('Foto / Link')}>
+  <div class="flex flex-col rounded-row bg-surface" role="group" aria-label={t('Foto / Link')}>
     {#each urls as url, i (i)}
       <div class="flex min-h-12 items-center gap-3 px-4">
         <Icon name="link" size={16} />

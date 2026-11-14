@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Wächter aus Vorlagen nennen das Gerät, der Assistent hat in jedem Schritt ein
 // „Zurück", und Batterie-Wächter stehen unter „Ruhig" statt unter „Läuft gerade".
@@ -45,7 +45,6 @@ async function openFound(page: Page, boardId: string) {
   await page.goto('/');
   await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
   await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
 }
 
@@ -60,9 +59,9 @@ async function setupHit(page: Page, hitText: string | RegExp, boardId: string) {
   await d.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
 }
 
-test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Namen und Kartentitel, auch in der Übersicht', async ({ page, request }) => {
+test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Namen und Aufgabentitel, auch in der Übersicht', async ({ page, request }) => {
   await clearWatchers(request);
-  // Werte neu setzen: unter 20 % legt ein neuer Batterie-Wächter nach 10 Minuten seit der letzten Änderung sofort eine Karte an (dann stünde er unter „Wartet")
+  // Werte neu setzen: unter 20 % legt ein neuer Batterie-Wächter nach 10 Minuten seit der letzten Änderung sofort eine Aufgabe an (dann stünde er unter „Wartet")
   await request.post(`${MOCK}/mock/state`, { data: { entityId: IPHONE, state: '14' } });
   await request.post(`${MOCK}/mock/state`, { data: { entityId: BAD, state: '12' } });
   const b = await board(request);
@@ -75,14 +74,13 @@ test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Name
   await expect(page.getByText('Wächter gespeichert')).toBeVisible();
 
   // der zweite Sensor aus der Vorlage (nach dem Speichern steht die Seite Wächter wieder da)
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
   await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
   await setupHit(page, 'Bad Fenster Batterie', b.boardId);
   await d.getByRole('button', { name: 'Wächter anlegen' }).click();
   await expect(page.getByText('Wächter gespeichert').first()).toBeVisible();
 
   const items = (await watchers(request)).filter((w) => [IPHONE, BAD].includes(w.trigger.entityId));
-  // der Wächter heißt wie die Vorlage (das Gerät steht darunter), der Kartentitel der Vorlage bleibt sauber (die Karte bekommt den Namen der Entität erst, wenn sie entsteht)
+  // der Wächter heißt wie die Vorlage (das Gerät steht darunter), der Aufgabentitel der Vorlage bleibt sauber (die Aufgabe bekommt den Namen der Entität erst, wenn sie entsteht)
   expect(items.map((w) => [w.name, w.card.title]).sort()).toEqual([
     ['Batterie schwach', 'Batterie wechseln'],
     ['Batterie schwach', 'Batterie wechseln'],
@@ -91,7 +89,8 @@ test('Vorlage „Batterie schwach" für zwei Sensoren: zwei unterscheidbare Name
   // Übersicht: beide stehen in der Kategorie „Batterien", nach Namen sortiert, mit dem aktuellen Wert
   await page.keyboard.press('Escape');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  const quiet = page.getByTestId('watcher-category').filter({ hasText: 'Batterien' });
+  await openWatcherCategory(page, 'Batterien');
+  const quiet = page.getByTestId('watcher-page');
   const rows = quiet.getByRole('button', { name: 'Wächter Batterie schwach öffnen' });
   await expect(rows).toHaveCount(2);
   await expect(rows.first()).toContainText('Bad Fenster Batterie');
@@ -121,7 +120,7 @@ test('Zurück im Assistenten: in jedem Schritt da, Eingaben bleiben, am Anfang z
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
   await expect(d.getByTestId('wizard-question')).toContainText('Welche Aufgabe');
   await expect(back).toBeVisible(); // Schritt 2
-  await d.getByLabel('Titel der Karte').fill('Mein eigener Titel');
+  await d.getByLabel('Titel der Aufgabe').fill('Mein eigener Titel');
   await d.getByTestId('then-editor').getByLabel('Board', { exact: true }).selectOption(b.boardId);
   await d.getByRole('button', { name: 'Weiter: Wer' }).click();
   await expect(back).toBeVisible(); // Schritt 3
@@ -134,12 +133,12 @@ test('Zurück im Assistenten: in jedem Schritt da, Eingaben bleiben, am Anfang z
   await expect(d.getByTestId('wizard-question')).toContainText('Wer soll');
   await back.click();
   await expect(d.getByTestId('wizard-question')).toContainText('Welche Aufgabe');
-  await expect(d.getByLabel('Titel der Karte')).toHaveValue('Mein eigener Titel');
+  await expect(d.getByLabel('Titel der Aufgabe')).toHaveValue('Mein eigener Titel');
   await back.click();
   await expect(d.getByTestId('graph-card')).toContainText('Bad Fenster Batterie');
   // vor wieder: der Titel ist noch da
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
-  await expect(d.getByLabel('Titel der Karte')).toHaveValue('Mein eigener Titel');
+  await expect(d.getByLabel('Titel der Aufgabe')).toHaveValue('Mein eigener Titel');
   await back.click();
 
   // am ersten Schritt: zurück zur Auswahl „Gefunden"
@@ -159,6 +158,7 @@ test('Zurück im Assistenten: in jedem Schritt da, Eingaben bleiben, am Anfang z
 
   // Escape und „Schließen" schließen den Assistenten ganz
   await d.getByTestId('found-hit').filter({ hasText: 'Bad Fenster Batterie' }).getByRole('button', { name: 'Einrichten' }).click();
+  await expect(d.getByTestId('wizard-question').or(d.getByTestId('entity-picker'))).toBeVisible(); // erst warten, bis der Assistent offen ist
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
@@ -173,7 +173,7 @@ test('Entität von Hand gewählt (Vorlage ohne Treffer): der Name bleibt der der
   await d.getByLabel('Entität suchen').fill('iphone rene');
   await d.getByTestId('entity-picker').getByRole('button', { name: /iPhone Rene Battery Level/ }).click();
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
-  await expect(d.getByLabel('Titel der Karte')).toHaveValue('Batterie wechseln');
+  await expect(d.getByLabel('Titel der Aufgabe')).toHaveValue('Batterie wechseln');
   await d.getByTestId('then-editor').getByLabel('Board', { exact: true }).selectOption(b.boardId);
   await d.getByRole('button', { name: 'Weiter: Wer' }).click();
   await d.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
@@ -195,7 +195,8 @@ test('Bestehende Wächter: Gerät immer unter dem Namen (nach Gerät sortiert), 
   await page.goto('/');
   await openBoards(page);
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  const quiet = page.getByTestId('watcher-categories');
+  await openWatcherCategory(page, 'Ohne Kategorie');
+  const quiet = page.getByTestId('watcher-page');
   // Zeile unter dem Namen: Friendly Name der Entität, alphabetisch (Bad, iPhone, sensor.flur …), eine Zeile
   const subjects = quiet.getByTestId('watcher-subject');
   await expect(subjects).toHaveCount(4);
@@ -236,7 +237,8 @@ test('Batterie über der Schwelle steht unter „Ruhig" mit dem Wert, nie unter 
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   await expect(page.getByTestId('watcher-categories')).toBeVisible();
   await expect(page.getByTestId('home-running')).toHaveCount(0);
-  await expect(page.getByTestId('watcher-categories').getByTestId('watcher-value')).toHaveText('26 %');
+  await openWatcherCategory(page, 'Ohne Kategorie');
+  await expect(page.getByTestId('watcher-page').getByTestId('watcher-value')).toHaveText('26 %');
   await request.post(`${MOCK}/mock/state`, { data: { entityId: FLUR, state: '85' } });
   await clearWatchers(request);
 });

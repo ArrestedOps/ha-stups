@@ -28,7 +28,7 @@ describe('filterCards', () => {
     expect(r.map((c) => c.id)).toEqual(['Bad putzen', 'Rasen']);
   });
 
-  it('nur meine: Karten, bei denen ich zugewiesen bin', () => {
+  it('nur meine: Aufgaben, bei denen ich zugewiesen bin', () => {
     const r = filterCards(cards, { categoryIds: [], onlyMine: true, search: '' }, 'rene');
     expect(r.map((c) => c.id)).toEqual(['Filter wechseln', 'Rasen']);
   });
@@ -57,7 +57,7 @@ describe('dueStats', () => {
     ...extra,
   });
 
-  it('zählt nur eigene, offene Karten: überfällig und heute fällig', () => {
+  it('zählt nur eigene, offene Aufgaben: überfällig und heute fällig', () => {
     const cards = [
       mk('a', '2026-10-29T10:00:00Z'), // überfällig
       mk('b', '2026-10-30T09:00:00Z'), // vor einer Stunde: überfällig
@@ -78,13 +78,13 @@ describe('dueStats', () => {
 });
 
 describe('countByColumn', () => {
-  it('zählt Karten je Spalte, auch leere', () => {
+  it('zählt Aufgaben je Spalte, auch leere', () => {
     expect(countByColumn(cards, ['c1', 'c2', 'c3'])).toEqual({ c1: 3, c2: 1, c3: 0 });
   });
 });
 
 describe('costTotals', () => {
-  it('trennt offene und erledigte Kosten und ignoriert Karten ohne Betrag', () => {
+  it('trennt offene und erledigte Kosten und ignoriert Aufgaben ohne Betrag', () => {
     const cards = [
       { columnId: 'open', costCents: 12000 },
       { columnId: 'open', costCents: null },
@@ -109,7 +109,7 @@ describe('filterCards: Gestupst', () => {
   const cards = [mk('a', ['rene']), mk('b', ['conny']), mk('c', []), mk('d', ['conny', 'rene'])];
   const f = { categoryIds: [], onlyMine: false, nudged: true, search: '' };
 
-  it('zeigt nur Karten mit einem offenen Stups an mich', () => {
+  it('zeigt nur Aufgaben mit einem offenen Stups an mich', () => {
     expect(filterCards(cards, f, 'rene').map((c) => c.id)).toEqual(['a', 'd']);
     expect(filterCards(cards, f, 'conny').map((c) => c.id)).toEqual(['b', 'd']);
   });
@@ -122,7 +122,7 @@ describe('filterCards: Gestupst', () => {
 describe('filterCards: Personen-Chips der Boards (Meine, Alle, je Person)', () => {
   const f = (personIds: string[], onlyMine = false) => ({ categoryIds: [], onlyMine, personIds, search: '' });
 
-  it('eine Person gewählt: ihre Karten', () => {
+  it('eine Person gewählt: ihre Aufgaben', () => {
     expect(filterCards(cards, f(['conny']), 'rene').map((c) => c.id)).toEqual(['Bad putzen', 'Rasen']);
   });
 
@@ -137,7 +137,7 @@ describe('filterCards: Personen-Chips der Boards (Meine, Alle, je Person)', () =
 });
 
 describe('hiddenByPerson', () => {
-  it('„Meine" versteckt Karten ohne mich, auch unzugewiesene', () => {
+  it('„Meine" versteckt Aufgaben ohne mich, auch unzugewiesene', () => {
     expect(hiddenByPerson([], { onlyMine: true, personIds: [] }, 'me')).toBe(true);
     expect(hiddenByPerson(['x'], { onlyMine: true, personIds: [] }, 'me')).toBe(true);
     expect(hiddenByPerson(['me', 'x'], { onlyMine: true, personIds: [] }, 'me')).toBe(false);

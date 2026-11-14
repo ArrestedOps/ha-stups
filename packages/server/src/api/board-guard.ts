@@ -5,12 +5,12 @@ import type { Store } from '../store.js';
 import type { Changes } from '../store/context.js';
 
 /**
- * Sichtbarkeit von Boards an der Tür: Jede Anfrage, die ein Board, eine Spalte, eine Kategorie, eine Karte oder etwas an einer Karte
+ * Sichtbarkeit von Boards an der Tür: Jede Anfrage, die ein Board, eine Spalte, eine Kategorie, eine Aufgabe oder etwas an einer Aufgabe
  * (Checkliste, Link, Kommentar, Anhang, Erledigung, Papierkorb-Eintrag) trifft, wird abgewiesen, wenn die Person das Board nicht sehen
  * darf: **404 statt 403**, damit nicht einmal die Existenz verrät, was dahinter liegt. Auch Administratoren sehen fremde private oder
  * ausgewählte Boards nicht. Wer ein Board sieht, entscheidet allein `store.canSeeBoard` (store/visibility.ts).
  *
- * Listen (Boards, Termine, Karten, Heute, Mitteilungen, Papierkorb, Statistik) filtert die Abfrage im Store; hier geht es um die Routen mit
+ * Listen (Boards, Termine, Aufgaben, Heute, Mitteilungen, Papierkorb, Statistik) filtert die Abfrage im Store; hier geht es um die Routen mit
  * einer Kennung. Der Test `board-visibility.test.ts` geht alle Routen mit Kennung durch.
  */
 
@@ -26,7 +26,7 @@ export function boardOfRoute(store: Store, req: FastifyRequest): Target | null {
   const url = req.routeOptions.url ?? '';
   const params = req.params as { id?: string; type?: string };
   const id = params.id ?? '';
-  const card = (cardId: string | null): Target => ({ board: cardId ? store.boardIdOfCardAny(cardId) : null, what: t('Karte nicht gefunden') });
+  const card = (cardId: string | null): Target => ({ board: cardId ? store.boardIdOfCardAny(cardId) : null, what: t('Aufgabe nicht gefunden') });
 
   if (/^\/api\/boards\/:id(\/|$)/.test(url)) return { board: id, what: t('Board nicht gefunden'), archived: url === '/api/boards/:id/unarchive' };
   if (/^\/api\/columns\/:id(\/|$)/.test(url)) return { board: store.boardIdOfColumn(id), what: t('Spalte nicht gefunden') };
@@ -37,7 +37,7 @@ export function boardOfRoute(store: Store, req: FastifyRequest): Target | null {
   if (/^\/api\/comments\/:id(\/|$)/.test(url)) return card(store.cardIdOfComment(id));
   if (/^\/api\/completions\/:id(\/|$)/.test(url)) return card(store.cardIdOfCompletion(id));
   if (/^\/api\/attachments\/:id(\/|$)/.test(url)) {
-    // Anhänge gibt es nur an Karten; ohne Anhang antwortet die Route selbst mit 404
+    // Anhänge gibt es nur an Aufgaben; ohne Anhang antwortet die Route selbst mit 404
     const cardId = ((): string | null => {
       try {
         return store.getAttachment(id).cardId;
@@ -51,7 +51,7 @@ export function boardOfRoute(store: Store, req: FastifyRequest): Target | null {
   return null;
 }
 
-/** Nur die Karten aus einer Meldung des Live-Sync, die diese Person sehen darf (bei „alles" bleibt es: die Ansichten laden gefiltert nach) */
+/** Nur die Aufgaben aus einer Meldung des Live-Sync, die diese Person sehen darf (bei „alles" bleibt es: die Ansichten laden gefiltert nach) */
 export function visibleChanges(store: Store, changes: Changes | undefined, viewer: string | null): Changes | undefined {
   if (!changes || changes.full) return changes;
   return { full: false, cards: changes.cards.filter((id) => store.canSeeCard(viewer, id)) };

@@ -96,7 +96,7 @@
                   {#each targets as b (b.id)}<option value={b.id}>{b.name}</option>{/each}
                 </select>
               </div>
-              <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Zuständige müssen dort Mitglieder sein, sonst „keine Karten, braucht neue Zuständige“.')}</p>
+              <p class="px-1 text-[12.5px] leading-[1.45] text-hint">{t('Zuständige müssen dort Mitglieder sein, sonst „keine Aufgaben, braucht neue Zuständige“.')}</p>
             {:else if p.action === 'pause'}
               <p class="px-1 text-[12.5px] text-hint">{t('wird pausiert: Board fehlt')}</p>
             {:else}
@@ -108,7 +108,7 @@
     {/if}
 
     {#if preview.reminders > 0}
-      <p class="px-1 text-[14px] leading-[1.45] text-fg2" data-testid="delete-reminders">{tn('{n} persönliche Erinnerung an Karten dieses Boards entfällt mit den Karten.', '{n} persönliche Erinnerungen an Karten dieses Boards entfallen mit den Karten.', preview.reminders)}</p>
+      <p class="px-1 text-[14px] leading-[1.45] text-fg2" data-testid="delete-reminders">{tn('{n} persönliche Erinnerung an Aufgaben dieses Boards entfällt mit den Aufgaben.', '{n} persönliche Erinnerungen an Aufgaben dieses Boards entfallen mit den Aufgaben.', preview.reminders)}</p>
     {/if}
     {#if locked}<p class="px-1 text-[14px] font-semibold text-danger" data-testid="delete-lock">{locked}</p>{/if}
   </div>

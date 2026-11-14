@@ -8,7 +8,7 @@ export interface SyncInfo {
 }
 
 /**
- * Live-Sync: Der Server meldet jede Änderung per WebSocket und sagt dazu, welche Karten sich geändert haben.
+ * Live-Sync: Der Server meldet jede Änderung per WebSocket und sagt dazu, welche Aufgaben sich geändert haben.
  * Der Client holt dann nur diese nach. Nach einem Verbindungsabbruch (z. B. iPhone im Hintergrund) wird
  * neu verbunden und alles neu geladen; ebenso, wenn eine Meldung fehlt.
  */

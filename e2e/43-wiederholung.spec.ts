@@ -17,7 +17,7 @@ const cardOf = async (request: APIRequestContext, boardId: string, title: string
 async function openNew(page: Page) {
   await page.goto('/');
   await openBoards(page);
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   return page.getByLabel('Was steht an?');
 }
 const repeatSheet = (page: Page) => page.getByRole('dialog', { name: 'Wiederholung' });
@@ -56,7 +56,7 @@ test('Neue Aufgabe: Wiederholung ohne Termin wählbar, der erste Termin wird aut
 
   await expect(sheet.getByRole('button', { name: /^Termin wählen, gerade: (?!Kein Termin)/ })).toBeVisible();
   await sheet.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
 
   const card = (await cardOf(request, boardId, title))!;
   expect(card.dueAt).not.toBeNull();
@@ -80,13 +80,13 @@ test('„Nie“ entfernt nur die Regel, der Termin bleibt', async ({ page, reque
   await rep.getByRole('button', { name: 'Fertig', exact: true }).click();
   await expect(sheet.getByRole('button', { name: /^Wiederholung wählen, gerade: Nicht wiederholen/ })).toBeVisible();
   await sheet.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
   const card = (await cardOf(request, boardId, title))!;
   expect(card.recurrence).toBeNull();
   expect(card.dueAt).not.toBeNull();
 });
 
-test('Verspätung: drei Karten mit Beispielen aus der echten Regel, Toleranz wird gespeichert', async ({ page, request }) => {
+test('Verspätung: drei Aufgaben mit Beispielen aus der echten Regel, Toleranz wird gespeichert', async ({ page, request }) => {
   const boardId = await ownBoard(request, page, unique('Wdh'));
   const input = await openNew(page);
   const title = unique('Bad putzen');
@@ -100,7 +100,7 @@ test('Verspätung: drei Karten mit Beispielen aus der echten Regel, Toleranz wir
   const group = rep.getByRole('radiogroup', { name: 'Und wenn ich später fertig werde?' });
   await expect(group.getByRole('radio')).toHaveCount(3);
   await expect(group.getByRole('radio', { name: /Plan bleibt fest/ })).toHaveAttribute('aria-checked', 'true');
-  // Beispiele stehen in allen drei Karten
+  // Beispiele stehen in allen drei Aufgaben
   await expect(rep.getByTestId('example-fixed')).toContainText(/Erledigt \S+ \d+\.\d+\. → nächstes Mal Sa \d+\.\d+\./);
   await expect(rep.getByTestId('example-after')).toContainText(/Erledigt \S+ \d+\.\d+\. → nächstes Mal \S+ \d+\.\d+\./);
 
@@ -115,13 +115,13 @@ test('Verspätung: drei Karten mit Beispielen aus der echten Regel, Toleranz wir
   await expect(rep.getByTestId('example-tolerant-ok')).toContainText('Bis 5 Tage zu spät: Plan bleibt.');
   await rep.getByRole('button', { name: 'Fertig', exact: true }).click();
   await sheet.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
 
   const card = (await cardOf(request, boardId, title))!;
   expect(card.recurrence).toMatchObject({ type: 'fixed', freq: 'weekly', every: 2, weekdays: [6], lateTolerance: 5 });
 });
 
-test('Stündlich: nur zwei Karten, Zeitfenster, „Neu zählen“ in Stunden', async ({ page, request }) => {
+test('Stündlich: nur zwei Aufgaben, Zeitfenster, „Neu zählen“ in Stunden', async ({ page, request }) => {
   const boardId = await ownBoard(request, page, unique('Wdh'));
   const input = await openNew(page);
   const title = unique('Trinken');
@@ -140,7 +140,7 @@ test('Stündlich: nur zwei Karten, Zeitfenster, „Neu zählen“ in Stunden', a
   await rep.getByRole('button', { name: 'Fertig', exact: true }).click();
   await expect(sheet.getByRole('button', { name: /^Wiederholung wählen, gerade: stündlich 08:00–20:00/ })).toBeVisible();
   await sheet.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
   const card = (await cardOf(request, boardId, title))!;
   expect(card.recurrence).toEqual({ type: 'fixed', freq: 'hourly', every: 1, window: { from: '08:00', to: '20:00' } });
   const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', hour: 'numeric', hourCycle: 'h23' }).format(new Date(card.dueAt!)));
@@ -148,10 +148,10 @@ test('Stündlich: nur zwei Karten, Zeitfenster, „Neu zählen“ in Stunden', a
   expect(hour).toBeLessThanOrEqual(20);
 });
 
-test('Karte: Wiederholung ohne Termin setzen, die Karte bekommt den ersten Termin', async ({ page, request }) => {
+test('Aufgabe: Wiederholung ohne Termin setzen, die Aufgabe bekommt den ersten Termin', async ({ page, request }) => {
   const boardId = await ownBoard(request, page, unique('Wdh'));
   const view = await (await request.get(`/api/boards/${boardId}`)).json();
-  const title = unique('Karte ohne Termin');
+  const title = unique('Aufgabe ohne Termin');
   const made = await (await request.post(`/api/boards/${boardId}/cards`, { data: { title, columnId: view.columns[0].id } })).json();
   expect(made.dueAt).toBeNull();
 
@@ -159,7 +159,7 @@ test('Karte: Wiederholung ohne Termin setzen, die Karte bekommt den ersten Termi
   await openBoards(page);
   await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
   const props = page.getByRole('group', { name: 'Eigenschaften' });
-  await props.getByRole('button', { name: 'Wiederholen' }).click();
+  await props.getByRole('button', { name: /^Wiederholung:/ }).click();
   await page.getByRole('button', { name: 'Monatlich', exact: true }).click();
   await expect(page.getByTestId('recurrence-preview')).toContainText('monatlich');
 

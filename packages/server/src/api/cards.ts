@@ -5,10 +5,10 @@ import { hasPermission, requirePermission } from '../permissions.js';
 import { type ApiKit, type Params } from './kit.js';
 
 const MAX_IDS = 50;
-/** So viele Karten höchstens in einer Antwort von `/api/schedule` (mehr kommt seitenweise) */
+/** So viele Aufgaben höchstens in einer Antwort von `/api/schedule` (mehr kommt seitenweise) */
 const SCHEDULE_PAGE = 2000;
 
-/** Karten, Termine über alle Boards, Erledigen und Archiv */
+/** Aufgaben, Termine über alle Boards, Erledigen und Archiv */
 export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
   const { deps, store, body, noContent } = k;
 
@@ -39,13 +39,13 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     );
     return reply.code(201).send(mine(card, req.user?.id ?? null));
   });
-  // Mehrere Karten in einem Aufruf (für den Live-Sync: nur holen, was sich geändert hat). Unbekannte und gelöschte fehlen.
+  // Mehrere Aufgaben in einem Aufruf (für den Live-Sync: nur holen, was sich geändert hat). Unbekannte und gelöschte fehlen.
   app.get<{ Querystring: { ids?: string } }>('/api/cards', async (req) => {
     const ids = [...new Set((req.query.ids ?? '').split(',').filter((x) => x !== ''))];
-    if (ids.length > MAX_IDS) throw new ValidationError(t('Höchstens {max} Karten auf einmal', { max: MAX_IDS }));
+    if (ids.length > MAX_IDS) throw new ValidationError(t('Höchstens {max} Aufgaben auf einmal', { max: MAX_IDS }));
     return store.getCards(ids, req.user?.id ?? null);
   });
-  // Nachhaken ist persönlich: zur Karte gehört nur die eigene Erinnerung der anfragenden Person (`reminder`), nie die der anderen
+  // Nachhaken ist persönlich: zur Aufgabe gehört nur die eigene Erinnerung der anfragenden Person (`reminder`), nie die der anderen
   const mine = <C extends { id: string }>(card: C, userId: string | null) => ({ ...card, reminder: store.myReminder(card.id, userId) });
   app.get<{ Params: Params }>('/api/cards/:id', async (req) => mine(store.getCard(req.params.id), req.user?.id ?? null));
   app.patch<{ Params: Params }>('/api/cards/:id', async (req) => {
@@ -82,14 +82,14 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     const b = body(req);
     const before = store.getCard(req.params.id);
     const after = store.moveCard(req.params.id, { columnId: b.columnId, afterId: b.afterId }, req.user?.id ?? null);
-    // Durch das Ablegen in "Erledigt" kann eine Karte erledigt worden sein: offene Pushes aufräumen.
+    // Durch das Ablegen in "Erledigt" kann eine Aufgabe erledigt worden sein: offene Pushes aufräumen.
     if (after.completedAt !== before.completedAt || after.dueAt !== before.dueAt) {
       void deps.notifier?.clearFor(after.id);
     }
     return after;
   });
   // ----- Termine über alle Boards (Agenda, Kalender) -----
-  // Eine Antwort hat höchstens `limit` Karten (Vorgabe und Höchstwert 2000). Wie viele es insgesamt gibt, steht in `x-total-count` (vor
+  // Eine Antwort hat höchstens `limit` Aufgaben (Vorgabe und Höchstwert 2000). Wie viele es insgesamt gibt, steht in `x-total-count` (vor
   // dem Abschneiden und vor dem Filter für Kinder); wer mehr braucht, blättert mit `offset` weiter, bis `offset + limit >= total`.
   app.get<{ Querystring: { from?: string; to?: string; boards?: string; done?: string; undated?: string; completedSince?: string; limit?: string; offset?: string } }>('/api/schedule', async (req, reply) => {
     const q = req.query;
@@ -116,14 +116,14 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
       undated: q.undated === '1',
       completedSince: time(q.completedSince, 'completedSince'),
     };
-    // Auswahl und Abschneiden macht die Datenbank; geladen werden nur die Karten dieser Seite
+    // Auswahl und Abschneiden macht die Datenbank; geladen werden nur die Aufgaben dieser Seite
     reply.header('x-total-count', String(store.countSchedule(opts)));
     return store.listSchedule({ ...opts, limit, offset });
   });
   app.post<{ Params: Params }>('/api/cards/:id/complete', async (req) => {
     const by = req.user?.id ?? null;
-    // Ein Kind, dessen „Erledigt" bestätigt werden muss, löst nur eine Anfrage aus: die Karte bleibt offen und zählt noch nicht.
-    // Ausgenommen die Karten im eigenen Board „nur ich": dort sieht niemand sonst, was zu bestätigen wäre.
+    // Ein Kind, dessen „Erledigt" bestätigt werden muss, löst nur eine Anfrage aus: die Aufgabe bleibt offen und zählt noch nicht.
+    // Ausgenommen die Aufgaben im eigenen Board „nur ich": dort sieht niemand sonst, was zu bestätigen wäre.
     const boardId = store.boardIdOfCardAny(req.params.id);
     const inPrivateBoard = boardId !== null && store.getBoard(boardId).visibility === 'private';
     if (by && req.access?.isChild && !inPrivateBoard && store.needsConfirmation(req.params.id, by)) {
@@ -135,12 +135,12 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     if (res.completionId) void deps.notifier?.clearFor(res.card.id);
     return res;
   });
-  // Weitergeben: eine Karte vom Haus an die nächste Person der Rotation (nicht für Kinder: die Erlaubnisliste verweigert es)
+  // Weitergeben: eine Aufgabe vom Haus an die nächste Person der Rotation (nicht für Kinder: die Erlaubnisliste verweigert es)
   app.post<{ Params: Params }>('/api/cards/:id/pass', async (req) => {
     if (!deps.watchers) throw new ConflictError(t('Wächter brauchen die Verbindung zu Home Assistant'));
     return deps.watchers.pass(req.params.id, req.user!.id);
   });
-  // Übernehmen: bei „Erst vorschlagen" bekommt die erste Person die Karte (nicht für Kinder: die Erlaubnisliste verweigert es)
+  // Übernehmen: bei „Erst vorschlagen" bekommt die erste Person die Aufgabe (nicht für Kinder: die Erlaubnisliste verweigert es)
   app.post<{ Params: Params }>('/api/cards/:id/claim', async (req) => {
     if (!deps.watchers) throw new ConflictError(t('Wächter brauchen die Verbindung zu Home Assistant'));
     await deps.watchers.claim(req.params.id, req.user!.id);
@@ -165,7 +165,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
     store.restoreArchived(req.params.id, body(req).columnId, req.user?.id ?? null),
   );
   // Symbole aus Titeln erkennen (Einstellungen, Administratoren und Recht „settings“, von der Person selbst ausgelöst). Erkannt wird in der
-  // Oberfläche (die Bibliothek und die Suchwörter liegen dort): Der Server liefert die Karten ohne Symbol und nimmt das Ergebnis an.
+  // Oberfläche (die Bibliothek und die Suchwörter liegen dort): Der Server liefert die Aufgaben ohne Symbol und nimmt das Ergebnis an.
   app.get('/api/icons/candidates', async (req) => {
     requirePermission(req, 'settings');
     return store.cardsWithoutIcon(req.user?.id ?? null);
@@ -173,7 +173,7 @@ export function registerCardRoutes(app: FastifyInstance, k: ApiKit): void {
   app.post('/api/icons/apply', async (req) => {
     requirePermission(req, 'settings');
     const result = store.applyDetectedIcons(body(req).items, req.user?.id ?? null);
-    if (result.updated > 50) store.markAllChanged(); // viele Karten auf einmal: die Geräte laden alles neu
+    if (result.updated > 50) store.markAllChanged(); // viele Aufgaben auf einmal: die Geräte laden alles neu
     return result;
   });
   app.post<{ Params: Params }>('/api/cards/:id/duplicate', async (req, reply) =>

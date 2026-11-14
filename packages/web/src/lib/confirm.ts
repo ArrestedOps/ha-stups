@@ -16,6 +16,6 @@ export function mayConfirm(
   return child.confirmers.length === 0 || child.confirmers.includes(me.id);
 }
 
-/** Wartet die Karte auf eine Bestätigung? */
+/** Wartet die Aufgabe auf eine Bestätigung? */
 export const waitingForConfirmation = (card: { confirmRequestedAt: string | null; completedAt: string | null }): boolean =>
   card.confirmRequestedAt !== null && card.completedAt === null;

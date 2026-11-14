@@ -28,11 +28,11 @@ export function createExternal(ctx: Ctx, calls: () => Parts) {
       .sort((a, b) => a.startMs - b.startMs);
     let next: { title: string; at: string } | null = null;
     for (const e of upcoming) {
-      // Der Schlüssel ist die Kennung des Termins (nicht Titel oder Beginn: wer sie ändert, bekäme sonst eine zweite Karte).
-      // Ohne Kennung (und für Karten aus früheren Versionen) gilt der alte Schlüssel aus Beginn und Titel.
+      // Der Schlüssel ist die Kennung des Termins (nicht Titel oder Beginn: wer sie ändert, bekäme sonst eine zweite Aufgabe).
+      // Ohne Kennung (und für Aufgaben aus früheren Versionen) gilt der alte Schlüssel aus Beginn und Titel.
       const legacyKey = `cal:${w.id}:${new Date(e.startMs).toISOString()}:${e.title}`;
       const key = e.uid ? `cal:${w.id}:uid:${e.uid}${e.recurrenceId ? `:${e.recurrenceId}` : ''}` : legacyKey;
-      if (store.hasCardWithDedupeKey(key) || store.hasCardWithDedupeKey(legacyKey)) continue; // dieser Termin hat seine Karte schon (auch erledigt oder im Papierkorb)
+      if (store.hasCardWithDedupeKey(key) || store.hasCardWithDedupeKey(legacyKey)) continue; // dieser Termin hat seine Aufgabe schon (auch erledigt oder im Papierkorb)
       if (e.startMs - lead <= nowMs) {
         data.patchState(w.id, { lastFireAt: new Date(nowMs).toISOString() });
         await calls().createCard(w, nowMs, false, key);
@@ -53,7 +53,7 @@ export function createExternal(ctx: Ctx, calls: () => Parts) {
       if (!Number.isFinite(at) || at < nowMs - 30 * 60_000 || at > nowMs + hours * 3_600_000) return false;
       return (typeof i.condition === 'string' && RAINY.has(i.condition)) || (i.precipitation_probability ?? 0) >= 50 || (i.precipitation ?? 0) >= 0.3;
     });
-    // wie bei Zuständen: erst wieder scharf, wenn es einmal trocken war; Sperrzeit und Doppelkarten-Regel gelten wie sonst
+    // wie bei Zuständen: erst wieder scharf, wenn es einmal trocken war; Sperrzeit und Doppelaufgaben-Regel gelten wie sonst
     const st = data.getState(w.id);
     if (!wet) {
       if (!st.armed || st.metSince) data.patchState(w.id, { armed: true, metSince: null });

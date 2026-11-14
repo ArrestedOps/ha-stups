@@ -15,7 +15,7 @@ afterEach(() => {
 const T = '2026-11-01T08:00:00.000Z';
 const TABLES = ['users', 'boards', 'columns', 'cards', 'watchers', 'watcher_state'];
 
-/** Eine Datenbank im Stand 25 mit Board, Karte und zwei Wächtern */
+/** Eine Datenbank im Stand 25 mit Board, Aufgabe und zwei Wächtern */
 function buildBefore(file: string): number {
   const before = Math.max(...migrations.map((m) => m.version).filter((v) => v < 26));
   const db = openDb(file, { migrations: migrations.filter((m) => m.version < 26) });

@@ -9,7 +9,7 @@ const fremdHeaders = {
   'x-remote-user-display-name': 'Fremd',
 };
 
-// Nach den Board-Tests liegt ein großes Board im Hintergrund (300 Karten), das Öffnen der Fenster dauert dann länger
+// Nach den Board-Tests liegt ein großes Board im Hintergrund (300 Aufgaben), das Öffnen der Fenster dauert dann länger
 test.describe.configure({ timeout: 90_000 });
 
 async function openPeople(page: Page) {
@@ -95,7 +95,7 @@ test('Person hinzufügen, Push-Geräte-Hinweis, umbenennen und mit Bestätigung 
 
   // die Zeile ist nach dem Umbenennen noch offen
   await page.getByRole('button', { name: 'Aus Stups entfernen' }).click();
-  await expect(page.getByText('Zugewiesene Karten behalten die Zuweisung')).toBeVisible();
+  await expect(page.getByText('Zugewiesene Aufgaben behalten die Zuweisung')).toBeVisible();
   await page.getByRole('button', { name: 'Ja, entfernen' }).click();
   await expect(page.getByRole('dialog').getByRole('button', { name: new RegExp(neu) })).toHaveCount(0);
 });

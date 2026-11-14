@@ -39,17 +39,17 @@ describe('parseLanguage', () => {
 
 describe('t, tn, tx', () => {
   it('Platzhalter, Katalog und Rückfall auf Deutsch', () => {
-    catalog({ 'Hallo {name}': 'Hello {name}', '{n} Karte': ['{n} card', '{n} cards'], 'Kontext|Alle': 'Every' });
+    catalog({ 'Hallo {name}': 'Hello {name}', '{n} Aufgabe': ['{n} card', '{n} cards'], 'Kontext|Alle': 'Every' });
     withLanguage('en', () => {
       expect(t('Hallo {name}', { name: 'Anna' })).toBe('Hello Anna');
       expect(t('Noch nicht übersetzt')).toBe('Noch nicht übersetzt');
-      expect(tn('{n} Karte', '{n} Karten', 1)).toBe('1 card');
-      expect(tn('{n} Karte', '{n} Karten', 2)).toBe('2 cards');
+      expect(tn('{n} Aufgabe', '{n} Aufgaben', 1)).toBe('1 card');
+      expect(tn('{n} Aufgabe', '{n} Aufgaben', 2)).toBe('2 cards');
       expect(tx('Kontext', 'Alle')).toBe('Every');
     });
     withLanguage('de', () => {
       expect(t('Hallo {name}', { name: 'Anna' })).toBe('Hallo Anna');
-      expect(tn('{n} Karte', '{n} Karten', 2)).toBe('2 Karten');
+      expect(tn('{n} Aufgabe', '{n} Aufgaben', 2)).toBe('2 Aufgaben');
       expect(tx('Kontext', 'Alle')).toBe('Alle');
     });
   });

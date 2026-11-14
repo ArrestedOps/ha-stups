@@ -18,8 +18,10 @@
     hit = undefined,
     hits = undefined,
     personIds = undefined,
+    category = undefined,
     onsaved = undefined,
     onback = undefined,
+    inline = false,
   }: {
     id: string | null;
     template?: string;
@@ -27,13 +29,16 @@
     /** mehrere Treffer derselben Art: gemeinsam einrichten */
     hits?: HitInit[];
     personIds?: string[];
+    category?: string;
     onsaved?: (saved: SavedWatcher) => void;
     onback?: () => void;
+    /** Desktop: der Ablauf steht aufgeklappt unter der Zeile in der Liste statt in einem Fenster */
+    inline?: boolean;
   } = $props();
 
   // svelte-ignore state_referenced_locally
   const ed = new WatcherEditor(id, { onsaved, onback });
-  onMount(() => void ed.load(template, hit, personIds, hits));
+  onMount(() => void ed.load(template, hit, personIds, category, hits));
 
   // Spalten und Kategorien des gewählten Boards
   $effect(() => {
@@ -60,4 +65,4 @@
   });
 </script>
 
-{#if ed.id}<WatcherFlow {ed} />{:else}<WatcherWizard {ed} />{/if}
+{#if ed.id}<WatcherFlow {ed} {inline} />{:else}<WatcherWizard {ed} />{/if}

@@ -81,22 +81,22 @@ for (const width of [320, 260]) {
 
     // Boards
     await openBoards(page);
-    // schmal sind die Spalten Reiter; die Karte liegt je nach Uhrzeit unter „Offen" (Termin heute) oder „Geplant" (Termin morgen): der Reiter mit der einen Karte
+    // schmal sind die Spalten Reiter; die Aufgabe liegt je nach Uhrzeit unter „Offen" (Termin heute) oder „Geplant" (Termin morgen): der Reiter mit der einen Aufgabe
     await page.getByRole('tab', { name: /· 1$/ }).click();
     await expect(page.getByText(LANG.slice(0, 30)).first()).toBeVisible();
     expect(await overflow(page), 'Boards').toEqual([]);
     expect(await reachable(page), 'Boards: Bedienelemente').toEqual([]);
 
-    // Karte öffnen: Titel und Beschreibung mit langen Wörtern
+    // Aufgabe öffnen: Titel und Beschreibung mit langen Wörtern
     await page.getByText(LANG.slice(0, 30)).first().click();
     const detail = page.getByRole('dialog').last();
     await expect(detail).toBeVisible();
-    expect(await overflow(page), 'Karte').toEqual([]);
-    expect(await reachable(page), 'Karte: Bedienelemente').toEqual([]);
+    expect(await overflow(page), 'Aufgabe').toEqual([]);
+    expect(await reachable(page), 'Aufgabe: Bedienelemente').toEqual([]);
     await page.keyboard.press('Escape');
 
     // Neue Aufgabe mit langem Titel
-    await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+    await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
     const sheet = page.getByRole('dialog', { name: 'Neue Aufgabe' });
     await expect(sheet).toBeVisible();
     await sheet.getByLabel('Was steht an?').fill(LANG);
@@ -115,6 +115,7 @@ for (const width of [320, 260]) {
 test('Tastatur: Tab führt nacheinander zu sichtbaren, benannten Bedienelementen; Escape schließt Fenster und gibt den Fokus zurück', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByTestId('tasks')).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Deine Zahlen' })).toBeVisible(); // erst wenn die Liste geladen ist, gibt es genug Bedienelemente
   const seen: string[] = [];
   for (let i = 0; i < 14; i += 1) {
     await page.keyboard.press('Tab');

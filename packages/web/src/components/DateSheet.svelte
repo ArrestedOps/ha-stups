@@ -7,9 +7,6 @@
   import { ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
-  import CtaButton from './ui/CtaButton.svelte';
-  import SectionHeader from './ui/SectionHeader.svelte';
-  import Tile from './ui/Tile.svelte';
 
   /**
    * „Termin“: Monatskalender und Uhrzeit-Rad (zwei Listen). „Übernehmen“ gibt den Termin als UTC-Zeit zurück, „Kein Termin“ null.
@@ -42,6 +39,23 @@
   const picked = $derived(compose(ymd, hour, minute, tz));
   const weekdays = $derived([1, 2, 3, 4, 5, 6, 0].map((d) => names().weekdaysShort[d]!));
   const monthTitle = $derived(`${names().monthsLong[view.m - 1]} ${view.y}`);
+
+  /** Schnellwahl wie im Entwurf: Heute 18:00, Morgen 09:00, Am Wochenende (Samstag 10:00) */
+  function plusDays(v: Ymd, n: number): Ymd {
+    const d = new Date(Date.UTC(v.y, v.m - 1, v.d + n));
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() };
+  }
+  const weekdayOf = (v: Ymd) => new Date(Date.UTC(v.y, v.m - 1, v.d)).getUTCDay();
+  const quick = $derived([
+    { label: t('Heute {time}', { time: '18:00' }), ymd: today, h: 18, mi: 0 },
+    { label: t('Morgen {time}', { time: '09:00' }), ymd: plusDays(today, 1), h: 9, mi: 0 },
+    { label: t('Am Wochenende'), ymd: plusDays(today, (6 - weekdayOf(today) + 7) % 7 || 7), h: 10, mi: 0 },
+  ]);
+  function quickPick(q: { ymd: Ymd; h: number; mi: number }) {
+    choose(q.ymd);
+    hour = q.h;
+    minute = minutes.includes(q.mi) ? q.mi : (minutes.find((m) => m >= q.mi) ?? minutes[0]!);
+  }
 
   const HOURS = Array.from({ length: 24 }, (_, i) => i);
   const minutes = $derived(minuteOptions(untrack(() => start.mi)));
@@ -145,11 +159,8 @@
   }
 </script>
 
-{#snippet foot()}
-  <div class="grid grid-cols-[1fr_2fr] gap-2">
-    <CtaButton ghost onclick={() => onpick(null)}>{t('Kein Termin')}</CtaButton>
-    <CtaButton onclick={() => onpick(picked)}>{t('Übernehmen')}</CtaButton>
-  </div>
+{#snippet apply()}
+  <button type="button" class="inline-flex h-11 items-center px-2 text-[16px] font-semibold text-accent-text" onclick={() => onpick(picked)}>{t('Übernehmen')}</button>
 {/snippet}
 
 {#snippet cancel()}
@@ -187,40 +198,39 @@
   </div>
 {/snippet}
 
-<Sheet title={t('Termin')} {onclose} left={cancel} footer={foot}>
+<Sheet title={t('Termin')} {onclose} left={cancel} right={apply}>
   <div class="flex flex-col gap-3.5 pt-1">
-    <div
-      class="flex h-row items-center gap-3 rounded-row border px-3.5"
-      style="background-image: var(--banner-warm); border-color: var(--banner-warm-line)"
-      aria-live="polite"
-    >
-      <Tile color="red"><Icon name="calendar" size={22} /></Tile>
-      <div class="min-w-0">
-        <div class="truncate text-[19px] font-extrabold text-on-banner" data-testid="termin-summary">{summaryTitle(picked, now, tz)}</div>
-        <div class="truncate text-[13px]" style="color: var(--banner-warm-sub)">{summaryFull(ymd)}</div>
-      </div>
+    <div class="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3" role="group" aria-label={t('Schnellwahl')}>
+      {#each quick as q (q.label)}
+        <button type="button" class="h-11 shrink-0 rounded-full bg-surface px-4 text-[16px] font-semibold" onclick={() => quickPick(q)}>{q.label}</button>
+      {/each}
     </div>
+    <p class="px-1 text-[13px] text-text-soft" aria-live="polite">
+      <b class="font-semibold text-fg" data-testid="termin-summary">{summaryTitle(picked, now, tz)}</b> · {summaryFull(ymd)}
+    </p>
 
-    <div class="rounded-row border border-line bg-surface">
-      <div class="flex items-center justify-between px-1.5 pt-2.5">
-        <button type="button" class="flex h-10 w-10 items-center justify-center rounded-xl bg-(--soft-btn) text-text-soft" aria-label={t('Voriger Monat')} onclick={() => go(-1)}>
-          <Icon name="chevron-left" size={18} stroke={2.2} />
-        </button>
-        <span class="text-[15px] font-extrabold" aria-live="polite">{monthTitle}</span>
-        <button type="button" class="flex h-10 w-10 items-center justify-center rounded-xl bg-(--soft-btn) text-text-soft" aria-label={t('Nächster Monat')} onclick={() => go(1)}>
-          <Icon name="chevron-right" size={18} stroke={2.2} />
-        </button>
+    <div class="rounded-row bg-surface pb-1.5">
+      <div class="flex items-center justify-between px-4 pt-3">
+        <span class="text-[17px] font-semibold" aria-live="polite">{monthTitle}</span>
+        <span class="flex gap-1">
+          <button type="button" class="flex h-10 w-10 items-center justify-center text-accent-text" aria-label={t('Voriger Monat')} onclick={() => go(-1)}>
+            <Icon name="chevron-left" size={22} stroke={2.4} />
+          </button>
+          <button type="button" class="flex h-10 w-10 items-center justify-center text-accent-text" aria-label={t('Nächster Monat')} onclick={() => go(1)}>
+            <Icon name="chevron-right" size={22} stroke={2.4} />
+          </button>
+        </span>
       </div>
-      <div class="grid grid-cols-7 px-1.5 pt-2.5 text-center text-[12px] font-semibold text-fg2" aria-hidden="true">
+      <div class="grid grid-cols-7 px-2 pt-1.5 text-center text-[12px] font-semibold text-fg2" aria-hidden="true">
         {#each weekdays as wd (wd)}<span>{wd}</span>{/each}
       </div>
-      <div class="flex flex-col gap-1 px-1.5 pt-1.5 pb-2.5" role="grid" aria-label={monthTitle} tabindex="-1" onkeydown={dayKey}>
+      <div class="flex flex-col gap-0.5 px-2 pt-1 pb-1.5" role="grid" aria-label={monthTitle} tabindex="-1" onkeydown={dayKey}>
         {#each rows as row, r (r)}
-          <div class="grid grid-cols-7 gap-1" role="row">
+          <div class="grid grid-cols-7" role="row">
             {#each row as c (ymdKey(c.ymd))}
               {@const on = ymdKey(c.ymd) === ymdKey(ymd)}
               {@const isToday = ymdKey(c.ymd) === ymdKey(today)}
-              <div role="gridcell" aria-selected={on}>
+              <div role="gridcell" aria-selected={on} class="flex justify-center">
                 <button
                   type="button"
                   data-day={ymdKey(c.ymd)}
@@ -228,7 +238,7 @@
                   aria-pressed={on}
                   aria-current={isToday ? 'date' : undefined}
                   tabindex={on ? 0 : -1}
-                  class="h-[42px] w-full rounded-xl text-[15px] font-semibold {on ? 'bg-accent-grad glow-day' : isToday ? 'shadow-[inset_0_0_0_1.5px_var(--sep)]' : ''} {!on && !c.inMonth ? 'text-ring' : ''}"
+                  class="h-11 w-11 rounded-full text-[19px] {on ? 'bg-brand-dot font-bold text-on-accent' : isToday ? 'font-bold text-accent-text' : ''} {!on && !c.inMonth ? 'text-ring' : ''}"
                   onclick={() => choose(c.ymd)}
                 >{c.ymd.d}</button>
               </div>
@@ -238,16 +248,18 @@
       </div>
     </div>
 
-    <SectionHeader title={t('Uhrzeit')} />
     <div
-      class="relative grid h-[180px] grid-cols-[1fr_auto_1fr] items-center overflow-hidden rounded-row border border-line bg-surface px-[30px]"
+      class="relative grid h-[180px] grid-cols-[1fr_auto_1fr] items-center overflow-hidden px-[30px]"
       role="group"
       aria-label={t('Uhrzeit {time}', { time: `${pad(hour)}:${pad(minute)}` })}
     >
-      <span class="wheel-band pointer-events-none absolute inset-x-3 top-[68px] h-11 rounded-xl"></span>
+      <span class="wheel-band pointer-events-none absolute inset-x-1 top-[68px] h-11 rounded-xl"></span>
       {@render wheelCol('h', t('Stunde'), HOURS, hourIndex)}
       <span class="relative text-[26px] font-extrabold" aria-hidden="true">:</span>
       {@render wheelCol('m', t('Minute'), minutes, minuteIndex)}
     </div>
+
+    <button type="button" class="h-12 rounded-row bg-surface text-[17px] text-danger" onclick={() => onpick(null)}>{t('Kein Termin')}</button>
+    <p class="px-1 text-[13px] text-text-soft">{t('Mit einem Termin kannst du auch wiederholen und erinnern.')}</p>
   </div>
 </Sheet>

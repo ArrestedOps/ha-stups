@@ -6,7 +6,7 @@
   /**
    * Verlauf der Entität (letzte Stunden) als Diagramm: Linie mit Fläche, grün gestrichelte Schwellen-Linie, grüner Punkt dort, wo die Regel
    * ausgelöst hätte. Darunter links der Anfang des Fensters, in der Mitte, wann ausgelöst wurde, rechts „jetzt". `compact`: kleine Fassung in der
-   * Karte des Ablaufs (70 px, eigener Rahmen), sonst die große im Assistenten (120 px; die Karte außen hält den Rahmen).
+   * Aufgabe des Ablaufs (70 px, eigener Rahmen), sonst die große im Assistenten (120 px; die Aufgabe außen hält den Rahmen).
    * Ohne Verlauf (kein Recorder, keine Verbindung) steht an seiner Stelle ein Hinweis in derselben Höhe.
    */
   let {

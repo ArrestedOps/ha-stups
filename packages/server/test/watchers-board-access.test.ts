@@ -1,10 +1,14 @@
+import type { DatabaseSync } from 'node:sqlite';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { apiRoutes } from '../src/api.js';
 import { openDb } from '../src/db.js';
 import { ingressAuth } from '../src/ingress.js';
 import { createStore, type Store } from '../src/store.js';
+import { createBoardAccess, type BoardAccessPlan } from '../src/store/board-access.js';
+import { createContext } from '../src/store/context.js';
 import { createWatcherData, type WatcherData } from '../src/watcher-data.js';
+import type { AssignRule } from '../src/watcher-types.js';
 import { createWatchers } from '../src/watchers.js';
 import { FakeHa } from './helpers/fake-ha.js';
 
@@ -20,6 +24,7 @@ const tom = as('ha-tom', 'Tom');
 
 const ENTITY = 'sensor.waschmaschine_leistung';
 
+let db: DatabaseSync;
 let app: FastifyInstance;
 let store: Store;
 let data: WatcherData;
@@ -30,7 +35,7 @@ let bad: { board: string; col: string }; // „Bad-Umbau": ausgewählt, Besitzer
 
 async function build() {
   ha = new FakeHa();
-  const db = openDb(':memory:');
+  db = openDb(':memory:');
   store = createStore(db);
   ids = {
     rene: store.addPerson({ haUserId: 'ha-rene', name: 'Rene' }).id,
@@ -150,7 +155,7 @@ describe('Zählt zur Fairness (Wächter)', () => {
     expect(patched.body.countsForFairness).toBe(false);
   });
 
-  it('Karten eines Wächters zählen nur, wenn Board UND Wächter zählen', async () => {
+  it('Aufgaben eines Wächters zählen nur, wenn Board UND Wächter zählen', async () => {
     const mk = async (name: string, counts: boolean) => {
       const id = (await call(chef, 'POST', '/api/watchers', input(pub, { name, countsForFairness: counts, assign: { mode: 'fixed', personIds: [ids.anna] } }))).body.id as string;
       await call(chef, 'POST', `/api/watchers/${id}/test`);
@@ -222,7 +227,7 @@ describe('Mitglied aus dem Board entfernen', () => {
     expect(data.get(c).status).toBe('assignees_missing');
   });
 
-  it('assignees_missing: der Wächter bleibt aktiv, legt aber keine Karten an (Lauf im Protokoll), auch Testen und „Jetzt erstellen" nicht', async () => {
+  it('assignees_missing: der Wächter bleibt aktiv, legt aber keine Aufgaben an (Lauf im Protokoll), auch Testen und „Jetzt erstellen" nicht', async () => {
     const { c } = await makeThree();
     await call(rene, 'PATCH', `/api/boards/${bad.board}`, { memberIds: [] });
     expect(data.get(c).active).toBe(true);
@@ -296,8 +301,8 @@ describe('Mitglied aus dem Board entfernen', () => {
   });
 });
 
-describe('Offene Karten eines Wächters in einem Board, das jemand nicht sieht', () => {
-  it('Wächter-Liste und Zuhause zeigen die Karte nicht', async () => {
+describe('Offene Aufgaben eines Wächters in einem Board, das jemand nicht sieht', () => {
+  it('Wächter-Liste und Zuhause zeigen die Aufgabe nicht', async () => {
     store.updateBoard(bad.board, { memberIds: [ids.anna, ids.chef] }, ids.rene);
     const id = (await call(chef, 'POST', '/api/watchers', input(bad, { assign: { mode: 'fixed', personIds: [ids.rene] } }))).body.id as string;
     await call(chef, 'POST', `/api/watchers/${id}/test`);
@@ -308,5 +313,179 @@ describe('Offene Karten eines Wächters in einem Board, das jemand nicht sieht',
     expect(await seen(chef)).toBeNull();
     expect(await seen(tom)).toBeNull();
     expect(((await call(tom, 'GET', '/api/watchers')).body.items as any[]).find((w) => w.id === id).openCard).toBeNull();
+  });
+});
+
+describe('Folgen für Wächter im Detail (Plan und Ausführung)', () => {
+  const rule = (extra: Partial<AssignRule> = {}): AssignRule => ({ mode: 'rotation', personIds: [], fallback: 'next', waitFallback: 'none', fallbackPersonId: null, ...extra });
+
+  /**
+   * Legt Wächter im Board „Bad-Umbau" an (Chef ist dafür kurz Mitglied) und setzt die Regel danach direkt in der Datenbank:
+   * So kommen auch Altbestände vor, die die Eingabeprüfung nie durchließe (Kreis mit Personen, die das Board nicht sehen).
+   */
+  async function watchersOnBad(rules: Record<string, AssignRule>): Promise<Record<string, string>> {
+    store.updateBoard(bad.board, { memberIds: [ids.anna, ids.chef] }, ids.rene);
+    const made: Record<string, string> = {};
+    for (const name of Object.keys(rules)) {
+      made[name] = (await call(chef, 'POST', '/api/watchers', input(bad, { name, assign: { mode: 'fixed', personIds: [ids.rene] } }))).body.id as string;
+    }
+    store.updateBoard(bad.board, { memberIds: [ids.anna] }, ids.rene);
+    for (const [name, assign] of Object.entries(rules)) db.prepare('update watchers set assign_json = ? where id = ?').run(JSON.stringify(assign), made[name]!);
+    return made;
+  }
+
+  it('nur Wächter, die auf dieses Board zeigen und lesbar gespeichert sind, zählen (andere Boards, kaputtes JSON)', async () => {
+    const w = await watchersOnBad({ Eigener: rule({ mode: 'fixed', personIds: [ids.rene] }), 'Kaputte Aufgabe': rule(), 'Kaputte Zuweisung': rule() });
+    await call(chef, 'POST', '/api/watchers', input(pub, { name: 'Anderes Board' }));
+    db.prepare("update watchers set card_json = 'kaputt' where id = ?").run(w['Kaputte Aufgabe']!);
+    db.prepare("update watchers set assign_json = 'kaputt' where id = ?").run(w['Kaputte Zuweisung']!);
+    const plan = store.previewBoardAccess(bad.board, { visibility: 'private' }, ids.rene);
+    expect(plan.removedIds).toEqual([ids.anna]);
+    expect(plan.blocking).toEqual([{ id: w.Eigener, name: 'Eigener' }]);
+    expect(plan.watchers).toEqual([]);
+    expect(plan.rules).toEqual([]);
+  });
+
+  it('nur Betroffene stehen im Plan: Art „keine Zuweisung", unberührte Kreise und ein bleibender Rückfall gehören nicht dazu', async () => {
+    const w = await watchersOnBad({
+      Keiner: rule({ mode: 'none' }),
+      Unberührt: rule({ personIds: [ids.rene] }),
+      'Rückfall bleibt': rule({ mode: 'rotation_present', personIds: [ids.rene], fallback: 'fixed', fallbackPersonId: ids.rene }),
+      Betroffen: rule({ personIds: [ids.rene, ids.anna] }),
+    });
+    const plan = store.previewBoardAccess(bad.board, { memberIds: [] }, ids.rene);
+    expect(plan.removedIds).toEqual([ids.anna]);
+    expect(plan.watchers.map((x) => x.watcherId)).toEqual([w.Betroffen]);
+    expect(plan.watchers[0]).toMatchObject({ mode: 'rotation', before: [ids.rene, ids.anna], after: [ids.rene], missing: false, circleEmpty: false, fallbackCleared: false });
+    expect(plan.rules).toEqual([{ watcherId: w.Betroffen, rule: rule({ personIds: [ids.rene] }) }]);
+  });
+
+  it('der Kreis zählt nur Personen, die das Board vorher sahen; ein leerer Kreis bleibt leer', async () => {
+    const w = await watchersOnBad({
+      // Chef sieht das Board nicht (mehr): er steht im Kreis, gehört aber nicht zu „jetzt zuständig"
+      Altbestand: rule({ personIds: [ids.anna, ids.chef] }),
+      'Alle im Board': rule({ personIds: [] }),
+    });
+    const plan = store.previewBoardAccess(bad.board, { memberIds: [] }, ids.rene);
+    const byId = Object.fromEntries(plan.watchers.map((x) => [x.watcherId, x]));
+    expect(byId[w.Altbestand!]).toMatchObject({ before: [ids.anna], after: [], missing: true, circleEmpty: false });
+    expect(byId[w['Alle im Board']!]).toMatchObject({ before: [ids.rene, ids.anna], after: [ids.rene], missing: false, circleEmpty: true });
+    expect(plan.rules.find((r) => r.watcherId === w.Altbestand)!.rule.personIds).toEqual([]);
+    expect(plan.rules.find((r) => r.watcherId === w['Alle im Board'])!.rule.personIds).toEqual([]);
+  });
+
+  it('eine Rückfall-Person, die das Board nie sah, bleibt eingetragen; sonst fällt nur der Rückfall „fixed" weg', async () => {
+    const w = await watchersOnBad({
+      Fremder: rule({ mode: 'rotation_present', personIds: [ids.rene, ids.anna], fallback: 'fixed', fallbackPersonId: ids.chef }),
+      'Rückfall fest': rule({ mode: 'rotation_present', personIds: [ids.rene], fallback: 'fixed', waitFallback: 'all', fallbackPersonId: ids.anna }),
+      'Warten fest': rule({ mode: 'first_home', personIds: [ids.rene], fallback: 'all', waitFallback: 'fixed', fallbackPersonId: ids.anna }),
+      'Beides fest': rule({ mode: 'first_home', personIds: [ids.rene], fallback: 'fixed', waitFallback: 'fixed', fallbackPersonId: ids.anna }),
+    });
+    const plan = store.previewBoardAccess(bad.board, { memberIds: [] }, ids.rene);
+    const impact = (id: string) => plan.watchers.find((x) => x.watcherId === id)!;
+    const ruleOf = (id: string) => plan.rules.find((r) => r.watcherId === id)!.rule;
+    expect(impact(w.Fremder!).fallbackCleared).toBe(false);
+    expect(ruleOf(w.Fremder!)).toMatchObject({ fallback: 'fixed', fallbackPersonId: ids.chef, personIds: [ids.rene] });
+    expect(impact(w['Rückfall fest']!).fallbackCleared).toBe(true);
+    expect(ruleOf(w['Rückfall fest']!)).toMatchObject({ fallback: 'none', waitFallback: 'all', fallbackPersonId: null });
+    expect(ruleOf(w['Warten fest']!)).toMatchObject({ fallback: 'all', waitFallback: 'none', fallbackPersonId: null });
+    expect(ruleOf(w['Beides fest']!)).toMatchObject({ fallback: 'none', waitFallback: 'none', fallbackPersonId: null });
+    // der Server schreibt dieselben Regeln
+    store.updateBoard(bad.board, { memberIds: [] }, ids.rene);
+    expect(data.get(w['Warten fest']!).assign).toMatchObject({ fallback: 'all', waitFallback: 'none', fallbackPersonId: null });
+    expect(data.get(w.Fremder!).assign).toMatchObject({ fallback: 'fixed', fallbackPersonId: ids.chef });
+  });
+
+  it('beim Ändern verlieren nur die Aufgaben des Boards die Zuständigen; sie zählen als geändert und bekommen eine neue Fassung', () => {
+    const mk = (target: { board: string; col: string }, title: string, assigneeIds: string[]) => store.createCard(target.board, { columnId: target.col, title, assigneeIds }, ids.rene).id;
+    const c1 = mk(bad, 'Eins', [ids.anna, ids.rene]);
+    const c2 = mk(bad, 'Zwei', [ids.anna]);
+    const c3 = mk(bad, 'Drei', [ids.rene]);
+    const other = mk(pub, 'Anderswo', [ids.anna]);
+    const versions = Object.fromEntries([c1, c2, c3].map((id) => [id, store.getCard(id).version]));
+    store.takeChanges();
+    const res = store.updateBoardWithEffects(bad.board, { memberIds: [] }, ids.rene);
+    expect(res.effects).toMatchObject({ removedIds: [ids.anna], cardsChanged: 2 });
+    expect(store.getCard(c1).assigneeIds).toEqual([ids.rene]);
+    expect(store.getCard(c2).assigneeIds).toEqual([]);
+    expect(store.getCard(c3).assigneeIds).toEqual([ids.rene]);
+    expect(store.getCard(other).assigneeIds).toEqual([ids.anna]);
+    expect(store.getCard(c1).version).toBe(versions[c1]! + 1);
+    expect(store.getCard(c2).version).toBe(versions[c2]! + 1);
+    expect(store.getCard(c3).version).toBe(versions[c3]!);
+    expect(store.takeChanges().cards.sort()).toEqual([c1, c2].sort());
+  });
+
+  describe('applyBoardAccess mit einem Plan von Hand', () => {
+    const impact = (watcherId: string, missing: boolean) => ({ watcherId, name: watcherId, mode: 'rotation' as const, before: [], after: [], missing, circleEmpty: true, fallbackCleared: false });
+    const plan = (watchers: BoardAccessPlan['watchers'], rules: BoardAccessPlan['rules']): BoardAccessPlan => ({ removedIds: [], watchers, blocking: [], assigneeCards: 0, rules });
+    const access = () => createBoardAccess(createContext(db), {});
+    const mkPub = async (name: string) => (await call(chef, 'POST', '/api/watchers', input(pub, { name }))).body.id as string;
+
+    it('ein Wächter ohne neue Regel, bei dem niemand bleibt, bekommt assignees_missing; die anderen nicht', async () => {
+      const [w1, w2] = [await mkPub('Eins'), await mkPub('Zwei')];
+      const effects = access().applyBoardAccess(pub.board, plan([impact(w1!, true), impact(w2!, false)], []));
+      expect(effects.cardsChanged).toBe(0);
+      expect(data.get(w1!).status).toBe('assignees_missing');
+      expect(data.get(w2!).status).toBe('ok');
+    });
+
+    it('gibt es Regeln für andere Wächter, wird der ohne Regel trotzdem markiert; der mit Regel bekommt sie und den Status', async () => {
+      const [w3, w4] = [await mkPub('Drei'), await mkPub('Vier')];
+      access().applyBoardAccess(pub.board, plan([impact(w3!, true), impact(w4!, true)], [{ watcherId: w3!, rule: rule({ personIds: [ids.rene] }) }]));
+      expect(data.get(w3!).status).toBe('assignees_missing');
+      expect(data.get(w3!).assign.personIds).toEqual([ids.rene]);
+      expect(data.get(w4!).status).toBe('assignees_missing');
+      expect(data.get(w4!).assign.personIds).toEqual([ids.rene, ids.anna]);
+    });
+  });
+});
+
+describe('Mitteilungen der Glocke zu Wächtern (Store-Teil)', () => {
+  const access = () => createBoardAccess(createContext(db), {});
+  const detail = { boardId: 'b1', boardName: 'Bad-Umbau', removedNames: ['Anna'], remainingNames: ['Rene'] };
+  const everything = (ba: ReturnType<typeof access>, who: string, limit = 10) => ba.watcherNoticesFor(who, '0000', '9999', limit);
+  const rawNotice = (id: string, watcherId: string, at: string, recipients: string, detailJson: string, byUser: string | null = null) =>
+    db.prepare("insert into watcher_notices (id, watcher_id, kind, at, by_user, recipients, detail) values (?, ?, 'shrunk', ?, ?, ?, ?)").run(id, watcherId, at, byUser, recipients, detailJson);
+  const mkWatcher = async () => (await call(chef, 'POST', '/api/watchers', input(pub, { name: 'Waschmaschine fertig' }))).body.id as string;
+  const count = () => (db.prepare('select count(*) as n from watcher_notices').get() as { n: number }).n;
+
+  it('ohne Empfänger wird nichts gespeichert; Empfänger stehen einmal in der Zeile', async () => {
+    const ba = access();
+    const w = await mkWatcher();
+    ba.addWatcherNotice({ watcherId: w, kind: 'shrunk', byUser: ids.rene, recipients: [], detail });
+    expect(count()).toBe(0);
+    ba.addWatcherNotice({ watcherId: w, kind: 'shrunk', byUser: ids.rene, recipients: ['u1', 'u1', 'u2'], detail });
+    expect(count()).toBe(1);
+    expect((db.prepare('select recipients from watcher_notices').get() as { recipients: string }).recipients).toBe('["u1","u2"]');
+    expect(everything(ba, 'u1')).toMatchObject([{ watcherId: w, watcherName: 'Waschmaschine fertig', kind: 'shrunk', byUser: ids.rene, detail }]);
+    expect(everything(ba, 'u2')).toHaveLength(1);
+    expect(everything(ba, 'u3')).toEqual([]);
+  });
+
+  it('der Auslöser kann fehlen (null bleibt null); das Limit schneidet die neuesten zuerst ab', async () => {
+    const ba = access();
+    const w = await mkWatcher();
+    rawNotice('n1', w, '2026-11-04T10:00:00.000Z', '["u1"]', JSON.stringify(detail), 'u9');
+    rawNotice('n2', w, '2026-11-04T11:00:00.000Z', '["u1"]', JSON.stringify(detail));
+    rawNotice('n3', w, '2026-11-04T12:00:00.000Z', '["u1"]', JSON.stringify(detail));
+    const two = everything(ba, 'u1', 2);
+    expect(two.map((n) => n.id)).toEqual(['n3', 'n2']);
+    expect(two[0]!.byUser).toBeNull();
+    expect(everything(ba, 'u1', 3).map((n) => [n.id, n.byUser])).toEqual([['n3', null], ['n2', null], ['n1', 'u9']]);
+    expect(everything(ba, 'u1', 1)).toHaveLength(1);
+  });
+
+  it('kaputte oder unvollständige Angaben fallen auf leere Werte zurück; eine kaputte Empfängerliste meint niemanden', async () => {
+    const ba = access();
+    const w = await mkWatcher();
+    rawNotice('kaputt', w, '2026-11-04T10:00:00.000Z', '["u1"]', 'kein json');
+    rawNotice('teil', w, '2026-11-04T11:00:00.000Z', '["u1"]', JSON.stringify({ boardName: 'Bad-Umbau' }));
+    rawNotice('ohne-empfaenger', w, '2026-11-04T12:00:00.000Z', 'kein json', JSON.stringify(detail));
+    const empty = { boardId: '', boardName: '', removedNames: [], remainingNames: [] };
+    const byId = Object.fromEntries(everything(ba, 'u1').map((n) => [n.id, n.detail]));
+    expect(Object.keys(byId).sort()).toEqual(['kaputt', 'teil']);
+    expect(byId.kaputt).toEqual(empty);
+    expect(byId.teil).toEqual({ ...empty, boardName: 'Bad-Umbau' });
   });
 });

@@ -105,7 +105,7 @@ function editor(extra: Record<string, string> = {}): WatcherEditor {
 describe('Wächter: Stupsen, wenn noch offen', () => {
   const card = (extra: Record<string, string>, wide = false) => render(NudgeCard, { props: { ed: editor(extra), wide } }).body;
 
-  it('Handy: Karte mit den Zeilen Nach / Wiederholen alle / Höchstens und dem Beispiel in der Karte', () => {
+  it('Handy: Aufgabe mit den Zeilen Nach / Wiederholen alle / Höchstens und dem Beispiel in der Aufgabe', () => {
     const raw = card({ nudgeAfter: '30', nudgeEvery: '30', nudgeMax: '3' });
     const out = text(raw);
     expect(out).toContain('Stupsen, wenn noch offen');
@@ -114,16 +114,16 @@ describe('Wächter: Stupsen, wenn noch offen', () => {
     expect(out).toContain('Wiederholen alle');
     expect(out).toContain('leer = nur einmal');
     expect(out).toContain('Höchstens');
-    expect(out).toContain('Karte angelegt 12:00 → Stups 12:30 · 13:00 · 13:30 (letzter)');
-    expect(out).toContain('Endet, sobald die Karte erledigt ist.');
-    // Das Beispiel steht in der Karte, nicht daneben
+    expect(out).toContain('Aufgabe angelegt 12:00 → Stups 12:30 · 13:00 · 13:30 (letzter)');
+    expect(out).toContain('Endet, sobald die Aufgabe erledigt ist.');
+    // Das Beispiel steht in der Aufgabe, nicht daneben
     expect(raw.indexOf('data-testid="nudge-example"')).toBeGreaterThan(raw.indexOf('data-testid="nudge-card"'));
   });
 
   it('ohne Wert bei „Nach“: kein Stups, kein Beispiel', () => {
     const out = text(card({}));
     expect(out).toContain('Leer lassen: kein Stups.');
-    expect(out).not.toContain('Karte angelegt 12:00');
+    expect(out).not.toContain('Aufgabe angelegt 12:00');
   });
 
   it('ohne Wiederholung: Höchstens ist gesperrt, es gibt genau einen Stups', () => {
@@ -132,7 +132,7 @@ describe('Wächter: Stupsen, wenn noch offen', () => {
     expect(raw).toMatch(/<input[^>]*aria-label="Höchstens so viele Stupse"[^>]*disabled|<input[^>]*disabled[^>]*aria-label="Höchstens so viele Stupse"/);
   });
 
-  it('Desktop: breite Karte, drei Felder in einer Zeile mit einzeiligen Beschriftungen, Zeitstrahl rechts', () => {
+  it('Desktop: breite Aufgabe, drei Felder in einer Zeile mit einzeiligen Beschriftungen, Zeitstrahl rechts', () => {
     const raw = card({ nudgeAfter: '30', nudgeEvery: '30', nudgeMax: '3' }, true);
     const out = text(raw);
     expect(raw).toContain('data-wide');
@@ -159,7 +159,7 @@ describe('Wächter: Stupsen, wenn noch offen', () => {
   it('englisch', () => {
     setLanguage('en');
     const out = text(card({ nudgeAfter: '30', nudgeEvery: '30', nudgeMax: '3' }));
-    expect(out).toContain('Card created 12:00 → Nudge 12:30 · 13:00 · 13:30 (last)');
-    expect(out).toContain('Ends as soon as the card is done.');
+    expect(out).toContain('Task created 12:00 → Nudge 12:30 · 13:00 · 13:30 (last)');
+    expect(out).toContain('Ends as soon as the task is done.');
   });
 });

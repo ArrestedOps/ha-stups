@@ -4,7 +4,7 @@ import type { AssignMode, BulkPatch, DueRule, TriggerKind, WatcherItem } from '.
 import { toInput, whoText, type WatcherForm } from './watchers';
 
 // Mehrere Wächter auf einmal bearbeiten: welche Felder für alle passen, welcher Wert gilt für alle („verschieden“, wenn keiner), und aus dem
-// Formular der Patch für `POST /api/watchers/bulk`. Entität, Name und Titel der Karte sind nie dabei.
+// Formular der Patch für `POST /api/watchers/bulk`. Entität, Name und Titel der Aufgabe sind nie dabei.
 
 export type BulkField =
   | 'active'
@@ -103,7 +103,7 @@ export function commonValues(items: WatcherItem[]): Partial<Record<BulkField, un
 
 /**
  * Aus dem Formular und den angefassten Feldern den Patch bauen. Es geht nur ins Paket, was angefasst wurde; alles andere bleibt je Wächter,
- * wie es ist. Ein neues Board nimmt die Spalte mit und leert die Kategorien der Karte (sie gehören dem alten Board).
+ * wie es ist. Ein neues Board nimmt die Spalte mit und leert die Kategorien der Aufgabe (sie gehören dem alten Board).
  */
 export function toBulkPatch(form: WatcherForm, touched: ReadonlySet<BulkField>): BulkPatch {
   const input = toInput(form);
@@ -190,7 +190,7 @@ export function fieldLabel(field: BulkField): string {
     case 'cooldown':
       return t('Sperrzeit');
     case 'dedupe':
-      return t('Keine zweite Karte');
+      return t('Keine zweite Aufgabe');
     case 'fairness':
       return t('Zählt zur Fairness');
     case 'threshold':

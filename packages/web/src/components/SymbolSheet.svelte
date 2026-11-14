@@ -24,7 +24,7 @@
     onpick,
     onclose,
   }: {
-    /** Titel der Karte (für die Vorschläge und den Satz „automatisch erkannt aus …“) */
+    /** Titel der Aufgabe (für die Vorschläge und den Satz „automatisch erkannt aus …“) */
     title: string;
     icon: string | null;
     color: string | null;

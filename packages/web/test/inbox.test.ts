@@ -113,10 +113,10 @@ describe('Zusammenfassung eines Eintrags', () => {
   });
   it('Wächter: zugewiesen, sucht jemanden, weitergegeben, erinnert', () => {
     const w = { kind: 'watcher' as const, watcherName: 'Waschmaschine fertig', actorId: null, cardTitle: 'ausräumen' };
-    expect(v({ ...w, assigned: true, detail: 'created' })).toEqual({ title: 'Wächter: Waschmaschine fertig', meta: 'Karte „ausräumen“ ist jetzt deine', icon: 'shield', color: 'orange' });
+    expect(v({ ...w, assigned: true, detail: 'created' })).toEqual({ title: 'Wächter: Waschmaschine fertig', meta: 'Aufgabe „ausräumen“ ist jetzt deine', icon: 'shield', color: 'orange' });
     expect(v({ ...w, assigned: false, detail: 'suggested' }).meta).toBe('„ausräumen“ sucht jemanden, der sie übernimmt');
-    expect(v({ ...w, assigned: true, detail: 'passed' }).meta).toBe('Karte „ausräumen“ wurde dir weitergegeben');
-    expect(v({ ...w, assigned: true, detail: 'nudged' }).meta).toBe('Karte „ausräumen“ wartet noch auf dich');
+    expect(v({ ...w, assigned: true, detail: 'passed' }).meta).toBe('Aufgabe „ausräumen“ wurde dir weitergegeben');
+    expect(v({ ...w, assigned: true, detail: 'nudged' }).meta).toBe('Aufgabe „ausräumen“ wartet noch auf dich');
   });
   it('Erinnerungen: überfällig mit Wochentag seit dem Termin (Berlin), fällig, vorab', () => {
     // Montag 2.11.2026, 23:30 UTC = Dienstag 0:30 Berlin: Der Termin lag am Dienstag
@@ -135,7 +135,7 @@ describe('Zusammenfassung eines Eintrags', () => {
   });
 });
 
-describe('Mitteilungen zu Wächtern ohne Karte', () => {
+describe('Mitteilungen zu Wächtern ohne Aufgabe', () => {
   it('„braucht neue Zuständige": roter Eintrag mit dem Grund', () => {
     const v = entryView(
       e({ kind: 'watcher', cardId: '', cardTitle: '', detail: 'assignees_missing', watcherName: 'Heizung prüfen', watcherId: 'w1', notice: { boardName: 'Bad-Umbau', removedNames: ['Anna'], remainingNames: [] } }),

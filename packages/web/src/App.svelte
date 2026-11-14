@@ -11,6 +11,8 @@
   import BoardSwitcher from './components/BoardSwitcher.svelte';
   import CardMenu from './components/CardMenu.svelte';
   import CardSheet from './components/CardSheet.svelte';
+  import CardContextMenu from './components/CardContextMenu.svelte';
+  import CommandPalette from './components/CommandPalette.svelte';
   import ConfirmDialog from './components/ConfirmDialog.svelte';
   import Icon from './components/Icon.svelte';
   import Lightbox from './components/Lightbox.svelte';
@@ -23,7 +25,7 @@
   import { agendaDelay } from './lib/agendaGate';
   import { columnForNew } from './lib/calendar';
   import { feedbackSheet } from './lib/feedbackSheet.svelte';
-  import { closeDetail, init, openSheet, setDesktop, ui } from './lib/store.svelte';
+  import { closeDetail, feat, goTasks, init, openSheet, selectTab, setDesktop, ui } from './lib/store.svelte';
   import { watchDesktop } from './lib/viewport';
   import Lazy from './components/Lazy.svelte';
 
@@ -50,7 +52,7 @@
   onMount(init);
 
   // Aufgaben und die Glocke oben (Punkt für Ungelesenes aus dem Posteingang) laden im selben Takt: Auf „Aufgaben" laden sie bei jeder Änderung neu,
-  // auf den anderen Reitern höchstens alle 30 Sekunden (sonst holte jede Änderung einer Karte zusätzlich alle Termine aller Boards)
+  // auf den anderen Reitern höchstens alle 30 Sekunden (sonst holte jede Änderung einer Aufgabe zusätzlich alle Termine aller Boards)
   let lastAgenda = 0;
   let agendaTimer: ReturnType<typeof setTimeout> | null = null;
   $effect(() => {
@@ -85,16 +87,34 @@
   const typing = (el: EventTarget | null) => el instanceof HTMLElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable);
 
   /**
-   * Tasten des Desktops. Strg/Cmd + K: Suche. N: neue Aufgabe (nicht in Eingabefeldern, nicht mit offenem Fenster). Escape: Detailspalte
+   * Tasten des Desktops. Strg/Cmd + K: Befehlspalette, „/“: Suchfeld. G dann T, B, C oder W: zu Aufgaben, Boards, Kalender, Wächter. N: neue Aufgabe (nicht in Eingabefeldern, nicht mit offenem Fenster). Escape: Detailspalte
    * schließen (nur wenn kein Fenster, Foto oder Rückfrage darüber liegt und Escape nicht schon etwas anderes getan hat). Im Capture,
    * damit ein Fenster, das Escape selbst schließt, die Detailspalte nicht gleich mit schließt.
    */
+  /** Zweistufige Tasten: „G“, dann T (Aufgaben), B (Boards), C (Kalender), W (Wächter); die zweite Taste gilt eine Sekunde lang */
+  let goAt = 0;
   function keydown(e: KeyboardEvent) {
     if (!ui.desktop || !ui.ready || ui.gate || !ui.allowed) return;
-    const modal = !!ui.sheet || !!ui.viewer || !!ui.confirm;
+    const modal = !!ui.sheet || !!ui.viewer || !!ui.confirm || ui.palette;
+    if (!e.metaKey && !e.ctrlKey && !e.altKey && !typing(e.target) && !modal) {
+      const key = e.key.toLowerCase();
+      if (goAt && Date.now() - goAt < 1000 && 'tbcw'.includes(key) && key.length === 1) {
+        goAt = 0;
+        e.preventDefault();
+        if (key === 't') goTasks('list');
+        else if (key === 'c') goTasks('calendar');
+        else if (key === 'b') selectTab('boards');
+        else if (feat.watchers) selectTab('watchers');
+        return;
+      }
+      goAt = key === 'g' ? Date.now() : 0;
+    }
     if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      if (modal) return;
+      if (modal && !ui.palette) return;
+      ui.palette = !ui.palette;
+    } else if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !typing(e.target) && !modal && !ui.palette) {
+      e.preventDefault();
       const input = document.getElementById('desktop-search') as HTMLInputElement | null;
       input?.focus();
       input?.select();
@@ -130,7 +150,6 @@
     <!-- Einrichtung beim ersten Start: statt der Reiter, solange der Server sie verlangt; Fenster (Einstellungen, Prüfen) öffnen darüber -->
     <Lazy load={loadOnboarding} />
   {:else}
-  <div class="header-glow" aria-hidden="true"></div>
   {#snippet pages()}
     {#if tab === 'boards'}
       <BoardsView />
@@ -153,17 +172,6 @@
   {:else}
     {@render pages()}
 
-    {#if (tab === 'boards' || (tab === 'tasks' && !ui.tasksCalendar)) && canCreate}
-      <!-- ab 640 px sitzt der Knopf am Rand der zentrierten Spalte (720 px), nicht am Rand des Fensters -->
-      <button
-        class="fab-grad fixed right-[max(1rem,calc((100vw-720px)/2+1rem))] bottom-[calc(var(--nav-h)+16px)] z-30 flex h-[58px] w-[58px] items-center justify-center rounded-btn"
-        aria-label={t('Neue Karte')}
-        onclick={() => openSheet({ type: 'new', columnId: newCardColumn! })}
-      >
-        <Icon name="plus" size={28} stroke={2.4} />
-      </button>
-    {/if}
-
     <TabBar />
   {/if}
   {/if}
@@ -173,7 +181,7 @@
   {:else if ui.sheet?.type === 'cardMenu'}
     {#key ui.sheet.id}<CardMenu id={ui.sheet.id} />{/key}
   {:else if ui.sheet?.type === 'new'}
-    <NewCardSheet columnId={ui.sheet.columnId} dueAt={ui.sheet.dueAt ?? null} picked={ui.sheet.picked ?? false} />
+    <NewCardSheet columnId={ui.sheet.columnId} dueAt={ui.sheet.dueAt ?? null} picked={ui.sheet.picked ?? false} initialTitle={ui.sheet.title ?? ''} />
   {:else if ui.sheet?.type === 'slot'}
     <SlotSheet at={ui.sheet.at} />
   {:else if ui.sheet?.type === 'boards'}
@@ -191,7 +199,7 @@
   {:else if ui.sheet?.type === 'people'}
     <Lazy load={loadPeopleSheet} />
   {:else if ui.sheet?.type === 'watcher'}
-    {#key ui.sheet.id ?? 'neu'}<Lazy load={loadWatcherSheet} props={{ id: ui.sheet.id, template: ui.sheet.template, hit: ui.sheet.hit, hits: ui.sheet.hits }} />{/key}
+    {#key ui.sheet.id ?? 'neu'}<Lazy load={loadWatcherSheet} props={{ id: ui.sheet.id, template: ui.sheet.template, hit: ui.sheet.hit, category: ui.sheet.category, hits: ui.sheet.hits }} />{/key}
   {:else if ui.sheet?.type === 'found'}
     <Lazy load={loadFoundSheet} />
   {:else if ui.sheet?.type === 'watcher-bulk'}
@@ -217,5 +225,7 @@
 
   <Lightbox />
   <ConfirmDialog />
+  {#if ui.desktop && ui.palette}<CommandPalette />{/if}
+  {#if ui.desktop && ui.ctx}<CardContextMenu />{/if}
   <Toasts />
 {/if}

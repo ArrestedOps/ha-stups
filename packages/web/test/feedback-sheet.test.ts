@@ -8,9 +8,9 @@ import { setLanguage } from '../src/lib/i18n/index.svelte';
 // Das Fenster „Feedback", auf dem Server gerendert: Schritt 1 (Art wählen) und Schritt 2 (Text, Zähler, Bild)
 const html = () => render(FeedbackSheet, { props: {} }).body;
 
-/** Das öffnende Tag des Senden-Knopfs (der große Knopf am Fuß, `glow-cta`) */
+/** Das öffnende Tag des Senden-Knopfs (der große Knopf am Fuß, 52 px hoch) */
 const sendButton = (out: string) => {
-  const start = out.lastIndexOf('<button', out.indexOf('glow-cta'));
+  const start = out.lastIndexOf('<button', out.indexOf('flex h-[52px] w-full'));
   return out.slice(start, out.indexOf('>', start) + 1);
 };
 

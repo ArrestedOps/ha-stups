@@ -76,7 +76,7 @@ describe('Eingabe prüfen', () => {
 });
 
 describe('Kalender: Termin mit Vorlauf', () => {
-  it('legt die Karte an, sobald der Vorlauf beginnt, genau einmal je Termin', async () => {
+  it('legt die Aufgabe an, sobald der Vorlauf beginnt, genau einmal je Termin', async () => {
     ha.calendars.set(CAL, [{ title: 'Biotonne', start: inHours(11), end: inHours(12) }]);
     await calendarWatcher();
     await engine.tick();
@@ -97,7 +97,7 @@ describe('Kalender: Termin mit Vorlauf', () => {
     expect(cards()).toHaveLength(1);
   });
 
-  it('zwei Termine: zwei Karten; vergangene Termine: keine', async () => {
+  it('zwei Termine: zwei Aufgaben; vergangene Termine: keine', async () => {
     ha.calendars.set(CAL, [
       { title: 'Alt', start: inHours(-5), end: inHours(-4) },
       { title: 'A', start: inHours(2), end: inHours(3) },
@@ -116,7 +116,7 @@ describe('Kalender: Termin mit Vorlauf', () => {
     expect(cards()).toHaveLength(1);
   });
 
-  it('ist die Karte erledigt, kommt sie für denselben Termin nicht wieder', async () => {
+  it('ist die Aufgabe erledigt, kommt sie für denselben Termin nicht wieder', async () => {
     ha.calendars.set(CAL, [{ title: 'Bio', start: inHours(2), end: inHours(3) }]);
     await calendarWatcher();
     await engine.tick();
@@ -126,7 +126,7 @@ describe('Kalender: Termin mit Vorlauf', () => {
     expect(cards()).toHaveLength(1);
   });
 
-  it('eine gelöschte Karte (Papierkorb) kommt für denselben Termin nicht wieder', async () => {
+  it('eine gelöschte Aufgabe (Papierkorb) kommt für denselben Termin nicht wieder', async () => {
     ha.calendars.set(CAL, [{ title: 'Bio', start: inHours(2), end: inHours(3), uid: 'abc' }]);
     await calendarWatcher();
     await engine.tick();
@@ -137,7 +137,7 @@ describe('Kalender: Termin mit Vorlauf', () => {
     expect(cards()).toHaveLength(0);
   });
 
-  it('ein geänderter Titel oder Beginn desselben Termins (gleiche Kennung) erzeugt keine zweite Karte', async () => {
+  it('ein geänderter Titel oder Beginn desselben Termins (gleiche Kennung) erzeugt keine zweite Aufgabe', async () => {
     ha.calendars.set(CAL, [{ title: 'Bio', start: inHours(2), end: inHours(3), uid: 'abc' }]);
     await calendarWatcher();
     await engine.tick();
@@ -148,7 +148,7 @@ describe('Kalender: Termin mit Vorlauf', () => {
     expect(cards()).toHaveLength(1);
   });
 
-  it('Einzeltermine einer Serie (gleiche Kennung, andere Wiederholung) bekommen je eine Karte', async () => {
+  it('Einzeltermine einer Serie (gleiche Kennung, andere Wiederholung) bekommen je eine Aufgabe', async () => {
     ha.calendars.set(CAL, [
       { title: 'Bio', start: inHours(2), end: inHours(3), uid: 'serie', recurrenceId: 'r1' },
       { title: 'Bio', start: inHours(5), end: inHours(6), uid: 'serie', recurrenceId: 'r2' },
@@ -226,7 +226,7 @@ describe('Kalender: Termin mit Vorlauf', () => {
     expect(cards()).toHaveLength(1);
   });
 
-  it('Zuhause: der nächste Termin steht unter „Bald dran", bis seine Karte entsteht', async () => {
+  it('Zuhause: der nächste Termin steht unter „Bald dran", bis seine Aufgabe entsteht', async () => {
     ha.calendars.set(CAL, [{ title: 'Restmüll', start: inHours(20), end: inHours(21) }]);
     await calendarWatcher();
     await engine.tick();
@@ -241,7 +241,7 @@ describe('Vorhersage: Regen', () => {
   const rain = (h: number) => ({ datetime: inHours(h), condition: 'rainy' });
   const dry = (h: number) => ({ datetime: inHours(h), condition: 'sunny', precipitation: 0, precipitation_probability: 5 });
 
-  it('Regen in den nächsten Stunden: eine Karte; solange der Regen anhält, keine zweite', async () => {
+  it('Regen in den nächsten Stunden: eine Aufgabe; solange der Regen anhält, keine zweite', async () => {
     ha.forecasts.set(WEATHER, [dry(1), rain(2), rain(3)]);
     await forecastWatcher();
     await engine.tick();
@@ -265,7 +265,7 @@ describe('Vorhersage: Regen', () => {
     expect(cards()).toHaveLength(1);
   });
 
-  it('nach trockenem Wetter ist der Wächter wieder scharf: neuer Regen, neue Karte', async () => {
+  it('nach trockenem Wetter ist der Wächter wieder scharf: neuer Regen, neue Aufgabe', async () => {
     ha.forecasts.set(WEATHER, [rain(1)]);
     await forecastWatcher();
     await engine.tick();

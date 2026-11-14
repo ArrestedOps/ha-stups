@@ -14,15 +14,15 @@ export interface ConfirmationRequest {
 }
 
 /**
- * Bestätigung durch Erwachsene: Ein Kind hakt ab, die Karte bleibt offen und „wartet auf Bestätigung", bis ein Bestätiger
- * zustimmt (dann erledigt `completeCard` die Karte, gezählt auf das Kind) oder „Nochmal" sagt (die Anfrage entfällt).
+ * Bestätigung durch Erwachsene: Ein Kind hakt ab, die Aufgabe bleibt offen und „wartet auf Bestätigung", bis ein Bestätiger
+ * zustimmt (dann erledigt `completeCard` die Aufgabe, gezählt auf das Kind) oder „Nochmal" sagt (die Anfrage entfällt).
  */
 export function createConfirmation(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { one, all, run, iso } = c;
   const { completeCard, getCard, touchCard, visibleCardRow } = lazy(s, ['completeCard', 'getCard', 'touchCard', 'visibleCardRow'] as const);
 
-  /** Braucht „Erledigt" dieser Person an dieser Karte eine Bestätigung? Nur ein Kind, dem die Karte zugewiesen ist. */
+  /** Braucht „Erledigt" dieser Person an dieser Aufgabe eine Bestätigung? Nur ein Kind, dem die Aufgabe zugewiesen ist. */
   function needsConfirmation(cardId: string, userId: string): boolean {
     const card = one('select confirm, completed_at from cards where id = ? and deleted_at is null', cardId);
     const user = one('select is_child, is_person, confirm_default from users where id = ?', userId);
@@ -41,7 +41,7 @@ export function createConfirmation(c: Ctx, late: unknown) {
   }
 
   /**
-   * Die Antwort eines Bestätigers. „Bestätigen" erledigt die Karte und zählt auf das Kind, „Nochmal" nimmt die Anfrage zurück.
+   * Die Antwort eines Bestätigers. „Bestätigen" erledigt die Aufgabe und zählt auf das Kind, „Nochmal" nimmt die Anfrage zurück.
    * Wer zuerst antwortet, entscheidet: danach gibt es keine Anfrage mehr (Konflikt).
    */
   function answerConfirmation(

@@ -62,7 +62,7 @@ describe('Probelauf: zahlenbasierte Bedingung', () => {
     expect(run(h).sentence).toBe('In den letzten 7 Tagen hätte der Wächter nie ausgelöst.');
   });
 
-  it('Zähler: erst bei jedem dritten Auslösen eine Karte', () => {
+  it('Zähler: erst bei jedem dritten Auslösen eine Aufgabe', () => {
     const h: HistoryPoint[] = [pt(900, '120')];
     for (let i = 0; i < 4; i += 1) h.push(pt(800 - i * 100, '1'), pt(750 - i * 100, '120'));
     expect(run(h, below({ count: 3 }), 0).fired).toHaveLength(1);

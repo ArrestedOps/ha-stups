@@ -4,7 +4,7 @@ import type { BoardVisibility, Row } from './types.js';
 
 /**
  * Für wen eine Abfrage gilt: die Kennung der Person, oder `null` (niemand Bestimmtes, zum Beispiel ein Hintergrunddienst für alle):
- * dann zählen nur Boards, die alle sehen. Jede Abfrage, die Boards oder Karten liefert, fragt hier, was gesehen werden darf.
+ * dann zählen nur Boards, die alle sehen. Jede Abfrage, die Boards oder Aufgaben liefert, fragt hier, was gesehen werden darf.
  */
 export type Viewer = string | null;
 
@@ -63,11 +63,11 @@ export function createVisibility(c: Ctx, late: unknown) {
     return all(v.sql, ...v.args).map((r) => r.id as string);
   }
 
-  /** Das Board einer Karte, auch einer gelöschten (für die Zugriffsprüfung); null, wenn es die Karte nicht gibt */
+  /** Das Board einer Aufgabe, auch einer gelöschten (für die Zugriffsprüfung); null, wenn es die Aufgabe nicht gibt */
   const boardIdOfCardAny = (cardId: string): string | null =>
     (one('select board_id from cards where id = ?', cardId)?.board_id as string | undefined) ?? null;
 
-  /** Sieht die Person das Board dieser Karte? Unbekannte Karte: nein. */
+  /** Sieht die Person das Board dieser Aufgabe? Unbekannte Aufgabe: nein. */
   function canSeeCard(viewer: Viewer, cardId: string): boolean {
     const board = boardIdOfCardAny(cardId);
     return board !== null && canSeeBoard(viewer, board);
@@ -80,7 +80,7 @@ export function createVisibility(c: Ctx, late: unknown) {
     all('select user_id from board_members where board_id = ? order by rowid', boardId).map((r) => r.user_id as string);
 
   /**
-   * Die Personen (Kennungen, in der Reihenfolge der Personenliste), die ein Board mit diesen Angaben sehen: Zuständige einer Karte und
+   * Die Personen (Kennungen, in der Reihenfolge der Personenliste), die ein Board mit diesen Angaben sehen: Zuständige einer Aufgabe und
    * Kreise der Wächter kommen nur aus ihnen.
    */
   function peopleSeeing(visibility: BoardVisibility, ownerId: string | null, memberIds: string[]): string[] {

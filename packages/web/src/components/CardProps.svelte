@@ -4,7 +4,7 @@
   import type { Recurrence } from '../lib/recurrence';
   import type { ReminderSpec } from '../lib/reminder';
 
-  /** Die Felder, die eine neue und eine bestehende Karte gemeinsam haben */
+  /** Die Felder, die eine neue und eine bestehende Aufgabe gemeinsam haben */
   export interface CardFields {
     columnId: string;
     assigneeIds: string[];
@@ -17,11 +17,11 @@
     effort?: Effort | null;
     categoryIds: string[];
     costCents: number | null;
-    /** gesetzt, wenn die Karte erledigt ist: dann ist der Termin nicht mehr „überfällig" */
+    /** gesetzt, wenn die Aufgabe erledigt ist: dann ist der Termin nicht mehr „überfällig" */
     completedAt?: string | null;
-    /** Was die nächste Karte übernimmt; ohne Angabe gilt die Voreinstellung */
+    /** Was die nächste Aufgabe übernimmt; ohne Angabe gilt die Voreinstellung */
     carryOver?: CarryField[];
-    /** Bestätigung beim Erledigen durch ein Kind; fehlt bei einer neuen Karte (dort gibt es die Wahl noch nicht) */
+    /** Bestätigung beim Erledigen durch ein Kind; fehlt bei einer neuen Aufgabe (dort gibt es die Wahl noch nicht) */
     confirm?: 'on' | 'off' | null;
   }
 </script>
@@ -32,7 +32,6 @@
   import { DEFAULT_CARRY } from '../lib/carry';
   import { describeRecurrence } from '../lib/recurrence';
   import { toast, ui } from '../lib/store.svelte';
-  import { catKey } from '../lib/colors';
   import Avatar from './Avatar.svelte';
   import CategoryPicker from './CategoryPicker.svelte';
   import DateSheet from './DateSheet.svelte';
@@ -47,6 +46,7 @@
     onsave,
     onmove,
     readonly = false,
+    grid = false,
   }: {
     card: CardFields;
     /** Spalten, die zur Wahl stehen */
@@ -56,10 +56,12 @@
     onmove: (columnId: string) => void;
     /** Nur ansehen (Rolle „Kind"): eine Zeile mit den Werten statt der Knöpfe */
     readonly?: boolean;
+    /** Desktop (aufgeklappte Aufgabe): die Eigenschaften als Raster aus Feldern, Beschriftung oben, Wert darunter; das Feld klappt als Streifen darunter auf */
+    grid?: boolean;
   } = $props();
 
   const column = $derived(ui.view?.columns.find((c) => c.id === card.columnId));
-  // Eine erledigte Karte ist nicht überfällig, auch wenn ihr Termin in der Vergangenheit liegt
+  // Eine erledigte Aufgabe ist nicht überfällig, auch wenn ihr Termin in der Vergangenheit liegt
   const late = $derived(isOverdue(card.dueAt) && !card.completedAt && !column?.isDone);
 
   // Welches Eigenschaftsfeld unter den Chips offen ist (immer nur eines)
@@ -81,9 +83,8 @@
     ['medium', t('Mittel')],
     ['large', t('Groß')],
   ]);
-  const effortLabel = $derived(card.effort ? (EFFORTS.find((e) => e[0] === card.effort)?.[1] ?? '') : t('Aufwand'));
 
-  // Bestätigung: nur sinnvoll, wenn der Karte ein Kind zugewiesen ist
+  // Bestätigung: nur sinnvoll, wenn der Aufgabe ein Kind zugewiesen ist
   const hasChild = $derived(ui.people.some((p) => p.isChild && card.assigneeIds.includes(p.id)));
   const CONFIRMS: [('on' | 'off') | null, string][] = $derived([
     [null, t('Vorgabe der Person')],
@@ -146,31 +147,22 @@
     void saveDue({ dueAt: null, recurrence: null, remindBeforeMin: null });
   }
 
+  /** Die Eigenschaften unter „Status“ in einer Reihenfolge, als Liste (Handy, Sheet) oder als Raster (aufgeklappte Aufgabe) */
+  const facts = $derived<{ name: string; label: string; value: string; tone?: string; avatars?: boolean; empty?: boolean }[]>([
+    { name: 'due', label: t('Fällig'), value: card.dueAt ? formatDue(card.dueAt) + (late ? ` · ${t('überfällig')}` : '') : t('Kein Termin'), tone: late ? 'text-danger' : '', empty: !card.dueAt },
+    { name: 'who', label: t('Zuständig'), value: people.length ? people.map((p) => p.displayName).join(' & ') : t('Niemand'), avatars: true, empty: people.length === 0 },
+    { name: 'rec', label: t('Wiederholung'), value: card.recurrence ? describeRecurrence(card.recurrence) : t('Nie'), empty: !card.recurrence },
+    { name: 'rem', label: t('Erinnerung'), value: card.remindBeforeMin ? t('{lead} vorher', { lead: formatLead(card.remindBeforeMin) }) : card.reminder ? t('Nachhaken') : t('Keine'), empty: !card.remindBeforeMin && !card.reminder },
+    { name: 'prio', label: t('Priorität'), value: card.priority ? (PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? '') : t('Normal'), empty: !card.priority },
+    { name: 'cat', label: t('Kategorie'), value: catNames.length ? catNames.join(', ') : t('Keine'), empty: catNames.length === 0 },
+    { name: 'effort', label: t('Aufwand'), value: card.effort ? (EFFORTS.find((e) => e[0] === card.effort)?.[1] ?? '') : t('Nicht angegeben'), empty: !card.effort },
+    { name: 'cost', label: t('Kosten'), value: card.costCents !== null ? formatCost(card.costCents) : t('Nicht angegeben'), empty: card.costCents === null },
+    ...(card.confirm !== undefined && hasChild ? [{ name: 'confirm', label: t('Bestätigung'), value: confirmLabel === t('Bestätigung') ? t('Vorgabe der Person') : confirmLabel, empty: card.confirm === null }] : []),
+  ]);
+
   // „Termin wählen“: Monatskalender und Uhrzeit-Rad (Termin-Fenster)
   let dateOpen = $state(false);
 </script>
-
-{#snippet chip(name: string, icon: string, text: string, filled: boolean, tone = '', lead?: 'photo' | 'dot', iconTone = '')}
-  <button
-    type="button"
-    class="flex h-[34px] max-w-full items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold {lead === 'photo' ? 'pl-1' : ''} {panel === name
-      ? 'bg-accent-grad glow-chip border-transparent'
-      : filled
-        ? `border-line-chip bg-surface ${tone || 'text-text-soft'}`
-        : 'border-dashed border-line-chip text-fg2'}"
-    aria-expanded={panel === name}
-    onclick={() => toggle(name)}
-  >
-    {#if lead === 'photo' && people[0]}
-      <Avatar person={people[0]} size={28} ring={1.5} />
-    {:else if lead === 'dot' && cats[0]}
-      <i class="h-[9px] w-[9px] shrink-0 rounded-full" style:background="var(--c-{catKey(cats[0].color)}-fg)"></i>
-    {:else}
-      <span class="inline-flex shrink-0 {iconTone}"><Icon name={icon} size={16} stroke={2} /></span>
-    {/if}
-    <span class="truncate">{text}</span>
-  </button>
-{/snippet}
 
 {#if readonly}
   <!-- Rolle „Kind": die Werte nur zum Ansehen (Aufwand und Kosten gehören nicht dazu) -->
@@ -195,50 +187,87 @@
     {/if}
   </div>
 {:else}
-<!-- Eigenschaften als kleine Chips: leer gestrichelt, gefüllt mit Wert. Antippen öffnet darunter ein Feld. -->
-<div class="flex flex-wrap gap-2" role="group" aria-label={t('Eigenschaften')}>
-  <label class="relative flex h-[34px] items-center gap-1.5 rounded-full border border-line-chip bg-surface px-3 text-[13px] font-semibold text-text-soft">
-    <Icon name="kanban" size={16} stroke={2} />{column?.name ?? 'Status'}
-    <select
-      class="absolute inset-0 h-full w-full opacity-0"
-      value={card.columnId}
-      aria-label={t('Status der Karte')}
-      onchange={(e) => onmove(e.currentTarget.value)}
-    >
-      {#each targets as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
-    </select>
-  </label>
-
-  {@render chip('who', 'user', people.length ? people.map((p) => p.displayName).join(' & ') : t('Zuständig'), people.length > 0, '', people.length ? 'photo' : undefined)}
-  {@render chip(
-    'due',
-    'calendar',
-    card.dueAt ? formatDue(card.dueAt) + (late ? ` · ${t('überfällig')}` : '') : t('Fälligkeit'),
-    !!card.dueAt,
-    late ? 'text-danger' : '',
-  )}
-  {@render chip('prio', 'flag', card.priority ? (PRIORITIES.find((p) => p[0] === card.priority)?.[1] ?? '') : t('Priorität'), !!card.priority, '', undefined, card.priority ? 'text-accent-text' : '')}
-  {@render chip('cat', 'tag', catNames.length ? catNames.join(', ') : t('Kategorie'), catNames.length > 0, '', catNames.length ? 'dot' : undefined)}
-  {@render chip('cost', 'euro', card.costCents !== null ? formatCost(card.costCents) : t('Kosten'), card.costCents !== null)}
-  {@render chip('effort', 'task-check', effortLabel, !!card.effort)}
-  {@render chip('rec', 'repeat', card.recurrence ? describeRecurrence(card.recurrence) : t('Wiederholen'), !!card.recurrence)}
-  {@render chip(
-    'rem',
-    'bell',
-    card.remindBeforeMin ? t('{lead} vorher', { lead: formatLead(card.remindBeforeMin) }) : card.reminder ? t('Nachhaken') : t('Erinnerung'),
-    !!card.remindBeforeMin || !!card.reminder,
-  )}
-  {#if card.confirm !== undefined && hasChild}
-    {@render chip('confirm', 'task-check', confirmLabel, card.confirm !== null)}
+<!-- Eigenschaften als gruppierte Liste wie in iOS: links der Name, rechts der Wert. Antippen klappt darunter das Feld auf (immer nur eines). -->
+{#if grid}
+  <div class="grid grid-cols-2 gap-2 xl:grid-cols-4" role="group" aria-label={t('Eigenschaften')}>
+    <label class="relative block min-w-0 rounded-[12px] border border-line bg-surface px-3 py-2.5 text-left hover:border-accent focus-within:border-accent">
+      <span class="block text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Status')}</span>
+      <span class="mt-0.5 flex min-h-6 items-center gap-1.5 truncate text-[15px] font-semibold"><Icon name="kanban" size={15} stroke={2} />{column?.name ?? 'Status'}</span>
+      <select class="absolute inset-0 h-full w-full cursor-pointer opacity-0" value={card.columnId} aria-label={t('Status der Aufgabe')} onchange={(e) => onmove(e.currentTarget.value)}>
+        {#each targets as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
+      </select>
+    </label>
+    {#each facts as f (f.name)}
+      <button
+        type="button"
+        class="min-w-0 rounded-[12px] border bg-surface px-3 py-2.5 text-left hover:border-accent {panel === f.name ? 'border-accent ring-1 ring-accent' : 'border-line'}"
+        aria-expanded={panel === f.name}
+        aria-label="{f.label}: {f.value}"
+        onclick={() => toggle(f.name)}
+      >
+        <span class="block text-[11px] font-bold tracking-[0.06em] text-fg2 uppercase" aria-hidden="true">{f.label}</span>
+        <span class="mt-0.5 flex min-h-6 items-center gap-1.5 truncate text-[15px] font-semibold {f.tone || (f.empty ? 'text-hint font-medium' : '')}" aria-hidden="true">
+          {#if f.avatars && people.length}
+            <span class="flex shrink-0 items-center -space-x-1.5">{#each people.slice(0, 3) as p (p.id)}<Avatar person={p} size={22} ring={1.5} />{/each}</span>
+          {/if}
+          <span class="truncate">{f.value}</span>
+        </span>
+      </button>
+    {/each}
+  </div>
+  {#if panel}
+    <div class="mt-2 rounded-[12px] border border-accent bg-surface p-3.5">{@render editor(panel)}</div>
   {/if}
-</div>
+{:else}
+<div class="list-group kv mt-0" role="group" aria-label={t('Eigenschaften')}>
+  <div>
+    <label class="relative flex min-h-[46px] items-center gap-3 px-4 text-[16px]">
+      <span class="flex-1">{t('Status')}</span>
+      <span class="flex min-w-0 items-center gap-1.5 truncate text-fg2"><Icon name="kanban" size={16} stroke={2} />{column?.name ?? 'Status'}</span>
+      <span class="flex shrink-0 text-dim"><Icon name="chevron-right" size={16} stroke={2.2} /></span>
+      <select class="absolute inset-0 h-full w-full opacity-0" value={card.columnId} aria-label={t('Status der Aufgabe')} onchange={(e) => onmove(e.currentTarget.value)}>
+        {#each targets as c (c.id)}<option value={c.id}>{c.name}</option>{/each}
+      </select>
+    </label>
+  </div>
 
-{#if panel}
-  <div class="mt-3 rounded-row border border-line bg-surface p-4">
-    {#if panel === 'who'}
+  {#each facts as f (f.name)}
+    {@render row(f.name, f.label, f.value, f.tone, f.avatars)}
+  {/each}
+</div>
+{/if}
+{/if}
+
+{#snippet row(name: string, label: string, value: string, tone = '', avatars = false)}
+  <div>
+    <button
+      type="button"
+      class="flex min-h-[46px] w-full items-center gap-3 px-4 text-left text-[16px]"
+      aria-expanded={panel === name}
+      aria-label="{label}: {value}"
+      onclick={() => toggle(name)}
+    >
+      <span class="flex-1">{label}</span>
+      {#if avatars && people.length}
+        <span class="flex shrink-0 items-center -space-x-1.5" aria-hidden="true">
+          {#each people.slice(0, 4) as p (p.id)}<Avatar person={p} size={26} ring={1.5} />{/each}
+        </span>
+      {:else}
+        <span class="min-w-0 truncate text-right {tone || 'text-fg2'}" aria-hidden="true">{value}</span>
+      {/if}
+      <span class="flex shrink-0 text-dim transition-transform {panel === name ? 'rotate-90' : ''}"><Icon name="chevron-right" size={16} stroke={2.2} /></span>
+    </button>
+    {#if panel === name}
+      <div class="px-4 pt-1 pb-4">{@render editor(name)}</div>
+    {/if}
+  </div>
+{/snippet}
+
+{#snippet editor(name: string)}
+    {#if name === 'who'}
       <PeoplePicker selected={card.assigneeIds} onchange={(ids) => onsave({ assigneeIds: ids })} />
       <p class="mt-3 text-[13px] text-fg2">{t('Benachrichtigt werden nur zugewiesene Personen.')}</p>
-    {:else if panel === 'due'}
+    {:else if name === 'due'}
       <div class="flex flex-wrap gap-2">
         {#each [[0, 18, t('Heute 18:00')], [1, 9, t('Morgen 09:00')]] as [days, hour, label] (label)}
           <button
@@ -270,7 +299,7 @@
         />
       </label>
       {#if !card.dueAt}<p class="mt-3 text-[13px] text-fg2">{t('Mit einem Termin kannst du auch wiederholen und erinnern.')}</p>{/if}
-    {:else if panel === 'rec'}
+    {:else if name === 'rec'}
       <RecurrenceEditor
         value={card.recurrence}
         dueAt={card.dueAt}
@@ -278,7 +307,7 @@
         onchange={(rule: Recurrence | null, autoDue?: string) => onsave({ recurrence: rule, ...(autoDue ? { dueAt: autoDue } : {}) })}
         oncarry={(fields: CarryField[]) => onsave({ carryOver: fields })}
       />
-    {:else if panel === 'rem'}
+    {:else if name === 'rem'}
       <ReminderEditor
         fromNow
         dueAt={card.dueAt}
@@ -287,7 +316,7 @@
         onremind={(min) => onsave({ remindBeforeMin: min })}
         onnag={(spec) => onsave({ reminder: spec })}
       />
-    {:else if panel === 'prio'}
+    {:else if name === 'prio'}
       <div class="flex flex-wrap gap-2" role="group" aria-label={t('Priorität')}>
         {#each PRIORITIES as [value, label] (label)}
           <button
@@ -304,7 +333,7 @@
           </button>
         {/each}
       </div>
-    {:else if panel === 'effort'}
+    {:else if name === 'effort'}
       <div class="flex flex-wrap gap-2" role="group" aria-label={t('Aufwand')}>
         {#each EFFORTS as [value, label] (label)}
           <button
@@ -318,9 +347,9 @@
         {/each}
       </div>
       <p class="mt-3 text-[13px] text-fg2">{t('Zählt in der Fairness-Ansicht: eine große Aufgabe wiegt mehr als eine kleine. Ohne Angabe zählt sie wie „Mittel“.')}</p>
-    {:else if panel === 'cat'}
+    {:else if name === 'cat'}
       <CategoryPicker selected={card.categoryIds} onchange={(ids) => onsave({ categoryIds: ids })} />
-    {:else if panel === 'cost'}
+    {:else if name === 'cost'}
       <input
         inputmode="decimal"
         placeholder={t('z. B. 49,90')}
@@ -330,7 +359,7 @@
         onfocus={() => (editingCost = true)}
         onblur={saveCost}
       />
-    {:else if panel === 'confirm'}
+    {:else if name === 'confirm'}
       <div class="flex flex-wrap gap-2" role="group" aria-label={t('Bestätigung')}>
         {#each CONFIRMS as [value, label] (label)}
           <button
@@ -343,11 +372,9 @@
           </button>
         {/each}
       </div>
-      <p class="mt-3 text-[13px] text-fg2">{t('Ist die Karte einem Kind zugewiesen, kann „Erledigt“ erst nach einem Ja der Eltern zählen. „Vorgabe der Person“ folgt der Einstellung unter Personen & Zugriff.')}</p>
+      <p class="mt-3 text-[13px] text-fg2">{t('Ist die Aufgabe einem Kind zugewiesen, kann „Erledigt“ erst nach einem Ja der Eltern zählen. „Vorgabe der Person“ folgt der Einstellung unter Personen & Zugriff.')}</p>
     {/if}
-  </div>
-{/if}
-{/if}
+{/snippet}
 
 {#if dateOpen}
   <DateSheet

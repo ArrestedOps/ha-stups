@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { nextDue, type Recurrence } from '../src/recurrence.js';
 
 const TZ = 'Europe/Berlin';
@@ -38,6 +38,23 @@ describe('fester Rhythmus: wöchentlich', () => {
   });
 });
 
+describe('fester Rhythmus: wöchentlich, Reihenfolge und späte Erledigung', () => {
+  it('ungeordnete Wochentage liefern trotzdem den frühesten Termin (Do + Mo, Erledigung am Freitag)', () => {
+    // Mo 2.11. fällig, Fr 6.11. erledigt → nächster ist Mo 9.11., nicht Do 12.11.
+    expect(nextDue(weekly([4, 1]), '2026-11-02T08:00:00Z', '2026-11-06T12:00:00Z', TZ)).toBe('2026-11-09T08:00:00.000Z');
+  });
+
+  it('holt bei Wochenabstand 2 eine längere Verspätung korrekt auf', () => {
+    // Sa 17.10. alle 2 Wochen: 31.10., 14.11., 28.11., 12.12., 26.12. (10:00 CET = 09:00Z)
+    expect(nextDue(weekly([6], 2), '2026-10-17T08:00:00Z', '2026-12-20T12:00:00Z', TZ)).toBe('2026-12-26T09:00:00.000Z');
+  });
+
+  it('findet den Termin auch nach mehreren tausend Jahren Verspätung', () => {
+    const rule: Recurrence = { type: 'fixed', freq: 'weekly', every: 1, weekdays: [6] };
+    expect(nextDue(rule, '2026-01-03T09:00:00Z', '6100-01-01T00:00:00Z', 'UTC')).toBe('6100-01-02T09:00:00.000Z');
+  });
+});
+
 describe('fester Rhythmus: täglich', () => {
   it('alle 3 Tage', () => {
     const rule: Recurrence = { type: 'fixed', freq: 'daily', every: 3 };
@@ -53,6 +70,48 @@ describe('fester Rhythmus: täglich', () => {
     const rule: Recurrence = { type: 'fixed', freq: 'daily', every: 1 };
     const got = nextDue(rule, '2020-01-01T09:00:00Z', '2026-10-30T12:00:00Z', TZ);
     expect(got).toBe('2026-10-31T09:00:00.000Z');
+  });
+});
+
+describe('fester Rhythmus: täglich, Randfälle', () => {
+  const daily: Recurrence = { type: 'fixed', freq: 'daily', every: 1 };
+
+  it('der Termin am selben Tag zählt, wenn die Winterzeit ihn hinter die Erledigung schiebt', () => {
+    // Di 20.10. 10:00 CEST (08:00Z); Mo 26.10. 10:00 CET = 09:00Z liegt nach der Erledigung um 08:30Z
+    expect(nextDue(daily, '2026-10-20T08:00:00Z', '2026-10-26T08:30:00Z', TZ)).toBe('2026-10-26T09:00:00.000Z');
+  });
+
+  it('findet den Termin auch nach mehr als 200.000 Tagen Verspätung', () => {
+    expect(nextDue(daily, '2026-01-01T09:00:00Z', '2800-01-01T00:00:00Z', 'UTC')).toBe('2800-01-01T09:00:00.000Z');
+  });
+});
+
+describe('Zeitzonen mit Sonderfällen', () => {
+  it('halbstündige Umstellung (Lord Howe): 02:45 nach dem Zurückstellen gilt einmal', () => {
+    const rule: Recurrence = { type: 'fixed', freq: 'daily', every: 1 };
+    // So 5.4.2026 02:00 LHDT → 01:30 LHST; 02:45 danach ist 16:15Z am Vortag
+    expect(nextDue(rule, '2026-04-03T15:45:00Z', '2026-04-03T16:15:00Z', 'Australia/Lord_Howe')).toBe('2026-04-04T16:15:00.000Z');
+  });
+
+  it('übersprungener Kalendertag (Samoa, 30.12.2011): Termin rückt hinter die Lücke', () => {
+    const rule: Recurrence = { type: 'after_completion', every: 1, unit: 'days' };
+    // erledigt Do 29.12. 12:00 (UTC-10); der 30.12. entfällt, 10:00 am 31.12. (UTC+14) = 30.12. 20:00Z
+    expect(nextDue(rule, '2011-12-20T20:00:00Z', '2011-12-29T22:00:00Z', 'Pacific/Apia')).toBe('2011-12-30T20:00:00.000Z');
+  });
+
+  it('legt den Zeitzonen-Formatierer nur einmal an', () => {
+    const spy = vi.spyOn(Intl, 'DateTimeFormat');
+    try {
+      const rule: Recurrence = { type: 'fixed', freq: 'daily', every: 1 };
+      // Der Zwischenspeicher gilt fürs ganze Modul: Ob der erste Aufruf ihn füllt, hängt von früheren Tests ab, der zweite nie
+      nextDue(rule, '2026-11-10T08:00:00Z', '2026-11-10T08:30:00Z', 'Pacific/Auckland');
+      const afterFirst = spy.mock.calls.length;
+      expect(afterFirst).toBeLessThanOrEqual(1);
+      nextDue(rule, '2026-11-11T08:00:00Z', '2026-11-11T08:30:00Z', 'Pacific/Auckland');
+      expect(spy).toHaveBeenCalledTimes(afterFirst);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 
@@ -90,6 +149,18 @@ describe('fester Rhythmus: monatlich und jährlich', () => {
     const rule: Recurrence = { type: 'fixed', freq: 'yearly', every: 1 };
     expect(nextDue(rule, '2026-03-01T09:00:00Z', '2026-03-01T09:30:00Z', TZ)).toBe('2027-03-01T09:00:00.000Z');
     expect(nextDue(rule, '2028-02-29T09:00:00Z', '2028-02-29T09:30:00Z', TZ)).toBe('2029-02-28T09:00:00.000Z');
+  });
+});
+
+describe('Jährlich und unbekannte Häufigkeit', () => {
+  it('unbekannte Häufigkeit: Fehler mit Meldung statt eines erfundenen Termins', () => {
+    const rule = { type: 'fixed', freq: 'quarterly', every: 1 } as unknown as Recurrence;
+    expect(() => nextDue(rule, '2026-01-15T00:00:00Z', '2026-01-15T00:10:00Z', 'UTC')).toThrow('Kein nächster Termin gefunden');
+  });
+
+  it('jährlich mit Abstand 2: der nächste Termin liegt zwei Jahre später', () => {
+    const rule: Recurrence = { type: 'fixed', freq: 'yearly', every: 2 };
+    expect(nextDue(rule, '2026-03-01T09:00:00Z', '2026-03-02T09:00:00Z', TZ)).toBe('2028-03-01T09:00:00.000Z');
   });
 });
 
@@ -135,6 +206,18 @@ describe('Zeitumstellung bei der Uhrzeit selbst', () => {
 describe('ungültige Eingaben', () => {
   it('lehnt ein unlesbares Datum ab', () => {
     expect(() => nextDue(weekly([6]), 'kaputt', '2026-10-19T12:00:00Z', TZ)).toThrow();
+  });
+
+  it('nennt beim unlesbaren bisherigen Termin die Eingabe in der Meldung', () => {
+    expect(() => nextDue(weekly([6]), 'kaputt', '2026-10-19T12:00:00Z', TZ)).toThrow(
+      'Der bisherige Termin ist kein gültiges Datum: kaputt',
+    );
+  });
+
+  it('nennt beim unlesbaren Erledigungszeitpunkt die Eingabe in der Meldung', () => {
+    expect(() => nextDue(weekly([6]), '2026-10-17T08:00:00Z', 'gestern', TZ)).toThrow(
+      'Der Erledigungszeitpunkt ist kein gültiges Datum: gestern',
+    );
   });
 });
 
@@ -188,6 +271,29 @@ describe('stündlich', () => {
     it('der Fensteranfang gilt in Ortszeit über die Zeitumstellung (Frühjahr)', () => {
       // Sa 28.03. 18:00 CET (17:00Z) + 3 Std. = 21:00 → So 29.03. 08:00 CEST (06:00Z)
       expect(nextDue(hourly(3, win), '2026-03-28T17:00:00Z', '2026-03-28T17:10:00Z', TZ)).toBe('2026-03-29T06:00:00.000Z');
+    });
+  });
+
+  describe('Zeitfenster mit Minuten', () => {
+    it('ein Termin vor 08:30 rückt auf 08:30, nicht auf 08:00', () => {
+      // 07:00 Berlin + 1 Std. = 08:00 < 08:30 → 08:30 (07:30Z)
+      expect(nextDue(hourly(1, { from: '08:30', to: '20:00' }), '2026-11-10T06:00:00Z', '2026-11-10T06:10:00Z', TZ)).toBe('2026-11-10T07:30:00.000Z');
+    });
+
+    it('ein Termin um 20:05 gehört zum Fenster bis 20:15', () => {
+      expect(nextDue(hourly(1, { from: '08:30', to: '20:15' }), '2026-11-10T18:05:00Z', '2026-11-10T18:10:00Z', TZ)).toBe('2026-11-10T19:05:00.000Z');
+    });
+
+    it('der Fensteranfang selbst gehört dazu (08:00 bleibt 08:00)', () => {
+      expect(nextDue(hourly(1, { from: '08:00', to: '20:00' }), '2026-11-10T06:00:00Z', '2026-11-10T06:10:00Z', TZ)).toBe('2026-11-10T07:00:00.000Z');
+    });
+
+    it('die Minuten zählen mit: 20:30 liegt nach 20:00, 08:10 nach 08:00 im Fenster', () => {
+      const win = { from: '08:00', to: '20:00' };
+      // 19:30 + 1 Std. = 20:30 → nächster Tag 08:00 (07:00Z)
+      expect(nextDue(hourly(1, win), '2026-11-10T18:30:00Z', '2026-11-10T18:40:00Z', TZ)).toBe('2026-11-11T07:00:00.000Z');
+      // 07:10 + 1 Std. = 08:10 bleibt
+      expect(nextDue(hourly(1, win), '2026-11-10T06:10:00Z', '2026-11-10T06:20:00Z', TZ)).toBe('2026-11-10T07:10:00.000Z');
     });
   });
 

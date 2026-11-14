@@ -20,7 +20,7 @@ export interface WatcherForm {
   columnId: string;
   title: string;
   description: string;
-  /** Symbol der Karte von Hand ('' = das der Entität) und feste Farbe ('' = nach Bereich) */
+  /** Symbol der Aufgabe von Hand ('' = das der Entität) und feste Farbe ('' = nach Bereich) */
   icon: string;
   iconColor: string;
   categoryIds: string[];
@@ -49,7 +49,7 @@ export interface WatcherForm {
   /** Kategorie zum Gruppieren ('' = keine) und woher sie kommt: Vorlage und Entität schlagen sie vor, was der Mensch wählt, bleibt */
   category: string;
   categorySource: '' | 'template' | 'entity' | 'user';
-  /** Kalender: so viele Stunden vor dem Termin entsteht die Karte */
+  /** Kalender: so viele Stunden vor dem Termin entsteht die Aufgabe */
   leadHours: string;
   /** Vorhersage: Regen in den nächsten so vielen Stunden */
   forecastHours: string;
@@ -141,7 +141,7 @@ export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { enti
     out.entityName = hit.name;
     out.entityUnit = hit.unit ?? '';
   }
-  // ein Sensor, der das Erledigen belegen kann (Batterie wieder voll): die Karte erledigt sich von selbst
+  // ein Sensor, der das Erledigen belegen kann (Batterie wieder voll): die Aufgabe erledigt sich von selbst
   if (d.done && hit) {
     out.doneOn = true;
     out.doneEntityId = hit.entityId;
@@ -155,7 +155,7 @@ export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { enti
 
 /**
  * Eine Entität für „Wenn" gewählt (Suche): Entität ins Formular. Name und Titel bleiben sauber; den Namen der Entität hängt der Server erst an die
- * Karte, die entsteht (siehe cardTitle.ts).
+ * Aufgabe, die entsteht (siehe cardTitle.ts).
  */
 export function applyEntity(f: WatcherForm, e: HaEntity): WatcherForm {
   const out: WatcherForm = { ...f, entityId: e.entityId, entityName: e.name, entityUnit: e.unit ?? '' };
@@ -222,15 +222,15 @@ export function formProblems(f: WatcherForm): FormProblem[] {
   if (!f.entityId) add(1, t('Wähle die Entität, die beobachtet werden soll.'));
   if (f.kind === 'state' && !f.to.trim()) add(1, t('Gib den Zustand an, in den die Entität wechseln soll.'));
   if ((f.kind === 'above' || f.kind === 'below') && num(f.value) === null) add(1, t('Gib den Schwellwert als Zahl an.'));
-  if (f.kind === 'calendar_event' && intOr(f.leadHours, -1) < 0) add(1, t('Gib an, wie viele Stunden vor dem Termin die Karte entstehen soll.'));
+  if (f.kind === 'calendar_event' && intOr(f.leadHours, -1) < 0) add(1, t('Gib an, wie viele Stunden vor dem Termin die Aufgabe entstehen soll.'));
   if (f.kind === 'forecast' && intOr(f.forecastHours, 0) < 1) add(1, t('Gib an, für wie viele Stunden im Voraus nach Regen geschaut werden soll.'));
-  if (!f.title.trim()) add(2, t('Gib der Karte einen Titel.'));
-  if (!f.boardId || !f.columnId) add(2, t('Wähle Board und Spalte für die Karte.'));
+  if (!f.title.trim()) add(2, t('Gib der Aufgabe einen Titel.'));
+  if (!f.boardId || !f.columnId) add(2, t('Wähle Board und Spalte für die Aufgabe.'));
   if (f.dueKind === 'in' && intOr(f.dueMinutes, -1) < 0) add(2, t('Gib die Minuten bis zur Fälligkeit an.'));
   if (f.assignMode === 'fixed' && f.personIds.length === 0) add(3, t('Wähle mindestens eine Person.'));
   if (((usesFallback(f.assignMode) && f.fallback === 'fixed') || (f.assignMode === 'first_home' && f.waitFallback === 'fixed')) && !f.fallbackPersonId) add(3, t('Wähle die Person für den Rückfall.'));
   if (f.doneOn) {
-    if (!f.doneEntityId) add(4, t('Wähle die Entität, bei der sich die Karte von selbst erledigt.'));
+    if (!f.doneEntityId) add(4, t('Wähle die Entität, bei der sich die Aufgabe von selbst erledigt.'));
     if (f.doneKind === 'state' && !f.doneTo.trim()) add(4, t('Gib den Zustand zum Erledigen an.'));
     if (f.doneKind !== 'state' && num(f.doneValue) === null) add(4, t('Gib den Schwellwert zum Erledigen an.'));
   }
@@ -378,7 +378,7 @@ export function previewSentence(f: WatcherForm, personName: (id: string) => stri
   const names = f.personIds.map(personName).join(', ') || t('niemand');
   const count = intOr(f.count, 1);
   const when = `${conditionText(f)}${count > 1 ? t(' (beim {n}. Mal)', { n: count }) : ''}`;
-  const card = t('die Karte „{title}“', { title: f.title.trim() || '…' });
+  const card = t('die Aufgabe „{title}“', { title: f.title.trim() || '…' });
   const who: Record<AssignMode, string> = {
     none: t('entsteht {card} ohne Zuständige', { card }),
     fixed: t('bekommt {names} {card}', { names, card }),
@@ -407,7 +407,7 @@ export function pausedText(i: { pausedBy?: 'archived' | 'deleted' | null }): str
 
 export function watcherLine(w: WatcherItem, personName: (id: string) => string, tz?: string, withCounter = true): string {
   if (w.status === 'target_missing') return pausedText(w);
-  if (w.status === 'assignees_missing') return t('Keine Karten: braucht neue Zuständige');
+  if (w.status === 'assignees_missing') return t('Keine Aufgaben: braucht neue Zuständige');
   if (w.status === 'entity_missing') return t('Entität fehlt in Home Assistant');
   const parts: string[] = [];
   if (withCounter && w.trigger.count > 1) parts.push(t('{n} von {total}', { n: w.counter, total: w.trigger.count }));
@@ -450,13 +450,13 @@ export function noteText(note: string | null | undefined): string {
 
 export const RUN_TEXT: Record<string, string> = {
   get no_assignees() {
-    return t('Keine Karte: braucht neue Zuständige');
+    return t('Keine Aufgabe: braucht neue Zuständige');
   },
   get created() {
-    return t('Karte angelegt');
+    return t('Aufgabe angelegt');
   },
   get retriggered() {
-    return t('Erneut ausgelöst, die Karte war noch offen');
+    return t('Erneut ausgelöst, die Aufgabe war noch offen');
   },
   get counted() {
     return t('Gezählt');
@@ -465,7 +465,7 @@ export const RUN_TEXT: Record<string, string> = {
     return t('Übersprungen: Sperrzeit');
   },
   get waiting() {
-    return t('Karte wartet auf die erste Heimkehr');
+    return t('Aufgabe wartet auf die erste Heimkehr');
   },
   get assigned() {
     return t('Zugewiesen');
@@ -474,7 +474,7 @@ export const RUN_TEXT: Record<string, string> = {
     return t('Automatisch erledigt');
   },
   get nudged() {
-    return t('Erinnert, weil die Karte noch offen war');
+    return t('Erinnert, weil die Aufgabe noch offen war');
   },
   get test() {
     return t('Test');
@@ -504,7 +504,7 @@ export interface SentencePart {
   field?: 'entity' | 'duration' | 'threshold' | 'lead' | 'hours' | 'who' | 'title';
 }
 
-/** Wer die Karte bekommt, als Halbsatz für das Feld im Satz */
+/** Wer die Aufgabe bekommt, als Halbsatz für das Feld im Satz */
 export function whoText(f: Pick<WatcherForm, 'assignMode' | 'personIds'>, personName: (id: string) => string): string {
   const names = f.personIds.map(personName).join(', ');
   switch (f.assignMode) {
@@ -526,7 +526,7 @@ export function whoText(f: Pick<WatcherForm, 'assignMode' | 'personIds'>, person
 }
 
 /**
- * Der Satz, den das Formular zeigt: „Wenn [Entität] länger als [3 Min.] unter [5 W] liegt, bekommt [wer zu Hause ist, reihum] die Karte [Titel]."
+ * Der Satz, den das Formular zeigt: „Wenn [Entität] länger als [3 Min.] unter [5 W] liegt, bekommt [wer zu Hause ist, reihum] die Aufgabe [Titel]."
  * Die Felder in eckigen Klammern sind antippbar. Der Satz wird als Ganzes übersetzt (Wortstellung!) und dann an den Platzhaltern zerlegt.
  */
 export function sentenceParts(f: WatcherForm, personName: (id: string) => string): SentencePart[] {
@@ -536,11 +536,11 @@ export function sentenceParts(f: WatcherForm, personName: (id: string) => string
   const threshold = f.kind === 'state' ? f.to.trim() || '…' : `${f.value.trim() || '…'}${unit}`;
   const duration = t('{n} Min.', { n: minutes });
   let template: string;
-  if (f.kind === 'calendar_event') template = t('Wenn im Kalender {entity} {lead} vor einem Termin ansteht, bekommt {who} die Karte {title}.');
-  else if (f.kind === 'forecast') template = t('Wenn {entity} in den nächsten {hours} Regen vorhersagt, bekommt {who} die Karte {title}.');
-  else if (f.kind === 'state') template = minutes > 0 ? t('Wenn {entity} länger als {duration} auf {threshold} steht, bekommt {who} die Karte {title}.') : t('Wenn {entity} zu {threshold} wechselt, bekommt {who} die Karte {title}.');
-  else if (f.kind === 'below') template = minutes > 0 ? t('Wenn {entity} länger als {duration} unter {threshold} liegt, bekommt {who} die Karte {title}.') : t('Wenn {entity} unter {threshold} liegt, bekommt {who} die Karte {title}.');
-  else template = minutes > 0 ? t('Wenn {entity} länger als {duration} über {threshold} liegt, bekommt {who} die Karte {title}.') : t('Wenn {entity} über {threshold} liegt, bekommt {who} die Karte {title}.');
+  if (f.kind === 'calendar_event') template = t('Wenn im Kalender {entity} {lead} vor einem Termin ansteht, bekommt {who} die Aufgabe {title}.');
+  else if (f.kind === 'forecast') template = t('Wenn {entity} in den nächsten {hours} Regen vorhersagt, bekommt {who} die Aufgabe {title}.');
+  else if (f.kind === 'state') template = minutes > 0 ? t('Wenn {entity} länger als {duration} auf {threshold} steht, bekommt {who} die Aufgabe {title}.') : t('Wenn {entity} zu {threshold} wechselt, bekommt {who} die Aufgabe {title}.');
+  else if (f.kind === 'below') template = minutes > 0 ? t('Wenn {entity} länger als {duration} unter {threshold} liegt, bekommt {who} die Aufgabe {title}.') : t('Wenn {entity} unter {threshold} liegt, bekommt {who} die Aufgabe {title}.');
+  else template = minutes > 0 ? t('Wenn {entity} länger als {duration} über {threshold} liegt, bekommt {who} die Aufgabe {title}.') : t('Wenn {entity} über {threshold} liegt, bekommt {who} die Aufgabe {title}.');
   const fields: Record<string, SentencePart> = {
     '{entity}': { text: entity, field: 'entity' },
     '{duration}': { text: duration, field: 'duration' },

@@ -39,7 +39,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
-describe('Wer bekommt die Karte: vier Arten als Segment', () => {
+describe('Wer bekommt die Aufgabe: vier Arten als Segment', () => {
   it('ordnet die sieben Arten den vier Segmenten zu; „Erst vorschlagen“ und „Niemand“ stehen außerhalb', () => {
     expect(deskModeOf('fixed')).toBe('fixed');
     expect(deskModeOf('first_home')).toBe('first_home');
@@ -231,7 +231,7 @@ describe('Editor im Formular am Desktop', () => {
     await ed.save();
     expect(done).toHaveBeenCalledWith(expect.objectContaining({ id: 'w1' }));
     expect(ui.sheet).toEqual({ type: 'found' }); // back() wurde nicht aufgerufen
-    expect(ui.confirm?.label).toBe('Ja, Karte erstellen');
+    expect(ui.confirm?.label).toBe('Ja, Aufgabe erstellen');
     await ui.confirm!.run();
     expect(fire).toHaveBeenCalledWith('w1');
   });

@@ -49,7 +49,7 @@ describe('Erinnerungs-, Nachhak- und Kostenfelder', () => {
     expect(mk({ reminder: 'ja' })).toThrow(ValidationError);
   });
 
-  it('summiert die Kosten eines Boards ohne gelöschte Karten', () => {
+  it('summiert die Kosten eines Boards ohne gelöschte Aufgaben', () => {
     const { b, open } = setup();
     store.createCard(b.id, { columnId: open.id, title: 'A', costCents: 1000 }, rene.id);
     const c = store.createCard(b.id, { columnId: open.id, title: 'B', costCents: 2500 }, rene.id);
@@ -123,7 +123,7 @@ describe('Einstellungen', () => {
 });
 
 describe('Benachrichtigungs-Hilfen', () => {
-  it('openDueCards liefert nur offene Karten mit Fälligkeit und zugewiesenen Personen', () => {
+  it('openDueCards liefert nur offene Aufgaben mit Fälligkeit und zugewiesenen Personen', () => {
     const { b, open, done } = setup();
     const a = store.createCard(
       b.id,

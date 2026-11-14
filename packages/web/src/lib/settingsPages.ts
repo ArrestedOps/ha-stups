@@ -7,7 +7,6 @@ export type SettingsPageId =
   | 'look'
   | 'account'
   | 'people'
-  | 'watchers'
   | 'templates'
   | 'icons'
   | 'dates'
@@ -74,7 +73,6 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
       pages: [
         // Dort stehen auch die Haus-Kanäle je Person: wer „house“ hat, braucht die Seite ebenfalls
         ...page('people', t('Personen & Zugriff'), 'user', may('people') || (may('house') && ctx.house)),
-        ...page('watchers', t('Wächter'), 'eye', may('watchers') && ctx.watchers),
         ...page('templates', t('Vorlagen'), 'columns', may('settings')),
         ...page('icons', t('Symbole'), 'spark', may('settings')),
         ...page('dates', t('Termine'), 'clock', may('settings')),
@@ -113,7 +111,6 @@ export function settingsGroups(ctx: SettingsCtx): SettingsGroup[] {
 export function settingsOverview(ctx: SettingsCtx): SettingsGroup[] {
   // Die Zeile „Wächter" entfällt hier (Reiter Wächter, dort „Alle Wächter verwalten"); die Seite selbst bleibt
   const base = settingsGroups(ctx)
-    .map((g) => ({ ...g, pages: g.pages.filter((p) => p.id !== 'watchers') }))
     .filter((g) => g.pages.length > 0)
     // „Einrichtung nochmal durchgehen" steht in „Hilfe und Daten" (für jeden, der die Gruppe sieht; ein Kind sieht sie nicht)
     .map((g): SettingsGroup => (g.id === 'help' ? { ...g, actions: [...(g.actions ?? []), 'onboarding'] } : g));

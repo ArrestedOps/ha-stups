@@ -8,7 +8,7 @@ const dayKey = (ms: number, tz: string): number => {
 };
 
 /**
- * Wie dringend eine Karte ist, für den farbigen Balken links: überfällig, heute, in den nächsten zwei Tagen („bald"),
+ * Wie dringend eine Aufgabe ist, für den farbigen Balken links: überfällig, heute, in den nächsten zwei Tagen („bald"),
  * später, ohne Termin oder erledigt.
  */
 export function urgency(

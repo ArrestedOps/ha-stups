@@ -73,7 +73,7 @@
           {#each [0, 1, 2] as k (k)}<i class="h-1.5 w-[18px] rounded-[3px] {k < filled ? 'bg-accent-text' : 'bg-track'}"></i>{/each}
         </span>
       {:else if i.value}
-        <span class="self-start pt-[13px] text-[13px] leading-[22px] text-fg2 tabular-nums" data-testid="watcher-value">{i.value}</span>
+        <span class="self-start pt-0 text-[13px] leading-[21px] text-fg2 tabular-nums" data-testid="watcher-value">{i.value}</span>
       {/if}
       <Toggle checked={i.active} label={t('{name} aktiv', { name: i.name })} disabled={!canToggle || busy || selecting} onchange={ontoggle} />
     </span>

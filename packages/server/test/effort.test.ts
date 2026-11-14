@@ -46,7 +46,7 @@ describe('Migration 18', () => {
   });
 });
 
-describe('Aufwand an der Karte', () => {
+describe('Aufwand an der Aufgabe', () => {
   it('beim Anlegen und Ändern: klein, mittel, groß oder leer', () => {
     const none = store.createCard(boardId, { columnId: openId, title: 'A' }, rene);
     expect(none.effort).toBeNull();
@@ -69,7 +69,7 @@ describe('Aufwand an der Karte', () => {
     expect(store.duplicateCard(c.id, rene).effort).toBe('large');
   });
 
-  it('die nächste Karte einer Wiederholung erbt den Aufwand', () => {
+  it('die nächste Aufgabe einer Wiederholung erbt den Aufwand', () => {
     const c = store.createCard(
       boardId,
       { columnId: openId, title: 'Müll', effort: 'small', dueAt: '2026-11-03T07:00:00.000Z', recurrence: { type: 'after_completion', every: 1, unit: 'weeks' } },

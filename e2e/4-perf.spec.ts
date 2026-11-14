@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { openBoards } from './helpers';
 
-// Spec: Ein Board mit 300 Karten bleibt flüssig, die erste Anzeige steht schnell.
-test('Board mit 300 Karten: lädt zügig und scrollt flüssig', async ({ page, request }, info) => {
+// Spec: Ein Board mit 300 Aufgaben bleibt flüssig, die erste Anzeige steht schnell.
+test('Board mit 300 Aufgaben: lädt zügig und scrollt flüssig', async ({ page, request }, info) => {
   test.skip(info.project.name !== 'dunkel', 'einmal reicht, die Daten bleiben im Board');
   test.setTimeout(90_000);
 
-  // Eigenes Board, damit die 300 Karten die übrigen Browser-Tests nicht verlangsamen
+  // Eigenes Board, damit die 300 Aufgaben die übrigen Browser-Tests nicht verlangsamen
   const board = await (await request.post('/api/boards', { data: { name: 'Performance' } })).json();
   const view = await (await request.get(`/api/boards/${board.id}`)).json();
   const openId = view.columns[0].id;
@@ -31,7 +31,7 @@ test('Board mit 300 Karten: lädt zügig und scrollt flüssig', async ({ page, r
     times.push(Date.now() - t0);
   }
   const median = [...times].sort((a, b) => a - b)[1]!;
-  console.log(`300 Karten: Laden ${times.join('/')} ms`);
+  console.log(`300 Aufgaben: Laden ${times.join('/')} ms`);
   // Grobe Schranke gegen Ausreißer nach oben (z. B. quadratischer Aufwand), keine Leistungsmessung:
   // Auf dem belasteten Entwicklungsrechner schwankten die Werte zwischen 0,5 und 3,7 s Laden und 9 bis 52 Bildern/s.
   expect(median).toBeLessThan(8000);
@@ -53,13 +53,13 @@ test('Board mit 300 Karten: lädt zügig und scrollt flüssig', async ({ page, r
         requestAnimationFrame(step);
       }),
   );
-  console.log(`300 Karten: Scrollen ${fps} Bilder/s`);
+  console.log(`300 Aufgaben: Scrollen ${fps} Bilder/s`);
   // Hier wird auf dem Hauptthread bei jedem Bild gescrollt, das ist härter als echtes Wischen auf dem iPhone
   expect(fps).toBeGreaterThan(4);
 });
 
-// Spec 1.13.0: Eine Änderung auf einem anderen Gerät holt nur die geänderte Karte, nicht das ganze Board.
-test('Änderung auf einem zweiten Gerät: nur die geänderte Karte wird nachgeladen', async ({ page, request }, info) => {
+// Spec 1.13.0: Eine Änderung auf einem anderen Gerät holt nur die geänderte Aufgabe, nicht das ganze Board.
+test('Änderung auf einem zweiten Gerät: nur die geänderte Aufgabe wird nachgeladen', async ({ page, request }, info) => {
   test.skip(info.project.name !== 'dunkel', 'einmal reicht, die Daten bleiben im Board');
   test.setTimeout(120_000);
 
@@ -81,7 +81,7 @@ test('Änderung auf einem zweiten Gerät: nur die geänderte Karte wird nachgela
   await openBoards(page);
   await expect(page.getByText('Sync 000', { exact: true })).toBeVisible();
 
-  // Vorher (was jede Meldung bisher geladen hat): Boards, Personen, Board mit allen Karten, Wächter
+  // Vorher (was jede Meldung bisher geladen hat): Boards, Personen, Board mit allen Aufgaben, Wächter
   const full = async () => {
     const t0 = Date.now();
     const bodies = await Promise.all(['api/boards', 'api/people', `api/boards/${board.id}`, 'api/watchers'].map((u) => request.get(u).then((r) => r.body())));
@@ -97,7 +97,7 @@ test('Änderung auf einem zweiten Gerät: nur die geänderte Karte wird nachgela
     seen.push({ url: new URL(res.url()).pathname + new URL(res.url()).search, bytes: body.length });
   });
 
-  // Gerät 2 ändert eine Karte
+  // Gerät 2 ändert eine Aufgabe
   const t0 = Date.now();
   const patched = await request.patch(`/api/cards/${ids[0]}`, { data: { title: 'Auf Gerät 2 geändert' } });
   expect(patched.ok()).toBe(true);
@@ -107,7 +107,7 @@ test('Änderung auf einem zweiten Gerät: nur die geänderte Karte wird nachgela
 
   const loads = seen.filter((s) => !s.url.startsWith('/api/events'));
   const deltaBytes = loads.reduce((n, s) => n + s.bytes, 0);
-  console.log(`300 Karten, eine Änderung: vorher ${before.bytes} Byte in ${before.ms} ms; jetzt ${deltaBytes} Byte (${loads.map((s) => s.url).join(' ')}); sichtbar nach ${delta} ms`);
+  console.log(`300 Aufgaben, eine Änderung: vorher ${before.bytes} Byte in ${before.ms} ms; jetzt ${deltaBytes} Byte (${loads.map((s) => s.url).join(' ')}); sichtbar nach ${delta} ms`);
   expect(loads.some((s) => s.url.startsWith('/api/cards?ids='))).toBe(true);
   expect(loads.some((s) => s.url === `/api/boards/${board.id}`)).toBe(false);
   expect(deltaBytes).toBeLessThan(before.bytes / 5);
@@ -117,7 +117,7 @@ test('Änderung auf einem zweiten Gerät: nur die geänderte Karte wird nachgela
   await request.post('/api/boards', { data: { name: 'Zweites Board' } });
   await expect.poll(() => seen.some((s) => s.url === `/api/boards/${board.id}`)).toBe(true);
 
-  // Gerät 2 löscht die Karte: sie verschwindet ohne Neuladen des ganzen Boards
+  // Gerät 2 löscht die Aufgabe: sie verschwindet ohne Neuladen des ganzen Boards
   seen.length = 0;
   await request.delete(`/api/cards/${ids[0]}`);
   await expect(page.getByText('Auf Gerät 2 geändert', { exact: true })).toHaveCount(0);

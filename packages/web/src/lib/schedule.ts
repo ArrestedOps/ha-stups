@@ -1,5 +1,5 @@
 import type { Card, Priority, ScheduleCard } from './api';
-import { addDays, mondayOf } from './calendar';
+import { addDays, dayKeyOf, mondayOf } from './calendar';
 import { CATEGORY_COLORS } from './colors';
 import { deviceTz, fromInputValue } from './datetime';
 import { t, tn } from './i18n/index.svelte';
@@ -7,7 +7,7 @@ import { dayOfMonth, names } from './i18n/names';
 
 export type { ScheduleCard };
 
-/** Die Gruppen von „Wann": so ordnet auch die Liste in Aufgaben ihre Karten */
+/** Die Gruppen von „Wann": so ordnet auch die Liste in Aufgaben ihre Aufgaben */
 export type WhenKey = 'overdue' | 'today' | 'week' | 'later' | 'undated';
 export const WHEN_KEYS: readonly WhenKey[] = ['overdue', 'today', 'week', 'later', 'undated'];
 export type SortKey = 'due' | 'priority' | 'newest';
@@ -15,24 +15,24 @@ export const SORT_KEYS: readonly SortKey[] = ['due', 'priority', 'newest'];
 const PRIORITIES: readonly Priority[] = ['high', 'medium', 'low'];
 
 /**
- * Das eine Filtermodell für Aufgaben und Kalender (Blatt „Filter"): wessen Karten, wann, welche Boards, welche Priorität,
+ * Das eine Filtermodell für Aufgaben und Kalender (Blatt „Filter"): wessen Aufgaben, wann, welche Boards, welche Priorität,
  * nur mit offenem Stups, nur von Wächtern, ob Erledigtes dabei ist und wie sortiert wird. Wird pro Gerät gemerkt (`stups.schedule`).
  */
 export interface ScheduleFilter {
   /** leer = alle Personen (zusammen mit `unassigned`) */
   personIds: string[];
-  /** auch Karten ohne Zuständige */
+  /** auch Aufgaben ohne Zuständige */
   unassigned: boolean;
   /** leer = alle Boards */
   boardIds: string[];
   showDone: boolean;
-  /** leer = alle Karten mit Termin; mehrere Gruppen gelten zusammen (eine davon genügt); „Ohne Termin" holt die Karten ohne Termin dazu */
+  /** leer = alle Aufgaben mit Termin; mehrere Gruppen gelten zusammen (eine davon genügt); „Ohne Termin" holt die Aufgaben ohne Termin dazu */
   when: WhenKey[];
   /** null = alle */
   priority: Priority | null;
-  /** nur Karten mit einem offenen Stups an mich */
+  /** nur Aufgaben mit einem offenen Stups an mich */
   nudged: boolean;
-  /** nur Karten, die ein Wächter angelegt hat */
+  /** nur Aufgaben, die ein Wächter angelegt hat */
   watcherOnly: boolean;
   sort: SortKey;
 }
@@ -49,8 +49,8 @@ export const AGENDA_STEP_DAYS = 60;
 const AGENDA_FIRST_LOOKAHEAD_DAYS = 365;
 
 /**
- * Ist im ersten Zeitraum keine einzige Karte mit Termin, schaut die Agenda gleich ein Jahr voraus: Sonst bliebe sie leer,
- * obwohl später Karten anstehen (die man im Kalender sieht). Gibt die neue Zahl der Tage zurück, oder null, wenn nichts zu tun ist.
+ * Ist im ersten Zeitraum keine einzige Aufgabe mit Termin, schaut die Agenda gleich ein Jahr voraus: Sonst bliebe sie leer,
+ * obwohl später Aufgaben anstehen (die man im Kalender sieht). Gibt die neue Zahl der Tage zurück, oder null, wenn nichts zu tun ist.
  */
 export const agendaHorizonAfterLoad = (loaded: number, days: number): number | null =>
   loaded === 0 && days === AGENDA_STEP_DAYS ? AGENDA_FIRST_LOOKAHEAD_DAYS : null;
@@ -91,7 +91,7 @@ export const extraFilterCount = (f: ScheduleFilter): number =>
 export const isFiltered = (f: ScheduleFilter): boolean => activeFilterCount(f) > 0;
 
 /**
- * Der Filter, der wirklich gilt: Ein Kind sieht nur eigene Karten und kennt weder „Wer" noch „nur von Wächtern"
+ * Der Filter, der wirklich gilt: Ein Kind sieht nur eigene Aufgaben und kennt weder „Wer" noch „nur von Wächtern"
  * (Wächter sind für Kinder nicht sichtbar). Erwachsene: derselbe Filter.
  */
 export const effectiveFilter = (f: ScheduleFilter, isChild: boolean): ScheduleFilter =>
@@ -101,7 +101,7 @@ export const effectiveFilter = (f: ScheduleFilter, isChild: boolean): ScheduleFi
 
 /** Beginn von morgen und von nächster Woche (Montag 00:00) in der Zeitzone des Haushalts, in Millisekunden */
 export function whenBounds(nowMs: number, tz = deviceTz()): { todayKey: string; startTomorrow: number; startNextWeek: number } {
-  // gleiche Anfrage wie eben (jede Karte fragt nach denselben Grenzen): nicht neu rechnen
+  // gleiche Anfrage wie eben (jede Aufgabe fragt nach denselben Grenzen): nicht neu rechnen
   if (lastBounds && lastBounds.nowMs === nowMs && lastBounds.tz === tz) return lastBounds.value;
   const todayKey = dayKeyOf(nowMs, tz);
   const value = {
@@ -115,7 +115,7 @@ export function whenBounds(nowMs: number, tz = deviceTz()): { todayKey: string; 
 let lastBounds: { nowMs: number; tz: string; value: { todayKey: string; startTomorrow: number; startNextWeek: number } } | null = null;
 
 /**
- * Die Gruppe von „Wann", in die eine Karte fällt. Offen: Termin vorbei = Überfällig, sonst Heute (bis 24 Uhr), Diese Woche (ab morgen bis Sonntag),
+ * Die Gruppe von „Wann", in die eine Aufgabe fällt. Offen: Termin vorbei = Überfällig, sonst Heute (bis 24 Uhr), Diese Woche (ab morgen bis Sonntag),
  * Später. Erledigte zählen nach dem Tag des Termins (heute erledigt = Heute); liegt der Tag davor, gehören sie zu keiner Gruppe (null).
  */
 export function whenOf(c: Pick<Card, 'dueAt' | 'completedAt'>, nowMs: number, tz = deviceTz()): WhenKey | null {
@@ -133,7 +133,7 @@ export function whenOf(c: Pick<Card, 'dueAt' | 'completedAt'>, nowMs: number, tz
 type Facet = 'person' | 'board' | 'when';
 const defaultContext = (): FilterContext => ({ meId: null, nowMs: Date.now(), tz: deviceTz() });
 
-/** Besteht die Karte den Filter? `skip` lässt eine Gruppe von Bedingungen weg (für die Zahlen an den Chips) */
+/** Besteht die Aufgabe den Filter? `skip` lässt eine Gruppe von Bedingungen weg (für die Zahlen an den Chips) */
 function passes(c: ScheduleCard, f: ScheduleFilter, ctx: FilterContext, skip?: Facet): boolean {
   if (skip !== 'person' && personFilterActive(f) && !(c.assigneeIds.some((id) => f.personIds.includes(id)) || (f.unassigned && c.assigneeIds.length === 0))) return false;
   if (skip !== 'board' && f.boardIds.length > 0 && !f.boardIds.includes(c.boardId)) return false;
@@ -156,7 +156,7 @@ export function filterSchedule<T extends ScheduleCard>(cards: T[], f: ScheduleFi
   return cards.filter((c) => passes(c, f, ctx));
 }
 
-/** Zahlen an den Personen-Chips: so viele Karten blieben übrig, wenn man genau diese Person wählt (alle anderen Filter gelten mit) */
+/** Zahlen an den Personen-Chips: so viele Aufgaben blieben übrig, wenn man genau diese Person wählt (alle anderen Filter gelten mit) */
 export function personCounts(
   cards: ScheduleCard[],
   f: ScheduleFilter,
@@ -192,7 +192,7 @@ export const toggleId = <T extends string>(list: T[], id: T): T[] => (list.inclu
 
 const PRIORITY_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
 const byId = (a: { id: string }, b: { id: string }): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-/** nach Termin, Karten ohne Termin zuletzt */
+/** nach Termin, Aufgaben ohne Termin zuletzt */
 const byDueDate = (a: ScheduleCard, b: ScheduleCard): number => {
   if (a.dueAt === b.dueAt) return byId(a, b);
   if (!a.dueAt) return 1;
@@ -251,15 +251,12 @@ export function parseScheduleFilter(
 export interface DaySection {
   key: string;
   title: string;
-  /** zweite Zeile, z. B. „Sa 31. Okt · 2 Karten" */
+  /** zweite Zeile, z. B. „Sa 31. Okt · 2 Aufgaben" */
   sub: string;
   overdue: boolean;
   today: boolean;
   cards: ScheduleCard[];
 }
-
-/** Kalendertag in Ortszeit als YYYY-MM-DD */
-export const dayKeyOf = (ms: number, tz = deviceTz()): string => new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date(ms));
 
 const dayNumber = (key: string): number => {
   const [y, m, d] = key.split('-').map(Number);
@@ -274,11 +271,11 @@ export function dayLabel(key: string, nowKey: string): string {
   return `${wd} ${dayOfMonth(d!)} ${names().monthsShort[m! - 1]}${sameYear ? '' : ` ${y}`}`;
 }
 
-const cardsText = (n: number) => tn('{n} Karte', '{n} Karten', n);
+const cardsText = (n: number) => tn('{n} Aufgabe', '{n} Aufgaben', n);
 
 /**
- * Teilt die Karten in „Überfällig" (offen, Termin vorbei) und je einen Abschnitt pro Tag, der Karten hat.
- * Tage ohne Karten fehlen, die Reihenfolge ist nach Termin.
+ * Teilt die Aufgaben in „Überfällig" (offen, Termin vorbei) und je einen Abschnitt pro Tag, der Aufgaben hat.
+ * Tage ohne Aufgaben fehlen, die Reihenfolge ist nach Termin.
  */
 export function groupByDay(cards: ScheduleCard[], nowMs = Date.now(), tz = deviceTz()): DaySection[] {
   const nowKey = dayKeyOf(nowMs, tz);

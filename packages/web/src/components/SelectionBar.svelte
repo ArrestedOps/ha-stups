@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from '../lib/i18n/index.svelte';
+  import { t, tn } from '../lib/i18n/index.svelte';
 
   /**
    * Die Leiste unten, solange Einträge ausgewählt werden (Wächter-Liste, „Gefunden“): „{n} ausgewählt“, die Aktionen als Knöpfe und
@@ -27,9 +27,9 @@
   <div
     class="pointer-events-auto mx-auto flex max-w-[720px] flex-wrap items-center gap-x-2 gap-y-1.5 rounded-[20px] border border-line bg-surface px-3 py-2 shadow-[0_8px_28px_rgba(0,0,0,0.35)] lg:max-w-none"
     role="toolbar"
-    aria-label={t('Auswahl')}
+    aria-label={t('Sammelaktionen')}
   >
-    <span class="mr-auto min-w-0 px-1 text-[15px] font-extrabold" aria-live="polite" data-testid="selection-count">{t('{n} ausgewählt', { n: count })}</span>
+    <span class="mr-auto min-w-0 px-1 text-[15px] font-extrabold" aria-live="polite" data-testid="selection-count">{tn('{n} ausgewählt', '{n} ausgewählt', count)}</span>
     {#each actions as a (a.id)}
       <button
         type="button"

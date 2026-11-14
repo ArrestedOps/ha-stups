@@ -60,7 +60,7 @@ describe('weekStrip: die sieben Tage der Woche mit Punkten', () => {
     expect(weekStrip([], monday, TZ)[0]).toMatchObject({ key: '2026-11-09', today: true });
   });
 
-  it('Karten außerhalb der Woche und ohne Termin zählen nicht', () => {
+  it('Aufgaben außerhalb der Woche und ohne Termin zählen nicht', () => {
     const w = weekStrip([mk('x', '2026-11-09T08:00:00Z'), mk('y', '2026-11-01T08:00:00Z'), mk('z', null as unknown as string)], NOW, TZ);
     expect(w.every((d) => d.dots.length === 0)).toBe(true);
   });

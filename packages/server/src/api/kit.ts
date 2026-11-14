@@ -42,10 +42,12 @@ export interface ApiDeps {
   resolveMapsLink?: (url: string) => Promise<{ url: string; title: string | null } | null>;
   /** Meldet Änderungen an alle verbundenen Geräte (Live-Sync). */
   bus?: EventBus;
-  /** Räumt Push-Nachrichten auf, wenn eine Karte in der App erledigt wurde; tick stellt neue Stupse sofort zu. */
+  /** Räumt Push-Nachrichten auf, wenn eine Aufgabe in der App erledigt wurde; tick stellt neue Stupse sofort zu. */
   notifier?: {
     clearFor(cardId: string): Promise<void>;
     tick?(): Promise<number>;
+    /** Antwort des Empfängers auf einen Stups in der App (erledigt, mach ich, später) */
+    replyToNudge?(nudgeId: string, personId: string, kind: 'DONE' | 'ACK' | 'LATER'): Promise<string>;
     /** Ein Kind hat abgehakt: die Bestätiger fragen */
     confirmationRequested?(cardId: string): Promise<void>;
     /** Ein Bestätiger hat geantwortet: dem Kind Bescheid geben, die Fragen bei den anderen Bestätigern wegräumen */

@@ -49,11 +49,11 @@ async function openSettings(page: Page, current?: string) {
   return settings;
 }
 
-test('Board-Auswahl: Liste mit offenen Karten und Sichtbarkeit, darunter Neues Board erstellen und Board-Einstellungen; „Einstellungen“ und „Bearbeiten“ entfallen', async ({ page, request }) => {
+test('Board-Auswahl: Liste mit offenen Aufgaben und Sichtbarkeit, darunter Neues Board erstellen und Board-Einstellungen; „Einstellungen“ und „Bearbeiten“ entfallen', async ({ page, request }) => {
   const name = `Auswahl ${tag}`;
   const id = await board(request, name, { visibility: 'private' });
   await board(request, `Daneben ${tag}`); // bei nur einem Board gibt es nichts zu ordnen
-  await card(request, id, `Karte ${tag}`);
+  await card(request, id, `Aufgabe ${tag}`);
   await openSwitcher(page);
   const sheet = page.getByRole('dialog', { name: 'Boards' });
   const row = sheet.getByRole('button', { name });

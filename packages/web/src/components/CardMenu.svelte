@@ -17,14 +17,14 @@
   const columns = $derived(ui.view?.columns ?? []);
   const column = $derived(columns.find((c) => c.id === card?.columnId));
   const board = $derived(ui.boards.find((b) => b.id === card?.boardId));
-  // „Geplant" nur für Karten mit Termin nach heute; solche Karten gehören nicht nach „Offen"
+  // „Geplant" nur für Aufgaben mit Termin nach heute; solche Aufgaben gehören nicht nach „Offen"
   const targets = $derived(
     cardTargets(columns, isFuture(card?.dueAt ?? null), columns.find((c) => !c.isDone && !c.isPlanned)?.id),
   );
 </script>
 
-<!-- Aktionsblatt wie im Mockup: Griff, Karte, „Verschieben nach" als 2 × 2 Felder, dann Öffnen, Stupsen, Duplizieren, Löschen. „Erledigt" ist eines der Felder. -->
-<Sheet title={t('Karten-Menü')} onclose={closeSheet} bare fit>
+<!-- Aktionsblatt wie im Mockup: Griff, Aufgabe, „Verschieben nach" als 2 × 2 Felder, dann Öffnen, Stupsen, Duplizieren, Löschen. „Erledigt" ist eines der Felder. -->
+<Sheet title={t('Aufgaben-Menü')} onclose={closeSheet} bare fit>
   {#if card}
     <div class="flex flex-col gap-3">
       <div class="flex items-center gap-3 px-1 pt-1.5 pb-0.5">
@@ -54,7 +54,7 @@
         {/each}
       </div>
 
-      <div class="flex flex-col gap-2">
+      <div class="list-group !mt-0">
         <ListRow title={t('Öffnen')} onclick={() => openSheet({ type: 'card', id: card.id })}>
           {#snippet tile()}<Tile color="gray" size="sm"><Icon name="external" size={18} stroke={2} /></Tile>{/snippet}
         </ListRow>
@@ -68,7 +68,7 @@
           onclick={async () => {
             const copy = await act(() => api.duplicateCard(card.id));
             closeSheet();
-            if (copy) toast(t('Karte dupliziert'), { action: { label: t('Öffnen'), run: () => openSheet({ type: 'card', id: copy.id }) } });
+            if (copy) toast(t('Aufgabe dupliziert'), { action: { label: t('Öffnen'), run: () => openSheet({ type: 'card', id: copy.id }) } });
           }}
         >
           {#snippet tile()}<Tile color="gray" size="sm"><Icon name="copy" size={18} stroke={2} /></Tile>{/snippet}

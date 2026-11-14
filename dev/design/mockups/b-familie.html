@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stups · Richtung B · Familie</title>
+<!--
+  Mockup, kein Produktcode. Plan und Abgleich: dev/design/richtungen.md.
+  Ordnung nach Person: Jede Person hat eine Farbe, der ganze Kopf nimmt die Farbe der gewählten Person an.
+  Die Personen oben sind antippbar (Anna, Ben, Mia), die Liste wechselt mit. Das ist die einzige Farbfläche, der Rest ist weiß.
+  Unter 900 px Handy, darüber Desktop. Nur Hellthema.
+-->
+<style>
+@font-face { font-family: "Bricolage Grotesque"; src: url("fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+:root {
+  --paper: #ffffff; --soft: #f1f2f6; --ink: #0e1a52; --mute: #565c7a; --rule: #e1e3ec;
+  --anna: #2447f5; --ben: #ff7a1a; --mia: #12b76a;
+  --p: var(--anna); --on-p: #ffffff;
+  --sans: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 20px; --s5: 32px; --s6: 48px; /* Abstandsraster */
+}
+body[data-p="ben"] { --p: var(--ben); --on-p: #0e1a52; }
+body[data-p="mia"] { --p: var(--mia); --on-p: #0e1a52; }
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--paper); }
+body { background: var(--paper); color: var(--ink); font: 400 16px/1.45 var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 8px; }
+svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.num { font-variant-numeric: tabular-nums lining-nums; }
+
+.avatar { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font: 700 13px/1 var(--sans); color: #fff; background: var(--anna); box-shadow: 0 0 0 2px var(--paper); }
+.avatar.ben { background: var(--ben); color: #0e1a52; }
+.avatar.mia { background: var(--mia); color: #0e1a52; }
+.avatars { display: inline-flex; }
+.avatars .avatar + .avatar { margin-left: -8px; }
+.wordmark { font: 800 26px/1 var(--sans); letter-spacing: -0.02em; }
+
+/* ---------- Kopf in der Farbe der Person ---------- */
+.hero { background: var(--p); color: var(--on-p); padding: var(--s3) var(--s4) 52px; transition: background-color .2s; }
+.hero .row1 { display: flex; align-items: center; justify-content: space-between; height: 44px; }
+.hero .right { display: flex; gap: var(--s2); }
+.round { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid currentColor; }
+.round .pip { position: absolute; top: 5px; right: 6px; width: 9px; height: 9px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 2px var(--p); }
+.people { display: flex; gap: var(--s4); margin-top: var(--s3); }
+.person { display: grid; justify-items: center; gap: 6px; font: 600 14px/1 var(--sans); }
+.person .nm { opacity: .8; }
+.person[aria-pressed="true"] .nm { opacity: 1; font-weight: 700; }
+.person .av { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; font: 700 20px/1 var(--sans); box-shadow: 0 0 0 3px var(--p); border: 2px solid #fff; }
+.person[aria-pressed="true"] .av { box-shadow: 0 0 0 3px var(--p), 0 0 0 6px #fff; }
+body[data-p="ben"] .person[aria-pressed="true"] .av, body[data-p="mia"] .person[aria-pressed="true"] .av { box-shadow: 0 0 0 3px var(--p), 0 0 0 6px #0e1a52; }
+body[data-p="ben"] .person .av, body[data-p="mia"] .person .av { border-color: #0e1a52; }
+.person .av.anna { background: var(--anna); color: #fff; }
+.person .av.ben { background: var(--ben); color: #0e1a52; }
+.person .av.mia { background: var(--mia); color: #0e1a52; }
+.hero h1 { font: 800 40px/1.02 var(--sans); letter-spacing: -0.025em; margin-top: var(--s4); max-width: 11em; text-wrap: balance; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s4); }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 var(--s3); border-radius: 999px; border: 2px solid currentColor; font: 600 15px/1 var(--sans); }
+.chip b { font-weight: 800; }
+.chip.solid { background: var(--on-p); color: var(--p); border-color: var(--on-p); }
+body[data-p="ben"] .chip.solid, body[data-p="mia"] .chip.solid { background: #0e1a52; color: #fff; border-color: #0e1a52; }
+
+/* ---------- Blatt ---------- */
+.sheet { position: relative; margin-top: -28px; background: var(--paper); border-radius: 28px 28px 0 0; padding: var(--s4) var(--s4) 120px; }
+.dayhead { display: flex; align-items: center; justify-content: space-between; }
+.dayhead h2 { font: 700 20px/1.2 var(--sans); letter-spacing: -0.01em; }
+.link { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 var(--s3); border-radius: 999px; background: var(--soft); font: 600 14px/1 var(--sans); }
+.link svg { width: 18px; height: 18px; }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: var(--s3); }
+.week button { display: grid; justify-items: center; gap: 2px; padding: 8px 0 6px; border-radius: 16px; }
+.week .wd { font: 500 12px/1 var(--sans); color: var(--mute); }
+.week .d { font: 700 19px/1.2 var(--sans); }
+.week .on { background: var(--ink); color: #fff; }
+.week .on .wd { color: #c9cde4; }
+.week .dots { display: flex; gap: 3px; height: 5px; }
+.week .dots b { width: 5px; height: 5px; border-radius: 50%; background: var(--p); }
+.week .on .dots b { background: #fff; }
+
+.nudge { display: flex; align-items: flex-end; gap: var(--s2); margin-top: var(--s4); }
+.nudge .bubble { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: var(--s3); background: var(--soft); border-radius: 22px 22px 22px 6px; padding: var(--s3) var(--s3) var(--s3) var(--s4); }
+.nudge b { display: block; font-weight: 700; }
+.nudge .sub { color: var(--mute); font-size: 15px; }
+.nudge .go { height: 36px; padding: 0 var(--s3); border-radius: 999px; background: var(--ink); color: #fff; font: 600 14px/1 var(--sans); white-space: nowrap; }
+
+.group { margin-top: var(--s5); }
+.group h3 { display: flex; align-items: center; gap: var(--s2); font: 800 24px/1.1 var(--sans); letter-spacing: -0.02em; margin-bottom: var(--s2); }
+.group h3 .c { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 999px; background: var(--ink); color: #fff; font: 700 14px/1 var(--sans); }
+.rows { list-style: none; padding: 0; }
+.row { position: relative; display: grid; grid-template-columns: 32px 1fr auto; align-items: center; column-gap: var(--s3); padding: var(--s3) 0; min-height: 72px; border-bottom: 1px solid var(--rule); }
+.row:last-child { border-bottom: 0; }
+.box { width: 32px; height: 32px; border-radius: 10px; border: 3px solid var(--p); display: grid; place-items: center; }
+.box svg { width: 20px; height: 20px; stroke-width: 3; opacity: 0; }
+.row.done .box { background: var(--p); color: var(--on-p); }
+.row.done .box svg { opacity: 1; }
+.row.done .title { text-decoration: line-through; color: var(--mute); }
+.row .title { font: 650 19px/1.25 var(--sans); letter-spacing: -0.01em; }
+.row .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--s3); font-size: 15px; color: var(--mute); margin-top: 2px; }
+.row .meta span { display: inline-flex; align-items: center; gap: 4px; }
+.row .meta svg { width: 15px; height: 15px; }
+.row .meta .hi { color: var(--ink); font-weight: 650; }
+.row.sel { background: var(--soft); border-radius: 16px; margin-inline: -12px; padding-inline: 12px; border-bottom-color: transparent; }
+.empty { padding: var(--s5) 0 var(--s4); }
+.empty p { font: 700 22px/1.2 var(--sans); letter-spacing: -0.02em; }
+.empty span { color: var(--mute); }
+
+.tabbar { position: fixed; inset: auto 0 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); padding: var(--s2) var(--s3) max(var(--s3), env(safe-area-inset-bottom)); background: var(--paper); border-top: 1px solid var(--rule); }
+.tabbar button { display: grid; justify-items: center; gap: 2px; padding: 8px 0; border-radius: 18px; font: 600 12px/1.2 var(--sans); color: var(--mute); }
+.tabbar button[aria-current="page"] { background: var(--p); color: var(--on-p); }
+
+.side, .detail { display: none; }
+
+/* ---------- Desktop ---------- */
+@media (min-width: 900px) {
+  .tabbar { display: none; }
+  .app { display: grid; grid-template-columns: 256px minmax(0, 1fr); min-height: 100vh; }
+  .side { display: flex; flex-direction: column; gap: var(--s5); padding: var(--s5) var(--s4); border-right: 1px solid var(--rule); position: sticky; top: 0; height: 100vh; }
+  .side nav { display: grid; gap: 4px; }
+  .side nav button { display: flex; align-items: center; gap: var(--s3); height: 48px; padding: 0 var(--s3); border-radius: 16px; font: 600 16px/1 var(--sans); color: var(--mute); }
+  .side nav button[aria-current="page"] { background: var(--p); color: var(--on-p); }
+  .side .lab { font: 700 15px/1 var(--sans); padding: 0 var(--s3) var(--s2); }
+  .side .fam { display: grid; gap: 4px; }
+  .side .fam button { display: flex; align-items: center; gap: var(--s3); height: 52px; padding: 0 var(--s3); border-radius: 16px; font: 600 16px/1 var(--sans); }
+  .side .fam button[aria-pressed="true"] { background: var(--soft); }
+  .side .fam .n { margin-left: auto; font: 700 15px/1 var(--sans); }
+  .side .foot { margin-top: auto; padding: var(--s3); font-size: 14px; color: var(--mute); }
+  .hero .row1 .wordmark, .hero .people { display: none; }
+  .hero .row1 { justify-content: flex-end; }
+  .col { min-width: 0; }
+  .hero { padding: var(--s5) var(--s6) var(--s6); }
+  .hero h1 { font-size: 64px; max-width: 12em; margin-top: 0; }
+  .hero .chips { margin-top: var(--s4); }
+  .hero .newbtn { display: inline-flex; align-items: center; gap: var(--s2); height: 44px; padding: 0 var(--s4); border-radius: 999px; background: var(--on-p); color: var(--p); font: 700 16px/1 var(--sans); }
+  body[data-p="ben"] .hero .newbtn, body[data-p="mia"] .hero .newbtn { background: #0e1a52; color: #fff; }
+  .work { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .sheet { margin-top: -28px; padding: var(--s5) var(--s6) var(--s6); }
+  .week { max-width: 620px; }
+  .nudge { max-width: 620px; }
+  .rows, .group > h3 { max-width: 720px; }
+}
+@media (min-width: 1240px) {
+  .work { grid-template-columns: minmax(0, 1fr) 420px; }
+  .sheet { border-radius: 28px 0 0 0; }
+  .detail { display: flex; flex-direction: column; gap: var(--s5); background: var(--soft); padding: calc(var(--s6) + 28px) var(--s5) var(--s6); margin-top: -28px; }
+  .detail .who { display: flex; align-items: center; gap: var(--s2); font-weight: 600; }
+  .detail h2 { font: 800 36px/1.05 var(--sans); letter-spacing: -0.025em; }
+  .detail .badge { display: inline-flex; height: 30px; align-items: center; padding: 0 var(--s3); border-radius: 999px; background: var(--ink); color: #fff; font: 650 14px/1 var(--sans); }
+  .detail dl { display: grid; grid-template-columns: 120px 1fr; }
+  .detail dt, .detail dd { padding: var(--s3) 0; border-bottom: 1px solid var(--rule); font-size: 16px; }
+  .detail dt { color: var(--mute); }
+  .detail dd { display: flex; align-items: center; gap: var(--s2); font-weight: 600; }
+  .detail .btns { display: grid; grid-template-columns: 1fr auto; gap: var(--s2); }
+  .detail .btns button { height: 52px; padding: 0 var(--s5); border-radius: 999px; font: 700 17px/1 var(--sans); text-align: center; }
+  .detail .btns .go { background: var(--p); color: var(--on-p); }
+  .detail .btns .alt { background: var(--paper); }
+  .detail h3 { font: 700 18px/1 var(--sans); margin-bottom: var(--s2); }
+  .detail .log { list-style: none; padding: 0; display: grid; gap: var(--s3); font-size: 15px; }
+  .detail .log li { display: grid; grid-template-columns: 12px 1fr; gap: var(--s3); align-items: baseline; }
+  .detail .log li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--rule); }
+  .detail .log li:first-child::before { background: var(--p); }
+}
+@media (min-width: 900px) and (max-width: 1239px) { .side .foot { display: none; } }
+</style>
+</head>
+<body data-p="anna">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 8.5 4.7L12 13 3.5 8.2 12 3.5Z"/><path d="m3.5 12.6 8.5 4.8 8.5-4.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19.5 6.5v5.6c0 4.2-3 7.4-7.5 8.4-4.5-1-7.5-4.2-7.5-8.4V6.5L12 3.5Z"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H18l-3-3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H6l3 3"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5.5 21V4h11l-2.2 4 2.2 4h-11"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="side" aria-label="Navigation">
+    <span class="wordmark">stups<span style="color:var(--p)">.</span></span>
+    <nav aria-label="Hauptbereiche">
+      <button aria-current="page"><svg><use href="#i-tasks"/></svg>Aufgaben</button>
+      <button><svg><use href="#i-layers"/></svg>Boards</button>
+      <button><svg><use href="#i-shield"/></svg>Wächter</button>
+    </nav>
+    <div>
+      <div class="lab">Wer hat was?</div>
+      <div class="fam" id="fam"></div>
+    </div>
+    <div class="foot">Angemeldet als Anna</div>
+  </aside>
+
+  <div class="col">
+    <header class="hero">
+      <div class="row1">
+        <span class="wordmark">stups.</span>
+        <div class="right">
+          <button class="round" aria-label="Mitteilungen, 1 neue"><svg><use href="#i-bell"/></svg><span class="pip"></span></button>
+          <button class="round newround" aria-label="Neue Aufgabe"><svg><use href="#i-plus"/></svg></button>
+        </div>
+      </div>
+      <div class="people" id="people" role="group" aria-label="Person wählen"></div>
+      <h1 id="sentence"></h1>
+      <div class="chips" id="chips"></div>
+    </header>
+
+    <div class="work">
+      <main class="sheet">
+        <div class="dayhead"><h2>Donnerstag, 5. November</h2><button class="link" aria-label="Filter"><svg><use href="#i-sliders"/></svg>Filter</button></div>
+        <div class="week" role="group" aria-label="Tage dieser Woche">
+          <button><span class="wd">Mo</span><span class="d">2</span><span class="dots"></span></button>
+          <button><span class="wd">Di</span><span class="d">3</span><span class="dots"></span></button>
+          <button><span class="wd">Mi</span><span class="d">4</span><span class="dots"></span></button>
+          <button class="on" aria-pressed="true"><span class="wd">Do</span><span class="d">5</span><span class="dots" id="dots5"></span></button>
+          <button><span class="wd">Fr</span><span class="d">6</span><span class="dots" id="dots6"></span></button>
+          <button><span class="wd">Sa</span><span class="d">7</span><span class="dots"></span></button>
+          <button><span class="wd">So</span><span class="d">8</span><span class="dots"></span></button>
+        </div>
+        <div id="nudge"></div>
+        <div id="groups"></div>
+      </main>
+      <aside class="detail" id="detail" aria-label="Details zur gewählten Aufgabe"></aside>
+    </div>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Hauptbereiche">
+  <button aria-current="page"><svg><use href="#i-tasks"/></svg>Aufgaben</button>
+  <button><svg><use href="#i-layers"/></svg>Boards</button>
+  <button><svg><use href="#i-shield"/></svg>Wächter</button>
+</nav>
+
+<script>
+(function () {
+  var I = function (n, s) { return '<svg' + (s ? ' style="width:' + s + 'px;height:' + s + 'px"' : '') + '><use href="#i-' + n + '"/></svg>'; };
+  var A = function (k) { return '<span class="avatar ' + (k === 'anna' ? '' : k) + '">' + k[0].toUpperCase() + '</span>'; };
+  var P = {
+    anna: { name: 'Anna', sentence: 'Zwei Dinge sind liegen geblieben.', over: 2, today: 0, done: 1, nudge: { from: 'ben', what: 'Fenster putzen' },
+      groups: [
+        { title: 'Liegen geblieben', rows: [
+          { t: 'Müll rausbringen', when: 'heute 16:17', repeat: 1, hi: 1, who: ['anna'], sel: 1 },
+          { t: 'Paket abholen', when: 'heute 16:30', who: ['anna'] } ] },
+        { title: 'Diese Woche', rows: [
+          { t: 'Fenster putzen', when: 'morgen 10:00', who: ['anna', 'ben'], note: 'mit Ben' } ] } ],
+      detail: { title: 'Müll rausbringen', badge: 'überfällig', due: 'heute, 16:17', who: ['anna'], repeat: 'jeden Donnerstag', prio: 'Hoch', board: 'Haushalt',
+        log: ['Seit 1 Std. 25 Min. überfällig', 'Fällig heute um 16:17', 'Letzte Woche von Anna erledigt'] },
+      dots5: 2, dots6: 1 },
+    ben: { name: 'Ben', sentence: 'Zwei Dinge warten auf dich.', over: 0, today: 1, done: 0,
+      groups: [
+        { title: 'Heute', rows: [ { t: 'Wäsche aufhängen', when: 'heute 18:30', who: ['ben'], sel: 1 } ] },
+        { title: 'Diese Woche', rows: [ { t: 'Fenster putzen', when: 'morgen 10:00', who: ['anna', 'ben'], note: 'mit Anna' } ] } ],
+      detail: { title: 'Wäsche aufhängen', badge: 'heute', due: 'heute, 18:30', who: ['ben'], repeat: 'keine', prio: 'Normal', board: 'Haushalt',
+        log: ['Angelegt von Anna', 'Fällig heute um 18:30'] },
+      dots5: 1, dots6: 1 },
+    mia: { name: 'Mia', sentence: 'Alles erledigt. Gut gemacht.', over: 0, today: 0, done: 2,
+      groups: [ { title: 'Heute erledigt', rows: [ { t: 'Zimmer aufräumen', when: 'heute 15:10', who: ['mia'], done: 1 }, { t: 'Hausaufgaben', when: 'heute 16:00', who: ['mia'], done: 1 } ] } ],
+      empty: 'Heute ist nichts mehr offen.',
+      detail: { title: 'Zimmer aufräumen', badge: 'erledigt', due: 'heute, 15:10', who: ['mia'], repeat: 'jeden Donnerstag', prio: 'Normal', board: 'Kinderzimmer',
+        log: ['Von Mia erledigt um 15:10', 'Von Anna bestätigt um 15:32'] },
+      dots5: 0, dots6: 0 }
+  };
+  var order = ['anna', 'ben', 'mia'];
+  function render(k) {
+    var p = P[k]; document.body.dataset.p = k;
+    document.getElementById('people').innerHTML = order.map(function (o) {
+      return '<button class="person" aria-pressed="' + (o === k) + '" data-k="' + o + '"><span class="av ' + o + '">' + P[o].name[0] + '</span>' + '<span class="nm">' + P[o].name + '</span></button>'; }).join('');
+    document.getElementById('fam').innerHTML = order.map(function (o) {
+      var n = P[o].over + P[o].today + (o === 'anna' ? 1 : 0);
+      return '<button aria-pressed="' + (o === k) + '" data-k="' + o + '">' + A(o).replace('avatar', 'avatar') + P[o].name + '<span class="n">' + (o === 'mia' ? 0 : n) + '</span></button>'; }).join('');
+    document.getElementById('sentence').textContent = p.sentence;
+    document.getElementById('chips').innerHTML =
+      (p.over ? '<button class="chip solid num"><b>' + p.over + '</b>überfällig</button>' : '') +
+      '<button class="chip num" aria-label="' + p.today + ' heute fällig"><b>' + p.today + '</b>heute</button>' +
+      '<button class="chip num"><b>' + p.done + '</b>erledigt</button>' +
+      '<button class="chip newbtn" style="display:none"></button>';
+    document.getElementById('nudge').innerHTML = p.nudge ?
+      '<div class="nudge">' + A(p.nudge.from) + '<div class="bubble"><div><b>' + P[p.nudge.from].name + ' stupst dich</b><span class="sub">' + p.nudge.what + '</span></div><button class="go">Ansehen</button></div></div>' : '';
+    document.getElementById('groups').innerHTML = p.groups.map(function (g) {
+      return '<section class="group"><h3>' + g.title + '<span class="c">' + g.rows.length + '</span></h3><ul class="rows">' + g.rows.map(function (r) {
+        return '<li class="row' + (r.sel ? ' sel' : '') + (r.done ? ' done' : '') + '"><button class="box" aria-label="' + r.t + (r.done ? ' wieder öffnen' : ' erledigen') + '">' + I('check') + '</button><div><div class="title">' + r.t + '</div><div class="meta"><span class="num">' + r.when + '</span>' +
+          (r.repeat ? '<span role="img" aria-label="wiederholt sich wöchentlich">' + I('repeat') + '</span>' : '') + (r.note ? '<span>' + r.note + '</span>' : '') + (r.hi ? '<span class="hi">' + I('flag') + 'Hoch</span>' : '') + '</div></div>' +
+          '<span class="avatars">' + r.who.map(A).join('') + '</span></li>'; }).join('') + '</ul></section>'; }).join('') +
+      (p.empty ? '<div class="empty"><p>' + p.empty + '</p><span>Genieße den Abend.</span></div>' : '');
+    var d = p.detail;
+    document.getElementById('detail').innerHTML =
+      '<div><span class="badge">' + d.badge + '</span></div><h2>' + d.title + '</h2>' +
+      '<dl><dt>Fällig</dt><dd class="num">' + d.due + '</dd><dt>Zuständig</dt><dd>' + d.who.map(function (w) { return A(w) + P[w].name; }).join(' ') + '</dd><dt>Wiederholung</dt><dd>' + d.repeat + '</dd><dt>Priorität</dt><dd>' + d.prio + '</dd><dt>Board</dt><dd>' + d.board + '</dd></dl>' +
+      '<div class="btns"><button class="go">Erledigt</button><button class="alt">Später</button></div>' +
+      '<div><h3>Verlauf</h3><ul class="log">' + d.log.map(function (l) { return '<li><span>' + l + '</span></li>'; }).join('') + '</ul></div>';
+    var dots = function (n) { return new Array(n + 1).join('<b></b>'); };
+    document.getElementById('dots5').innerHTML = dots(p.dots5); document.getElementById('dots6').innerHTML = dots(p.dots6);
+    // Desktop: Neue Aufgabe als Knopf im Kopf
+    var nb = document.querySelector('.chip.newbtn'); nb.className = 'newbtn'; nb.innerHTML = I('plus', 20) + 'Neue Aufgabe'; nb.style.display = '';
+  }
+  document.addEventListener('click', function (e) { var b = e.target.closest('[data-k]'); if (b) render(b.dataset.k); });
+  var q = new URLSearchParams(location.search).get('p'); render(P[q] ? q : 'anna');
+})();
+</script>
+<style>
+.newbtn { display: none; }
+@media (min-width: 900px) { .hero .newbtn { display: inline-flex !important; } .hero .newround { display: none; } .hero .chips { align-items: center; } .hero .chips .newbtn { margin-left: auto; } }
+@media (max-width: 899px) { .hero .chips .newbtn { display: none !important; } }
+</style>
+</body>
+</html>

@@ -115,7 +115,7 @@ describe('homeState nach einem Neustart', () => {
 });
 
 describe('homeState', () => {
-  it('ruhig, solange nichts läuft; der Wächter nennt die Karte, die danach kommt', async () => {
+  it('ruhig, solange nichts läuft; der Wächter nennt die Aufgabe, die danach kommt', async () => {
     await create();
     expect(only()).toMatchObject({ name: 'Waschmaschine fertig', phase: 'quiet', nextCard: 'Wäsche aufhängen', progress: null, entityMissing: false, openCard: null });
   });
@@ -150,13 +150,13 @@ describe('homeState', () => {
     expect(only().since).toBe('2026-11-04T10:00:00.000Z'); // Beginn bleibt
   });
 
-  it('wartet auf jemanden, sobald die Karte entstanden ist, mit der zuständigen Person', async () => {
+  it('wartet auf jemanden, sobald die Aufgabe entstanden ist, mit der zuständigen Person', async () => {
     const w = await create();
     await emit(w, '120');
     advance(30);
     await emit(w, '1');
     expect(only()).toMatchObject({ phase: 'waiting', openCard: { title: 'Wäsche aufhängen: sensor.waschmaschine_leistung', assigneeIds: [anna] } });
-    // die Karte wird erledigt: wieder ruhig
+    // die Aufgabe wird erledigt: wieder ruhig
     store.completeCard(only().openCard!.id, { by: anna, source: 'app' });
     expect(only().phase).toBe('quiet');
   });

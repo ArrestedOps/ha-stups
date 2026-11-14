@@ -59,8 +59,8 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     return { engine: deps.watchers, data: deps.watcherData };
   };
   /**
-   * Board, Spalte, Kategorien und Personen müssen es geben (sonst entstünde nie eine Karte). Das Board darf nicht privat sein (ein
-   * Wächter legt Karten für andere an) und muss für die Person sichtbar sein, die es wählt (ein unverändertes Board nicht: wer nur
+   * Board, Spalte, Kategorien und Personen müssen es geben (sonst entstünde nie eine Aufgabe). Das Board darf nicht privat sein (ein
+   * Wächter legt Aufgaben für andere an) und muss für die Person sichtbar sein, die es wählt (ein unverändertes Board nicht: wer nur
    * umbenennt, muss es nicht sehen). Zuständige kommen nur aus den Personen, die das Board sehen.
    */
   function checkWatcherTargets(req: FastifyRequest, c: WatcherConfig, unchangedBoard: string | null = null): void {
@@ -70,7 +70,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     } catch {
       throw new ValidationError(t('Das Board gibt es nicht'));
     }
-    if (view.board.visibility === 'private') throw new ValidationError(t('Private Boards sind für Wächter nicht wählbar: ein Wächter legt Karten für andere an'));
+    if (view.board.visibility === 'private') throw new ValidationError(t('Private Boards sind für Wächter nicht wählbar: ein Wächter legt Aufgaben für andere an'));
     if (c.card.boardId !== unchangedBoard && !store.canSeeBoard(req.user?.id ?? null, c.card.boardId)) throw new ValidationError(t('Das Board gibt es nicht'));
     if (!view.columns.some((x) => x.id === c.card.columnId)) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
     const cats = new Set(view.categories.map((x) => x.id));
@@ -96,14 +96,14 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     const clearMissing = config.assign.mode === 'none' || config.assign.personIds.length > 0;
     return { config, clearMissing };
   }
-  /** Speichert eine geprüfte Konfiguration; das Stupsen der offenen Karte folgt der neuen Regel */
+  /** Speichert eine geprüfte Konfiguration; das Stupsen der offenen Aufgabe folgt der neuen Regel */
   function saveUpdate(id: string, config: WatcherConfig, clearMissing: boolean): void {
     deps.watcherData!.update(id, config, clearMissing);
     const open = store.openCardOfWatcher(id);
     if (open) store.syncWatcherNudge(open.id, config.nudge ? { anchor: 'created', ...config.nudge, atTime: null } : null);
   }
 
-  /** Karten aus Boards, die die Person nicht sieht, tauchen im Wächter nicht auf (die offene Karte wird weggelassen) */
+  /** Aufgaben aus Boards, die die Person nicht sieht, tauchen im Wächter nicht auf (die offene Aufgabe wird weggelassen) */
   function hideCards<T extends { openCard: { boardId: string } | null }>(req: FastifyRequest, items: T[]): T[] {
     const me = req.user?.id ?? null;
     return items.map((w) => (w.openCard && !store.canSeeBoard(me, w.openCard.boardId) ? { ...w, openCard: null } : w));
@@ -280,8 +280,8 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     const config = parseWatcher(raw);
     checkWatcherTargets(req, config);
     const created = data.create(config);
-    // `metNow`: die Bedingung gilt schon und es löst nichts von selbst aus, die Oberfläche fragt, ob die Karte jetzt entstehen soll
-    const metNow = await engine.onSaved(created.id);
+    // Beim Anlegen löst ein Wächter, dessen Bedingung schon gilt, gleich aus (`metNow` bleibt dann leer)
+    const metNow = await engine.onSaved(created.id, { created: true });
     return reply.code(201).send({ ...watcherView(created.id), metNow });
   });
   app.patch<{ Params: Params }>('/api/watchers/:id', async (req) => {
@@ -311,7 +311,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   /**
    * Mehrere Treffer von „Gefunden" gemeinsam einrichten: `{ base, devices }`. `base` ist ein vollständiger Entwurf wie bei `POST /api/watchers`;
    * je Gerät gilt dessen Entität als Auslöser (und als Bedingung zum Erledigen, wenn der Entwurf dort dieselbe Entität nutzt). Name und
-   * Kartentitel bleiben die des Entwurfs (die Karte nennt das Gerät zur Laufzeit). Entitäten, die schon ein Wächter beobachtet, werden
+   * Aufgabentitel bleiben die des Entwurfs (die Aufgabe nennt das Gerät zur Laufzeit). Entitäten, die schon ein Wächter beobachtet, werden
    * übersprungen (`skipped`). Alles wird erst geprüft, dann in einer Transaktion angelegt: ist der Entwurf ungültig, entsteht keiner.
    */
   app.post('/api/watchers/bulk-create', async (req, reply) => {
@@ -341,7 +341,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     });
   });
   /**
-   * Mehrere Wächter auf einmal ändern: `{ ids, patch }`. Der Patch fasst nur an, was er nennt (nie Entität, Name oder Kartentitel);
+   * Mehrere Wächter auf einmal ändern: `{ ids, patch }`. Der Patch fasst nur an, was er nennt (nie Entität, Name oder Aufgabentitel);
    * Auslöser-Felder gehen nur, wenn alle Wächter dieselbe Auslöser-Art (und bei Schwellwerten dieselbe Einheit) haben. Jeder Wächter
    * läuft durch dieselbe Prüfung wie das Einzelspeichern; erst wenn alle gültig sind, wird in einer Transaktion gespeichert.
    */
@@ -398,7 +398,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     }
     return watcherView(req.params.id);
   });
-  /** „Ja, Karte erstellen" auf die Rückfrage nach dem Speichern: nur wenn die Bedingung weiterhin gilt und keine Karte des Wächters offen ist (sonst 409) */
+  /** „Ja, Aufgabe erstellen" auf die Rückfrage nach dem Speichern: nur wenn die Bedingung weiterhin gilt und keine Aufgabe des Wächters offen ist (sonst 409) */
   app.post<{ Params: Params }>('/api/watchers/:id/fire-now', async (req) => {
     requirePermission(req, 'watchers');
     const { engine, data } = watcherEngine();

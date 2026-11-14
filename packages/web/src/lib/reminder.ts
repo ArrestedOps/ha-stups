@@ -155,7 +155,7 @@ export function nudgeOffsets(n: Nudge): number[] {
   return Array.from({ length: total }, (_, i) => n.afterMin + i * (n.everyMin ?? 0));
 }
 
-/** „12:30 · 13:00 · 13:30“ für eine Karte, die um 12:00 angelegt wird; ab dem zweiten Tag mit dem Wochentag */
+/** „12:30 · 13:00 · 13:30“ für eine Aufgabe, die um 12:00 angelegt wird; ab dem zweiten Tag mit dem Wochentag */
 export function nudgeTimes(n: Nudge, startHm = '12:00'): { text: string; last: boolean }[] {
   const [h, mi] = startHm.split(':').map(Number) as [number, number];
   const base = Date.UTC(2026, 0, 5, h, mi); // ein Montag, nur für die Uhrzeiten

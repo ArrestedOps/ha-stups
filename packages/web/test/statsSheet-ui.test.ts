@@ -91,7 +91,7 @@ describe('Blatt „Heute fällig“', () => {
 
 describe('Blatt „Überfällig“', () => {
   const cards = [mk('Fußmatte', '2026-11-02T09:00:00Z'), mk('Kabel', '2026-11-03T09:00:00Z'), mk('Später', '2026-11-04T17:00:00Z')];
-  it('seit 2 Tagen / seit gestern, Morgen je Karte, Sammel-Knöpfe, „In der Liste filtern“', () => {
+  it('seit 2 Tagen / seit gestern, Morgen je Aufgabe, Sammel-Knöpfe, „In der Liste filtern“', () => {
     seed(cards);
     const out = html(StatsSheet, { kind: 'overdue' });
     expect(out).toContain('seit 2 Tagen');

@@ -44,14 +44,14 @@
     {#if items === null}
       <p class="py-10 text-center text-fg2">{t('Lädt …')}</p>
     {:else if items.length === 0}
-      <p class="py-10 text-center text-fg2">{t('Noch nichts archiviert. Erledigte Karten landen hier nach der Archivfrist des Boards.')}</p>
+      <p class="py-10 text-center text-fg2">{t('Noch nichts archiviert. Erledigte Aufgaben landen hier nach der Archivfrist des Boards.')}</p>
     {:else}
       <label class="focus-ring-in flex h-12 items-center gap-2.5 rounded-row border border-line bg-surface px-3.5 text-fg2">
         <Icon name="search" size={20} stroke={2} />
         <input type="search" bind:value={search} placeholder={t('Im Archiv suchen')} class="min-w-0 flex-1 bg-transparent text-[16px] font-medium text-fg outline-none placeholder:text-dim" aria-label={t('Im Archiv suchen')} />
       </label>
       <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">
-        {ui.view?.board.archiveAfterDays ? t('Erledigte Karten landen nach {n} Tagen hier. Nichts geht verloren, alles lässt sich zurückholen.', { n: ui.view.board.archiveAfterDays }) : t('Nichts geht verloren, alles lässt sich zurückholen.')}
+        {ui.view?.board.archiveAfterDays ? t('Erledigte Aufgaben landen nach {n} Tagen hier. Nichts geht verloren, alles lässt sich zurückholen.', { n: ui.view.board.archiveAfterDays }) : t('Nichts geht verloren, alles lässt sich zurückholen.')}
       </p>
       {#each groups as g (g.key)}
         <div class="flex flex-col gap-2">

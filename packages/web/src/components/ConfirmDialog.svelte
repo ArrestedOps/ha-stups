@@ -22,7 +22,7 @@
     await run?.();
   }
 
-  // Escape schließt nur die Rückfrage, nicht auch noch die Karte dahinter
+  // Escape schließt nur die Rückfrage, nicht auch noch die Aufgabe dahinter
   function key(e: KeyboardEvent) {
     if (c && e.key === 'Escape') {
       e.stopImmediatePropagation();

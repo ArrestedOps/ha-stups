@@ -38,15 +38,15 @@ export type RunResult =
   | 'nudged'
   | 'test'
   | 'error'
-  /** die Person hat die Karte weitergegeben */
+  /** die Person hat die Aufgabe weitergegeben */
   | 'passed'
-  /** „Erst vorschlagen": die Karte entstand ohne Zuständige, alle Anwesenden wurden gefragt */
+  /** „Erst vorschlagen": die Aufgabe entstand ohne Zuständige, alle Anwesenden wurden gefragt */
   | 'suggested'
-  /** jemand hat die vorgeschlagene Karte übernommen */
+  /** jemand hat die vorgeschlagene Aufgabe übernommen */
   | 'claimed'
   /** niemand hat sich in 30 Minuten gemeldet: der Rückfall des Wächters greift */
   | 'suggest_fallback'
-  /** Der Wächter braucht neue Zuständige (Status `assignees_missing`): es wurde keine Karte angelegt */
+  /** Der Wächter braucht neue Zuständige (Status `assignees_missing`): es wurde keine Aufgabe angelegt */
   | 'no_assignees';
 
 export interface WatcherRun {
@@ -59,7 +59,7 @@ export interface WatcherRun {
   note: string | null;
 }
 
-/** Karte, die auf die erste Person wartet, die heimkommt */
+/** Aufgabe, die auf die erste Person wartet, die heimkommt */
 export interface Waiting {
   cardId: string;
   watcherId: string;
@@ -68,7 +68,7 @@ export interface Waiting {
   firstAssignedAt: string | null;
 }
 
-/** Eine vorgeschlagene Karte, die auf ein „Übernehmen" wartet */
+/** Eine vorgeschlagene Aufgabe, die auf ein „Übernehmen" wartet */
 export interface Suggestion {
   cardId: string;
   watcherId: string;
@@ -202,7 +202,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
     run('update watchers set category = ?, updated_at = ? where id = ?', mergeCategory(category, categories(id)), iso(), id);
   }
 
-  /** Nur Name und Titel der Kartenvorlage (Aufräumen alter Gerätenamen): kein erneutes Anmelden, nichts sonst; null lässt den Text, wie er ist */
+  /** Nur Name und Titel der Aufgabenvorlage (Aufräumen alter Gerätenamen): kein erneutes Anmelden, nichts sonst; null lässt den Text, wie er ist */
   function setNames(id: string, to: { name: string | null; cardTitle: string | null }): void {
     const w = get(id);
     if (to.name !== null) run('update watchers set name = ? where id = ?', to.name, id);
@@ -294,7 +294,7 @@ export function createWatcherData(db: DatabaseSync, now: () => Date = () => new 
       limit,
     ).map((r) => ({ ...toRun(r), watcherName: r.watcher_name }));
 
-  /** Läufe zu einer Karte, älteste zuerst (Verlauf der Karte) */
+  /** Läufe zu einer Aufgabe, älteste zuerst (Verlauf der Aufgabe) */
   const runsOfCard = (cardId: string): WatcherRun[] =>
     all('select * from watcher_runs where card_id = ? order by at, rowid', cardId).map(toRun);
 

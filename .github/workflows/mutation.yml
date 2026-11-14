@@ -1,0 +1,31 @@
+name: Mutationstests
+
+# Nur von Hand (Actions → Mutationstests → Run workflow): Der Lauf dauert deutlich länger als die CI und sperrt nichts.
+# Er zeigt, welche Stellen des Servers kein Test prüft; der Bericht hängt als Artefakt am Lauf.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm mutation
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutationsbericht
+          path: packages/server/reports/mutation
+          retention-days: 14

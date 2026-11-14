@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stups · Idee 4 · Grundriss</title>
+<!--
+  Mockup, kein Produktcode. Aufgaben nach Räumen: der Hausplan zeigt, wo etwas wartet.
+  Hinweis: Dafür bräuchten Aufgaben einen Raum. Home Assistant kennt Bereiche (Küche, Flur …), Stups bisher nicht für Karten.
+  Parameter: ?theme=light|dark. Nur Handy.
+-->
+<style>
+@font-face { font-family: "Schibsted Grotesk"; src: url("../fonts/schibsted-grotesk-latin-wght-normal.woff2") format("woff2"); font-weight: 400 900; font-display: swap; }
+:root {
+  --bg: #f1f2f4; --room: #ffffff; --wall: #1f3a68; --ink: #000000; --mute: #5c6370; --line: #dcdfe5; --thin: #aab2c0;
+  --accent: #c2410c; --accent-soft: rgba(194,65,12,.13); --on-accent: #fff; --card: #ffffff; --bar: rgba(255,255,255,.92);
+  --font: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #000; --room: #141418; --wall: #8fb0f0; --ink: #fff; --mute: #a3a9b4; --line: #2a2c31; --thin: #4a5060; --accent: #ff8a50; --accent-soft: rgba(255,138,80,.18); --on-accent: #1a0b02; --card: #1b1b1e; --bar: rgba(0,0,0,.9); color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #000; --room: #141418; --wall: #8fb0f0; --ink: #fff; --mute: #a3a9b4; --line: #2a2c31; --thin: #4a5060; --accent: #ff8a50; --accent-soft: rgba(255,138,80,.18); --on-accent: #1a0b02; --card: #1b1b1e; --bar: rgba(0,0,0,.9); color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.35 var(--font); -webkit-font-smoothing: antialiased; max-width: 430px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.num { font-variant-numeric: tabular-nums; }
+
+.top { display: flex; align-items: flex-start; justify-content: space-between; padding: var(--s3) var(--s4) 0; }
+.top h1 { font: 800 30px/1.05 var(--font); letter-spacing: -0.025em; }
+.top .s { font-size: 15px; color: var(--mute); margin-top: 2px; }
+.right { display: flex; gap: var(--s2); align-items: center; padding-top: 2px; }
+.iconbtn { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--card); }
+.iconbtn .pip { position: absolute; top: 8px; right: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+.me { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--wall); color: var(--bg); font: 800 16px/1 var(--font); }
+.say { padding: var(--s3) var(--s4) 0; font: 600 18px/1.3 var(--font); }
+.say b { color: var(--accent); }
+
+.plan { margin: var(--s3) var(--s4) 0; }
+.plan svg { width: 100%; height: auto; display: block; stroke-linecap: butt; stroke-linejoin: miter; }
+.plan text { font: 600 12.5px var(--font); fill: var(--mute); stroke: none; }
+.plan .room rect.f { fill: var(--room); stroke: var(--wall); stroke-width: 3; }
+.plan .thin { fill: none; stroke: var(--thin); stroke-width: 1.4; }
+.plan .sel rect.f { fill: color-mix(in srgb, var(--accent) 14%, var(--room)); stroke: var(--accent); stroke-width: 3.5; }
+.plan .sel text { fill: var(--accent); font-weight: 800; font-size: 14px; }
+.plan .badge circle { fill: var(--room); stroke: var(--wall); stroke-width: 2; }
+.plan .sel .badge circle { fill: var(--accent); stroke: var(--accent); }
+.plan .badge text { fill: var(--ink); font: 800 12px var(--font); text-anchor: middle; }
+.plan .sel .badge text { fill: var(--on-accent); }
+.plan .door { stroke: var(--bg); stroke-width: 5; }
+
+.sec { padding: var(--s3) var(--s4) 0; }
+.sec .h { display: flex; align-items: center; gap: var(--s2); font: 800 22px/1.1 var(--font); letter-spacing: -0.02em; margin: var(--s3) 0 var(--s1); }
+.chip { display: inline-flex; align-items: center; height: 26px; padding: 0 var(--s2); border-radius: 13px; background: var(--accent-soft); color: var(--accent); font: 700 13px/1 var(--font); }
+.item { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) 0; border-top: 1px solid var(--line); }
+.item .c { width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--mute); flex: none; }
+.item .n { font: 700 17px/1.2 var(--font); }
+.item .m { display: flex; gap: var(--s2); align-items: center; font-size: 14px; color: var(--mute); }
+.item .m svg { width: 14px; height: 14px; }
+.item .m .late { color: var(--accent); font-weight: 700; }
+.item .g { margin-left: auto; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--wall); color: var(--bg); font: 800 12px/1 var(--font); }
+.rooms { display: flex; gap: var(--s2); padding: var(--s3) var(--s4) 0; overflow: hidden; }
+.rooms button { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 var(--s3); border-radius: 17px; background: var(--card); font: 600 14px/1 var(--font); white-space: nowrap; }
+.rooms button b { font-weight: 800; color: var(--accent); }
+.spacer { flex: 1; }
+.tabbar { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--bar); border-top: 1px solid var(--line); padding: var(--s1) 0 max(var(--s2), env(safe-area-inset-bottom)); }
+.tabbar button { display: grid; justify-items: center; gap: 2px; padding: 6px 0 2px; font: 600 11.5px/1.2 var(--font); color: var(--mute); }
+.tabbar button[aria-current="page"] { color: var(--accent); }
+.tabbar svg { width: 25px; height: 25px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 8.5 4.7L12 13 3.5 8.2 12 3.5Z"/><path d="m3.5 12.6 8.5 4.8 8.5-4.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19.5 6.5v5.6c0 4.2-3 7.4-7.5 8.4-4.5-1-7.5-4.2-7.5-8.4V6.5L12 3.5Z"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H18l-3-3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H6l3 3"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5.5 21V4h11l-2.2 4 2.2 4h-11"/></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <div><h1>Zuhause</h1><div class="s">Erdgeschoss</div></div>
+  <div class="right"><button class="iconbtn" aria-label="Mitteilungen, 1 neue"><svg><use href="#i-bell"/></svg><span class="pip"></span></button><button class="me" aria-label="Konto: Anna">A</button></div>
+</header>
+<p class="say">Im <b>Flur</b> warten zwei Dinge auf dich.</p>
+
+<div class="plan">
+  <svg viewBox="-4 -4 366 270" role="img" aria-label="Grundriss: Flur mit 2 offenen Aufgaben, Wohnzimmer mit 1">
+    <!-- Küche -->
+    <g class="room"><rect class="f" x="0" y="0" width="118" height="108"/><text x="10" y="22">Küche</text>
+      <path class="thin" d="M10 98V40h14M10 98h60"/><circle class="thin" cx="86" cy="88" r="9"/></g>
+    <!-- Wohnzimmer -->
+    <g class="room"><rect class="f" x="118" y="0" width="240" height="108"/><text x="128" y="22">Wohnzimmer</text>
+      <rect class="thin" x="140" y="62" width="92" height="30" rx="8"/><circle class="thin" cx="290" cy="74" r="16"/><rect class="thin" x="322" y="16" width="26" height="26" rx="3"/>
+      <g class="badge"><circle cx="338" cy="84" r="11"/><text x="338" y="88.5">1</text></g></g>
+    <!-- Flur (gewählt) -->
+    <g class="room sel"><rect class="f" x="0" y="108" width="358" height="56"/><text x="10" y="130">Flur</text>
+      <g class="badge"><circle cx="338" cy="136" r="12"/><text x="338" y="140.5">2</text></g></g>
+    <!-- unten -->
+    <g class="room"><rect class="f" x="0" y="164" width="104" height="98"/><text x="10" y="186">Bad</text><rect class="thin" x="10" y="218" width="64" height="30" rx="14"/></g>
+    <g class="room"><rect class="f" x="104" y="164" width="124" height="98"/><text x="114" y="186">Arbeitszimmer</text><rect class="thin" x="124" y="214" width="70" height="30" rx="3"/></g>
+    <g class="room"><rect class="f" x="228" y="164" width="130" height="98"/><text x="238" y="186">Schlafzimmer</text><rect class="thin" x="262" y="204" width="76" height="46" rx="5"/><path class="thin" d="M262 220h76"/></g>
+    <!-- Türen -->
+    <path class="door" d="M50 108h26M180 108h26M40 164h26M150 164h26M280 164h26"/>
+    <path class="door" d="M-1 128v22"/><text x="-2" y="-8" style="display:none"></text>
+  </svg>
+</div>
+
+<main class="sec">
+  <div class="h">Flur <span class="chip num">2 überfällig</span></div>
+  <div class="item"><span class="c"></span><div><div class="n">Müll rausbringen</div><div class="m"><span class="late num">seit 16:17</span><svg><use href="#i-repeat"/></svg><span>Hoch</span></div></div><span class="g">A</span></div>
+  <div class="item"><span class="c"></span><div><div class="n">Paket abholen</div><div class="m"><span class="late num">seit 16:30</span></div></div><span class="g">A</span></div>
+</main>
+<section class="sec" aria-label="Andere Räume">
+  <div class="h" style="font-size:18px;margin-top:var(--s4)">In anderen Räumen</div>
+  <div class="item"><span class="c"></span><div><div class="n">Fenster putzen</div><div class="m"><span>Wohnzimmer</span><span class="num">morgen 10:00</span></div></div><span class="g">A</span></div>
+  <div class="item"><span class="c"></span><div><div class="n">Steuererklärung abgeben</div><div class="m"><span>ohne Raum</span><span class="num">Di 23:00</span></div></div><span class="g">A</span></div>
+</section>
+<div class="spacer"></div>
+
+<nav class="tabbar" aria-label="Hauptbereiche">
+  <button aria-current="page"><svg><use href="#i-tasks"/></svg>Aufgaben</button>
+  <button><svg><use href="#i-layers"/></svg>Boards</button>
+  <button><svg><use href="#i-shield"/></svg>Wächter</button>
+</nav>
+<script>try { var t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; } catch (e) {}</script>
+</body>
+</html>

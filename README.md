@@ -108,7 +108,7 @@ New versions appear first as **Stups (Beta)**, a second app with its own data, a
 https://github.com/ArrestedOps/ha-stups#beta
 ```
 
-**Stups (Beta)** appears there (with a "BETA" icon). It is marked experimental, so Home Assistant only shows it with **Advanced mode** switched on (your profile, bottom left). From this address a second "Stups" also appears: do not install that one. In the beta, push and watchers are off at first so nobody gets messages twice; **Settings › Help and data › Bin, archive, move** copies real data into it once. Everything about it: [stups-beta/DOCS.md](stups-beta/DOCS.md).
+**Stups (Beta)** appears there (with a "BETA" icon). It is marked experimental, so Home Assistant only shows it with **Advanced mode** switched on (your profile, bottom left). From this address a second "Stups" also appears: do not install that one. In the beta, push is off at first so nobody gets messages twice (the watchers run; switch them off under Settings › Beta if tasks appear twice); **Settings › Help and data › Bin, archive, move** copies real data into it once. Everything about it: [stups-beta/DOCS.md](stups-beta/DOCS.md).
 
 ### Without Home Assistant (Docker, beta)
 

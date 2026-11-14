@@ -34,7 +34,7 @@ describe('Board aus einer Vorlage anlegen', () => {
     expect(view.cards).toEqual([]);
   });
 
-  it('mit Vorlage: Spalten, Kategorien und Karten, in der Sprache der Anfrage, Ersteller ist die Person', async () => {
+  it('mit Vorlage: Spalten, Kategorien und Aufgaben, in der Sprache der Anfrage, Ersteller ist die Person', async () => {
     const res = await call(ben, 'POST', '/api/boards', { name: 'Home', template: 'household' }, 'en');
     expect(res.statusCode).toBe(201);
     const view = (await call(ben, 'GET', `/api/boards/${res.json().id}`)).json();

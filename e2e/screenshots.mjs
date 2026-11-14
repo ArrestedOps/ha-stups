@@ -172,7 +172,7 @@ async function seed() {
   await mk(einkauf.id, ev.columns[0].id, { title: S.parcel, dueAt: dayAt(0, 16, 30), assigneeIds: [anna.id] });
   await mk(einkauf.id, ev.columns[0].id, { title: S.wrapping, dueAt: dayAt(1, 18, 0) });
 
-  // Archiv und Papierkorb des Boards „Haushalt" füllen: zwei erledigte, ins Archiv gelegte Karten, zwei gelöschte
+  // Archiv und Papierkorb des Boards „Haushalt" füllen: zwei erledigte, ins Archiv gelegte Aufgaben, zwei gelöschte
   const old1 = await mk(haushalt.id, open, { title: S.archived1, assigneeIds: [ben.id] });
   const old2 = await mk(haushalt.id, open, { title: S.archived2, assigneeIds: [anna.id] });
   for (const c of [old1, old2]) await api('POST', `cards/${c.id}/complete`);
@@ -180,7 +180,7 @@ async function seed() {
   const bin2 = await mk(haushalt.id, open, { title: S.bin2 });
   for (const c of [bin1, bin2]) await fetch(`${base}/api/cards/${c.id}`, { method: 'DELETE', headers: { 'x-stups-language': lang } });
 
-  // Ein erfundenes Bild als Anhang der Steuer-Karte (für die Foto-Ansicht): ein neutraler Verlauf, kein Foto
+  // Ein erfundenes Bild als Anhang der Steuer-Aufgabe (für die Foto-Ansicht): ein neutraler Verlauf, kein Foto
   const png = new PNG({ width: 640, height: 420 });
   for (let yy = 0; yy < 420; yy++) for (let xx = 0; xx < 640; xx++) {
     const i = (640 * yy + xx) << 2;
@@ -213,7 +213,7 @@ async function seed() {
   db.prepare('insert into nudges (id, card_id, from_user, to_user, template, text, created_at, deliver_at, delivered_at, delivered_round) values (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)').run(
     'shots-nudge-1', windows.id, ben.id, anna.id, 'today', x('Heute noch?', 'Today still?'), at(-2 * H), at(-2 * H), at(-2 * H),
   );
-  // Mitteilungen für Anna (Posteingang): Stups (oben), Wächter-Karte, Überfälliges, Erledigung von Ben; gestern ein Kommentar und Bens Antwort auf Annas Stups.
+  // Mitteilungen für Anna (Posteingang): Stups (oben), Wächter-Aufgabe, Überfälliges, Erledigung von Ben; gestern ein Kommentar und Bens Antwort auf Annas Stups.
   // Annas Gelesen-Marker liegt vor den beiden neuesten Einträgen: sie sind ungelesen (Punkt), der Rest ist gelesen
   const cardId = (title) => db.prepare('select id from cards where title = ?').get(title).id;
   db.prepare("insert into watchers (id, name, trigger_json, card_json, assign_json, created_at, updated_at) values ('w-shots', ?, '{}', '{}', '{}', ?, ?)").run(S.washer, at(-9 * D), at(-9 * D));
@@ -295,9 +295,9 @@ const settings = async (page, name) => {
 const screens = [
   ['board', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: re(S.open) }).click(); }],
   ['karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: re(S.open) }).click(); await page.getByText(S.tax).first().click(); await page.getByTestId('created-note').waitFor(); }],
-  ['neue-karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Karte', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByTestId('symbol-chip').waitFor(); }],
-  ['symbol-waehlen', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Karte', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByTestId('symbol-tile').click(); await page.getByTestId('symbol-name').waitFor(); }],
-  ['termin-waehlen', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Karte', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByRole('button', { name: x(/^Termin wählen/, /^Choose due date/) }).click(); await page.getByTestId('termin-summary').waitFor(); }],
+  ['neue-karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Aufgabe', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByTestId('symbol-chip').waitFor(); }],
+  ['symbol-waehlen', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Aufgabe', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByTestId('symbol-tile').click(); await page.getByTestId('symbol-name').waitFor(); }],
+  ['termin-waehlen', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Aufgabe', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByRole('button', { name: x(/^Termin wählen/, /^Choose due date/) }).click(); await page.getByTestId('termin-summary').waitFor(); }],
   ['stupsen', async (page) => {
     await nav(page, 'Boards').click();
     await page.getByRole('tab', { name: re(S.planned) }).click();
@@ -385,7 +385,7 @@ const screens = [
     await page.getByRole('button', { name: re(S.parcel) }).waitFor();
     const grid = page.getByTestId('calendar-grid');
     await grid.evaluate((el) => (el.scrollTop = 11 * 44));
-    const box = await page.getByRole('button', { name: x(/^Neue Karte am/, /^New card on/) }).boundingBox();
+    const box = await page.getByRole('button', { name: x(/^Neue Aufgabe am/, /^New card on/) }).boundingBox();
     await page.mouse.click(box.x + box.width / 2, box.y + 12 * 44 + 14);
     await page.getByLabel(x('Titel', 'Title')).fill(S.dentist);
   }],

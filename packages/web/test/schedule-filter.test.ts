@@ -54,7 +54,7 @@ const cards = [
 ];
 const run = (extra: Partial<ScheduleFilter>) => ids(filterSchedule(cards, f(extra), ctx));
 
-describe('whenOf: in welche Gruppe fällt eine Karte', () => {
+describe('whenOf: in welche Gruppe fällt eine Aufgabe', () => {
   it('Überfällig, Heute, Diese Woche, Später, Ohne Termin (Grenze 00:00 in der Zeitzone)', () => {
     const by = Object.fromEntries(cards.map((c) => [c.id, whenOf(c, NOW, TZ)]));
     expect(by).toMatchObject({ alt: 'overdue', frueh: 'overdue', abend: 'today', freitag: 'week', naechste: 'later', ohne: 'undated' });
@@ -74,7 +74,7 @@ describe('whenOf: in welche Gruppe fällt eine Karte', () => {
 });
 
 describe('filterSchedule: jede Filterart einzeln', () => {
-  it('Standard: offene Karten mit Termin, nichts ohne Termin, nichts Erledigtes', () => {
+  it('Standard: offene Aufgaben mit Termin, nichts ohne Termin, nichts Erledigtes', () => {
     expect(run({})).toEqual(['alt', 'frueh', 'abend', 'freitag', 'naechste']);
   });
 
@@ -90,7 +90,7 @@ describe('filterSchedule: jede Filterart einzeln', () => {
     expect(run({ when: ['later'] })).toEqual(['naechste']);
   });
 
-  it('Wann „Ohne Termin" holt Karten ohne Termin dazu (sonst nie)', () => {
+  it('Wann „Ohne Termin" holt Aufgaben ohne Termin dazu (sonst nie)', () => {
     expect(run({ when: ['undated'] })).toEqual(['ohne']);
     expect(run({ when: ['undated', 'later'] })).toEqual(['naechste', 'ohne']);
   });
@@ -99,7 +99,7 @@ describe('filterSchedule: jede Filterart einzeln', () => {
     expect(run({ boardIds: ['b2'] })).toEqual(['freitag', 'naechste']);
   });
 
-  it('Priorität: genau diese; Karten ohne Priorität nur bei „Alle"', () => {
+  it('Priorität: genau diese; Aufgaben ohne Priorität nur bei „Alle"', () => {
     expect(run({ priority: 'high' })).toEqual(['alt', 'naechste']);
     expect(run({ priority: 'medium' })).toEqual(['abend']);
     expect(run({ priority: 'low' })).toEqual(['frueh']);
@@ -115,7 +115,7 @@ describe('filterSchedule: jede Filterart einzeln', () => {
     expect(run({ watcherOnly: true })).toEqual(['freitag']);
   });
 
-  it('Erledigte anzeigen: auch erledigte Karten; mit Wann nur die, die in eine Gruppe fallen', () => {
+  it('Erledigte anzeigen: auch erledigte Aufgaben; mit Wann nur die, die in eine Gruppe fallen', () => {
     expect(run({ showDone: true })).toEqual(['alt', 'frueh', 'abend', 'freitag', 'naechste', 'fertig-heute', 'fertig-gestern']);
     expect(run({ showDone: true, when: ['today'] })).toEqual(['abend', 'fertig-heute']);
     expect(run({ showDone: true, when: ['overdue'] })).toEqual(['alt', 'frueh']);
@@ -173,7 +173,7 @@ describe('Sortierung', () => {
 });
 
 describe('groupTasks mit Sortierung und „Ohne Termin"', () => {
-  it('sortiert in jeder Gruppe nach Wahl; Karten ohne Termin bilden eine eigene Gruppe vor „Erledigt"', () => {
+  it('sortiert in jeder Gruppe nach Wahl; Aufgaben ohne Termin bilden eine eigene Gruppe vor „Erledigt"', () => {
     const g = groupTasks(cards, NOW, TZ, { sort: 'priority', withDone: true });
     expect(g.map((x) => x.key)).toEqual(['overdue', 'today', 'week', 'later', 'undated', 'done']);
     expect(ids(g[0]!.cards)).toEqual(['alt', 'frueh']);

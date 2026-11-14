@@ -1,31 +1,36 @@
 <script lang="ts">
-  import { unread } from '../lib/inbox.svelte';
-  import { bellText } from '../lib/inbox';
   import { columnForNew } from '../lib/calendar';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { feat, goToDashboard, openSheet, ui } from '../lib/store.svelte';
+  import { boardColorKey } from '../lib/colors';
+  import { activeScheduleFilter, openSheet, setPersonScope, ui } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
-  import SymbolIcon from './SymbolIcon.svelte';
 
   /**
    * Kopfzeile des Desktops (ab 1024 px) über allen Reitern: links Titel und Untertitel, rechts die Suche (Strg/Cmd + K), „Neue Aufgabe“
    * (ersetzt den „+“-Knopf des Handys), Home Assistant (nur im Add-on) und die Glocke. Logo, Zahnrad und Profil stehen in der Seitenleiste.
-   * Die Suche filtert die schon geladenen Karten im Gerät: in Boards wie das Feld im Blatt „Filter“ (`filter.search`), in Aufgaben und
+   * Die Suche filtert die schon geladenen Aufgaben im Gerät: in Boards wie das Feld im Blatt „Filter“ (`filter.search`), in Aufgaben und
    * Wächtern über `ui.query`.
    */
   const view = $derived(ui.view);
   const board = $derived(ui.boards.find((b) => b.id === ui.boardId));
+  const VIEW_LABEL = $derived({ all: t('Alle offen'), nudged: t('Gestupst'), today: t('Heute'), overdue: t('Überfällig'), week: t('Diese Woche'), done: t('Erledigt') });
   const page = $derived(
     ui.tab === 'boards'
       ? { title: board?.name ?? 'Boards', sub: t('Organisiere deine Aufgaben in Kanban-Boards.'), titleTestid: 'board-name' }
       : ui.tab === 'watchers'
         ? { title: t('Wächter'), sub: t('Automatische Aufgaben aus Home Assistant.') }
-        : { title: ui.tasksCalendar ? t('Kalender') : t('Aufgaben'), sub: t('Deine Aufgaben, Termine und To-dos an einem Ort.'), subTestid: 'tasks-sub' },
+        : { title: ui.tasksCalendar ? t('Kalender') : VIEW_LABEL[ui.taskView], sub: t('Deine Aufgaben, Termine und To-dos an einem Ort.'), subTestid: 'tasks-sub' },
   );
 
   const newColumn = $derived(columnForNew(view?.columns ?? [], false));
   const canCreate = $derived(!!view && !!newColumn && !ui.isChild);
-  const unseen = $derived(unread());
+  const boardKey = $derived(boardColorKey(ui.boards, ui.boardId ?? ''));
+  const onList = $derived(ui.tab === 'tasks' && !ui.tasksCalendar);
+  /** Die Wahl „Ansicht für“ in der Seitenleiste, als Chip neben dem Titel, damit man sieht, warum etwas fehlt (leer bei „Alle“) */
+  const scopeIds = $derived(activeScheduleFilter().personIds);
+  const scopeName = $derived(
+    scopeIds.length === 0 ? '' : scopeIds.length === 1 && scopeIds[0] === ui.me?.id ? t('Nur meine') : t('Nur {name}', { name: scopeIds.map((id) => ui.people.find((p) => p.id === id)?.displayName ?? '…').join(', ') }),
+  );
 
   const value = $derived(ui.tab === 'boards' ? ui.filter.search : ui.query);
   function setValue(v: string) {
@@ -46,7 +51,18 @@
 
 <header class="flex shrink-0 items-start gap-4 pt-6 pb-5" data-testid="desktop-header">
   <div class="min-w-0 flex-1">
-    <h1 class="truncate text-[30px] leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{page.title}</h1>
+    <div class="flex min-w-0 items-baseline gap-3">
+      {#if ui.tab === 'boards' && board}<i class="block h-3 w-3 shrink-0 self-center rounded-full" style:background="var(--c-{boardKey}-fg)" aria-hidden="true"></i>{/if}
+      <h1 class="truncate text-[30px] leading-[1.1] font-extrabold tracking-tight" data-testid={page.titleTestid}>{page.title}</h1>
+      {#if ui.tab === 'boards' && board}<span class="shrink-0 text-[14px] font-medium text-text-soft">{t('{n} offen', { n: board.openCards })}</span>{/if}
+      {#if onList}<span class="shrink-0 text-[14px] font-medium text-text-soft">{tn('{n} Aufgabe', '{n} Aufgaben', ui.taskCount)}</span>{/if}
+      {#if scopeName}
+        <span class="inline-flex h-7 shrink-0 items-center gap-1 self-center rounded-full bg-accent-soft pr-1 pl-3 text-[12.5px] font-bold text-accent-text" data-testid="scope-chip">
+          {scopeName}
+          <button class="flex h-5 w-5 items-center justify-center rounded-full hover:bg-surface2" aria-label={t('Filter aufheben')} onclick={() => setPersonScope([])}><Icon name="x" size={12} stroke={2.6} /></button>
+        </span>
+      {/if}
+    </div>
     <p class="mt-1 truncate text-[14px] text-fg2" data-testid={page.subTestid}>{page.sub}</p>
   </div>
 
@@ -56,13 +72,21 @@
     </span>
   {/if}
 
+  {#if onList}
+    <div class="flex h-10 shrink-0 items-center gap-0.5 rounded-[10px] bg-surface2 p-0.5" role="radiogroup" aria-label={t('Gruppieren')}>
+      {#each [['due', t('Fälligkeit')], ['board', 'Board']] as [id, label] (id)}
+        <button class="h-9 rounded-[8px] px-3 text-[13px] font-semibold {ui.taskGroupBy === id ? 'bg-surface shadow-sm' : 'text-text-soft'}" role="radio" aria-checked={ui.taskGroupBy === id} onclick={() => (ui.taskGroupBy = id as 'due' | 'board')}>{label}</button>
+      {/each}
+    </div>
+  {/if}
+
   <label class="focus-ring-in flex h-12 w-[230px] shrink-0 items-center gap-2.5 rounded-[14px] border border-line-chip bg-surface px-3.5 text-text-soft hover:border-sep xl:w-[340px]">
     <Icon name="search" size={20} stroke={1.9} />
     <input
       id="desktop-search"
       type="search"
       class="desktop-search min-w-0 flex-1 bg-transparent text-[15px] font-medium text-fg outline-none placeholder:text-dim"
-      placeholder="{t('Suchen')} …"
+      placeholder={ui.tab === 'boards' ? t('In diesem Board filtern') : ui.tab === 'watchers' ? t('Wächter, Geräte und Räume suchen') : onList ? t('Aufgaben filtern') : `${t('Suchen')} …`}
       aria-label={t('Suchen')}
       autocomplete="off"
       {value}
@@ -79,17 +103,8 @@
   </label>
 
   {#if canCreate}
-    <button class="fab-grad flex h-12 shrink-0 items-center justify-center gap-2 rounded-[14px] text-[15px] font-extrabold hover:brightness-110 max-xl:w-12 xl:px-5" data-testid="new-task" onclick={() => openSheet({ type: 'new', columnId: newColumn! })}>
+    <button class="fab-grad flex h-12 shrink-0 items-center justify-center gap-2 rounded-[14px] text-[15px] font-extrabold hover:brightness-110 max-xl:w-12 xl:px-4" data-testid="new-task" onclick={() => openSheet({ type: 'new', columnId: newColumn! })}>
       <Icon name="plus" size={20} stroke={2.4} /><span class="max-xl:sr-only">{t('Neue Aufgabe')}</span>
     </button>
   {/if}
-  {#if feat.haUi}
-    <button class="head-icon" aria-label={t('Zurück zu Home Assistant')} data-testid="home-button" onclick={goToDashboard}>
-      <SymbolIcon id="home-assistant" size={26} />
-    </button>
-  {/if}
-  <button class="head-icon relative" aria-label={unseen > 0 ? tn('Mitteilungen, {n} ungelesen', 'Mitteilungen, {n} ungelesen', unseen) : t('Mitteilungen')} data-testid="bell" onclick={() => openSheet({ type: 'notifications' })}>
-    <Icon name="bell" size={24} />
-    {#if unseen > 0}<span class="bell-count absolute top-[8px] right-[9px]" data-testid="bell-dot" aria-hidden="true">{bellText(unseen)}</span>{/if}
-  </button>
 </header>

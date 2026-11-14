@@ -1,8 +1,8 @@
 /**
- * „Rückgängig" nach „Überfällige verschieben" (Blatt „Überfällig"): Ein alter Termin wird nur zurückgeschrieben, wenn die Karte noch so
+ * „Rückgängig" nach „Überfällige verschieben" (Blatt „Überfällig"): Ein alter Termin wird nur zurückgeschrieben, wenn die Aufgabe noch so
  * dasteht, wie die Aktion sie hinterlassen hat. Hat inzwischen jemand anderes einen Termin gesetzt, bleibt die neuere Entscheidung.
  * Gelesen wird frisch, geschrieben mit der gelesenen Version als Vorbedingung (der Server antwortet 409, wenn jemand dazwischen war).
- * Jede Karte für sich: Ein Fehler bei einer bricht die übrigen nicht ab.
+ * Jede Aufgabe für sich: Ein Fehler bei einer bricht die übrigen nicht ab.
  */
 
 import { shiftDue, type ShiftTarget } from './statsSheets';
@@ -25,7 +25,7 @@ export interface UndoResult {
   restored: ShiftRecord[];
   /** inzwischen von jemandem geändert: bleibt, wie es ist */
   conflicts: ShiftRecord[];
-  /** ließ sich nicht zurücksetzen (Fehler, gelöschte Karte) */
+  /** ließ sich nicht zurücksetzen (Fehler, gelöschte Aufgabe) */
   failed: number;
 }
 
@@ -54,7 +54,7 @@ export interface ShiftInput {
   id: string;
   title: string;
   dueAt: string;
-  /** die Version, die die Liste gesehen hat: Hat jemand die Karte inzwischen geändert, antwortet der Server mit 409 und die Karte bleibt */
+  /** die Version, die die Liste gesehen hat: Hat jemand die Aufgabe inzwischen geändert, antwortet der Server mit 409 und die Aufgabe bleibt */
   version?: number;
 }
 
@@ -66,7 +66,7 @@ export interface ShiftBatch {
   first: unknown;
 }
 
-/** Überfällige Karten auf einen neuen Termin schieben, jede für sich mit der gesehenen Version als Vorbedingung; ein Fehler bricht die übrigen nicht ab */
+/** Überfällige Aufgaben auf einen neuen Termin schieben, jede für sich mit der gesehenen Version als Vorbedingung; ein Fehler bricht die übrigen nicht ab */
 export async function shiftBatch(
   items: ShiftInput[],
   target: ShiftTarget,

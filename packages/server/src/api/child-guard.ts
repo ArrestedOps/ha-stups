@@ -7,20 +7,20 @@ import type { Store } from '../store.js';
  * Rolle „Kind": Ein Filter für alle Anfragen eines Kindes mit **Erlaubnisliste**: Was nicht ausdrücklich dasteht, ist verboten,
  * auch jede künftige Route. Gleiches gilt im Server, nicht nur in der Oberfläche. Der Test `child-guard.test.ts` geht alle Routen durch.
  *
- * Erlaubt ist, was ein Kind für seine eigenen (zugewiesenen) Karten braucht: ansehen, erledigen (und zurücknehmen), Checkliste
- * abhaken, kommentieren, Fotos und Links anhängen; dazu Sprache und Farbe der eigenen Oberfläche. Welche Boards und Karten es
+ * Erlaubt ist, was ein Kind für seine eigenen (zugewiesenen) Aufgaben braucht: ansehen, erledigen (und zurücknehmen), Checkliste
+ * abhaken, kommentieren, Fotos und Links anhängen; dazu Sprache und Farbe der eigenen Oberfläche. Welche Boards und Aufgaben es
  * sehen darf, entscheidet die Abfrage (siehe store/visibility.ts), hier geht es um die Routen.
  */
 
 /**
- * Wie eine Route prüft, ob die Anfrage zur eigenen Karte gehört. Dazu das eigene Board: ein Board „nur ich", das das Kind selbst angelegt
- * hat (`board`, `column`, `category`; `boardcard` für Karten darin; `create` für das Anlegen, das nur „nur ich" erlaubt). In einem solchen
- * Board darf das Kind frei arbeiten, in allen anderen nur an den ihm zugewiesenen Karten.
+ * Wie eine Route prüft, ob die Anfrage zur eigenen Aufgabe gehört. Dazu das eigene Board: ein Board „nur ich", das das Kind selbst angelegt
+ * hat (`board`, `column`, `category`; `boardcard` für Aufgaben darin; `create` für das Anlegen, das nur „nur ich" erlaubt). In einem solchen
+ * Board darf das Kind frei arbeiten, in allen anderen nur an den ihm zugewiesenen Aufgaben.
  */
 type Own = 'none' | 'card' | 'checklist' | 'completion' | 'create' | 'board' | 'column' | 'category' | 'boardcard';
 
 const ALLOWED: Record<string, Own> = {
-  // Schreiben: nur an eigenen Karten
+  // Schreiben: nur an eigenen Aufgaben
   'POST /api/cards/:id/complete': 'card',
   'POST /api/cards/:id/checklist': 'card',
   'POST /api/cards/:id/comments': 'card',
@@ -29,7 +29,7 @@ const ALLOWED: Record<string, Own> = {
   'PATCH /api/checklist/:id': 'checklist',
   'POST /api/completions/:id/undo': 'completion',
   // Sprache und Farbe der eigenen Oberfläche
-  // Eigene Boards („nur ich"): anlegen, einrichten und darin Karten pflegen
+  // Eigene Boards („nur ich"): anlegen, einrichten und darin Aufgaben pflegen
   'POST /api/boards': 'create',
   'PATCH /api/boards/:id': 'board',
   'DELETE /api/boards/:id': 'board',
@@ -67,7 +67,7 @@ const ALLOWED: Record<string, Own> = {
   'GET /api/cards/:id/comments': 'none',
   'GET /api/cards/:id/completions': 'none',
   'GET /api/events': 'none',
-  // Mitteilungen: der Store filtert auf Einträge zu eigenen Karten (store/inbox.ts)
+  // Mitteilungen: der Store filtert auf Einträge zu eigenen Aufgaben (store/inbox.ts)
   'GET /api/inbox': 'none',
   'PUT /api/me/inbox-seen': 'none',
   'GET /api/me': 'none',
@@ -101,7 +101,7 @@ export function registerChildGuard(app: FastifyInstance, store: Store): void {
     if (own === 'category') return ownsBoard(req, store.boardIdOfCategory(id));
     const cardId = own === 'card' || own === 'boardcard' ? id : own === 'checklist' ? store.cardIdOfChecklistItem(id) : store.cardIdOfCompletion(id);
     if (!cardId) return true; // gibt es nicht: die Route antwortet selbst mit „nicht gefunden"
-    // Karten im eigenen Board gehören dem Kind ganz; sonst nur, was ihm zugewiesen ist (und nur für Erledigen, Checkliste, Kommentare …)
+    // Aufgaben im eigenen Board gehören dem Kind ganz; sonst nur, was ihm zugewiesen ist (und nur für Erledigen, Checkliste, Kommentare …)
     if (ownsBoard(req, store.boardIdOfCardAny(cardId)) && store.boardIdOfCardAny(cardId)) return true;
     if (own === 'boardcard') return false;
     try {
@@ -118,7 +118,7 @@ export function registerChildGuard(app: FastifyInstance, store: Store): void {
     return new Set([...store.boardIdsWithCardsOf(req.user.id), ...own]);
   }
 
-  /** Die Karte (oder der Anhang) liegt in einem Board, das das Kind nicht sieht: für das Kind gibt es sie nicht */
+  /** Die Aufgabe (oder der Anhang) liegt in einem Board, das das Kind nicht sieht: für das Kind gibt es sie nicht */
   function hidden(req: FastifyRequest, cardId: string | null, what: string): void {
     const visible = visibleBoards(req);
     if (!visible || !cardId) return;
@@ -133,13 +133,13 @@ export function registerChildGuard(app: FastifyInstance, store: Store): void {
     const own = ALLOWED[route];
     if (own === undefined || !isOwn(req, own)) throw deny();
 
-    // Sichtbarkeit: einzelne Boards, Karten und Anhänge, die das Kind nicht sehen darf
+    // Sichtbarkeit: einzelne Boards, Aufgaben und Anhänge, die das Kind nicht sehen darf
     const id = (req.params as { id?: string }).id ?? '';
     if (route === 'GET /api/boards/:id') {
       const visible = visibleBoards(req);
       if (visible && !visible.has(id)) throw new NotFoundError(t('Board nicht gefunden'));
     } else if (route.startsWith('GET /api/cards/:id')) {
-      hidden(req, id, t('Karte nicht gefunden'));
+      hidden(req, id, t('Aufgabe nicht gefunden'));
     } else if (route.startsWith('GET /api/attachments/:id')) {
       // Gibt es den Anhang nicht, wirft das schon hier „nicht gefunden" (derselbe 404 wie in der Route)
       hidden(req, store.getAttachment(id).cardId, t('Anhang nicht gefunden'));

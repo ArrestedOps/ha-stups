@@ -48,7 +48,7 @@ test('Stupsen: Rene stupst Conny, Abzeichen und Verlauf erscheinen live bei ihr'
     await conny.getByRole('tab', { name: /^Offen/ }).click();
     await expect(conny.getByRole('button', { name: /Offline/ })).toHaveCount(0);
 
-    // Rene öffnet die Karte und stupst Conny (als Zuständige vorausgewählt)
+    // Rene öffnet die Aufgabe und stupst Conny (als Zuständige vorausgewählt)
     await page.goto('/');
     await openBoards(page);
     await page.getByRole('tab', { name: /^Offen/ }).click();
@@ -60,20 +60,20 @@ test('Stupsen: Rene stupst Conny, Abzeichen und Verlauf erscheinen live bei ihr'
     await expect(page.getByRole('status').filter({ hasText: 'Gestupst!' })).toBeVisible();
     await expect(page.getByText('Senden fehlgeschlagen')).toHaveCount(0);
 
-    // Rene sieht den dezenten Hinweis an der Karte
+    // Rene sieht den dezenten Hinweis an der Aufgabe
     await expect(page.locator('[role=presentation]').filter({ hasText: title }).getByTestId('nudge-from-me')).toContainText('Du hast Conny gestupst');
 
     // Conny sieht es ohne Neuladen: deutliches Abzeichen und der Filter „Nur mit offenem Stups" (im Blatt hinter dem Filter-Knopf)
     const row = conny.locator('[role=presentation]').filter({ hasText: title });
     await expect(row.getByTestId('nudge-to-me')).toContainText('Rene stupst dich', { timeout: 15_000 });
-    // Der Filter zeigt alle gestupsten Karten des Boards (frühere Läufe liegen noch dort), unsere ist dabei
+    // Der Filter zeigt alle gestupsten Aufgaben des Boards (frühere Läufe liegen noch dort), unsere ist dabei
     await conny.getByRole('button', { name: 'Filter' }).click();
     await conny.getByRole('switch', { name: 'Nur mit offenem Stups' }).click();
-    await conny.getByRole('button', { name: /Karten? anzeigen/ }).click();
+    await conny.getByRole('button', { name: /Aufgaben? anzeigen/ }).click();
     await expect(row).toBeVisible();
     await expect(conny.locator('[role=presentation]').filter({ hasNot: conny.getByTestId('nudge-to-me') })).toHaveCount(0);
 
-    // Im Verlauf der Karte steht der Stups
+    // Im Verlauf der Aufgabe steht der Stups
     await row.getByText(title).click();
     await expect(conny.getByText(/Gestupst: Conny · Heute noch\?/)).toBeVisible();
   } finally {

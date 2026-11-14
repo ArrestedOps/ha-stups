@@ -25,7 +25,7 @@ export type Sheet =
   | { type: 'boardSettings'; boardId?: string }
   | { type: 'settings'; page?: SettingsPageId }
   | { type: 'people' }
-  | { type: 'watcher'; id: string | null; template?: string; /** geöffnet aus Einstellungen › Wächter oder aus „Gefunden": dorthin geht Zurück */ from?: 'settings' | 'found'; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
+  | { type: 'watcher'; id: string | null; template?: string; /** geöffnet aus Einstellungen › Wächter oder aus „Gefunden": dorthin geht Zurück */ from?: 'settings' | 'found'; hit?: HitInit; /** mehrere Treffer gemeinsam einrichten */ hits?: HitInit[] }
   | { type: 'found' }
   /** mehrere Wächter auf einmal bearbeiten */
   | { type: 'watcher-bulk'; ids: string[] }
@@ -59,10 +59,21 @@ export interface ConfirmRequest {
   tone?: 'danger' | 'primary';
 }
 
+/** Ein Treffer aus „Gefunden“ als Vorbelegung: Entität, Name, Einheit, Begründung (mit dem aktuellen Wert) und der Entwurf der Fassung */
+export interface HitInit {
+  entityId: string;
+  name: string;
+  unit?: string;
+  reason?: string;
+  draft?: TemplateDraft;
+}
+
 /** Womit der Bereich „Neuer Wächter“ aufklappt: eine Vorlage und/oder ein Treffer aus „Gefunden“ (Entität schon gewählt) */
 export interface NewWatcherRequest {
   template?: string;
-  hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft };
+  hit?: HitInit;
+  /** Mehrere Treffer derselben Art, die gemeinsam eingerichtet werden (der Assistent zeigt sie als Liste; am Desktop immer der Assistent) */
+  hits?: HitInit[];
   /** Wer bei „Wer kommt infrage?" vorgewählt ist (die Einrichtung) */
   personIds?: string[];
 }

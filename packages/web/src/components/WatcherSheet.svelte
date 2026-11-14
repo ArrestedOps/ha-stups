@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { WatcherEditor } from '../lib/watcher-editor.svelte';
   import type { SavedWatcher } from '../lib/watcher-types';
-  import type { TemplateDraft } from '../lib/watcher-types';
+  import type { HitInit } from '../lib/store.svelte';
   import WatcherFlow from './WatcherFlow.svelte';
   import WatcherWizard from './WatcherWizard.svelte';
 
@@ -16,13 +16,16 @@
     id,
     template = undefined,
     hit = undefined,
+    hits = undefined,
     personIds = undefined,
     onsaved = undefined,
     onback = undefined,
   }: {
     id: string | null;
     template?: string;
-    hit?: { entityId: string; name: string; label?: string; unit?: string; draft?: TemplateDraft };
+    hit?: HitInit;
+    /** mehrere Treffer derselben Art: gemeinsam einrichten */
+    hits?: HitInit[];
     personIds?: string[];
     onsaved?: (saved: SavedWatcher) => void;
     onback?: () => void;
@@ -30,7 +33,7 @@
 
   // svelte-ignore state_referenced_locally
   const ed = new WatcherEditor(id, { onsaved, onback });
-  onMount(() => void ed.load(template, hit, personIds));
+  onMount(() => void ed.load(template, hit, personIds, hits));
 
   // Spalten und Kategorien des gewählten Boards
   $effect(() => {

@@ -2,13 +2,16 @@
   import { onMount } from 'svelte';
   import { api, ApiError } from '../lib/api';
   import { startOfTomorrow } from '../lib/datetime';
-  import { t } from '../lib/i18n/index.svelte';
+  import { hitId } from '../lib/foundGroups';
+  import { t, tn } from '../lib/i18n/index.svelte';
+  import { clearAll, prune, selectAll, toggle, type Selection } from '../lib/selection';
   import type { Recurrence } from '../lib/recurrence';
   import type { WatcherSuggestion, WatcherTemplate } from '../lib/watcher-types';
   import { refresh, toast, ui } from '../lib/store.svelte';
   import FoundHits from './FoundHits.svelte';
   import Group from './Group.svelte';
   import Icon from './Icon.svelte';
+  import SelectionBar from './SelectionBar.svelte';
   import SelectField from './SelectField.svelte';
 
   /**
@@ -17,7 +20,16 @@
    * Karten aus Vorlage) und alle Vorlagen. Nur für Administratoren.
    * `onsetup`: „Einrichten" bei einem Treffer; `ontemplate`: eine Vorlage ohne Gerät aus „Alle Vorlagen ansehen".
    */
-  let { onsetup, ontemplate }: { onsetup: (s: WatcherSuggestion) => void; ontemplate: (tpl: WatcherTemplate) => void } = $props();
+  let {
+    onsetup,
+    ontemplate,
+    onsetupmany,
+  }: {
+    onsetup: (s: WatcherSuggestion) => void;
+    ontemplate: (tpl: WatcherTemplate) => void;
+    /** Mehrere Treffer derselben Art gemeinsam einrichten; ohne diese Angabe (Einrichtung beim ersten Start) gibt es kein Auswählen */
+    onsetupmany?: (hits: WatcherSuggestion[]) => void;
+  } = $props();
   let suggestions = $state<WatcherSuggestion[] | null>(null);
   /** Ausgeblendet: nicht mehr vorgeschlagen, hier wieder einblendbar */
   let hidden = $state<WatcherSuggestion[]>([]);
@@ -27,6 +39,31 @@
   let showAll = $state(false);
   let boardId = $state(ui.boardId ?? ui.boards[0]?.id ?? '');
   let busy = $state<string | null>(null);
+
+  // Mehrere Treffer auswählen: gemeinsam einrichten oder ausblenden
+  let selecting = $state(false);
+  let selection = $state<Selection>(clearAll());
+  const selectedHits = $derived((suggestions ?? []).filter((s) => selection.has(hitId(s))));
+  const endSelecting = () => {
+    selecting = false;
+    selection = clearAll();
+  };
+  async function hideMany() {
+    const hits = selectedHits.map((s) => ({ templateId: s.templateId, entityId: s.entityId }));
+    if (hits.length === 0) return;
+    try {
+      await api.hideSuggestions(hits);
+      toast(tn('{n} Treffer ausgeblendet. Stups schlägt sie nicht mehr vor.', '{n} Treffer ausgeblendet. Stups schlägt sie nicht mehr vor.', hits.length));
+      selection = clearAll();
+      await loadSuggestions();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : t('Ausblenden fehlgeschlagen'), { tone: 'error' });
+    }
+  }
+  const bulkActions = $derived([
+    { id: 'setup', label: t('Einrichten'), run: () => (selectedHits.length === 1 ? onsetup(selectedHits[0]!) : onsetupmany?.(selectedHits)) },
+    { id: 'hide', label: t('Ausblenden'), run: () => void hideMany() },
+  ]);
 
   onMount(async () => {
     templates = await api.watcherTemplates().catch(() => []);
@@ -42,6 +79,8 @@
     const r = await api.watcherSuggestions();
     suggestions = r.items;
     hidden = r.hidden ?? [];
+    // Treffer, die es nicht mehr gibt (eingerichtet, ausgeblendet, in Home Assistant weg), fallen aus der Auswahl
+    selection = prune(selection, r.items.map(hitId));
   }
 
   const titleOf = (id: string) => templates.find((x) => x.id === id)?.title ?? id;
@@ -96,7 +135,33 @@
   {:else}
     <p class="mt-3 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Stups hat in Home Assistant Geräte gefunden, zu denen ein Wächter passt. Tippe auf „Einrichten“: der Satz ist schon ausgefüllt.')}</p>
     {#if suggestions.length > 0}
-      <FoundHits {suggestions} templates={device} {onsetup} onhide={hide} />
+      {#if onsetupmany}
+        <div class="mt-3 flex justify-end">
+          <button
+            type="button"
+            class="flex h-11 items-center gap-2 rounded-row border px-4 text-[15px] font-bold {selecting ? 'border-accent text-accent-text' : 'border-line bg-surface'}"
+            aria-pressed={selecting}
+            data-testid="select-mode"
+            onclick={() => (selecting ? endSelecting() : (selecting = true))}
+          >
+            <Icon name="checklist" size={18} stroke={2} />{t('Auswählen')}
+          </button>
+        </div>
+      {/if}
+      <FoundHits
+        {suggestions}
+        templates={device}
+        {onsetup}
+        onhide={hide}
+        {selecting}
+        selected={selectedHits}
+        onpick={(s) => (selection = toggle(selection, hitId(s)))}
+        onpickgroup={(items) => {
+          const ids = items.map(hitId);
+          selection = ids.every((id) => selection.has(id)) ? new Set([...selection].filter((id) => !ids.includes(id))) : selectAll(selection, ids);
+        }}
+      />
+      {#if selecting}<SelectionBar inSheet count={selectedHits.length} actions={bulkActions} ondone={endSelecting} />{/if}
     {:else}
       <p class="mt-3 rounded-row border border-line bg-surface px-4 py-4 text-[15px] text-fg2">{t('Stups hat nichts gefunden, das zu einer Vorlage passt. Unten gibt es alle Vorlagen zum Einrichten von Hand.')}</p>
     {/if}

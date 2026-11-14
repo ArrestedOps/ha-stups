@@ -257,3 +257,68 @@ test('Gefunden: ein Treffer aus der Suche lässt sich einrichten (Tastatur: Such
   await page.keyboard.press('Enter');
   await expect(dialog.getByTestId('graph-card')).toContainText('Keller Fenstersensor Batterie');
 });
+
+test('Gefunden: drei Batterien auswählen, gemeinsam einrichten (drei Wächter); zwei andere gemeinsam ausblenden', async ({ page, request }) => {
+  const tag = Date.now().toString(36);
+  const board = (await (await request.post('/api/boards', { data: { name: `Gemeinsam ${tag}` } })).json()) as { id: string };
+  const NAMES = ['Bad Fenster Batterie', 'iPhone Rene Battery Level', 'Küche Fenstersensor Batterie'];
+  const ENTITIES = ['sensor.bad_batterie', 'sensor.iphone_rene_battery_level', 'sensor.kueche_fenstersensor_batterie'];
+  const mine = async () => ((await (await request.get('/api/watchers')).json()) as { items: { id: string; name: string; trigger: { entityId: string }; done: { entityId: string } | null; card: { boardId: string } }[] }).items.filter((w) => ENTITIES.includes(w.trigger.entityId));
+  const found = async (page2: Page) => {
+    await nav(page2).getByRole('button', { name: 'Wächter' }).click();
+    await page2.getByTestId('home-found').click();
+    const dialog = page2.getByRole('dialog');
+    await expect(dialog.getByTestId('found-group').first()).toBeVisible();
+    return dialog;
+  };
+  try {
+    await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);
+    await page.goto('/');
+    await openBoards(page);
+    let dialog = await found(page);
+
+    // Auswählen: Kästchen an den Treffern, eine Art nach der anderen
+    await dialog.getByTestId('select-mode').click();
+    for (const n of NAMES) await dialog.getByRole('checkbox', { name: `${n} auswählen`, exact: true }).check();
+    await expect(dialog.getByTestId('selection-count')).toHaveText('3 ausgewählt');
+    // Treffer einer anderen Vorlage lassen sich dazu nicht wählen
+    await expect(dialog.getByRole('checkbox', { name: 'Abfallkalender auswählen' })).toBeDisabled();
+    await expect(dialog.getByTestId('found-lock-hint')).toBeVisible();
+
+    // Einrichten: derselbe Assistent, Schritt 1 zeigt die drei Geräte mit ihrem Wert
+    await dialog.getByTestId('selection-setup').click();
+    await expect(dialog.getByTestId('devices-title')).toContainText('3 Geräte');
+    await expect(dialog.getByTestId('device-row')).toHaveCount(3);
+    await expect(dialog.getByTestId('device-row').filter({ hasText: 'Bad Fenster Batterie: Batterie bei 12 %' })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Weiter: Dann' }).click();
+    await dialog.getByTestId('then-editor').getByLabel('Board', { exact: true }).selectOption(board.id);
+    await dialog.getByRole('button', { name: 'Weiter: Wer' }).click();
+    await dialog.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
+    await dialog.getByRole('button', { name: '3 Wächter anlegen' }).click();
+    await expect(page.getByText('3 Wächter angelegt')).toBeVisible();
+
+    // drei Wächter, je mit eigener Entität (auch beim Erledigen), gleichem Board und gleichem Namen
+    const created = await mine();
+    expect(created.map((w) => w.trigger.entityId).sort()).toEqual([...ENTITIES].sort());
+    expect(created.map((w) => w.done?.entityId).sort()).toEqual([...ENTITIES].sort());
+    expect(new Set(created.map((w) => w.name))).toEqual(new Set(['Batterie schwach']));
+    expect(new Set(created.map((w) => w.card.boardId))).toEqual(new Set([board.id]));
+    await expect(page.getByTestId('watcher-categories')).toContainText('Batterie schwach');
+    for (const w of created) await request.delete(`/api/watchers/${w.id}`);
+
+    // Zweiter Durchlauf: zwei Treffer gemeinsam ausblenden, sie stehen unter „Ausgeblendet“
+    await page.keyboard.press('Escape');
+    dialog = await found(page);
+    await dialog.getByTestId('select-mode').click();
+    for (const n of [NAMES[0]!, NAMES[1]!]) await dialog.getByRole('checkbox', { name: `${n} auswählen`, exact: true }).check();
+    await dialog.getByTestId('selection-hide').click();
+    await expect(page.getByText('2 Treffer ausgeblendet')).toBeVisible();
+    await dialog.getByTestId('selection-done').click();
+    await dialog.getByTestId('found-hidden-toggle').click();
+    await expect(dialog.getByTestId('found-hidden')).toHaveCount(2);
+    await expect(dialog.getByTestId('found-hidden').filter({ hasText: 'Bad Fenster Batterie' })).toBeVisible();
+  } finally {
+    for (const w of await mine()) await request.delete(`/api/watchers/${w.id}`);
+    for (const entityId of ENTITIES) await request.post('/api/watchers/suggestions/unhide', { data: { templateId: 'battery', entityId } });
+  }
+});

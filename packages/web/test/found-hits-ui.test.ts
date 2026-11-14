@@ -62,3 +62,40 @@ describe('Gefunden: Gruppen in der Oberfläche', () => {
     expect(out).toContain('Search found devices');
   });
 });
+
+describe('Gefunden: mehrere Treffer auswählen', () => {
+  const batteries = [1, 2, 3].map((n) => hit('battery', n));
+  const withBins = [...batteries, hit('bins', 1)];
+  const sel = (suggestions: WatcherSuggestion[], over: Record<string, unknown> = {}) =>
+    render(FoundHits, { props: { suggestions, templates, onsetup: () => undefined, onhide: () => undefined, selecting: true, selected: [], onpick: () => undefined, onpickgroup: () => undefined, ...over } }).body;
+
+  it('ohne Auswahlmodus keine Kästchen und kein „Alle auswählen“', () => {
+    const out = html(withBins);
+    expect(count(out, /data-testid="select-box"/g)).toBe(0);
+    expect(count(out, /data-testid="select-all"/g)).toBe(0);
+  });
+
+  it('im Auswahlmodus: ein Kästchen je Treffer, „Alle auswählen“ je Gruppe, und große Gruppen stehen ganz offen', () => {
+    const many = Array.from({ length: 9 }, (_, i) => hit('battery', i));
+    const out = sel([...many, hit('bins', 1)]);
+    expect(count(out, /data-testid="select-box"/g)).toBe(10);
+    expect(count(out, /data-testid="select-all"/g)).toBe(2);
+    expect(out).not.toContain('found-more');
+  });
+
+  it('Kästchen anderer Gruppen sind aus, wenn schon eine Art gewählt ist, mit Hinweis', () => {
+    const out = sel(withBins, { selected: [batteries[0]] });
+    const boxes = [...out.matchAll(/<input type="checkbox"[^>]*>/g)].map((m) => m[0]);
+    expect(boxes).toHaveLength(4);
+    const disabled = boxes.filter((b) => b.includes('disabled'));
+    expect(disabled).toHaveLength(1);
+    expect(disabled[0]).toContain('Gerät 1 auswählen'.replace('Gerät 1', 'Gerät 1'));
+    expect(out).toContain('Nur Treffer einer Art lassen sich zusammen einrichten');
+  });
+
+  it('gewählte Treffer sind angehakt; der Hinweis fehlt ohne Auswahl', () => {
+    const out = sel(withBins, { selected: [batteries[0], batteries[1]] });
+    expect(count(out, /type="checkbox"[^>]*checked/g)).toBe(2);
+    expect(sel(withBins)).not.toContain('Nur Treffer einer Art');
+  });
+});

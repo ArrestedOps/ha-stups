@@ -1823,4 +1823,11 @@ export const en: Catalog = {
   'verschieden': 'different',
   'ja': 'yes',
   'nein': 'no',
+  'Nur Treffer einer Art lassen sich zusammen einrichten.': 'Only hits of the same kind can be set up together.',
+  '{n} Treffer ausgeblendet. Stups schlägt sie nicht mehr vor.': ['{n} hit hidden. Stups will not suggest it any more.', '{n} hits hidden. Stups will not suggest them any more.'],
+  'Geräte': 'Devices',
+  'Die Werte unten gelten für alle gewählten Geräte. Name und Titel der Karte setzt Stups je Gerät.': 'The values below apply to all selected devices. Stups sets the name and card title for each device.',
+  '{n} Wächter anlegen': ['Create {n} watcher', 'Create {n} watchers'],
+  '{n} Wächter angelegt': ['{n} watcher created', '{n} watchers created'],
+  '{n} gab es schon': '{n} already existed',
 };

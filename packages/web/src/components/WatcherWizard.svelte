@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { t } from '../lib/i18n/index.svelte';
+  import { t, tn } from '../lib/i18n/index.svelte';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
   import DryRunPanel from './DryRunPanel.svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
+  import WatcherDevices from './WatcherDevices.svelte';
   import WatcherFineEditor from './WatcherFineEditor.svelte';
   import WatcherSummary from './WatcherSummary.svelte';
   import WatcherThenEditor from './WatcherThenEditor.svelte';
@@ -41,7 +42,7 @@
   {#if ed.step === 4}
     <div class="grid grid-cols-[1fr_2fr] gap-2">
       <CtaButton ghost onclick={() => dry?.run()}>{t('Testen')}</CtaButton>
-      <CtaButton disabled={ed.busy} onclick={() => ed.save()}><Icon name="check" size={20} stroke={2.6} />{ed.busy ? t('Speichert …') : t('Wächter anlegen')}</CtaButton>
+      <CtaButton disabled={ed.busy} onclick={() => ed.save()}><Icon name="check" size={20} stroke={2.6} />{ed.busy ? t('Speichert …') : ed.selectedDevices.length > 1 ? tn('{n} Wächter anlegen', '{n} Wächter anlegen', ed.selectedDevices.length) : t('Wächter anlegen')}</CtaButton>
     </div>
   {:else}
     <CtaButton onclick={() => ed.next()}>{NEXT}<Icon name="chevron-right" size={20} stroke={2.4} /></CtaButton>
@@ -94,7 +95,8 @@
           </div>
           <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Füllt die Schritte vor, alles bleibt änderbar. Danach noch die Entität wählen.')}</p>
         {/if}
-        <WatcherWhenEditor {ed} />
+        {#if ed.devices.length > 1}<WatcherDevices {ed} />{/if}
+        <WatcherWhenEditor {ed} entityRow={ed.devices.length < 2} />
       {:else if ed.step === 2}
         <WatcherThenEditor {ed} />
       {:else if ed.step === 3}

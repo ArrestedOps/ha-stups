@@ -46,3 +46,26 @@ export const showFoundSearch = (total: number): boolean => total >= FOUND_SEARCH
 const ICONS: Record<string, string> = { washer: 'washer', dryer: 'fan', dishwasher: 'dish', bins: 'trash', rain: 'globe', battery: 'plug', vacuum: 'vacuum' };
 /** Symbol der Vorlage am Gruppenkopf */
 export const foundIcon = (templateId: string): string => ICONS[templateId] ?? 'eye';
+
+// ---------- Mehrere Treffer auswählen ----------
+
+/** Kennung eines Treffers in der Auswahl (dieselbe Entität kann unter zwei Vorlagen stehen) */
+export const hitId = (s: Pick<WatcherSuggestion, 'templateId' | 'entityId'>): string => `${s.templateId}|${s.entityId}`;
+
+/** Gemeinsam einrichten lassen sich nur Treffer derselben Vorlage und Fassung (Leistung oder Programmstatus eines Geräts haben verschiedene Auslöser) */
+export const selectionKey = (s: Pick<WatcherSuggestion, 'templateId' | 'variant'>): string => `${s.templateId}:${s.variant}`;
+
+/** Passt der Treffer zu dem, was schon gewählt ist? Ohne Auswahl passt jeder */
+export const canJoin = (selected: Pick<WatcherSuggestion, 'templateId' | 'variant'>[], s: Pick<WatcherSuggestion, 'templateId' | 'variant'>): boolean =>
+  selected.length === 0 || selectionKey(selected[0]!) === selectionKey(s);
+
+/**
+ * „Alle auswählen“ im Kopf einer Gruppe: alle Treffer der Gruppe, die zur Auswahl passen. Ist noch nichts gewählt, gilt die Fassung des
+ * ersten Treffers (beim Gerät mit Leistung und Programmstatus zählt die Leistung, sie steht zuerst).
+ */
+export function pickableInGroup(items: WatcherSuggestion[], selected: WatcherSuggestion[]): WatcherSuggestion[] {
+  const first = items[0];
+  if (!first) return [];
+  const anchor = selected.length > 0 ? selected : [first];
+  return items.filter((s) => canJoin(anchor, s));
+}

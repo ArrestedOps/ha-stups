@@ -1,14 +1,16 @@
 import { api, ApiError, type BoardView, type HaEntity, type SavedWatcher, type WatcherItem, type WatcherRun } from './api';
 import { boardCounts, boardPeople, watcherBoardOption } from './boardAccess';
-import { t } from './i18n/index.svelte';
+import { t, tn } from './i18n/index.svelte';
 import type { EntityHistory } from './history';
 import { can, closeSheet, openSettings, openSheet, toast, ui } from './store.svelte';
 import type { OrderView, TemplateDraft, WatcherSuggestion, WatcherTemplate } from './watcher-types';
 import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, type WatcherForm } from './watchers';
 import { askCard, metNowOf } from './watcher-ask';
+import { devicesOf } from './watcher-bulk';
 import { backAction } from './watcher-wizard';
 
-export type Hit = { entityId: string; name: string; unit?: string; draft?: TemplateDraft };
+/** Ein Treffer aus „Gefunden“; `reason` nennt das Gerät mit seinem aktuellen Wert (für die Liste beim gemeinsamen Einrichten) */
+export type Hit = { entityId: string; name: string; unit?: string; reason?: string; draft?: TemplateDraft };
 
 /**
  * Der Zustand des Wächter-Editors, den Ablauf (Bearbeiten) und Assistent (Anlegen) teilen: das Formular, was vom Server dazukommt
@@ -35,6 +37,10 @@ export class WatcherEditor {
   historyBusy = $state(false);
   /** Reihenfolge für „An wen" */
   order = $state<OrderView | null>(null);
+  /** Gemeinsam einrichten: alle Treffer (ab zwei) und die davon abgewählten; angelegt wird je gewähltes Gerät ein Wächter */
+  devices = $state<Hit[]>([]);
+  off = $state<string[]>([]);
+  readonly selectedDevices = $derived(this.devices.filter((d) => !this.off.includes(d.entityId)));
   /** Welche Suche offen ist (Auslöser oder „erledigt sich selbst") */
   picking = $state<'trigger' | 'done' | null>(null);
   query = $state('');
@@ -84,7 +90,7 @@ export class WatcherEditor {
   personName = (pid: string): string => ui.people.find((p) => p.id === pid)?.displayName ?? '?';
 
   /** `personIds`: wer bei „Wer kommt infrage?" schon gewählt ist (die Einrichtung wählt die Personen vor, die im ersten Schritt dabei sind) */
-  async load(template: string | undefined, hit: Hit | undefined, personIds?: string[]): Promise<void> {
+  async load(template: string | undefined, hit: Hit | undefined, personIds?: string[], hits?: Hit[]): Promise<void> {
     try {
       if (this.id) {
         const res = await api.watchers();
@@ -109,7 +115,8 @@ export class WatcherEditor {
     if (!this.id) this.templates = (await api.watcherTemplates().catch(() => [])).filter((x) => x.kind === 'watcher');
     this.loading = false;
     const wanted = !this.id && template ? this.templates.find((x) => x.id === template) : undefined;
-    if (wanted) this.applyTemplate(wanted, hit);
+    if (!this.id && hits && hits.length > 1) this.devices = hits;
+    if (wanted) this.applyTemplate(wanted, hit ?? hits?.[0]);
     if (!this.id && personIds && personIds.length > 0) this.form.personIds = personIds;
   }
 
@@ -217,6 +224,24 @@ export class WatcherEditor {
     this.picking = null;
   }
 
+  /** Ein Gerät beim gemeinsamen Einrichten an- oder abwählen; mindestens eines bleibt, und die Entität im Formular ist immer das erste gewählte */
+  toggleDevice(entityId: string): void {
+    const on = !this.off.includes(entityId);
+    if (on && this.selectedDevices.length <= 1) return;
+    this.off = on ? [...this.off, entityId] : this.off.filter((x) => x !== entityId);
+    const first = this.selectedDevices[0];
+    if (first && first.entityId !== this.form.entityId) {
+      const old = this.form.entityId;
+      this.form = {
+        ...this.form,
+        entityId: first.entityId,
+        entityName: first.name,
+        entityUnit: first.unit ?? '',
+        ...(this.form.doneEntityId === old ? { doneEntityId: first.entityId, doneEntityName: first.name } : {}),
+      };
+    }
+  }
+
   // ---------- Assistent ----------
 
   /** Ein Schritt weiter, wenn der aktuelle stimmt; sonst sagt eine Meldung, was fehlt */
@@ -266,6 +291,11 @@ export class WatcherEditor {
     }
     this.busy = true;
     try {
+      if (!this.id && this.selectedDevices.length > 1) {
+        await this.saveMany();
+        this.busy = false;
+        return;
+      }
       const saved = this.id ? await api.updateWatcher(this.id, toInput(this.form)) : await api.createWatcher(toInput(this.form));
       toast(t('Wächter gespeichert'));
       if (this.onsaved) this.onsaved(saved);
@@ -275,6 +305,20 @@ export class WatcherEditor {
       toast(e instanceof ApiError ? e.message : t('Speichern fehlgeschlagen'), { tone: 'error' });
     }
     this.busy = false;
+  }
+
+  /**
+   * Gemeinsam einrichten: ein Entwurf, je gewähltem Gerät ein Wächter (eine Anfrage, alle oder keiner). Die Rückfrage „Karte jetzt erstellen?“
+   * entfällt bei vielen Geräten; Entitäten, die schon ein Wächter beobachtet, meldet die Antwort.
+   */
+  private async saveMany(): Promise<void> {
+    const res = await api.bulkCreateWatchers(toInput(this.form), devicesOf(this.selectedDevices));
+    const made = tn('{n} Wächter angelegt', '{n} Wächter angelegt', res.created.length);
+    toast(res.skipped.length > 0 ? `${made} · ${t('{n} gab es schon', { n: res.skipped.length })}` : made);
+    ui.watchers = await api.watchers().catch(() => ui.watchers);
+    const first = res.created[0];
+    if (this.onsaved && first) this.onsaved(first);
+    else this.back();
   }
 
   /** Gilt die Bedingung schon und löst der Wächter deshalb nicht von selbst aus, fragt die App, ob die Karte jetzt entstehen soll */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FOUND_PREVIEW, FOUND_SEARCH_FROM, foundIcon, groupSuggestions, showFoundSearch, visibleHits } from '../src/lib/foundGroups';
+import { canJoin, FOUND_PREVIEW, FOUND_SEARCH_FROM, foundIcon, groupSuggestions, hitId, pickableInGroup, showFoundSearch, visibleHits } from '../src/lib/foundGroups';
 import type { WatcherSuggestion } from '../src/lib/watcher-types';
 
 const templates = [
@@ -110,5 +110,29 @@ describe('Gefunden: Suchfeld und Symbole', () => {
   it('jede Vorlage hat ein Symbol; Unbekanntes bekommt das Auge', () => {
     for (const id of ['washer', 'dryer', 'dishwasher', 'bins', 'rain', 'battery', 'vacuum']) expect(foundIcon(id)).not.toBe('eye');
     expect(foundIcon('zukunft')).toBe('eye');
+  });
+});
+
+describe('Treffer auswählen', () => {
+  const s = (templateId: string, entityId: string, variant: 'power' | 'status' | 'default' = 'default') => ({ templateId, entityId, name: entityId, reason: entityId, variant });
+
+  it('nur Treffer derselben Vorlage und Fassung lassen sich zusammen wählen', () => {
+    const power = s('washer', 'sensor.a', 'power');
+    expect(canJoin([], power)).toBe(true);
+    expect(canJoin([power], s('washer', 'sensor.b', 'power'))).toBe(true);
+    expect(canJoin([power], s('washer', 'sensor.b', 'status'))).toBe(false);
+    expect(canJoin([power], s('dryer', 'sensor.c', 'power'))).toBe(false);
+  });
+
+  it('„Alle auswählen“ nimmt die Fassung des ersten Treffers, bei bestehender Auswahl deren Fassung', () => {
+    const items = [s('washer', 'sensor.a', 'power'), s('washer', 'sensor.b', 'status'), s('washer', 'sensor.c', 'power')];
+    expect(pickableInGroup(items, []).map((x) => x.entityId)).toEqual(['sensor.a', 'sensor.c']);
+    expect(pickableInGroup(items, [items[1]!]).map((x) => x.entityId)).toEqual(['sensor.b']);
+    expect(pickableInGroup(items, [s('dryer', 'sensor.z')])).toEqual([]);
+    expect(pickableInGroup([], [])).toEqual([]);
+  });
+
+  it('die Kennung unterscheidet dieselbe Entität unter zwei Vorlagen', () => {
+    expect(hitId(s('washer', 'sensor.a'))).not.toBe(hitId(s('dryer', 'sensor.a')));
   });
 });

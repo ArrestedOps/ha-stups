@@ -191,3 +191,28 @@ export interface OrderView {
   /** wie viele aus dem Kreis zu Hause sind; null, wenn sich niemand zuordnen lässt */
   home: number | null;
 }
+
+// ---------- Mehrere auf einmal ----------
+
+/**
+ * Die Änderung für `POST /api/watchers/bulk`: nur, was angefasst wurde (Entität, Name und Titel der Karte nie). `trigger` und `done` nur bei
+ * gleicher Auslöser-Art; `done: { value }` ändert nur eine vorhandene Bedingung.
+ */
+export interface BulkPatch {
+  active?: boolean;
+  category?: string | null;
+  assign?: AssignRule;
+  card?: Partial<Pick<WatcherCard, 'boardId' | 'columnId' | 'categoryIds' | 'priority' | 'due'>>;
+  cooldownMin?: number;
+  dedupe?: boolean;
+  nudge?: Nudge | null;
+  countsForFairness?: boolean;
+  trigger?: Partial<Pick<WatchTrigger, 'value' | 'forMin' | 'count' | 'leadMin' | 'to'>> & { forecastHours?: number };
+  done?: { value?: number | null; to?: string | null } | null;
+}
+
+/** Antwort auf „Mehrere Treffer gemeinsam einrichten“: die neuen Wächter und die Entitäten, die schon ein Wächter beobachtete */
+export interface BulkCreated {
+  created: WatcherItem[];
+  skipped: string[];
+}

@@ -7,7 +7,7 @@ const SCHEDULE_PAGE = 2000;
 import type { FeedbackContext, FeedbackItem, FeedbackKind, FeedbackStatus } from '../feedback';
 import type { Permission } from '../permissions';
 import type { EntityHistory } from '../history';
-import type { DryRunResult, HaEntity, OrderView, SavedWatcher, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from '../watcher-types';
+import type { BulkCreated, BulkPatch, DryRunResult, HaEntity, OrderView, SavedWatcher, WatcherActivity, WatcherInput, WatcherItem, WatcherRun, WatcherSuggestion, WatcherTemplate } from '../watcher-types';
 import type { User, AccessMode, Me, AccessInfo, Board, BoardDeletePreview, WatcherChoice, BoardDuplicateInput, BoardAccessPreview, BoardAccessInput, BoardSummary, Column, Category, Card, ChecklistItem, CardLink, Attachment, CardDetail, Comment, BoardView, Settings, TrashItem, CompleteResult, CardInput, CardPatch, TemplateInfo, InboxPage, HaDashboards, Today, HomeState, Fairness, HouseType, HouseResult, HouseChannel, HouseInfo, HouseEntities, Capabilities, BetaState, PasskeyInfo, PasskeyCeremony, AuthStatus, Account, PushStatus, ScheduleCard, NudgeTemplate, NudgeInfo, NudgeResult } from './types';
 
 export const api = {
@@ -228,6 +228,11 @@ export const api = {
   /** „Ja, Karte erstellen“ auf diese Rückfrage (409, wenn die Bedingung nicht mehr gilt oder schon eine Karte offen ist) */
   fireWatcherNow: (id: string) => post<WatcherItem>(`watchers/${id}/fire-now`),
   deleteWatcher: (id: string) => del(`watchers/${id}`),
+  /** Mehrere Wächter auf einmal ändern (alle oder keiner); nur die Felder im Patch werden geschrieben */
+  bulkUpdateWatchers: (ids: string[], patch: BulkPatch) => post<{ items: WatcherItem[] }>('watchers/bulk', { ids, patch }),
+  bulkDeleteWatchers: (ids: string[]) => post<void>('watchers/bulk-delete', { ids }),
+  /** Mehrere Geräte mit demselben Entwurf einrichten; Entitäten, die schon beobachtet werden, kommen in `skipped` */
+  bulkCreateWatchers: (base: WatcherInput, devices: { entityId: string }[]) => post<BulkCreated>('watchers/bulk-create', { base, devices }),
   testWatcher: (id: string) => post<WatcherItem>(`watchers/${id}/test`),
   /** Sammelknopf: Wächter mit Vorlagennamen bekommen das Gerät im Namen (nur Administratoren) */
   suggestWatcherCategories: () => post<{ updated: number }>('watchers/suggest-categories'),
@@ -239,6 +244,8 @@ export const api = {
   /** Einen Treffer von „Gefunden" ausblenden (nie wieder vorschlagen) oder wieder einblenden */
   hideSuggestion: (templateId: string, entityId: string) => post<void>('watchers/suggestions/hide', { templateId, entityId }),
   unhideSuggestion: (templateId: string, entityId: string) => post<void>('watchers/suggestions/unhide', { templateId, entityId }),
+  /** Mehrere Treffer auf einmal ausblenden */
+  hideSuggestions: (hits: { templateId: string; entityId: string }[]) => post<void>('watchers/suggestions/hide-many', { hits }),
   /** Probelauf: die Regel auf die Historie der letzten 7 Tage anwenden, ohne zu speichern */
   dryRun: (b: { trigger: WatcherInput['trigger']; cooldownMin: number }, signal?: AbortSignal) => post<DryRunResult>('watchers/dry-run', b, signal),
   /** Verlauf einer Entität (letzte Stunden) mit den Stellen, an denen die Regel ausgelöst hätte; nie ein Fehler: der Status sagt, wenn es keinen gibt */

@@ -13,7 +13,7 @@
   import type { SavedWatcher } from '../lib/watcher-types';
   import { categoryKeyOf, COL_LAST, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
   import { noteText, RUN_TEXT } from '../lib/watchers';
-  import { activeScheduleFilter, askSuggestWatcherCategories, can, completeCard, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
+  import { activeScheduleFilter, askSuggestWatcherCategories, can, completeCard, feat, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
   import TopBar from './TopBar.svelte';
   import WatcherDesk from './WatcherDesk.svelte';
@@ -33,9 +33,34 @@
   let request = 0;
   /** Was die Wächter zuletzt getan haben (für alle lesbar) */
   let activity = $state<WatcherActivity[]>([]);
+  /** Beta: die Wächter sind dort zunächst aus (sonst legten sie neben der normalen App doppelt Aufgaben an); null = normale App oder noch unbekannt */
+  let betaOff = $state(false);
+
+  async function loadBeta() {
+    if (!feat.beta) return;
+    betaOff = await api.beta().then((g) => !g.watchers).catch(() => false);
+  }
+  function askBetaOn() {
+    if (!ui.isAdmin) return;
+    ui.confirm = {
+      title: t('Wächter in der Beta einschalten?'),
+      text: t('Die Beta hat die Daten der normalen App übernommen. Laufen dort dieselben Wächter, entstehen Aufgaben doppelt. Schalte die Wächter nur ein, wenn du sie hier testen willst.'),
+      label: t('Einschalten'),
+      run: async () => {
+        try {
+          await api.setBeta({ watchers: true });
+          betaOff = false;
+          toast(t('Wächter eingeschaltet'));
+        } catch (e) {
+          toast(e instanceof ApiError ? e.message : t('Das ging nicht'), { tone: 'error' });
+        }
+      },
+    };
+  }
 
   async function load() {
     const mine = ++request;
+    void loadBeta();
     if (can('watchers')) api.watcherSuggestions().then((r) => (found = r.items.length)).catch(() => (found = 0));
     api.watcherActivity().then((a) => (activity = a)).catch(() => undefined);
     try {
@@ -373,6 +398,13 @@
 <main class="relative z-[1] mx-auto flex h-full max-w-[720px] flex-col lg:max-w-none">
   <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab lg:-mx-1 lg:px-1 lg:pt-0" data-testid="home">
     <div class="flex flex-col gap-3.5">
+      {#if betaOff}
+        <div data-testid="beta-watchers-off">
+          <Banner wrap variant="warm" title={t('In der Beta sind die Wächter ausgeschaltet')} sub={ui.isAdmin ? t('Sie legen deshalb keine Aufgaben an. Tippe hier, um sie einzuschalten.') : t('Sie legen deshalb keine Aufgaben an. Ein Administrator kann sie einschalten.')} onclick={ui.isAdmin ? askBetaOn : undefined}>
+            {#snippet leading()}<Icon name="eye" size={26} />{/snippet}
+          </Banner>
+        </div>
+      {/if}
       {#if !ui.desktop && pageGroup}
         <!-- Kategorie als eigene Seite (Handy) -->
         <div data-testid="watcher-page" class="flex flex-col gap-3">

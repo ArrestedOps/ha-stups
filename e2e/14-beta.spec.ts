@@ -27,6 +27,19 @@ test('Die Beta meldet ihren Kanal; Push und Wächter sind zunächst aus', async 
   await expect(dialog.getByRole('switch', { name: 'Wächter in der Beta einschalten' })).not.toBeChecked();
 });
 
+test('Die Wächter-Seite sagt, dass die Wächter in der Beta aus sind; ein Administrator schaltet sie dort ein', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
+  const hint = page.getByTestId('beta-watchers-off');
+  await expect(hint).toContainText('In der Beta sind die Wächter ausgeschaltet');
+  await hint.getByRole('button').click();
+  await page.getByRole('button', { name: 'Einschalten', exact: true }).click();
+  await expect(hint).toHaveCount(0);
+  expect((await (await page.request.get('/api/beta')).json()).watchers).toBe(true);
+  // zurück auf aus, die folgenden Tests gehen vom Ausgangszustand aus
+  await page.request.put('/api/beta', { headers: API, data: { watchers: false } });
+});
+
 test('Sensoren der Beta heißen sensor.stups_beta_…, die der normalen App kommen nicht vor', async ({ request }) => {
   await expect
     .poll(async () => ((await (await request.get(`${MOCK}/mock/published`)).json()) as { entityId: string }[]).map((s) => s.entityId), { timeout: 15_000 })

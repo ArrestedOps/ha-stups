@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.9
+
+**Batterie-Wächter lösen beim Anlegen ohne Wartezeit aus.** Lag die Batterie schon unter der Grenze, kam die Aufgabe trotzdem erst nach „10 Minuten unter 20 %“, gerechnet ab der letzten Änderung des Werts. Bei einem Handy-Akku, der sich ständig ändert, hieß das: nichts passiert. Jetzt entsteht die Aufgabe sofort. Bei einem Zustand (Tür offen) bleibt die Wartezeit.
+
+**Bitte prüfen:** Wächter „Batterie schwach“ für ein Gerät anlegen, dessen Batterie schon unter 20 % liegt: Die Aufgabe „Batterie wechseln“ erscheint sofort, ohne Rückfrage.
+
 ## 1.42.0-beta.8
 
 **Wächter lösen beim Anlegen gleich aus.** Gilt die Bedingung schon (Batterie bei 16 %, Grenze 20 %; Tür schon im Zielzustand), entsteht die Aufgabe sofort, nach der Wartezeit ab der letzten Änderung. Die Rückfrage gibt es nur noch beim Ändern eines vorhandenen Wächters. **Aufgeklappter Wächter am Desktop:** Wenn, Dann, Wer und Erledigt sich selbst stehen untereinander, der Schalter „Erledigt sich selbst“ wird nicht mehr abgeschnitten, „Ändern“ zerstört das Layout nicht mehr.

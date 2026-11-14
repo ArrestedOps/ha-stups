@@ -180,9 +180,16 @@ describe('Pegel beim Anlegen schon über der Grenze', () => {
     expect(data.runs(w.id)[0]).toMatchObject({ result: 'created' });
   });
 
-  it('steht der Wert erst kurz so, kommt die Aufgabe nach der Wartezeit (Takt), nicht früher', async () => {
-    ha.set(BATT, '1', '2026-11-04T09:58:00Z', { device_class: 'battery', unit_of_measurement: '%' });
-    const w = await battery();
+  it('steht der Wert erst kurz so (Handy-Akku ändert sich ständig), kommt die Aufgabe trotzdem sofort, ohne die Wartezeit', async () => {
+    ha.set(BATT, '1', '2026-11-04T09:59:00Z', { device_class: 'battery', unit_of_measurement: '%' });
+    await battery();
+    expect(cards()).toHaveLength(1);
+  });
+
+  it('ein Zustand (Tür offen) wartet beim Anlegen weiter die Wartezeit ab der Änderung ab', async () => {
+    ha.set(ENTITY, 'on', '2026-11-04T09:58:00Z', {});
+    const w = watcher({ trigger: { entityId: ENTITY, kind: 'state', to: 'on', forMin: 10 } });
+    await engine.onSaved(w.id, { created: true });
     expect(cards()).toHaveLength(0);
     expect(data.getState(w.id).armed).toBe(true);
     advance(5);

@@ -91,15 +91,18 @@ export function createEvaluate(ctx: Ctx, calls: () => Parts) {
         const met = conditionMet(w.trigger, s.state);
         const nowMs = now().getTime();
         // Ein Pegel (Batterie, Temperatur), der beim ersten Anlegen schon über der Grenze liegt, ist ein Befund: die Aufgabe kommt sofort
-        // (nach der Wartezeit, gerechnet ab der letzten Änderung des Werts). Vorgänge und Unbekanntes warten auf den nächsten Wechsel.
+        // (ohne Wartezeit). Vorgänge und Unbekanntes warten auf den nächsten Wechsel.
         const neverFired = !data.getState(id).lastFireAt;
-        const levelNow = met && (w.trigger.kind === 'below' || w.trigger.kind === 'above') && measuresLevel(s, w.trigger.entityId) && neverFired;
+        const isLevel = (w.trigger.kind === 'below' || w.trigger.kind === 'above') && measuresLevel(s, w.trigger.entityId);
+        const levelNow = met && isLevel && neverFired;
         // Beim Anlegen gilt dasselbe für jede Bedingung auf dem Zustand (Zustand, Vorgang, Pegel): erfüllt heißt auslösen
         const auto = levelNow || (opts.created === true && met && w.active && checksState(w) && neverFired);
         const since = met ? metSinceOf(auto ? 'state' : w.trigger.kind, s, nowMs) : null;
         data.patchState(id, { armed: auto || !met, metSince: since });
         if (w.status === 'entity_missing') data.setStatus(id, 'ok');
-        if (auto && since && nowMs - Date.parse(since) >= minutes(w.trigger.forMin)) await calls().fire(w);
+        // Ein Pegel, der schon unter der Grenze liegt, ist kein kurzer Ausschlag: die Wartezeit („10 Minuten unter 20 %") gilt dort nicht,
+        // sonst käme die Aufgabe bei einem Handy-Akku, dessen Wert sich ständig ändert, erst Minuten später. Sonst zählt sie ab der Änderung.
+        if (auto && since && (isLevel || nowMs - Date.parse(since) >= minutes(w.trigger.forMin))) await calls().fire(w);
         // Schon erfüllt und kein automatisches Auslösen: die Oberfläche darf fragen (nur wenn noch keine Aufgabe des Wächters offen ist)
         if (met && !auto && w.active && checksState(w) && !store.openCardOfWatcher(id)) {
           metNow = { entityName: s.name ?? w.trigger.entityId, stateText: stateText(s.state, s.unit), reason: 'already_met' };

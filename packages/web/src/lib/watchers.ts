@@ -147,7 +147,8 @@ export function applyTemplate(f: WatcherForm, tpl: WatcherTemplate, hit?: { enti
     out.doneEntityId = hit.entityId;
     out.doneEntityName = hit.name;
     out.doneKind = d.done.kind;
-    out.doneValue = String(d.done.value);
+    if (d.done.kind === 'state') out.doneTo = d.done.to;
+    else out.doneValue = String(d.done.value);
   }
   return out;
 }

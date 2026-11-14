@@ -1,14 +1,42 @@
 import { describe, expect, it } from 'vitest';
 import type { HaState } from '../src/ha.js';
+import { withLanguage } from '../src/i18n/index.js';
 import { detectSuggestions, MAX_SUGGESTIONS, suggestionKey, watcherTemplates } from '../src/watcher-templates.js';
 
 const state = (entityId: string, st: string, attributes: Record<string, unknown> = {}): HaState => ({ entity_id: entityId, state: st, attributes });
 const ids = (list: { templateId: string; entityId: string }[]) => list.map((s) => `${s.templateId}:${s.entityId}`);
 
 describe('Vorlagen', () => {
-  it('alle Vorlagen aus dem Entwurf sind da: sieben mit Gerät, vier ohne', () => {
+  it('alle Vorlagen aus dem Entwurf sind da: sieben mit Gerät, dazu 19 neue, vier ohne Gerät', () => {
     const list = watcherTemplates();
-    expect(list.filter((x) => x.kind === 'watcher').map((x) => x.id)).toEqual(['washer', 'dryer', 'dishwasher', 'bins', 'rain', 'battery', 'vacuum']);
+    expect(list.filter((x) => x.kind === 'watcher').map((x) => x.id)).toEqual([
+      'washer',
+      'dryer',
+      'dishwasher',
+      'bins',
+      'rain',
+      'battery',
+      'vacuum',
+      'window_open',
+      'fridge_open',
+      'leak',
+      'plant',
+      'humid',
+      'co2',
+      'dehumidifier',
+      'robot_error',
+      'filter_life',
+      'toner',
+      'level',
+      'refill',
+      'litter',
+      'ev_plug',
+      'mail',
+      'garage_lock',
+      'freezer_warm',
+      'unavailable',
+      'update',
+    ]);
     expect(list.filter((x) => x.kind === 'recurring').map((x) => x.id)).toEqual(['descale', 'smoke', 'filter', 'bedding']);
   });
 
@@ -53,6 +81,8 @@ describe('Erkennung', () => {
       'battery:sensor.bad_batterie',
       'battery:sensor.flur_batterie',
       'vacuum:vacuum.roboter',
+      'robot_error:vacuum.roboter',
+      'unavailable:sensor.kaputt_batterie',
     ]);
     expect(list.find((s) => s.entityId === 'sensor.steckdose_trockner_power')?.reason).toBe('Steckdose Trockner Leistung misst die Leistung');
     expect(list.find((s) => s.entityId === 'sensor.bad_batterie')?.reason).toBe('Bad Fenster Batterie: Batterie bei 12 %');
@@ -87,12 +117,15 @@ describe('Erkennung', () => {
     const list = detectSuggestions(states, new Set(['sensor.waschmaschine_leistung', 'vacuum.roboter']));
     expect(ids(list)).not.toContain('washer:sensor.waschmaschine_leistung');
     expect(ids(list)).not.toContain('vacuum:vacuum.roboter');
+    expect(ids(list)).not.toContain('robot_error:vacuum.roboter');
     expect(ids(list)).toContain('dryer:sensor.steckdose_trockner_power');
   });
 
   it('der Kühlschrank (Leistung, aber kein Gerätename) und der Familienkalender treffen nichts; ein Sensor ohne Zahl fehlt bei den Batterien', () => {
     const list = ids(detectSuggestions(states, new Set()));
-    expect(list.some((x) => x.includes('kuehlschrank') || x.includes('calendar.familie') || x.includes('kaputt'))).toBe(false);
+    expect(list.some((x) => x.includes('kuehlschrank') || x.includes('calendar.familie'))).toBe(false);
+    // ein Batterie-Sensor ohne Zahl ist kein Batterie-Treffer (er steht als „nicht erreichbar“ da)
+    expect(list.filter((x) => x.includes('kaputt'))).toEqual(['unavailable:sensor.kaputt_batterie']);
   });
 
   it('mehr als fünf Batterien: alle kommen, die schwächsten zuerst', () => {
@@ -160,13 +193,155 @@ describe('Ausgeblendetes', () => {
 
   it('ausgeblendete Treffer fehlen, andere Vorlagen derselben Entität bleiben', () => {
     const hidden = new Set([suggestionKey('battery', 'sensor.batt_a')]);
-    expect(ids(detectSuggestions(states, new Set(), hidden))).toEqual(['battery:sensor.batt_b', 'vacuum:vacuum.robi']);
-    expect(ids(detectSuggestions(states, new Set()))).toEqual(['battery:sensor.batt_a', 'battery:sensor.batt_b', 'vacuum:vacuum.robi']);
+    expect(ids(detectSuggestions(states, new Set(), hidden))).toEqual(['battery:sensor.batt_b', 'vacuum:vacuum.robi', 'robot_error:vacuum.robi']);
+    expect(ids(detectSuggestions(states, new Set()))).toEqual(['battery:sensor.batt_a', 'battery:sensor.batt_b', 'vacuum:vacuum.robi', 'robot_error:vacuum.robi']);
   });
 
   it('beim Ausblenden bleiben alle übrigen Treffer, in derselben Reihenfolge', () => {
     const many = Array.from({ length: 7 }, (_, i) => state(`sensor.b${i}`, String(10 + i), { device_class: 'battery' }));
     const hidden = new Set([suggestionKey('battery', 'sensor.b0')]);
     expect(detectSuggestions(many, new Set(), hidden).map((s) => s.entityId)).toEqual(['sensor.b1', 'sensor.b2', 'sensor.b3', 'sensor.b4', 'sensor.b5', 'sensor.b6']);
+  });
+});
+
+// ---------- Neue Vorlagen für Geräte ----------
+
+describe('Neue Vorlagen: Erkennung', () => {
+  const only = (states: HaState[], id: string) => detectSuggestions(states, new Set()).filter((s) => s.templateId === id);
+  const one = (states: HaState[], id: string) => {
+    const hits = only(states, id);
+    expect(hits).toHaveLength(1);
+    return hits[0]!;
+  };
+
+  it('Fenster/Tür lange offen: Fenster-, Tür- und Garagensensor, aber nicht die Kühlschranktür', () => {
+    const w = state('binary_sensor.fenster_bad', 'off', { device_class: 'window', friendly_name: 'Fenster Bad' });
+    expect(one([w], 'window_open').entityId).toBe('binary_sensor.fenster_bad');
+    expect(only([state('binary_sensor.haustuer', 'off', { device_class: 'door', friendly_name: 'Haustür' })], 'window_open')).toHaveLength(1);
+    const fridge = state('binary_sensor.kuehlschrank_tuer', 'off', { device_class: 'door', friendly_name: 'Kühlschrank Tür' });
+    expect(only([fridge], 'window_open')).toEqual([]);
+    expect(only([state('sensor.fenster_x', '1', { device_class: 'window' })], 'window_open')).toEqual([]);
+  });
+
+  it('Kühl-/Gefriertür offen: nur Türsensoren mit Kühlschrank- oder Gefrierwörtern', () => {
+    const fridge = state('binary_sensor.kuehlschrank_tuer', 'off', { device_class: 'door', friendly_name: 'Kühlschrank Tür' });
+    expect(one([fridge], 'fridge_open').entityId).toBe('binary_sensor.kuehlschrank_tuer');
+    expect(only([state('binary_sensor.freezer_door', 'off', { device_class: 'door', friendly_name: 'Freezer Door' })], 'fridge_open')).toHaveLength(1);
+    expect(only([state('binary_sensor.haustuer', 'off', { device_class: 'door', friendly_name: 'Haustür' })], 'fridge_open')).toEqual([]);
+  });
+
+  it('Wasserleck: binary_sensor mit Geräteklasse moisture', () => {
+    expect(one([state('binary_sensor.waschkeller_wasser', 'off', { device_class: 'moisture', friendly_name: 'Waschkeller Wasser' })], 'leak').entityId).toBe('binary_sensor.waschkeller_wasser');
+    expect(only([state('sensor.bodenfeuchte', '30', { device_class: 'moisture' })], 'leak')).toEqual([]);
+  });
+
+  it('Pflanze: Bodenfeuchte-Sensor oder plant-Entität; Luftfeuchte ist keine Pflanze', () => {
+    const soil = one([state('sensor.ficus_moisture', '35', { device_class: 'moisture', unit_of_measurement: '%', friendly_name: 'Ficus' })], 'plant');
+    expect(soil).toMatchObject({ variant: 'level', unit: '%' });
+    const byName = one([state('sensor.monstera_boden', '35', { unit_of_measurement: '%', friendly_name: 'Monstera Boden' })], 'plant');
+    expect(byName.entityId).toBe('sensor.monstera_boden');
+    const entity = one([state('plant.ficus', 'ok', { friendly_name: 'Ficus' })], 'plant');
+    expect(entity).toMatchObject({ variant: 'status', draft: { trigger: { kind: 'state', to: 'problem' }, done: { kind: 'state', to: 'ok' } } });
+    expect(only([state('sensor.bad_luftfeuchte', '55', { device_class: 'humidity', unit_of_measurement: '%', friendly_name: 'Pflanzenzimmer Luftfeuchte' })], 'plant')).toEqual([]);
+  });
+
+  it('Lüften: Luftfeuchte und CO₂', () => {
+    expect(one([state('sensor.bad_feuchte', '70', { device_class: 'humidity', unit_of_measurement: '%', friendly_name: 'Bad' })], 'humid').reason).toBe('Bad: Luftfeuchte bei 70 %');
+    expect(one([state('sensor.buero_co2', '1300', { device_class: 'carbon_dioxide', unit_of_measurement: 'ppm', friendly_name: 'Büro' })], 'co2').reason).toBe('Büro: CO₂ bei 1300 ppm');
+    expect(only([state('sensor.t', '20', { device_class: 'temperature' })], 'humid')).toEqual([]);
+  });
+
+  it('Entfeuchter-Tank und andere Nachfüll-Meldungen', () => {
+    expect(one([state('binary_sensor.entfeuchter_tank', 'off', { friendly_name: 'Entfeuchter Tank voll' })], 'dehumidifier').entityId).toBe('binary_sensor.entfeuchter_tank');
+    expect(only([state('binary_sensor.tank_pool', 'off', { friendly_name: 'Pool Tank' })], 'dehumidifier')).toEqual([]);
+    expect(one([state('binary_sensor.spuelmaschine_salz', 'off', { friendly_name: 'Spülmaschine Salz leer' })], 'refill').entityId).toBe('binary_sensor.spuelmaschine_salz');
+    // der Tank eines Entfeuchters ist kein „Nachfüllen“
+    expect(only([state('binary_sensor.entfeuchter_tank', 'off', { friendly_name: 'Entfeuchter Wassertank' })], 'refill')).toEqual([]);
+  });
+
+  it('Roboter steckt fest: Saug- und Mähroboter', () => {
+    const list = detectSuggestions([state('vacuum.robi', 'docked'), state('lawn_mower.rasen', 'docked', { friendly_name: 'Rasenroboter' })], new Set());
+    expect(ids(list.filter((s) => s.templateId === 'robot_error'))).toEqual(['robot_error:vacuum.robi', 'robot_error:lawn_mower.rasen']);
+    expect(only([state('light.flur', 'off')], 'robot_error')).toEqual([]);
+  });
+
+  it('Filter, Toner, Füllstand: Prozentwerte mit den passenden Wörtern', () => {
+    expect(one([state('sensor.luftreiniger_filter', '8', { unit_of_measurement: '%', friendly_name: 'Luftreiniger Filter' })], 'filter_life').reason).toBe('Luftreiniger Filter: Filter bei 8 %');
+    expect(only([state('sensor.filter_x', 'on', { friendly_name: 'Filter x' })], 'filter_life')).toEqual([]);
+    expect(one([state('sensor.drucker_tonerstand', '12', { unit_of_measurement: '%', friendly_name: 'Drucker Toner' })], 'toner').entityId).toBe('sensor.drucker_tonerstand');
+    // „ink“ steckt auch in „link“: nur das ganze Wort zählt
+    expect(only([state('sensor.wlan_link_qualitaet', '80', { unit_of_measurement: '%', friendly_name: 'WLAN Link Qualität' })], 'toner')).toEqual([]);
+    expect(one([state('sensor.pellets_fuellstand', '15', { unit_of_measurement: '%', friendly_name: 'Pellets Füllstand' })], 'level').entityId).toBe('sensor.pellets_fuellstand');
+    expect(only([state('sensor.pellets_fuellstand', '15', { friendly_name: 'Pellets Füllstand' })], 'level')).toEqual([]);
+  });
+
+  it('Katzenklo: Behälter-Sensor (Schalter) oder Füllstand (Pegel) mit eigenem Entwurf', () => {
+    const sw = one([state('binary_sensor.katzenklo_voll', 'off', { friendly_name: 'Katzenklo voll' })], 'litter');
+    expect(sw.variant).toBe('switch');
+    const lvl = one([state('sensor.katzenklo_schublade', '40', { unit_of_measurement: '%', friendly_name: 'Katzenklo Schublade' })], 'litter');
+    expect(lvl).toMatchObject({ variant: 'level', draft: { trigger: { kind: 'above', value: 80 }, done: { kind: 'below', value: 50 } } });
+    expect(only([state('binary_sensor.katzenklo_tuer', 'off', { friendly_name: 'Katzenklo Tür' })], 'litter')).toEqual([]);
+  });
+
+  it('E-Auto einstecken: Ladestand des Autos, nicht der Handy-Akku', () => {
+    expect(one([state('sensor.id3_auto_batterie', '25', { device_class: 'battery', unit_of_measurement: '%', friendly_name: 'ID.3 Auto Batterie' })], 'ev_plug').entityId).toBe('sensor.id3_auto_batterie');
+    expect(only([state('sensor.iphone_battery_level', '25', { device_class: 'battery', unit_of_measurement: '%', friendly_name: 'iPhone Auto Handy' })], 'ev_plug')).toEqual([]);
+    expect(only([state('sensor.flur_batterie', '25', { device_class: 'battery', friendly_name: 'Flur' })], 'ev_plug')).toEqual([]);
+  });
+
+  it('Post: nur der Briefkasten-Sensor', () => {
+    expect(one([state('binary_sensor.briefkasten', 'off', { friendly_name: 'Briefkasten' })], 'mail').entityId).toBe('binary_sensor.briefkasten');
+    expect(one([state('binary_sensor.post_eingang', 'off', { friendly_name: 'Post' })], 'mail').entityId).toBe('binary_sensor.post_eingang');
+    expect(only([state('binary_sensor.position_x', 'off', { friendly_name: 'Position' })], 'mail')).toEqual([]);
+  });
+
+  it('Garage und Haustür: Garagentor (cover) und Türschloss (lock) mit verschiedenen Fassungen', () => {
+    const cover = one([state('cover.garage', 'closed', { device_class: 'garage', friendly_name: 'Garage' })], 'garage_lock');
+    expect(cover).toMatchObject({ variant: 'cover' });
+    expect(cover.draft).toBeUndefined();
+    const lock = one([state('lock.haustuer', 'locked', { friendly_name: 'Haustür' })], 'garage_lock');
+    expect(lock).toMatchObject({ variant: 'lock', draft: { trigger: { kind: 'state', to: 'unlocked' }, card: { title: 'Tür abschließen' }, done: { kind: 'state', to: 'locked' } } });
+    expect(only([state('cover.rollo', 'open', { device_class: 'shutter' })], 'garage_lock')).toEqual([]);
+  });
+
+  it('Gefriertruhe zu warm: Temperatur mit Gefrierwörtern', () => {
+    expect(one([state('sensor.gefriertruhe_temperatur', '-18', { device_class: 'temperature', friendly_name: 'Gefriertruhe' })], 'freezer_warm').reason).toBe('Gefriertruhe: Temperatur bei -18 °C');
+    expect(only([state('sensor.wohnzimmer_temperatur', '21', { device_class: 'temperature', friendly_name: 'Wohnzimmer' })], 'freezer_warm')).toEqual([]);
+  });
+
+  it('Update und nicht erreichbare Geräte; ein schon belegtes Gerät bekommt keinen zweiten Treffer', () => {
+    expect(one([state('update.home_assistant_core_update', 'off', { friendly_name: 'Home Assistant Core' })], 'update').entityId).toBe('update.home_assistant_core_update');
+    const gone = state('sensor.tuer_batterie', 'unavailable', { device_class: 'battery', friendly_name: 'Tür Batterie' });
+    expect(one([gone], 'unavailable').entityId).toBe('sensor.tuer_batterie');
+    // ein Fenstersensor, der nicht erreichbar ist, ist schon „Fenster lange offen“ und kommt nicht doppelt
+    const window = state('binary_sensor.fenster', 'unavailable', { device_class: 'window', friendly_name: 'Fenster' });
+    expect(only([window], 'window_open')).toHaveLength(1);
+    expect(only([window], 'unavailable')).toEqual([]);
+    // erreichbare Geräte erscheinen nicht
+    expect(only([state('sensor.ok_batterie', '50', { device_class: 'battery' })], 'unavailable')).toEqual([]);
+    expect(only([state('light.flur', 'unavailable')], 'unavailable')).toEqual([]);
+  });
+
+  it('jede neue Vorlage hat Titel, Hinweis, Karte und eine ehrliche Aussage zum Erledigen (Begründung, wo nichts belegt werden kann)', () => {
+    const news = watcherTemplates().filter((x) => x.kind === 'watcher').slice(7);
+    expect(news).toHaveLength(19);
+    for (const x of news) {
+      expect(x.title).toBeTruthy();
+      expect(x.hint).toBeTruthy();
+      expect(x.draft!.card.title).toBeTruthy();
+      expect(x.canSelfComplete).toBe(x.draft!.done !== null);
+      if (!x.canSelfComplete) expect(x.whyNoSelfComplete).toBeTruthy();
+    }
+    expect(news.filter((x) => !x.canSelfComplete).map((x) => x.id)).toEqual(['leak', 'mail', 'freezer_warm', 'unavailable']);
+  });
+
+  it('alle Texte der neuen Vorlagen gibt es auf Englisch', () => {
+    const de = watcherTemplates().filter((x) => x.kind === 'watcher').slice(7);
+    const en = withLanguage('en', () => watcherTemplates().filter((x) => x.kind === 'watcher').slice(7));
+    for (const [i, x] of de.entries()) {
+      expect(en[i]!.title).not.toBe(x.title);
+      expect(en[i]!.hint).not.toBe(x.hint);
+      expect(en[i]!.draft!.card.title.length).toBeGreaterThan(0);
+    }
   });
 });

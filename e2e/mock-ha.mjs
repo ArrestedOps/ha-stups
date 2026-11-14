@@ -62,6 +62,10 @@ export async function startMockHa({ port, first, second, token, extraPersons = [
     const id = room.toLowerCase().replaceAll('ü', 'ue').replaceAll('ä', 'ae').replaceAll('ö', 'oe');
     setState(`sensor.${id}_fenstersensor_batterie`, String(31 + i * 4), { friendly_name: `${room} Fenstersensor Batterie`, unit_of_measurement: '%', device_class: 'battery' });
   });
+  // Weitere Vorlagen von „Gefunden“: Fenster, Luftfeuchte, Filter
+  setState('binary_sensor.fenster_bad', 'off', { friendly_name: 'Fenster Bad', device_class: 'window' });
+  setState('sensor.bad_luftfeuchte', '58', { friendly_name: 'Bad Luftfeuchte', unit_of_measurement: '%', device_class: 'humidity' });
+  setState('sensor.luftreiniger_filter', '64', { friendly_name: 'Luftreiniger Filter', unit_of_measurement: '%' });
   /** Historie je Entität für den Probelauf (POST /mock/history), Kalendertermine (POST /mock/calendar), Vorhersagen (POST /mock/forecast) */
   const histories = new Map();
   const calendars = new Map();

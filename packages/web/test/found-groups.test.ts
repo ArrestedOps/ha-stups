@@ -136,3 +136,10 @@ describe('Treffer auswählen', () => {
     expect(hitId(s('washer', 'sensor.a'))).not.toBe(hitId(s('dryer', 'sensor.a')));
   });
 });
+
+describe('Symbole der neuen Vorlagen', () => {
+  it('jede Vorlage mit Gerät hat ein eigenes Symbol', () => {
+    const ids = ['window_open', 'fridge_open', 'leak', 'plant', 'humid', 'co2', 'dehumidifier', 'robot_error', 'filter_life', 'toner', 'level', 'refill', 'litter', 'ev_plug', 'mail', 'garage_lock', 'freezer_warm', 'unavailable', 'update'];
+    for (const id of ids) expect(foundIcon(id), id).not.toBe('eye');
+  });
+});

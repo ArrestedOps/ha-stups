@@ -43,7 +43,34 @@ export const visibleHits = (g: FoundGroup, expanded: boolean, filtering: boolean
 
 export const showFoundSearch = (total: number): boolean => total >= FOUND_SEARCH_FROM;
 
-const ICONS: Record<string, string> = { washer: 'washer', dryer: 'fan', dishwasher: 'dish', bins: 'trash', rain: 'globe', battery: 'plug', vacuum: 'vacuum' };
+const ICONS: Record<string, string> = {
+  washer: 'washer',
+  dryer: 'fan',
+  dishwasher: 'dish',
+  bins: 'trash',
+  rain: 'globe',
+  battery: 'plug',
+  vacuum: 'vacuum',
+  window_open: 'window',
+  fridge_open: 'door',
+  leak: 'alert',
+  plant: 'leaf',
+  humid: 'fan',
+  co2: 'fan',
+  dehumidifier: 'fan',
+  robot_error: 'robot',
+  filter_life: 'layers',
+  toner: 'file',
+  level: 'layers',
+  refill: 'dish',
+  litter: 'trash',
+  ev_plug: 'plug',
+  mail: 'message',
+  garage_lock: 'shield',
+  freezer_warm: 'heat',
+  unavailable: 'wifi-off',
+  update: 'download',
+};
 /** Symbol der Vorlage am Gruppenkopf */
 export const foundIcon = (templateId: string): string => ICONS[templateId] ?? 'eye';
 

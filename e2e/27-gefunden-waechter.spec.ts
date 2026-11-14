@@ -322,3 +322,22 @@ test('Gefunden: drei Batterien auswählen, gemeinsam einrichten (drei Wächter);
     for (const entityId of ENTITIES) await request.post('/api/watchers/suggestions/unhide', { data: { templateId: 'battery', entityId } });
   }
 });
+
+test('Gefunden: neue Vorlagen erkennen Fenster, Luftfeuchte und Filter', async ({ page }) => {
+  await page.goto('/');
+  await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  await page.getByTestId('home-found').click();
+  const dialog = page.getByRole('dialog');
+  const group = (title: string) => dialog.getByTestId('found-group').filter({ has: page.getByRole('heading', { name: title }) });
+  await expect(group('Fenster lange offen')).toContainText('Fenster Bad meldet, ob es offen ist');
+  await expect(group('Lüften (Feuchte)')).toContainText('Bad Luftfeuchte: Luftfeuchte bei 58 %');
+  await expect(group('Filter verbraucht')).toContainText('Luftreiniger Filter: Filter bei 64 %');
+  // Der Assistent beginnt mit dem Entwurf der Vorlage: Fenster 30 Minuten offen, erledigt sich, wenn es wieder zu ist
+  await group('Fenster lange offen').getByRole('button', { name: 'Einrichten' }).click();
+  await expect(dialog.getByTestId('graph-card')).toContainText('Fenster Bad');
+  await dialog.getByRole('button', { name: 'Weiter: Dann' }).click();
+  await dialog.getByRole('button', { name: 'Weiter: Wer' }).click();
+  await dialog.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
+  await expect(dialog.getByTestId('watcher-sentence')).toContainText('Wenn Fenster Bad länger als 30 Min. auf on steht');
+  await expect(dialog.getByRole('switch', { name: 'Automatisch erledigen' })).toBeEnabled();
+});

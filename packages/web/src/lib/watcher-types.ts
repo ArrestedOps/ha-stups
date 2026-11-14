@@ -140,7 +140,7 @@ export interface TemplateDraft {
     | { kind: 'forecast'; condition: 'rain'; hours: number };
   card: { title: string; due: DueRule };
   assign: { mode: AssignMode };
-  done: { kind: 'above'; value: number } | null;
+  done: { kind: 'above' | 'below'; value: number } | { kind: 'state'; to: string } | null;
 }
 
 export interface WatcherTemplate {
@@ -164,7 +164,7 @@ export interface WatcherSuggestion {
   entityId: string;
   name: string;
   reason: string;
-  variant: 'power' | 'status' | 'default';
+  variant: 'power' | 'status' | 'default' | 'level' | 'switch' | 'cover' | 'lock';
   unit?: string;
   draft?: TemplateDraft;
   /** Kurzer Gerätename für Name und Kartentitel des neuen Wächters */

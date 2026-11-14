@@ -18,6 +18,10 @@ describe('Kategorie aus der Vorlage', () => {
     expect(categoryOfTemplate('dishwasher')).toBe('Haushaltsgeräte');
     expect(categoryOfTemplate('vacuum')).toBe('Haushaltsgeräte');
     expect(categoryOfTemplate('bins')).toBe('Müll & Abfall');
+    expect(categoryOfTemplate('window_open')).toBe('Sicherheit');
+    expect(categoryOfTemplate('humid')).toBe('Klima');
+    expect(categoryOfTemplate('ev_plug')).toBe('Energie');
+    expect(categoryOfTemplate('update')).toBe('Sonstiges');
     expect(categoryOfTemplate('rain')).toBe('Wetter');
     expect(withLanguage('en', () => categoryOfTemplate('battery'))).toBe('Batteries');
     expect(withLanguage('en', () => categoryOfTemplate('bins'))).toBe('Waste & recycling');

@@ -275,6 +275,8 @@
         try {
           await api.bulkDeleteWatchers(ids);
           selection = new Set([...selection].filter((id) => !ids.includes(id)));
+          // nichts mehr gewählt: das Auswählen endet (die Wächter sind weg, die Leiste hätte nichts mehr zu tun)
+          if (selection.size === 0) endSelecting();
           toast(tn('{n} Wächter gelöscht', '{n} Wächter gelöscht', ids.length));
         } catch (e) {
           toast(e instanceof ApiError ? e.message : t('Löschen fehlgeschlagen'), { tone: 'error' });

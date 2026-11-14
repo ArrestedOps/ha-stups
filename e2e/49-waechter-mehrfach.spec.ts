@@ -30,12 +30,15 @@ async function setup(request: APIRequestContext) {
     boards.push({ id: b.id, columnId: view.columns.find((c) => !c.isDone && !c.isPlanned)!.id });
   }
   const names = [`Mehrfach ${tag} A`, `Mehrfach ${tag} B`];
+  // eigene Kategorie: am Handy stehen die Wächter auf der Seite ihrer Kategorie
+  const category = `Mehrfach ${tag}`;
   const entities = ['sensor.iphone_rene_battery_level', 'sensor.bad_batterie'];
   const ids: string[] = [];
   for (const [i, name] of names.entries()) {
     const res = await request.post('/api/watchers', {
       data: {
         name,
+        category,
         trigger: { entityId: entities[i], kind: 'below', value: 5, forMin: 10 },
         card: { boardId: boards[i]!.id, columnId: boards[i]!.columnId, title: `Wechseln ${tag} ${i}` },
         assign: { mode: 'none' },
@@ -48,12 +51,13 @@ async function setup(request: APIRequestContext) {
   const cleanup = async () => {
     for (const id of ids) await request.delete(`/api/watchers/${id}`);
   };
-  return { tag, names, ids, boards, conny, state, cleanup };
+  return { tag, names, category, ids, boards, conny, state, cleanup };
 }
 
-/** Auswählen einschalten und die beiden Wächter anhaken; die Zeilen stehen nach Namen in der Liste */
-async function selectBoth(page: Page, names: string[]) {
+/** Auswählen einschalten und die beiden Wächter anhaken; am Handy erst die Seite ihrer Kategorie öffnen (der Desktop zeigt die Tabelle) */
+async function selectBoth(page: Page, names: string[], category: string) {
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  if ((page.viewportSize()?.width ?? 0) < 1024) await page.getByRole('button', { name: `Kategorie ${category} öffnen` }).click();
   await page.getByTestId('select-mode').click();
   for (const n of names) await page.getByRole('checkbox', { name: `${n} auswählen` }).check();
   await expect(page.getByTestId('selection-count')).toHaveText('2 ausgewählt');
@@ -63,7 +67,7 @@ async function bulkFlow(page: Page, request: APIRequestContext, desktop: boolean
   const s = await setup(request);
   try {
     await page.goto('/');
-    await selectBoth(page, s.names);
+    await selectBoth(page, s.names, s.category);
     const bar = page.getByTestId('selection-bar');
 
     // Bearbeiten: Board ist „verschieden“; Name und Board bleiben, wenn nur „Wer“ geändert wird
@@ -140,7 +144,7 @@ test('Wächter-Liste: ein zwischendurch gelöschter Wächter meldet sich, nichts
   const s = await setup(request);
   try {
     await page.goto('/');
-    await selectBoth(page, s.names);
+    await selectBoth(page, s.names, s.category);
     await page.getByTestId('selection-edit').click();
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('button', { name: 'Sperrzeit ändern' }).click();

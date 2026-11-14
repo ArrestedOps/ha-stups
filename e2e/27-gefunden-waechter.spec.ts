@@ -302,7 +302,8 @@ test('Gefunden: drei Batterien auswählen, gemeinsam einrichten (drei Wächter);
     expect(created.map((w) => w.done?.entityId).sort()).toEqual([...ENTITIES].sort());
     expect(new Set(created.map((w) => w.name))).toEqual(new Set(['Batterie schwach']));
     expect(new Set(created.map((w) => w.card.boardId))).toEqual(new Set([board.id]));
-    await expect(page.getByTestId('watcher-categories')).toContainText('Batterie schwach');
+    // am Handy stehen die Kategorien als eigene Seiten: die neuen Wächter landen unter „Batterien“
+    await expect(page.getByTestId('watcher-categories')).toContainText('Batterien');
     for (const w of created) await request.delete(`/api/watchers/${w.id}`);
 
     // Zweiter Durchlauf: zwei Treffer gemeinsam ausblenden, sie stehen unter „Ausgeblendet“

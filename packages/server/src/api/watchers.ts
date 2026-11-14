@@ -6,6 +6,8 @@ import { clampHours, historyOf, unavailableHistory } from '../entity-history.js'
 import { categoryOfEntity, categoryOfTemplate, cleanCategory } from '../watcher-categories.js';
 import { hasPermission, requirePermission } from '../permissions.js';
 import { detectSuggestions, suggestionKey, watcherTemplates } from '../watcher-templates.js';
+import { applyBulkPatch, commonFamily, parseBulkPatch } from '../watcher-bulk.js';
+import type { Watcher } from '../watcher-data.js';
 import { MODES, parseTrigger, parseWatcher, type AssignRule, type WatchTrigger, type WatcherConfig } from '../watcher-types.js';
 import { type ApiKit, type Params } from './kit.js';
 import { t } from '../i18n/index.js';
@@ -19,6 +21,17 @@ const single = (query: object): Record<string, string | undefined> =>
 
 /** Hat sich geändert, was der Wächter beobachtet (Entität, Art, Zielzustand, Wert)? Wartezeit und Zähler gehören nicht dazu. */
 const conditionChanged = (a: WatchTrigger, b: WatchTrigger): boolean => a.entityId !== b.entityId || a.kind !== b.kind || a.to !== b.to || a.value !== b.value;
+
+/** So viele Wächter oder Treffer erlaubt eine Sammel-Anfrage höchstens */
+const MAX_BULK = 500;
+
+/** Die Kennungen einer Sammel-Anfrage: eine Liste eindeutiger Texte, 1 bis 500 */
+function idList(raw: unknown): string[] {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_BULK || raw.some((x) => typeof x !== 'string' || x === '') || new Set(raw).size !== raw.length) {
+    throw new ValidationError(t('Die Auswahl der Wächter fehlt oder ist ungültig (1 bis {max}, ohne Doppelte)', { max: MAX_BULK }));
+  }
+  return raw as string[];
+}
 
 /** Wächter und Diagnose */
 export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
@@ -65,6 +78,27 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     if (ids.some((id) => !people.has(id))) throw new ValidationError(t('Eine gewählte Person gibt es in Stups nicht'));
     const seeing = new Set(store.boardPeopleIds(c.card.boardId));
     if (ids.some((id) => !seeing.has(id))) throw new ValidationError(t('Zur Auswahl stehen nur Personen aus dem Board'));
+  }
+
+  /**
+   * Die geänderte Konfiguration eines vorhandenen Wächters prüfen: das Einzelspeichern und die Sammelbearbeitung gehen beide hierdurch.
+   * `raw` ist der ganze Wächter mit den Änderungen, `assignGiven` sagt, ob die Zuteilung bewusst neu gesetzt wurde.
+   */
+  function prepareUpdate(req: FastifyRequest, current: Watcher, raw: Record<string, unknown>, assignGiven: boolean): { config: WatcherConfig; clearMissing: boolean } {
+    // Ein Wächter ohne Zuständige (feste Person weg) lässt sich ändern, ohne dass die leere Liste erst gefüllt sein muss
+    const keepAssign = current.status === 'assignees_missing' && !assignGiven;
+    const config = parseWatcher({ ...raw, ...(keepAssign ? { assign: { ...current.assign, mode: 'none' } } : {}) });
+    if (keepAssign) config.assign = current.assign;
+    checkWatcherTargets(req, config, current.card.boardId);
+    // „Braucht neue Zuständige" fällt erst weg, wenn Zuständige gewählt sind (ein leerer Kreis hieße „alle im Board": dahin fällt der Wächter nie zurück)
+    const clearMissing = config.assign.mode === 'none' || config.assign.personIds.length > 0;
+    return { config, clearMissing };
+  }
+  /** Speichert eine geprüfte Konfiguration; das Stupsen der offenen Karte folgt der neuen Regel */
+  function saveUpdate(id: string, config: WatcherConfig, clearMissing: boolean): void {
+    deps.watcherData!.update(id, config, clearMissing);
+    const open = store.openCardOfWatcher(id);
+    if (open) store.syncWatcherNudge(open.id, config.nudge ? { anchor: 'created', ...config.nudge, atTime: null } : null);
   }
 
   /** Karten aus Boards, die die Person nicht sieht, tauchen im Wächter nicht auf (die offene Karte wird weggelassen) */
@@ -255,19 +289,41 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       return watcherView(current.id);
     }
     const { id: _id, ...rest } = current;
-    // Ein Wächter ohne Zuständige (feste Person weg) lässt sich umbenennen, ohne dass die leere Liste erst gefüllt sein muss
-    const keepAssign = current.status === 'assignees_missing' && !('assign' in b);
-    const config = parseWatcher({ ...rest, ...b, ...(keepAssign ? { assign: { ...rest.assign, mode: 'none' } } : {}) });
-    if (keepAssign) config.assign = rest.assign;
-    checkWatcherTargets(req, config, current.card.boardId);
-    // „Braucht neue Zuständige" fällt erst weg, wenn Zuständige gewählt sind (ein leerer Kreis hieße „alle im Board": dahin fällt der Wächter nie zurück)
-    const clearMissing = config.assign.mode === 'none' || config.assign.personIds.length > 0;
-    data.update(current.id, config, clearMissing);
-    const open = store.openCardOfWatcher(current.id);
-    if (open) store.syncWatcherNudge(open.id, config.nudge ? { anchor: 'created', ...config.nudge, atTime: null } : null);
+    const { config, clearMissing } = prepareUpdate(req, current, { ...rest, ...b }, 'assign' in b);
+    saveUpdate(current.id, config, clearMissing);
     const metNow = await engine.onSaved(current.id);
     // gefragt wird nur, wenn sich Entität oder Bedingung geändert haben (nicht beim Umbenennen und Co.)
     return { ...watcherView(current.id), metNow: conditionChanged(current.trigger, config.trigger) ? metNow : null };
+  });
+  /**
+   * Mehrere Wächter auf einmal ändern: `{ ids, patch }`. Der Patch fasst nur an, was er nennt (nie Entität, Name oder Kartentitel);
+   * Auslöser-Felder gehen nur, wenn alle Wächter dieselbe Auslöser-Art (und bei Schwellwerten dieselbe Einheit) haben. Jeder Wächter
+   * läuft durch dieselbe Prüfung wie das Einzelspeichern; erst wenn alle gültig sind, wird in einer Transaktion gespeichert.
+   */
+  app.post('/api/watchers/bulk', async (req) => {
+    requirePermission(req, 'watchers');
+    const { engine, data } = watcherEngine();
+    const b = body(req);
+    const ids = idList(b.ids);
+    const current = ids.map((id) => data.get(id)); // 404 bei einer unbekannten Kennung, bevor etwas geschieht
+    const units = new Map(engine.view().map((v) => [v.id, v.entityUnit]));
+    const patch = parseBulkPatch(b.patch, commonFamily(current.map((w) => ({ trigger: w.trigger, unit: units.get(w.id) ?? null }))));
+    const keys = Object.keys(patch);
+    if (keys.length === 0) throw new ValidationError(t('Die Änderung ist leer'));
+    if (keys.every((k) => k === 'category')) {
+      // nur die Kategorie: nichts wird neu angemeldet, kein Status zurückgesetzt
+      store.transaction(() => current.forEach((w) => data.setCategory(w.id, cleanCategory(patch.category))));
+    } else if (keys.every((k) => k === 'active')) {
+      // nur pausieren oder wieder einschalten
+      store.transaction(() => current.forEach((w) => data.setActive(w.id, patch.active === true)));
+      if (patch.active === true) for (const w of current) await engine.onSaved(w.id);
+      else engine.syncSubscriptions();
+    } else {
+      const prepared = current.map((w) => ({ w, ...prepareUpdate(req, w, applyBulkPatch(w, patch) as unknown as Record<string, unknown>, patch.assign !== undefined) }));
+      store.transaction(() => prepared.forEach((p) => saveUpdate(p.w.id, p.config, p.clearMissing)));
+      for (const p of prepared) await engine.onSaved(p.w.id);
+    }
+    return { items: hideCards(req, ids.map((id) => watcherView(id)!)) };
   });
   app.delete<{ Params: Params }>('/api/watchers/:id', async (req, reply) => {
     requirePermission(req, 'watchers');

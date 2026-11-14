@@ -70,7 +70,7 @@ describe('Symbol-Bibliothek', () => {
     expect(symbolName('gibt-es-nicht')).toBe(symbolName(DEFAULT_SYMBOL));
   });
 
-  it('die Symbole, die der Server Wächter-Karten gibt, gehören zur Bibliothek', () => {
+  it('die Symbole, die der Server Wächter-Aufgaben gibt, gehören zur Bibliothek', () => {
     const ids = new Set(SYMBOLS.map((s) => s.id));
     expect(WATCHER_ICON_IDS.length).toBeGreaterThan(10);
     for (const n of WATCHER_ICON_IDS) expect(ids.has(n), n).toBe(true);

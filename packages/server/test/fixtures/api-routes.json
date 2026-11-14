@@ -162,6 +162,7 @@
   "POST /api/house/channels",
   "POST /api/house/channels/:id/test",
   "POST /api/icons/apply",
+  "POST /api/nudges/:id/reply",
   "POST /api/passkeys",
   "POST /api/passkeys/options",
   "POST /api/push/test",

@@ -77,23 +77,23 @@ beforeEach(() => {
 const card = (extra: object) =>
   store.createCard(boardId, { columnId: openCol, title: 'Bad putzen', ...extra }, rene.id);
 
-describe('Neue Karte von einem Wächter', () => {
-  it('sagt der zugewiesenen Person gleich Bescheid, mit „Erledigt", wenn die Karte einen Termin hat', async () => {
+describe('Neue Aufgabe von einem Wächter', () => {
+  it('sagt der zugewiesenen Person gleich Bescheid, mit „Erledigt", wenn die Aufgabe einen Termin hat', async () => {
     const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [rene.id] });
     await makeNotifier().notifyAssigned(c, [rene.id]);
     expect(calls.map((x) => x.service).sort()).toEqual(['svc_rene', 'svc_rene_ipad']);
     expect(calls[0]!.data).toMatchObject({
       title: 'Bad putzen',
-      message: 'Neue Karte für dich · fällig heute 10:00',
+      message: 'Neue Aufgabe für dich · fällig heute 10:00',
       data: { actions: [{ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, title: 'Erledigt' }] },
     });
   });
 
-  it('ohne Termin gibt es keinen „Erledigt"-Knopf, nur die Karte zum Öffnen', async () => {
+  it('ohne Termin gibt es keinen „Erledigt"-Knopf, nur die Aufgabe zum Öffnen', async () => {
     const c = card({ assigneeIds: [conny.id] });
     await makeNotifier().notifyAssigned(c, [conny.id]);
     expect(calls).toHaveLength(1);
-    expect(calls[0]!.data.message).toBe('Neue Karte für dich');
+    expect(calls[0]!.data.message).toBe('Neue Aufgabe für dich');
     expect(calls[0]!.data.data.actions).toBeUndefined();
     expect(calls[0]!.data.data.url).toContain(`?card=${c.id}`);
   });
@@ -161,7 +161,7 @@ describe('Fälligkeit', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('meldet erledigte, archivierte und gelöschte Karten nicht', async () => {
+  it('meldet erledigte, archivierte und gelöschte Aufgaben nicht', async () => {
     const done = card({ title: 'erledigt', dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id] });
     const gone = card({ title: 'gelöscht', dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id] });
     store.completeCard(done.id, { by: rene.id, source: 'app' });
@@ -179,7 +179,7 @@ describe('Fälligkeit', () => {
     await expect(makeNotifier().tick()).resolves.toBe(1);
   });
 
-  it('eine wiederkehrende Karte meldet sich zum neuen Termin erneut', async () => {
+  it('eine wiederkehrende Aufgabe meldet sich zum neuen Termin erneut', async () => {
     const c = card({
       dueAt: '2026-11-01T09:00:00Z',
       assigneeIds: [conny.id],
@@ -211,7 +211,7 @@ describe('Fälligkeit', () => {
     expect(calls[1]!.data.data.actions[0].action).toBe(`KANBAN_DONE:${c.id}:2026-11-01T09:02:00.000Z`);
   });
 
-  it('eine wiederkehrende Karte, per Push erledigt und auf „gleich" gestellt, meldet sich zum neuen Termin', async () => {
+  it('eine wiederkehrende Aufgabe, per Push erledigt und auf „gleich" gestellt, meldet sich zum neuen Termin', async () => {
     const c = card({
       dueAt: '2026-11-01T09:00:00Z',
       assigneeIds: [conny.id],
@@ -221,7 +221,7 @@ describe('Fälligkeit', () => {
     now = new Date('2026-11-01T09:00:00Z');
     await n.tick();
     await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'ha-conny' });
-    // Die nächste Karte hat den Termin zwei Tage später; wer ihn auf „in 2 Minuten" ändert, bekommt eine Nachricht
+    // Die nächste Aufgabe hat den Termin zwei Tage später; wer ihn auf „in 2 Minuten" ändert, bekommt eine Nachricht
     const next = store.getBoardView(boardId).cards.find((x) => x.repeatedFrom === c.id)!;
     expect(next.dueAt).toBe('2026-11-03T09:00:00.000Z');
     store.updateCard(next.id, { dueAt: '2026-11-01T09:02:00Z' }, conny.id);
@@ -250,7 +250,7 @@ describe('Fälligkeit', () => {
     expect(calls[0]!.service).toBe('svc_conny');
     expect(calls[0]!.data).toMatchObject({
       title: 'Müll',
-      message: 'Erledigt · nächste Karte Di 10:00', // der 01.11.2026 ist ein Sonntag, zwei Tage später Dienstag
+      message: 'Erledigt · nächste Aufgabe Di 10:00', // der 01.11.2026 ist ein Sonntag, zwei Tage später Dienstag
       data: { tag: `stups-card-${c.id}`, push: { 'interruption-level': 'passive' } },
     });
     expect(calls[0]!.data.data.actions).toBeUndefined();
@@ -266,7 +266,7 @@ describe('Fälligkeit', () => {
     expect(calls).toEqual([{ service: 'svc_conny', data: { message: 'clear_notification', data: { tag: `stups-card-${c.id}` } } }]);
   });
 
-  it('enthält Erledigt-Button, Tag und Link zur Karte', async () => {
+  it('enthält Erledigt-Button, Tag und Link zur Aufgabe', async () => {
     store.setSettings({ panelPath: '/c552c524_stups' });
     const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id] });
     now = new Date('2026-11-01T09:00:00Z');
@@ -477,7 +477,7 @@ describe('Tageszusammenfassung', () => {
 });
 
 describe('Erledigt-Button in der Push-Nachricht', () => {
-  it('erledigt die Karte als die tippende Person und räumt die Nachrichten auf', async () => {
+  it('erledigt die Aufgabe als die tippende Person und räumt die Nachrichten auf', async () => {
     const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [rene.id, conny.id] });
     let changed = 0;
     const n = makeNotifier({ onChange: () => (changed += 1) });
@@ -504,7 +504,7 @@ describe('Erledigt-Button in der Push-Nachricht', () => {
     expect(store.listCompletions(c.id)).toHaveLength(1);
   });
 
-  it('eine Nachricht zu einem alten Termin lässt die wiederkehrende Karte in Ruhe', async () => {
+  it('eine Nachricht zu einem alten Termin lässt die wiederkehrende Aufgabe in Ruhe', async () => {
     const c = card({
       dueAt: '2026-11-01T09:00:00Z',
       assigneeIds: [conny.id],
@@ -513,11 +513,11 @@ describe('Erledigt-Button in der Push-Nachricht', () => {
     const n = makeNotifier();
     now = new Date('2026-11-01T09:00:00Z');
     expect(await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'ha-conny' })).toBe('completed');
-    // Die Karte ist erledigt, eine neue wartet mit dem nächsten Termin
+    // Die Aufgabe ist erledigt, eine neue wartet mit dem nächsten Termin
     expect(store.getCard(c.id).completedAt).not.toBeNull();
     const next = store.getBoardView(boardId).cards.find((x) => x.repeatedFrom === c.id)!;
     expect(next.dueAt).toBe('2026-11-07T09:00:00.000Z');
-    // alte Nachricht vom 01.11. wird noch einmal angetippt: sie betrifft nur die erledigte Karte
+    // alte Nachricht vom 01.11. wird noch einmal angetippt: sie betrifft nur die erledigte Aufgabe
     expect(await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'ha-conny' })).toBe('already_done');
     expect(store.getCard(next.id).completedAt).toBeNull();
     expect(store.getCard(next.id).dueAt).toBe('2026-11-07T09:00:00.000Z');
@@ -525,7 +525,7 @@ describe('Erledigt-Button in der Push-Nachricht', () => {
     expect(store.listCompletions(next.id)).toHaveLength(0);
   });
 
-  it('ignoriert fremde Aktionen und unbekannte Karten', async () => {
+  it('ignoriert fremde Aktionen und unbekannte Aufgaben', async () => {
     const n = makeNotifier();
     expect(await n.handleAction({ action: 'ANDERE_APP', userId: 'x' })).toBe('ignored');
     expect(await n.handleAction({ action: 'KANBAN_DONE:gibt-es-nicht:2026-11-01T09:00:00.000Z' })).toBe('unknown_card');
@@ -554,7 +554,7 @@ describe('Erledigt-Button in der Push-Nachricht', () => {
     expect(await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'ha-mia' })).toBe('awaiting');
   });
 
-  it('S3: wer der Karte nicht zugewiesen ist, kann sie in der Nachricht nicht erledigen', async () => {
+  it('S3: wer der Aufgabe nicht zugewiesen ist, kann sie in der Nachricht nicht erledigen', async () => {
     const c = card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id] });
     const n = makeNotifier();
     expect(await n.handleAction({ action: `KANBAN_DONE:${c.id}:2026-11-01T09:00:00.000Z`, userId: 'ha-rene' })).toBe('ignored');
@@ -725,7 +725,7 @@ describe('Stupsen', () => {
     expect(await n.handleAction({ action: `KANBAN_NUDGE_LATER:${id}`, userId: 'ha-conny' })).toBe('stale');
   });
 
-  it('„Erledigt" erledigt die Karte und meldet es dem Absender', async () => {
+  it('„Erledigt" erledigt die Aufgabe und meldet es dem Absender', async () => {
     const c = card({ title: 'Mülltonne raus', assigneeIds: [conny.id] });
     const id = nudge(c.id);
     const n = makeNotifier();
@@ -741,7 +741,7 @@ describe('Stupsen', () => {
     expect(calls.some((x) => x.service === 'svc_conny' && x.data.message === 'clear_notification')).toBe(true);
   });
 
-  it('„Erledigt" bei einer Wiederholung: neue Karte, Nachricht wird durch die Bestätigung ersetzt', async () => {
+  it('„Erledigt" bei einer Wiederholung: neue Aufgabe, Nachricht wird durch die Bestätigung ersetzt', async () => {
     const c = card({ title: 'Müll', dueAt: '2026-11-01T09:00:00Z', assigneeIds: [conny.id], recurrence: { type: 'fixed', freq: 'daily', every: 2 } });
     const id = nudge(c.id);
     const n = makeNotifier();
@@ -751,7 +751,7 @@ describe('Stupsen', () => {
     expect(await n.handleAction({ action: `KANBAN_NUDGE_DONE:${id}`, userId: 'ha-conny' })).toBe('completed');
     await n.idle();
     expect(store.getBoardView(boardId).cards.some((x) => x.repeatedFrom === c.id)).toBe(true);
-    expect(calls.some((x) => x.service === 'svc_conny' && String(x.data.message).startsWith('Erledigt · nächste Karte'))).toBe(true);
+    expect(calls.some((x) => x.service === 'svc_conny' && String(x.data.message).startsWith('Erledigt · nächste Aufgabe'))).toBe(true);
   });
 
   it('wer erledigt, ohne der Empfänger zu sein, löst dieselbe Rückmeldung aus; erledigt der Absender selbst, gibt es keine', async () => {
@@ -787,7 +787,7 @@ describe('Stupsen', () => {
     expect(await n.handleAction({ action: 'KANBAN_NUDGE_ACK:gibt-es-nicht', userId: 'ha-conny' })).toBe('stale');
     store.completeCard(c.id, { by: rene.id, source: 'app' });
     calls.length = 0;
-    expect(await n.handleAction({ action: `KANBAN_NUDGE_DONE:${id}`, userId: 'ha-conny' })).toBe('stale'); // Karte schon erledigt
+    expect(await n.handleAction({ action: `KANBAN_NUDGE_DONE:${id}`, userId: 'ha-conny' })).toBe('stale'); // Aufgabe schon erledigt
     expect(calls).toHaveLength(0);
     expect(store.getNudge(id)!.reply).toBe('closed');
   });
@@ -818,7 +818,7 @@ describe('Beta: Aktionen mit eigenem Präfix', () => {
     expect(store.getCard(c.id).completedAt).not.toBeNull();
   });
 
-  it('die normale App ignoriert Aktionen der Beta, auch wenn die Karte bei ihr dieselbe Kennung hat (kopierte Daten)', async () => {
+  it('die normale App ignoriert Aktionen der Beta, auch wenn die Aufgabe bei ihr dieselbe Kennung hat (kopierte Daten)', async () => {
     const c = card({ dueAt: due, assigneeIds: [conny.id] });
     const stable = makeNotifier();
     expect(await stable.handleAction({ action: `BETA_KANBAN_DONE:${c.id}:${due}`, userId: 'ha-conny' })).toBe('ignored');

@@ -25,7 +25,7 @@
     children?: Snippet;
   } = $props();
   const edge = $derived(px ?? TILE_PX[size]);
-  const radius = $derived(round ?? (size === 'sm' ? 9 : size === 'lg' ? 14 : 11));
+  const radius = $derived(round ?? (size === 'sm' ? 8 : size === 'lg' ? 12 : 9));
 </script>
 
 <span class="tile tile-{color}" style:width="{edge}px" style:height="{edge}px" style:border-radius="{radius}px" aria-hidden="true">

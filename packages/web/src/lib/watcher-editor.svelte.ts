@@ -2,9 +2,9 @@ import { api, ApiError, type BoardView, type HaEntity, type SavedWatcher, type W
 import { boardCounts, boardPeople, watcherBoardOption } from './boardAccess';
 import { t } from './i18n/index.svelte';
 import type { EntityHistory } from './history';
-import { can, closeSheet, openSettings, openSheet, toast, ui } from './store.svelte';
+import { can, closeSheet, openSheet, toast, ui } from './store.svelte';
 import type { OrderView, TemplateDraft, WatcherSuggestion, WatcherTemplate } from './watcher-types';
-import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, type WatcherForm } from './watchers';
+import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, withCategory, type WatcherForm } from './watchers';
 import { askCard, metNowOf } from './watcher-ask';
 import { backAction } from './watcher-wizard';
 
@@ -23,7 +23,7 @@ export class WatcherEditor {
   item = $state<WatcherItem | null>(null);
   runs = $state<WatcherRun[]>([]);
   templates = $state<WatcherTemplate[]>([]);
-  /** Warum sich die Karte nicht von selbst erledigen kann (leer = sie kann) */
+  /** Warum sich die Aufgabe nicht von selbst erledigen kann (leer = sie kann) */
   selfNote = $state('');
   view = $state<BoardView | null>(null);
   /** Assistent: Schritt 1 bis 4 */
@@ -73,18 +73,16 @@ export class WatcherEditor {
     this.onback = opts.onback;
   }
 
-  /** Aus Einstellungen › Wächter geht es dorthin zurück; aus dem Reiter Wächter schließt es das Fenster, von anderswo geht es in die Einstellungen */
+  /** Schließt das Fenster (der Reiter Wächter steht darunter); in der Einrichtung bestimmt `onback`, wohin es geht */
   back = (): void => {
     if (this.onback) return this.onback();
-    const fromSettings = ui.sheet?.type === 'watcher' && ui.sheet.from === 'settings';
-    if (!fromSettings && ui.tab === 'watchers') closeSheet();
-    else openSettings('watchers');
+    closeSheet();
   };
 
   personName = (pid: string): string => ui.people.find((p) => p.id === pid)?.displayName ?? '?';
 
   /** `personIds`: wer bei „Wer kommt infrage?" schon gewählt ist (die Einrichtung wählt die Personen vor, die im ersten Schritt dabei sind) */
-  async load(template: string | undefined, hit: Hit | undefined, personIds?: string[]): Promise<void> {
+  async load(template: string | undefined, hit: Hit | undefined, personIds?: string[], category?: string): Promise<void> {
     try {
       if (this.id) {
         const res = await api.watchers();
@@ -111,6 +109,7 @@ export class WatcherEditor {
     const wanted = !this.id && template ? this.templates.find((x) => x.id === template) : undefined;
     if (wanted) this.applyTemplate(wanted, hit);
     if (!this.id && personIds && personIds.length > 0) this.form.personIds = personIds;
+    if (!this.id && category) this.form = withCategory(this.form, category);
   }
 
   // ---------- Vom Server nachladen (die Oberfläche ruft sie aus ihren Effekten auf) ----------
@@ -277,7 +276,7 @@ export class WatcherEditor {
     this.busy = false;
   }
 
-  /** Gilt die Bedingung schon und löst der Wächter deshalb nicht von selbst aus, fragt die App, ob die Karte jetzt entstehen soll */
+  /** Gilt die Bedingung schon und löst der Wächter deshalb nicht von selbst aus, fragt die App, ob die Aufgabe jetzt entstehen soll */
   private askAfterSave(saved: SavedWatcher): void {
     const met = metNowOf(saved);
     if (!met) return;
@@ -286,9 +285,9 @@ export class WatcherEditor {
         await api.fireWatcherNow(saved.id);
         ui.watchers = await api.watchers().catch(() => ui.watchers);
         ui.rev += 1;
-        toast(t('Karte angelegt'));
+        toast(t('Aufgabe angelegt'));
       } catch (e) {
-        toast(e instanceof ApiError ? e.message : t('Karte konnte nicht angelegt werden'), { tone: 'error' });
+        toast(e instanceof ApiError ? e.message : t('Aufgabe konnte nicht angelegt werden'), { tone: 'error' });
       }
     });
   }
@@ -298,7 +297,7 @@ export class WatcherEditor {
     this.busy = true;
     try {
       await api.testWatcher(this.id);
-      toast(t('Testkarte angelegt'));
+      toast(t('Testaufgabe angelegt'));
       this.runs = await api.watcherRuns(this.id).catch(() => this.runs);
     } catch (e) {
       toast(e instanceof ApiError ? e.message : t('Test fehlgeschlagen'), { tone: 'error' });
@@ -332,7 +331,7 @@ export class WatcherEditor {
     if (!id) return;
     ui.confirm = {
       title: t('Wächter löschen?'),
-      text: t('„{name}“ legt danach keine Karten mehr an. Bereits angelegte Karten bleiben.', { name: this.form.name }),
+      text: t('„{name}“ legt danach keine Aufgaben mehr an. Bereits angelegte Aufgaben bleiben.', { name: this.form.name }),
       label: t('Löschen'),
       run: async () => {
         try {

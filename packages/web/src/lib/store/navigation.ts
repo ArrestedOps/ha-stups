@@ -49,8 +49,8 @@ export function restoreView(): void {
 }
 
 /**
- * Eine neue Karte soll man sehen: Verstecken sie die Personenfilter (Start mit „Meine"), wechselt die Ansicht für Boards und
- * Aufgaben auf „Alle", statt die Karte unauffindbar zu lassen.
+ * Eine neue Aufgabe soll man sehen: Verstecken sie die Personenfilter (Start mit „Meine"), wechselt die Ansicht für Boards und
+ * Aufgaben auf „Alle", statt die Aufgabe unauffindbar zu lassen.
  */
 export function revealNewCard(card: { assigneeIds: string[] }): void {
   if (hiddenByPerson(card.assigneeIds, ui.filter, ui.me?.id ?? null)) {
@@ -62,6 +62,15 @@ export function revealNewCard(card: { assigneeIds: string[] }): void {
   if (hiddenInList) setScheduleFilter({ personIds: [], unassigned: false });
 }
 
+/** Reiter Aufgaben als Liste oder als Kalender öffnen (die Leiste unten hat beides) */
+export function goTasks(to: 'list' | 'calendar'): void {
+  ui.tab = 'tasks';
+  ui.sheet = null;
+  ui.detailId = null;
+  ui.query = '';
+  ui.tasksGoto = to;
+}
+
 export function selectTab(tab: Tab): void {
   ui.tab = tab;
   ui.sheet = null;
@@ -70,8 +79,8 @@ export function selectTab(tab: Tab): void {
 }
 
 /**
- * Wo eine Karte aufgeht. Auf dem Desktop steht sie in Aufgaben in der Detailspalte rechts (die Liste bleibt sichtbar), überall sonst
- * (Boards, Kalender, Handy) als Sheet. Alle Wege, eine Karte zu öffnen, laufen hierüber.
+ * Wo eine Aufgabe aufgeht. Auf dem Desktop steht sie in Aufgaben in der Detailspalte rechts (die Liste bleibt sichtbar), überall sonst
+ * (Boards, Kalender, Handy) als Sheet. Alle Wege, eine Aufgabe zu öffnen, laufen hierüber.
  */
 export function openCard(id: string): void {
   if (ui.desktop && ui.tab === 'tasks' && !ui.tasksCalendar) {
@@ -83,7 +92,7 @@ export function openCard(id: string): void {
 }
 export const closeDetail = (): void => void (ui.detailId = null);
 
-/** Das Fenster wird breiter oder schmaler als 1024 px: eine offene Karte wechselt zwischen Detailspalte und Sheet */
+/** Das Fenster wird breiter oder schmaler als 1024 px: eine offene Aufgabe wechselt zwischen Detailspalte und Sheet */
 export function setDesktop(on: boolean): void {
   ui.desktop = on;
   if (!on && ui.detailId) {
@@ -104,25 +113,33 @@ export function filterContext(): FilterContext {
 /** Der Filter von Aufgaben und Kalender, wie er für diese Rolle gilt (ein Kind: ohne „Wer" und „nur von Wächtern") */
 export const activeScheduleFilter = (): ScheduleFilter => effectiveFilter(ui.sf, ui.isChild);
 
+/** Wessen Aufgaben und Wächter die Ansicht zeigt (Seitenleiste „Ansicht für“): leer heißt alle; dieselbe Wahl gilt für das Kanban eines Boards */
+export function setPersonScope(ids: string[]): void {
+  setScheduleFilter({ personIds: ids, unassigned: false });
+  const mine = ids.length === 1 && ids[0] === ui.me?.id;
+  ui.filter.onlyMine = mine;
+  ui.filter.personIds = mine ? [] : ids;
+}
+
 /** Ändert den Filter von Agenda und Kalender und merkt ihn sich auf diesem Gerät */
 export function setScheduleFilter(patch: Partial<ScheduleFilter>): void {
   ui.sf = { ...ui.sf, ...patch };
   memo.set('stups.schedule', JSON.stringify(ui.sf));
 }
 
-/** Öffnet eine Karte aus Agenda oder Kalender, auch wenn sie in einem anderen Board liegt */
+/** Öffnet eine Aufgabe aus Agenda oder Kalender, auch wenn sie in einem anderen Board liegt */
 export async function openCardAnywhere(card: { id: string; boardId: string }): Promise<void> {
   if (card.boardId !== ui.boardId) await selectBoard(card.boardId);
   openCard(card.id);
 }
 
-/** Öffnet das Karten-Menü („…") einer Karte aus Aufgaben, auch wenn sie in einem anderen Board liegt */
+/** Öffnet das Aufgaben-Menü („…") einer Aufgabe aus Aufgaben, auch wenn sie in einem anderen Board liegt */
 export async function openCardMenuAnywhere(card: { id: string; boardId: string }): Promise<void> {
   if (card.boardId !== ui.boardId) await selectBoard(card.boardId);
   ui.sheet = { type: 'cardMenu', id: card.id };
 }
 
-/** Lässt eine Karte kurz hüpfen: die Rückmeldung nach dem Stupsen */
+/** Lässt eine Aufgabe kurz hüpfen: die Rückmeldung nach dem Stupsen */
 export function hopCard(id: string): void {
   ui.hop = id;
   setTimeout(() => {

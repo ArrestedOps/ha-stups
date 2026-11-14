@@ -2,13 +2,15 @@
   import { t, tn } from '../lib/i18n/index.svelte';
   import type { Card } from '../lib/api';
   import { cardMeta, categoryFg, priorityTone } from '../lib/cardMeta';
+  import { boardColorKey } from '../lib/colors';
+  import { ui } from '../lib/store.svelte';
   import { formatCost, formatDue } from '../lib/datetime';
   import { describeRecurrence } from '../lib/recurrence';
   import Icon from './Icon.svelte';
 
   /**
-   * Die Meta-Zeile unter dem Titel einer Karte wie im Mockup: Symbol und Text, getrennt durch „•"
-   * („Mo, 27. Jan • Ben • 0/3 • 1"). Eine Zeile; was nicht passt, wird hinten abgeschnitten. Alles Weitere steht im Karten-Fenster.
+   * Die Meta-Zeile unter dem Titel einer Aufgabe wie im Mockup: Symbol und Text, getrennt durch „•"
+   * („Mo, 27. Jan • Ben • 0/3 • 1"). Eine Zeile; was nicht passt, wird hinten abgeschnitten. Alles Weitere steht im Aufgaben-Fenster.
    * `quietDue`: ein überfälliger Termin wird nicht rot (in Aufgaben sagt das die Gruppe „Überfällig").
    */
   let {
@@ -17,15 +19,21 @@
     overdue = false,
     categories = [],
     quietDue = false,
+    showBoard = false,
+    people = [],
     wrap = false,
     nowMs = Date.now(),
   }: {
     card: Card;
     done?: boolean;
     overdue?: boolean;
-    /** die Kategorien der Karte: die erste steht mit Farbpunkt in der Zeile, alle als Text für Vorlese-Programme */
+    /** die Kategorien der Aufgabe: die erste steht mit Farbpunkt in der Zeile, alle als Text für Vorlese-Programme */
     categories?: { id: string; name: string; color: string }[];
     quietDue?: boolean;
+    /** der Name des Boards mit Farbpunkt am Ende (Aufgaben über alle Boards) */
+    showBoard?: boolean;
+    /** die Zuständigen mit Vornamen (Handy: das Bild allein sagt nicht, wer es ist) */
+    people?: { displayName: string }[];
     /** Desktop-Karte im Kanban (schmale Spalte): die Teile brechen in die nächste Zeile um, statt hinten abgeschnitten zu werden, ohne „•“ dazwischen */
     wrap?: boolean;
     nowMs?: number;
@@ -33,9 +41,11 @@
 
   const meta = $derived(cardMeta(card, { overdue, isDone: done }, { due: (iso) => formatDue(iso, nowMs), cost: formatCost, recurrence: describeRecurrence }, { categories }));
   const ICON = 14;
+  const boardName = $derived((card as { boardName?: string }).boardName ?? '');
+  const boardKey = $derived(boardColorKey(ui.boards, card.boardId));
 </script>
 
-{#if meta.length || categories.length}
+{#if meta.length || categories.length || people.length || (showBoard && boardName)}
   <span class="flex min-w-0 {wrap ? 'flex-wrap items-center gap-x-3 gap-y-1' : 'items-center gap-1.5 overflow-hidden whitespace-nowrap'}" data-testid="card-meta">
     {#if categories.length}<span class="sr-only" data-testid="card-categories" aria-label={t('Kategorien: {names}', { names: categories.map((c) => c.name).join(', ') })}>{t('Kategorien: {names}', { names: categories.map((c) => c.name).join(', ') })}</span>{/if}
     {#each meta as m, i (m.kind)}
@@ -80,5 +90,13 @@
         <span class="inline-flex shrink-0 items-center gap-1"><Icon name="euro" size={ICON} stroke={1.9} />{m.text}</span>
       {/if}
     {/each}
+    {#if people.length}
+      {#if meta.length && !wrap}<span class="shrink-0 text-sep" aria-hidden="true">•</span>{/if}
+      <span class="inline-flex min-w-0 shrink items-center gap-1" data-testid="card-people"><Icon name="user" size={ICON} stroke={1.9} /><span class="truncate">{people.slice(0, 2).map((p) => p.displayName.split(' ')[0]).join(', ')}{people.length > 2 ? ` +${people.length - 2}` : ''}</span></span>
+    {/if}
+    {#if showBoard && boardName}
+      {#if (meta.length || people.length) && !wrap}<span class="shrink-0 text-sep" aria-hidden="true">•</span>{/if}
+      <span class="inline-flex min-w-0 shrink items-center gap-1.5" data-testid="card-board"><i class="block h-2 w-2 shrink-0 rounded-full" style:background="var(--c-{boardKey}-fg)" aria-hidden="true"></i><span class="truncate">{boardName}</span></span>
+    {/if}
   </span>
 {/if}

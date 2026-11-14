@@ -2,7 +2,7 @@ import type { LanguageChoice } from '../i18n/index.svelte';
 import { clientHeaders, del, get, getList, patch, post, put, send } from './http';
 import { fetchAllPages } from '../paging';
 
-/** So viele Karten holt eine Seite von `GET /api/schedule` höchstens (der Höchstwert des Servers) */
+/** So viele Aufgaben holt eine Seite von `GET /api/schedule` höchstens (der Höchstwert des Servers) */
 const SCHEDULE_PAGE = 2000;
 import type { FeedbackContext, FeedbackItem, FeedbackKind, FeedbackStatus } from '../feedback';
 import type { Permission } from '../permissions';
@@ -79,7 +79,7 @@ export const api = {
   removePerson: (id: string) => del(`access/people/${id}`),
   boards: () => get<BoardSummary[]>('boards'),
   board: (id: string) => get<BoardView>(`boards/${id}`),
-  /** Einzelne Karten (für den Live-Sync); gelöschte und archivierte fehlen in der Antwort */
+  /** Einzelne Aufgaben (für den Live-Sync); gelöschte und archivierte fehlen in der Antwort */
   cardsByIds: (ids: string[]) => get<Card[]>(`cards?ids=${ids.map(encodeURIComponent).join(',')}`),
   createBoard: (name: string, template?: string, access: BoardAccessInput = {}) => post<Board>('boards', { name, ...(template ? { template } : {}), ...access }),
   templates: () => get<TemplateInfo[]>('templates'),
@@ -93,7 +93,7 @@ export const api = {
     if (q.memberIds) p.set('members', q.memberIds.join(','));
     return get<BoardAccessPreview>(`boards/${id}/access-preview?${p}`);
   },
-  /** Boards ohne Besitzer (nur Administratoren): nur Name und Zahl der Karten */
+  /** Boards ohne Besitzer (nur Administratoren): nur Name und Zahl der Aufgaben */
   orphanBoards: () => get<{ id: string; name: string; cards: number }[]>('admin/orphan-boards'),
   deleteOrphanBoard: (id: string) => del(`admin/orphan-boards/${id}`),
   deleteBoard: (id: string) => del(`boards/${id}`),
@@ -126,11 +126,11 @@ export const api = {
   moveCard: (id: string, columnId: string, afterId?: string | null) =>
     post<CardDetail>(`cards/${id}/move`, afterId === undefined ? { columnId } : { columnId, afterId }),
   complete: (id: string) => post<CompleteResult>(`cards/${id}/complete`),
-  /** Ein Bestätiger sagt „Bestätigen" (erledigt die Karte) oder „Nochmal" (nimmt die Anfrage zurück) */
+  /** Ein Bestätiger sagt „Bestätigen" (erledigt die Aufgabe) oder „Nochmal" (nimmt die Anfrage zurück) */
   confirmCard: (id: string) => post<CompleteResult>(`cards/${id}/confirm`),
   rejectCard: (id: string) => post<CardDetail>(`cards/${id}/reject`),
   duplicateCard: (id: string) => post<CardDetail>(`cards/${id}/duplicate`),
-  /** Symbole aus Titeln erkennen (Administrator): Karten ohne Symbol holen, erkannte Symbole zurückgeben */
+  /** Symbole aus Titeln erkennen (Administrator): Aufgaben ohne Symbol holen, erkannte Symbole zurückgeben */
   iconCandidates: () => get<{ id: string; title: string }[]>('icons/candidates'),
   applyIcons: (items: { id: string; icon: string }[]) => post<{ updated: number; skipped: number }>('icons/apply', { items }),
   undo: (completionId: string) => post<CardDetail>(`completions/${completionId}/undo`),
@@ -199,7 +199,7 @@ export const api = {
   pushStatus: () => get<PushStatus>('notifications/status'),
 
   /**
-   * Alle passenden Karten: Der Server liefert höchstens SCHEDULE_PAGE je Antwort und nennt die Gesamtzahl, hier wird weitergeblättert,
+   * Alle passenden Aufgaben: Der Server liefert höchstens SCHEDULE_PAGE je Antwort und nennt die Gesamtzahl, hier wird weitergeblättert,
    * bis alles da ist (ein Fehler bei einer Seite ist ein Fehler für das Ganze, nie eine stillschweigend unvollständige Liste).
    */
   schedule: (q: { from?: string; to?: string; boards?: string[]; done?: boolean; undated?: boolean; completedSince?: string }, signal?: AbortSignal) => {
@@ -208,9 +208,9 @@ export const api = {
     if (q.to) p.set('to', q.to);
     if (q.boards?.length) p.set('boards', q.boards.join(','));
     if (q.done) p.set('done', '1');
-    /** nur offene Karten ohne Termin (Filter „Ohne Termin") */
+    /** nur offene Aufgaben ohne Termin (Filter „Ohne Termin") */
     if (q.undated) p.set('undated', '1');
-    /** nur Karten, die seit diesem Zeitpunkt erledigt wurden („Zuletzt erledigt"), unabhängig von ihrer Fälligkeit */
+    /** nur Aufgaben, die seit diesem Zeitpunkt erledigt wurden („Zuletzt erledigt"), unabhängig von ihrer Fälligkeit */
     if (q.completedSince) p.set('completedSince', q.completedSince);
     p.set('limit', String(SCHEDULE_PAGE));
     return fetchAllPages<ScheduleCard>(async (offset) => {
@@ -225,7 +225,7 @@ export const api = {
   /** Antwort nach Anlegen und Ändern: mit `metNow`, wenn die Bedingung schon erfüllt ist und nichts von selbst auslöst (dann fragt die App) */
   createWatcher: (b: WatcherInput) => post<SavedWatcher>('watchers', b),
   updateWatcher: (id: string, b: Partial<WatcherInput>) => patch<SavedWatcher>(`watchers/${id}`, b),
-  /** „Ja, Karte erstellen“ auf diese Rückfrage (409, wenn die Bedingung nicht mehr gilt oder schon eine Karte offen ist) */
+  /** „Ja, Aufgabe erstellen“ auf diese Rückfrage (409, wenn die Bedingung nicht mehr gilt oder schon eine Aufgabe offen ist) */
   fireWatcherNow: (id: string) => post<WatcherItem>(`watchers/${id}/fire-now`),
   deleteWatcher: (id: string) => del(`watchers/${id}`),
   testWatcher: (id: string) => post<WatcherItem>(`watchers/${id}/test`),
@@ -263,6 +263,8 @@ export const api = {
   exportData: () => post<{ dir: string; bytes: number; files: boolean }>('admin/export'),
 
   nudgeInfo: (cardId: string) => get<NudgeInfo>(`cards/${cardId}/nudges`),
+  /** Antwort auf einen Stups an mich: erledigt, mach ich, später */
+  nudgeReply: (nudgeId: string, action: 'done' | 'ack' | 'later') => post<{ outcome: string }>(`nudges/${nudgeId}/reply`, { action }),
   nudge: (cardId: string, b: { to: string[]; template?: NudgeTemplate; text?: string }) =>
     post<NudgeResult>(`cards/${cardId}/nudge`, b),
 };

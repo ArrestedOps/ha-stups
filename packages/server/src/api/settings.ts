@@ -57,7 +57,7 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
     const people = store.people();
     const byId = new Map(people.map((p) => [p.id, p]));
     const now = Date.now();
-    // Offene Karten mit Termin: wer bekommt dafür eine Nachricht?
+    // Offene Aufgaben mit Termin: wer bekommt dafür eine Nachricht?
     const me = req.user?.id ?? null;
     const upcoming = store
       .openDueCards()
@@ -104,8 +104,8 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
     };
   });
   // Test-Nachricht an die eigenen Geräte über den Push-Weg der Betriebsart (mit ntfy zusätzlich ein Knopf, der den Rückweg prüft).
-  // Mit { kind: 'onboarding', cardTitle?, personId? } die Testnachricht der Einrichtung: so wie die Nachricht zu einer neuen Karte eines Wächters
-  // (Kartentitel, „Neue Karte für dich · fällig …", nur der Knopf Erledigt), in der Sprache der Person, die sie bekommt. `personId`: ein Administrator,
+  // Mit { kind: 'onboarding', cardTitle?, personId? } die Testnachricht der Einrichtung: so wie die Nachricht zu einer neuen Aufgabe eines Wächters
+  // (Aufgabentitel, „Neue Aufgabe für dich · fällig …", nur der Knopf Erledigt), in der Sprache der Person, die sie bekommt. `personId`: ein Administrator,
   // der selbst keine Person ist, wählt, an wessen Handy sie geht. Sie geht am Tor der Beta vorbei: eine einzelne Test-Nachricht an eine Person
   // verdoppelt keine Erinnerungen an die Familie. Der Knopf tut nichts, der Notifier ignoriert die Aktion.
   app.post('/api/push/test', async (req) => {
@@ -139,7 +139,7 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
     const message: PushMessage = onboarding
       ? withLanguage(pushLanguage(store, target.id), () => ({
           title: cardTitle ?? t('Waschmaschine ausräumen'),
-          body: t('Neue Karte für dich · fällig {due}', { due: formatDue(nowMs + 30 * 60_000, nowMs, deps.timeZone?.() ?? 'Europe/Berlin') }),
+          body: t('Neue Aufgabe für dich · fällig {due}', { due: formatDue(nowMs + 30 * 60_000, nowMs, deps.timeZone?.() ?? 'Europe/Berlin') }),
           tag: 'stups-test',
           group: 'stups',
           open: {},

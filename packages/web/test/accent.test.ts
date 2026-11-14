@@ -58,13 +58,13 @@ describe('Farbberechnung', () => {
     }
   });
 
-  it('Akzentschrift ist auf Karte und Hintergrund lesbar (Kontrast mindestens 4,5)', () => {
+  it('Akzentschrift ist auf Aufgabe und Hintergrund lesbar (Kontrast mindestens 4,5)', () => {
     const surface = { dark: rgb('#1a181d'), light: rgb('#ffffff') };
     const bg = { dark: rgb('#0e0d10'), light: rgb('#fff6ee') };
     for (let hue = 0; hue < 360; hue++) {
       for (const scheme of ['dark', 'light'] as const) {
         const text = rgb(accentVars(hue, scheme)['--accent-text']!);
-        expect(contrast(text, surface[scheme]), `${hue} ${scheme} Karte`).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(text, surface[scheme]), `${hue} ${scheme} Aufgabe`).toBeGreaterThanOrEqual(4.5);
         expect(contrast(text, bg[scheme]), `${hue} ${scheme} Hintergrund`).toBeGreaterThanOrEqual(4.5);
       }
     }

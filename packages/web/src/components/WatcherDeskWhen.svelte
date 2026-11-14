@@ -127,7 +127,7 @@
       {/if}
     </label>
     {#if open}
-      <ul id="{uid}-list" role="listbox" aria-label={t('Entität suchen')} class="absolute top-[calc(100%+6px)] right-0 left-0 z-20 flex max-h-72 flex-col gap-1 overflow-y-auto rounded-row border border-line bg-surface2 p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.45)]" data-testid="desk-entity-list">
+      <ul id="{uid}-list" role="listbox" aria-label={t('Entität suchen')} class="absolute top-[calc(100%+6px)] right-0 left-0 z-20 flex max-h-72 flex-col gap-1 overflow-y-auto rounded-row bg-surface2 p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.45)]" data-testid="desk-entity-list">
         {#each results as e, i (e.entityId)}
           <!-- Tastatur: Pfeile und Enter im Suchfeld (Kombinationsfeld), die Zeilen selbst nehmen keinen Fokus -->
           <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -194,7 +194,7 @@
     {#if f.kind === 'calendar_event'}
       <span class="text-[14px] text-fg2">{t('Wie viele Stunden vorher?')}</span>
       <DeskField bind:value={f.leadHours} label={t('Vorlauf in Stunden')} unit={t('Std.')} width="w-24" inputmode="numeric" />
-      <span class="text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Karte')}</span>
+      <span class="text-[13px] text-fg2">{t('So früh vor dem Termin entsteht die Aufgabe')}</span>
     {:else if f.kind === 'forecast'}
       <span class="text-[14px] text-fg2">{t('Regen in den nächsten …')}</span>
       <DeskField bind:value={f.forecastHours} label={t('Stunden im Voraus')} unit={t('Std.')} width="w-24" inputmode="numeric" />

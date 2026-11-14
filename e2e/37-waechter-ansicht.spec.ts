@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant, Handy 390 × 844). Reiter Wächter: alle Wächter immer sichtbar, in Kategorien zum
 // Zu- und Aufklappen, je Wächter ein Schalter „aktiv/aus", Kategorie beim Anlegen vorgeschlagen, Sammelknopf „Kategorien vorschlagen".
@@ -36,9 +36,9 @@ type S = Awaited<ReturnType<typeof setup>>;
 
 const make = (s: S, name: string, entityId: string, extra: Record<string, unknown> = {}) => ({
   name,
-  // Schwelle 5: die Batterien (12 %, 14 %) liegen darüber, der Wächter bleibt ruhig (unter 20 % legte er nach 10 Minuten sofort eine Karte an)
+  // Schwelle 5: die Batterien (12 %, 14 %) liegen darüber, der Wächter bleibt ruhig (unter 20 % legte er nach 10 Minuten sofort eine Aufgabe an)
   trigger: { entityId, kind: 'below', value: 5, forMin: 10 },
-  card: { boardId: s.boardId, columnId: s.columnId, title: `Karte ${name}`, due: { kind: 'none' } },
+  card: { boardId: s.boardId, columnId: s.columnId, title: `Aufgabe ${name}`, due: { kind: 'none' } },
   assign: { mode: 'fixed', personIds: [s.rene.id] },
   cooldownMin: 0,
   ...extra,
@@ -52,7 +52,7 @@ async function openList(page: Page, s: S) {
   await expect(page.getByTestId('watcher-list')).toBeVisible();
 }
 
-test('Alle Wächter sind immer sichtbar, nach Kategorie gruppiert; Gruppen klappen zu und auf und der Zustand bleibt', async ({ page, request }) => {
+test('Kategorien sind eigene Seiten (einheitlich), gleiche Namen ohne Beachtung der Groß-/Kleinschreibung sind eine Kategorie', async ({ page, request }) => {
   await clear(request);
   const s = await setup(request);
   const long = `Sehr langer Wächtername ${'x'.repeat(40)} ${s.tag}`;
@@ -65,33 +65,54 @@ test('Alle Wächter sind immer sichtbar, nach Kategorie gruppiert; Gruppen klapp
   }
   await openList(page, s);
 
-  // kein Zuklapper „N Wächter ohne offene Aktion": jeder Wächter steht als Zeile da
-  await expect(page.getByText(/ohne offene Aktion/)).toHaveCount(0);
-  await expect(page.getByTestId('watcher-row')).toHaveCount(3);
-  // gleiche Namen ohne Beachtung der Groß-/Kleinschreibung sind eine Gruppe; „Ohne Kategorie" steht ganz unten
+  // keine Zeilen in der Übersicht: jede Kategorie ist eine Zeile, die eine eigene Seite öffnet; „Ohne Kategorie" steht ganz unten
+  await expect(page.getByTestId('watcher-row')).toHaveCount(0);
   const groups = page.getByTestId('watcher-category');
   await expect(groups).toHaveCount(2);
   await expect(groups.nth(0)).toContainText('Garten');
-  await expect(groups.nth(0).getByTestId('watcher-row')).toHaveCount(2);
+  await expect(groups.nth(0)).toContainText('2 Wächter');
   await expect(groups.nth(1)).toContainText('Ohne Kategorie');
 
-  // Schalter: mindestens 44 px hoch, nichts läuft über, auch bei dem langen Namen
+  await groups.nth(0).getByRole('button').click();
+  const sub = page.getByTestId('watcher-page');
+  await expect(sub.getByRole('heading', { name: 'Garten' })).toBeVisible();
+  await expect(sub.getByTestId('watcher-row')).toHaveCount(2);
+  // Schalter: mindestens 44 px hoch, nichts läuft über
   for (const sw of await page.getByRole('switch').all()) expect((await sw.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  // zurück zur Übersicht
+  await sub.getByRole('button', { name: 'Wächter', exact: true }).click();
+  await expect(page.getByTestId('watcher-page')).toHaveCount(0);
+  await groups.nth(1).getByRole('button').click();
+  await expect(page.getByTestId('watcher-page').getByTestId('watcher-row')).toHaveCount(1);
   const rows = await page.getByTestId('watcher-row').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right));
   for (const r of rows) expect(r).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await clear(request);
+});
 
-  // zuklappen: Kopf mit aria-expanded, die Zeilen verschwinden, nach dem Neuladen bleibt es zugeklappt
-  const head = groups.nth(0).getByRole('button', { expanded: true });
-  await head.click();
-  await expect(groups.nth(0).getByRole('button', { expanded: false })).toBeVisible();
-  await expect(groups.nth(0).getByTestId('watcher-row')).toHaveCount(0);
-  await expect(groups.nth(1).getByTestId('watcher-row')).toHaveCount(1);
-  await page.reload();
-  await nav(page).getByRole('button', { name: 'Wächter' }).click();
-  await expect(page.getByTestId('watcher-category').nth(0).getByTestId('watcher-row')).toHaveCount(0);
-  await page.getByTestId('watcher-category').nth(0).getByRole('button', { expanded: false }).click();
-  await expect(page.getByTestId('watcher-category').nth(0).getByTestId('watcher-row')).toHaveCount(2);
+test('Kategorie-Seite: Menü „…“ pausiert und aktiviert alle Wächter der Kategorie', async ({ page, request }) => {
+  await clear(request);
+  const s = await setup(request);
+  for (const [name, entity] of [
+    [`Eins ${s.tag}`, 'sensor.bad_batterie'],
+    [`Zwei ${s.tag}`, 'sensor.iphone_rene_battery_level'],
+  ] as const) {
+    expect((await request.post('/api/watchers', { data: make(s, name, entity, { category: 'Menü' }) })).status()).toBe(201);
+  }
+  await openList(page, s);
+  await openWatcherCategory(page, 'Menü');
+  const sub = page.getByTestId('watcher-page');
+  await sub.getByTestId('category-menu').click();
+  await page.getByRole('menuitem', { name: 'Alle pausieren' }).click();
+  await expect.poll(async () => (await watchers(request)).filter((w) => w.category === 'Menü' && !w.active).length).toBe(2);
+  await sub.getByTestId('category-menu').click();
+  await expect(page.getByRole('menuitem', { name: 'Alle pausieren' })).toHaveCount(0);
+  await page.getByRole('menuitem', { name: 'Alle aktivieren' }).click();
+  await expect.poll(async () => (await watchers(request)).filter((w) => w.category === 'Menü' && w.active).length).toBe(2);
+  // Neuer Wächter in dieser Kategorie: der Assistent trägt sie schon
+  await sub.getByTestId('category-menu').click();
+  await page.getByRole('menuitem', { name: /^Neuer Wächter in „Menü“/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Neuer Wächter' })).toBeVisible();
   await clear(request);
 });
 
@@ -103,9 +124,10 @@ test('Schalter: aus löst nicht mehr aus (der Server entscheidet), an wieder; di
   const created = await request.post('/api/watchers', { data: make(s, name, 'sensor.waschmaschine_leistung', { category: 'Test', trigger: { entityId: 'sensor.waschmaschine_leistung', kind: 'below', value: 5, forMin: 0 } }) });
   expect(created.status()).toBe(201);
   const id = ((await created.json()) as { id: string }).id;
-  const cards = async () => ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string }[] }).cards.filter((c) => c.title.startsWith(`Karte ${name}`));
+  const cards = async () => ((await (await request.get(`/api/boards/${s.boardId}`)).json()) as { cards: { title: string }[] }).cards.filter((c) => c.title.startsWith(`Aufgabe ${name}`));
 
   await openList(page, s);
+  await openWatcherCategory(page, 'Test');
   const sw = page.getByRole('switch', { name: `${name} aktiv` });
   await expect(sw).toBeEnabled();
   await expect(sw).toHaveAttribute('aria-checked', 'true');
@@ -117,7 +139,7 @@ test('Schalter: aus löst nicht mehr aus (der Server entscheidet), an wieder; di
   await expect(row).toBeVisible();
   await expect(row.getByTestId('watcher-status')).toHaveText('Aus');
 
-  // aus: die Maschine wird fertig, aber es entsteht keine Karte
+  // aus: die Maschine wird fertig, aber es entsteht keine Aufgabe
   await setState(request, 'sensor.waschmaschine_leistung', '2');
   await page.waitForTimeout(3000);
   expect(await cards()).toHaveLength(0);
@@ -142,11 +164,12 @@ test('Mitglied ohne Recht: der Schalter ist sichtbar, aber gesperrt; der Server 
   try {
     await conny.goto('/');
     await conny.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
+    // die Kategorien sind zu sehen, auch ohne Recht
+    await expect(conny.getByTestId('watcher-category').filter({ hasText: 'Test' })).toBeVisible();
+    await openWatcherCategory(conny, 'Test');
     const sw = conny.getByRole('switch', { name: `${name} aktiv` });
     await expect(sw).toBeVisible();
     await expect(sw).toBeDisabled();
-    // die Kategorien sind zu sehen, auch ohne Recht
-    await expect(conny.getByTestId('watcher-category').filter({ hasText: 'Test' })).toBeVisible();
     // Banner „Kategorien vorschlagen" nur mit Recht
     await expect(conny.getByTestId('home-categorize')).toHaveCount(0);
     expect((await ctx.request.patch(`/api/watchers/${id}`, { data: { active: false }, headers: { 'x-stups-client': 'e2e' } })).status()).toBe(403);
@@ -161,7 +184,7 @@ test('Mitglied ohne Recht: der Schalter ist sichtbar, aber gesperrt; der Server 
 test('Neuer Wächter: die Kategorie wird vorgeschlagen und vorbelegt; eine eigene lässt sich anlegen; im Editor änderbar', async ({ page, request }) => {
   await clear(request);
   const s = await setup(request);
-  // die Werte neu setzen: unter 20 % legt ein neuer Batterie-Wächter nach 10 Minuten seit der letzten Änderung sofort eine Karte an
+  // die Werte neu setzen: unter 20 % legt ein neuer Batterie-Wächter nach 10 Minuten seit der letzten Änderung sofort eine Aufgabe an
   await setState(request, 'sensor.bad_batterie', '12');
   await setState(request, 'sensor.iphone_rene_battery_level', '14');
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), s.boardId);
@@ -171,7 +194,6 @@ test('Neuer Wächter: die Kategorie wird vorgeschlagen und vorbelegt; eine eigen
   const d = page.getByRole('dialog');
 
   async function setupHit(hitText: string) {
-    await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
     await page.getByRole('button', { name: 'Wächter aus Vorlagen' }).click();
     await d.getByTestId('found-hit').filter({ hasText: hitText }).getByRole('button', { name: 'Einrichten' }).click();
     await expect(d.getByTestId('graph-card')).toBeVisible();
@@ -208,7 +230,8 @@ test('Neuer Wächter: die Kategorie wird vorgeschlagen und vorbelegt; eine eigen
   await expect(groups.nth(1)).toContainText('Haus & Garten');
 
   // 3) im Editor ändern (Chip „Kategorie: …"): wird zusammengelegt
-  await groups.nth(1).getByRole('button', { name: /^Wächter .* öffnen$/ }).click();
+  await openWatcherCategory(page, 'Haus & Garten');
+  await page.getByTestId('watcher-page').getByRole('button', { name: /^Wächter .* öffnen$/ }).click();
   await d.getByRole('button', { name: /^Kategorie: Haus & Garten$/ }).click();
   await d.getByTestId('category-field').locator('select').selectOption('Batterien');
   await d.getByRole('button', { name: 'Speichern', exact: true }).first().click();

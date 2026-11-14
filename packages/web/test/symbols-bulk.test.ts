@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { detectForCards, chunk } from '../src/lib/symbols/bulk';
 
-// Feste Datenmenge: Karten ohne Symbol, wie der Server sie für „Symbole aus Titeln erkennen“ liefert
+// Feste Datenmenge: Aufgaben ohne Symbol, wie der Server sie für „Symbole aus Titeln erkennen“ liefert
 const cards = [
   { id: 'a', title: 'Müll raus' },
   { id: 'b', title: 'Waschmaschine ausräumen' },
@@ -12,7 +12,7 @@ const cards = [
   { id: 'g', title: 'Milch kaufen' },
 ];
 
-describe('Symbole für viele Karten erkennen', () => {
+describe('Symbole für viele Aufgaben erkennen', () => {
   it('deutsch eingestellt: deutsche Titel, und englische als zweiter Versuch', () => {
     const r = detectForCards(cards, 'de');
     expect(r.items).toEqual([
@@ -29,10 +29,10 @@ describe('Symbole für viele Karten erkennen', () => {
     const r = detectForCards(cards, 'en');
     expect(r.items.map((i) => i.id)).toEqual(['a', 'b', 'd', 'f', 'g']);
   });
-  it('keine Karten, nichts zu tun', () => {
+  it('keine Aufgaben, nichts zu tun', () => {
     expect(detectForCards([], 'de')).toEqual({ items: [], total: 0, unmatched: 0 });
   });
-  it('Karten ohne erkennbaren Titel bleiben unberührt (kein Standardsymbol als Erkennung)', () => {
+  it('Aufgaben ohne erkennbaren Titel bleiben unberührt (kein Standardsymbol als Erkennung)', () => {
     expect(detectForCards([{ id: 'x', title: 'qqq www' }], 'de').items).toEqual([]);
   });
   it('Pakete von höchstens n Einträgen', () => {

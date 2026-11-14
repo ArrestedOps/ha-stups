@@ -60,24 +60,24 @@ describe('Testnachricht der Einrichtung', () => {
     expect(sent[0]!.via).toBe('tor');
   });
 
-  it('kind „onboarding": so wie eine Wächter-Nachricht, mit Kartentitel, „Neue Karte für dich · fällig …“ und nur dem Knopf Erledigt', async () => {
+  it('kind „onboarding": so wie eine Wächter-Nachricht, mit Aufgabentitel, „Neue Aufgabe für dich · fällig …“ und nur dem Knopf Erledigt', async () => {
     const res = await post(anna, { kind: 'onboarding' });
     expect(res.statusCode).toBe(200);
     expect(sent).toHaveLength(1);
     expect(sent[0]!.to).toBe(annaId);
     expect(sent[0]!.message).toMatchObject({
       title: 'Waschmaschine ausräumen',
-      body: 'Neue Karte für dich · fällig heute 12:30',
+      body: 'Neue Aufgabe für dich · fällig heute 12:30',
       tag: 'stups-test',
       group: 'stups',
       level: 'time-sensitive',
     });
-    // „Später" gibt es nur bei einem Stups, nicht bei einer Wächter-Karte
+    // „Später" gibt es nur bei einem Stups, nicht bei einer Wächter-Aufgabe
     expect(sent[0]!.message.actions!.map((a) => a.title)).toEqual(['Erledigt']);
     expect(sent[0]!.message.kind).toBeUndefined();
   });
 
-  it('der Kartentitel kommt vom Wächter, den die Person eingerichtet hat', async () => {
+  it('der Aufgabentitel kommt vom Wächter, den die Person eingerichtet hat', async () => {
     await post(anna, { kind: 'onboarding', cardTitle: 'Müll rausstellen' });
     expect(sent[0]!.message.title).toBe('Müll rausstellen');
   });
@@ -85,7 +85,7 @@ describe('Testnachricht der Einrichtung', () => {
   it('in der Sprache der Person, die sie bekommt', async () => {
     store.setLanguage(annaId, { choice: 'en', effective: 'en' });
     await post(anna, { kind: 'onboarding' });
-    expect(sent[0]!.message).toMatchObject({ title: 'Empty the washing machine', body: 'New card for you · due today 12:30' });
+    expect(sent[0]!.message).toMatchObject({ title: 'Empty the washing machine', body: 'New task for you · due today 12:30' });
     expect(sent[0]!.message.actions!.map((a) => a.title)).toEqual(['Done']);
   });
 

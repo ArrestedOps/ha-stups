@@ -31,7 +31,7 @@
   import type { TileColor } from './ui/Tile.svelte';
 
   /** dueAt: vorbelegter Termin, z. B. aus dem Kalender */
-  let { columnId, dueAt = null, picked = false }: { columnId: string; dueAt?: string | null; picked?: boolean } = $props();
+  let { columnId, dueAt = null, picked = false, initialTitle = '' }: { columnId: string; dueAt?: string | null; picked?: boolean; initialTitle?: string } = $props();
 
   const columns = $derived(ui.view?.columns ?? []);
   // Ohne eigene Wahl richtet sich die Spalte nach dem Termin: nach heute → „Geplant", sonst „Offen"
@@ -50,12 +50,12 @@
     return fromInputValue(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T09:00`);
   };
 
-  // Alles, was eine Karte haben kann, lässt sich schon beim Anlegen ausfüllen
+  // Alles, was eine Aufgabe haben kann, lässt sich schon beim Anlegen ausfüllen
   const startsPlanned = ui.view?.columns.find((c) => c.id === columnId)?.isPlanned ?? false;
   let fields = $state<CardFields>({
     // svelte-ignore state_referenced_locally
     columnId,
-    // Erinnerungen gehen nur an Zuständige: Wer die Karte anlegt, ist zuerst selbst zuständig und kann das ändern
+    // Erinnerungen gehen nur an Zuständige: Wer die Aufgabe anlegt, ist zuerst selbst zuständig und kann das ändern
     assigneeIds: ui.me?.isPerson ? [ui.me.id] : [],
     // svelte-ignore state_referenced_locally
     dueAt: dueAt ?? (startsPlanned ? tomorrowNine() : null),
@@ -67,7 +67,8 @@
     categoryIds: [],
     costCents: null,
   });
-  let title = $state('');
+  // svelte-ignore state_referenced_locally
+  let title = $state(initialTitle);
 
   // ---------- Schnell-Eingabe: aus einer Zeile Text werden Titel, Termin, Zuständige, Kategorie, Wiederholung, Priorität ----------
   const tz = deviceTz();
@@ -145,7 +146,7 @@
       const wanted = columnForDue(columns, fields.columnId, isFuture(fields.dueAt));
       if (wanted !== fields.columnId) {
         fields.columnId = wanted;
-        toast(t('Termin heute oder keiner: Die Karte kommt nach „{column}".', { column: columns.find((c) => c.id === wanted)?.name ?? t('Offen') }));
+        toast(t('Termin heute oder keiner: Die Aufgabe kommt nach „{column}".', { column: columns.find((c) => c.id === wanted)?.name ?? t('Offen') }));
       }
     }
     return { dueAt: fields.dueAt };
@@ -160,10 +161,10 @@
     columnPicked = true;
     const fitting = columnForDue(columns, id, isFuture(fields.dueAt));
     fields.columnId = fitting;
-    if (fitting !== id) toast(t('„Geplant" nimmt nur Karten mit einem Termin nach heute. Stell zuerst den Termin ein.'));
+    if (fitting !== id) toast(t('„Geplant" nimmt nur Aufgaben mit einem Termin nach heute. Stell zuerst den Termin ein.'));
   }
 
-  /** Neue Kategorien aus der Schnell-Eingabe: erst fragen, dann anlegen und der Karte geben */
+  /** Neue Kategorien aus der Schnell-Eingabe: erst fragen, dann anlegen und der Aufgabe geben */
   async function createCategories(): Promise<string[] | null> {
     const wanted = parsed.categories.filter((c) => c.categoryId === null && c.status === 'new');
     const ids: string[] = [];
@@ -189,7 +190,7 @@
       const names = fresh.map((c) => `„${c.name}“`).join(', ');
       ui.confirm = {
         title: fresh.length === 1 ? t('Kategorie anlegen?') : t('Kategorien anlegen?'),
-        text: t('{names} gibt es in diesem Board noch nicht. Neu anlegen und der Karte geben? Zum Weglassen schließ diese Frage und tippe auf den Chip.', { names }),
+        text: t('{names} gibt es in diesem Board noch nicht. Neu anlegen und der Aufgabe geben? Zum Weglassen schließ diese Frage und tippe auf den Chip.', { names }),
         label: t('Anlegen'),
         run: () => create(undefined, true),
       };
@@ -225,7 +226,7 @@
     }
     revealNewCard(card);
 
-    // Checkliste, Links und Anhänge gehören zur fertigen Karte; was schiefgeht, wird gemeldet, die Karte bleibt
+    // Checkliste, Links und Anhänge gehören zur fertigen Aufgabe; was schiefgeht, wird gemeldet, die Aufgabe bleibt
     const problems: string[] = [];
     for (const text of items) {
       try {
@@ -252,8 +253,8 @@
 
     busy = false;
     closeSheet();
-    if (problems.length) toast(t('Karte angelegt, aber nicht gespeichert: {problems}', { problems: problems.join(', ') }), { tone: 'error' });
-    else toast(t('Karte angelegt'), { action: { label: t('Öffnen'), run: () => openSheet({ type: 'card', id: card.id }) } });
+    if (problems.length) toast(t('Aufgabe angelegt, aber nicht gespeichert: {problems}', { problems: problems.join(', ') }), { tone: 'error' });
+    else toast(t('Aufgabe angelegt'), { action: { label: t('Öffnen'), run: () => openSheet({ type: 'card', id: card.id }) } });
   }
 
   // ---------- Anzeige ----------
@@ -283,8 +284,9 @@
   <div class="mt-1 flex h-[30px] items-center gap-2 px-1"><h2 class="text-[17px] font-extrabold tracking-tight">{label}</h2></div>
 {/snippet}
 
-<Sheet title={t('Neue Aufgabe')} onclose={closeSheet} left={cancel} footer={foot}>
-  <form onsubmit={create} class="flex flex-col gap-3.5 pt-1">
+<Sheet title={t('Neue Aufgabe')} onclose={closeSheet} left={cancel} footer={foot} lgWidth={880}>
+  <form onsubmit={create} class="flex flex-col gap-3.5 pt-1 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
+    <div class="max-lg:order-0 lg:col-span-2">
     <QuickLine
       bind:title
       {parsed}
@@ -298,7 +300,10 @@
       }}
       oncreate={() => void create()}
     />
+    </div>
 
+    <div class="flex flex-col gap-3.5 max-lg:contents" data-testid="new-left">
+      <div class="flex flex-col gap-3.5 max-lg:order-1">
     {@render sec(t('Wann und wo'))}
     <WhenWhere
       {fields}
@@ -311,6 +316,28 @@
       }}
     />
 
+      </div>
+      <div class="flex flex-col gap-3.5 max-lg:order-5">
+    {@render sec(t('Notiz'))}
+    <div class="focus-ring-in flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3">
+      <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="note">{t('Freitext, Details, Maße …')}</label>
+      <textarea
+        id="note"
+        rows="3"
+        bind:value={description}
+        use:autogrow={description}
+        placeholder={t('z. B. Gelbe Tonne steht im Hof, Schlüssel hängt am Brett.')}
+        class="block min-h-[66px] w-full resize-none overflow-hidden bg-transparent p-0 text-[15px] leading-[1.45] font-medium outline-none placeholder:text-dim"
+      ></textarea>
+    </div>
+
+      </div>
+      <div class="flex flex-col gap-3.5 max-lg:order-6">
+    {@render sec(t('Mehr'))}
+    <MoreSection bind:this={more} bind:items bind:urls bind:files />
+      </div>
+    </div>
+    <div class="flex flex-col gap-3.5 max-lg:order-2" data-testid="new-right">
     {@render sec(t('Wer kümmert sich?'))}
     <div class="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3" role="group" aria-label={t('Wer kümmert sich?')}>
       {#each people as p (p.id)}
@@ -332,21 +359,7 @@
     {@render sec(t('Kategorie'))}
     <CategoryPicker {fields} {onsave} />
 
-    {@render sec(t('Notiz'))}
-    <div class="focus-ring-in flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3">
-      <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="note">{t('Freitext, Details, Maße …')}</label>
-      <textarea
-        id="note"
-        rows="3"
-        bind:value={description}
-        use:autogrow={description}
-        placeholder={t('z. B. Gelbe Tonne steht im Hof, Schlüssel hängt am Brett.')}
-        class="block min-h-[66px] w-full resize-none overflow-hidden bg-transparent p-0 text-[15px] leading-[1.45] font-medium outline-none placeholder:text-dim"
-      ></textarea>
     </div>
-
-    {@render sec(t('Mehr'))}
-    <MoreSection bind:this={more} bind:items bind:urls bind:files />
   </form>
 </Sheet>
 

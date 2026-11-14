@@ -56,7 +56,7 @@ describe('Sprache je Empfänger', () => {
     expect(pushLanguage(store, rene.id)).toBe('en');
   });
 
-  it('dieselbe fällige Karte: ein englischer und ein deutscher Empfänger bekommen je ihre Sprache', async () => {
+  it('dieselbe fällige Aufgabe: ein englischer und ein deutscher Empfänger bekommen je ihre Sprache', async () => {
     store.setLanguage(rene.id, { choice: 'en', effective: 'en' });
     store.createCard(boardId, { columnId: openCol, title: 'Bad putzen', dueAt: '2026-11-01T07:00:00Z', assigneeIds: [rene.id, conny.id] }, rene.id);
     await notifier().tick();

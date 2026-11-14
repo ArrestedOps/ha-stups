@@ -179,9 +179,9 @@ try {
   if (!created?.id) throw new Error('Board anlegen: keine Kennung in der Antwort');
   const column = (await api(base, cookie, 'GET', `boards/${created.id}`)).columns?.[0]?.id;
   if (!column) throw new Error('Das neue Board hat keine Spalte');
-  const card = await api(base, cookie, 'POST', `boards/${created.id}/cards`, { columnId: column, title: 'Smoke-Karte' });
-  if (!card?.id) throw new Error('Karte anlegen: keine Kennung in der Antwort');
-  ok('Board und Karte angelegt');
+  const card = await api(base, cookie, 'POST', `boards/${created.id}/cards`, { columnId: column, title: 'Smoke-Aufgabe' });
+  if (!card?.id) throw new Error('Aufgabe anlegen: keine Kennung in der Antwort');
+  ok('Board und Aufgabe angelegt');
 
   await target.restart();
   await waitHealthy(base);
@@ -191,8 +191,8 @@ try {
   const boards = await api(base, cookie, 'GET', 'boards');
   if (!boards.some((b) => b.id === created.id && b.name === BOARD)) throw new Error('Das Board ist nach dem Neustart weg');
   const view = await api(base, cookie, 'GET', `boards/${created.id}`);
-  if (!view.cards?.some((c) => c.id === card.id && c.title === 'Smoke-Karte')) throw new Error('Die Karte ist nach dem Neustart weg');
-  ok('Board und Karte sind nach dem Neustart noch da (Daten bleiben erhalten)');
+  if (!view.cards?.some((c) => c.id === card.id && c.title === 'Smoke-Aufgabe')) throw new Error('Die Aufgabe ist nach dem Neustart weg');
+  ok('Board und Aufgabe sind nach dem Neustart noch da (Daten bleiben erhalten)');
 
   if (mode === '--image') {
     // der HEALTHCHECK des Images wird erst nach start-period/interval gesund; hier genügt, dass er nicht „unhealthy" meldet

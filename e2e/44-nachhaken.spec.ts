@@ -30,7 +30,7 @@ test('Neue Aufgabe: Nachhaken wählen, Ablauf als Text, gespeichert nur für mic
   const boardId = await ownBoard(request, page, unique('Nachhaken'));
   await page.goto('/');
   await openBoards(page);
-  await page.getByRole('button', { name: 'Neue Karte', exact: true }).click();
+  await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).click();
   const title = unique('Fenster putzen');
   await page.getByLabel('Was steht an?').fill(title);
   await pickDue(page, tomorrow());
@@ -59,7 +59,7 @@ test('Neue Aufgabe: Nachhaken wählen, Ablauf als Text, gespeichert nur für mic
 
   await expect(sheet.getByRole('button', { name: /^Erinnerung wählen, gerade: Nachhaken, wenn nicht erledigt/ })).toBeVisible();
   await sheet.getByRole('button', { name: 'Aufgabe anlegen' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Karte angelegt' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Aufgabe angelegt' })).toBeVisible();
 
   const card = await cardOf(request, boardId, title);
   expect(card.reminder).toEqual({ anchor: 'due', afterMin: 4320, everyMin: 1440, max: 3, atTime: '18:00' });
@@ -67,7 +67,7 @@ test('Neue Aufgabe: Nachhaken wählen, Ablauf als Text, gespeichert nur für mic
   expect((await cardOf(request, boardId, title, conny)).reminder).toBeNull();
 });
 
-test('Karte: Erinnerung öffnen, ändern und ausschalten; „Eigene …“ zeigt Nach [Zahl] [Einheit]', async ({ page, request }) => {
+test('Aufgabe: Erinnerung öffnen, ändern und ausschalten; „Eigene …“ zeigt Nach [Zahl] [Einheit]', async ({ page, request }) => {
   const boardId = await ownBoard(request, page, unique('Nachhaken'));
   const view = (await (await request.get(`/api/boards/${boardId}`)).json()) as { columns: { id: string }[] };
   const title = unique('Mit Nachhaken');
@@ -77,7 +77,7 @@ test('Karte: Erinnerung öffnen, ändern und ausschalten; „Eigene …“ zeigt
   expect(made.reminder).toMatchObject({ afterMin: 60 });
 
   await page.goto(`/?card=${made.id}`);
-  await page.getByRole('button', { name: /^Nachhaken$/ }).click();
+  await page.getByRole('button', { name: /^Erinnerung: Nachhaken$/ }).click();
   const editor = page.getByTestId('reminder-editor');
   await expect(editor.getByTestId('nag-first').getByRole('button', { name: 'Nach 1 Std.', exact: true })).toHaveAttribute('aria-pressed', 'true');
 
@@ -89,7 +89,7 @@ test('Karte: Erinnerung öffnen, ändern und ausschalten; „Eigene …“ zeigt
 
   await editor.getByTestId('nag-first').getByRole('button', { name: 'Aus', exact: true }).click();
   await expect.poll(async () => (await cardOf(request, boardId, title)).reminder).toBeNull();
-  await expect(page.getByRole('button', { name: /^Erinnerung$/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Erinnerung: Keine$/ })).toBeVisible();
 });
 
 test('Ohne Termin zählt es ab dem Anlegen, der Ablauf sagt es', async ({ page, request }) => {
@@ -97,7 +97,7 @@ test('Ohne Termin zählt es ab dem Anlegen, der Ablauf sagt es', async ({ page, 
   const view = (await (await request.get(`/api/boards/${boardId}`)).json()) as { columns: { id: string }[] };
   const made = (await (await request.post(`/api/boards/${boardId}/cards`, { data: { columnId: view.columns[0]!.id, title: unique('Ohne Termin') } })).json()) as ApiCard;
   await page.goto(`/?card=${made.id}`);
-  await page.getByRole('button', { name: /^Erinnerung$/ }).click();
+  await page.getByRole('button', { name: /^Erinnerung: / }).click();
   await page.getByTestId('nag-first').getByRole('button', { name: 'Nach 1 Std.', exact: true }).click();
   await expect(page.getByTestId('nag-plan')).toContainText('Dein Ablauf (ab jetzt)');
   await expect.poll(async () => ((await (await request.get(`/api/cards/${made.id}`)).json()) as ApiCard).reminder).toMatchObject({ anchor: 'created', afterMin: 60 });

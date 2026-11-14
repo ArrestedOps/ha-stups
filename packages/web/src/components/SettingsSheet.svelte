@@ -19,13 +19,11 @@
   import SettingsHead from './settings/SettingsHead.svelte';
   import TemplatesPage from './settings/TemplatesPage.svelte';
   import VoicePage from './settings/VoicePage.svelte';
-  import WatchersPage from './settings/WatchersPage.svelte';
   import logo from '../assets/stups-icon.png';
   import Icon from './Icon.svelte';
   import PeopleSheet from './PeopleSheet.svelte';
   import Sheet from './Sheet.svelte';
   import ListRow from './ui/ListRow.svelte';
-  import SectionHeader from './ui/SectionHeader.svelte';
   import Tile, { type TileColor } from './ui/Tile.svelte';
   import Toggle from './ui/Toggle.svelte';
   import { restart as restartOnboarding } from '../lib/onboarding.svelte';
@@ -92,8 +90,6 @@
   <AccountPage />
 {:else if page === 'people'}
   <PeopleSheet />
-{:else if page === 'watchers'}
-  <WatchersPage />
 {:else if page === 'templates'}
   <TemplatesPage />
 {:else if page === 'icons'}
@@ -115,20 +111,28 @@
 {:else if page === 'beta'}
   <BetaPage />
 {:else}
-  <Sheet title={t('Einstellungen')} onclose={closeSheet}>
-    <div class="flex flex-col gap-3.5 pt-1">
-      <SettingsHead />
+  {#snippet done()}
+    <button class="inline-flex h-11 items-center px-2 text-[16px] font-bold text-accent-text" onclick={closeSheet}>{t('Fertig')}</button>
+  {/snippet}
+  <Sheet title={t('Einstellungen')} onclose={closeSheet} right={done} hideClose lgWidth={880}>
+    <div class="settings-flat flex flex-col gap-3.5 pt-1 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
+      <div class="lg:col-span-2"><SettingsHead /></div>
       {#if !ui.isChild}
+        <div class="lg:col-span-2">
         <!-- Für jede Person ganz oben: Feedback senden (die Liste der Rückmeldungen steht für Administratoren unter „Hilfe und Daten") -->
+        <div class="list-group !mt-0">
         <ListRow title={t('Feedback & Ideen')} label={t('Feedback & Ideen')} onclick={() => openFeedback()}>
           {#snippet tile()}<Tile color="orange"><Icon name="message" size={22} stroke={1.8} /></Tile>{/snippet}
           {#snippet meta()}{t('Fehler melden, Wünsche, Lob und Kritik')}{/snippet}
           {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
         </ListRow>
+        </div>
+        </div>
       {/if}
       {#each groups as g (g.id)}
-        <div class="flex flex-col gap-2">
-          <SectionHeader title={g.title} />
+        <div>
+          <p class="px-4 pb-1.5 text-[13px] font-semibold text-text-soft">{g.title}</p>
+          <div class="list-group !mt-0">
           {#if g.actions?.includes('header')}
             <ListRow title={t('HA-Kopfzeile ausblenden')}>
               {#snippet tile()}<Tile color="gray"><Icon name="columns" size={22} stroke={1.8} /></Tile>{/snippet}
@@ -165,10 +169,11 @@
               {#snippet right()}<span class="flex text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>{/snippet}
             </ListRow>
           {/if}
+          </div>
         </div>
       {/each}
 
-      <p class="flex items-center justify-center gap-2 py-2 text-center text-[12px] text-dim">
+      <p class="flex items-center justify-center gap-2 py-2 text-center text-[12px] text-dim lg:col-span-2">
         <img src={logo} alt="" class="h-5 w-5 rounded-[5px]" width="20" height="20" />
         <span>
           {#if !feat.standalone}{t('Angemeldet als {name}', { name: ui.me?.displayName ?? '—' })}{/if}

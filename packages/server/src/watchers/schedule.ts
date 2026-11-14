@@ -4,7 +4,7 @@ import type { CardTemplate } from '../watcher-types.js';
 
 export const minutes = (n: number) => n * 60_000;
 
-/** Wann die Karte fällig wird: gar nicht, in N Minuten oder heute/morgen um eine Uhrzeit (Ortszeit) */
+/** Wann die Aufgabe fällig wird: gar nicht, in N Minuten oder heute/morgen um eine Uhrzeit (Ortszeit) */
 export function dueFor(t: CardTemplate, nowMs: number, tz: string): string | null {
   if (t.due.kind === 'none') return null;
   if (t.due.kind === 'in') return new Date(nowMs + minutes(t.due.minutes)).toISOString();
@@ -22,7 +22,7 @@ export function tomorrowStart(nowMs: number, tz: string): number {
   return fromLocal({ y: next.getUTCFullYear(), m: next.getUTCMonth() + 1, d: next.getUTCDate(), h: 0, mi: 0, s: 0 }, tz);
 }
 
-/** „Geplant" nimmt nur Karten mit Termin nach heute; sonst die erste offene Spalte */
+/** „Geplant" nimmt nur Aufgaben mit Termin nach heute; sonst die erste offene Spalte */
 export function columnFor(store: Store, t: CardTemplate, dueAt: string | null, nowMs: number, tz: string): string {
   const cols = store.getBoardView(t.boardId).columns;
   const chosen = cols.find((c) => c.id === t.columnId);

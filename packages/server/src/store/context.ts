@@ -21,8 +21,8 @@ export function createContext(db: DatabaseSync, opts: StoreOptions = {}) {
     if (!m) return;
     const table = m[1]!.toLowerCase();
     if (table === 'cards') {
-      // Karten werden immer einzeln über ihre Kennung geschrieben: neu (Kennung zuerst) oder „where id = ?" (Kennung zuletzt).
-      // Alles andere (mehrere Karten auf einmal) sagt „alles neu laden", statt Karten zu verpassen.
+      // Aufgaben werden immer einzeln über ihre Kennung geschrieben: neu (Kennung zuerst) oder „where id = ?" (Kennung zuletzt).
+      // Alles andere (mehrere Aufgaben auf einmal) sagt „alles neu laden", statt Aufgaben zu verpassen.
       const id = /^\s*insert/i.test(sql) ? params[0] : BY_ID.test(sql) ? params[params.length - 1] : undefined;
       if (typeof id === 'string') cards.add(id);
       else full = true;
@@ -30,8 +30,8 @@ export function createContext(db: DatabaseSync, opts: StoreOptions = {}) {
     else if (!QUIET_TABLES.has(table)) full = true;
   }
   /**
-   * Was sich seit dem letzten Abholen geändert hat: einzelne Karten, oder „alles" (Boards, Spalten, Kategorien, Personen, Stupse …).
-   * Schreibt eine Anfrage nur an Teilen einer Karte (Checkliste, Kommentar …) ohne die Karte selbst zu berühren, gilt das auch als „alles".
+   * Was sich seit dem letzten Abholen geändert hat: einzelne Aufgaben, oder „alles" (Boards, Spalten, Kategorien, Personen, Stupse …).
+   * Schreibt eine Anfrage nur an Teilen einer Aufgabe (Checkliste, Kommentar …) ohne die Aufgabe selbst zu berühren, gilt das auch als „alles".
    */
   function takeChanges(): Changes {
     const out = { full: full || (partWrites && cards.size === 0), cards: [...cards] };
@@ -87,7 +87,7 @@ export function createContext(db: DatabaseSync, opts: StoreOptions = {}) {
   return { db, opts, now, timeZone, iso, one, all, run, tx, pendingClosed, takeChanges, markAllChanged };
 }
 
-/** Was sich geändert hat: einzelne Karten (ihre Kennungen) oder „alles" (dann lädt der Client die Ansicht neu) */
+/** Was sich geändert hat: einzelne Aufgaben (ihre Kennungen) oder „alles" (dann lädt der Client die Ansicht neu) */
 export interface Changes {
   full: boolean;
   cards: string[];
@@ -95,7 +95,7 @@ export interface Changes {
 
 const WRITE = /^\s*(?:insert\s+(?:or\s+\w+\s+)?into|update|delete\s+from)\s+(\w+)/i;
 const BY_ID = /where\s+id\s*=\s*\?\s*$/i;
-/** Teile einer Karte: ihre Zahlen und Zähler stehen auf der Karte selbst */
+/** Teile einer Aufgabe: ihre Zahlen und Zähler stehen auf der Aufgabe selbst */
 const CARD_PARTS = new Set(['card_categories', 'card_assignees', 'checklist_items', 'links', 'comments', 'attachments', 'completions', 'card_events']);
 /** Ändert sich laufend, ohne dass sich eine Ansicht ändert */
 const QUIET_TABLES = new Set(['sent_notifications', 'card_reminders', 'sessions', 'passkeys', 'local_accounts', 'house_pending', 'feedback']);

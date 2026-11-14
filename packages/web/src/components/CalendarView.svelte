@@ -8,6 +8,7 @@
     dayKeyOf,
     dayNumber,
     inMonth,
+    isoWeek,
     layoutDay,
     minutesOfDay,
     monthGrid,
@@ -21,7 +22,6 @@
   } from '../lib/calendar';
   import { boardColorKey, filterSchedule, type ScheduleCard } from '../lib/schedule';
   import { activeScheduleFilter, filterContext, openCardAnywhere, openSheet, ui } from '../lib/store.svelte';
-  import { tileColorOf } from '../lib/cardTile';
   import Icon from './Icon.svelte';
   import SectionHeader from './ui/SectionHeader.svelte';
   import TaskRow from './TaskRow.svelte';
@@ -36,7 +36,8 @@
     mode,
     day = $bindable(),
     onopenday,
-  }: { mode: CalMode; day: string; onopenday: (day: string) => void } = $props();
+    hideNav = false,
+  }: { mode: CalMode; day: string; onopenday: (day: string) => void; /** Desktop: Pfeile, Titel und „Heute“ stehen in der Kopfzeile der Seite */ hideNav?: boolean } = $props();
   const todayKey = () => dayKeyOf(Date.now());
 
   let loaded = $state<ScheduleCard[]>([]);
@@ -66,7 +67,7 @@
       });
   });
 
-  // Ein Kind sieht nur die eigenen Karten
+  // Ein Kind sieht nur die eigenen Aufgaben
   const shown = $derived(filterSchedule(loaded, activeScheduleFilter(), filterContext()).filter((c) => !ui.isChild || c.assigneeIds.includes(ui.me?.id ?? '')));
   const byDay = $derived(cardsByDay(shown));
   const days = $derived(visibleDays(mode, day));
@@ -88,7 +89,7 @@
   function jump() {
     if (!needScroll || !scroller || mode === 'month') return;
     needScroll = false;
-    // erste Karte; bei „heute" höchstens die aktuelle Uhrzeit; ohne Karten 7 Uhr
+    // erste Aufgabe; bei „heute" höchstens die aktuelle Uhrzeit; ohne Aufgaben 7 Uhr
     const first = days.flatMap((d) => byDay.get(d) ?? []).map((c) => minutesOfDay(c.dueAt!))[0];
     const now = minutesOfDay(new Date().toISOString());
     const target = first !== undefined ? Math.min(first, days.includes(today) ? now : first) : days.includes(today) ? now - 60 : 7 * 60;
@@ -99,7 +100,7 @@
   const nowTop = $derived((void minuteClock.tick, (minutesOfDay(new Date().toISOString()) / 60) * HOUR_PX));
 
   function tapSlot(e: MouseEvent, d: string) {
-    if (ui.isChild) return; // ein Kind legt keine Karten an
+    if (ui.isChild) return; // ein Kind legt keine Aufgaben an
     const el = e.currentTarget as HTMLElement;
     // Mit der Tastatur gibt es keine Stelle: dann 9 Uhr
     const minutes = e.detail === 0 ? 9 * 60 : ((e.clientY - el.getBoundingClientRect().top) / HOUR_PX) * 60 - 15;
@@ -107,7 +108,7 @@
     pending = { day: d, minutes: rounded };
     openSheet({ type: 'slot', at: slotIso(d, minutes) });
   }
-  /** der angetippte freie Zeitpunkt, gestrichelt markiert, solange das Fenster „Neue Karte" offen ist */
+  /** der angetippte freie Zeitpunkt, gestrichelt markiert, solange das Fenster „Neue Aufgabe" offen ist */
   let pending = $state<{ day: string; minutes: number } | null>(null);
   const showPending = $derived(ui.sheet?.type === 'slot' ? pending : null);
   const clock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -117,9 +118,22 @@
     onopenday(d);
   }
 
+  /** Wischen nach links/rechts blättert (3 Tage, Woche, Tag); nur eine überwiegend waagrechte Bewegung zählt */
+  let touch: { x: number; y: number } | null = null;
+  const swipeStart = (e: TouchEvent) => (touch = e.touches.length === 1 ? { x: e.touches[0]!.clientX, y: e.touches[0]!.clientY } : null);
+  function swipeEnd(e: TouchEvent) {
+    const start = touch;
+    touch = null;
+    const end = e.changedTouches[0];
+    if (!start || !end) return;
+    const dx = end.clientX - start.x;
+    const dy = end.clientY - start.y;
+    if (Math.abs(dx) > 56 && Math.abs(dx) > Math.abs(dy) * 1.6) day = step(mode, day, dx < 0 ? 1 : -1);
+  }
+
   const dayLabel = (d: string) => `${weekdayShort(d)} ${dayNumber(d)}`;
 
-  /** Monat: die Karten des gewählten Tages und seine Überschrift („Freitag, 31. Januar") */
+  /** Monat: die Aufgaben des gewählten Tages und seine Überschrift („Freitag, 31. Januar") */
   const dayCards = $derived(byDay.get(day) ?? []);
   const dayTitle = $derived.by(() => {
     const [y, m, d] = day.split('-').map(Number);
@@ -130,15 +144,15 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
-  <div class="mt-3 flex items-center gap-1.5">
-    <button class="flex h-11 w-11 items-center justify-center text-text-soft2" aria-label={t('Zurück')} onclick={() => (day = step(mode, day, -1))}>
-      <span class="flex h-9 w-9 items-center justify-center rounded-full bg-(--soft-btn)"><Icon name="chevron-left" size={20} stroke={2.4} /></span>
+  <div class="mt-3 flex items-center gap-1 {hideNav ? 'hidden' : ''}">
+    <button class="flex h-11 w-9 items-center justify-center text-accent-text" aria-label={t('Zurück')} onclick={() => (day = step(mode, day, -1))}>
+      <Icon name="chevron-left" size={22} stroke={2.6} />
     </button>
-    <h2 class="min-w-0 flex-1 truncate text-center text-[15px] font-bold" aria-live="polite">{rangeTitle(mode, day)}</h2>
-    <button class="flex h-11 w-11 items-center justify-center text-text-soft2" aria-label={t('Weiter')} onclick={() => (day = step(mode, day, 1))}>
-      <span class="flex h-9 w-9 items-center justify-center rounded-full bg-(--soft-btn)"><Icon name="chevron-right" size={20} stroke={2.4} /></span>
+    <h2 class="min-w-0 flex-1 truncate text-center text-[17px] font-bold lg:text-[15px]" aria-live="polite">{rangeTitle(mode, day)}{#if mode === 'week' || mode === 'days3'}<span class="ml-2 text-[15px] font-medium text-text-soft"> KW {isoWeek(day)}</span>{/if}</h2>
+    <button class="flex h-11 w-9 items-center justify-center text-accent-text" aria-label={t('Weiter')} onclick={() => (day = step(mode, day, 1))}>
+      <Icon name="chevron-right" size={22} stroke={2.6} />
     </button>
-    <button class="border-line-chip inline-flex h-[34px] shrink-0 items-center rounded-full border bg-surface px-3 text-[13px] font-semibold text-text-soft" onclick={() => (day = todayKey())}>{t('Heute')}</button>
+    <button class="inline-flex h-9 shrink-0 items-center rounded-full bg-accent/12 px-3.5 text-[15px] font-semibold text-accent-text" onclick={() => (day = todayKey())}>{t('Heute')}</button>
   </div>
 
   {#if failed}
@@ -154,7 +168,7 @@
             {@const list = byDay.get(d) ?? []}
             <button
               class="flex h-[50px] flex-col items-center justify-center gap-1 rounded-xl text-[15px] font-semibold {d === today ? 'bg-accent-grad glow-day' : ''} {d === day ? 'shadow-[inset_0_0_0_2px_var(--brand-dot)]' : ''} {inMonth(d, day) || d === today ? '' : 'text-sep'}"
-              aria-label={`${dayLabel(d)}, ${tn('{n} Karte', '{n} Karten', list.length)}`}
+              aria-label={`${dayLabel(d)}, ${tn('{n} Aufgabe', '{n} Aufgaben', list.length)}`}
               aria-pressed={d === day}
               data-today={d === today ? '' : undefined}
               onclick={() => (day = d)}
@@ -183,17 +197,18 @@
       <span></span>
       {#each days as d (d)}
         <button
-          class="flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] {d === day ? 'bg-accent-grad glow-day' : 'text-fg2'}"
+          class="flex flex-col items-center gap-0.5 rounded-xl py-1 text-[12px] font-medium {d === today ? 'text-accent-text' : 'text-text-soft'}"
+          aria-current={d === day ? 'date' : undefined}
           onclick={() => openDay(d)}
           aria-label={t('Tag {day} öffnen', { day: dayLabel(d) })}
         >
           {weekdayShort(d)}
-          <b class="text-[15px] font-bold {d === day ? '' : d === today ? 'text-accent-text' : 'text-fg'}">{dayNumber(d)}</b>
+          <b class="flex h-8 min-w-8 items-center justify-center rounded-full text-[17px] font-bold {d === today ? 'bg-brand-dot text-on-accent' : d === day ? 'bg-surface2 text-fg' : 'text-fg'}">{dayNumber(d)}</b>
         </button>
       {/each}
     </div>
 
-    <div class="mt-3 min-h-0 flex-1 overflow-hidden rounded-row border border-line bg-surface">
+    <div class="mt-3 min-h-0 flex-1 overflow-hidden rounded-row border border-line bg-surface" role="presentation" ontouchstart={swipeStart} ontouchend={swipeEnd}>
       <div bind:this={scroller} class="h-full overflow-y-auto overscroll-contain" data-testid="calendar-grid">
         <div class="relative flex" style:height="{24 * HOUR_PX}px">
           <div class="relative w-[34px] shrink-0">
@@ -207,7 +222,7 @@
             {/each}
             {#each days as d (d)}
               <div class="relative flex-1 border-l border-line/50">
-                <button class="absolute inset-0 w-full cursor-pointer" aria-label={t('Neue Karte am {day}', { day: dayLabel(d) })} onclick={(e) => tapSlot(e, d)}></button>
+                <button class="absolute inset-0 w-full cursor-pointer" aria-label={t('Neue Aufgabe am {day}', { day: dayLabel(d) })} onclick={(e) => tapSlot(e, d)}></button>
                 {#if showPending && showPending.day === d}
                   <span
                     class="pointer-events-none absolute z-[1] flex items-center justify-center rounded-lg border-[1.5px] border-dashed border-brand-dot bg-accent/10 text-center text-[10.5px] leading-[1.15] font-bold text-tok"
@@ -221,7 +236,10 @@
                 {#each placed.get(d) ?? [] as p (p.card.id)}
                   {@const c = p.card}
                   <button
-                    class="tile tile-{tileColorOf(color(c))} absolute z-[2] overflow-hidden !rounded-lg px-[5px] py-1 text-left {c.completedAt ? 'opacity-60' : ''}"
+                    class="absolute z-[2] overflow-hidden rounded-lg border-l-[3px] px-[5px] py-1 text-left {c.completedAt ? 'opacity-60' : ''}"
+                    style:background="color-mix(in srgb, var(--c-{color(c)}-fg) 15%, var(--surface))"
+                    style:border-left-color="var(--c-{color(c)}-fg)"
+                    style:color="var(--c-{color(c)}-fg)"
                     style:top="{(p.top / 60) * HOUR_PX + 1}px"
                     style:height="{Math.max((p.height / 60) * HOUR_PX - 3, 24)}px"
                     style:left="calc({(p.col / p.cols) * 100}% + 2px)"
@@ -244,7 +262,7 @@
         </div>
       </div>
     </div>
-    <p class="px-1 pt-2 pb-tabbar text-[12.5px] leading-[1.45] text-hint">{t('Auf eine freie Zeit tippen legt eine Karte mit genau diesem Termin an.')}</p>
+    <p class="px-1 pt-2 pb-tabbar text-[12.5px] leading-[1.45] text-hint">{t('Auf eine freie Zeit tippen legt eine Aufgabe mit genau diesem Termin an.')}</p>
   {/if}
 
   {#if loading}<p class="sr-only" role="status">{t('Lädt …')}</p>{/if}

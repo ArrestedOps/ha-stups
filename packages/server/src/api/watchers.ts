@@ -44,8 +44,8 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     return { engine: deps.watchers, data: deps.watcherData };
   };
   /**
-   * Board, Spalte, Kategorien und Personen müssen es geben (sonst entstünde nie eine Karte). Das Board darf nicht privat sein (ein
-   * Wächter legt Karten für andere an) und muss für die Person sichtbar sein, die es wählt (ein unverändertes Board nicht: wer nur
+   * Board, Spalte, Kategorien und Personen müssen es geben (sonst entstünde nie eine Aufgabe). Das Board darf nicht privat sein (ein
+   * Wächter legt Aufgaben für andere an) und muss für die Person sichtbar sein, die es wählt (ein unverändertes Board nicht: wer nur
    * umbenennt, muss es nicht sehen). Zuständige kommen nur aus den Personen, die das Board sehen.
    */
   function checkWatcherTargets(req: FastifyRequest, c: WatcherConfig, unchangedBoard: string | null = null): void {
@@ -55,7 +55,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     } catch {
       throw new ValidationError(t('Das Board gibt es nicht'));
     }
-    if (view.board.visibility === 'private') throw new ValidationError(t('Private Boards sind für Wächter nicht wählbar: ein Wächter legt Karten für andere an'));
+    if (view.board.visibility === 'private') throw new ValidationError(t('Private Boards sind für Wächter nicht wählbar: ein Wächter legt Aufgaben für andere an'));
     if (c.card.boardId !== unchangedBoard && !store.canSeeBoard(req.user?.id ?? null, c.card.boardId)) throw new ValidationError(t('Das Board gibt es nicht'));
     if (!view.columns.some((x) => x.id === c.card.columnId)) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
     const cats = new Set(view.categories.map((x) => x.id));
@@ -67,7 +67,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     if (ids.some((id) => !seeing.has(id))) throw new ValidationError(t('Zur Auswahl stehen nur Personen aus dem Board'));
   }
 
-  /** Karten aus Boards, die die Person nicht sieht, tauchen im Wächter nicht auf (die offene Karte wird weggelassen) */
+  /** Aufgaben aus Boards, die die Person nicht sieht, tauchen im Wächter nicht auf (die offene Aufgabe wird weggelassen) */
   function hideCards<T extends { openCard: { boardId: string } | null }>(req: FastifyRequest, items: T[]): T[] {
     const me = req.user?.id ?? null;
     return items.map((w) => (w.openCard && !store.canSeeBoard(me, w.openCard.boardId) ? { ...w, openCard: null } : w));
@@ -233,8 +233,8 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     const config = parseWatcher(raw);
     checkWatcherTargets(req, config);
     const created = data.create(config);
-    // `metNow`: die Bedingung gilt schon und es löst nichts von selbst aus, die Oberfläche fragt, ob die Karte jetzt entstehen soll
-    const metNow = await engine.onSaved(created.id);
+    // Beim Anlegen löst ein Wächter, dessen Bedingung schon gilt, gleich aus (`metNow` bleibt dann leer)
+    const metNow = await engine.onSaved(created.id, { created: true });
     return reply.code(201).send({ ...watcherView(created.id), metNow });
   });
   app.patch<{ Params: Params }>('/api/watchers/:id', async (req) => {
@@ -287,7 +287,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     }
     return watcherView(req.params.id);
   });
-  /** „Ja, Karte erstellen" auf die Rückfrage nach dem Speichern: nur wenn die Bedingung weiterhin gilt und keine Karte des Wächters offen ist (sonst 409) */
+  /** „Ja, Aufgabe erstellen" auf die Rückfrage nach dem Speichern: nur wenn die Bedingung weiterhin gilt und keine Aufgabe des Wächters offen ist (sonst 409) */
   app.post<{ Params: Params }>('/api/watchers/:id/fire-now', async (req) => {
     requirePermission(req, 'watchers');
     const { engine, data } = watcherEngine();

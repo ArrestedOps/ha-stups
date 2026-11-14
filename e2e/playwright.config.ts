@@ -18,7 +18,7 @@ const DESKTOP_SPECS = /\/(3[56]|4[245])-desktop[^/]*\.spec\.ts$/;
 const DESKTOP = { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 } };
 
 /**
- * Eine kleine Auswahl der Kernabläufe auch in Chromium (die Android-Companion-App ist ein Chromium-WebView) und Firefox: Karten anlegen,
+ * Eine kleine Auswahl der Kernabläufe auch in Chromium (die Android-Companion-App ist ein Chromium-WebView) und Firefox: Aufgaben anlegen,
  * wischen, erledigen, Aufgaben und Kalender, Live-Sync. Bewusst nicht alle Specs in allen Browsern, sondern die, an denen sich Browser unterscheiden
  * (Zeigerereignisse, Scrollen, Datumsfelder).
  */
@@ -39,7 +39,7 @@ export default defineConfig({
     locale: 'de-DE',
     timezoneId: 'Europe/Berlin',
     trace: 'retain-on-failure',
-    // Die Tests legen Daten über die API an (Boards, Karten): ohne Angabe antwortet der Server Englisch, und neue Boards hießen „Open", „Planned" …
+    // Die Tests legen Daten über die API an (Boards, Aufgaben): ohne Angabe antwortet der Server Englisch, und neue Boards hießen „Open", „Planned" …
     // Die Seite selbst sendet ihre eigene Sprache; das englische Projekt stellt es auf Englisch um.
     extraHTTPHeaders: { 'x-stups-language': 'de' },
   },

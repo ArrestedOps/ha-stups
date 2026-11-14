@@ -11,7 +11,7 @@ import { closeDetail, closeSheet, personById, setScheduleFilter } from './naviga
 import { ui } from './state.svelte';
 import { toast } from './toasts';
 
-// ---------- Aktionen auf Karten ----------
+// ---------- Aktionen auf Aufgaben ----------
 
 export async function completeCard(card: Pick<Card, 'id'>): Promise<void> {
   const res = await act(() => api.complete(card.id));
@@ -21,7 +21,7 @@ export async function completeCard(card: Pick<Card, 'id'>): Promise<void> {
   }
   if (!res || !res.completionId) return;
   const id = res.completionId;
-  const text = res.nextDueAt ? t('Erledigt · nächste Karte {when}', { when: formatDue(res.nextDueAt) }) : t('Erledigt');
+  const text = res.nextDueAt ? t('Erledigt · nächste Aufgabe {when}', { when: formatDue(res.nextDueAt) }) : t('Erledigt');
   toast(text, { action: { label: t('Rückgängig'), run: () => void act(() => api.undo(id)) } });
 }
 
@@ -36,9 +36,9 @@ export function filterListFor(kind: 'today' | 'overdue'): void {
 }
 
 /**
- * Überfällige Karten verschieben (Blatt „Überfällig"): Termin auf heute, morgen oder Samstag, Uhrzeit bleibt (shiftDue). Über die
- * gewöhnliche Karten-Änderung; „Geplant" und zurück regelt der Server. Gemeldet wird nur, was wirklich verschoben wurde, mit „Rückgängig"
- * (stellt die alten Termine wieder her); schlägt es für alle fehl, gibt es nur die Fehlermeldung. Kinder ändern keine Karten.
+ * Überfällige Aufgaben verschieben (Blatt „Überfällig"): Termin auf heute, morgen oder Samstag, Uhrzeit bleibt (shiftDue). Über die
+ * gewöhnliche Aufgaben-Änderung; „Geplant" und zurück regelt der Server. Gemeldet wird nur, was wirklich verschoben wurde, mit „Rückgängig"
+ * (stellt die alten Termine wieder her); schlägt es für alle fehl, gibt es nur die Fehlermeldung. Kinder ändern keine Aufgaben.
  */
 export async function shiftCards(cards: { id: string; title: string; dueAt: string | null; version?: number }[], target: ShiftTarget): Promise<void> {
   if (ui.isChild) return;
@@ -82,7 +82,7 @@ async function undoShift(moved: ShiftRecord[]): Promise<void> {
   if (res.failed > 0) toast(tn('{n} Aufgabe ließ sich nicht zurücksetzen', '{n} Aufgaben ließen sich nicht zurücksetzen', res.failed), { tone: 'error' });
 }
 
-/** Eine heute erledigte Karte wieder öffnen (Blatt „Heute erledigt"): macht die letzte Erledigung rückgängig, wie „Rückgängig" nach dem Abhaken */
+/** Eine heute erledigte Aufgabe wieder öffnen (Blatt „Heute erledigt"): macht die letzte Erledigung rückgängig, wie „Rückgängig" nach dem Abhaken */
 export async function reopenCard(card: Pick<Card, 'id' | 'title'>): Promise<void> {
   const r = await actResult(async () => {
     const last = (await api.card(card.id)).history[0];
@@ -92,7 +92,7 @@ export async function reopenCard(card: Pick<Card, 'id' | 'title'>): Promise<void
   if (r.ok) toast(t('„{title}“ ist wieder offen', { title: card.title }));
 }
 
-/** Eine Karte vom Haus weitergeben: an die nächste Person der Rotation, oder sie bleibt bei mir, wenn gerade niemand sonst dran ist */
+/** Eine Aufgabe vom Haus weitergeben: an die nächste Person der Rotation, oder sie bleibt bei mir, wenn gerade niemand sonst dran ist */
 export async function passCard(card: Pick<Card, 'id' | 'title'>): Promise<void> {
   const res = await act(() => api.passCard(card.id));
   if (!res) return;
@@ -100,13 +100,13 @@ export async function passCard(card: Pick<Card, 'id' | 'title'>): Promise<void> 
   else toast(t('Weitergegeben an {name}', { name: personById(res.to)?.displayName ?? '?' }));
 }
 
-/** "Erst vorschlagen": die Karte übernehmen (wer zuerst tippt, bekommt sie) */
+/** "Erst vorschlagen": die Aufgabe übernehmen (wer zuerst tippt, bekommt sie) */
 export async function claimCard(card: Pick<Card, 'id'>): Promise<void> {
   const res = await act(() => api.claimCard(card.id));
   if (res) toast(t('Übernommen'));
 }
 
-/** Ein Bestätiger sagt „Bestätigen" (die Karte ist erledigt, zählt aufs Kind) oder „Nochmal" (das Kind bekommt sie zurück) */
+/** Ein Bestätiger sagt „Bestätigen" (die Aufgabe ist erledigt, zählt aufs Kind) oder „Nochmal" (das Kind bekommt sie zurück) */
 export async function answerConfirmation(card: Pick<Card, 'id' | 'title'>, answer: 'confirm' | 'reject'): Promise<void> {
   const res = await act(async (): Promise<boolean> => {
     if (answer === 'confirm') await api.confirmCard(card.id);
@@ -127,19 +127,19 @@ export async function moveCard(card: Card, columnId: string, afterId?: string | 
   const completedNow = res.completedAt && !card.completedAt;
   const completion = res.history[0];
   if (completedNow && completion) {
-    // Bei einer Wiederholung liegt die neue Karte inzwischen im geladenen Board
+    // Bei einer Wiederholung liegt die neue Aufgabe inzwischen im geladenen Board
     const next = card.recurrence ? ui.view?.cards.find((c) => c.repeatedFrom === card.id) : undefined;
-    const text = next?.dueAt ? t('Erledigt · nächste Karte {when}', { when: formatDue(next.dueAt) }) : t('Erledigt');
+    const text = next?.dueAt ? t('Erledigt · nächste Aufgabe {when}', { when: formatDue(next.dueAt) }) : t('Erledigt');
     toast(text, { action: { label: t('Rückgängig'), run: () => void act(() => api.undo(completion.id)) } });
     return;
   }
 
   const landed = columns.find((c) => c.id === res.columnId);
   if (wanted && landed && landed.id !== wanted.id) {
-    // Der Server hat die Karte in die passende Spalte gelegt: „Geplant" gibt es nur für Termine nach heute
+    // Der Server hat die Aufgabe in die passende Spalte gelegt: „Geplant" gibt es nur für Termine nach heute
     toast(
       wanted.isPlanned
-        ? t('Nach „Geplant" kommen nur Karten mit einem Termin nach heute.')
+        ? t('Nach „Geplant" kommen nur Aufgaben mit einem Termin nach heute.')
         : t('„{title}" hat einen Termin nach heute und wartet deshalb in „{column}".', { title: res.title, column: landed.name }),
     );
     return;
@@ -151,7 +151,7 @@ export async function moveCard(card: Card, columnId: string, afterId?: string | 
   }
 }
 
-/** Wischen: eine Karte in den nächsten (rechts) oder vorigen (links) Status, „Geplant" wird übersprungen */
+/** Wischen: eine Aufgabe in den nächsten (rechts) oder vorigen (links) Status, „Geplant" wird übersprungen */
 export async function swipeCard(card: Card, dir: 'left' | 'right'): Promise<void> {
   const target = swipeTarget(ui.view?.columns ?? [], card.columnId, dir);
   if (target) await moveCard(card, target.id, null);
@@ -193,15 +193,15 @@ export function askSuggestWatcherCategories(n: number): void {
 /** Fragt vor dem Löschen nach; gelöscht wird erst nach „Löschen" */
 export function removeCard(card: Card): void {
   ui.confirm = {
-    title: t('Karte löschen?'),
+    title: t('Aufgabe löschen?'),
     text: t('„{title}“ kommt in den Papierkorb und lässt sich von dort wiederherstellen.', { title: card.title }),
     label: t('Löschen'),
     run: async () => {
       const r = await actResult(() => api.deleteCard(card.id));
-      if (!r.ok) return; // der Fehler steht schon als Hinweis da; die Karte bleibt offen
+      if (!r.ok) return; // der Fehler steht schon als Hinweis da; die Aufgabe bleibt offen
       closeSheet();
       if (ui.detailId === card.id) closeDetail();
-      toast(t('Karte gelöscht'), { action: { label: t('Rückgängig'), run: () => void act(() => api.restore('card', card.id)) } });
+      toast(t('Aufgabe gelöscht'), { action: { label: t('Rückgängig'), run: () => void act(() => api.restore('card', card.id)) } });
     },
   };
 }

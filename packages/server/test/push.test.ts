@@ -56,7 +56,7 @@ describe('HaNotifyPush', () => {
     expect(calls[0]!.data).toEqual({ title: 'T', message: 'B', data: { tag: 't' } });
   });
 
-  it('öffnet ohne Karte die Startseite', async () => {
+  it('öffnet ohne Aufgabe die Startseite', async () => {
     const { push, calls } = setup({ u1: ['svc'] });
     await push.send('u1', { title: 'T', body: 'B', tag: 't', open: {} });
     expect(calls[0]!.data.data.url).toBe('/dashboard/start');

@@ -37,8 +37,8 @@
 <Group
   title="Beta"
   hint={ui.isAdmin
-    ? t('Das ist die Beta-Version von Stups mit eigenen Daten. Push und Wächter sind zunächst aus, damit niemand Nachrichten doppelt bekommt (auch nicht aus der normalen App). Schalte sie nur ein, wenn du sie testen willst.')
-    : t('Das ist die Beta-Version von Stups mit eigenen Daten. Push und Wächter schaltet ein Administrator ein.')}
+    ? t('Das ist die Beta-Version von Stups mit eigenen Daten. Push ist zunächst aus, damit niemand Nachrichten doppelt bekommt (auch nicht aus der normalen App); die Wächter laufen. Laufen dieselben Wächter auch in der normalen App, entstehen Aufgaben doppelt: dann schalte sie hier aus.')
+    : t('Das ist die Beta-Version von Stups mit eigenen Daten. Push und Wächter schaltet ein Administrator ein oder aus.')}
 >
   <div class="flex min-h-[46px] items-center gap-2 bg-accent px-4 py-2 text-on-accent" data-testid="beta-banner">
     <span class="rounded-md bg-on-accent px-2 py-0.5 text-[12px] font-bold text-accent">BETA</span>

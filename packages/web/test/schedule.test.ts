@@ -52,7 +52,7 @@ describe('filterSchedule', () => {
     expect(filterSchedule(cards, f({ personIds: ['anna', 'ben'] })).map((c) => c.id)).toEqual(['müll', 'steuer', 'fenster', 'elektriker']);
   });
 
-  it('„Niemand zugewiesen" zeigt Karten ohne Zuständige, allein oder zusammen mit Personen', () => {
+  it('„Niemand zugewiesen" zeigt Aufgaben ohne Zuständige, allein oder zusammen mit Personen', () => {
     expect(filterSchedule(cards, f({ unassigned: true })).map((c) => c.id)).toEqual(['papier']);
     expect(filterSchedule(cards, f({ personIds: ['anna'], unassigned: true })).map((c) => c.id)).toEqual(['müll', 'fenster', 'papier']);
   });
@@ -72,7 +72,7 @@ describe('filterSchedule', () => {
 });
 
 describe('Zahlen an den Chips', () => {
-  it('Personen: Karten je Person unter dem Board-Filter, „Niemand" extra', () => {
+  it('Personen: Aufgaben je Person unter dem Board-Filter, „Niemand" extra', () => {
     expect(personCounts(cards, DEFAULT_FILTER)).toEqual({ byPerson: { anna: 2, ben: 3 }, unassigned: 1 });
     expect(personCounts(cards, f({ boardIds: ['b2'] }))).toEqual({ byPerson: { ben: 1 }, unassigned: 0 });
   });
@@ -81,7 +81,7 @@ describe('Zahlen an den Chips', () => {
     expect(personCounts(cards, f({ personIds: ['anna'] }))).toEqual(personCounts(cards, DEFAULT_FILTER));
   });
 
-  it('Boards: Karten je Board unter dem Personen-Filter', () => {
+  it('Boards: Aufgaben je Board unter dem Personen-Filter', () => {
     expect(boardCounts(cards, DEFAULT_FILTER)).toEqual({ b1: 4, b2: 1 });
     expect(boardCounts(cards, f({ personIds: ['ben'] }))).toEqual({ b1: 2, b2: 1 });
   });
@@ -98,7 +98,7 @@ describe('groupByDay', () => {
   const open = filterSchedule(cards, DEFAULT_FILTER);
   const sections = groupByDay(open, NOW, TZ);
 
-  it('Überfälliges zuerst, dann nur Tage mit Karten, nach Datum', () => {
+  it('Überfälliges zuerst, dann nur Tage mit Aufgaben, nach Datum', () => {
     expect(sections.map((s) => [s.key, s.title, s.cards.map((c) => c.id)])).toEqual([
       ['overdue', 'Überfällig', ['müll']],
       ['2026-11-04', 'Heute', ['steuer']],
@@ -108,7 +108,7 @@ describe('groupByDay', () => {
   });
 
   it('zweite Zeile mit Datum bei Heute und Morgen, sonst nur die Zahl', () => {
-    expect(sections.map((s) => s.sub)).toEqual(['1 Karte', 'Mi 4. Nov · 1 Karte', 'Do 5. Nov · 1 Karte', '2 Karten']);
+    expect(sections.map((s) => s.sub)).toEqual(['1 Aufgabe', 'Mi 4. Nov · 1 Aufgabe', 'Do 5. Nov · 1 Aufgabe', '2 Aufgaben']);
     expect(sections.find((s) => s.today)!.key).toBe('2026-11-04');
   });
 
@@ -123,7 +123,7 @@ describe('groupByDay', () => {
     expect(s[0]!.title).toBe('Morgen');
   });
 
-  it('ohne Karten gibt es keine Abschnitte', () => {
+  it('ohne Aufgaben gibt es keine Abschnitte', () => {
     expect(groupByDay([], NOW, TZ)).toEqual([]);
   });
 });
@@ -144,7 +144,7 @@ describe('dayLabel und Boardfarbe', () => {
 });
 
 describe('Zeitraum der Agenda', () => {
-  it('ist nichts im Zeitraum, schaut die Agenda gleich ein Jahr voraus (sonst wäre die Liste leer, obwohl später Karten anstehen)', () => {
+  it('ist nichts im Zeitraum, schaut die Agenda gleich ein Jahr voraus (sonst wäre die Liste leer, obwohl später Aufgaben anstehen)', () => {
     expect(agendaHorizonAfterLoad(0, AGENDA_STEP_DAYS)).toBe(365);
   });
 

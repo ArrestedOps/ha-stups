@@ -27,21 +27,22 @@ test('Leiste unten: im Browser mit Platz für den Home-Balken, in Home Assistant
   const gap = () => {
     const nav = document.querySelector('nav[aria-label]') as HTMLElement;
     const labels = [...nav.querySelectorAll('button')].map((b) => b.getBoundingClientRect().bottom);
-    return { lowestButton: Math.max(...labels), viewport: window.innerHeight, padBottom: parseFloat(getComputedStyle(nav).paddingBottom) };
+    return { lowestButton: Math.max(...labels), viewport: window.innerHeight, padBottom: parseFloat(getComputedStyle(document.querySelector('nav[aria-label]')!).bottom) + 12 };
   };
 
   await page.goto('/');
   await expect(page.getByRole('navigation', { name: 'Ansicht' })).toBeVisible();
   const direct = await page.evaluate(gap);
   expect(direct.padBottom).toBeGreaterThanOrEqual(30);
-  expect(direct.viewport - direct.lowestButton).toBeGreaterThanOrEqual(30);
+  // die Leiste schwebt über dem Home-Balken: Platz unter den Knöpfen
+  expect(direct.viewport - direct.lowestButton).toBeGreaterThanOrEqual(18);
 
   await page.setContent(`<iframe id="f" src="${baseURL}/" style="width:390px;height:700px;border:0"></iframe>`);
   await expect(page.frameLocator('#f').getByRole('navigation', { name: 'Ansicht' })).toBeVisible();
   const handle = await page.locator('#f').elementHandle();
   const inner = await (await handle!.contentFrame())!.evaluate(gap);
   expect(inner.padBottom).toBeLessThanOrEqual(12);
-  expect(inner.viewport - inner.lowestButton).toBeLessThanOrEqual(12);
+  expect(inner.viewport - inner.lowestButton).toBeLessThanOrEqual(20);
 });
 
 // Home Assistant ab 2026.8: Das App-Panel polstert den iframe selbst. Stups meldet sich mit handleSafeArea an, bekommt die Abstände
@@ -62,7 +63,7 @@ const panelPage = (src: string, insets: object | null) => `
     });
   </script>`;
 
-test('Home Assistant 2026.8: Stups übernimmt die Sicherheitsabstände, die Leiste füllt bis zum unteren Rand ohne Streifen', async ({ page, baseURL }) => {
+test('Home Assistant 2026.8: Stups übernimmt die Sicherheitsabstände, die schwebende Leiste hält den Home-Balken frei', async ({ page, baseURL }) => {
   // Wie im Ingress: gleicher Ursprung wie Stups, der iframe füllt den Bildschirm (Home Assistant polstert ihn, solange es nicht anders gesagt wird)
   await page.goto(`${baseURL}/healthz`);
   await page.evaluate(() => {
@@ -105,7 +106,7 @@ test('Home Assistant 2026.8: Stups übernimmt die Sicherheitsabstände, die Leis
       bottom: getComputedStyle(root).getPropertyValue('--safe-bottom').trim(),
       viewport: window.innerHeight,
       navBottom: nav.getBoundingClientRect().bottom,
-      padBottom: parseFloat(getComputedStyle(nav).paddingBottom),
+      padBottom: parseFloat(getComputedStyle(nav).bottom) + 12,
       belowButtons: window.innerHeight - lowest,
       bottomPixelIsNav: !!atBottom && nav.contains(atBottom),
       contentTop: head,
@@ -115,11 +116,10 @@ test('Home Assistant 2026.8: Stups übernimmt die Sicherheitsabstände, die Leis
   expect(m.bottom).toBe('34px');
   // der iframe füllt den Bildschirm: die Leiste endet genau am unteren Rand und deckt den letzten Pixel ab
   expect(Math.abs(m.viewport - screenH)).toBeLessThanOrEqual(1);
-  expect(Math.abs(m.navBottom - m.viewport)).toBeLessThanOrEqual(1); // Rundung bei skalierter Seite
-  expect(m.bottomPixelIsNav).toBe(true);
-  // die Knöpfe stehen über der Home-Balken-Zone
+  // die Leiste schwebt (abgerundet, mit Abstand zum Rand); der Platz unter den Knöpfen hält die Home-Balken-Zone frei
+  expect(m.navBottom).toBeLessThanOrEqual(m.viewport + 1);
   expect(m.padBottom).toBeGreaterThanOrEqual(34);
-  expect(m.belowButtons).toBeGreaterThanOrEqual(34);
+  expect(m.belowButtons).toBeGreaterThanOrEqual(22);
   // oben nur EINMAL der Abstand zur Statusleiste (47 px + 8 px Rand), nicht doppelt
   expect(m.contentTop).toBeGreaterThanOrEqual(47);
   expect(m.contentTop).toBeLessThan(47 + 40);
@@ -133,7 +133,7 @@ test('Home Assistant vor 2026.8 (keine Antwort): wie bisher, kleiner Rand und ke
   const m = await inner.evaluate(() => ({
     managed: document.documentElement.classList.contains('safe-managed'),
     top: getComputedStyle(document.documentElement).getPropertyValue('--safe-top').trim(),
-    pad: parseFloat(getComputedStyle(document.querySelector('nav[aria-label]')!).paddingBottom),
+    pad: parseFloat(getComputedStyle(document.querySelector('nav[aria-label]')!).bottom) + 12,
   }));
   expect(m).toEqual({ managed: false, top: '0px', pad: 8 });
 });

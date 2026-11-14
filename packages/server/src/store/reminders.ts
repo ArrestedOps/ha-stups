@@ -20,11 +20,11 @@ export interface DueReminder {
   baseMs: number;
   sentCount: number;
   nextAt: string | null;
-  /** die Zuständigen der Karte, die das Board sehen */
+  /** die Zuständigen der Aufgabe, die das Board sehen */
   assigneeIds: string[];
 }
 
-/** Nachhaken (Tabelle card_reminders): Erinnerungen „wenn noch nicht erledigt“ je Karte und Person */
+/** Nachhaken (Tabelle card_reminders): Erinnerungen „wenn noch nicht erledigt“ je Aufgabe und Person */
 export function createReminders(c: Ctx, late: unknown) {
   const s = late as Internals;
   const { iso, all, one, run } = c;
@@ -32,7 +32,7 @@ export function createReminders(c: Ctx, late: unknown) {
 
   const specOf = (r: Row): ReminderSpec => ({ anchor: r.anchor, afterMin: r.after_min, everyMin: r.every_min, max: r.max_count, atTime: r.at_time });
 
-  /** Die Erinnerung dieser Person an diese Karte (null: keine). Nur die eigene Zeile: andere Personen sehen sie nie. */
+  /** Die Erinnerung dieser Person an diese Aufgabe (null: keine). Nur die eigene Zeile: andere Personen sehen sie nie. */
   function myReminder(cardId: string, userId: string | null): ReminderSpec | null {
     if (!userId) return null;
     const r = one('select * from card_reminders where card_id = ? and user_id = ?', cardId, userId);
@@ -60,7 +60,7 @@ export function createReminders(c: Ctx, late: unknown) {
     );
   }
 
-  /** Der Wächter wurde geändert: das Stupsen einer schon laufenden Karte folgt der neuen Regel (nur wenn die Karte schon eins hat) */
+  /** Der Wächter wurde geändert: das Stupsen einer schon laufenden Aufgabe folgt der neuen Regel (nur wenn die Aufgabe schon eins hat) */
   function syncWatcherNudge(cardId: string, spec: ReminderSpec | null): void {
     const ex = one('select id from card_reminders where card_id = ? and user_id is null', cardId);
     if (!ex) return;
@@ -81,12 +81,12 @@ export function createReminders(c: Ctx, late: unknown) {
     run('update card_reminders set next_at = null, sent_count = 0, done = 0 where card_id = ?', cardId);
   }
 
-  /** Eine Wächter-Karte ist (neu) zugewiesen: gezählt wird ab jetzt, auch ein schon gesendeter Stups gilt neu */
+  /** Eine Wächter-Aufgabe ist (neu) zugewiesen: gezählt wird ab jetzt, auch ein schon gesendeter Stups gilt neu */
   function restartReminders(cardId: string, atIso: string): void {
     run("update card_reminders set anchor_at = ?, next_at = null, sent_count = 0, done = 0 where card_id = ? and anchor = 'created'", atIso, cardId);
   }
 
-  /** Kopiert die Erinnerungen auf eine neue Karte (wiederkehrende Karte: alle; Duplikat: nur die der Person) und zählt dort neu */
+  /** Kopiert die Erinnerungen auf eine neue Aufgabe (wiederkehrende Aufgabe: alle; Duplikat: nur die der Person) und zählt dort neu */
   function copyReminders(fromId: string, toId: string, onlyUser?: string | null): void {
     const now = iso();
     const rows = all('select * from card_reminders where card_id = ?', fromId).filter((r) => onlyUser === undefined || r.user_id === onlyUser);
@@ -109,7 +109,7 @@ export function createReminders(c: Ctx, late: unknown) {
   }
 
   /**
-   * Offene Karten mit einer Erinnerung, die fällig ist oder noch keinen Zeitpunkt hat. Erledigte, gelöschte und archivierte Karten
+   * Offene Aufgaben mit einer Erinnerung, die fällig ist oder noch keinen Zeitpunkt hat. Erledigte, gelöschte und archivierte Aufgaben
    * (und solche, die auf eine Bestätigung warten) kommen nicht vor: damit endet das Nachhaken von selbst.
    */
   function dueReminders(nowIso: string): DueReminder[] {
@@ -165,7 +165,7 @@ export function createReminders(c: Ctx, late: unknown) {
     run('update card_reminders set sent_count = ?, next_at = ?, done = ? where id = ?', st.sentCount, st.nextAt, st.done ? 1 : 0, id);
   }
 
-  /** Hält der Wächter-Verlauf fest („Erinnerung gesendet, weil die Karte noch offen war“): nur bei Karten, die ein Wächter angelegt hat */
+  /** Hält der Wächter-Verlauf fest („Erinnerung gesendet, weil die Aufgabe noch offen war“): nur bei Aufgaben, die ein Wächter angelegt hat */
   function recordWatcherNudge(cardId: string, assigneeIds: string[], note: string): void {
     const card = one('select watcher_id from cards where id = ?', cardId);
     if (!card?.watcher_id) return;

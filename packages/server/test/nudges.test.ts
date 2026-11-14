@@ -41,12 +41,12 @@ beforeEach(() => {
 const card = (extra: object = {}) => store.createCard(boardId, { columnId: openCol, title: 'Mülltonne raus', ...extra }, rene.id);
 
 describe('Stups anlegen', () => {
-  it('legt einen Stups je Empfänger an und zeigt ihn an der Karte', () => {
+  it('legt einen Stups je Empfänger an und zeigt ihn an der Aufgabe', () => {
     const c = card();
     const r = store.createNudges(c.id, rene.id, { to: [conny.id], template: 'think' });
     expect(r.skipped).toEqual([]);
     expect(r.sent).toEqual([{ nudgeId: expect.any(String), to: conny.id, status: 'sent', deliverAt: now.toISOString() }]);
-    expect(store.getCard(c.id).openNudges).toEqual([{ id: r.sent[0]!.nudgeId, fromId: rene.id, toId: conny.id, delivered: false }]);
+    expect(store.getCard(c.id).openNudges).toEqual([{ id: r.sent[0]!.nudgeId, fromId: rene.id, toId: conny.id, delivered: false, at: expect.any(String), template: expect.anything(), text: expect.any(String) }]);
     expect(store.getBoardView(boardId).cards[0]!.openNudges).toHaveLength(1);
   });
 
@@ -91,14 +91,14 @@ describe('Stups anlegen', () => {
     ]);
   });
 
-  it('eine erledigte Karte lässt sich nicht stupsen', () => {
+  it('eine erledigte Aufgabe lässt sich nicht stupsen', () => {
     const c = card();
     store.completeCard(c.id, { by: rene.id, source: 'app' });
     expect(() => store.createNudges(c.id, rene.id, { to: [conny.id], template: 'think' })).toThrow(ConflictError);
   });
 });
 
-describe('Sperrzeit (30 Minuten je Karte, Absender und Empfänger)', () => {
+describe('Sperrzeit (30 Minuten je Aufgabe, Absender und Empfänger)', () => {
   it('ein zweiter Stups innerhalb von 30 Minuten wird abgelehnt, mit dem Zeitpunkt, ab wann es wieder geht', () => {
     const c = card();
     store.createNudges(c.id, rene.id, { to: [conny.id], template: 'think' });
@@ -110,7 +110,7 @@ describe('Sperrzeit (30 Minuten je Karte, Absender und Empfänger)', () => {
     expect(store.createNudges(c.id, rene.id, { to: [conny.id], template: 'today' }).sent).toHaveLength(1);
   });
 
-  it('gilt nur für dieselbe Karte, denselben Absender und denselben Empfänger', () => {
+  it('gilt nur für dieselbe Aufgabe, denselben Absender und denselben Empfänger', () => {
     const c1 = card();
     const c2 = card({ title: 'Wäsche' });
     store.createNudges(c1.id, rene.id, { to: [conny.id], template: 'think' });
@@ -253,7 +253,7 @@ describe('Zustellung und Antworten', () => {
 });
 
 describe('Erledigen, Löschen und Entfernen schließt offene Stupse', () => {
-  it('Erledigen schließt alle offenen Stupse der Karte und meldet sie, wer erledigt hat steht dabei', () => {
+  it('Erledigen schließt alle offenen Stupse der Aufgabe und meldet sie, wer erledigt hat steht dabei', () => {
     store.setNotifyServices(gast.id, ['svc_gast']);
     const c = card();
     const a = store.createNudges(c.id, rene.id, { to: [conny.id, gast.id], template: 'think' }).sent;
@@ -279,7 +279,7 @@ describe('Erledigen, Löschen und Entfernen schließt offene Stupse', () => {
     const n2 = store.createNudges(c2.id, rene.id, { to: [conny.id], template: 'think' }).sent[0]!.nudgeId;
     const res = store.completeCard(c2.id, { by: rene.id, source: 'app' });
     expect(store.getNudge(n2)!.reply).toBe('closed');
-    expect(store.getCard(res.nextCardId!).openNudges).toEqual([]); // die neue Karte beginnt ohne Stupse
+    expect(store.getCard(res.nextCardId!).openNudges).toEqual([]); // die neue Aufgabe beginnt ohne Stupse
   });
 
   it('Löschen und das Entfernen einer Person schließen leise, ohne Meldung', () => {
@@ -295,7 +295,7 @@ describe('Erledigen, Löschen und Entfernen schließt offene Stupse', () => {
     expect(closed).toEqual([]);
   });
 
-  it('Rückgängig öffnet die Karte, geschlossene Stupse bleiben geschlossen', () => {
+  it('Rückgängig öffnet die Aufgabe, geschlossene Stupse bleiben geschlossen', () => {
     const c = card();
     const id = store.createNudges(c.id, rene.id, { to: [conny.id], template: 'think' }).sent[0]!.nudgeId;
     const res = store.completeCard(c.id, { by: rene.id, source: 'app' });
@@ -304,7 +304,7 @@ describe('Erledigen, Löschen und Entfernen schließt offene Stupse', () => {
     expect(store.dueNudges()).toEqual([]);
   });
 
-  it('ein Stups auf eine nicht zugestellte, später erledigte Karte wird nie zugestellt', () => {
+  it('ein Stups auf eine nicht zugestellte, später erledigte Aufgabe wird nie zugestellt', () => {
     at('2026-11-04T22:30:00Z');
     const c = card();
     store.createNudges(c.id, rene.id, { to: [conny.id], template: 'think' });
@@ -315,7 +315,7 @@ describe('Erledigen, Löschen und Entfernen schließt offene Stupse', () => {
 });
 
 describe('Verlauf, Zähler und Übersicht', () => {
-  it('der Verlauf der Karte zeigt Stups, „Mach ich" und „Später"', () => {
+  it('der Verlauf der Aufgabe zeigt Stups, „Mach ich" und „Später"', () => {
     const c = card();
     const id = store.createNudges(c.id, rene.id, { to: [conny.id], text: 'Bitte heute' }).sent[0]!.nudgeId;
     at('2026-11-04T10:05:00Z');

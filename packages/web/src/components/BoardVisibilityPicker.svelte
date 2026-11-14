@@ -80,7 +80,7 @@
 
   <ListRow title={t('Zählt zur Fairness der Woche')} dim={locked}>
     {#snippet tile()}<Tile color="green"><Icon name="columns" size={22} stroke={1.8} /></Tile>{/snippet}
-    {#snippet meta()}<span data-testid="counts-note">{locked ? t('Private Boards zählen nie mit.') : counts ? t('Erledigte Karten zählen mit') : t('Erledigte Karten zählen nicht mit')}</span>{/snippet}
+    {#snippet meta()}<span data-testid="counts-note">{locked ? t('Private Boards zählen nie mit.') : counts ? t('Erledigte Aufgaben zählen mit') : t('Erledigte Aufgaben zählen nicht mit')}</span>{/snippet}
     {#snippet right()}
       <Toggle label={t('Zählt zur Fairness der Woche')} checked={locked ? false : counts} disabled={locked || disabled} onchange={oncounts} />
     {/snippet}

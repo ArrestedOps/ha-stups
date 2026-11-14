@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Wächter-Editor: Assistent in vier Schritten (mit „Reihum" vorausgewählt),
 // Ablauf beim Bearbeiten mit Verlauf der Entität, Mitglied nur lesend.
@@ -78,7 +78,7 @@ test('Assistent in vier Schritten: Verlauf mit Auslösepunkt, „Reihum“ ist v
 
   // Schritt 2: Titel, Board, Fälligkeit
   await expect(d.getByTestId('wizard-question')).toHaveText('Welche Aufgabe soll dann entstehen?');
-  await d.getByLabel('Titel der Karte').fill(title);
+  await d.getByLabel('Titel der Aufgabe').fill(title);
   await d.getByLabel('Board', { exact: true }).selectOption(s.boardId);
   await d.getByRole('group', { name: 'Fälligkeit' }).getByRole('button', { name: 'in 1 Std.' }).click();
   await expect(d.getByTestId('card-preview')).toContainText(title);
@@ -99,7 +99,7 @@ test('Assistent in vier Schritten: Verlauf mit Auslösepunkt, „Reihum“ ist v
   await d.getByRole('switch', { name: 'Automatisch erledigen' }).click();
   expect(await clipped(d)).toEqual([]);
   // Schritt 4: Zusammenfassung, anlegen
-  await expect(d.getByTestId('watcher-sentence')).toContainText(`bekommt reihum jemand die Karte „${title}“ (fällig in 60 Min.)`);
+  await expect(d.getByTestId('watcher-sentence')).toContainText(`bekommt reihum jemand die Aufgabe „${title}“ (fällig in 60 Min.)`);
   await d.getByRole('button', { name: 'Wächter anlegen' }).click();
   await expect(page.getByText('Wächter gespeichert')).toBeVisible();
 
@@ -110,7 +110,7 @@ test('Assistent in vier Schritten: Verlauf mit Auslösepunkt, „Reihum“ ist v
   expect(saved.card.due).toEqual({ kind: 'in', minutes: 60 });
 });
 
-test('Bearbeiten als Ablauf: vier Karten, Verlauf, „Ändern“ klappt die Einstellungen auf, Feinschliff als Chips', async ({ page, request }) => {
+test('Bearbeiten als Ablauf: vier Aufgaben, Verlauf, „Ändern“ klappt die Einstellungen auf, Feinschliff als Chips', async ({ page, request }) => {
   const s = await setup(request);
   await washerHistory(request);
   const name = `Ablauf ${s.tag}`;
@@ -136,9 +136,9 @@ test('Bearbeiten als Ablauf: vier Karten, Verlauf, „Ändern“ klappt die Eins
   await expect(d.getByTestId('graph-threshold')).toBeAttached();
   await expect(d.getByTestId('graph-mark')).toHaveCount(1);
   await expect(d.getByTestId('assign-order')).toBeVisible();
-  await expect(d.getByTestId('done-sum')).toContainText('Die Karte erledigst du selbst.');
+  await expect(d.getByTestId('done-sum')).toContainText('Die Aufgabe erledigst du selbst.');
 
-  // die Entität steht oben in der Karte WENN, direkt unter der Überschrift, mit „Ändern“ rechts
+  // die Entität steht oben in der Aufgabe WENN, direkt unter der Überschrift, mit „Ändern“ rechts
   const entity = flow.getByTestId('when-entity');
   await expect(entity).toContainText('Waschmaschine Leistung');
   await expect(entity.getByRole('button', { name: /^Entität ändern: Waschmaschine Leistung/ })).toHaveText('Ändern');
@@ -160,9 +160,9 @@ test('Bearbeiten als Ablauf: vier Karten, Verlauf, „Ändern“ klappt die Eins
   await d.getByRole('group', { name: 'Feinschliff' }).getByRole('button', { name: 'Sperrzeit 10 Min.' }).click();
   await d.getByLabel('Sperrzeit in Minuten').fill('15');
   await expect(d.getByRole('button', { name: 'Sperrzeit 15 Min.' })).toBeVisible();
-  // „Keine zweite Karte“ ist ein Schalter unter den Chips
-  await d.getByRole('button', { name: 'Keine zweite Karte' }).click();
-  await expect(d.getByRole('button', { name: 'Zweite Karte erlaubt' })).toBeVisible();
+  // „Keine zweite Aufgabe“ ist ein Schalter unter den Chips
+  await d.getByRole('button', { name: 'Keine zweite Aufgabe' }).click();
+  await expect(d.getByRole('button', { name: 'Zweite Aufgabe erlaubt' })).toBeVisible();
 
   // Erledigt sich selbst: einschalten, Entität wählen
   await d.getByRole('switch', { name: 'Automatisch erledigen' }).click();
@@ -225,8 +225,7 @@ test('ohne Verlauf: ein Hinweis statt des Diagramms, der Assistent bleibt bedien
   await page.goto('/');
   await openBoards(page);
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByRole('button', { name: 'Alle Wächter verwalten' }).click();
-  await page.getByRole('button', { name: 'Wächter hinzufügen' }).first().click();
+  await page.getByRole('button', { name: 'Neuer Wächter', exact: true }).first().click();
   const d = page.getByRole('dialog');
   await d.getByRole('button', { name: 'Entität wählen' }).click();
   await d.getByLabel('Entität suchen').fill('bad fenster');
@@ -255,13 +254,14 @@ test('Sehr lange Entitätsnamen brechen um und machen die Seite nicht breiter (A
   await page.goto('/');
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   // Die Batterie (Pegel, kein Vorgang) steht in ihrer Kategorie, nicht unter „Läuft gerade"
-  await expect(page.getByTestId('watcher-categories')).toContainText(name);
+  await openWatcherCategory(page, 'Ohne Kategorie');
+  await expect(page.getByTestId('watcher-page')).toContainText(name);
   await expect(page.getByTestId('home-running').filter({ hasText: name })).toHaveCount(0);
   await page.getByRole('button', { name: `Wächter ${name} öffnen` }).first().click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByTestId('watcher-sentence')).toBeVisible();
 
-  // nichts ragt über den Bildschirm hinaus: weder die Seite noch Zusammenfassung, Karten oder Entitätszeile
+  // nichts ragt über den Bildschirm hinaus: weder die Seite noch Zusammenfassung, Aufgaben oder Entitätszeile
   const m = await page.evaluate(() => {
     const vw = window.innerWidth;
     const overflowing = [...document.querySelectorAll('[role=dialog] *')]

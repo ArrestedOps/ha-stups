@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stups · Richtung C · Aufgaben mit Persönlichkeit</title>
+<!--
+  Mockup, kein Produktcode. Richtung C (nativ) mit mehr Persönlichkeit:
+   · runde Schrift für Titel, Zahlen und Namen (auf dem iPhone ui-rounded = SF Rounded; hier Nunito als Ersatz), Text in der Systemschrift (hier Inter)
+   · Personen haben eigene Farben, ein Personenband statt "Meine | Alle | Ben" (skaliert auf 10 und mehr Personen)
+   · ein Satz in Alltagssprache unter dem Titel
+   · der Stups kommt als Nachricht an: Sprechblase mit den Antwort-Knöpfen der Push-Nachricht
+  Parameter: ?users=3 (Standard) oder ?users=10, ?theme=light|dark. Unter 900 px Handy, darüber Desktop (ab 1240 px mit Details).
+-->
+<style>
+@font-face { font-family: "Inter"; src: url("fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Nunito"; src: url("fonts/nunito-latin-wght-normal.woff2") format("woff2"); font-weight: 200 1000; font-display: swap; }
+:root {
+  --bg: #f2f2f7; --card: #ffffff; --ink: #000000; --mute: #6c6c70; --sep: #d1d1d6; --fill: rgba(118,118,128,.12);
+  --tint: #c93f00; --tint-soft: rgba(201,63,0,.10); --on-tint: #ffffff; --ring: #c7c7cc; --bar: rgba(249,249,249,.94);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 40px; /* Abstandsraster */
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #000000; --card: #1c1c1e; --ink: #ffffff; --mute: #98989f; --sep: #38383a; --fill: rgba(118,118,128,.24);
+  --tint: #ff8a50; --tint-soft: rgba(255,138,80,.16); --on-tint: #1a0b02; --ring: #636366; --bar: rgba(28,28,30,.92); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #000000; --card: #1c1c1e; --ink: #ffffff; --mute: #98989f; --sep: #38383a; --fill: rgba(118,118,128,.24);
+  --tint: #ff8a50; --tint-soft: rgba(255,138,80,.16); --on-tint: #1a0b02; --ring: #636366; --bar: rgba(28,28,30,.92); color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--ink); font: 400 17px/1.3 var(--sans); letter-spacing: -0.011em; -webkit-font-smoothing: antialiased; }
+button { font: inherit; letter-spacing: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+button:focus-visible { outline: 3px solid var(--tint); outline-offset: 2px; border-radius: 8px; }
+svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.num { font-variant-numeric: tabular-nums; }
+.rd { font-family: var(--round); }
+
+/* ---------- Personen: eigene Farbe je Person ---------- */
+.av { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pc, #6b7280); color: var(--pt, #fff); font: 800 13px/1 var(--round); flex: none; }
+.av.xl { width: 56px; height: 56px; font-size: 22px; }
+.av.lg { width: 40px; height: 40px; font-size: 17px; }
+.avs { display: inline-flex; }
+.avs .av + .av { margin-left: -7px; box-shadow: -2px 0 0 var(--card); }
+.pc1 { --pc: #c93f00; } .pc2 { --pc: #2563eb; } .pc3 { --pc: #c2185b; } .pc4 { --pc: #15803d; } .pc5 { --pc: #7c3aed; }
+.pc6 { --pc: #b45309; } .pc7 { --pc: #0e7490; } .pc8 { --pc: #be123c; } .pc9 { --pc: #65a30d; --pt: #1a2e05; } .pc10 { --pc: #6b7280; }
+
+/* ---------- Kopf ---------- */
+.nav { display: flex; align-items: center; justify-content: space-between; height: 52px; padding: 0 var(--s4); }
+.nav .brand { font: 800 21px/1 var(--round); letter-spacing: -0.01em; }
+.nav .brand i { font-style: normal; color: var(--tint); }
+.nav .right { display: flex; gap: var(--s2); }
+.circ { position: relative; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--fill); }
+.circ svg { width: 20px; height: 20px; }
+.circ .pip { position: absolute; top: 3px; right: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--tint); border: 2px solid var(--bg); box-sizing: content-box; }
+.title { font: 800 36px/1.05 var(--round); letter-spacing: 0; padding: var(--s1) var(--s4) 0; }
+.say { padding: var(--s1) var(--s4) 0; color: var(--mute); font-size: 17px; line-height: 1.35; max-width: 22em; }
+.say b { color: var(--ink); font-weight: 600; }
+
+/* ---------- Personenband ---------- */
+.people { position: relative; margin-top: var(--s3); }
+.strip { display: flex; gap: 6px; overflow-x: auto; padding: 9px var(--s4) 8px; scrollbar-width: none; }
+.strip::-webkit-scrollbar { display: none; }
+.person { position: relative; display: grid; justify-items: center; gap: 6px; width: 60px; flex: none; font: 600 12.5px/1.1 var(--sans); color: var(--mute); }
+.person .face { position: relative; border-radius: 50%; }
+.person .face .av, .person .face .all { box-shadow: 0 0 0 0 transparent; }
+.person .all { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--fill); color: var(--ink); }
+.person .all svg { width: 26px; height: 26px; }
+.person .n { position: absolute; top: -3px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--card); color: var(--ink); font: 800 12px/20px var(--round); text-align: center; box-shadow: 0 0 0 2px var(--bg); }
+.person[aria-pressed="true"] { color: var(--ink); font-weight: 700; }
+.person[aria-pressed="true"] .face { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4.5px var(--tint); }
+.more { display: none; }
+.people.many .strip { padding-right: 60px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 100px), transparent calc(100% - 56px)); mask-image: linear-gradient(90deg, #000 calc(100% - 100px), transparent calc(100% - 56px)); }
+.people.many .more { display: grid; position: absolute; right: 0; top: 0; bottom: 0; width: 60px; place-items: center; padding-left: 4px; }
+.more span { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--fill); }
+.more svg { width: 22px; height: 22px; }
+
+/* ---------- Zahlen ---------- */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: var(--s4) var(--s4) 0; background: var(--card); border-radius: 14px; }
+.stats button { display: grid; gap: 1px; padding: var(--s3) var(--s4); text-align: left; }
+.stats button + button { border-left: 1px solid var(--sep); }
+.stats .v { font: 800 28px/1.1 var(--round); font-variant-numeric: tabular-nums; }
+.stats .l { font-size: 13px; color: var(--mute); }
+.stats .over .v { color: var(--tint); }
+
+.week { display: grid; grid-template-columns: repeat(7, 1fr); margin: var(--s3) var(--s2) 0; }
+.week button { display: grid; justify-items: center; gap: 3px; padding: var(--s1) 0; }
+.week .wd { font: 500 12px/1 var(--sans); color: var(--mute); }
+.week .d { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; font: 700 19px/1 var(--round); }
+.week .on .d { background: var(--tint); color: var(--on-tint); }
+.week .dots { display: flex; gap: 3px; height: 5px; }
+.week .dots b { width: 5px; height: 5px; border-radius: 50%; background: var(--ring); }
+
+/* ---------- Stups als Nachricht ---------- */
+.msg { display: flex; align-items: flex-end; gap: var(--s2); margin: var(--s4) var(--s4) 0; }
+.msg .bubble { flex: 1; min-width: 0; padding: var(--s3) var(--s4) var(--s3); border-radius: 22px 22px 22px 6px; background: color-mix(in srgb, var(--pc) 13%, var(--card)); }
+.msg .who { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--mute); }
+.msg .who b { color: var(--ink); font-weight: 600; }
+.msg .who svg { width: 17px; height: 17px; color: var(--pc); stroke-width: 2.2; }
+.msg .who time { margin-left: auto; }
+.msg .text { font: 800 24px/1.15 var(--round); margin-top: 4px; }
+.msg .ref { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s2); font-size: 15px; color: var(--mute); }
+.msg .ref .tile { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--tint-soft); color: var(--tint); }
+.msg .ref .tile svg { width: 16px; height: 16px; stroke-width: 2.2; }
+.msg .ref b { color: var(--ink); font-weight: 600; }
+.msg .acts { display: flex; gap: var(--s2); margin-top: var(--s3); }
+.msg .acts button { flex: 1; height: 38px; border-radius: 19px; background: var(--card); font: 600 15px/1 var(--sans); text-align: center; }
+.msg .acts .go { background: var(--tint); color: var(--on-tint); }
+
+/* ---------- Listen ---------- */
+.gh { display: flex; justify-content: space-between; align-items: baseline; margin: var(--s5) var(--s4) var(--s2); padding: 0 var(--s4); font: 800 20px/1.2 var(--round); }
+.gh .c { font: 700 15px/1 var(--round); color: var(--mute); }
+.gh.over { color: var(--tint); } .gh.over .c { color: var(--tint); }
+.group { margin: 0 var(--s4); background: var(--card); border-radius: 14px; overflow: hidden; }
+.item { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: var(--s3); min-height: 64px; padding: var(--s3) var(--s4); position: relative; width: 100%; }
+.item + .item::before { content: ""; position: absolute; top: 0; left: 54px; right: 0; height: 1px; background: var(--sep); opacity: .8; }
+.circle { width: 26px; height: 26px; border-radius: 50%; border: 1.75px solid var(--ring); }
+.item .name { font-size: 17px; font-weight: 600; }
+.item .sub { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s2); font-size: 15px; color: var(--mute); margin-top: 1px; }
+.item .sub svg { width: 14px; height: 14px; }
+.item .sub span { display: inline-flex; align-items: center; gap: 3px; }
+.item .sub .hi { color: var(--tint); font-weight: 600; }
+@media (min-width: 900px) { .item.sel { background: var(--tint-soft); } }
+
+.tabbar { position: fixed; inset: auto 0 0 0; display: grid; grid-template-columns: repeat(3, 1fr); background: var(--bar); backdrop-filter: blur(20px); border-top: 1px solid var(--sep); padding: var(--s1) 0 max(var(--s2), env(safe-area-inset-bottom)); }
+.tabbar button { display: grid; justify-items: center; gap: 2px; padding: 6px 0 2px; font: 500 10.5px/1.2 var(--sans); color: var(--mute); }
+.tabbar button[aria-current="page"] { color: var(--tint); }
+.tabbar svg { width: 26px; height: 26px; }
+.pad { padding-bottom: 120px; }
+.side, .insp, .dhead { display: none; }
+
+/* ---------- Desktop ---------- */
+@media (min-width: 900px) {
+  .tabbar, .nav, .mhead { display: none; }
+  .pad { padding-bottom: var(--s6); }
+  .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); min-height: 100vh; }
+  .side { display: flex; flex-direction: column; gap: var(--s4); padding: var(--s5) var(--s3) var(--s4); background: color-mix(in srgb, var(--bg) 92%, var(--ink)); border-right: 1px solid var(--sep); position: sticky; top: 0; height: 100vh; }
+  .side .brand { font: 800 22px/1 var(--round); padding: 0 var(--s2); }
+  .side .brand i { font-style: normal; color: var(--tint); }
+  .side .search { display: flex; align-items: center; gap: var(--s2); height: 32px; padding: 0 var(--s2); border-radius: 8px; background: var(--fill); color: var(--mute); font-size: 14px; }
+  .side .search svg { width: 16px; height: 16px; } .side .search kbd { margin-left: auto; font: 500 12px var(--sans); }
+  .side nav { display: grid; gap: 2px; }
+  .side nav button { display: flex; align-items: center; gap: var(--s3); height: 36px; padding: 0 var(--s2); border-radius: 8px; font-size: 15px; }
+  .side nav button svg { width: 20px; height: 20px; color: var(--tint); }
+  .side nav button[aria-current="page"] { background: var(--fill); font-weight: 600; }
+  .side h4 { display: flex; justify-content: space-between; font: 700 13px/1 var(--round); color: var(--mute); padding: 0 var(--s2) var(--s2); }
+  .side .plist { display: grid; gap: 1px; overflow-y: auto; max-height: calc(100vh - 430px); min-height: 120px; }
+  .side .plist button { display: flex; align-items: center; gap: var(--s3); height: 38px; padding: 0 var(--s2); border-radius: 8px; font-size: 15px; flex: none; }
+  .side .plist button[aria-pressed="true"] { background: var(--fill); font-weight: 600; }
+  .side .plist .cnt { margin-left: auto; font: 700 13px/1 var(--round); color: var(--mute); }
+  .side .plist .av { width: 26px; height: 26px; font-size: 12px; }
+  .side .foot { margin-top: auto; display: flex; align-items: center; gap: var(--s2); padding: var(--s2); font-size: 14px; }
+  .main { min-width: 0; min-height: 100vh; display: flex; flex-direction: column; }
+  .work { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; }
+  .body { max-width: 780px; padding: 0 var(--s6); }
+  .dhead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s5); padding: var(--s6) 0 var(--s1); }
+  .dhead .title { font-size: 44px; padding: 0; }
+  .dhead .say { padding: var(--s2) 0 0; font-size: 18px; }
+  .dhead .acts { display: flex; align-items: center; gap: var(--s2); padding-top: var(--s2); }
+  .dhead .new { display: inline-flex; align-items: center; gap: var(--s2); height: 38px; padding: 0 var(--s4); border-radius: 19px; background: var(--tint); color: var(--on-tint); font: 600 15px/1 var(--sans); white-space: nowrap; }
+  .dhead .new svg { width: 18px; height: 18px; stroke-width: 2.4; }
+  .body > .stats, .body > .week, .body > .msg, .body > .group, .body > .gh { margin-left: 0; margin-right: 0; }
+  .body > .gh { padding-inline: var(--s1); }
+  .body > .week { margin-inline: calc(var(--s2) * -1); }
+  .msg .bubble { max-width: 560px; }
+}
+@media (min-width: 1240px) {
+  .work { grid-template-columns: minmax(0, 1fr) 380px; }
+  .insp { display: block; border-left: 1px solid var(--sep); background: var(--card); padding: var(--s6) var(--s5); }
+  .insp .kick { color: var(--tint); font-weight: 600; font-size: 15px; }
+  .insp h2 { font: 800 30px/1.1 var(--round); margin: var(--s1) 0 var(--s5); }
+  .insp .props { background: var(--bg); border-radius: 14px; }
+  .insp .props div { display: flex; align-items: center; gap: var(--s2); min-height: 44px; padding: 0 var(--s4); font-size: 16px; }
+  .insp .props div + div { border-top: 1px solid var(--sep); }
+  .insp .props span:first-child { flex: 1; }
+  .insp .props .v { color: var(--mute); display: inline-flex; align-items: center; gap: var(--s2); }
+  .insp .btns { display: grid; gap: var(--s2); margin-top: var(--s5); }
+  .insp .btns button { height: 48px; border-radius: 14px; font-weight: 600; text-align: center; }
+  .insp .btns .go { background: var(--tint); color: var(--on-tint); } .insp .btns .alt { background: var(--fill); }
+  .insp h3 { font: 700 15px/1 var(--round); color: var(--mute); margin: var(--s5) 0 var(--s2) var(--s1); }
+  .insp .log { background: var(--bg); border-radius: 14px; list-style: none; padding: 0; }
+  .insp .log li { padding: var(--s3) var(--s4); font-size: 15px; } .insp .log li + li { border-top: 1px solid var(--sep); }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 8.5 4.7L12 13 3.5 8.2 12 3.5Z"/><path d="m3.5 12.6 8.5 4.8 8.5-4.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19.5 6.5v5.6c0 4.2-3 7.4-7.5 8.4-4.5-1-7.5-4.2-7.5-8.4V6.5L12 3.5Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.4-4.4"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H18l-3-3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H6l3 3"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5.5 21V4h11l-2.2 4 2.2 4h-11"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.2" r="3.3"/><path d="M3 19.5a6 6 0 0 1 12 0"/><circle cx="17.2" cy="9.2" r="2.5"/><path d="M17 14.2a4.6 4.6 0 0 1 4.3 4.6"/></symbol>
+    <!-- Stups-Geste: eine zeigende Hand, die anklopft -->
+    <symbol id="i-poke" viewBox="0 0 24 24"><path d="M9 11.5V4.8a1.8 1.8 0 0 1 3.6 0v6.7H16a3 3 0 0 1 3 3V17a4 4 0 0 1-4 4h-4.5a4 4 0 0 1-4-4v-3a2.5 2.5 0 0 1 2.5-2.5Z"/><path d="M12.6 14.2v2.4M15.8 14.4v2.2M6.4 4.6 4.8 3.4M15.2 4.6l1.6-1.2"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="side" aria-label="Navigation">
+    <span class="brand">stups<i>.</i></span>
+    <button class="search"><svg><use href="#i-search"/></svg>Suchen<kbd>Strg K</kbd></button>
+    <nav aria-label="Hauptbereiche">
+      <button aria-current="page"><svg><use href="#i-tasks"/></svg>Aufgaben</button>
+      <button><svg><use href="#i-layers"/></svg>Boards</button>
+      <button><svg><use href="#i-shield"/></svg>Wächter</button>
+    </nav>
+    <div><h4><span>Personen</span><span id="pcount"></span></h4><div class="plist" id="plist"></div></div>
+    <div class="foot"><span class="av pc1">A</span>Anna<span style="margin-left:auto;color:var(--mute)">Einstellungen</span></div>
+  </aside>
+
+  <div class="main">
+    <div class="nav">
+      <span class="brand">stups<i>.</i></span>
+      <div class="right">
+        <button class="circ" aria-label="Mitteilungen, 1 neue"><svg><use href="#i-bell"/></svg><span class="pip"></span></button>
+        <button class="circ" aria-label="Neue Aufgabe"><svg><use href="#i-plus"/></svg></button>
+        <button class="av pc1 lg" style="width:36px;height:36px;font-size:15px" aria-label="Konto: Anna">A</button>
+      </div>
+    </div>
+    <div class="mhead">
+      <h1 class="title">Aufgaben</h1>
+      <p class="say">Zwei Dinge sind <b>liegen geblieben</b>, sonst ist alles ruhig.</p>
+      <div class="people" id="people"><div class="strip" id="strip" role="group" aria-label="Wessen Aufgaben"></div>
+        <button class="more" aria-label="Personen auswählen"><span><svg><use href="#i-users"/></svg></span></button></div>
+    </div>
+
+    <div class="work">
+      <main class="body pad">
+        <div class="dhead">
+          <div><h1 class="title">Aufgaben</h1><p class="say">Zwei Dinge sind <b>liegen geblieben</b>, sonst ist alles ruhig.</p></div>
+          <div class="acts"><button class="circ" aria-label="Mitteilungen, 1 neue"><svg><use href="#i-bell"/></svg><span class="pip"></span></button>
+            <button class="new"><svg><use href="#i-plus"/></svg>Neue Aufgabe</button></div>
+        </div>
+
+        <div class="stats" role="group" aria-label="Überblick">
+          <button><span class="v">0</span><span class="l">Heute fällig</span></button>
+          <button class="over"><span class="v">2</span><span class="l">Überfällig</span></button>
+          <button><span class="v">1</span><span class="l">Erledigt</span></button>
+        </div>
+
+        <div class="week" role="group" aria-label="Tage dieser Woche">
+          <button><span class="wd">Mo</span><span class="d">2</span><span class="dots"></span></button>
+          <button><span class="wd">Di</span><span class="d">3</span><span class="dots"></span></button>
+          <button><span class="wd">Mi</span><span class="d">4</span><span class="dots"></span></button>
+          <button class="on" aria-pressed="true"><span class="wd">Do</span><span class="d">5</span><span class="dots"><b></b><b></b></span></button>
+          <button><span class="wd">Fr</span><span class="d">6</span><span class="dots"><b></b></span></button>
+          <button><span class="wd">Sa</span><span class="d">7</span><span class="dots"></span></button>
+          <button><span class="wd">So</span><span class="d">8</span><span class="dots"></span></button>
+        </div>
+
+        <div class="msg pc2">
+          <span class="av pc2 lg">B</span>
+          <div class="bubble">
+            <div class="who"><svg><use href="#i-poke"/></svg><b>Ben stupst dich</b><time>16:17</time></div>
+            <div class="text">Heute noch?</div>
+            <div class="ref"><span class="tile"><svg><use href="#i-tasks"/></svg></span><span><b>Fenster putzen</b>, morgen 10:00</span></div>
+            <div class="acts"><button class="go">Erledigt</button><button>Bin dran</button><button>Später</button></div>
+          </div>
+        </div>
+
+        <div class="gh over"><span>Überfällig</span><span class="c">2</span></div>
+        <div class="group">
+          <div class="item sel">
+            <button class="circle" aria-label="Müll rausbringen erledigen"></button>
+            <div><div class="name">Müll rausbringen</div>
+              <div class="sub"><span class="num">Heute 16:17</span><span role="img" aria-label="wiederholt sich wöchentlich"><svg><use href="#i-repeat"/></svg></span><span class="hi"><svg><use href="#i-flag"/></svg>Hoch</span></div></div>
+            <span class="av pc1">A</span>
+          </div>
+          <div class="item">
+            <button class="circle" aria-label="Paket abholen erledigen"></button>
+            <div><div class="name">Paket abholen</div><div class="sub"><span class="num">Heute 16:30</span></div></div>
+            <span class="av pc1">A</span>
+          </div>
+        </div>
+
+        <div class="gh"><span>Diese Woche</span><span class="c">1</span></div>
+        <div class="group">
+          <div class="item">
+            <button class="circle" aria-label="Fenster putzen erledigen"></button>
+            <div><div class="name">Fenster putzen</div><div class="sub"><span class="num">Morgen 10:00</span><span>mit Ben</span></div></div>
+            <span class="avs"><span class="av pc1">A</span><span class="av pc2">B</span></span>
+          </div>
+        </div>
+      </main>
+
+      <aside class="insp" aria-label="Details zur gewählten Aufgabe">
+        <div class="kick">Überfällig</div>
+        <h2>Müll rausbringen</h2>
+        <div class="props">
+          <div><span>Fällig</span><span class="v num">Heute, 16:17</span></div>
+          <div><span>Zuständig</span><span class="v"><span class="av pc1" style="width:24px;height:24px;font-size:11px">A</span>Anna</span></div>
+          <div><span>Wiederholung</span><span class="v">Jeden Donnerstag</span></div>
+          <div><span>Priorität</span><span class="v" style="color:var(--tint);font-weight:600">Hoch</span></div>
+          <div><span>Board</span><span class="v">Haushalt</span></div>
+        </div>
+        <div class="btns"><button class="go">Erledigt</button><button class="alt">Später</button></div>
+        <h3>Verlauf</h3>
+        <ul class="log"><li>Seit 1 Std. 25 Min. überfällig</li><li>Letzte Woche von Anna erledigt</li><li>Neue Aufgabe aus Wiederholung</li></ul>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Hauptbereiche">
+  <button aria-current="page"><svg><use href="#i-tasks"/></svg>Aufgaben</button>
+  <button><svg><use href="#i-layers"/></svg>Boards</button>
+  <button><svg><use href="#i-shield"/></svg>Wächter</button>
+</nav>
+
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var th = q.get('theme'); if (th === 'dark' || th === 'light') document.documentElement.dataset.theme = th;
+  var all = [['Anna', 3], ['Ben', 2], ['Mia', 0], ['Noah', 1], ['Lena', 2], ['Jonas', 0], ['Sophie', 1], ['Paul', 4], ['Emma', 0], ['Oma Ruth', 1]];
+  var n = Math.max(2, Math.min(10, parseInt(q.get('users') || '3', 10)));
+  var people = all.slice(0, n);
+  var strip = '<button class="person" aria-pressed="false"><span class="face"><span class="all"><svg><use href="#i-users"/></svg></span></span>Alle</button>';
+  people.forEach(function (p, i) {
+    strip += '<button class="person" aria-pressed="' + (i === 0) + '"><span class="face"><span class="av xl pc' + (i + 1) + '">' + p[0][0] + '</span>' + (p[1] ? '<span class="n num">' + p[1] + '</span>' : '') + '</span>' + (i === 0 ? 'Meine' : p[0].split(' ')[0]) + '</button>';
+  });
+  document.getElementById('strip').innerHTML = strip;
+  if (n > 5) document.getElementById('people').classList.add('many');
+  document.getElementById('pcount').textContent = n;
+  var pl = '<button aria-pressed="false"><span class="av" style="background:var(--fill);color:var(--ink)"><svg style="width:15px;height:15px"><use href="#i-users"/></svg></span>Alle Personen</button>';
+  people.forEach(function (p, i) { pl += '<button aria-pressed="' + (i === 0) + '"><span class="av pc' + (i + 1) + '">' + p[0][0] + '</span>' + (i === 0 ? 'Meine' : p[0]) + (p[1] ? '<span class="cnt num">' + p[1] + '</span>' : '') + '</button>'; });
+  document.getElementById('plist').innerHTML = pl;
+})();
+</script>
+</body>
+</html>

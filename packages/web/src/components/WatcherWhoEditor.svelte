@@ -11,8 +11,8 @@
   import Tile from './ui/Tile.svelte';
 
   /**
-   * „Wer": an wen die Karte geht. Alle sieben Arten der Zuweisung sind wählbar, vorausgewählt ist „reihum"; darunter, wer infrage kommt, die
-   * Reihenfolge mit Fotos (wer als Nächstes dran ist, wer unterwegs ist) und der Rückfall. Im Ablauf klappt es in der Karte AN WEN auf.
+   * „Wer": an wen die Aufgabe geht. Alle sieben Arten der Zuweisung sind wählbar, vorausgewählt ist „reihum"; darunter, wer infrage kommt, die
+   * Reihenfolge mit Fotos (wer als Nächstes dran ist, wer unterwegs ist) und der Rückfall. Im Ablauf klappt es in der Aufgabe AN WEN auf.
    */
   let { ed }: { ed: WatcherEditor } = $props();
 
@@ -21,11 +21,12 @@
   const people = $derived(ed.people);
   const restricted = $derived(!!ed.board && ed.board.visibility !== 'all');
   const options = $derived(modeOptions());
+  const MODE_ICON: Record<string, string> = { fixed: 'flag', rotation: 'user', rotation_present: 'user', first_home: 'home', all_present: 'bell', suggest: 'repeat', none: 'layers' };
   const toggle = (id: string) => (f.personIds = f.personIds.includes(id) ? f.personIds.filter((x) => x !== id) : [...f.personIds, id]);
 
   const hint = $derived(
     f.assignMode === 'first_home'
-      ? t('Ist niemand zu Hause, erscheint die Karte ohne Zuständige und ohne Push. Wer als Erstes heimkommt, bekommt sie (die Fälligkeit zählt ab dann).')
+      ? t('Ist niemand zu Hause, erscheint die Aufgabe ohne Zuständige und ohne Push. Wer als Erstes heimkommt, bekommt sie (die Fälligkeit zählt ab dann).')
       : f.assignMode === 'rotation_present' || f.assignMode === 'all_present'
         ? t('Anwesend heißt: Die Person in Home Assistant ist zu Hause.')
         : f.assignMode === 'suggest'
@@ -49,18 +50,19 @@
 {/snippet}
 
 <div class="flex flex-col gap-3.5" data-testid="who-editor">
-  <div class="flex flex-col gap-2" role="radiogroup" aria-label={t('Zuweisung')}>
+  <div class="list-group !mt-0" role="radiogroup" aria-label={t('Zuweisung')}>
     {#each options as o (o.mode)}
       {@const on = f.assignMode === o.mode}
       <button
         type="button"
         role="radio"
         aria-checked={on}
-        class="flex min-h-row w-full items-center gap-3 rounded-row border px-3.5 py-2.5 text-left text-[15px] font-bold {on ? 'pick-on' : 'border-line bg-surface'}"
+        class="flex min-h-[60px] w-full items-center gap-3 px-4 py-2 text-left text-[16px] {on ? 'font-semibold' : ''}"
         onclick={() => (f.assignMode = o.mode)}
       >
-        <span class="h-5 w-5 shrink-0 rounded-full {on ? 'border-[6px] border-brand-dot' : 'border-2 border-ring'}"></span>
-        <span>{o.title}<span class="mt-[3px] block text-[12.5px] font-medium text-fg2">{o.meta}</span></span>
+        <Tile size="sm" color={on ? 'orange' : 'gray'}><Icon name={MODE_ICON[o.mode]} size={20} stroke={1.9} /></Tile>
+        <span class="min-w-0 flex-1">{o.title}<span class="mt-[2px] block text-[12.5px] leading-[1.35] font-medium text-fg2">{o.meta}</span></span>
+        <span class="h-5 w-5 shrink-0 rounded-full {on ? 'border-[6px] border-brand-dot' : 'border-2 border-ring'}" aria-hidden="true"></span>
       </button>
     {/each}
   </div>
@@ -87,14 +89,14 @@
   {/if}
 
   {#if usesFallback(f.assignMode)}
-    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
+    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
       {@render selectRow(fallbackLabel, fallbackValue)}
       <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" bind:value={f.fallback} aria-label={t('Rückfall')}>
         {#each FALLBACKS as [v, label] (v)}<option value={v}>{label}</option>{/each}
       </select>
     </div>
   {:else if f.assignMode === 'first_home'}
-    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
+    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
       {@render selectRow(t('Nach 24 Stunden ohne Heimkehr'), waitValue)}
       <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" bind:value={f.waitFallback} aria-label={t('Rückfall nach 24 Stunden')}>
         {#each WAIT as [v, label] (v)}<option value={v}>{label}</option>{/each}
@@ -102,7 +104,7 @@
     </div>
   {/if}
   {#if showFixedPerson}
-    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
+    <div class="relative flex min-h-row py-2 w-full items-center gap-3 rounded-row bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
       {@render selectRow(t('Feste Person für den Rückfall'), personName(f.fallbackPersonId))}
       <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" bind:value={f.fallbackPersonId} aria-label={t('Person für den Rückfall')}>
         <option value="">{t('wählen …')}</option>

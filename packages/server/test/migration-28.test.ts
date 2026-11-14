@@ -29,7 +29,7 @@ describe('Migration 28 (Nachhaken als eigene Tabelle)', () => {
       insert into cards (id, board_id, column_id, position, title, due_at, overdue_nag, created_at, updated_at) values ('k3', 'b1', 'c1', 'a2', 'Ohne', '${T}', 0, '${T}', '${T}');
       insert into cards (id, board_id, column_id, position, title, due_at, overdue_nag, created_at, updated_at) values ('k4', 'b1', 'c1', 'a3', 'Niemand', '${T}', 1, '${T}', '${T}');
       insert into card_assignees (card_id, user_id) values ('k1', 'u1'), ('k1', 'u2'), ('k2', 'u1'), ('k3', 'u1');
-      -- Wächter: w1 stupst nach 45 Minuten (Karte k5 offen, schon angelegt), w2 nie, w3 hat schon gestupst (Karte k6)
+      -- Wächter: w1 stupst nach 45 Minuten (Aufgabe k5 offen, schon angelegt), w2 nie, w3 hat schon gestupst (Aufgabe k6)
       insert into watchers (id, name, active, trigger_json, card_json, assign_json, nudge_after_min, position, created_at, updated_at) values ('w1', 'Wasch', 1, '{}', '{}', '{}', 45, 0, '${T}', '${T}');
       insert into watchers (id, name, active, trigger_json, card_json, assign_json, nudge_after_min, position, created_at, updated_at) values ('w2', 'Nie', 1, '{}', '{}', '{}', null, 1, '${T}', '${T}');
       insert into watchers (id, name, active, trigger_json, card_json, assign_json, nudge_after_min, position, created_at, updated_at) values ('w3', 'Schon', 1, '{}', '{}', '{}', 30, 2, '${T}', '${T}');
@@ -53,7 +53,7 @@ describe('Migration 28 (Nachhaken als eigene Tabelle)', () => {
     ]);
     expect(db.prepare("select name from pragma_table_info('cards') where name = 'overdue_nag'").all()).toEqual([]);
 
-    // altes Stupsen: {afterMin: N, everyMin: null, max: 1}; offene Karten mit noch ausstehendem Stups bekommen ihre Zeile (gezählt ab der letzten Zuweisung)
+    // altes Stupsen: {afterMin: N, everyMin: null, max: 1}; offene Aufgaben mit noch ausstehendem Stups bekommen ihre Zeile (gezählt ab der letzten Zuweisung)
     expect(db.prepare('select id, nudge_json from watchers order by id').all()).toEqual([
       { id: 'w1', nudge_json: '{"afterMin":45,"everyMin":null,"max":1}' },
       { id: 'w2', nudge_json: null },
@@ -64,7 +64,7 @@ describe('Migration 28 (Nachhaken als eigene Tabelle)', () => {
     ]);
     expect(db.prepare("select name from pragma_table_info('watchers') where name = 'nudge_after_min'").all()).toEqual([]);
 
-    // je Karte und Person höchstens eine Zeile; mit der Karte gelöscht
+    // je Aufgabe und Person höchstens eine Zeile; mit der Aufgabe gelöscht
     expect(() => db.exec("insert into card_reminders (id, card_id, user_id, anchor, after_min, created_at) values ('x', 'k1', 'u1', 'due', 5, 'x')")).toThrow();
     expect(() => db.exec("insert into card_reminders (id, card_id, user_id, anchor, after_min, created_at) values ('y', 'k5', null, 'due', 5, 'x')")).toThrow();
     db.exec("delete from cards where id = 'k1'");

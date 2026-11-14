@@ -91,7 +91,7 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
   try {
     const page = kid.page;
     await expect(page.getByRole('button', { name: mineName }).first()).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Neue Karte' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Neue Aufgabe' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /^Menü für/ })).toHaveCount(0);
 
     // Board-Wechsler: nur das eigene Board, nichts zum Anlegen oder Verwalten
@@ -103,7 +103,7 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
     await expect(sheet.getByRole('button', { name: 'Reihenfolge ändern' })).toHaveCount(0);
     await expect(sheet.getByRole('button', { name: 'Archivierte Boards' })).toHaveCount(0);
     await expect(sheet.getByRole('button', { name: 'Papierkorb' })).toHaveCount(0);
-    // ein Kind legt Boards an, aber nur „Nur ich“ (die anderen beiden Karten fehlen)
+    // ein Kind legt Boards an, aber nur „Nur ich“ (die anderen beiden Aufgaben fehlen)
     await sheet.getByRole('button', { name: 'Neues Board erstellen' }).click();
     await expect(sheet.getByLabel('Name des neuen Boards')).toHaveCount(1);
     await expect(sheet.getByRole('radio', { name: /Nur ich/ })).toBeVisible();
@@ -123,7 +123,7 @@ test('reduzierte Oberfläche: nur eigene Boards, kein Plus, keine Verwaltung, ke
 
     // Zwei Reiter (Aufgaben, Boards, kein Wächter); in Aufgaben kein „Wer"-Filter, kein „Vom Haus", keine Zeilen „Bei den anderen" und Fairness
     const nav = page.getByRole('navigation', { name: 'Ansicht' });
-    await expect(nav.getByRole('button')).toHaveText(['Aufgaben', 'Boards']);
+    await expect(nav.getByRole('button')).toHaveText(['Aufgaben', 'Boards', 'Kalender']);
     await expect(nav.getByRole('button', { name: 'Wächter' })).toHaveCount(0);
     await nav.getByRole('button', { name: 'Aufgaben' }).click();
     await expect(page.getByTestId('tasks-sub')).toBeVisible();
@@ -152,7 +152,7 @@ test('der Server verweigert, was die Oberfläche nicht zeigt', async ({ browser,
   }
 });
 
-test('Kind hakt ab: die Karte wartet auf Bestätigung, ein Elternteil bestätigt, sie zählt auf das Kind', async ({ browser, baseURL, page, request }) => {
+test('Kind hakt ab: die Aufgabe wartet auf Bestätigung, ein Elternteil bestätigt, sie zählt auf das Kind', async ({ browser, baseURL, page, request }) => {
   const kid = await kidPage(browser, baseURL);
   try {
     const kp = kid.page;
@@ -164,11 +164,11 @@ test('Kind hakt ab: die Karte wartet auf Bestätigung, ein Elternteil bestätigt
     expect((await state(request, mineId)).completedAt).toBeNull();
     expect((await state(request, mineId)).confirmRequestedAt).not.toBeNull();
 
-    // Das Kind sieht in der Karte keine Antwort-Knöpfe
+    // Das Kind sieht in der Aufgabe keine Antwort-Knöpfe
     const kd = await openCard(kp, mineName);
     await expect(kd.getByTestId('confirm-note')).toContainText('wartet auf Bestätigung');
     await expect(kd.getByRole('button', { name: 'Bestätigen' })).toHaveCount(0);
-    await expect(kd.getByRole('button', { name: 'Karte löschen' })).toHaveCount(0);
+    await expect(kd.getByRole('button', { name: 'Aufgabe löschen' })).toHaveCount(0);
     await expect(kd.getByLabel('Titel')).toHaveJSProperty('readOnly', true);
     await kp.keyboard.press('Escape');
 
@@ -188,7 +188,7 @@ test('Kind hakt ab: die Karte wartet auf Bestätigung, ein Elternteil bestätigt
   }
 });
 
-test('„Nochmal": die Anfrage entfällt, die Karte bleibt offen und das Kind kann es erneut versuchen', async ({ browser, baseURL, page, request }) => {
+test('„Nochmal": die Anfrage entfällt, die Aufgabe bleibt offen und das Kind kann es erneut versuchen', async ({ browser, baseURL, page, request }) => {
   const title = `Noch eine ${tag}`;
   const id = cardIds[title]!;
   const kid = await kidPage(browser, baseURL);
@@ -215,7 +215,7 @@ test('„Nochmal": die Anfrage entfällt, die Karte bleibt offen und das Kind ka
   }
 });
 
-test('Kind: Filter ohne „Wer" und ohne „nur von Wächtern", mit Wann, Priorität und Sortierung; nur eigene Karten', async ({ browser, baseURL }) => {
+test('Kind: Filter ohne „Wer" und ohne „nur von Wächtern", mit Wann, Priorität und Sortierung; nur eigene Aufgaben', async ({ browser, baseURL }) => {
   const kd = await kidPage(browser, baseURL);
   try {
     await kd.page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
@@ -229,7 +229,7 @@ test('Kind: Filter ohne „Wer" und ohne „nur von Wächtern", mit Wann, Priori
     await expect(sheet.getByRole('switch', { name: 'Nur von Wächtern' })).toHaveCount(0);
     await expect(sheet.getByRole('switch', { name: 'Nur mit offenem Stups' })).toHaveCount(0);
     await expect(sheet.getByRole('switch', { name: 'Erledigte anzeigen' })).toBeVisible();
-    // „Ohne Termin" zeigt die eigenen Karten ohne Termin, nie die Karte aus dem Erwachsenenboard
+    // „Ohne Termin" zeigt die eigenen Aufgaben ohne Termin, nie die Aufgabe aus dem Erwachsenenboard
     await sheet.getByRole('group', { name: 'Wann' }).getByRole('button', { name: /^Ohne Termin/ }).click();
     await kd.page.getByRole('dialog').getByRole('button', { name: /Aufgaben? anzeigen$/ }).click();
     await expect(kd.page.getByTestId('group-undated').getByText(`Noch eine ${tag}`)).toBeVisible();
@@ -239,14 +239,14 @@ test('Kind: Filter ohne „Wer" und ohne „nur von Wächtern", mit Wann, Priori
   }
 });
 
-test('Kind sieht die Symbole seiner Karten (Kachel in der Liste und im Karten-Fenster), ändern kann es sie nicht', async ({ browser, baseURL, request }) => {
+test('Kind sieht die Symbole seiner Aufgaben (Kachel in der Liste und im Aufgaben-Fenster), ändern kann es sie nicht', async ({ browser, baseURL, request }) => {
   const b = await board(request, `Symbolboard ${tag}`);
   const title = `Pflanzen gießen ${tag}`;
   const res = await request.post(`/api/boards/${b.id}/cards`, { data: { title, columnId: b.columnId, assigneeIds: [kidId], dueAt: new Date(Date.now() + 3_600_000).toISOString(), icon: 'leaf', iconColor: 'green', iconSource: 'manual' } });
   expect(res.status()).toBe(201);
   const kd = await kidPage(browser, baseURL);
   try {
-    // „Aufgaben" zeigt dem Kind alle eigenen Karten, auch die aus dem Board, das gerade nicht gewählt ist
+    // „Aufgaben" zeigt dem Kind alle eigenen Aufgaben, auch die aus dem Board, das gerade nicht gewählt ist
     await kd.page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
     const row = kd.page.locator('[data-variant=task]').filter({ hasText: title });
     await expect(row.locator('.tile-green')).toHaveCount(1);

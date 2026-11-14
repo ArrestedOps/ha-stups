@@ -207,7 +207,7 @@ describe('cards', () => {
 });
 
 describe('erledigen', () => {
-  it('erledigt eine einmalige Karte, protokolliert wer es war und archiviert sie später', async () => {
+  it('erledigt eine einmalige Aufgabe, protokolliert wer es war und archiviert sie später', async () => {
     const { b, columns } = await boardWithColumns();
     const card = (await call('POST', `/api/boards/${b.id}/cards`, { columnId: columns[0]!.id, title: 'Müll' })).body;
     const res = await call('POST', `/api/cards/${card.id}/complete`);
@@ -218,7 +218,7 @@ describe('erledigen', () => {
     expect(again.body.completionId).toBeNull();
   });
 
-  it('erledigt eine wiederkehrende Karte und macht es mit Rückgängig wieder gut', async () => {
+  it('erledigt eine wiederkehrende Aufgabe und macht es mit Rückgängig wieder gut', async () => {
     const { b, columns } = await boardWithColumns();
     const card = (
       await call('POST', `/api/boards/${b.id}/cards`, {
@@ -230,7 +230,7 @@ describe('erledigen', () => {
     ).body;
     const res = await call('POST', `/api/cards/${card.id}/complete`);
     expect(res.body.nextDueAt).toBe('2026-10-31T09:00:00.000Z');
-    // Die erledigte Karte liegt in „Erledigt", die neue wartet oben in „Offen"
+    // Die erledigte Aufgabe liegt in „Erledigt", die neue wartet oben in „Offen"
     expect(res.body.card).toMatchObject({ id: card.id, columnId: columns[2]!.id, recurrence: null });
     const next = (await call('GET', `/api/cards/${res.body.nextCardId}`)).body;
     expect(next).toMatchObject({ columnId: columns[0]!.id, dueAt: '2026-10-31T09:00:00.000Z', repeatedFrom: card.id });
@@ -243,7 +243,7 @@ describe('erledigen', () => {
     expect((await call('POST', `/api/completions/${res.body.completionId}/undo`)).status).toBe(404);
   });
 
-  it('eine Karte in die Erledigt-Spalte ziehen erledigt sie', async () => {
+  it('eine Aufgabe in die Erledigt-Spalte ziehen erledigt sie', async () => {
     const { b, columns } = await boardWithColumns();
     const card = (await call('POST', `/api/boards/${b.id}/cards`, { columnId: columns[0]!.id, title: 'x' })).body;
     const moved = await call('POST', `/api/cards/${card.id}/move`, { columnId: columns[2]!.id });
@@ -251,7 +251,7 @@ describe('erledigen', () => {
     expect(moved.body.history).toHaveLength(1);
   });
 
-  it('holt eine archivierte Karte in eine Spalte zurück', async () => {
+  it('holt eine archivierte Aufgabe in eine Spalte zurück', async () => {
     const { b, columns } = await boardWithColumns();
     const card = (await call('POST', `/api/boards/${b.id}/cards`, { columnId: columns[0]!.id, title: 'x' })).body;
     await call('POST', `/api/cards/${card.id}/complete`);
@@ -330,7 +330,7 @@ describe('Falsche Feldtypen ergeben 400, nie 500 oder stilles Nichtstun', () => 
     });
     expect(ok.status).toBe(200);
     expect(ok.body.recurrence).toEqual({ type: 'fixed', freq: 'weekly', every: 2, weekdays: [1] });
-    // und die Karte lässt sich erledigen
+    // und die Aufgabe lässt sich erledigen
     expect((await call('POST', `/api/cards/${c.id}/complete`, {})).status).toBe(200);
   });
 });

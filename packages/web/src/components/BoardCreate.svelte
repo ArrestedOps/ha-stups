@@ -94,7 +94,7 @@
         {#if chosen}
           <p class="mt-2 px-1 text-[13px] text-fg2" data-testid="template-preview">
             {#if chosen.description}{chosen.description}<br />{/if}
-            {tn('{n} Spalte', '{n} Spalten', chosen.columns)} · {tn('{n} Kategorie', '{n} Kategorien', chosen.categories)} · {tn('{n} Karte', '{n} Karten', chosen.cards)}
+            {tn('{n} Spalte', '{n} Spalten', chosen.columns)} · {tn('{n} Kategorie', '{n} Kategorien', chosen.categories)} · {tn('{n} Aufgabe', '{n} Aufgaben', chosen.cards)}
           </p>
         {/if}
       {:else}

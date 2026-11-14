@@ -131,7 +131,7 @@ describe('Sensoren', () => {
     expect(states['sensor.stups_beta_ueberfaellig']!.attributes.friendly_name).toBe('Stups Beta überfällig');
     expect(states['sensor.stups_beta_ueberfaellig_conny']!.attributes.friendly_name).toBe('Stups Beta überfällig (Conny)');
     expect(states['sensor.stups_beta_stupse_offen']!.attributes.friendly_name).toBe('Stups Beta offene Stupse');
-    expect(states['sensor.stups_beta_waechter_offen']!.attributes.friendly_name).toBe('Stups Beta offene Wächter-Karten');
+    expect(states['sensor.stups_beta_waechter_offen']!.attributes.friendly_name).toBe('Stups Beta offene Wächter-Aufgaben');
     expect(states['sensor.stups_beta_gestupst_conny']!.attributes.friendly_name).toBe('Stups Beta gestupst (Conny)');
     // die normale App schreibt weiter ihre eigenen Namen
     states = {};
@@ -158,13 +158,13 @@ describe('Sensoren', () => {
   it('veröffentlicht auch bei leerem Stand Nullen', async () => {
     await make().publish();
     expect(states['sensor.stups_ueberfaellig']!.state).toBe('0');
-    // überfällig und heute fällig (gesamt und je Person), offene Stupse (gesamt und je Person), offene Wächter-Karten
+    // überfällig und heute fällig (gesamt und je Person), offene Stupse (gesamt und je Person), offene Wächter-Aufgaben
     expect(Object.keys(states)).toHaveLength(2 + 2 * 2 + 1 + 2 + 1);
     expect(states['sensor.stups_waechter_offen']!.state).toBe('0');
     expect(states['sensor.stups_stupse_offen']!.state).toBe('0');
   });
 
-  it('zählt offene Stupse gesamt und je Person, mit Karte und Absender als Attribut', async () => {
+  it('zählt offene Stupse gesamt und je Person, mit Aufgabe und Absender als Attribut', async () => {
     store.setNotifyServices(conny.id, ['svc']);
     const b = store.createBoard({ name: 'Haushalt' });
     const col = store.getBoardView(b.id).columns[0]!.id;

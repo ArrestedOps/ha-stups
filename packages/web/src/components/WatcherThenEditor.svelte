@@ -17,8 +17,8 @@
   import { symbolName } from '../lib/symbols/library';
 
   /**
-   * „Dann": welche Karte entstehen soll. Im Assistenten (Schritt 2) mit der Vorschau „So erscheint sie"; im Ablauf klappt es in der Karte DANN KARTE
-   * auf (`preview` aus: die Vorschau steht schon in der Karte).
+   * „Dann": welche Aufgabe entstehen soll. Im Assistenten (Schritt 2) mit der Vorschau „So erscheint sie"; im Ablauf klappt es in der Aufgabe DANN KARTE
+   * auf (`preview` aus: die Vorschau steht schon in der Aufgabe).
    */
   let { ed, preview = true }: { ed: WatcherEditor; preview?: boolean } = $props();
 
@@ -26,7 +26,7 @@
   const board = $derived(ui.boards.find((b) => b.id === f.boardId));
   const column = $derived(ed.view?.columns.find((c) => c.id === f.columnId));
   const auto = $derived(f.icon ? null : (nameSymbol(f.title) ?? nameSymbol(f.entityName)));
-  /** Der Titel der Karte, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
+  /** Der Titel der Aufgabe, wie sie entsteht: mit dem Namen der Entität (siehe cardTitle.ts) */
   const shownTitle = $derived(cardTitleWithEntity(f.title, f.kind, f.entityName || f.entityId) || '…');
   const look = $derived({ icon: f.icon || auto, iconColor: f.iconColor || null });
   let symbolOpen = $state(false);
@@ -58,8 +58,8 @@
 </script>
 
 <div class="flex flex-col gap-3.5" data-testid="then-editor">
-  <!-- Titel der Karte mit Symbol (Funken: automatisch erkannt) -->
-  <div class="focus-ring-in flex items-center gap-3 rounded-row border border-line bg-surface px-3.5 py-3">
+  <!-- Titel der Aufgabe mit Symbol (Funken: automatisch erkannt) -->
+  <div class="focus-ring-in flex items-center gap-3 rounded-row bg-surface px-3.5 py-3">
     <button
       type="button"
       class="relative block shrink-0 rounded-[14px]"
@@ -73,14 +73,14 @@
       {/if}
     </button>
     <span class="flex min-w-0 flex-1 flex-col gap-1.5">
-      <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="watcher-card-title">{t('Titel der Karte')}</label>
+      <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="watcher-card-title">{t('Titel der Aufgabe')}</label>
       <input id="watcher-card-title" class="min-h-6 w-full bg-transparent text-[18px] font-bold placeholder:text-dim" bind:value={f.title} maxlength="200" placeholder={t('z. B. Waschmaschine ausräumen')} autocapitalize="sentences" />
     </span>
   </div>
 
   <!-- Board und Spalte: die Zeile zeigt die Wahl, darüber liegt das Auswahlfeld des Handys -->
   <div class="flex flex-col gap-2">
-    <div class="relative flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
+    <div class="relative flex min-h-row py-2 items-center gap-3 rounded-row bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
       <Tile color="orange"><Icon name="layers" size={22} stroke={1.8} /></Tile>
       <span class="flex min-w-0 flex-1 flex-col gap-1">
         <span class="wrap-anywhere text-[15px] font-bold tracking-tight">{board?.name ?? t('Board wählen')}</span>
@@ -91,7 +91,7 @@
         {#each ed.boardOptions as o (o.id)}<option value={o.id} disabled={o.disabled} data-short={o.short}>{o.label}</option>{/each}
       </select>
     </div>
-    <div class="relative flex min-h-row py-2 items-center gap-3 rounded-row border border-line bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
+    <div class="relative flex min-h-row py-2 items-center gap-3 rounded-row bg-surface pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-accent">
       <Tile color="gray"><Icon name="columns" size={22} stroke={1.8} /></Tile>
       <span class="flex min-w-0 flex-1 flex-col gap-1">
         <span class="wrap-anywhere text-[15px] font-bold tracking-tight">{column?.name ?? t('Spalte wählen')}</span>
@@ -112,7 +112,7 @@
     <Chip small active={showCustom} pressed={showCustom} onclick={() => (dueOpen = !dueOpen)}>{t('Anders …')}</Chip>
   </div>
   {#if showCustom}
-    <div class="flex flex-col gap-2 rounded-row border border-line bg-surface px-3.5 py-3" data-testid="due-custom">
+    <div class="flex flex-col gap-2 rounded-row bg-surface px-3.5 py-3" data-testid="due-custom">
       <div class="flex items-center justify-between gap-3">
         <span class="text-[15px] font-bold">{t('Fälligkeit')}</span>
         <SelectField bind:value={f.dueKind} label={t('Fälligkeit')}>
@@ -154,7 +154,7 @@
   {/if}
 
   <SectionHeader title={t('Beschreibung')} />
-  <label class="focus-ring-in flex rounded-row border border-line bg-surface px-3.5 py-3">
+  <label class="focus-ring-in flex rounded-row bg-surface px-3.5 py-3">
     <textarea class="min-h-[44px] w-full resize-none bg-transparent text-[15px] leading-[1.45] font-medium placeholder:text-dim" rows="2" bind:value={f.description} placeholder={t('Beschreibung (optional)')} aria-label={t('Beschreibung')}></textarea>
   </label>
 

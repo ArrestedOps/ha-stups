@@ -5,7 +5,7 @@
   import { ui } from '../lib/store.svelte';
 
   /**
-   * Der Rahmen der Dialoge zum Board (Löschen, Archivieren, Duplizieren, Vorlage): eine Karte in der Mitte, dahinter der Schleier, unten
+   * Der Rahmen der Dialoge zum Board (Löschen, Archivieren, Duplizieren, Vorlage): eine Aufgabe in der Mitte, dahinter der Schleier, unten
    * „Abbrechen" und die eigentliche Aktion. Escape und Tippen auf den Schleier schließen nur den Dialog, nicht das Fenster dahinter.
    */
   let {

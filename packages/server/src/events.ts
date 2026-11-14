@@ -5,7 +5,7 @@ export interface AppEvent {
   seq: number;
   /** HA-Nutzer-ID (intern: users.id) der Person, die die Änderung ausgelöst hat */
   by: string | null;
-  /** Was sich geändert hat (einzelne Karten oder „alles"); ohne Angabe lädt der Client alles neu */
+  /** Was sich geändert hat (einzelne Aufgaben oder „alles"); ohne Angabe lädt der Client alles neu */
   changes?: Changes;
 }
 

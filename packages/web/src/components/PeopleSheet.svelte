@@ -40,7 +40,7 @@
   let house = $state<HouseInfo | null>(null);
   let entities = $state<HouseEntities | null>(null);
 
-  // Boards ohne Besitzer (die Person ist entfernt): niemand sieht sie; ein Administrator sieht nur Name und Zahl der Karten und darf sie löschen
+  // Boards ohne Besitzer (die Person ist entfernt): niemand sieht sie; ein Administrator sieht nur Name und Zahl der Aufgaben und darf sie löschen
   let orphans = $state<{ id: string; name: string; cards: number }[]>([]);
   async function loadOrphans() {
     orphans = await api.orphanBoards().catch(() => orphans);
@@ -48,7 +48,7 @@
   function askDeleteOrphan(b: { id: string; name: string; cards: number }) {
     ui.confirm = {
       title: t('Board „{name}“ löschen?', { name: b.name }),
-      text: tn('Das Board hat keinen Besitzer mehr. Es wird mit {n} Karte endgültig gelöscht.', 'Das Board hat keinen Besitzer mehr. Es wird mit {n} Karten endgültig gelöscht.', b.cards),
+      text: tn('Das Board hat keinen Besitzer mehr. Es wird mit {n} Aufgabe endgültig gelöscht.', 'Das Board hat keinen Besitzer mehr. Es wird mit {n} Aufgaben endgültig gelöscht.', b.cards),
       label: t('Löschen'),
       run: async () => {
         try {
@@ -231,7 +231,7 @@
 
     <div class="flex flex-col gap-2">
       <SectionHeader title={t('Personen')} count={info.people.length} />
-      <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Diesen Personen kann man Karten zuweisen, und sie bekommen die Push-Nachrichten.')}</p>
+      <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Diesen Personen kann man Aufgaben zuweisen, und sie bekommen die Push-Nachrichten.')}</p>
       {#each info.people as p (p.id)}
         <div>
           <ListRow title={p.id === ui.me?.id ? `${p.displayName} (${t('du')})` : p.displayName} expanded={openId === p.id} onclick={() => (openId = openId === p.id ? null : p.id)}>
@@ -346,7 +346,7 @@
                           void run(() => api.updatePerson(p.id, { childScope: scope }));
                         }}
                       >
-                        <option value="assigned">{t('Nur Boards mit eigenen Karten')}</option>
+                        <option value="assigned">{t('Nur Boards mit eigenen Aufgaben')}</option>
                         <option value="all">{t('Alle Boards')}</option>
                       </select>
                     </label>
@@ -370,14 +370,14 @@
                       </div>
                     {/each}
                     <p class="text-[13px] text-fg2">{t('Administratoren dürfen immer bestätigen. Ist niemand gewählt, dürfen alle Erwachsenen.')}</p>
-                    <p class="text-[13px] text-fg2">{t('Ein Kind sieht und ändert nur seine eigenen Karten (abhaken, kommentieren, Fotos anhängen), nichts sonst. Sprache und Farbe wählt es selbst.')}</p>
+                    <p class="text-[13px] text-fg2">{t('Ein Kind sieht und ändert nur seine eigenen Aufgaben (abhaken, kommentieren, Fotos anhängen), nichts sonst. Sprache und Farbe wählt es selbst.')}</p>
                   {/if}
                 </div>
               {/if}
 
               {#if admin && !info.managed}
                 {#if confirmRemove === p.id}
-                  <p class="text-[13px] text-fg2">{t('Zugewiesene Karten behalten die Zuweisung, falls {name} zurückkommt.', { name: p.displayName })}</p>
+                  <p class="text-[13px] text-fg2">{t('Zugewiesene Aufgaben behalten die Zuweisung, falls {name} zurückkommt.', { name: p.displayName })}</p>
                   <div class="flex gap-2">
                     <button type="button" class="min-h-11 flex-1 rounded-xl bg-danger-bg font-semibold text-danger" disabled={busy} onclick={() => remove(p.id)}>
                       {t('Ja, entfernen')}
@@ -422,7 +422,7 @@
       {/if}
       <div class="mt-3.5 flex flex-col gap-2">
         <SectionHeader title={t('Person ohne Anmeldung')} />
-        <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Zum Zuweisen von Karten, zum Beispiel für Kinder, die Stups nicht selbst öffnen.')}</p>
+        <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Zum Zuweisen von Aufgaben, zum Beispiel für Kinder, die Stups nicht selbst öffnen.')}</p>
         {@render manualForm(t('Name'), t('Name der Person ohne Anmeldung'))}
       </div>
     {:else if mayPeople && !info.managed}
@@ -470,7 +470,7 @@
         {#each orphans as b (b.id)}
           <ListRow title={b.name}>
             {#snippet tile()}<Tile color="gray"><Icon name="layers" size={22} stroke={1.8} /></Tile>{/snippet}
-            {#snippet meta()}{tn('{n} Karte', '{n} Karten', b.cards)}{/snippet}
+            {#snippet meta()}{tn('{n} Aufgabe', '{n} Aufgaben', b.cards)}{/snippet}
             {#snippet right()}
               <button class="bg-danger-bg inline-flex h-[34px] items-center rounded-[12px] px-3 text-[13px] font-bold text-danger" onclick={() => askDeleteOrphan(b)}>{t('Löschen')}</button>
             {/snippet}

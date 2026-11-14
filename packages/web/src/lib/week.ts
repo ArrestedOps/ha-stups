@@ -3,7 +3,7 @@ import { names } from './i18n/names';
 import { deviceTz } from './datetime';
 import type { ScheduleCard } from './schedule';
 
-/** Die Farbe eines Punktes unter dem Tag: wie dringend die Karte ist (die Oberfläche ordnet jeder Art ein Farbtoken zu) */
+/** Die Farbe eines Punktes unter dem Tag: wie dringend die Aufgabe ist (die Oberfläche ordnet jeder Art ein Farbtoken zu) */
 export type DotKind = 'overdue' | 'today' | 'upcoming' | 'done';
 
 export interface WeekDay {
@@ -20,7 +20,7 @@ const ORDER: Record<DotKind, number> = { overdue: 0, today: 1, upcoming: 2, done
 export const MAX_DOTS = 3;
 
 /**
- * Die sieben Tage der laufenden Woche (Montag bis Sonntag) mit je bis zu drei Punkten für die Karten dieses Tages.
+ * Die sieben Tage der laufenden Woche (Montag bis Sonntag) mit je bis zu drei Punkten für die Aufgaben dieses Tages.
  * Reine Funktion: Uhr und Zeitzone kommen von außen, damit sie ohne Tageszeit testbar ist.
  */
 export function weekStrip(cards: ScheduleCard[], nowMs: number, tz = deviceTz()): WeekDay[] {

@@ -15,7 +15,7 @@ describe('deltaIds: nachladen oder alles neu laden', () => {
     expect(deltaIds({ full: false, cards: ['a'] }, true)).toBeNull();
   });
 
-  it('einzelne Karten: genau diese', () => {
+  it('einzelne Aufgaben: genau diese', () => {
     expect(deltaIds({ full: false, cards: ['a', 'b'] }, false)).toEqual(['a', 'b']);
     expect(deltaIds({ full: false, cards: [] }, false)).toEqual([]);
   });
@@ -28,7 +28,7 @@ describe('deltaIds: nachladen oder alles neu laden', () => {
 });
 
 describe('applyCards', () => {
-  it('ersetzt eine geänderte Karte und lässt die anderen unberührt', () => {
+  it('ersetzt eine geänderte Aufgabe und lässt die anderen unberührt', () => {
     const a = card('a', 'a0');
     const b = card('b', 'a1');
     const out = applyCards(view([a, b]), ['a'], [card('a', 'a0', { title: 'neu' })])!;
@@ -36,7 +36,7 @@ describe('applyCards', () => {
     expect(out.cards[1]).toBe(b);
   });
 
-  it('eine neue Karte kommt an ihre Stelle nach Position (bei gleicher Position nach Kennung)', () => {
+  it('eine neue Aufgabe kommt an ihre Stelle nach Position (bei gleicher Position nach Kennung)', () => {
     const out = applyCards(view([card('a', 'a0'), card('c', 'a2')]), ['b', 'd'], [card('b', 'a1'), card('d', 'a2')])!;
     expect(out.cards.map((c) => c.id)).toEqual(['a', 'b', 'c', 'd']);
   });
@@ -46,22 +46,22 @@ describe('applyCards', () => {
     expect(out.cards.map((c) => c.id)).toEqual(['b', 'a']);
   });
 
-  it('Karten, die der Server nicht mehr liefert (gelöscht, archiviert), verschwinden', () => {
+  it('Aufgaben, die der Server nicht mehr liefert (gelöscht, archiviert), verschwinden', () => {
     const out = applyCards(view([card('a', 'a0'), card('b', 'a1')]), ['a'], [])!;
     expect(out.cards.map((c) => c.id)).toEqual(['b']);
   });
 
-  it('eine Karte, die in ein anderes Board gewandert ist, verschwindet', () => {
+  it('eine Aufgabe, die in ein anderes Board gewandert ist, verschwindet', () => {
     const out = applyCards(view([card('a', 'a0')]), ['a'], [card('a', 'a0', { boardId: 'b2' })])!;
     expect(out.cards).toEqual([]);
   });
 
-  it('eine Karte eines anderen Boards kommt nicht hinein', () => {
+  it('eine Aufgabe eines anderen Boards kommt nicht hinein', () => {
     const out = applyCards(view([card('a', 'a0')]), ['x'], [card('x', 'a1', { boardId: 'b2' })])!;
     expect(out.cards.map((c) => c.id)).toEqual(['a']);
   });
 
-  it('geholte Karten, die nicht angefragt waren, werden ignoriert', () => {
+  it('geholte Aufgaben, die nicht angefragt waren, werden ignoriert', () => {
     const out = applyCards(view([card('a', 'a0')]), ['a'], [card('a', 'a0'), card('z', 'a9')])!;
     expect(out.cards.map((c) => c.id)).toEqual(['a']);
   });

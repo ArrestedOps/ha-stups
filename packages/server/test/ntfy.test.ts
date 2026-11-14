@@ -145,7 +145,7 @@ describe('NtfyPush', () => {
     expect(t.sent.map((s) => s.body.priority)).toEqual([4, 3, 2, 3]);
   });
 
-  it('ohne Karte öffnet der Link die Startseite', async () => {
+  it('ohne Aufgabe öffnet der Link die Startseite', async () => {
     const t = setup();
     await t.push.send('anna', message({ open: {}, actions: undefined }));
     expect(t.sent[0]!.body.click).toBe('https://stups.example.org/');

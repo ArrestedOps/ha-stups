@@ -98,7 +98,7 @@
                     </p>
                     {#if !info.ntfy.buttons}
                       <p class="mt-1 text-[13px] text-danger">
-                        {t('Ohne STUPS_PUBLIC_URL im Container kommen die Nachrichten ohne Link zur Karte und ohne Knöpfe.')}
+                        {t('Ohne STUPS_PUBLIC_URL im Container kommen die Nachrichten ohne Link zur Aufgabe und ohne Knöpfe.')}
                       </p>
                     {/if}
                   {/if}
@@ -163,7 +163,7 @@
     {#if p.busyUntil}
       <button type="button" class="min-h-11 text-[15px] font-semibold text-accent-text" disabled={busy} onclick={() => run(() => api.updatePerson(p.id, { busyUntil: null }))}>{t('Wieder normal')}</button>
     {/if}
-    <p class="text-[13px] text-fg2">{t('Von Hand kann man ihr oder ihm weiter Karten zuweisen; nur das Verteilen durch Wächter pausiert.')}</p>
+    <p class="text-[13px] text-fg2">{t('Von Hand kann man ihr oder ihm weiter Aufgaben zuweisen; nur das Verteilen durch Wächter pausiert.')}</p>
   </div>
 {/if}
 

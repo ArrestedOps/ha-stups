@@ -10,8 +10,8 @@ export function createNotifications(c: Ctx, late: unknown) {
   const { canSeeBoard, visibleBoardsSql } = lazy(s, ['canSeeBoard', 'visibleBoardsSql'] as const);
 
   /**
-   * Alle offenen Karten mit Fälligkeit (für Erinnerungen und Zusammenfassung: Karten gehen nur an ihre Zuständigen, und die sehen das
-   * Board). `publicOnly`: nur Karten aus Boards, die alle sehen (für Sensoren in Home Assistant, die jeder dort lesen kann).
+   * Alle offenen Aufgaben mit Fälligkeit (für Erinnerungen und Zusammenfassung: Aufgaben gehen nur an ihre Zuständigen, und die sehen das
+   * Board). `publicOnly`: nur Aufgaben aus Boards, die alle sehen (für Sensoren in Home Assistant, die jeder dort lesen kann).
    */
   function openDueCards(opts: { publicOnly?: boolean } = {}): OpenDueCard[] {
     const rows = all(
@@ -28,7 +28,7 @@ export function createNotifications(c: Ctx, late: unknown) {
     )) {
       assignees.set(r.card_id, [...(assignees.get(r.card_id) ?? []), r.user_id]);
     }
-    // Zuständig bleibt nur, wer das Board sieht (Meldungen gehen nie an jemanden, der die Karte gar nicht sehen darf)
+    // Zuständig bleibt nur, wer das Board sieht (Meldungen gehen nie an jemanden, der die Aufgabe gar nicht sehen darf)
     const sees = new Map<string, boolean>();
     const mayLook = (userId: string, boardId: string): boolean => {
       const key = `${userId}\u0000${boardId}`;
@@ -80,7 +80,7 @@ export function createNotifications(c: Ctx, late: unknown) {
       kind: r.kind,
       status: r.status,
       at: r.sent_at,
-      title: r.kind === 'summary' ? 'Tageszusammenfassung' : (r.title ?? '(Karte gelöscht)'),
+      title: r.kind === 'summary' ? 'Tageszusammenfassung' : (r.title ?? '(Aufgabe gelöscht)'),
       user: r.user_name ?? '?',
     }));
   }

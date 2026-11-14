@@ -4,7 +4,7 @@ import { t } from '../i18n/index.svelte';
 import { ui } from './state.svelte';
 import { toast } from './toasts';
 
-// ---------- Home Assistant: Link zur Karte, Panel-Pfad, Zurück zum Dashboard ----------
+// ---------- Home Assistant: Link zur Aufgabe, Panel-Pfad, Zurück zum Dashboard ----------
 
 /** Aus dem Push: ?card=<id> in der Adresse von Home Assistant (außerhalb des iframes). */
 export function takeDeepLink(): string | null {

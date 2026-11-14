@@ -6,7 +6,7 @@ export interface Decision {
   waiting: boolean;
   /** zuletzt gewählte Person für die Rotation */
   last?: string;
-  /** "Erst vorschlagen": diese Personen fragen, wer übernimmt (die Karte entsteht ohne Zuständige) */
+  /** "Erst vorschlagen": diese Personen fragen, wer übernimmt (die Aufgabe entsteht ohne Zuständige) */
   suggest?: string[];
 }
 

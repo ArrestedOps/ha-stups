@@ -14,7 +14,7 @@
 <button
   {type}
   {disabled}
-  class="flex h-14 w-full items-center justify-center gap-2 rounded-btn text-[17px] font-extrabold disabled:opacity-40 {ghost ? 'border border-line bg-surface text-fg' : 'bg-accent-grad glow-cta'}"
+  class="flex h-[52px] w-full items-center justify-center gap-2 rounded-btn text-[17px] font-semibold disabled:opacity-40 {ghost ? 'bg-surface text-accent-text' : 'bg-accent-grad'}"
   {onclick}
 >
   {@render children()}

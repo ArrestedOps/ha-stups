@@ -184,7 +184,7 @@ describe('Kommentare', () => {
   });
 });
 
-describe('Karten-Felder', () => {
+describe('Aufgaben-Felder', () => {
   it('speichert Vorab-Erinnerung, Nachhaken und Kosten und liefert die Kostensumme', async () => {
     const { b, columns } = await setup();
     const res = await call('POST', `/api/boards/${b.id}/cards`, {
@@ -213,7 +213,7 @@ describe('Live-Sync und Push-Aufräumen', () => {
     expect(seen).toEqual([1]);
   });
 
-  it('räumt Push-Nachrichten auf, wenn eine Karte in der App erledigt wird', async () => {
+  it('räumt Push-Nachrichten auf, wenn eine Aufgabe in der App erledigt wird', async () => {
     const { b, columns } = await setup();
     const card = (await call('POST', `/api/boards/${b.id}/cards`, { columnId: columns[0]!.id, title: 'A' })).body;
     await call('POST', `/api/cards/${card.id}/complete`, {});
@@ -222,7 +222,7 @@ describe('Live-Sync und Push-Aufräumen', () => {
     expect(cleared).toEqual([card.id]);
   });
 
-  it('räumt auch auf, wenn die Karte in die Erledigt-Spalte gezogen wird, aber nicht bei normalem Verschieben', async () => {
+  it('räumt auch auf, wenn die Aufgabe in die Erledigt-Spalte gezogen wird, aber nicht bei normalem Verschieben', async () => {
     const { b, columns } = await setup();
     const card = (await call('POST', `/api/boards/${b.id}/cards`, { columnId: columns[0]!.id, title: 'A' })).body;
     await call('POST', `/api/cards/${card.id}/move`, { columnId: columns[1]!.id });

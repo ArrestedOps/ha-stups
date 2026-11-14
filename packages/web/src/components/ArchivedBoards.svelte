@@ -31,7 +31,7 @@
         <BoardTile board={b} />
         <span class="flex min-w-0 flex-1 flex-col gap-1">
           <span class="truncate text-[15px] font-bold tracking-tight">{b.name}</span>
-          <span class="truncate text-[13px] text-fg2">{tn('{n} offene Karte', '{n} offene Karten', b.openCards)}{#if info.who} · {info.who}{/if}</span>
+          <span class="truncate text-[13px] text-fg2">{tn('{n} offene Aufgabe', '{n} offene Aufgaben', b.openCards)}{#if info.who} · {info.who}{/if}</span>
         </span>
         <button
           type="button"

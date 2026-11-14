@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t, tn } from '../lib/i18n/index.svelte';
   import { finish, ob } from '../lib/onboarding.svelte';
-  import { feat, openSettings, openSheet } from '../lib/store.svelte';
+  import { feat, openNewWatcher, openSettings, openSheet } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
   import OnboardingFrame from './OnboardingFrame.svelte';
   import CtaButton from './ui/CtaButton.svelte';
@@ -44,7 +44,7 @@
             {#if r.meta}<span class="block truncate text-[13px] text-fg2">{r.meta}</span>{/if}
           </span>
           {#if !r.ok && r.page}
-            <button type="button" class="min-h-11 shrink-0 rounded-xl bg-surface2 px-3.5 text-[13px] font-bold" aria-label={t('{name} in den Einstellungen öffnen', { name: r.title })} onclick={() => (r.page === 'people' ? openSheet({ type: 'people' }) : openSettings(r.page === 'watchers' ? 'watchers' : 'notifications'))}>{t('Öffnen')}</button>
+            <button type="button" class="min-h-11 shrink-0 rounded-xl bg-surface2 px-3.5 text-[13px] font-bold" aria-label={t('{name} in den Einstellungen öffnen', { name: r.title })} onclick={() => (r.page === 'people' ? openSheet({ type: 'people' }) : (r.page === 'watchers' ? openNewWatcher() : openSettings('notifications')))}>{t('Öffnen')}</button>
           {/if}
         </li>
       {/if}

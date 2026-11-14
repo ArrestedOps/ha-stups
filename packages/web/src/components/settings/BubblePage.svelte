@@ -60,7 +60,7 @@
     </div>
     <ListRow title={t('So geht\'s')}>
       {#snippet tile()}<Tile color="gray"><Icon name="info" size={22} stroke={1.8} /></Tile>{/snippet}
-      {#snippet meta()}{t('Dashboard bearbeiten › Karte › Manuell')}{/snippet}
+      {#snippet meta()}{t('Dashboard bearbeiten › Aufgabe › Manuell')}{/snippet}
     </ListRow>
   </div>
 </Page>

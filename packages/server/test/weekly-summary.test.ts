@@ -93,7 +93,7 @@ describe('Nachricht am Sonntagabend', () => {
     expect(weekly(ben)).toEqual([]);
   });
 
-  it('bei 0 erledigten Karten keine Nachricht', async () => {
+  it('bei 0 erledigten Aufgaben keine Nachricht', async () => {
     at('2026-11-15T17:00:00Z'); // Sonntag der nächsten Woche: nichts erledigt
     await notifier().tick();
     expect(weekly(ben)).toEqual([]);

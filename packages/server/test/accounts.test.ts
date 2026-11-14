@@ -89,7 +89,7 @@ describe('Konto anlegen', () => {
     expect(store.people()).toHaveLength(0);
   });
 
-  it('eine schon vorhandene Person gleichen Namens bekommt das Konto, ihre Karten bleiben ihr', async () => {
+  it('eine schon vorhandene Person gleichen Namens bekommt das Konto, ihre Aufgaben bleiben ihr', async () => {
     const board = store.createBoard({ name: 'Haushalt' });
     const col = store.getBoardView(board.id).columns[0]!.id;
     const vorher = store.addPerson({ name: 'Anna' });
@@ -203,7 +203,7 @@ describe('Administratoren und Entfernen', () => {
     expect(() => accounts.remove(b.userId)).toThrow(/letzte Administrator/);
   });
 
-  it('Entfernen löscht Konto und Sitzungen, die Person und ihre Karten bleiben', async () => {
+  it('Entfernen löscht Konto und Sitzungen, die Person und ihre Aufgaben bleiben', async () => {
     await accounts.create({ username: 'chef', password: PW, isAdmin: true });
     const b = await accounts.create({ username: 'ben', password: PW });
     const token = accounts.createSession(b.userId).token;

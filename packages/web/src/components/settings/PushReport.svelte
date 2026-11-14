@@ -13,7 +13,7 @@
 
   /**
    * „Warum kommt nichts?": der Stand der Zustellung. Oben die Verbindung, dann pro Person „x / y Geräte erreichbar" und Ruhezeit,
-   * bei Fehlern ein Banner mit der Lösung, dann das Protokoll der letzten Nachrichten. Darunter die Einzelheiten (Karten mit Termin,
+   * bei Fehlern ein Banner mit der Lösung, dann das Protokoll der letzten Nachrichten. Darunter die Einzelheiten (Aufgaben mit Termin,
    * Notify-Dienste, ntfy, Haus, Stupse).
    */
   let status = $state<PushStatus | null>(null);
@@ -131,14 +131,14 @@
 
     <div class="space-y-4 rounded-row border border-line bg-surface px-4 py-3.5 text-[15px]">
       <div>
-        <p class="font-semibold">{t('Nächste Karten mit Termin')}</p>
+        <p class="font-semibold">{t('Nächste Aufgaben mit Termin')}</p>
         {#each status.upcoming as c, i (i)}
           <p class="mt-1">
             {c.title} · {clock(c.dueAt)} · {c.assignees.length ? c.assignees.join(', ') : t('niemand')}
             {#if c.note}<span class="block text-[13px] text-danger">{c.note}</span>{/if}
           </p>
         {:else}
-          <p class="mt-1 text-fg2">{t('Keine offene Karte mit Termin.')}</p>
+          <p class="mt-1 text-fg2">{t('Keine offene Aufgabe mit Termin.')}</p>
         {/each}
       </div>
       {#if feat.haPush}

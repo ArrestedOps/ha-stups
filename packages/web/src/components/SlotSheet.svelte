@@ -45,7 +45,7 @@
     if (!card) return;
     revealNewCard(card);
     closeSheet();
-    toast(t('Karte angelegt'), { action: { label: t('Öffnen'), run: () => void openCardAnywhere({ id: card.id, boardId }) } });
+    toast(t('Aufgabe angelegt'), { action: { label: t('Öffnen'), run: () => void openCardAnywhere({ id: card.id, boardId }) } });
   }
 
   /** Alle Felder: das volle Formular im gewählten Board, Termin vorbelegt */
@@ -63,7 +63,7 @@
   </button>
 {/snippet}
 
-<Sheet title={t('Neue Karte')} onclose={closeSheet} right={createButton}>
+<Sheet title={t('Neue Aufgabe')} onclose={closeSheet} right={createButton}>
   <form onsubmit={create} class="flex flex-col gap-3.5 pt-1 pb-2">
     <div class="focus-ring-in flex flex-col gap-1.5 rounded-row border border-line bg-surface px-3.5 py-3">
       <label class="text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase" for="slot-title">{t('Titel')}</label>

@@ -161,7 +161,7 @@ test('Administrator: Liste in den Einstellungen mit Bild, Stand umschalten, Als 
   const viewer = page.getByRole('dialog', { name: /^feedback-/ });
   await expect(viewer).toBeVisible();
   await expect(viewer.getByRole('img')).toBeVisible();
-  await expect(viewer.getByRole('button', { name: 'Entfernen' })).toHaveCount(0); // gehört nicht zu einer Karte
+  await expect(viewer.getByRole('button', { name: 'Entfernen' })).toHaveCount(0); // gehört nicht zu einer Aufgabe
   await viewer.getByRole('button', { name: 'Schließen' }).first().click();
   await expect(viewer).toHaveCount(0);
 

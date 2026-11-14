@@ -11,7 +11,7 @@
 
   let items = $state<TrashItem[] | null>(null);
 
-  const LABEL = $derived({ board: t('Board'), column: t('Spalte'), category: t('Kategorie'), card: t('Karte') } as const);
+  const LABEL = $derived({ board: t('Board'), column: t('Spalte'), category: t('Kategorie'), card: t('Aufgabe') } as const);
   const TILE: Record<TrashItem['type'], { color: TileColor; icon: string }> = {
     card: { color: 'orange', icon: 'trash' },
     board: { color: 'blue', icon: 'kanban' },
@@ -41,7 +41,7 @@
     {:else if items.length === 0}
       <p class="py-10 text-center text-fg2">{t('Der Papierkorb ist leer.')}</p>
     {:else}
-      <Banner variant="warm" title={t('30 Tage Bedenkzeit')} sub={t('Danach löscht Stups die Karten endgültig.')}>
+      <Banner variant="warm" title={t('30 Tage Bedenkzeit')} sub={t('Danach löscht Stups die Aufgaben endgültig.')}>
         {#snippet leading()}<Icon name="clock" size={28} stroke={1.7} />{/snippet}
       </Banner>
       <div class="flex flex-col gap-2">

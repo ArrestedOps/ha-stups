@@ -9,7 +9,7 @@ import { createNotifier, type Notifier } from '../src/notifications.js';
 import type { PushGateway, PushMessage } from '../src/push.js';
 import { createStore, type Store } from '../src/store.js';
 
-// Bestätigung: Ein Kind hakt ab, die Karte bleibt offen, bis ein Bestätiger „Bestätigen" sagt. Alles mit fester Uhr.
+// Bestätigung: Ein Kind hakt ab, die Aufgabe bleibt offen, bis ein Bestätiger „Bestätigen" sagt. Alles mit fester Uhr.
 const TZ = 'Europe/Berlin';
 const as = (id: string, name = id) => ({ 'x-remote-user-id': id, 'x-remote-user-name': name, 'x-remote-user-display-name': name });
 const mia = as('ha-mia', 'Mia'); // Kind, braucht Bestätigung
@@ -68,11 +68,11 @@ beforeEach(async () => {
 });
 
 describe('Wann braucht „Erledigt" eine Bestätigung', () => {
-  it('Vorgabe der Person gilt, wenn die Karte nichts sagt', () => {
+  it('Vorgabe der Person gilt, wenn die Aufgabe nichts sagt', () => {
     expect(store.needsConfirmation(cardId, miaId)).toBe(true);
   });
 
-  it('die Karte kann es überschreiben: aus oder ein', () => {
+  it('die Aufgabe kann es überschreiben: aus oder ein', () => {
     store.updateCard(cardId, { confirm: 'off' });
     expect(store.needsConfirmation(cardId, miaId)).toBe(false);
     store.setChild(miaId, { confirmDefault: false });
@@ -83,20 +83,20 @@ describe('Wann braucht „Erledigt" eine Bestätigung', () => {
     expect(store.needsConfirmation(cardId, miaId)).toBe(false); // zurück auf die Vorgabe der Person: aus
   });
 
-  it('nur für ein Kind, dem die Karte zugewiesen ist; nie für Erwachsene', () => {
+  it('nur für ein Kind, dem die Aufgabe zugewiesen ist; nie für Erwachsene', () => {
     expect(store.needsConfirmation(cardId, benId)).toBe(false);
     store.updateCard(cardId, { assigneeIds: [benId] });
     expect(store.needsConfirmation(cardId, miaId)).toBe(false);
   });
 
-  it('unbekannte Karte, gelöschte Karte oder unbekannte Person: nie', () => {
+  it('unbekannte Aufgabe, gelöschte Aufgabe oder unbekannte Person: nie', () => {
     expect(store.needsConfirmation('gibt-es-nicht', miaId)).toBe(false);
     expect(store.needsConfirmation(cardId, 'gibt-es-nicht')).toBe(false);
     db.prepare('update cards set deleted_at = ? where id = ?').run(now.toISOString(), cardId);
     expect(store.needsConfirmation(cardId, miaId)).toBe(false);
   });
 
-  it('ein Erwachsener braucht auch bei ausdrücklich eingeschalteter Karte keine Bestätigung', () => {
+  it('ein Erwachsener braucht auch bei ausdrücklich eingeschalteter Aufgabe keine Bestätigung', () => {
     store.updateCard(cardId, { confirm: 'on', assigneeIds: [benId] });
     expect(store.needsConfirmation(cardId, benId)).toBe(false);
   });
@@ -108,16 +108,16 @@ describe('Wann braucht „Erledigt" eine Bestätigung', () => {
     expect(store.needsConfirmation(cardId, miaId)).toBe(false);
   });
 
-  it('eine schon erledigte Karte braucht nichts mehr', () => {
+  it('eine schon erledigte Aufgabe braucht nichts mehr', () => {
     store.completeCard(cardId, { by: benId, source: 'app' });
     expect(store.needsConfirmation(cardId, miaId)).toBe(false);
   });
 
-  it('die Einstellung der Karte wird geprüft', () => {
+  it('die Einstellung der Aufgabe wird geprüft', () => {
     expect(() => store.updateCard(cardId, { confirm: 'vielleicht' })).toThrow(/Bestätigung/);
   });
 
-  it('die nächste Karte einer Wiederholung und eine Kopie behalten die Einstellung', () => {
+  it('die nächste Aufgabe einer Wiederholung und eine Kopie behalten die Einstellung', () => {
     store.updateCard(cardId, { confirm: 'off', recurrence: { type: 'fixed', freq: 'daily', every: 1 } });
     const res = store.completeCard(cardId, { by: benId, source: 'app' });
     expect(store.getCard(res.nextCardId!).confirm).toBe('off');
@@ -156,7 +156,7 @@ describe('Wer bestätigen darf', () => {
 });
 
 describe('Anfrage statt Erledigen (Schnittstelle)', () => {
-  it('ein Kind löst nur eine Anfrage aus: die Karte bleibt offen, nichts wird gezählt', async () => {
+  it('ein Kind löst nur eine Anfrage aus: die Aufgabe bleibt offen, nichts wird gezählt', async () => {
     const res = await post(mia, `/api/cards/${cardId}/complete`);
     expect(res.statusCode).toBe(200);
     const body = res.json();
@@ -187,7 +187,7 @@ describe('Anfrage statt Erledigen (Schnittstelle)', () => {
     expect(store.getCard(cardId).completedAt).not.toBeNull();
   });
 
-  it('Erwachsene erledigen immer sofort, auch Karten von Kindern', async () => {
+  it('Erwachsene erledigen immer sofort, auch Aufgaben von Kindern', async () => {
     const res = await post(ben, `/api/cards/${cardId}/complete`);
     expect(res.json().completionId).toEqual(expect.any(String));
   });
@@ -199,7 +199,7 @@ describe('Bestätigen und „Nochmal" (Schnittstelle)', () => {
     sent = [];
   });
 
-  it('Bestätigen erledigt die Karte und zählt auf das Kind', async () => {
+  it('Bestätigen erledigt die Aufgabe und zählt auf das Kind', async () => {
     at('2026-11-04T10:00:00Z');
     const res = await post(ben, `/api/cards/${cardId}/confirm`);
     expect(res.statusCode).toBe(200);
@@ -228,7 +228,7 @@ describe('Bestätigen und „Nochmal" (Schnittstelle)', () => {
     expect((await post(mia, `/api/cards/${cardId}/reject`)).statusCode).toBe(403);
   });
 
-  it('„Nochmal" nimmt die Anfrage zurück, die Karte bleibt offen und zählt nicht', async () => {
+  it('„Nochmal" nimmt die Anfrage zurück, die Aufgabe bleibt offen und zählt nicht', async () => {
     const res = await post(ben, `/api/cards/${cardId}/reject`);
     expect(res.statusCode).toBe(200);
     expect(res.json().confirmRequestedAt).toBeNull();
@@ -254,13 +254,13 @@ describe('Bestätigen und „Nochmal" (Schnittstelle)', () => {
     expect((await post(ben, `/api/cards/${other}/confirm`)).statusCode).toBe(409);
   });
 
-  it('wird die Karte anders erledigt, entfällt die Anfrage', async () => {
+  it('wird die Aufgabe anders erledigt, entfällt die Anfrage', async () => {
     await post(admin, `/api/cards/${cardId}/complete`);
     expect(state().confirmRequestedAt).toBeNull();
     expect((await post(ben, `/api/cards/${cardId}/confirm`)).statusCode).toBe(409);
   });
 
-  it('bei einer Wiederholung zählt die Bestätigung und die nächste Karte beginnt ohne Anfrage', async () => {
+  it('bei einer Wiederholung zählt die Bestätigung und die nächste Aufgabe beginnt ohne Anfrage', async () => {
     const rec = store.createCard(boardId, { columnId: colId, title: 'Müll', dueAt: '2026-11-04T16:00:00.000Z', assigneeIds: [miaId], recurrence: { type: 'fixed', freq: 'daily', every: 1 } }, benId).id;
     await post(mia, `/api/cards/${rec}/complete`);
     const res = await post(ben, `/api/cards/${rec}/confirm`);
@@ -277,7 +277,7 @@ describe('Antwort direkt im Store', () => {
     expect(store.listCompletions(cardId)).toEqual([]);
   });
 
-  it('„Nochmal“ zählt die Karte als geändert (Version steigt, Anfrage weg)', () => {
+  it('„Nochmal“ zählt die Aufgabe als geändert (Version steigt, Anfrage weg)', () => {
     store.requestConfirmation(cardId, miaId);
     const before = state().version;
     const res = store.answerConfirmation(cardId, 'reject', 'app');
@@ -400,7 +400,7 @@ describe('Benachrichtigungen', () => {
   });
 });
 
-describe('Offene Anfrage und Verschieben der Karte', () => {
+describe('Offene Anfrage und Verschieben der Aufgabe', () => {
   const doneCol = () => store.getBoardView(boardId).columns.find((c) => c.isDone)!.id;
 
   it('Ablegen in „Erledigt“ beendet die Anfrage; Zurückziehen bringt sie nicht wieder', () => {
@@ -415,7 +415,7 @@ describe('Offene Anfrage und Verschieben der Karte', () => {
 
   it('Wiedereröffnen aus „Erledigt“ löscht eine übrig gebliebene Anfrage', () => {
     store.moveCard(cardId, { columnId: doneCol() }, benId);
-    store.requestConfirmation(cardId, miaId); // Anfrage trotz erledigter Karte (Altbestand)
+    store.requestConfirmation(cardId, miaId); // Anfrage trotz erledigter Aufgabe (Altbestand)
     store.moveCard(cardId, { columnId: colId }, benId);
     expect(state().confirmRequestedAt).toBeNull();
   });

@@ -1,4 +1,4 @@
-// Nimmt ein kurzes Demo-GIF auf (iPhone-Ansicht, erfundene Daten, ohne Ton): Schnell-Eingabe, Karte anlegen, Agenda, Erledigen.
+// Nimmt ein kurzes Demo-GIF auf (iPhone-Ansicht, erfundene Daten, ohne Ton): Schnell-Eingabe, Aufgabe anlegen, Agenda, Erledigen.
 // Aufruf im Repository-Ordner (nach pnpm build): node e2e/demo.mjs --lang en|de   →  docs/images/demo.<lang>.gif
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
@@ -87,7 +87,7 @@ await nav('Boards').waitFor();
 await snap(120);
 
 // Schnell-Eingabe: Zeile Stück für Stück tippen, die Chips erscheinen
-await page.getByRole('button', { name: x('Neue Karte', 'New card'), exact: true }).click();
+await page.getByRole('button', { name: x('Neue Aufgabe', 'New card'), exact: true }).click();
 const title = page.getByLabel(x('Titel', 'Title'));
 const line = x('Blumen gießen morgen 19 Uhr @Ben #Haushalt jede Woche !!', 'Water the plants tomorrow 7pm @Ben #Home every week !!');
 const stops = [line.indexOf(x(' morgen', ' tomorrow')), line.indexOf('@'), line.indexOf('every') > 0 ? line.indexOf('every') : line.indexOf('jede'), line.length];
@@ -102,12 +102,12 @@ await page.getByRole('button', { name: x('Anlegen', 'Create'), exact: true }).cl
 await page.getByRole('tab', { name: new RegExp(`^${x('Geplant', 'Planned')}`) }).click();
 await snap(130);
 
-// Agenda: die neue Karte steht morgen
+// Agenda: die neue Aufgabe steht morgen
 await nav('Agenda').click();
 await page.getByTestId('agenda').getByText(x('Blumen gießen', 'Water the plants')).waitFor();
 await snap(160);
 
-// Erledigen: Kreis links an der überfälligen Karte, dann „Rückgängig" im Hinweis
+// Erledigen: Kreis links an der überfälligen Aufgabe, dann „Rückgängig" im Hinweis
 await nav('Boards').click();
 await page.getByRole('tab', { name: new RegExp(`^${x('Offen', 'Open')}`) }).click();
 await snap(90);

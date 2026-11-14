@@ -29,7 +29,7 @@ export interface User {
   weeklySummary: boolean;
   /** Rolle „Kind": eingeschränkte Rechte (der Administrator legt sie fest; ein Administrator ist nie Kind) */
   isChild: boolean;
-  /** Welche Boards ein Kind sieht: alle oder nur die mit eigenen (zugewiesenen) Karten */
+  /** Welche Boards ein Kind sieht: alle oder nur die mit eigenen (zugewiesenen) Aufgaben */
   childScope: 'all' | 'assigned';
   /** „Erledigt" des Kindes braucht standardmäßig eine Bestätigung */
   confirmDefault: boolean;
@@ -54,7 +54,7 @@ export const NUDGE_TEMPLATES: Record<NudgeTemplate, string> = {
 };
 
 export const NUDGE_TEXT_MAX = 120;
-/** Zwischen zwei Stupsen derselben Person an dieselbe Person zur selben Karte */
+/** Zwischen zwei Stupsen derselben Person an dieselbe Person zur selben Aufgabe */
 export const NUDGE_COOLDOWN_MS = 30 * 60_000;
 export const NUDGE_LATER_MS = 60 * 60_000;
 export const NUDGE_LATER_MAX = 3;
@@ -77,13 +77,18 @@ export interface Nudge {
   replyAt: string | null;
 }
 
-/** Offener Stups an der Karte (für Abzeichen und Filter) */
+/** Offener Stups an der Aufgabe (für Abzeichen und Filter) */
 export interface OpenNudge {
   id: string;
   fromId: string;
   toId: string;
   /** schon als Push zugestellt */
   delivered: boolean;
+  /** wann gestupst (ISO) */
+  at: string;
+  /** Schnellauswahl (zum Beispiel „think“) und eigener Text; höchstens einer von beiden */
+  template: string | null;
+  text: string | null;
 }
 
 export interface NudgeSent {
@@ -137,7 +142,7 @@ export interface ClosedNudge {
   cardTitle: string;
   fromId: string;
   toId: string;
-  /** wer die Karte erledigt hat (null = unbekannt) */
+  /** wer die Aufgabe erledigt hat (null = unbekannt) */
   byId: string | null;
 }
 
@@ -185,7 +190,7 @@ export interface Column {
   name: string;
   position: string;
   isDone: boolean;
-  /** Nur Karten mit Termin nach heute; rücken am Tag der Fälligkeit nach „Offen" */
+  /** Nur Aufgaben mit Termin nach heute; rücken am Tag der Fälligkeit nach „Offen" */
   isPlanned: boolean;
 }
 
@@ -213,29 +218,29 @@ export interface Completion {
 
 export interface CompleteResult {
   card: CardDetail;
-  /** null, wenn die Karte schon erledigt war (nichts wurde protokolliert) */
+  /** null, wenn die Aufgabe schon erledigt war (nichts wurde protokolliert) */
   completionId: string | null;
-  /** nur bei wiederkehrenden Karten */
+  /** nur bei wiederkehrenden Aufgaben */
   nextDueAt: string | null;
-  /** die neue Karte, die bei einer wiederkehrenden Karte angelegt wurde */
+  /** die neue Aufgabe, die bei einer wiederkehrenden Aufgabe angelegt wurde */
   nextCardId: string | null;
-  /** true, wenn ein Kind abgehakt hat und die Karte auf Bestätigung wartet (erledigt wurde nichts) */
+  /** true, wenn ein Kind abgehakt hat und die Aufgabe auf Bestätigung wartet (erledigt wurde nichts) */
   awaitingConfirmation?: boolean;
 }
 
-/** Felder, die eine wiederkehrende Karte auf Wunsch in die nächste Karte mitnimmt */
+/** Felder, die eine wiederkehrende Aufgabe auf Wunsch in die nächste Aufgabe mitnimmt */
 export type CarryField = 'description' | 'checklist' | 'links' | 'cost' | 'attachments' | 'comments';
 
 export const CARRY_FIELDS: readonly CarryField[] = ['description', 'checklist', 'links', 'cost', 'attachments', 'comments'];
 
-/** Ohne eigene Auswahl: Fotos und Kommentare gehören meist zu genau einem Durchgang und bleiben bei der erledigten Karte */
+/** Ohne eigene Auswahl: Fotos und Kommentare gehören meist zu genau einem Durchgang und bleiben bei der erledigten Aufgabe */
 export const DEFAULT_CARRY: readonly CarryField[] = ['description', 'checklist', 'links', 'cost'];
 
-/** Aufwand einer Karte: klein, mittel oder groß */
+/** Aufwand einer Aufgabe: klein, mittel oder groß */
 export type Effort = 'small' | 'medium' | 'large';
 export const EFFORTS: readonly Effort[] = ['small', 'medium', 'large'];
 
-/** Die acht Kachelfarben der Oberfläche (Symbol an der Karte) */
+/** Die acht Kachelfarben der Oberfläche (Symbol an der Aufgabe) */
 export type IconColor = 'orange' | 'purple' | 'violet' | 'blue' | 'teal' | 'green' | 'red' | 'gray';
 export const ICON_COLORS: readonly IconColor[] = ['orange', 'purple', 'violet', 'blue', 'teal', 'green', 'red', 'gray'];
 export type IconSource = 'auto' | 'manual';
@@ -271,16 +276,16 @@ export interface Card {
   iconSource: IconSource | null;
   /** Bestätigung: leer = Vorgabe der zuständigen Person, on = immer, off = nie */
   confirm: 'on' | 'off' | null;
-  /** Das Kind hat erledigt gesagt, die Karte wartet auf Bestätigung (sonst null) */
+  /** Das Kind hat erledigt gesagt, die Aufgabe wartet auf Bestätigung (sonst null) */
   confirmRequestedAt: string | null;
   confirmRequestedBy: string | null;
-  /** Was die nächste Karte übernimmt, wenn diese sich wiederholt */
+  /** Was die nächste Aufgabe übernimmt, wenn diese sich wiederholt */
   carryOver: CarryField[];
-  /** offene Stupse zu dieser Karte */
+  /** offene Stupse zu dieser Aufgabe */
   openNudges: OpenNudge[];
-  /** Karte, aus deren Wiederholung diese entstanden ist */
+  /** Aufgabe, aus deren Wiederholung diese entstanden ist */
   repeatedFrom: string | null;
-  /** Wächter, aus dem die Karte entstanden ist */
+  /** Wächter, aus dem die Aufgabe entstanden ist */
   watcherId: string | null;
   assigneeIds: string[];
   categoryIds: string[];
@@ -290,11 +295,11 @@ export interface Card {
   attachmentCount: number;
 }
 
-/** Karte mit Termin samt Board, für Agenda und Kalender */
+/** Aufgabe mit Termin samt Board, für Agenda und Kalender */
 export interface ScheduleCard extends Card {
   boardName: string;
   boardColor: string | null;
-  /** die Kategorien der Karte (Name und Farbe), in der Reihenfolge der Karte; Aufgaben zeigt die erste in der Zeile */
+  /** die Kategorien der Aufgabe (Name und Farbe), in der Reihenfolge der Aufgabe; Aufgaben zeigt die erste in der Zeile */
   categories: { id: string; name: string; color: string }[];
 }
 
@@ -387,7 +392,7 @@ export interface CardLink {
 export type ActivityKind = 'created' | 'repeated' | 'completed' | 'moved' | 'reopened' | 'due' | 'nudged' | 'nudge_reply' | 'watcher';
 
 /**
- * Ein Eintrag im Verlauf einer Karte. Bei „due" sind from/to ISO-Zeiten, bei „moved"/„reopened" Spaltennamen,
+ * Ein Eintrag im Verlauf einer Aufgabe. Bei „due" sind from/to ISO-Zeiten, bei „moved"/„reopened" Spaltennamen,
  * bei „nudged" ist `to` der Empfänger und `text` die Nachricht, bei „nudge_reply" ist `text` die Antwort.
  */
 export interface ActivityEntry {
@@ -416,7 +421,7 @@ export interface BoardView {
   columns: Column[];
   categories: Category[];
   cards: Card[];
-  /** Summe der Kosten aller Karten des Boards */
+  /** Summe der Kosten aller Aufgaben des Boards */
   costTotalCents: number;
 }
 
@@ -444,7 +449,7 @@ export type CardPatch = Partial<Omit<CardInput, 'columnId'>> & {
   /** Bestätigung beim Erledigen durch ein Kind: 'on', 'off' oder leer (Vorgabe der zuständigen Person) */
   confirm?: unknown;
   /**
-   * Vorbedingung gegen veraltete Schreibzugriffe: Nur wenn die Karte noch in dieser Fassung (`version`) vorliegt, wird geändert, sonst
+   * Vorbedingung gegen veraltete Schreibzugriffe: Nur wenn die Aufgabe noch in dieser Fassung (`version`) vorliegt, wird geändert, sonst
    * ConflictError. Fehlt sie, gewinnt die letzte Änderung.
    */
   expectedVersion?: unknown;
@@ -463,7 +468,7 @@ export interface TrashItem {
 
 // ---------- Haus-Kanäle ----------
 
-/** Welche Nachrichten ins Haus dürfen: Stups, Fälligkeit (auch Vorab-Erinnerung und Nachhaken), Karte eines Wächters */
+/** Welche Nachrichten ins Haus dürfen: Stups, Fälligkeit (auch Vorab-Erinnerung und Nachhaken), Aufgabe eines Wächters */
 export type HouseKind = 'nudge' | 'due' | 'watcher';
 export const HOUSE_KINDS: readonly HouseKind[] = ['nudge', 'due', 'watcher'];
 /** Ansage über einen Lautsprecher oder eine Lampe, die aufleuchtet */
@@ -501,7 +506,7 @@ export interface HousePending {
 }
 
 export interface StoreOptions {
-  /** Wird nach dem Erledigen einer Karte mit den dabei geschlossenen Stupsen aufgerufen (für die Rückmeldung) */
+  /** Wird nach dem Erledigen einer Aufgabe mit den dabei geschlossenen Stupsen aufgerufen (für die Rückmeldung) */
   onNudgesClosed?: (list: ClosedNudge[]) => void;
   now?: () => Date;
   /** IANA-Zeitzone von Home Assistant, z. B. Europe/Berlin */

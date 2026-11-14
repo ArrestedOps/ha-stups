@@ -103,7 +103,7 @@ test('Administrator: alles durchlaufen bis „Zu den Aufgaben"', async ({ page, 
   await expect(page.getByTestId('test-recipients').getByRole('radio', { name: 'Conny' })).toHaveAttribute('aria-checked', 'true');
   await expect(page.getByTestId('onboarding-preview')).toHaveCount(1);
   await expect(page.getByTestId('preview-title')).toContainText('Waschmaschine');
-  await expect(page.getByTestId('preview-body')).toContainText('Neue Karte für dich · fällig');
+  await expect(page.getByTestId('preview-body')).toContainText('Neue Aufgabe für dich · fällig');
   await dialog(page).getByRole('button', { name: 'Testnachricht an Conny senden' }).click();
   await expect(page.getByTestId('test-sent')).toBeVisible();
   const pushes = (await (await request.get(`${MOCK}/mock/pushes`)).json()) as { service: string; title: string; message: string; data: { actions?: { title: string }[] } }[];
@@ -111,8 +111,8 @@ test('Administrator: alles durchlaufen bis „Zu den Aufgaben"', async ({ page, 
   expect(toConny, JSON.stringify(pushes)).toBeTruthy();
   // Conny hat zwei Anmeldungen der Companion App: Home Assistant ordnet beide ihr zu, die Nachricht geht an beide
   expect(pushes.filter((p) => /Waschmaschine/.test(p.title)).map((p) => p.service).sort()).toEqual(['mobile_app_conny_e2e', 'mobile_app_conny_e2e_2']);
-  expect(toConny!.message).toMatch(/^Neue Karte für dich · fällig /);
-  // nur Erledigt: „Später" gibt es bei Wächter-Karten nicht
+  expect(toConny!.message).toMatch(/^Neue Aufgabe für dich · fällig /);
+  // nur Erledigt: „Später" gibt es bei Wächter-Aufgaben nicht
   expect(toConny!.data.actions?.map((a) => a.title)).toEqual(['Erledigt']);
   await dialog(page).getByRole('button', { name: 'Ja, weiter' }).click();
 
@@ -308,7 +308,7 @@ test('Kind mit zugeordnetem Handy: die Testnachricht an das eigene Handy funktio
 });
 
 test('Bestandsinstallation: wer schon da ist, sieht die Einrichtung nicht; nochmal durchgehen steht in den Einstellungen', async ({ page, request }) => {
-  // Eine Installation mit Personen und Karte, der Administrator hat die Einrichtung früher durchlaufen
+  // Eine Installation mit Personen und Aufgabe, der Administrator hat die Einrichtung früher durchlaufen
   await request.post('/api/access/people', { data: { name: 'Conny', haUserId: 'ha-conny-e2e' } });
   const board = (await (await request.get('/api/boards')).json()) as { id: string }[];
   const view = (await (await request.get(`/api/boards/${board[0]!.id}`)).json()) as { columns: { id: string }[] };

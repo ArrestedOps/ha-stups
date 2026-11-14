@@ -28,11 +28,11 @@ export function modeOptions(): ModeOption[] {
     { mode: 'first_home', title: t('Wer zuerst heimkommt'), meta: t('ideal, wenn die Maschine läuft, während alle weg sind') },
     { mode: 'all_present', title: t('Alle, die gerade da sind'), meta: t('wer zuerst abhakt, hat es erledigt') },
     { mode: 'suggest', title: t('Erst vorschlagen'), meta: t('alle Anwesenden fragen, wer übernimmt') },
-    { mode: 'none', title: t('Niemand'), meta: t('Karte landet nur auf dem Board') },
+    { mode: 'none', title: t('Niemand'), meta: t('Aufgabe landet nur auf dem Board') },
   ];
 }
 
-/** Kurz hinter „AN WEN" in der Karte des Ablaufs: „abwechselnd, nur Anwesende" */
+/** Kurz hinter „AN WEN" in der Aufgabe des Ablaufs: „abwechselnd, nur Anwesende" */
 export function modeSummary(mode: AssignMode): string {
   switch (mode) {
     case 'fixed':
@@ -134,7 +134,7 @@ export function dueFields(chip: Exclude<DueChip, 'custom'>): Pick<WatcherForm, '
   }
 }
 
-/** Die Fälligkeit als Text für die Vorschau der Karte („in 30 Min."), leer ohne Termin */
+/** Die Fälligkeit als Text für die Vorschau der Aufgabe („in 30 Min."), leer ohne Termin */
 export function dueText(f: Pick<WatcherForm, 'dueKind' | 'dueMinutes' | 'dueDay' | 'dueTime'>): string {
   if (f.dueKind === 'in') return intOr(f.dueMinutes, 0) === 0 ? t('sofort') : t('in {n} Min.', { n: intOr(f.dueMinutes, 0) });
   if (f.dueKind === 'at') return `${f.dueDay === 'today' ? t('heute') : t('morgen')} ${f.dueTime}`;
@@ -151,8 +151,8 @@ export function doneText(f: WatcherForm): string {
 }
 
 /**
- * Der Satz als Zusammenfassung (Schritt 4 und oben im Ablauf), mit fetten Teilen wie im Entwurf: Entität, Schwelle, wer, Karte.
- * Dazu kommen die Fälligkeit in Klammern und, wenn sich die Karte von selbst erledigt, ein zweiter Satz.
+ * Der Satz als Zusammenfassung (Schritt 4 und oben im Ablauf), mit fetten Teilen wie im Entwurf: Entität, Schwelle, wer, Aufgabe.
+ * Dazu kommen die Fälligkeit in Klammern und, wenn sich die Aufgabe von selbst erledigt, ein zweiter Satz.
  */
 export function summaryParts(f: WatcherForm, personName: (id: string) => string): Part[] {
   const parts: Part[] = sentenceParts(f, personName).map((p) => ({
@@ -188,7 +188,7 @@ export function fineChips(f: WatcherForm): { key: FineKey; label: string }[] {
     { key: 'name', label: t('Name: {name}', { name: f.name.trim() || '…' }) },
     { key: 'category', label: t('Kategorie: {name}', { name: f.category.trim() || t('keine') }) },
     { key: 'cooldown', label: t('Sperrzeit {n} Min.', { n: cooldown }) },
-    { key: 'dedupe', label: f.dedupe ? t('Keine zweite Karte') : t('Zweite Karte erlaubt') },
+    { key: 'dedupe', label: f.dedupe ? t('Keine zweite Aufgabe') : t('Zweite Aufgabe erlaubt') },
     { key: 'nudge', label: nudge === null ? t('Nicht stupsen') : nudge.everyMin === null ? t('Stupsen nach {n} Min.', { n: nudge.afterMin }) : t('Stupsen nach {n} Min., alle {e} Min., {max} ×', { n: nudge.afterMin, e: nudge.everyMin, max: nudge.max }) },
     { key: 'count', label: t('Erst beim {n}. Mal', { n: count }) },
   ];

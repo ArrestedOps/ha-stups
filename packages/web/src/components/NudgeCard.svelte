@@ -10,8 +10,8 @@
 
   /**
    * „Stupsen, wenn noch offen" des Wächters: Nach / Wiederholen alle (leer = nur einmal) / Höchstens, dazu ein Beispiel mit den echten Werten.
-   * Handy: eine Karte mit Zeilen und dem Beispiel darin. Desktop (`wide`): breite Karte, die drei Felder nebeneinander auf einer Linie,
-   * rechts der Zeitstrahl. Der Stups geht an die Zuständigen und endet mit der Erledigung der Karte.
+   * Handy: eine Aufgabe mit Zeilen und dem Beispiel darin. Desktop (`wide`): breite Aufgabe, die drei Felder nebeneinander auf einer Linie,
+   * rechts der Zeitstrahl. Der Stups geht an die Zuständigen und endet mit der Erledigung der Aufgabe.
    */
   let { ed, wide = false, readOnly = false }: { ed: WatcherEditor; wide?: boolean; readOnly?: boolean } = $props();
   const f = $derived(ed.form);
@@ -33,10 +33,10 @@
 {#snippet example()}
   {#if nudge}
     <p class="rounded-xl bg-surface2 px-3 py-2.5 text-[13.5px] leading-[1.5]" data-testid="nudge-example">
-      {t('Karte angelegt 12:00')} →
+      {t('Aufgabe angelegt 12:00')} →
       {t('Stups')}
       {#each steps as s, i (i)}{i > 0 ? ' · ' : ''}<b class="font-bold text-accent-text">{s.text}</b>{s.last ? ` ${t('(letzter)')}` : ''}{/each}<br />
-      {t('Endet, sobald die Karte erledigt ist.')}
+      {t('Endet, sobald die Aufgabe erledigt ist.')}
     </p>
   {:else}
     <p class="px-1 text-[13px] text-fg2" data-testid="nudge-off">{t('Leer lassen: kein Stups.')}</p>

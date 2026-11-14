@@ -4,8 +4,8 @@ import type { WatcherStatus } from './watcher-types.js';
 
 /**
  * Der Reiter „Wächter" zeigt den Zustand der Wächter. Jeder Wächter ist in genau einer Phase (ein pausierter ist ruhig, es sei denn, seine
- * Karte ist noch offen):
- * - waiting: seine Karte ist offen, jemand muss etwas tun
+ * Aufgabe ist noch offen):
+ * - waiting: seine Aufgabe ist offen, jemand muss etwas tun
  * - running: der Vorgang, auf dessen Ende er wartet, ist gerade im Gang (die Waschmaschine läuft)
  * - soon: bald dran (Zähler steht auf „2 von 3", der nächste Termin steht an)
  * - quiet: nichts zu melden
@@ -108,11 +108,11 @@ export interface HomeItem {
   progress: { n: number; of: number } | null;
   /** Aktueller Wert der Entität mit Einheit ("26 %"); null, wenn Home Assistant keinen Wert hat */
   value: string | null;
-  /** Titel der Karte, die danach kommt */
+  /** Titel der Aufgabe, die danach kommt */
   nextCard: string;
   /** Die Entität gibt es in Home Assistant nicht (mehr) */
   entityMissing: boolean;
-  /** ok, entity_missing, target_missing (Board oder Spalte weg, pausiert) oder assignees_missing (keine Karten, braucht neue Zuständige) */
+  /** ok, entity_missing, target_missing (Board oder Spalte weg, pausiert) oder assignees_missing (keine Aufgaben, braucht neue Zuständige) */
   status: WatcherStatus;
   /** Bei `target_missing`: das Board ist archiviert (`archived`) oder gelöscht (`deleted`); sonst null (zum Beispiel fehlt nur die Spalte) */
   pausedBy: 'archived' | 'deleted' | null;
@@ -126,10 +126,10 @@ export interface HomeItem {
   trigger: WatchTrigger;
   /** Einheit der beobachteten Entität („W", „%"), null ohne */
   entityUnit: string | null;
-  /** Wann der Wächter zuletzt eine Karte angelegt hat (null: noch nie) und für wen */
+  /** Wann der Wächter zuletzt eine Aufgabe angelegt hat (null: noch nie) und für wen */
   lastFiredAt: string | null;
   lastAssigneeIds: string[];
-  /** An wen die Karte geht: Art und feste Personen bzw. Kreis */
+  /** An wen die Aufgabe geht: Art und feste Personen bzw. Kreis */
   assign: { mode: AssignMode; personIds: string[] };
 }
 

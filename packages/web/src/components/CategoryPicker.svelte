@@ -23,7 +23,7 @@
     color = CATEGORY_COLORS[(CATEGORY_COLORS.indexOf(shownColor as never) + 1) % CATEGORY_COLORS.length]!;
   }
 
-  /** Neue Kategorie direkt anlegen und gleich für diese Karte wählen; gibt es den Namen schon, wird die vorhandene gewählt */
+  /** Neue Kategorie direkt anlegen und gleich für diese Aufgabe wählen; gibt es den Namen schon, wird die vorhandene gewählt */
   async function create(e: Event) {
     e.preventDefault();
     const n = name.trim();

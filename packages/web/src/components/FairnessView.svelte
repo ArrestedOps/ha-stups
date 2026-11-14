@@ -51,9 +51,9 @@
   /** Die kleinen Zahlen unter dem Balken; was null ist, bleibt weg */
   const details = (p: Fairness['people'][number]) =>
     [
-      p.created > 0 ? tn('{n} Karte angelegt', '{n} Karten angelegt', p.created) : '',
+      p.created > 0 ? tn('{n} Aufgabe angelegt', '{n} Aufgaben angelegt', p.created) : '',
       p.nudgesAnswered > 0 ? tn('{n} Stups beantwortet', '{n} Stupse beantwortet', p.nudgesAnswered) : '',
-      p.watcherCards > 0 ? tn('{n} Wächter-Karte', '{n} Wächter-Karten', p.watcherCards) : '',
+      p.watcherCards > 0 ? tn('{n} Wächter-Aufgabe', '{n} Wächter-Aufgaben', p.watcherCards) : '',
     ].filter(Boolean);
 </script>
 
@@ -94,8 +94,8 @@
     {#if data.houseCards > 0}
       <p class="mt-1 text-[15px] text-house" data-testid="week-house">
         {period === 'week'
-          ? tn('{n} Karte kam diese Woche vom Haus', '{n} Karten kamen diese Woche vom Haus', data.houseCards)
-          : tn('{n} Karte kam diesen Monat vom Haus', '{n} Karten kamen diesen Monat vom Haus', data.houseCards)}
+          ? tn('{n} Aufgabe kam diese Woche vom Haus', '{n} Aufgaben kamen diese Woche vom Haus', data.houseCards)
+          : tn('{n} Aufgabe kam diesen Monat vom Haus', '{n} Aufgaben kamen diesen Monat vom Haus', data.houseCards)}
       </p>
     {/if}
 

@@ -5,7 +5,7 @@ export interface PushMessage {
   /** Gleiches Tag ersetzt die ältere Nachricht, und darüber lässt sie sich wieder entfernen */
   tag: string;
   group?: string;
-  /** Beim Tippen öffnen: die Karte, sonst die Startseite. Ohne Angabe öffnet die Nachricht nichts Bestimmtes. */
+  /** Beim Tippen öffnen: die Aufgabe, sonst die Startseite. Ohne Angabe öffnet die Nachricht nichts Bestimmtes. */
   open?: { cardId?: string };
   level?: 'time-sensitive' | 'active' | 'passive';
   /** Knöpfe in der Nachricht; `id` kommt unverändert als Aktion zurück (siehe Notifier.handleAction) */
@@ -21,7 +21,7 @@ export interface PushMessage {
   nudgeId?: string;
 }
 
-/** Stups, Fälligkeit (auch Vorab-Erinnerung und Nachhaken) oder Karte eines Wächters */
+/** Stups, Fälligkeit (auch Vorab-Erinnerung und Nachhaken) oder Aufgabe eines Wächters */
 export type PushKind = 'nudge' | 'due' | 'watcher';
 
 export interface PushGateway {

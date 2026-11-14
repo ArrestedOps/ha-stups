@@ -9,8 +9,8 @@
   import Page from './Page.svelte';
 
   /**
-   * „Symbole aus Titeln erkennen“: Administratoren und Recht „settings“, nur auf Wunsch (nie automatisch). Setzt für alle Karten ohne Symbol das zum
-   * Titel passende; Karten, die schon eins haben, bleiben. Erst kommt eine Rückfrage, am Ende steht das Ergebnis als Zahl.
+   * „Symbole aus Titeln erkennen“: Administratoren und Recht „settings“, nur auf Wunsch (nie automatisch). Setzt für alle Aufgaben ohne Symbol das zum
+   * Titel passende; Aufgaben, die schon eins haben, bleiben. Erst kommt eine Rückfrage, am Ende steht das Ergebnis als Zahl.
    */
   let busy = $state(false);
   let result = $state('');
@@ -23,14 +23,14 @@
     busy = false;
     if (!cards) return;
     if (cards.length === 0) {
-      result = t('Alle Karten haben schon ein Symbol.');
+      result = t('Alle Aufgaben haben schon ein Symbol.');
       return;
     }
     ui.confirm = {
       title: t('Symbole erkennen?'),
       text: tn(
-        '{n} Karte hat noch kein Symbol. Stups sucht zu ihrem Titel ein passendes. Karten mit Symbol bleiben, wie sie sind; einzelne Symbole änderst du später an der Karte.',
-        '{n} Karten haben noch kein Symbol. Stups sucht zu jedem Titel ein passendes. Karten mit Symbol bleiben, wie sie sind; einzelne Symbole änderst du später an der Karte.',
+        '{n} Aufgabe hat noch kein Symbol. Stups sucht zu ihrem Titel ein passendes. Aufgaben mit Symbol bleiben, wie sie sind; einzelne Symbole änderst du später an der Aufgabe.',
+        '{n} Aufgaben haben noch kein Symbol. Stups sucht zu jedem Titel ein passendes. Aufgaben mit Symbol bleiben, wie sie sind; einzelne Symbole änderst du später an der Aufgabe.',
         cards.length,
       ),
       label: t('Erkennen'),
@@ -53,8 +53,8 @@
     }
     busy = false;
     result =
-      tn('{n} Karte hat jetzt ein Symbol.', '{n} Karten haben jetzt ein Symbol.', updated) +
-      (found.unmatched > 0 ? ' ' + tn('Zu {n} Karte passte keins.', 'Zu {n} Karten passte keins.', found.unmatched) : '');
+      tn('{n} Aufgabe hat jetzt ein Symbol.', '{n} Aufgaben haben jetzt ein Symbol.', updated) +
+      (found.unmatched > 0 ? ' ' + tn('Zu {n} Aufgabe passte keins.', 'Zu {n} Aufgaben passte keins.', found.unmatched) : '');
     toast(result);
   }
 </script>
@@ -62,7 +62,7 @@
 <Page title={t('Symbole')}>
   <Group
     title={t('Symbole aus Titeln erkennen')}
-    hint={t('Neue Karten bekommen ihr Symbol beim Anlegen aus dem Titel. Für Karten, die es schon gibt, löst du die Erkennung hier selbst aus, einmal und nur für Karten ohne Symbol. Das dürfen Administratoren und wer die Berechtigung „App-Einstellungen“ hat.')}
+    hint={t('Neue Aufgaben bekommen ihr Symbol beim Anlegen aus dem Titel. Für Aufgaben, die es schon gibt, löst du die Erkennung hier selbst aus, einmal und nur für Aufgaben ohne Symbol. Das dürfen Administratoren und wer die Berechtigung „App-Einstellungen“ hat.')}
   >
     <button class="flex min-h-[52px] w-full items-center gap-3 px-4 text-left text-[17px] disabled:opacity-50" disabled={busy || !can('settings')} onclick={start}>
       <Icon name="spark" size={20} /><span class="flex-1">{busy ? t('Erkenne …') : t('Symbole aus Titeln erkennen')}</span>

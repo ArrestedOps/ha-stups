@@ -11,7 +11,7 @@ beforeEach(() => setLanguage('de'));
 describe('Einstellungen nach Rolle und Betriebsart', () => {
   it('Administrator im Add-on: alle vier Gruppen, keine Konto-Seite', () => {
     expect(groupIds(addon)).toEqual(['me', 'household', 'ha', 'help']);
-    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'watchers', 'templates', 'icons', 'dates', 'times', 'dashboard', 'bubble', 'voice', 'report', 'data', 'feedback']);
+    expect(ids(addon)).toEqual(['notifications', 'look', 'people', 'templates', 'icons', 'dates', 'times', 'dashboard', 'bubble', 'voice', 'report', 'data', 'feedback']);
   });
 
   it('Mitglied: „Für mich", „Home Assistant" (nur die eigene Dashboard-Wahl) und „Hilfe und Daten"', () => {
@@ -51,9 +51,8 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
     expect(ids(docker)).toEqual(['look', 'account', 'people', 'templates', 'icons', 'dates', 'data', 'feedback']);
   });
 
-  it('Docker mit Home Assistant: Wächter und Ansage sind da, das Dashboard nicht', () => {
+  it('Docker mit Home Assistant: die Ansage ist da, das Dashboard nicht', () => {
     const dockerHa = { ...addon, standalone: true, haUi: false };
-    expect(ids(dockerHa)).toContain('watchers');
     expect(ids(dockerHa)).toContain('voice');
     expect(ids(dockerHa)).not.toContain('dashboard');
   });
@@ -67,11 +66,11 @@ describe('Einstellungen nach Rolle und Betriebsart', () => {
     expect(ids({ ...addon, isAdmin: false })).not.toContain('bubble');
   });
 
-  it('Die Übersicht zeigt keine Zeile „Wächter" (dafür gibt es den Reiter), die Seite bleibt über „Alle Wächter verwalten" erreichbar', () => {
+  it('Wächter haben keine Seite in den Einstellungen: sie werden im Reiter Wächter verwaltet', () => {
     const overview = settingsOverview(addon).flatMap((g) => g.pages.map((p) => p.id));
     expect(overview).not.toContain('watchers');
     expect(overview).toContain('templates');
-    expect(ids(addon)).toContain('watchers');
+    expect(ids(addon)).not.toContain('watchers');
   });
 
   it('Beta nur im Beta-Kanal', () => {
@@ -114,9 +113,8 @@ describe('Einstellungen mit Berechtigungen (Mitglied, dem ein Administrator Rech
     expect(ids(member([]))).toEqual(['notifications', 'look', 'dashboard', 'report', 'data']);
   });
 
-  it('„Wächter": die Wächter-Seite, nur wo es Wächter gibt', () => {
-    expect(ids(member(['watchers']))).toContain('watchers');
-    expect(ids(member(['watchers'], { watchers: false }))).not.toContain('watchers');
+  it('„Wächter": keine eigene Seite in den Einstellungen, auch keine Personen-Seite', () => {
+    expect(ids(member(['watchers']))).not.toContain('watchers');
     expect(ids(member(['watchers']))).not.toContain('people');
   });
 

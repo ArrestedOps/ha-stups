@@ -10,6 +10,7 @@
     iconTone,
     open,
     large = false,
+    plain = false,
     tone,
     ontoggle,
     children,
@@ -23,6 +24,8 @@
     open?: boolean;
     /** Aufgaben: Titel 19 px und Kopf 36 px hoch, sonst 17 und 34 */
     large?: boolean;
+    /** Handy-Entwurf: schlichte Überschrift (20 px fett, Zähler rechts in Grau), ohne Symbol, Zählerblase und Pfeil; Tippen klappt trotzdem ein */
+    plain?: boolean;
     /** Farbe der Überschrift: Gefahr (überfällig) oder Haus (Türkis, immer mit Wort oder Zeichen dazu) */
     tone?: 'danger' | 'house';
     ontoggle?: () => void;
@@ -42,6 +45,21 @@
   {#if count !== undefined}<span class="inline-flex h-[22px] min-w-6 shrink-0 items-center justify-center rounded-full bg-count px-2 text-text-soft font-bold {large ? 'text-[13px]' : 'text-[12px]'}">{count}</span>{/if}
 {/snippet}
 
+{#if plain}
+  <!-- schlicht wie im Entwurf: Titel links, Zähler rechts -->
+  {#if collapsible}
+    <button type="button" class="flex min-h-9 w-full items-baseline justify-between px-1 pt-2 pb-1.5 text-left {toneClass}" aria-expanded={open} onclick={ontoggle}>
+      <h2 class="truncate text-[20px] leading-[1.15] font-bold tracking-[0.01em]">{title}</h2>
+      {#if count !== undefined}<span class="text-[15px] font-medium tabular-nums {tone === 'danger' ? '' : 'text-text-soft'}">{count}</span>{/if}
+    </button>
+  {:else}
+    <div class="flex items-baseline justify-between px-1 pt-1 pb-2 {toneClass}">
+      <h2 class="truncate text-[20px] leading-[1.15] font-bold tracking-[0.01em]">{title}</h2>
+      {#if count !== undefined}<span class="text-[15px] font-medium tabular-nums {tone === 'danger' ? '' : 'text-text-soft'}">{count}</span>{/if}
+      {@render children?.()}
+    </div>
+  {/if}
+{:else}
 <div class="flex items-center gap-2 px-1 {large ? 'h-9' : 'h-[34px]'} {toneClass}">
   {#if collapsible}
     <button type="button" class="flex min-h-11 min-w-0 flex-1 items-center gap-2 text-left" aria-expanded={open} onclick={ontoggle}>
@@ -54,3 +72,4 @@
   {/if}
   {@render children?.()}
 </div>
+{/if}

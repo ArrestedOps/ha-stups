@@ -54,7 +54,7 @@ describe('Der Store merkt sich, was sich geändert hat', () => {
     expect(store.takeChanges()).toEqual({ full: false, cards: [id] });
   });
 
-  it('eine neue Karte, Ändern, Verschieben und Löschen melden genau diese Karte', () => {
+  it('eine neue Aufgabe, Ändern, Verschieben und Löschen melden genau diese Aufgabe', () => {
     const c = card();
     expect(store.takeChanges()).toEqual({ full: false, cards: [c.id] });
     store.updateCard(c.id, { title: 'Bad schrubben' }, anna);
@@ -65,7 +65,7 @@ describe('Der Store merkt sich, was sich geändert hat', () => {
     expect(store.takeChanges()).toEqual({ full: false, cards: [c.id] });
   });
 
-  it('Checkliste, Links, Kommentare und Anhänge einer Karte melden die Karte (ihre Zahlen stehen auf der Karte)', () => {
+  it('Checkliste, Links, Kommentare und Anhänge einer Aufgabe melden die Aufgabe (ihre Zahlen stehen auf der Aufgabe)', () => {
     const c = card();
     store.takeChanges();
     store.addChecklistItem(c.id, 'Eimer');
@@ -76,21 +76,21 @@ describe('Der Store merkt sich, was sich geändert hat', () => {
     expect(store.takeChanges()).toEqual({ full: false, cards: [c.id] });
   });
 
-  it('Zuständige und Termin ändern: nur die Karte', () => {
+  it('Zuständige und Termin ändern: nur die Aufgabe', () => {
     const c = card();
     store.takeChanges();
     store.updateCard(c.id, { assigneeIds: [anna, ben], dueAt: '2026-11-05T09:00:00Z' }, anna);
     expect(store.takeChanges()).toEqual({ full: false, cards: [c.id] });
   });
 
-  it('mehrere Karten in einer Anfrage: alle, jede einmal, in der Reihenfolge der Änderung', () => {
+  it('mehrere Aufgaben in einer Anfrage: alle, jede einmal, in der Reihenfolge der Änderung', () => {
     const a = card('A');
     const b = card('B');
     store.updateCard(a.id, { title: 'A2' }, anna);
     expect(store.takeChanges()).toEqual({ full: false, cards: [a.id, b.id] });
   });
 
-  it('Erledigen einer Wiederholung meldet beide Karten: die erledigte und die nächste', () => {
+  it('Erledigen einer Wiederholung meldet beide Aufgaben: die erledigte und die nächste', () => {
     const c = card('Müll', { dueAt: '2026-11-04T09:00:00Z', recurrence: { type: 'fixed', freq: 'daily', every: 2 } });
     store.takeChanges();
     store.completeCard(c.id, { by: anna, source: 'app' });
@@ -102,7 +102,7 @@ describe('Der Store merkt sich, was sich geändert hat', () => {
     expect(ch.cards).toContain(next.id);
   });
 
-  it('„Rückgängig" meldet die Karte, die zurückkommt, und die nächste, die wieder verschwindet', () => {
+  it('„Rückgängig" meldet die Aufgabe, die zurückkommt, und die nächste, die wieder verschwindet', () => {
     const c = card('Müll', { dueAt: '2026-11-04T09:00:00Z', recurrence: { type: 'fixed', freq: 'daily', every: 2 } });
     const res = store.completeCard(c.id, { by: anna, source: 'app' });
     store.takeChanges();
@@ -112,7 +112,7 @@ describe('Der Store merkt sich, was sich geändert hat', () => {
     expect(ch.cards).toHaveLength(2);
   });
 
-  it('Archivieren und Wiederherstellen aus dem Archiv melden die Karte', () => {
+  it('Archivieren und Wiederherstellen aus dem Archiv melden die Aufgabe', () => {
     const c = card();
     store.setArchived(c.id, true);
     expect(store.takeChanges().cards).toContain(c.id);
@@ -138,12 +138,12 @@ describe('Alles andere heißt: neu laden', () => {
   ])('%s', (_name, act) => {
     store.setNotifyServices(ben, ['svc_ben']); // ohne Gerät wird kein Stups geschrieben
     act();
-    store.takeChanges(); // Karte aus der Vorbereitung ist egal
+    store.takeChanges(); // Aufgabe aus der Vorbereitung ist egal
     act();
     expect(store.takeChanges().full).toBe(true);
   });
 
-  it('eine Karte, die gleichzeitig mit einer Spalte geändert wird: neu laden (die Spalte betrifft alle Karten)', () => {
+  it('eine Aufgabe, die gleichzeitig mit einer Spalte geändert wird: neu laden (die Spalte betrifft alle Aufgaben)', () => {
     const c = card();
     store.takeChanges();
     store.updateCard(c.id, { title: 'X' }, anna);
@@ -151,7 +151,7 @@ describe('Alles andere heißt: neu laden', () => {
     expect(store.takeChanges().full).toBe(true);
   });
 
-  it('Papierkorb: eine Karte wiederherstellen meldet die Karte', () => {
+  it('Papierkorb: eine Aufgabe wiederherstellen meldet die Aufgabe', () => {
     const c = card();
     store.deleteCard(c.id);
     store.takeChanges();
@@ -191,15 +191,15 @@ describe('Alles andere heißt: neu laden', () => {
   });
 });
 
-describe('getCards: genau die gewünschten, sichtbaren Karten', () => {
-  it('liefert die Karten wie die Board-Ansicht (gleiche Form, gleiche Reihenfolge nach Position)', () => {
+describe('getCards: genau die gewünschten, sichtbaren Aufgaben', () => {
+  it('liefert die Aufgaben wie die Board-Ansicht (gleiche Form, gleiche Reihenfolge nach Position)', () => {
     const a = card('A');
     const b = card('B');
     const view = store.getBoardView(boardId).cards;
     expect(store.getCards([b.id, a.id], null)).toEqual(view.filter((x) => [a.id, b.id].includes(x.id)));
   });
 
-  it('gelöschte, archivierte und unbekannte Karten fehlen (der Aufrufer entfernt sie dann)', () => {
+  it('gelöschte, archivierte und unbekannte Aufgaben fehlen (der Aufrufer entfernt sie dann)', () => {
     const a = card('A');
     const b = card('B');
     const c = card('C');
@@ -248,7 +248,7 @@ describe('GET /api/cards?ids=…', () => {
   }
   const headers = { 'x-remote-user-id': 'u-anna', 'x-remote-user-name': 'Anna', 'x-remote-user-display-name': 'Anna' };
 
-  it('liefert die Karten in einem Aufruf', async () => {
+  it('liefert die Aufgaben in einem Aufruf', async () => {
     const f = await app();
     const a = card('A');
     const b = card('B');
@@ -266,7 +266,7 @@ describe('GET /api/cards?ids=…', () => {
     expect((await f.inject({ url: '/api/cards?ids=gibt-es-nicht', headers })).json()).toEqual([]);
   });
 
-  it('die Route für eine einzelne Karte bleibt, wie sie war', async () => {
+  it('die Route für eine einzelne Aufgabe bleibt, wie sie war', async () => {
     const f = await app();
     const a = card('A');
     const res = await f.inject({ url: `/api/cards/${a.id}`, headers });

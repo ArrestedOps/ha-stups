@@ -22,7 +22,7 @@ afterEach(() => {
 
 const T = '2026-03-01T10:00:00.000Z';
 
-/** Stand 9: Personen, Board mit Spalten, Karten mit Checkliste/Link/Erledigung, Stupse */
+/** Stand 9: Personen, Board mit Spalten, Aufgaben mit Checkliste/Link/Erledigung, Stupse */
 function seed9(db: DatabaseSync): void {
   db.exec(`
     insert into users (id, ha_user_id, name, display_name, is_person, color, created_at, notify_services)
@@ -48,7 +48,7 @@ function seed9(db: DatabaseSync): void {
   `);
 }
 
-/** Stand 19: dazu Wächter mit Zustand, Läufen und wartender Karte; ein Kind mit Bestätigern und angefragter Bestätigung */
+/** Stand 19: dazu Wächter mit Zustand, Läufen und wartender Aufgabe; ein Kind mit Bestätigern und angefragter Bestätigung */
 function seed19(db: DatabaseSync): void {
   db.exec(`
     insert into watchers (id, name, trigger_json, card_json, assign_json, created_at, updated_at, last_assignees)
@@ -138,7 +138,7 @@ describe('Echte Migrationen mit befüllter alter Datenbank', () => {
     const old = openDb(path, { migrations: migrations.filter((m) => m.version <= 19) });
     seed9(old);
     seed19Prepared(old);
-    // Anhänge liegen als Datei im Ordner files/; die Datenbank hält nur die Zeile (Beziehung zur Karte, Dateiname, Größe)
+    // Anhänge liegen als Datei im Ordner files/; die Datenbank hält nur die Zeile (Beziehung zur Aufgabe, Dateiname, Größe)
     old.exec(`insert into attachments (id, card_id, filename, mime, size, file, created_by, created_at)
       values ('a1', 'card1', 'bad.jpg', 'image/jpeg', 1234, 'files/a1.jpg', 'u-rene', '${T}')`);
     const before = dump(old);
@@ -149,10 +149,10 @@ describe('Echte Migrationen mit befüllter alter Datenbank', () => {
     const upgraded = openDb(path, { backupDir, now: () => new Date('2026-11-05T12:00:00Z') });
     const backup = readdirSync(backupDir)[0]!;
     expect(backup).toMatch(/^stups-v19-/);
-    // 2. Danach geht etwas schief (hier: alle Karten sind weg)
+    // 2. Danach geht etwas schief (hier: alle Aufgaben sind weg)
     upgraded.exec('delete from cards');
     expect((upgraded.prepare('select count(*) as n from cards').get() as { n: number }).n).toBe(0);
-    expect((upgraded.prepare('select count(*) as n from attachments').get() as { n: number }).n).toBe(0); // die Anhangzeile ging mit der Karte
+    expect((upgraded.prepare('select count(*) as n from attachments').get() as { n: number }).n).toBe(0); // die Anhangzeile ging mit der Aufgabe
     upgraded.close();
 
     // 3. Zurückspielen: die Sicherung ersetzt die Datenbank (ohne Reste des Schreibprotokolls)
@@ -178,7 +178,7 @@ describe('Echte Migrationen mit befüllter alter Datenbank', () => {
     again.close();
   });
 
-  it('die gehobene Datenbank lässt sich wie gewohnt benutzen (Karten, Wächter, Stupse, Kind)', () => {
+  it('die gehobene Datenbank lässt sich wie gewohnt benutzen (Aufgaben, Wächter, Stupse, Kind)', () => {
     const { db } = migrate(9, (d) => (seed9(d), seed19Prepared(d)));
     const store = createStore(db, { now: () => new Date('2026-11-05T12:00:00Z'), timeZone: () => 'Europe/Berlin' });
     const view = store.getBoardView('b1');

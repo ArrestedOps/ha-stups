@@ -26,7 +26,7 @@ const item = (over: Partial<HomeItem> & { watcherId: string }): HomeItem => ({
   phase: 'quiet',
   since: null,
   progress: null,
-  nextCard: 'Karte',
+  nextCard: 'Aufgabe',
   entityMissing: false,
   openCard: null,
   nextEvent: null,
@@ -86,7 +86,7 @@ describe('watcherLayout: genau einmal, oben die aktuellen', () => {
     expect(watcherLayout([mk('3', 'Abfall', ''), mk('2', 'Batterie schwach', 'A'), mk('1', 'Batterie schwach', 'Z')]).groups[0]!.items.map((i) => i.watcherId)).toEqual(['3', '2', '1']);
   });
 
-  it('ausgeschaltete Wächter bleiben sichtbar, in ihrer Kategorie; wartet noch ihre Karte, steht sie oben', () => {
+  it('ausgeschaltete Wächter bleiben sichtbar, in ihrer Kategorie; wartet noch ihre Aufgabe, steht sie oben', () => {
     const l = watcherLayout([
       item({ watcherId: 'off', active: false, category: 'A', phase: 'quiet' }),
       item({ watcherId: 'offwait', active: false, category: 'A', phase: 'waiting', since: '2026-11-04T09:00:00Z' }),

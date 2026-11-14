@@ -45,7 +45,7 @@ describe('Migration 10', () => {
 });
 
 describe('Eingabe prüfen', () => {
-  it('füllt Vorgaben: Zahlenwerte warten 3 Minuten, Sperrzeit 10 Minuten, Doppelkarten-Regel an', () => {
+  it('füllt Vorgaben: Zahlenwerte warten 3 Minuten, Sperrzeit 10 Minuten, Doppelaufgaben-Regel an', () => {
     const w = parseWatcher(input());
     expect(w.trigger).toMatchObject({ kind: 'below', value: 5, forMin: 3, count: 1, to: null });
     expect(w.cooldownMin).toBe(10);
@@ -131,7 +131,7 @@ describe('Datenschicht', () => {
     expect(runs.at(-1)!.note).toBe('Lauf 5');
   });
 
-  it('Läufe einer Karte kommen älteste zuerst', () => {
+  it('Läufe einer Aufgabe kommen älteste zuerst', () => {
     const { data, advance } = setup();
     const w = data.create(config());
     data.addRun({ watcherId: w.id, result: 'created', cardId: 'k1' });

@@ -196,7 +196,7 @@ export function createAccounts(db: DatabaseSync, store: Store, opts: { now?: () 
     return accountOrThrow(userId);
   }
 
-  /** Löscht das Konto (Passwort und Sitzungen). Die Person bleibt, ihre Karten und Zuweisungen auch. */
+  /** Löscht das Konto (Passwort und Sitzungen). Die Person bleibt, ihre Aufgaben und Zuweisungen auch. */
   function remove(userId: string): void {
     const a = accountOrThrow(userId);
     if (a.isAdmin && adminCount() <= 1) throw new ConflictError(t('Das ist der letzte Administrator'));

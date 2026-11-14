@@ -1,12 +1,12 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { openBoards } from './helpers';
 
-// Kompakte Karten: Ziel sind mindestens vier Karten auf einem iPhone 15 im Hochformat (393 × 852).
+// Kompakte Aufgaben: Ziel sind mindestens vier Aufgaben auf einem iPhone 15 im Hochformat (393 × 852).
 test.use({ viewport: { width: 393, height: 852 } });
 
 const DAY = 86_400_000;
 
-/** Ein eigenes Board mit typischen Karten (Titel, Termin, eine Person, eine Kategorie) */
+/** Ein eigenes Board mit typischen Aufgaben (Titel, Termin, eine Person, eine Kategorie) */
 async function typicalBoard(request: APIRequestContext, page: Page, name: string, count = 6) {
   const board = (await (await request.post('/api/boards', { data: { name } })).json()) as { id: string };
   const category = (await (await request.post(`/api/boards/${board.id}/categories`, { data: { name: 'Haushalt', color: 'green' } })).json()) as { id: string };
@@ -15,7 +15,7 @@ async function typicalBoard(request: APIRequestContext, page: Page, name: string
   const rene = ((await (await request.get('/api/people')).json()) as { id: string; name: string }[]).find((p) => p.name === 'Rene')!;
   for (let i = 0; i < count; i++) {
     const res = await request.post(`/api/boards/${board.id}/cards`, {
-      data: { columnId: openId, title: `Typische Karte ${i + 1}`, dueAt: new Date(Date.now() + (2 + i) * DAY).toISOString(), assigneeIds: [rene.id], categoryIds: [category.id] },
+      data: { columnId: openId, title: `Typische Aufgabe ${i + 1}`, dueAt: new Date(Date.now() + (2 + i) * DAY).toISOString(), assigneeIds: [rene.id], categoryIds: [category.id] },
     });
     expect(res.status()).toBe(201);
   }
@@ -23,11 +23,11 @@ async function typicalBoard(request: APIRequestContext, page: Page, name: string
   return { boardId: board.id, openId };
 }
 
-test('Mindestens vier typische Karten stehen vollständig über der Leiste, jede mit höchstens einer Meta-Zeile', async ({ page, request }) => {
+test('Mindestens vier typische Aufgaben stehen vollständig über der Leiste, jede mit höchstens einer Meta-Zeile', async ({ page, request }) => {
   await typicalBoard(request, page, 'Kompakt');
   await page.goto('/');
   await openBoards(page);
-  // Karten mit Termin in der Zukunft liegen von selbst in „Geplant"
+  // Aufgaben mit Termin in der Zukunft liegen von selbst in „Geplant"
   await page.getByRole('tab', { name: /^Geplant/ }).click();
   await expect(page.locator('[role=presentation]').first()).toBeVisible();
 
@@ -42,7 +42,7 @@ test('Mindestens vier typische Karten stehen vollständig über der Leiste, jede
   expect(fully.length, `vollständig sichtbar: ${fully.length}, Höhen ${boxes.map((b) => Math.round(b.height)).join('/')}`).toBeGreaterThanOrEqual(4);
   for (const b of boxes) expect(b.height).toBeLessThan(110);
 
-  // genau eine Meta-Zeile je Karte (eine Zeile hoch), „Angelegt …" gibt es in der Liste nicht mehr
+  // genau eine Meta-Zeile je Aufgabe (eine Zeile hoch), „Angelegt …" gibt es in der Liste nicht mehr
   const meta = await page.getByTestId('card-meta').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height));
   expect(meta.length).toBeGreaterThanOrEqual(4);
   for (const h of meta) expect(h).toBeLessThan(24);
@@ -80,12 +80,12 @@ test('Termin: überfällig ist rot und erledigt nie, Wiederholung, Priorität un
   // eine Zeile, auch mit allen Angaben
   expect(await row.getByTestId('card-meta').evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(24);
   await page.getByRole('tab', { name: /^Geplant/ }).click();
-  const normal = page.locator('[role=presentation]').filter({ hasText: 'Typische Karte 1' });
+  const normal = page.locator('[role=presentation]').filter({ hasText: 'Typische Aufgabe 1' });
   await expect(normal.getByTestId('card-due')).toHaveAttribute('data-overdue', 'false');
 });
 
 
-test('Der „+"-Knopf verdeckt nichts: die letzte Karte lässt sich über ihn hinaus scrollen', async ({ page, request }) => {
+test('Der „+"-Knopf verdeckt nichts: die letzte Aufgabe lässt sich über ihn hinaus scrollen', async ({ page, request }) => {
   const { boardId, openId } = await typicalBoard(request, page, 'Knopf', 1);
   for (let i = 0; i < 9; i++) await request.post(`/api/boards/${boardId}/cards`, { data: { columnId: openId, title: `Eintrag ${i + 1}` } });
   await page.goto('/');
@@ -94,9 +94,9 @@ test('Der „+"-Knopf verdeckt nichts: die letzte Karte lässt sich über ihn hi
   await expect(page.locator('[role=presentation]').nth(5)).toBeVisible();
   await list.evaluate((el) => (el.scrollTop = el.scrollHeight));
   await page.waitForTimeout(150);
-  const fabTop = await page.getByRole('button', { name: 'Neue Karte', exact: true }).evaluate((el) => el.getBoundingClientRect().top);
+  const fabTop = await page.getByRole('button', { name: 'Neue Aufgabe', exact: true }).evaluate((el) => el.getBoundingClientRect().top);
   const lastBottom = await page.locator('[role=presentation]').last().evaluate((el) => el.getBoundingClientRect().bottom);
-  expect(lastBottom, 'Die letzte Karte endet über dem Knopf').toBeLessThanOrEqual(fabTop);
+  expect(lastBottom, 'Die letzte Aufgabe endet über dem Knopf').toBeLessThanOrEqual(fabTop);
 });
 
 test('Spalten-Tabs: Verlauf am Rand zeigt, dass man wischen kann, und die aktive Spalte rückt ins Bild', async ({ page, request }) => {
@@ -129,7 +129,7 @@ test('Auswahlfelder zeigen den Wert und einen Pfeil; die Wahl am (durchsichtigen
   const { boardId, openId } = await typicalBoard(request, page, 'Auswahl', 1);
   const card = (await (await request.post(`/api/boards/${boardId}/cards`, { data: { columnId: openId, title: 'Mit Termin', dueAt: new Date(Date.now() + 3 * DAY).toISOString() } })).json()) as { id: string };
   await page.goto(`/?card=${card.id}`);
-  await page.getByRole('button', { name: /^Erinnerung|Vorab|vorher|Nachhaken/ }).first().click();
+  await page.getByRole('button', { name: /^Erinnerung: / }).click();
   const select = page.getByLabel('Vorab-Erinnerung');
   const shown = select.locator('xpath=..').getByTestId('select-value');
   await expect(shown).toHaveText('Nur zur Fälligkeit');

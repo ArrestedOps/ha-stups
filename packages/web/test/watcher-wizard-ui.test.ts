@@ -23,14 +23,14 @@ beforeEach(() => {
 
 describe('Zurück im Assistenten: in jedem Schritt sichtbar', () => {
   for (const step of [1, 2, 3, 4] as const) {
-    it(`Schritt ${step}: genau ein Zurück-Knopf mit Pfeil in der Kopfzeile, benannt „Zurück“`, () => {
+    it(`Schritt ${step}: genau ein Zurück-Knopf (nur Text, wie im Entwurf) in der Kopfzeile, benannt „Zurück“`, () => {
       const out = html(editor(step));
       expect(count(out, /aria-label="Zurück"/g)).toBe(1);
-      expect(out).toMatch(/<button[^>]*aria-label="Zurück"[^>]*>[^]*?<svg/); // Pfeil links
+      expect(out).toMatch(/<button[^>]*aria-label="Zurück"[^>]*>\s*Zurück/);
     });
 
-    it(`Schritt ${step}: Schließen bleibt daneben erreichbar`, () => {
-      expect(html(editor(step))).toContain('>Schließen<');
+    it(`Schritt ${step}: kein „Schließen“ rechts (Escape schließt, Zurück am ersten Schritt)`, () => {
+      expect(html(editor(step))).not.toContain('>Schließen<');
     });
   }
 
@@ -45,14 +45,14 @@ describe('Zurück-Knopf: was er tut, die Eingaben bleiben', () => {
   it('geht Schritt für Schritt zurück und behält das Formular', () => {
     const ed = editor(4);
     ed.form.name = 'Mein Wächter';
-    ed.form.title = 'Meine Karte';
+    ed.form.title = 'Meine Aufgabe';
     ed.goBack();
     expect(ed.step).toBe(3);
     ed.goBack();
     expect(ed.step).toBe(2);
     ed.goBack();
     expect(ed.step).toBe(1);
-    expect(ed.form).toMatchObject({ name: 'Mein Wächter', title: 'Meine Karte' });
+    expect(ed.form).toMatchObject({ name: 'Mein Wächter', title: 'Meine Aufgabe' });
   });
 
   it('schließt zuerst die offene Suche und bleibt im Schritt', () => {

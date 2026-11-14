@@ -98,7 +98,7 @@ describe('Wächter-Zeile in der Tabelle (Desktop)', () => {
   it('alle Spalten sind da, jede mit ihrem Inhalt', () => {
     const out = table();
     expect(out).toMatch(/data-testid="watcher-subject">Tür Batterie</);
-    expect(out).toMatch(/data-testid="watcher-condition">Wenn Tür Batterie 10 Minuten unter 20 % liegt</);
+    expect(out).toMatch(/data-testid="watcher-condition">\u00a0·\u00a0Wenn Tür Batterie 10 Minuten unter 20 % liegt</);
     expect(out).toMatch(/data-testid="watcher-value">26 %</);
     expect(out).toMatch(/data-testid="watcher-status">[\s\S]*Ruhig/);
     expect(out).toMatch(/data-testid="watcher-last">vor 3 Std\.</);
@@ -113,7 +113,7 @@ describe('Wächter-Zeile in der Tabelle (Desktop)', () => {
     expect(out).toMatch(/data-testid="watcher-value">–</);
   });
 
-  it('offene Karte steht als nächste Karte, wenn eine wartet', () => {
+  it('offene Aufgabe steht als nächste Aufgabe, wenn eine wartet', () => {
     const out = table({ item: item({ phase: 'waiting', openCard: { id: 'c', title: 'Gerade offen', boardId: 'b', assigneeIds: [], createdAt: '2026-11-06T11:00:00Z' } }) });
     expect(out).toMatch(/data-testid="watcher-next">[\s\S]*Gerade offen/);
   });
@@ -121,9 +121,10 @@ describe('Wächter-Zeile in der Tabelle (Desktop)', () => {
   it('Spalten richten sich nach der Breite der Liste: schmal weniger, mit denselben Klassen wie der Kopf', () => {
     const out = table();
     expect(out).toContain('grid-cols-[minmax(0,1fr)_4.5rem_7rem_3.25rem]');
-    expect(out).toMatch(/class="hidden @min-\[700px\]:block[^"]*"[^>]*data-testid="watcher-condition"/);
-    expect(out).toMatch(/class="hidden @min-\[900px\]:block[^"]*"[^>]*data-testid="watcher-last"/);
-    expect(out).toMatch(/class="hidden @min-\[1100px\]:flex[^"]*"[^>]*data-testid="watcher-next"/);
+    // die Bedingung steht in der Zelle des Namens und erscheint ab 640 px, nicht als eigene Spalte
+    expect(out).toMatch(/class="hidden @min-\[640px\]:inline"[^>]*data-testid="watcher-condition"/);
+    expect(out).toMatch(/class="hidden @min-\[640px\]:block[^"]*"[^>]*data-testid="watcher-last"/);
+    expect(out).toMatch(/class="hidden @min-\[820px\]:flex[^"]*"[^>]*data-testid="watcher-next"/);
   });
 
   it('Schalter: ohne Recht deaktiviert, ausgeschaltet gedämpft mit „Aus", die Zeile öffnet über den Namen', () => {

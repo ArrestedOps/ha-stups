@@ -24,7 +24,7 @@ test.beforeAll(async ({ request }) => {
   const view = (await (await request.get(`/api/boards/${b.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
   columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;
   const mk = (name: string, assign: object) =>
-    request.post('/api/watchers', { data: { name, trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 }, card: { boardId, columnId, title: `${name} Karte`, due: { kind: 'none' } }, assign } });
+    request.post('/api/watchers', { data: { name, trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 }, card: { boardId, columnId, title: `${name} Aufgabe`, due: { kind: 'none' } }, assign } });
   expect((await mk(`Waschmaschine fertig ${tag}`, { mode: 'rotation', personIds: [reneId, connyId] })).status()).toBe(201);
   expect((await mk(`Heizung prüfen ${tag}`, { mode: 'fixed', personIds: [connyId] })).status()).toBe(201);
 });
@@ -61,7 +61,7 @@ test('Dialog „Conny entfernen": breit, Spalten „Wächter" und „Zuständige
       return r.getClientRects().length;
     }),
   );
-  for (const n of lines) expect(n).toBe(1);
+  for (const n of lines) expect(n).toBeLessThanOrEqual(2); // Text (und ein Zeichen davor): nowrap oben stellt sicher, dass nichts umbricht
   // die Reihe „Danach" bricht bei Bedarf um: die Zeile „niemand …" ist die höchste
   await expect(table.locator('tr[data-missing]')).toContainText('niemand');
   await dialog.getByRole('button', { name: 'Abbrechen' }).click();

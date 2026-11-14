@@ -119,7 +119,7 @@ describe('Rotation überspringt Personen mit wenig Zeit', () => {
     expect(last()).toEqual([ben]);
   });
 
-  it('sind alle beschäftigt, geht keine Karte verloren: es gilt die normale Reihenfolge', async () => {
+  it('sind alle beschäftigt, geht keine Aufgabe verloren: es gilt die normale Reihenfolge', async () => {
     const w = await watcher({ mode: 'rotation', personIds: [anna, ben] });
     store.setBusyUntil(anna, '2026-11-10');
     store.setBusyUntil(ben, '2026-11-10');

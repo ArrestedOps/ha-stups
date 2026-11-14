@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { openBoards } from './helpers';
+import { openBoards, openWatcherCategory } from './helpers';
 
 // Läuft nur im Projekt „waechter" (nachgebautes Home Assistant). Board löschen mit der Wahl je Wächter (Pausieren, Umziehen, Löschen), die
 // pausierten Wächter oben in der Liste mit rotem Rand („Pausiert: Board fehlt"), Wiederherstellen aus dem Papierkorb lässt sie wieder laufen;
@@ -26,7 +26,7 @@ async function board(request: APIRequestContext, name: string, extra: Record<str
 }
 async function watcherOn(request: APIRequestContext, target: { id: string; columnId: string }, name: string) {
   const res = await request.post('/api/watchers', {
-    data: { name, trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 }, card: { boardId: target.id, columnId: target.columnId, title: `${name} Karte`, due: { kind: 'none' } }, assign: { mode: 'none', personIds: [] } },
+    data: { name, trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 }, card: { boardId: target.id, columnId: target.columnId, title: `${name} Aufgabe`, due: { kind: 'none' } }, assign: { mode: 'none', personIds: [] } },
   });
   expect(res.status()).toBe(201);
   return ((await res.json()) as { id: string }).id;
@@ -98,6 +98,7 @@ test('Löschen: je Wächter Pausieren, Umziehen oder Löschen; pausierte stehen 
   expect(await watcher(request, pause)).toMatchObject({ active: true, pausedBy: null });
   await page.reload();
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  await openWatcherCategory(page);
   await expect(page.getByTestId('watcher-row').filter({ hasText: `Waschmaschine ${tag}` })).toBeVisible();
   await expect(page.getByTestId('home-problems').filter({ hasText: `Waschmaschine ${tag}` })).toHaveCount(0);
 });
@@ -124,6 +125,7 @@ test('Archivieren: der Dialog zeigt die Wächter als pausiert, die Liste sagt �
 
   // Wiederherstellen aus „Archivierte Boards“
   await nav(page).getByRole('button', { name: 'Boards' }).click();
+  await page.getByTestId('board-list').getByRole('button').first().click(); // Handy: erst ein Board öffnen
   await page.getByRole('button', { name: 'Board wechseln' }).click();
   await page.getByRole('dialog', { name: 'Boards' }).getByRole('button', { name: 'Archivierte Boards' }).click();
   await page.getByTestId(`archived-${arch.id}`).getByRole('button', { name: 'Wiederherstellen' }).click();

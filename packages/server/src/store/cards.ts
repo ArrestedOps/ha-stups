@@ -10,7 +10,7 @@ import type { Internals } from './internals.js';
 import { t } from '../i18n/index.js';
 import type { Viewer } from './visibility.js';
 
-/** Karten */
+/** Aufgaben */
 export function createCards(c: Ctx, late: unknown) {
   // Erst hier auf den vollen Typ gebracht: stünde Internals schon im Kopf, hinge sein Typ von sich selbst ab
   const s = late as Internals;
@@ -71,11 +71,11 @@ export function createCards(c: Ctx, late: unknown) {
     }
     const nudges = group(
       all(
-        `select card_id, id, from_user, to_user, delivered_round from nudges where reply is null and card_id in (${sub}) order by created_at, rowid`,
+        `select card_id, id, from_user, to_user, delivered_round, template, text, created_at from nudges where reply is null and card_id in (${sub}) order by created_at, rowid`,
         ...params,
       ),
       'card_id',
-      (r): OpenNudge => ({ id: r.id, fromId: r.from_user, toId: r.to_user, delivered: r.delivered_round >= 0 }),
+      (r): OpenNudge => ({ id: r.id, fromId: r.from_user, toId: r.to_user, delivered: r.delivered_round >= 0, at: r.created_at, template: r.template ?? null, text: r.text ?? null }),
     );
     const commentCounts = new Map<string, number>();
     for (const r of all(
@@ -127,7 +127,7 @@ export function createCards(c: Ctx, late: unknown) {
 
   function visibleCardRow(id: string): Row {
     const r = one('select * from cards where id = ? and deleted_at is null', id);
-    if (!r) throw new NotFoundError(t('Karte nicht gefunden'));
+    if (!r) throw new NotFoundError(t('Aufgabe nicht gefunden'));
     return r;
   }
 
@@ -149,8 +149,8 @@ export function createCards(c: Ctx, late: unknown) {
   });
 
   /**
-   * Mehrere Karten auf einmal, so wie die Board-Ansicht sie liefert (sichtbar, nicht archiviert); Unbekannte, Gelöschte und Archivierte
-   * fehlen, ebenso Karten aus Boards, die `viewer` nicht sieht
+   * Mehrere Aufgaben auf einmal, so wie die Board-Ansicht sie liefert (sichtbar, nicht archiviert); Unbekannte, Gelöschte und Archivierte
+   * fehlen, ebenso Aufgaben aus Boards, die `viewer` nicht sieht
    */
   function getCards(ids: string[], viewer: Viewer): Card[] {
     if (ids.length === 0) return [];
@@ -221,7 +221,7 @@ export function createCards(c: Ctx, late: unknown) {
       .slice(0, limit);
   }
 
-  /** Zuständige einer Karte: nur Personen aus Stups, die das Board sehen (auf einem privaten Board nur der Besitzer) */
+  /** Zuständige einer Aufgabe: nur Personen aus Stups, die das Board sehen (auf einem privaten Board nur der Besitzer) */
   function checkAssignees(ids: unknown, boardId: string): string[] {
     if (!Array.isArray(ids)) throw new ValidationError(t('Zuständige müssen eine Liste sein'));
     if (ids.some((x) => typeof x !== 'string')) throw new ValidationError(t('Zuständige müssen eine Liste sein'));
@@ -267,7 +267,7 @@ export function createCards(c: Ctx, late: unknown) {
   }
 
   /**
-   * Karten ohne Symbol (offen, erledigt, archiviert; nicht im Papierkorb) für „Symbole aus Titeln erkennen“, nur aus Boards,
+   * Aufgaben ohne Symbol (offen, erledigt, archiviert; nicht im Papierkorb) für „Symbole aus Titeln erkennen“, nur aus Boards,
    * die `viewer` sieht: Auch ein Administrator bekommt keine Titel aus fremden privaten oder ausgewählten Boards.
    */
   function cardsWithoutIcon(viewer: Viewer): { id: string; title: string }[] {
@@ -279,12 +279,12 @@ export function createCards(c: Ctx, late: unknown) {
   }
 
   /**
-   * Setzt erkannte Symbole (Quelle „auto“), aber nur bei Karten, die noch keins haben: Was jemand zwischendurch von Hand
-   * gewählt hat, bleibt. Ändert weder Fassung noch Änderungszeit, denn es ist kein Eingriff der Person in die Karte.
+   * Setzt erkannte Symbole (Quelle „auto“), aber nur bei Aufgaben, die noch keins haben: Was jemand zwischendurch von Hand
+   * gewählt hat, bleibt. Ändert weder Fassung noch Änderungszeit, denn es ist kein Eingriff der Person in die Aufgabe.
    */
   function applyDetectedIcons(items: unknown, viewer: Viewer): { updated: number; skipped: number } {
     if (!Array.isArray(items)) throw new ValidationError(t('Die Liste der Symbole fehlt'));
-    if (items.length > 2000) throw new ValidationError(t('Höchstens {max} Karten auf einmal', { max: 2000 }));
+    if (items.length > 2000) throw new ValidationError(t('Höchstens {max} Aufgaben auf einmal', { max: 2000 }));
     const clean = items.map((it) => {
       const o = (it ?? {}) as Record<string, unknown>;
       if (typeof o.id !== 'string') throw new ValidationError(t('Die Liste der Symbole fehlt'));
@@ -293,7 +293,7 @@ export function createCards(c: Ctx, late: unknown) {
       return { id: o.id, icon };
     });
     let updated = 0;
-    // Die Berechtigung wird hier unabhängig vom Lesen geprüft: Karten fremder Boards zählen als übersprungen, auch mit bekannter Kennung
+    // Die Berechtigung wird hier unabhängig vom Lesen geprüft: Aufgaben fremder Boards zählen als übersprungen, auch mit bekannter Kennung
     const v = visibleBoardsSql(viewer);
     tx(() => {
       for (const it of clean) {
@@ -328,7 +328,7 @@ export function createCards(c: Ctx, late: unknown) {
     const description = optionalText(input.description, t('Die Beschreibung'), 20000);
     if (remind !== null && !dueAt) throw new ValidationError(t('Eine Vorab-Erinnerung braucht eine Fälligkeit'));
     if (col.is_planned === 1 && !isFutureDue(dueAt)) {
-      throw new ValidationError(t('In „Geplant" kommen nur Karten mit einem Termin nach heute'));
+      throw new ValidationError(t('In „Geplant" kommen nur Aufgaben mit einem Termin nach heute'));
     }
 
     return tx(() => {
@@ -369,7 +369,7 @@ export function createCards(c: Ctx, late: unknown) {
     });
   }
 
-  /** Karte in die Spalte für Termine nach heute oder zurück in die erste offene Spalte, je nach Termin. */
+  /** Aufgabe in die Spalte für Termine nach heute oder zurück in die erste offene Spalte, je nach Termin. */
   function syncPlannedCard(id: string): void {
     const card = one('select * from cards where id = ? and deleted_at is null', id);
     if (!card || card.completed_at !== null || card.archived_at !== null) return;
@@ -391,8 +391,8 @@ export function createCards(c: Ctx, late: unknown) {
     return tx(() => {
       if (patch.expectedVersion !== undefined) {
         const expected = patch.expectedVersion;
-        if (typeof expected !== 'number' || !Number.isInteger(expected) || expected < 0) throw new ValidationError(t('Die erwartete Fassung der Karte ist ungültig'));
-        if (expected !== card.version) throw new ConflictError(t('Die Karte wurde zwischenzeitlich geändert'), { version: card.version });
+        if (typeof expected !== 'number' || !Number.isInteger(expected) || expected < 0) throw new ValidationError(t('Die erwartete Fassung der Aufgabe ist ungültig'));
+        if (expected !== card.version) throw new ConflictError(t('Die Aufgabe wurde zwischenzeitlich geändert'), { version: card.version });
       }
       const sets: string[] = [];
       const params: unknown[] = [];
@@ -489,7 +489,7 @@ export function createCards(c: Ctx, late: unknown) {
   }
 
   /**
-   * Kopie einer Karte: Felder, Zuweisung, Kategorien, Checkliste (zurückgesetzt) und Links.
+   * Kopie einer Aufgabe: Felder, Zuweisung, Kategorien, Checkliste (zurückgesetzt) und Links.
    * Nicht kopiert werden Kommentare, Anhänge und der Verlauf. Die Kopie ist immer offen.
    */
   function duplicateCard(id: string, by: string | null): CardDetail {
@@ -594,7 +594,7 @@ export function createCards(c: Ctx, late: unknown) {
     const col = visibleColumn(to.columnId);
     if (col.board_id !== card.board_id) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
     return tx(() => {
-      // „Geplant" nimmt nur Karten mit Termin nach heute, und solche Karten gehören nicht nach „Offen":
+      // „Geplant" nimmt nur Aufgaben mit Termin nach heute, und solche Aufgaben gehören nicht nach „Offen":
       // Wer dort ablegt, was nicht passt, landet in der passenden Nachbarspalte.
       const planned = plannedColumn(card.board_id);
       const inbox = inboxColumn(card.board_id);
@@ -606,7 +606,7 @@ export function createCards(c: Ctx, late: unknown) {
       const afterId = target.id === col.id ? to.afterId : target.id === planned?.id ? undefined : null;
 
       const entersDone = target.is_done === 1 && card.completed_at === null;
-      // Eine wiederkehrende Karte bleibt nie in der Erledigt-Spalte: Ablegen dort heißt "erledigen".
+      // Eine wiederkehrende Aufgabe bleibt nie in der Erledigt-Spalte: Ablegen dort heißt "erledigen".
       if (entersDone && card.recurrence) return completeCard(id, { by, source: 'app' }).card;
 
       const snapshot = entersDone ? snapshotOf(card) : null;
@@ -651,16 +651,16 @@ export function createCards(c: Ctx, late: unknown) {
     includeDone?: boolean;
     undated?: boolean;
     completedSince?: string;
-    /** Seite aus der Datenbank: höchstens so viele Karten, ab `offset` (ohne `limit` kommen alle) */
+    /** Seite aus der Datenbank: höchstens so viele Aufgaben, ab `offset` (ohne `limit` kommen alle) */
     limit?: number;
     offset?: number;
   };
 
   /**
    * Bedingung und Reihenfolge der Terminliste, an einer Stelle für Liste und Zählung.
-   * `undated`: nur offene Karten ohne Termin (Filter „Ohne Termin"); Zeitraum und Erledigte gibt es dort nicht.
-   * `completedSince`: nur Karten, die seit diesem Zeitpunkt erledigt wurden („Zuletzt erledigt"); es zählt allein das Datum der
-   * Erledigung, Fälligkeit und Zeitraum spielen keine Rolle (eine Karte ohne Termin oder vor Wochen fällig gehört ebenso dazu).
+   * `undated`: nur offene Aufgaben ohne Termin (Filter „Ohne Termin"); Zeitraum und Erledigte gibt es dort nicht.
+   * `completedSince`: nur Aufgaben, die seit diesem Zeitpunkt erledigt wurden („Zuletzt erledigt"); es zählt allein das Datum der
+   * Erledigung, Fälligkeit und Zeitraum spielen keine Rolle (eine Aufgabe ohne Termin oder vor Wochen fällig gehört ebenso dazu).
    */
   function scheduleQuery(opts: ScheduleOpts): { where: string; params: unknown[]; order: string } {
     const seen = visibleBoardsSql(opts.viewer);
@@ -686,21 +686,21 @@ export function createCards(c: Ctx, late: unknown) {
       params.push(...opts.boardIds);
     }
     // Zeitangaben sind ISO-Zeichenketten gleicher Form: die Sortierung der Datenbank ist die der Zeit. „Zuletzt erledigt": die zuletzt
-    // erledigte Karte zuerst. Sonst Termin, dann Anlage, dann Kennung (ohne Termin sind alle gleich, es zählen Anlage und Kennung).
+    // erledigte Aufgabe zuerst. Sonst Termin, dann Anlage, dann Kennung (ohne Termin sind alle gleich, es zählen Anlage und Kennung).
     const order = recent ? 'completed_at desc, id' : 'due_at, created_at, id';
     return { where: where.join(' and '), params, order };
   }
 
-  /** Wie viele Karten die Terminliste insgesamt hat (ohne `limit` und `offset`), für die Gesamtzahl beim seitenweisen Laden */
+  /** Wie viele Aufgaben die Terminliste insgesamt hat (ohne `limit` und `offset`), für die Gesamtzahl beim seitenweisen Laden */
   function countSchedule(opts: ScheduleOpts): number {
     const q = scheduleQuery(opts);
     return Number(one(`select count(*) as n from cards where ${q.where}`, ...q.params)?.n ?? 0);
   }
 
   /**
-   * Alle Karten mit Termin über alle Boards (für Agenda und Kalender), nach Termin sortiert.
+   * Alle Aufgaben mit Termin über alle Boards (für Agenda und Kalender), nach Termin sortiert.
    * `from` ist eingeschlossen, `to` ausgeschlossen; ohne `from` kommt auch alles Überfällige.
-   * Mit `limit` und `offset` kommt nur eine Seite, ausgewählt und sortiert in der Datenbank: Geladen werden nur die Karten der Seite.
+   * Mit `limit` und `offset` kommt nur eine Seite, ausgewählt und sortiert in der Datenbank: Geladen werden nur die Aufgaben der Seite.
    */
   function listSchedule(opts: ScheduleOpts): ScheduleCard[] {
     const q = scheduleQuery(opts);
@@ -714,7 +714,7 @@ export function createCards(c: Ctx, late: unknown) {
     const sees = boardVisibleSql('b', opts.viewer);
     const boards = new Map(all(`select id, name, color from boards b where b.deleted_at is null and ${sees.sql}`, ...sees.args).map((b) => [b.id as string, b]));
     const cats = new Map(all('select id, name, color from categories where deleted_at is null').map((c) => [c.id as string, { id: c.id as string, name: c.name as string, color: c.color as string }]));
-    // Eine Seite lädt nur ihre Karten (höchstens eine Seite voll Parameter); ohne `limit` über die Bedingung, wie die Menge auch wächst
+    // Eine Seite lädt nur ihre Aufgaben (höchstens eine Seite voll Parameter); ohne `limit` über die Bedingung, wie die Menge auch wächst
     const loaded = paged ? loadCards(`id in (${ids.map(() => '?').join(', ')})`, ...ids) : loadCards(q.where, ...q.params);
     const byId = new Map(loaded.map((c) => [c.id, c]));
     return ids

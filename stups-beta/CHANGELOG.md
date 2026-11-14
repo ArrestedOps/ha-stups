@@ -4,6 +4,78 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.11
+
+**In der Beta laufen die Wächter jetzt von Anfang an.** Bisher waren sie dort zunächst ausgeschaltet, ein neuer Wächter legte deshalb keine Aufgabe an. Push bleibt zunächst aus (sonst bekäme die Familie Nachrichten doppelt). Bewusst ausgeschaltet bleibt ein Wächter-Schalter, den du in der Beta selbst auf „aus“ gestellt hast. **Achtung:** Laufen dieselben Wächter auch in der normalen App, entstehen Aufgaben doppelt; dann schaltest du sie unter Einstellungen › Beta aus.
+
+**Bitte prüfen:** Beta aktualisieren, Wächter-Seite öffnen: kein Hinweis „ausgeschaltet“. Wächter „Batterie schwach“ für einen Sensor unter 20 % anlegen: Die Aufgabe entsteht sofort.
+
+## 1.42.0-beta.10
+
+**Die Wächter-Seite sagt, wenn die Wächter in der Beta aus sind.** In der Beta sind Push und Wächter zunächst ausgeschaltet, damit die übernommenen Daten der normalen App keine doppelten Aufgaben und Nachrichten erzeugen. Bisher stand das nur in den Einstellungen unter „Beta“; ein neu angelegter Wächter legte deshalb keine Aufgabe an, ohne dass die App es sagte. Jetzt steht oben auf der Wächter-Seite ein Hinweis, und ein Administrator schaltet die Wächter dort mit einem Tipp (und einer Rückfrage) ein.
+
+**Bitte prüfen:** Beta › Wächter: Hinweis „In der Beta sind die Wächter ausgeschaltet“ antippen › „Einschalten“. Danach Wächter „Batterie schwach“ für einen Sensor anlegen, der schon unter 20 % liegt: Die Aufgabe entsteht sofort.
+
+## 1.42.0-beta.9
+
+**Batterie-Wächter lösen beim Anlegen ohne Wartezeit aus.** Lag die Batterie schon unter der Grenze, kam die Aufgabe trotzdem erst nach „10 Minuten unter 20 %“, gerechnet ab der letzten Änderung des Werts. Bei einem Handy-Akku, der sich ständig ändert, hieß das: nichts passiert. Jetzt entsteht die Aufgabe sofort. Bei einem Zustand (Tür offen) bleibt die Wartezeit.
+
+**Bitte prüfen:** Wächter „Batterie schwach“ für ein Gerät anlegen, dessen Batterie schon unter 20 % liegt: Die Aufgabe „Batterie wechseln“ erscheint sofort, ohne Rückfrage.
+
+## 1.42.0-beta.8
+
+**Wächter lösen beim Anlegen gleich aus.** Gilt die Bedingung schon (Batterie bei 16 %, Grenze 20 %; Tür schon im Zielzustand), entsteht die Aufgabe sofort, nach der Wartezeit ab der letzten Änderung. Die Rückfrage gibt es nur noch beim Ändern eines vorhandenen Wächters. **Aufgeklappter Wächter am Desktop:** Wenn, Dann, Wer und Erledigt sich selbst stehen untereinander, der Schalter „Erledigt sich selbst“ wird nicht mehr abgeschnitten, „Ändern“ zerstört das Layout nicht mehr.
+
+**Desktop: „Ansicht für“.** Oben in der Seitenleiste wählst du, wessen Aufgaben und Wächter alle Seiten zeigen (Alle, du, die anderen); ein Chip „Nur Ben ✕“ neben dem Titel zeigt den Filter. Die Gruppe „Personen“ unten entfällt. **Aufgeklappte Aufgabe:** Eigenschaften als Raster aus Feldern, links Notiz, Checkliste mit Fortschritt und Links, rechts Kommentare und Verlauf als Reiter.
+
+**Bitte prüfen (Testliste):** (0) Ansicht für: Person wählen, Aufgaben und Wächter filtern, Chip hebt auf; Aufgabe aufklappen, Felder anklicken und ändern. (1) Wächter für eine Batterie anlegen, die schon unter der Grenze liegt: Aufgabe entsteht. (2) Wächter für einen Zustand anlegen, der schon gilt: Aufgabe entsteht. (3) Wächter aufklappen › „Wer“ › „Ändern“: Layout bleibt heil. (4) Schalter „Erledigt sich selbst“ vollständig sichtbar.
+
+## 1.42.0-beta.7
+
+**Aufgaben am Desktop klappen unter ihrer Zeile auf**, wie die Wächter: zwei Spalten (links Eigenschaften, rechts Beschreibung, Checkliste, Links, Kommentare), „Erledigt“, „Stupsen“ und Schließen in einer Leiste oben. Zweiter Klick, Esc oder das X klappen sie zu. Die Detailspalte rechts gibt es nicht mehr. Am Handy ändert sich nichts.
+
+**Handy:** „Alle Wächter verwalten“ gibt es nicht mehr (Duplikat des Reiters Wächter); „Wächter aus Vorlagen“ steht neben „Neuer Wächter“.
+
+**Bitte prüfen (Testliste):** (0) Handy › Wächter: „Neuer Wächter“ und „Wächter aus Vorlagen“ öffnen den Assistenten bzw. „Gefunden“. (1) Desktop › Aufgaben: Zeile anklicken, aufgeklappter Bereich direkt darunter, Titel ändern, Kommentar schreiben, „Erledigt“. (2) Andere Zeile anklicken: die erste klappt zu. (3) Esc und X klappen zu. (4) Aufgabe aus der Befehlspalette (Strg K) öffnen. (5) Rechtsklick-Menü einer Zeile.
+
+## 1.42.0-beta.6
+
+**Lange Wächternamen und Board-Symbole.** In der Wächter-Tabelle am Desktop steht die Bedingung jetzt in der zweiten Zeile unter dem Namen; ein langer Name bricht auf zwei Zeilen um und wird nicht mehr abgeschnitten. Alle Zeilen sind gleich hoch (64 px). Die Seitenleiste zeigt Boards mit dem Symbol aus den Board-Einstellungen in der Boardfarbe. Dazu: Wächter-Gruppe in der Seitenleiste, Ablauf klappt unter der Zeile auf, „Aktivität“ als Reiter (aus beta.5).
+
+**Bitte prüfen (Testliste):** (1) Wächter mit sehr langem Namen: voll lesbar, Zeilen gleich hoch. (2) Seitenleiste: Boards mit eigenem Symbol und Farbe. (3) Zeile aufklappen, ändern, speichern. (4) Reiter „Aktivität“.
+
+## 1.42.0-beta.5
+
+**Wächter am Desktop neu geordnet.** Wächter sind eine eigene Gruppe in der Seitenleiste (unter Boards und Kalender), mit Filtern und Kategorien. Die Seite ist eine einzige Tabelle in voller Breite, alle Zeilen gleich hoch. Ein Klick auf eine Zeile klappt den Ablauf darunter auf (bearbeiten, speichern, testen, pausieren, löschen), kein Fenster mehr. „Aktivität“ ist ein Reiter. Am Handy bleibt alles wie bisher.
+
+**Bitte prüfen (Testliste):** (1) Seitenleiste: Gruppe „Wächter“ unter „Mehr“, Filter und Kategorien wählen. (2) Eine Zeile aufklappen, etwas ändern, speichern; eine andere Zeile klappt die erste zu. (3) Alle Zeilen gleich hoch, Namen vollständig sichtbar (Tooltip bei langen). (4) Reiter „Aktivität“. (5) „Neuer Wächter“ klappt weiter über der Tabelle auf.
+
+## 1.42.0-beta.4
+
+**Zeilen am Handy zeigen, wem eine Aufgabe gehört.** Aufgaben und Karten im Board zeigen die Zuständigen als Bilder und mit Vornamen, neben Datum und Kategorie. Der Kalender hat am Handy den gleichen Kopf wie die anderen Reiter. Am Desktop wird das Zahnrad in der Seitenleiste nicht mehr abgeschnitten, und es gibt keinen Seitwärts-Balken mehr.
+
+**Bitte prüfen (Testliste):** (1) Aufgaben (Handy): Bild und Vorname der Zuständigen in jeder Zeile, auch bei „Meine Aufgaben“. (2) Board (Handy): dasselbe. (3) Kalender (Handy): Logo, Home Assistant, Glocke, Zahnrad oben. (4) Desktop in der Beta: Kopf der Seitenleiste vollständig, kein Balken unten.
+
+## 1.42.0-beta.3
+
+**Einstellungen, Mitteilungen, Startseiten im neuen Stil.** Einstellungen: einzeilige Zeilen mit Wert rechts, „Fertig“ oben rechts. Mitteilungen: eine gruppierte Liste, „Alle als gelesen markieren“ unten. „Noch kein Zugriff“ und Anmeldung ohne Leuchten. **Wächter:** Kategorien haben ein „…“-Menü (alle pausieren, alle aktivieren, neuer Wächter in der Kategorie); der „Wer“-Schritt zeigt Zeilen mit Symbol, der letzte Schritt beginnt mit WENN / DANN / WER.
+
+**Bitte prüfen (Testliste):** (1) Einstellungen öffnen und schließen („Fertig“, Escape). (2) Glocke: Mitteilungen lesen, „Alle als gelesen markieren“. (3) Wächter-Kategorie › „…“: alle pausieren und wieder aktivieren, „Neuer Wächter in …“ trägt die Kategorie schon ein. (4) Neuer Wächter, Schritt 3 und 4.
+
+## 1.42.0-beta.2
+
+**Aufgaben-Details im neuen Stil.** Die Eigenschaften stehen als gruppierte Liste (Fällig, Zuständig, Wiederholung, …); am Handy gibt es unter der Liste einen großen Knopf „Erledigt“ und „Auf morgen verschieben“, ein Stups an dich erscheint als orange Karte. Am Desktop füllen die Details die ganze Höhe rechts. **Wächter-Assistent:** Vorlagen als Liste, eine Fortschrittsleiste, „Zurück“ ohne „Schließen“.
+
+**Bitte prüfen (Testliste):** (1) Aufgabe öffnen: jede Zeile öffnet ihr Feld, Änderungen speichern sofort. (2) Stups an dich: Karte in den Details, die drei Antworten gehen. (3) Neuer Wächter: Vorlage wählen, alle vier Schritte, Zurück behält die Eingaben. (4) Desktop: Detailspalte neben der Liste, Kopfzeile bleibt lesbar.
+
+## 1.42.0-beta.1
+
+**Neues Design (iOS-Stil), am Handy und am Desktop.** Aufgaben, Boards, Kalender und Wächter sind neu gestaltet: Tab-Leiste mit Aufgaben | Boards | + | Kalender | Wächter, Kopfzeile mit Stups-Logo, Home-Assistant-Symbol, Glocke und Zahnrad, gruppierte Listen, flaches Orange. Am Desktop gibt es Seitenleiste, Aufgaben-Tabelle mit Gruppierung, Schnellerfassung, Kontextmenü, Befehlspalette (Strg/Cmd+K) und Tastenkürzel (G dann T/B/C/W, „/“ für die Suche).
+
+**Weitere Änderungen.** Aufgaben lassen sich am Handy nach links und rechts wischen. Der Kalender zeigt am Handy standardmäßig drei Tage (wischbar). Die Stups-Karte zeigt Antworten an. Wächter sind am Handy in Kategorien-Seiten gegliedert; am Desktop gibt es Mehrfachauswahl. „Karte“ heißt überall „Aufgabe“. Der Server liefert für offene Stups zusätzlich Zeit, Vorlage und Text.
+
+**Bitte prüfen (Testliste):** (1) Am iPhone: Wischen in der Aufgabenliste, Dreitage-Kalender, Kategorien bei den Wächtern. (2) Am Desktop: Seitenleiste, Aufgaben-Tabelle, Befehlspalette, Kontextmenü. (3) Hell und Dunkel: Lesbarkeit und Tippflächen. (4) Alle Felder beim Anlegen einer Aufgabe und eines Wächters sind weiterhin da. Bekannt: Safari/WebKit wurde hier nur in Chromium getestet.
+
 ## 1.41.1-beta.3
 
 **Aufgeräumt, an der App ändert sich nichts.** Zwei Stellen in der Oberfläche, an denen sich Dateien gegenseitig importierten, sind aufgelöst: Zwei Hilfsfunktionen liegen jetzt dort, wo sie hingehören, ihr Inhalt ist unverändert. Ein neuer Test lässt solche Importzyklen in Server und Oberfläche künftig nicht mehr zu. Vier Funktionen, die nirgends mehr benutzt wurden, sind entfernt. Verhalten und Texte sind unverändert; Tests und Browser-Tests laufen wie vorher.

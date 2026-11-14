@@ -3,7 +3,10 @@
   import { countByColumn, filterCards } from '../lib/filters';
   import { scrollStrip } from '../lib/scrollStrip';
   import { toggleId } from '../lib/schedule';
-  import { openSheet, ui } from '../lib/store.svelte';
+  import { openSheet, selectBoard, ui } from '../lib/store.svelte';
+  import { boardColorKey } from '../lib/schedule';
+  import { tileColorOf } from '../lib/cardTile';
+  import Tile from './ui/Tile.svelte';
   import Avatar from './Avatar.svelte';
   import ColumnList from './ColumnList.svelte';
   import ColumnTabs from './ColumnTabs.svelte';
@@ -13,10 +16,16 @@
 
   /**
    * Der Reiter Boards nach dem Mockup (Boards): Kopf mit Titel, Board-Leiste, Chips (Meine, Alle, Personen, Filter), Kategorien-Chips,
-   * Spalten als Umschalter, Karten als Zeilen, „+". Suche, Stups-Filter und Kosten stehen hinter dem Filter-Knopf (Blatt „Filter").
+   * Spalten als Umschalter, Aufgaben als Zeilen, „+". Suche, Stups-Filter und Kosten stehen hinter dem Filter-Knopf (Blatt „Filter").
    * Ab 1024 px stehen die Spalten nebeneinander.
    */
   const desktop = $derived(ui.desktop);
+  /** Handy: die Liste der Boards ist die Startseite, ein Tipp öffnet das Board (mit „‹ Boards“ oben) */
+  let showList = $state(true);
+  async function openBoard(id: string) {
+    await selectBoard(id);
+    showList = false;
+  }
   const view = $derived(ui.view);
   const columns = $derived(view?.columns ?? []);
   const board = $derived(ui.boards.find((b) => b.id === ui.boardId));
@@ -35,32 +44,50 @@
   const hiddenFilter = $derived(f.nudged || f.search.trim() !== '');
   const filterKey = $derived(`${f.categoryIds.join()}|${f.onlyMine}|${f.personIds.join()}`);
 
+  /** Handy: Personen- und Kategorie-Chips sind eingeklappt (wie im Entwurf), ein Knopf „Filter“ klappt sie auf */
+  let chipsOpen = $state(false);
+  const filterSummary = $derived(
+    [f.onlyMine ? t('Meine') : '', ...f.personIds.map((id) => ui.people.find((p) => p.id === id)?.displayName ?? ''), ...(view?.categories ?? []).filter((c) => f.categoryIds.includes(c.id)).map((c) => c.name)]
+      .filter(Boolean)
+      .join(', '),
+  );
+
   function toggleCategory(id: string) {
     ui.filter.categoryIds = toggleId(ui.filter.categoryIds, id);
   }
 </script>
 
 {#snippet head()}
-  <TopBar title="Boards" sub={t('Organisiere deine Aufgaben in Kanban-Boards.')} />
-
-  <!-- Board-Leiste: ein Tipp öffnet „Board wechseln" (Desktop: die Seitenleiste wechselt das Board, der Name steht in der Kopfzeile) -->
-  {#if !desktop}
-    <button
-      class="flex h-[52px] w-full min-w-0 items-center gap-2.5 rounded-row border border-line-chip bg-surface px-4 text-left text-[17px] font-semibold"
-      onclick={() => openSheet({ type: 'boards' })}
-      aria-label={t('Board wechseln')}
-    >
-      <span class="shrink-0 text-text-soft"><Icon name="layers" size={22} /></span>
-      <span class="min-w-0 flex-1 truncate" data-testid="board-name">{board?.name ?? 'Stups'}</span>
-      <span class="shrink-0 text-text-soft"><Icon name="chevron-down" size={20} stroke={2} /></span>
-    </button>
+  {#if desktop}
+    <TopBar title="Boards" sub={t('Organisiere deine Aufgaben in Kanban-Boards.')} />
+  {:else}
+    <!-- Handy: „‹ Boards“ statt des Logos, darunter der Name des Boards als große Überschrift (ein Tipp darauf wechselt das Board) -->
+    <TopBar
+      title={board?.name ?? 'Stups'}
+      sub={t('Organisiere deine Aufgaben in Kanban-Boards.')}
+      back={{ label: 'Boards', onclick: () => (showList = true) }}
+      titleButton={{ label: t('Board wechseln'), onclick: () => openSheet({ type: 'boards' }) }}
+      titleTestid="board-name"
+    />
   {/if}
 
   {#if view}
-    <div class="flex flex-col gap-2">
+    {#if !desktop}
+      <button
+        type="button"
+        class="inline-flex h-9 max-w-full items-center gap-1.5 self-start rounded-full bg-surface2 px-3.5 text-[15px] font-semibold"
+        aria-expanded={chipsOpen}
+        aria-label={t('Personen und Kategorien')}
+        data-testid="board-filter-toggle"
+        onclick={() => (chipsOpen = !chipsOpen)}
+      >
+        <Icon name="sliders" size={16} stroke={2.2} /><span class="min-w-0 truncate">{t('Filter')}{filterSummary ? ` · ${filterSummary}` : ''}</span><Icon name={chipsOpen ? 'chevron-up' : 'chevron-down'} size={16} stroke={2.4} />
+      </button>
+    {/if}
+    <div class="flex flex-col gap-2 {!desktop && !chipsOpen ? 'hidden' : ''}" data-testid="board-chips">
       {#if !ui.isChild}
         <div class="flex items-center gap-2">
-          <div class="no-scrollbar -ml-3 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-3" role="group" aria-label={t('Personen')} use:scrollStrip={filterKey}>
+          <div class="no-scrollbar -ml-3 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-3 {desktop ? 'hidden' : ''}" role="group" aria-label={t('Personen')} use:scrollStrip={filterKey}>
             <Chip
               active={!personActive}
               pressed={!personActive}
@@ -80,6 +107,7 @@
               </Chip>
             {/each}
           </div>
+          {#if desktop}<span class="flex-1"></span>{/if}
           <Chip square label={t('Filter')} outline={hiddenFilter} onclick={() => openSheet({ type: 'filter' })}><Icon name="sliders" size={20} /></Chip>
         </div>
       {/if}
@@ -101,17 +129,18 @@
       <div class="flex shrink-0 flex-col gap-3">{@render head()}</div>
       <!-- Kanban über die ganze Breite: Spalten gleich breit (mindestens 264 px, danach scrollt die Fläche seitlich), Kopf mit Name, Zähler und „+“ -->
       <div class="mt-4 min-h-0 flex-1 overflow-x-auto pb-6" data-testid="kanban">
-        <div class="grid h-full min-w-0 grid-flow-col auto-cols-[minmax(264px,1fr)] gap-4">
+        <div class="grid h-full min-w-0 grid-flow-col auto-cols-[minmax(264px,1fr)] items-start gap-3.5">
           {#each columns as col (col.id)}
-            <section class="flex min-h-0 flex-col rounded-[20px] border border-line bg-surface/40" aria-label={col.name}>
-              <div class="flex h-14 shrink-0 items-center gap-2 pr-2 pl-4">
+            <section class="flex min-h-0 flex-col self-start rounded-[16px] bg-surface2/70 max-h-full" aria-label={col.name}>
+              <div class="flex h-12 shrink-0 items-center gap-2 pr-2 pl-4">
+                <i class="block h-2.5 w-2.5 shrink-0 rounded-full" style:background="var(--c-{['blue', 'orange', 'purple', 'green'][columns.indexOf(col) % 4]}-fg)" aria-hidden="true"></i>
                 <h2 class="min-w-0 truncate text-[15px] font-bold">{col.name}</h2>
-                <span class="inline-flex h-[22px] min-w-6 shrink-0 items-center justify-center rounded-full bg-count px-2 text-[12px] font-bold text-text-soft" data-testid="column-count">{counts[col.id] ?? 0}</span>
+                <span class="shrink-0 text-[14px] text-text-soft tabular-nums" data-testid="column-count">{counts[col.id] ?? 0}</span>
                 <span class="flex-1"></span>
                 {#if !ui.isChild && !col.isDone && !col.isPlanned}
                   <button
-                    class="flex h-9 w-9 items-center justify-center rounded-[10px] bg-surface2 text-text-soft hover:text-fg"
-                    aria-label={t('Neue Karte in „{name}“', { name: col.name })}
+                    class="flex h-8 w-8 items-center justify-center rounded-[8px] text-text-soft hover:bg-surface hover:text-fg"
+                    aria-label={t('Neue Aufgabe in „{name}“', { name: col.name })}
                     onclick={() => openSheet({ type: 'new', columnId: col.id, picked: true })}
                   >
                     <Icon name="plus" size={20} stroke={2} />
@@ -121,6 +150,32 @@
               <div class="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 pb-3" data-testid="column-list-{col.id}"><ColumnList columnId={col.id} /></div>
             </section>
           {/each}
+        </div>
+      </div>
+    {:else if showList}
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[calc(var(--safe-top)+8px)] pb-fab" data-testid="boards-overview">
+        <div class="flex flex-col gap-3">
+          <TopBar title="Boards" sub={t('Organisiere deine Aufgaben in Kanban-Boards.')} />
+          <ul class="list-group !mt-0" data-testid="board-list">
+            {#each ui.boards as b, i (b.id)}
+              <li>
+                <button class="flex h-[46px] w-full items-center gap-3 px-3.5 text-left" aria-current={b.id === ui.boardId ? 'true' : undefined} onclick={() => void openBoard(b.id)}>
+                  <Tile color={tileColorOf(boardColorKey(b.color, i))} px={30} radius={7}><Icon name="layers" size={18} /></Tile>
+                  <span class="min-w-0 flex-1 truncate text-[17px]">{b.name}</span>
+                  <span class="shrink-0 text-[17px] text-text-soft tabular-nums">{t('{n} offen', { n: b.openCards })}</span>
+                  <span class="shrink-0 text-text-soft2"><Icon name="chevron-right" size={16} stroke={2.2} /></span>
+                </button>
+              </li>
+            {/each}
+          </ul>
+          <ul class="list-group !mt-0">
+            <li>
+              <button class="flex h-[46px] w-full items-center gap-3 px-3.5 text-left text-[17px] font-medium text-accent-text" onclick={() => openSheet({ type: 'newBoard' })}>
+                <span class="flex h-[30px] w-[30px] items-center justify-center"><Icon name="plus" size={22} stroke={2.2} /></span>{t('Neues Board')}
+              </button>
+            </li>
+          </ul>
+          <p class="px-1 text-[14px] text-text-soft">{t('Tippe ein Board an, um seine Spalten zu sehen.')}</p>
         </div>
       </div>
     {:else}

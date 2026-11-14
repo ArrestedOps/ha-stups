@@ -3,7 +3,7 @@ import { ruleFromEditor, type Recurrence, type RecurrenceEditor } from '../recur
 import { DICTIONARIES, type Dictionary, type Unit } from './dictionary';
 
 /**
- * Schnell-Eingabe: aus einer Zeile Text wird eine Karte.
+ * Schnell-Eingabe: aus einer Zeile Text wird eine Aufgabe.
  *   „Müll raus morgen 19 Uhr @Ben #Haushalt jede Woche !!"
  * Reine Logik ohne Oberfläche. Die Wörter stehen im Wörterbuch der Sprache (dictionary.ts); die Regeln sind für alle gleich.
  * Alles, was erkannt wird, kommt als Token zurück (zum Hervorheben und Zurücknehmen); der Rest ist der Titel.

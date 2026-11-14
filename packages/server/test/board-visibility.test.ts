@@ -140,7 +140,7 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
     expect((await call(cleo, 'GET', `/api/boards/${priv.board}`)).status).toBe(404);
   });
 
-  it('Karten-Direktaufrufe und alles an der Karte', async () => {
+  it('Aufgaben-Direktaufrufe und alles an der Aufgabe', async () => {
     const checklist = store.addChecklistItem(priv.card, 'eins').id;
     const link = store.addLink(priv.card, { url: 'https://example.org' } as never).id;
     const comment = store.addComment(priv.card, ids.anna, 'Hallo').id;
@@ -187,7 +187,7 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
     }
   });
 
-  it('Karten mit Kennungen (Live-Sync) und Termine (Agenda, Kalender)', async () => {
+  it('Aufgaben mit Kennungen (Live-Sync) und Termine (Agenda, Kalender)', async () => {
     const list = async (who: object) => ((await call(who, 'GET', `/api/cards?ids=${[pub.card, priv.card, sel.card].join(',')}`)).body as { title: string }[]).map((c) => c.title).sort();
     expect(await list(anna)).toEqual(['Geheimer Plan', 'Müll raus', 'Überraschung']);
     expect(await list(cleo)).toEqual(['Müll raus', 'Überraschung']);
@@ -203,30 +203,30 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
     expect(await titles(ben, '?undated=1')).toEqual([]);
   });
 
-  it('Heute: Karten, Zahlen der anderen und Karten vom Haus', async () => {
+  it('Heute: Aufgaben, Zahlen der anderen und Aufgaben vom Haus', async () => {
     const view = async (who: object) => (await call(who, 'GET', '/api/today')).body as { mine: { title: string }[]; others: { personId: string; open: number }[] };
     expect((await view(anna)).mine.map((c) => c.title)).toEqual(['Geheimer Plan']);
-    // Anna und Cleo haben je eine eigene Karte in einem Board, das Ben nicht sieht: Ben sieht davon nichts, auch nicht in den Zahlen
+    // Anna und Cleo haben je eine eigene Aufgabe in einem Board, das Ben nicht sieht: Ben sieht davon nichts, auch nicht in den Zahlen
     const forBen = await view(ben);
     expect(forBen.mine.map((c) => c.title)).toEqual(['Müll raus']);
     expect(forBen.others).toEqual([]);
-    expect((await view(cleo)).others).toEqual([{ personId: ids.ben, open: 1 }]); // Annas private Karte zählt bei Anna nicht mit
-    // Anna sieht beide Boards: bei Cleo und Ben je eine offene Karte
+    expect((await view(cleo)).others).toEqual([{ personId: ids.ben, open: 1 }]); // Annas private Aufgabe zählt bei Anna nicht mit
+    // Anna sieht beide Boards: bei Cleo und Ben je eine offene Aufgabe
     expect((await view(anna)).others.sort((x, y) => (x.personId < y.personId ? -1 : 1))).toEqual(
       [{ personId: ids.cleo, open: 1 }, { personId: ids.ben, open: 1 }].sort((x, y) => (x.personId < y.personId ? -1 : 1)),
     );
   });
 
-  it('Posteingang: Kommentare, Wächter und Erinnerungen zu fremden Karten erscheinen nie', async () => {
-    // Anna ist Zuständige im privaten Board; sie ändert danach ihre Meinung nicht, Ben kommentiert nicht (er sieht die Karte nicht)
+  it('Posteingang: Kommentare, Wächter und Erinnerungen zu fremden Aufgaben erscheinen nie', async () => {
+    // Anna ist Zuständige im privaten Board; sie ändert danach ihre Meinung nicht, Ben kommentiert nicht (er sieht die Aufgabe nicht)
     store.addComment(priv.card, ids.cleo, 'Von jemandem, der es nie sehen dürfte');
     store.addComment(sel.card, ids.anna, 'Für Cleo');
     store.addComment(pub.card, ids.anna, 'Für Ben');
     const items = async (who: object) => ((await call(who, 'GET', '/api/inbox')).body.items as { cardId: string }[]).map((i) => i.cardId);
     expect(await items(ben)).toEqual([pub.card]);
     expect(await items(chef)).toEqual([]);
-    expect(await items(cleo)).toEqual([sel.card]); // Cleos eigene Karte: Annas Kommentar dazu
-    // Anna sieht den Kommentar von Cleo an ihrer privaten Karte (die Karte gehört ihr)
+    expect(await items(cleo)).toEqual([sel.card]); // Cleos eigene Aufgabe: Annas Kommentar dazu
+    // Anna sieht den Kommentar von Cleo an ihrer privaten Aufgabe (die Aufgabe gehört ihr)
     expect(await items(anna)).toContain(priv.card);
   });
 
@@ -244,13 +244,13 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
     expect((await call(anna, 'POST', `/api/trash/card/${priv.card}/restore`)).status).toBe(204);
   });
 
-  it('Symbole erkennen: Kandidaten und Anwenden gelten nur für Karten sichtbarer Boards (auch für Administratoren)', async () => {
+  it('Symbole erkennen: Kandidaten und Anwenden gelten nur für Aufgaben sichtbarer Boards (auch für Administratoren)', async () => {
     // Chef ist Administrator mit dem Recht „settings“, aber weder Besitzer noch Mitglied der Boards von Anna
     const list = ((await call(chef, 'GET', '/api/icons/candidates')).body as { id: string; title: string }[]).map((c) => c.title);
     expect(list).toContain('Müll raus');
     expect(list).not.toContain('Geheimer Plan');
     expect(list).not.toContain('Überraschung');
-    // Auch mit bekannter Kennung lässt sich bei fremden Karten kein Symbol setzen: sie zählen als übersprungen
+    // Auch mit bekannter Kennung lässt sich bei fremden Aufgaben kein Symbol setzen: sie zählen als übersprungen
     const res = await call(chef, 'POST', '/api/icons/apply', {
       items: [
         { id: priv.card, icon: 'dog' },
@@ -265,7 +265,7 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
     expect(store.getCard(pub.card).icon).toBe('leaf');
   });
 
-  it('Symbole erkennen im Store: die Besitzerin sieht ihre eigenen Karten, ein Hintergrunddienst (null) nur Boards für alle', () => {
+  it('Symbole erkennen im Store: die Besitzerin sieht ihre eigenen Aufgaben, ein Hintergrunddienst (null) nur Boards für alle', () => {
     const titles = (viewer: string | null) => store.cardsWithoutIcon(viewer).map((c) => c.title).sort();
     expect(titles(ids.anna)).toEqual(['Geheimer Plan', 'Müll raus', 'Überraschung']);
     expect(titles(ids.cleo)).toEqual(['Müll raus', 'Überraschung']);
@@ -300,7 +300,7 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
     expect(store.openWatcherCardCount({ publicOnly: true })).toBe(0);
   });
 
-  it('HA-Sensoren: gesamt und je Person zeigen nur Karten aus Boards für alle', async () => {
+  it('HA-Sensoren: gesamt und je Person zeigen nur Aufgaben aus Boards für alle', async () => {
     const writes = new Map<string, { state: string; attributes: Record<string, unknown> }>();
     const sensors = createSensors({
       store,
@@ -317,7 +317,7 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
     expect(JSON.stringify([...writes.values()])).not.toMatch(/Geheimer Plan|Überraschung/);
   });
 
-  it('Live-Sync (WebSocket): Karten fremder Boards werden aus den Meldungen genommen', () => {
+  it('Live-Sync (WebSocket): Aufgaben fremder Boards werden aus den Meldungen genommen', () => {
     const changes = { full: false, cards: [pub.card, priv.card, sel.card] };
     expect(visibleChanges(store, changes, ids.ben)).toEqual({ full: false, cards: [pub.card] });
     expect(visibleChanges(store, changes, ids.chef)).toEqual({ full: false, cards: [pub.card] });
@@ -345,7 +345,7 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
     expect(week().done).toBe(2);
   });
 
-  it('Admin-Liste „Boards ohne Besitzer": nur Name und Zahl der Karten, löschen geht', async () => {
+  it('Admin-Liste „Boards ohne Besitzer": nur Name und Zahl der Aufgaben, löschen geht', async () => {
     store.removePerson(ids.anna);
     expect((await call(ben, 'GET', '/api/admin/orphan-boards')).status).toBe(403);
     const list = (await call(chef, 'GET', '/api/admin/orphan-boards')).body as Record<string, unknown>[];
@@ -362,7 +362,7 @@ describe('Ein Fremder sieht nichts: ein Test je Bereich', () => {
 });
 
 describe('Zuständige nur aus den Personen, die das Board sehen', () => {
-  it('beim Anlegen und Ändern einer Karte', async () => {
+  it('beim Anlegen und Ändern einer Aufgabe', async () => {
     const bad = await call(anna, 'POST', `/api/boards/${priv.board}/cards`, { columnId: priv.col, title: 'x', assigneeIds: [ids.ben] });
     expect(bad.status).toBe(400);
     expect(bad.body.error).toMatch(/Board sehen/);
@@ -423,7 +423,7 @@ describe('Wer das Board ändern darf', () => {
 });
 
 describe('Die Tür kennt jede Route mit Kennung', () => {
-  it('jede Route mit Board, Spalte, Kategorie, Karte oder etwas an einer Karte ist einem Board zugeordnet (sonst wäre sie ungeschützt)', () => {
+  it('jede Route mit Board, Spalte, Kategorie, Aufgabe oder etwas an einer Aufgabe ist einem Board zugeordnet (sonst wäre sie ungeschützt)', () => {
     const routes = JSON.parse(readFileSync(join(fileURLToPath(new URL('.', import.meta.url)), 'fixtures', 'api-routes.json'), 'utf8')) as string[];
     const resource = /^\w+ \/api\/(boards|columns|categories|cards|checklist|links|comments|completions|attachments|trash)\/:/;
     const bound = routes.filter((r) => !r.startsWith('HEAD ') && resource.test(r));
@@ -447,7 +447,7 @@ describe('Die Tür im Einzelnen: Ziel und Meldung je Route', () => {
     const category = store.addCategory(priv.board, { name: 'Küche', color: '#ff0000' }).id;
     store.addAttachment(priv.card, { id: 'att-1', filename: 'a.png', mime: 'image/png', size: 3, file: 'f.png', thumb: 'f-t.png' }, ids.anna);
     store.deleteCard(sel.card);
-    const card = 'Karte nicht gefunden';
+    const card = 'Aufgabe nicht gefunden';
     expect(route('/api/boards/:id', { id: priv.board })).toEqual({ board: priv.board, what: 'Board nicht gefunden', archived: false });
     expect(route('/api/boards/:id/cards', { id: priv.board })).toEqual({ board: priv.board, what: 'Board nicht gefunden', archived: false });
     expect(route('/api/boards/:id/unarchive', { id: priv.board })).toEqual({ board: priv.board, what: 'Board nicht gefunden', archived: true });
@@ -477,7 +477,7 @@ describe('Die Tür im Einzelnen: Ziel und Meldung je Route', () => {
     const res = await call(ben, 'GET', `/api/boards/${priv.board}`);
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Board nicht gefunden');
-    expect((await call(ben, 'GET', `/api/cards/${priv.card}`)).body.error).toBe('Karte nicht gefunden');
+    expect((await call(ben, 'GET', `/api/cards/${priv.card}`)).body.error).toBe('Aufgabe nicht gefunden');
     expect((await call(ben, 'PATCH', `/api/columns/${priv.col}`)).body.error).toBe('Spalte nicht gefunden');
   });
 

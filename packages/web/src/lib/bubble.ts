@@ -4,7 +4,7 @@ import { deviceTz } from './datetime';
 /** Name des Sensors „heute fällig" (gleich wie in packages/server/src/channel.ts: die Beta hat eigene Namen) */
 export const todaySensor = (channel: 'stable' | 'beta' | undefined): string => (channel === 'beta' ? 'sensor.stups_beta_heute_faellig' : 'sensor.stups_heute_faellig');
 
-/** Was die Vorschau des Knopfs zeigt: offene Karten, die heute fällig oder überfällig sind (wie die Sensoren, für alle Personen) */
+/** Was die Vorschau des Knopfs zeigt: offene Aufgaben, die heute fällig oder überfällig sind (wie die Sensoren, für alle Personen) */
 export function bubbleCounts(cards: { dueAt: string | null; completedAt: string | null }[], nowMs: number, tz = deviceTz()): { today: number; overdue: number } {
   const key = dayKeyOf(nowMs, tz);
   let today = 0;

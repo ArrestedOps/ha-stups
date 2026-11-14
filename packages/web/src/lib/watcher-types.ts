@@ -1,4 +1,4 @@
-// Wächter: Karten automatisch aus Zuständen in Home Assistant. Diese Typen spiegeln die Schnittstelle des Servers.
+// Wächter: Aufgaben automatisch aus Zuständen in Home Assistant. Diese Typen spiegeln die Schnittstelle des Servers.
 import type { Nudge } from './reminder';
 
 export type ConditionKind = 'state' | 'above' | 'below';
@@ -14,7 +14,7 @@ export interface WatchTrigger {
   value: number | null;
   forMin: number;
   count: number;
-  /** Kalender: so viele Minuten vor dem Termin entsteht die Karte */
+  /** Kalender: so viele Minuten vor dem Termin entsteht die Aufgabe */
   leadMin?: number;
   /** Vorhersage: Regen in den nächsten so vielen Stunden */
   forecast?: { condition: 'rain'; hours: number };
@@ -35,7 +35,7 @@ export interface WatcherCard {
   categoryIds: string[];
   priority: string | null;
   due: DueRule;
-  /** Symbol und Farbe der Karte von Hand (leer: das Symbol der beobachteten Entität) */
+  /** Symbol und Farbe der Aufgabe von Hand (leer: das Symbol der beobachteten Entität) */
   icon?: string | null;
   iconColor?: string | null;
 }
@@ -72,14 +72,14 @@ export interface WatcherInput {
   nudge: Nudge | null;
   /** Kategorie zum Gruppieren (null = „Ohne Kategorie"); gleiche Namen legt der Server zusammen */
   category: string | null;
-  /** Die Karten zählen zur Fairness (zusätzlich zum Board). Ohne Angabe beim Anlegen gilt der Wert des Boards. */
+  /** Die Aufgaben zählen zur Fairness (zusätzlich zum Board). Ohne Angabe beim Anlegen gilt der Wert des Boards. */
   countsForFairness?: boolean;
 }
 
 export interface WatcherItem extends Omit<WatcherInput, 'countsForFairness'> {
   countsForFairness: boolean;
   id: string;
-  /** assignees_missing: keine gültigen Zuständigen mehr, der Wächter bleibt aktiv, legt aber keine Karten an */
+  /** assignees_missing: keine gültigen Zuständigen mehr, der Wächter bleibt aktiv, legt aber keine Aufgaben an */
   status: 'ok' | 'entity_missing' | 'target_missing' | 'assignees_missing';
   /** Bei target_missing: das Board ist archiviert oder gelöscht (fehlt oder null: nur die Spalte fehlt) */
   pausedBy?: 'archived' | 'deleted' | null;
@@ -100,7 +100,7 @@ export interface WatcherItem extends Omit<WatcherInput, 'countsForFairness'> {
   openCard: { id: string; title: string; boardId: string; assigneeIds: string[]; waiting: boolean } | null;
 }
 
-/** Die Bedingung gilt beim Speichern schon und der Wächter löst nicht von selbst aus: Die App fragt, ob die Karte jetzt entstehen soll */
+/** Die Bedingung gilt beim Speichern schon und der Wächter löst nicht von selbst aus: Die App fragt, ob die Aufgabe jetzt entstehen soll */
 export interface MetNow {
   entityName: string;
   /** der Zustand in Worten („aus“, „412 W“), in der Sprache der Anfrage */
@@ -167,7 +167,7 @@ export interface WatcherSuggestion {
   variant: 'power' | 'status' | 'default';
   unit?: string;
   draft?: TemplateDraft;
-  /** Kurzer Gerätename für Name und Kartentitel des neuen Wächters */
+  /** Kurzer Gerätename für Name und Aufgabentitel des neuen Wächters */
   label?: string;
 }
 

@@ -1,0 +1,101 @@
+<title>Stups Welten</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+/* Layout: kurzer Kopf, darunter die fünf Handys nebeneinander (umbrechend), jedes mit Namen, einem Satz und zwei Knöpfen. */
+:root {
+  --bg: #e9ecf1; --ink: #0f1420; --mute: #54607a; --card: #ffffff; --line: #d3d9e4; --accent: #c2410c; --bezel: #0f1420; --on-accent: #ffffff;
+  --seg-bg: #dde2ea; --seg-on: #ffffff;
+  --font: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #10141f; --ink: #eef2fa; --mute: #9fabc4; --card: #1a2133; --line: #2b3550; --accent: #ff9a62; --bezel: #05070c; --on-accent: #1a0b02; --seg-bg: #1f2740; --seg-on: #2e3a5c; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #10141f; --ink: #eef2fa; --mute: #9fabc4; --card: #1a2133; --line: #2b3550; --accent: #ff9a62; --bezel: #05070c; --on-accent: #1a0b02; --seg-bg: #1f2740; --seg-on: #2e3a5c; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 500 16px/1.45 var(--font); padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button, a { font: inherit; color: inherit; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 10px; }
+.wrap { max-width: 1500px; margin: 0 auto; display: grid; gap: 28px; }
+header { display: grid; gap: 14px; max-width: 46rem; }
+h1 { margin: 0; font: 800 clamp(34px, 6vw, 56px)/1 var(--font); letter-spacing: -0.035em; text-wrap: balance; }
+header p { margin: 0; font-size: 18px; color: var(--mute); max-width: 36em; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+.bar > span { font-size: 15px; color: var(--mute); }
+.seg { display: inline-flex; padding: 3px; border-radius: 12px; background: var(--seg-bg); }
+.seg button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 9px; background: none; cursor: pointer; font-weight: 600; }
+.seg button[aria-pressed="true"] { background: var(--seg-on); font-weight: 800; }
+.again { min-height: 40px; padding: 0 16px; border: 2px solid var(--ink); border-radius: 12px; background: none; cursor: pointer; font-weight: 700; }
+.worlds { display: grid; gap: 40px 28px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
+@media (min-width: 1380px) { .worlds { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 40px 24px; } }
+.world { display: grid; gap: 16px; min-width: 0; }
+.phone { background: var(--bezel); border-radius: 34px; padding: 9px; }
+.screen { position: relative; border-radius: 26px; overflow: hidden; background: #fff; }
+.screen iframe { position: absolute; left: 0; top: 0; width: 390px; height: 800px; border: 0; transform-origin: 0 0; background: transparent; }
+.fail { position: absolute; inset: 0; display: none; place-items: center; padding: 24px; text-align: center; color: #333; font-size: 15px; }
+.meta { display: grid; gap: 8px; min-width: 0; }
+.meta h2 { margin: 0; display: flex; align-items: center; gap: 10px; font: 800 26px/1.1 var(--font); letter-spacing: -0.02em; }
+.meta h2 i { width: 14px; height: 14px; border-radius: 50%; background: var(--w); flex: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--line); }
+.meta p { margin: 0; color: var(--mute); }
+.meta .try { color: var(--ink); font-size: 15px; }
+.meta .try b { font-weight: 800; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.btns button, .btns a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 22px; font-weight: 700; text-decoration: none; cursor: pointer; }
+.btns .open { background: var(--accent); color: var(--on-accent); border: 0; }
+.btns .replay { background: none; border: 2px solid var(--line); }
+.note { margin: 0; max-width: 46rem; color: var(--mute); font-size: 15px; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Fünf Welten für Stups</h1>
+    <p>Fünf Ideen für den Aufgaben-Bildschirm. Jedes Handy läuft live: antippen, ziehen, abhaken. Mit „Ganz öffnen“ siehst du die Welt in voller Größe, am Computer mit eigenem Layout.</p>
+    <div class="bar">
+      <span>Handys zeigen</span>
+      <div class="seg" role="group" aria-label="Darstellung in den Handys">
+        <button type="button" data-mode="light" aria-pressed="true">Hell</button>
+        <button type="button" data-mode="dark" aria-pressed="false">Dunkel</button>
+      </div>
+      <button type="button" class="again" id="again">Alle neu abspielen</button>
+    </div>
+  </header>
+  <main class="worlds" id="worlds"></main>
+  <p class="note">Alles hier ist ein Entwurf aus HTML ohne die App dahinter. Namen, Aufgaben und Zeiten sind Beispiele.</p>
+</div>
+
+<script>
+(function () {
+  var worlds = [
+    { f: '1-fallblatt.html', n: 'Fallblatt', c: '#ffd23f', t: 'Eine Abfahrtstafel für den Haushalt. Die Klappen rattern beim Öffnen durch, verspätete Aufgaben sind gelb.', a: 'Tippe auf eine Zeile. Nach ein paar Sekunden klappt ein Stups von Ben herein.' },
+    { f: '2-murmeln.html', n: 'Murmeln', c: '#2563eb', t: 'Aufgaben sind schwere Kugeln mit Physik. Größe heißt Aufwand, Farbe heißt Board, der orange Ring heißt verspätet.', a: 'Ziehe eine Kugel in die Schale oben oder wirf sie hinein. Antippen stupst sie an.' },
+    { f: '3-kuehlschrank.html', n: 'Kühlschrank', c: '#ffe66d', t: 'Zettel mit Magneten an der Kühlschranktür, dazu Buchstabenmagnete, Kalender, Foto und eine Zeichnung von Mia.', a: 'Tippe auf das Stempelsymbol eines Zettels. Alles lässt sich verschieben.' },
+    { f: '4-wetter.html', n: 'Haushaltswetter', c: '#8fd3f4', t: 'Der Haushalt als Wetterbericht. Überfälliges ist Regen, die Mülltonne steht draußen, bis sie erledigt ist.', a: 'Hake unten die Warnungen ab. Beim letzten Haken kommt die Sonne.' },
+    { f: '5-puppenhaus.html', n: 'Puppenhaus', c: '#f7c3a6', t: 'Ein aufgeschnittenes Haus mit Bewohnern. Das Licht im Raum zeigt, wo etwas wartet, und blinkt orange, wenn es überfällig ist.', a: 'Tippe auf einen Raum, dann auf eine Aufgabe. Ben winkt nach ein paar Sekunden.' }
+  ];
+  var mode = 'light', host = document.getElementById('worlds'), cards = [];
+
+  function frameText(txt) { return txt.replace('new URLSearchParams(location.search)', "new URLSearchParams('?theme=" + mode + "')"); }
+  function load(c) {
+    var fr = c.frame; c.fail.style.display = 'none';
+    fetch(c.w.f.indexOf('/') < 0 ? 'v3/' + c.w.f : c.w.f).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then(function (txt) { fr.removeAttribute('src'); fr.srcdoc = frameText(txt); })
+      .catch(function () { fr.removeAttribute('srcdoc'); fr.src = 'v3/' + c.w.f + '?theme=' + mode; });
+  }
+  function fit() { cards.forEach(function (c) { var w = c.screen.clientWidth, s = w / 390; c.frame.style.transform = 'scale(' + s + ')'; c.screen.style.height = 800 * s + 'px'; }); }
+
+  worlds.forEach(function (w) {
+    var el = document.createElement('article'); el.className = 'world'; el.style.setProperty('--w', w.c);
+    el.innerHTML = '<div class="phone"><div class="screen"><iframe title="' + w.n + '" loading="lazy"></iframe><div class="fail">Die Vorschau lädt nicht. Öffne die Welt mit „Ganz öffnen“.</div></div></div>' +
+      '<div class="meta"><h2><i></i>' + w.n + '</h2><p>' + w.t + '</p><p class="try"><b>Ausprobieren:</b> ' + w.a + '</p><div class="btns"><a class="open" target="_blank" rel="noopener" href="v3/' + w.f + '">Ganz öffnen</a><button type="button" class="replay">Neu abspielen</button></div></div>';
+    host.appendChild(el);
+    var c = { w: w, el: el, frame: el.querySelector('iframe'), screen: el.querySelector('.screen'), fail: el.querySelector('.fail'), open: el.querySelector('.open') };
+    el.querySelector('.replay').addEventListener('click', function () { load(c); });
+    cards.push(c);
+  });
+  function setMode(m) { mode = m; document.querySelectorAll('.seg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.mode === m); }); cards.forEach(function (c) { c.open.href = 'v3/' + c.w.f + '?theme=' + m; load(c); }); }
+  document.querySelectorAll('.seg button').forEach(function (b) { b.addEventListener('click', function () { setMode(b.dataset.mode); }); });
+  document.getElementById('again').addEventListener('click', function () { cards.forEach(load); });
+  fit(); addEventListener('resize', fit); if (window.ResizeObserver) new ResizeObserver(fit).observe(host);
+  setMode('light');
+})();
+</script>

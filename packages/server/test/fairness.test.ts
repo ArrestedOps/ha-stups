@@ -65,7 +65,7 @@ describe('Zeiträume', () => {
 });
 
 describe('Zählen', () => {
-  it('erledigte Karten und Aufwand je Person, in der Reihenfolge der Personenliste', () => {
+  it('erledigte Aufgaben und Aufwand je Person, in der Reihenfolge der Personenliste', () => {
     complete(card('Klein', ben, { effort: 'small' }).id, ben);
     complete(card('Groß', ben, { effort: 'large' }).id, ben);
     complete(card('Ohne Angabe', anna).id, anna); // zählt wie mittel
@@ -106,15 +106,15 @@ describe('Zählen', () => {
     expect(store.fairness('week').people[0]!.done).toBe(0);
   });
 
-  it('angelegte Karten: nur von Hand angelegte (keine Wiederholungen, keine Wächter-Karten)', () => {
+  it('angelegte Aufgaben: nur von Hand angelegte (keine Wiederholungen, keine Wächter-Aufgaben)', () => {
     card('Von Hand', ben);
     const rec = card('Wöchentlich', ben, { dueAt: '2026-11-04T08:00:00.000Z', recurrence: { type: 'after_completion', every: 1, unit: 'weeks' } });
-    complete(rec.id, ben); // legt die nächste Karte an: zählt nicht als angelegt
+    complete(rec.id, ben); // legt die nächste Aufgabe an: zählt nicht als angelegt
     const watcher = card('Vom Wächter', anna);
     db.prepare('update cards set watcher_id = ? where id = ?').run('w1', watcher.id);
     const f = store.fairness('week');
     expect(f.people[0]!.created).toBe(2); // „Von Hand" und „Wöchentlich"
-    expect(f.people[1]!.created).toBe(0); // die Wächter-Karte gehört nicht dazu
+    expect(f.people[1]!.created).toBe(0); // die Wächter-Aufgabe gehört nicht dazu
   });
 
   it('beantwortete Stupse: „Mach ich" und „Erledigt" zählen, „Später" und „geschlossen" nicht', () => {
@@ -132,7 +132,7 @@ describe('Zählen', () => {
     expect(n2 && n3).toBeTruthy();
   });
 
-  it('übernommene Wächter-Karten: erledigte Karten eines Wächters', () => {
+  it('übernommene Wächter-Aufgaben: erledigte Aufgaben eines Wächters', () => {
     const w = card('Waschmaschine ausräumen', ben);
     db.prepare('update cards set watcher_id = ? where id = ?').run('w1', w.id);
     complete(w.id, ben);
@@ -150,7 +150,7 @@ describe('Zählen', () => {
     expect(store.fairness('week').people.map((p) => p.name)).toEqual(['Anna']);
   });
 
-  it('Karten aus allen Boards zählen', () => {
+  it('Aufgaben aus allen Boards zählen', () => {
     const other = store.createBoard({ name: 'Garten' });
     const col = store.getBoardView(other.id).columns[0]!.id;
     complete(store.createCard(other.id, { columnId: col, title: 'Rasen' }, ben).id, ben);
@@ -166,13 +166,13 @@ describe('Zählen', () => {
 });
 
 describe('Zusätze für „Diese Woche"', () => {
-  it('houseCards zählt die Karten von Wächtern im Zeitraum', () => {
+  it('houseCards zählt die Aufgaben von Wächtern im Zeitraum', () => {
     db.prepare("insert into watchers (id, name, active, trigger_json, card_json, assign_json, cooldown_min, dedupe, position, created_at, updated_at) values ('w1', 'W', 1, '{}', '{}', '{}', 10, 1, 0, 'x', 'x')").run();
     const c = card('Vom Haus', ben);
     db.prepare("update cards set watcher_id = 'w1' where id = ?").run(c.id);
     card('Von Hand', ben);
     expect(store.fairness('week').houseCards).toBe(1);
-    at('2026-11-12T09:00:00Z'); // nächste Woche: die Karte zählt nicht mehr
+    at('2026-11-12T09:00:00Z'); // nächste Woche: die Aufgabe zählt nicht mehr
     expect(store.fairness('week').houseCards).toBe(0);
     expect(store.fairness('month').houseCards).toBe(1);
   });

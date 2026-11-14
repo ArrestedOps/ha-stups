@@ -28,7 +28,7 @@ describe('swipeTarget', () => {
     expect(swipeTarget(columns, 'erledigt', 'right')).toBeNull();
   });
 
-  it('aus „Geplant": nach rechts geht es weiter, nach links nicht (die Karte würde zurückspringen)', () => {
+  it('aus „Geplant": nach rechts geht es weiter, nach links nicht (die Aufgabe würde zurückspringen)', () => {
     expect(swipeTarget(columns, 'geplant', 'right')?.id).toBe('arbeit');
     expect(swipeTarget(columns, 'geplant', 'left')).toBeNull();
   });
@@ -50,12 +50,12 @@ describe('swipeTarget', () => {
 });
 
 describe('cardTargets (Ziele im Menü)', () => {
-  it('„Geplant" erscheint nur für Karten mit Termin nach heute', () => {
+  it('„Geplant" erscheint nur für Aufgaben mit Termin nach heute', () => {
     expect(cardTargets(columns, true).map((c) => c.id)).toEqual(['offen', 'geplant', 'arbeit', 'erledigt']);
     expect(cardTargets(columns, false).map((c) => c.id)).toEqual(['offen', 'arbeit', 'erledigt']);
   });
 
-  it('„Offen" erscheint nicht für Karten mit Termin nach heute, die Karte käme sofort zurück nach „Geplant"', () => {
+  it('„Offen" erscheint nicht für Aufgaben mit Termin nach heute, die Aufgabe käme sofort zurück nach „Geplant"', () => {
     expect(cardTargets(columns, true, 'offen').map((c) => c.id)).toEqual(['geplant', 'arbeit', 'erledigt']);
   });
 
@@ -65,8 +65,8 @@ describe('cardTargets (Ziele im Menü)', () => {
   });
 });
 
-describe('columnForDue (neue Karte)', () => {
-  it('„Geplant" bleibt nur mit einem Termin nach heute, sonst landet die Karte in der ersten offenen Spalte', () => {
+describe('columnForDue (neue Aufgabe)', () => {
+  it('„Geplant" bleibt nur mit einem Termin nach heute, sonst landet die Aufgabe in der ersten offenen Spalte', () => {
     expect(columnForDue(columns, 'geplant', true)).toBe('geplant');
     expect(columnForDue(columns, 'geplant', false)).toBe('offen'); // z. B. Termin heute 18:06 oder keiner
   });

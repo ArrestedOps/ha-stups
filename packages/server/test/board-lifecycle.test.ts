@@ -155,7 +155,7 @@ describe('Löschen: Wahl je Wächter', () => {
     expect(list[0]).toMatchObject({ status: 'target_missing', pausedBy: 'deleted' });
   });
 
-  it('Umziehen: Karten-Vorlage auf das Ziel; Zuständige nur aus dem Ziel, sonst „braucht neue Zuständige"', async () => {
+  it('Umziehen: Aufgaben-Vorlage auf das Ziel; Zuständige nur aus dem Ziel, sonst „braucht neue Zuständige"', async () => {
     const target = mk('Ziel', 'selected', ids.rene, []); // nur Rene
     const stays = watcher('Bleibt', haus, { mode: 'rotation', personIds: [ids.rene] });
     const loses = watcher('Verliert', haus, { mode: 'fixed', personIds: [ids.anna] });
@@ -318,7 +318,7 @@ describe('Archivieren', () => {
     expect(store.fairness('week').total.done).toBe(1);
   });
 
-  it('in einem archivierten Board entstehen keine Karten (Wächter, Direktaufruf), und es lässt sich nicht löschen', async () => {
+  it('in einem archivierten Board entstehen keine Aufgaben (Wächter, Direktaufruf), und es lässt sich nicht löschen', async () => {
     await call(rene, 'POST', `/api/boards/${bad.board}/archive-board`, {});
     expect(() => store.createCard(bad.board, { columnId: bad.col, title: 'Neu' }, ids.rene)).toThrow(/nicht gefunden/);
     expect((await call(rene, 'POST', `/api/boards/${bad.board}/cards`, { columnId: bad.col, title: 'Neu' })).status).toBe(404);
@@ -413,8 +413,8 @@ describe('Als Vorlage speichern', () => {
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({ name: 'Umbau', cards: 0, categories: 1 });
     expect((await call(rene, 'GET', '/api/templates')).body.some((t: any) => t.id === res.body.id)).toBe(true);
-    // ohne die Angabe bleibt es, wie es war: mit offenen Karten
-    expect((await call(rene, 'POST', `/api/boards/${bad.board}/save-as-template`, { name: 'Mit Karten' })).body.cards).toBe(1);
+    // ohne die Angabe bleibt es, wie es war: mit offenen Aufgaben
+    expect((await call(rene, 'POST', `/api/boards/${bad.board}/save-as-template`, { name: 'Mit Aufgaben' })).body.cards).toBe(1);
     const made = await call(rene, 'POST', '/api/boards', { name: 'Aus Vorlage', template: res.body.id });
     expect(made.status).toBe(201);
     expect((await call(rene, 'GET', `/api/boards/${made.body.id}`)).body.cards).toEqual([]);

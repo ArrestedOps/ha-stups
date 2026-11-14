@@ -5,7 +5,7 @@
 
   /**
    * Die Testnachricht, wie sie auf dem iPhone ankommt: Sperrbildschirm mit der Mitteilung der Companion App (Symbol von Home Assistant, nicht von
-   * Stups, so kommt sie an), Kartentitel und „Neue Karte für dich · fällig …" wie bei einem echten Wächter. Den Knopf Erledigt gibt es dort erst,
+   * Stups, so kommt sie an), Aufgabentitel und „Neue Aufgabe für dich · fällig …" wie bei einem echten Wächter. Den Knopf Erledigt gibt es dort erst,
    * wenn man die Mitteilung gedrückt hält: „Normal" und „Gedrückt halten" zeigen beides. Die Uhr ist nur Dekoration.
    */
   /** Das Symbol von Home Assistant (Material Design Icons, home-assistant), weiß auf dem blauen Quadrat der Companion App */

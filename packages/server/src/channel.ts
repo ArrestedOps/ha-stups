@@ -2,7 +2,7 @@ import type { PushGateway } from './push.js';
 
 /**
  * Die normale App und die Beta laufen nebeneinander in demselben Home Assistant, auf denselben Handys und (nach dem Umzug)
- * mit denselben Karten. Damit sie sich nicht in die Quere kommen, hat die Beta für alles, was nach außen sichtbar ist,
+ * mit denselben Aufgaben. Damit sie sich nicht in die Quere kommen, hat die Beta für alles, was nach außen sichtbar ist,
  * eigene Namen: Push-Titel, Tags und Gruppen, Knöpfe in Nachrichten, Sensoren und das Ereignis für Automationen.
  */
 export type Channel = 'stable' | 'beta';
@@ -19,7 +19,7 @@ export interface ChannelNames {
   sensorPrefix: string;
   /** Anfang der Anzeigenamen der Sensoren */
   sensorLabel: string;
-  /** Ereignis in Home Assistant, mit dem eine Automation eine Karte anlegt */
+  /** Ereignis in Home Assistant, mit dem eine Automation eine Aufgabe anlegt */
   eventType: string;
 }
 

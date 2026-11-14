@@ -32,9 +32,9 @@ describe('metNowOf: was der Server nach dem Speichern meldet', () => {
 describe('askCard: der Wortlaut der Rückfrage', () => {
   it('deutsch', () => {
     const c = askCard(met, 'Tür schließen', () => undefined);
-    expect(c.title).toBe('Karte jetzt erstellen?');
-    expect(c.text).toBe('Tür Waschküche ist gerade aus – die Bedingung ist also schon erfüllt. Soll jetzt eine Karte „Tür schließen“ erstellt werden?');
-    expect(c.label).toBe('Ja, Karte erstellen');
+    expect(c.title).toBe('Aufgabe jetzt erstellen?');
+    expect(c.text).toBe('Tür Waschküche ist gerade aus – die Bedingung ist also schon erfüllt. Soll jetzt eine Aufgabe „Tür schließen“ erstellt werden?');
+    expect(c.label).toBe('Ja, Aufgabe erstellen');
     expect(c.cancelLabel).toBe('Nein, erst beim nächsten Mal');
     expect(c.tone).toBe('primary');
   });
@@ -42,9 +42,9 @@ describe('askCard: der Wortlaut der Rückfrage', () => {
   it('englisch', () => {
     setLanguage('en');
     const c = askCard({ ...met, entityName: 'Laundry door', stateText: 'off' }, 'Close the door', () => undefined);
-    expect(c.title).toBe('Create a card now?');
-    expect(c.text).toBe('Laundry door is currently off – so the condition is already met. Create a card “Close the door” now?');
-    expect(c.label).toBe('Yes, create card');
+    expect(c.title).toBe('Create a task now?');
+    expect(c.text).toBe('Laundry door is currently off – so the condition is already met. Create a task “Close the door” now?');
+    expect(c.label).toBe('Yes, create task');
     expect(c.cancelLabel).toBe('No, wait for the next time');
   });
 });
@@ -59,7 +59,7 @@ describe('Rückfrage als Dialog', () => {
     expect(out).toContain('aria-modal="true"');
     expect(out).toContain('aria-describedby="confirm-text"');
     expect(out).toContain('Tür Waschküche ist gerade aus');
-    expect(out).toContain('Ja, Karte erstellen');
+    expect(out).toContain('Ja, Aufgabe erstellen');
     expect(out).toContain('Nein, erst beim nächsten Mal');
     expect(out).not.toContain('Abbrechen">'); // der Knopf trägt die gewählte Beschriftung
     expect(out).not.toContain('bg-danger-grad');
@@ -70,13 +70,13 @@ describe('Rückfrage als Dialog', () => {
     setLanguage('en');
     ui.confirm = askCard({ ...met, stateText: 'off' }, 'Close the door', () => undefined);
     const out = html();
-    expect(out).toContain('Yes, create card');
+    expect(out).toContain('Yes, create task');
     expect(out).toContain('No, wait for the next time');
     expect(out).toContain('is currently off');
   });
 
   it('ein Löschen-Dialog bleibt rot mit „Abbrechen“', () => {
-    ui.confirm = { title: 'Karte löschen?', text: 'Weg.', label: 'Löschen', run: () => undefined };
+    ui.confirm = { title: 'Aufgabe löschen?', text: 'Weg.', label: 'Löschen', run: () => undefined };
     const out = html();
     expect(out).toContain('bg-danger-grad');
     expect(out).toContain('>Abbrechen<');
@@ -91,11 +91,11 @@ describe('Nach dem Speichern im Editor', () => {
     return ed;
   };
 
-  it('Anlegen mit metNow: die Frage erscheint, „Ja“ legt die Karte über fire-now an', async () => {
+  it('Anlegen mit metNow: die Frage erscheint, „Ja“ legt die Aufgabe über fire-now an', async () => {
     vi.spyOn(api, 'createWatcher').mockResolvedValue(created(met));
     const fire = vi.spyOn(api, 'fireWatcherNow').mockResolvedValue(created(null));
     await editor().save();
-    expect(ui.confirm?.label).toBe('Ja, Karte erstellen');
+    expect(ui.confirm?.label).toBe('Ja, Aufgabe erstellen');
     expect(ui.confirm?.text).toContain('„Tür schließen“');
     expect(fire).not.toHaveBeenCalled();
     await ui.confirm!.run();

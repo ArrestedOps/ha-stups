@@ -34,7 +34,7 @@ const OPEN_PATHS = new Set(['/api/me']);
 
 /**
  * Die API. Hier stehen nur Einrichtung, Zugriffsprüfung und Live-Sync; die Routen selbst liegen seit 1.12.0 nach Themen
- * in api/*.ts (Einstellungen, Zugriff, Boards, Karten, Stupsen, Wächter, Anhänge, Kommentare und Co., Papierkorb).
+ * in api/*.ts (Einstellungen, Zugriff, Boards, Aufgaben, Stupsen, Wächter, Anhänge, Kommentare und Co., Papierkorb).
  */
 export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<void> {
   const { store } = deps;
@@ -71,7 +71,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
 
   // Rolle „Kind": nur, was ausdrücklich erlaubt ist (Erlaubnisliste)
   registerChildGuard(app, store);
-  // Sichtbarkeit von Boards: Anfragen an Boards, Karten und Co., die die Person nicht sehen darf, gibt es nicht (404)
+  // Sichtbarkeit von Boards: Anfragen an Boards, Aufgaben und Co., die die Person nicht sehen darf, gibt es nicht (404)
   registerBoardGuard(app, store);
 
   // Jede erfolgreiche Änderung wird allen Geräten gemeldet, die sie dann nachladen.
@@ -82,7 +82,7 @@ export async function apiRoutes(app: FastifyInstance, deps: ApiDeps): Promise<vo
   await ensureWebsocket(app);
   app.get('/api/events', { websocket: true }, (socket, req) => {
     const bus = deps.bus;
-    // Die Karten einer Meldung gehen nur an Personen, die ihr Board sehen (die Nummer bleibt, damit keine Lücke entsteht)
+    // Die Aufgaben einer Meldung gehen nur an Personen, die ihr Board sehen (die Nummer bleibt, damit keine Lücke entsteht)
     const viewer = req.user?.id ?? null;
     socket.send(JSON.stringify({ type: 'hello', seq: bus?.seq ?? 0 }));
     const off = bus?.subscribe((e) => socket.send(JSON.stringify({ type: 'changed', seq: e.seq, by: e.by, changes: visibleChanges(store, e.changes, viewer) })));

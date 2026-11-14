@@ -58,7 +58,7 @@ describe('Erkennung', () => {
     expect(list.find((s) => s.entityId === 'sensor.bad_batterie')?.reason).toBe('Bad Fenster Batterie: Batterie bei 12 %');
   });
 
-  it('jeder Treffer trägt den kurzen Gerätenamen für Name und Kartentitel (ohne Endungen wie Battery Level)', () => {
+  it('jeder Treffer trägt den kurzen Gerätenamen für Name und Aufgabentitel (ohne Endungen wie Battery Level)', () => {
     const list = detectSuggestions(
       [
         state('sensor.iphone_rene_battery_level', '14', { device_class: 'battery', friendly_name: 'iPhone Rene Battery Level' }),

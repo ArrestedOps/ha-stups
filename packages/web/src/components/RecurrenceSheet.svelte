@@ -7,7 +7,7 @@
   import Sheet from './Sheet.svelte';
   import CtaButton from './ui/CtaButton.svelte';
 
-  /** „Wiederholung“ als eigenes Fenster (aus der Zeile in Neue Aufgabe): der Editor der Karte, jede Änderung gilt sofort */
+  /** „Wiederholung“ als eigenes Fenster (aus der Zeile in Neue Aufgabe): der Editor der Aufgabe, jede Änderung gilt sofort */
   let {
     value,
     dueAt,

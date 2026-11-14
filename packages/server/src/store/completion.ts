@@ -42,7 +42,7 @@ export function createCompletion(c: Ctx, late: unknown) {
     checklistDone: string[];
     /** Wiederholungsregel vor dem Erledigen (JSON). Fehlt bei Erledigungen aus Versionen vor 0.12. */
     recurrence?: string | null;
-    /** Die bei der Wiederholung angelegte Karte, die „Rückgängig" wieder entfernt */
+    /** Die bei der Wiederholung angelegte Aufgabe, die „Rückgängig" wieder entfernt */
     spawnedId?: string | null;
   }
 
@@ -59,8 +59,8 @@ export function createCompletion(c: Ctx, late: unknown) {
   }
 
   /**
-   * Legt die nächste Karte einer wiederkehrenden Karte an: Titel, Zuweisung, Kategorien, Priorität, Wiederholung und
-   * Erinnerungen immer, den Rest nur laut Auswahl der Karte. Fotos teilen sich die Datei mit der erledigten Karte.
+   * Legt die nächste Aufgabe einer wiederkehrenden Aufgabe an: Titel, Zuweisung, Kategorien, Priorität, Wiederholung und
+   * Erinnerungen immer, den Rest nur laut Auswahl der Aufgabe. Fotos teilen sich die Datei mit der erledigten Aufgabe.
    */
   function spawnNextCard(src: Row, nextDueAt: string): string {
     const carry = resolveCarry(src.carry_over);
@@ -97,7 +97,7 @@ export function createCompletion(c: Ctx, late: unknown) {
     );
     run('update cards set confirm = ? where id = ?', src.confirm ?? null, newId); // die Bestätigungspflicht gehört zur Aufgabe
     run('insert into card_assignees (card_id, user_id) select ?, user_id from card_assignees where card_id = ?', newId, src.id);
-    copyReminders(src.id, newId); // Nachhaken gehört zur Aufgabe: kommt mit, zählt aber bei der neuen Karte von vorn
+    copyReminders(src.id, newId); // Nachhaken gehört zur Aufgabe: kommt mit, zählt aber bei der neuen Aufgabe von vorn
     run(
       `insert into card_categories (card_id, category_id)
        select ?, cc.category_id from card_categories cc
@@ -187,10 +187,10 @@ export function createCompletion(c: Ctx, late: unknown) {
       const snapshot = snapshotOf(card);
       let nextDueAt: string | null = null;
       let nextCardId: string | null = null;
-      // Offene Stupse gehören zur erledigten Karte; die Absender bekommen eine Rückmeldung
+      // Offene Stupse gehören zur erledigten Aufgabe; die Absender bekommen eine Rückmeldung
       closeOpenNudges(id, ctx.by, true);
       if (recurrence) {
-        // Die erledigte Karte bleibt als Nachweis in „Erledigt" (ohne Wiederholung), eine neue Karte
+        // Die erledigte Aufgabe bleibt als Nachweis in „Erledigt" (ohne Wiederholung), eine neue Aufgabe
         // mit dem nächsten Termin übernimmt: oben in „Offen" oder, bei Termin nach heute, in „Geplant"
         nextDueAt = nextDue(recurrence, card.due_at ?? iso(), iso(), timeZone());
         nextCardId = spawnNextCard(card, nextDueAt);
@@ -209,11 +209,11 @@ export function createCompletion(c: Ctx, late: unknown) {
     });
   }
 
-  /** Die Karte einer Erledigung (für die Rechte-Prüfung); null, wenn es sie nicht gibt */
+  /** Die Aufgabe einer Erledigung (für die Rechte-Prüfung); null, wenn es sie nicht gibt */
   const cardIdOfCompletion = (id: string): string | null => (one('select card_id from completions where id = ?', id)?.card_id as string | undefined) ?? null;
 
   /**
-   * Hat jemand mit der bei der Wiederholung angelegten Karte gearbeitet? Dann würde „Rückgängig“ sie samt Kommentaren,
+   * Hat jemand mit der bei der Wiederholung angelegten Aufgabe gearbeitet? Dann würde „Rückgängig“ sie samt Kommentaren,
    * Anhängen und Checkliste endgültig löschen. Die Version zählt nicht (der Geplant-Abgleich erhöht sie von selbst);
    * geprüft werden die Daten: so wie `spawnNextCard` sie anlegt, sind Kommentare, Anhänge, Stupse und Erledigungen leer,
    * Checkliste und Links entsprechen der Vorgängerin (oder fehlen), Titel, Beschreibung und Priorität stimmen überein.
@@ -247,13 +247,13 @@ export function createCompletion(c: Ctx, late: unknown) {
     const card = visibleCardRow(c.card_id);
     const snap = JSON.parse(c.snapshot) as Snapshot;
     return tx(() => {
-      // Die bei der Wiederholung angelegte Karte verschwindet wieder, solange niemand mit ihr gearbeitet hat
+      // Die bei der Wiederholung angelegte Aufgabe verschwindet wieder, solange niemand mit ihr gearbeitet hat
       if (snap.spawnedId) {
         if (one('select 1 as x from completions where card_id = ?', snap.spawnedId)) {
-          throw new ConflictError(t('Die nächste Karte wurde schon erledigt, deshalb lässt sich das nicht mehr rückgängig machen'));
+          throw new ConflictError(t('Die nächste Aufgabe wurde schon erledigt, deshalb lässt sich das nicht mehr rückgängig machen'));
         }
         if (spawnedHasOwnWork(snap.spawnedId, card)) {
-          throw new ConflictError(t('Die nächste Karte wurde schon bearbeitet, deshalb lässt sich das nicht mehr rückgängig machen'));
+          throw new ConflictError(t('Die nächste Aufgabe wurde schon bearbeitet, deshalb lässt sich das nicht mehr rückgängig machen'));
         }
         run('delete from cards where id = ?', snap.spawnedId);
       }
@@ -298,7 +298,7 @@ export function createCompletion(c: Ctx, late: unknown) {
 
   function restoreArchived(cardId: string, columnId: string, by: string | null = null): CardDetail {
     const card = visibleCardRow(cardId);
-    if (card.archived_at === null) throw new ConflictError(t('Die Karte ist nicht archiviert'));
+    if (card.archived_at === null) throw new ConflictError(t('Die Aufgabe ist nicht archiviert'));
     const col = visibleColumn(columnId);
     if (col.board_id !== card.board_id) throw new ValidationError(t('Die Spalte gehört nicht zu diesem Board'));
     return tx(() => {

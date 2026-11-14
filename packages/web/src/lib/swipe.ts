@@ -11,8 +11,8 @@ export function swipeDirection(dx: number): 'left' | 'right' {
 }
 
 /**
- * Wohin eine Karte beim Wischen springt: in den nächsten Status nach rechts, in den vorigen nach links.
- * „Geplant" wird dabei übersprungen. Aus „Geplant" heraus gibt es nach links kein Ziel, weil die Karte
+ * Wohin eine Aufgabe beim Wischen springt: in den nächsten Status nach rechts, in den vorigen nach links.
+ * „Geplant" wird dabei übersprungen. Aus „Geplant" heraus gibt es nach links kein Ziel, weil die Aufgabe
  * mit ihrem Termin sofort wieder dorthin zurückkehren würde.
  */
 export function swipeTarget<T extends SwipeColumn>(columns: T[], currentId: string, dir: 'left' | 'right'): T | null {
@@ -27,7 +27,7 @@ export function swipeTarget<T extends SwipeColumn>(columns: T[], currentId: stri
 }
 
 /**
- * Spalten, die im Menü „Verschieben nach" angeboten werden. Die Karte darf nach „Geplant", wenn ihr
+ * Spalten, die im Menü „Verschieben nach" angeboten werden. Die Aufgabe darf nach „Geplant", wenn ihr
  * Termin nach heute liegt, und nicht nach „Offen" (die erste Spalte), wenn sie nach „Geplant" gehört.
  */
 export function cardTargets<T extends SwipeColumn>(columns: T[], hasFutureDue: boolean, inboxId?: string): T[] {
@@ -40,8 +40,8 @@ export function cardTargets<T extends SwipeColumn>(columns: T[], hasFutureDue: b
 }
 
 /**
- * Spalte für eine Karte, die gerade angelegt wird: „Geplant" nimmt nur Karten mit Termin nach heute. Stimmt der
- * Termin nicht (heute oder keiner), kommt die Karte stattdessen in die erste offene Spalte.
+ * Spalte für eine Aufgabe, die gerade angelegt wird: „Geplant" nimmt nur Aufgaben mit Termin nach heute. Stimmt der
+ * Termin nicht (heute oder keiner), kommt die Aufgabe stattdessen in die erste offene Spalte.
  */
 export function columnForDue<T extends SwipeColumn>(columns: T[], columnId: string, hasFutureDue: boolean): string {
   const current = columns.find((c) => c.id === columnId);

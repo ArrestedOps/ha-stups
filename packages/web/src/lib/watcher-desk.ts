@@ -6,11 +6,11 @@ import { formProblems, type WatcherForm } from './watchers';
 
 /**
  * Reine Logik für das Formular „Neuer Wächter“ am Desktop (ein Bereich über der Liste statt vier Schritte): die vier Arten „Wer bekommt die
- * Karte?“, Entwurf, automatischer Name, Vorschlags-Chips und die Zahlen über der Liste. Alles Weitere (Bedingung, Karte, Speichern) kommt
+ * Aufgabe?“, Entwurf, automatischer Name, Vorschlags-Chips und die Zahlen über der Liste. Alles Weitere (Bedingung, Aufgabe, Speichern) kommt
  * aus `watchers.ts` und `watcher-flow.ts`, das Datenmodell ist dasselbe wie im Assistenten am Handy.
  */
 
-// ---------- Wer bekommt die Karte? ----------
+// ---------- Wer bekommt die Aufgabe? ----------
 
 /** Die vier Segmente; „Erst vorschlagen“ und „Niemand“ stehen als weitere Arten daneben */
 export type DeskMode = 'fixed' | 'first_home' | 'rotation' | 'all_present';

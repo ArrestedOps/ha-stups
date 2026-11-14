@@ -58,7 +58,7 @@
 </script>
 
 <!-- Schnell-Eingabe: Symbol, Titel, erkannte Teile -->
-<div class="flex flex-col gap-3 rounded-row border border-line bg-surface px-3.5 pt-3.5 pb-3">
+<div class="flex flex-col gap-3 rounded-row bg-surface px-3.5 pt-3.5 pb-3">
   <div class="flex items-start gap-3">
     <button
       type="button"

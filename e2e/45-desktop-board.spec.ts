@@ -9,7 +9,7 @@ const tag = `${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
 const ENTITY = 'sensor.iphone_rene_battery_level';
 const created: string[] = [];
 const side = (page: Page) => page.getByTestId('sidebar');
-const sideBoards = (page: Page) => side(page).getByRole('navigation', { name: 'Boards' });
+const sideBoards = (page: Page) => side(page);
 
 type B = { id: string; name: string };
 const list = async (request: APIRequestContext) => (await (await request.get('/api/boards')).json()) as B[];
@@ -87,19 +87,21 @@ test('Reihenfolge ändern über die Seitenleiste: die Seitenleiste folgt, die Re
   await page.goto('/');
   await sideBoards(page).getByRole('button', { name: 'Reihenfolge ändern' }).click();
   const sheet = page.getByRole('dialog', { name: 'Reihenfolge' });
-  await sheet.getByRole('button', { name: `Zwei ${tag} nach oben` }).click();
-  await sheet.getByRole('button', { name: `Zwei ${tag} nach oben` }).click();
+  // „Zwei“ ganz nach oben schieben (wie viele Boards davor stehen, hängt von den anderen Tests ab)
+  const up = sheet.getByRole('button', { name: `Zwei ${tag} nach oben` });
+  for (let i = 0; i < 20 && (await up.isEnabled()); i += 1) await up.click();
   await sheet.getByRole('button', { name: 'Fertig' }).click();
   await expect.poll(async () => (await list(request)).map((x) => x.id).filter((id) => [a.id, b.id].includes(id))).toEqual([b.id, a.id]);
-  const names = await sideBoards(page).getByRole('button', { name: new RegExp(`^(Eins|Zwei) ${tag}`) }).allInnerTexts();
-  expect(names.map((n) => n.split('\n')[0]!.trim())).toEqual([`Zwei ${tag}`, `Eins ${tag}`]);
+  await expect
+    .poll(async () => (await sideBoards(page).getByRole('button', { name: new RegExp(`^(Eins|Zwei) ${tag}`) }).allInnerTexts()).map((n) => n.split('\n')[0]!.trim()))
+    .toEqual([`Zwei ${tag}`, `Eins ${tag}`]);
 });
 
 test('Löschen am Desktop: Dialog mit Wahl je Wächter (Umziehen), danach läuft der Wächter im Ziel-Board weiter', async ({ page, request }) => {
   const quelle = await board(request, `Quelle ${tag}`);
   const ziel = await board(request, `Ziel ${tag}`);
   const res = await request.post('/api/watchers', {
-    data: { name: `Waschmaschine ${tag}`, trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 }, card: { boardId: quelle.id, columnId: quelle.columnId, title: 'Karte', due: { kind: 'none' } }, assign: { mode: 'none', personIds: [] } },
+    data: { name: `Waschmaschine ${tag}`, trigger: { entityId: ENTITY, kind: 'below', value: 5, forMin: 10 }, card: { boardId: quelle.id, columnId: quelle.columnId, title: 'Aufgabe', due: { kind: 'none' } }, assign: { mode: 'none', personIds: [] } },
   });
   const wid = ((await res.json()) as { id: string }).id;
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), quelle.id);

@@ -13,7 +13,7 @@
   import Tile from '../ui/Tile.svelte';
 
   /**
-   * „Wann und wo": Board und Spalte, Termin, Wiederholung, Erinnerung der neuen Karte. Die Fenster dazu öffnet der Aufrufer (`onopen`):
+   * „Wann und wo": Board und Spalte, Termin, Wiederholung, Erinnerung der neuen Aufgabe. Die Fenster dazu öffnet der Aufrufer (`onopen`):
    * sie gehören neben das Blatt, nicht in dessen Formular.
    */
   let {
@@ -62,7 +62,7 @@
   <span class="flex shrink-0 text-text-soft2"><Icon name="chevron-right" size={20} stroke={2} /></span>
 {/snippet}
 
-<div class="flex flex-col gap-2">
+<div class="list-group !mt-0">
   <div class="relative">
     <ListRow title={board?.name ?? t('Board')} variant="setting">
       {#snippet tile()}<Tile color="purple"><Icon name="layers" size={24} /></Tile>{/snippet}
@@ -72,7 +72,7 @@
     <select
       class="absolute inset-0 h-full w-full opacity-0"
       value={fields.columnId}
-      aria-label={t('Status der Karte')}
+      aria-label={t('Status der Aufgabe')}
       onchange={(e) => onpickcolumn(e.currentTarget.value)}
     >
       {#each choices as c (c.id)}<option value={c.id}>{c.name}</option>{/each}

@@ -14,7 +14,7 @@ import { toSeen } from './seen.js';
 
 const TEST_NOTE = 'Test';
 
-/** Auslösen und die Karte anlegen: Sperrzeit, Zähler, Doppelkarten-Regel, Zuweisung, Fälligkeit, Spalte */
+/** Auslösen und die Aufgabe anlegen: Sperrzeit, Zähler, Doppelaufgaben-Regel, Zuweisung, Fälligkeit, Spalte */
 export function createCards(ctx: Ctx, calls: () => Parts) {
   const { deps, store, data, ha, now, timeZone, mem, enqueue, peopleOf, seenOf, presence, memoryOf, counterOf } = ctx;
 
@@ -23,7 +23,7 @@ export function createCards(ctx: Ctx, calls: () => Parts) {
   }
 
   /**
-   * Stupsen, wenn noch offen: Die Regel des Wächters wird eine Erinnerung der Karte an die jeweils Zuständigen (gezählt ab dem Anlegen bzw.
+   * Stupsen, wenn noch offen: Die Regel des Wächters wird eine Erinnerung der Aufgabe an die jeweils Zuständigen (gezählt ab dem Anlegen bzw.
    * Zuweisen; der Planer in notifications.ts sendet sie und beendet sie mit der Erledigung).
    */
   function armNudge(w: Watcher, cardId: string): void {
@@ -58,7 +58,7 @@ export function createCards(ctx: Ctx, calls: () => Parts) {
         }
       }
 
-      // keine Doppelkarten
+      // keine Doppelaufgaben
       const open = store.openCardOfWatcher(w.id);
       if (open && w.dedupe) {
         data.addRun({ watcherId: w.id, result: 'retriggered', cardId: open.id, note: note(w, counter) });
@@ -71,7 +71,7 @@ export function createCards(ctx: Ctx, calls: () => Parts) {
     await createCard(w, nowMs, test);
   }
 
-  /** Symbol der Karte: das der Vorlage (von Hand), sonst das der beobachteten Entität (automatisch), sonst keins (Standard) */
+  /** Symbol der Aufgabe: das der Vorlage (von Hand), sonst das der beobachteten Entität (automatisch), sonst keins (Standard) */
   function cardIconFor(w: Watcher): { icon?: string; iconColor?: string | null; iconSource?: 'auto' | 'manual' } {
     if (w.card.icon) return { icon: w.card.icon, iconColor: w.card.iconColor ?? null, iconSource: 'manual' };
     const s = seenOf(w.trigger.entityId);
@@ -82,10 +82,10 @@ export function createCards(ctx: Ctx, calls: () => Parts) {
   async function createCard(w: Watcher, nowMs: number, test: boolean, dedupeKey: string | null = null, runNote?: string): Promise<void> {
     // Keine gültigen Zuständigen mehr: der Wächter bleibt aktiv, legt aber nichts an, bis neue Zuständige gespeichert sind
     if (w.status === 'assignees_missing') {
-      if (test) throw new ConflictError(t('Der Wächter braucht neue Zuständige, darum entsteht keine Karte.'));
+      if (test) throw new ConflictError(t('Der Wächter braucht neue Zuständige, darum entsteht keine Aufgabe.'));
       // Ein Hinweis im Protokoll genügt (nicht bei jedem Takt einer)
       if (data.runs(w.id, 1)[0]?.result !== 'no_assignees') {
-        data.addRun({ watcherId: w.id, result: 'no_assignees', note: 'Keine Karte angelegt: braucht neue Zuständige' });
+        data.addRun({ watcherId: w.id, result: 'no_assignees', note: 'Keine Aufgabe angelegt: braucht neue Zuständige' });
         deps.onChange?.();
       }
       return;
@@ -150,7 +150,7 @@ export function createCards(ctx: Ctx, calls: () => Parts) {
     else if (decision.ids.length > 0) deps.onAssigned?.(card, decision.ids);
   }
 
-  /** „Testen": legt die Karte einmal sofort an, ohne Sperrzeit, Zähler und Doppelkarten-Regel */
+  /** „Testen": legt die Aufgabe einmal sofort an, ohne Sperrzeit, Zähler und Doppelaufgaben-Regel */
   async function test(id: string): Promise<void> {
     await enqueue(async () => {
       await fire(data.get(id), true);
@@ -158,14 +158,14 @@ export function createCards(ctx: Ctx, calls: () => Parts) {
   }
 
   /**
-   * „Ja, Karte erstellen" nach dem Speichern: legt die Karte über den normalen Weg an (Zuweisung, Fälligkeit, Spalte), aber nur, wenn
-   * die Bedingung weiterhin gilt und keine Karte des Wächters offen ist. Sperrzeit und Zähler gelten hier nicht: Der Mensch hat die
-   * Karte ausdrücklich gewollt, ein Schweigen wäre unverständlich. Keine Testkarte, im Lauf steht der Anlass.
+   * „Ja, Aufgabe erstellen" nach dem Speichern: legt die Aufgabe über den normalen Weg an (Zuweisung, Fälligkeit, Spalte), aber nur, wenn
+   * die Bedingung weiterhin gilt und keine Aufgabe des Wächters offen ist. Sperrzeit und Zähler gelten hier nicht: Der Mensch hat die
+   * Aufgabe ausdrücklich gewollt, ein Schweigen wäre unverständlich. Keine Testaufgabe, im Lauf steht der Anlass.
    */
   async function fireNow(id: string): Promise<void> {
     await enqueue(async () => {
       const w = data.get(id);
-      if (w.status === 'assignees_missing') throw new ConflictError(t('Der Wächter braucht neue Zuständige, darum entsteht keine Karte.'));
+      if (w.status === 'assignees_missing') throw new ConflictError(t('Der Wächter braucht neue Zuständige, darum entsteht keine Aufgabe.'));
       // Der Mensch hat vielleicht eine Weile überlegt: den Stand frisch holen (ohne Verbindung gilt der zuletzt gesehene)
       try {
         for (const x of await ha.getStates()) {
@@ -177,9 +177,9 @@ export function createCards(ctx: Ctx, calls: () => Parts) {
       }
       const s = seenOf(w.trigger.entityId);
       if (!w.active || !calls().checksState(w) || !s || !conditionMet(w.trigger, s.state)) {
-        throw new ConflictError(t('Die Bedingung ist nicht mehr erfüllt, darum entsteht keine Karte.'));
+        throw new ConflictError(t('Die Bedingung ist nicht mehr erfüllt, darum entsteht keine Aufgabe.'));
       }
-      if (store.openCardOfWatcher(id)) throw new ConflictError(t('Zu diesem Wächter gibt es schon eine offene Karte.'));
+      if (store.openCardOfWatcher(id)) throw new ConflictError(t('Zu diesem Wächter gibt es schon eine offene Aufgabe.'));
       const nowMs = now().getTime();
       data.patchState(id, { armed: false, lastFireAt: new Date(nowMs).toISOString() });
       memoryOf(id).touched = false;

@@ -1,7 +1,7 @@
 import { t } from './i18n/index.svelte';
 import type { CarryField } from './api';
 
-/** Was eine wiederkehrende Karte in die nächste Karte mitnehmen kann (Reihenfolge wie in der Oberfläche) */
+/** Was eine wiederkehrende Aufgabe in die nächste Aufgabe mitnehmen kann (Reihenfolge wie in der Oberfläche) */
 export const CARRY_OPTIONS: { field: CarryField; label: string; hint?: string }[] = [
   { field: 'description', get label() { return t('Beschreibung'); } },
   { field: 'checklist', get label() { return t('Checkliste'); }, get hint() { return t('alle Einträge wieder offen'); } },

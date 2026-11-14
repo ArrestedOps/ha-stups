@@ -15,7 +15,7 @@ export type Sheet =
   | null
   | { type: 'card'; id: string }
   | { type: 'cardMenu'; id: string }
-  | { type: 'new'; columnId: string; dueAt?: string; /** die Spalte ist gewählt (das „+“ über einer Spalte im Kanban): der Termin ändert sie nicht von selbst */ picked?: boolean }
+  | { type: 'new'; columnId: string; dueAt?: string; /** die Spalte ist gewählt (das „+“ über einer Spalte im Kanban): der Termin ändert sie nicht von selbst */ picked?: boolean; /** Titel vorbelegt (die Schnellzeile am Desktop) */ title?: string }
   | { type: 'slot'; at: string }
   | { type: 'boards' }
   | { type: 'newBoard' }
@@ -25,7 +25,7 @@ export type Sheet =
   | { type: 'boardSettings'; boardId?: string }
   | { type: 'settings'; page?: SettingsPageId }
   | { type: 'people' }
-  | { type: 'watcher'; id: string | null; template?: string; /** geöffnet aus Einstellungen › Wächter oder aus „Gefunden": dorthin geht Zurück */ from?: 'settings' | 'found'; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
+  | { type: 'watcher'; id: string | null; template?: string; category?: string; /** geöffnet aus Einstellungen › Wächter oder aus „Gefunden": dorthin geht Zurück */ from?: 'settings' | 'found'; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
   | { type: 'found' }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
@@ -63,6 +63,8 @@ export interface NewWatcherRequest {
   hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft };
   /** Wer bei „Wer kommt infrage?" vorgewählt ist (die Einrichtung) */
   personIds?: string[];
+  /** Kategorie, die der neue Wächter gleich trägt (aus dem Menü einer Kategorie) */
+  category?: string;
 }
 
 export const ui = $state({
@@ -95,12 +97,28 @@ export const ui = $state({
   filter: { categoryIds: [] as string[], onlyMine: false, personIds: [] as string[], nudged: false, search: '' },
   searchOpen: false,
   sheet: null as Sheet,
-  /** Karte, die gerade „hüpft" (nach dem Stupsen) */
+  /** Aufgabe, die gerade „hüpft" (nach dem Stupsen) */
   hop: null as string | null,
   /** Ansicht unten in der Leiste: Aufgaben, Boards oder Wächter */
   tab: 'tasks' as Tab,
   /** Aufgaben zeigt gerade den Kalender (Tag, Woche, Monat) statt der Liste: der „+"-Knopf ruht dann */
   tasksCalendar: false,
+  /** Wunsch von außen (Leiste unten): Aufgaben als Liste oder Kalender zeigen; TasksView nimmt ihn an und setzt ihn zurück */
+  tasksGoto: null as 'list' | 'calendar' | null,
+  /** Desktop: welche Ansicht der Aufgabenliste die Seitenleiste gewählt hat (Alle offen, Gestupst, Heute, Überfällig, Diese Woche, Erledigt) */
+  taskView: 'all' as 'all' | 'nudged' | 'today' | 'overdue' | 'week' | 'done',
+  /** Desktop: die Liste nach Fälligkeit oder nach Board gruppiert */
+  taskGroupBy: 'due' as 'due' | 'board',
+  /** Desktop: wie viele Aufgaben die Liste gerade zeigt (für die Kopfzeile) */
+  taskCount: 0,
+  /** Desktop, Reiter Wächter: was die Tabelle zeigt (all, problem, waiting, running, soon, paused oder cat:<Schlüssel>); die Seitenleiste wählt es */
+  watcherScope: 'all' as string,
+  /** Desktop: Zahlen und Kategorien für die Gruppe „Wächter“ in der Seitenleiste (die Seite Wächter füllt sie, solange sie offen ist) */
+  watcherNav: null as null | { counts: { all: number; problem: number; waiting: number; running: number; soon: number; paused: number }; cats: { key: string; name: string | null; n: number }[] },
+  /** Desktop: die Befehlspalette (Strg/Cmd + K) ist offen */
+  palette: false,
+  /** Desktop: Rechtsklick-Menü einer Aufgabe (Zeigerstelle und Aufgabe) */
+  ctx: null as { x: number; y: number; card: import('../api').Card } | null,
   /** Filter für Agenda und Kalender (Personen, Boards, Erledigtes) */
   sf: { ...DEFAULT_FILTER } as ScheduleFilter,
   /** zählt bei jedem Nachladen hoch, damit offene Detailansichten und die Agenda sich aktualisieren */
@@ -108,7 +126,7 @@ export const ui = $state({
   dragging: false,
   /** ab 1024 px Breite: Seitenleiste, Detailspalte, alle Spalten nebeneinander, Ziehen mit der Maus (App.svelte hält es aktuell) */
   desktop: isDesktop(),
-  /** Desktop, Aufgaben: die Karte in der Detailspalte rechts (statt im Sheet); null: keine gewählt */
+  /** Desktop, Aufgaben: die Aufgabe in der Detailspalte rechts (statt im Sheet); null: keine gewählt */
   detailId: null as string | null,
   /** Desktop: Eingabe im Suchfeld oben (Aufgaben und Wächter; die Boards nutzen filter.search, das Blatt „Filter“ zeigt dasselbe Feld) */
   query: '',

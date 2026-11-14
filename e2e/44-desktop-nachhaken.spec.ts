@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
-// Läuft nur im Projekt „desktop-ha“ (1440 × 900): Stupsen, wenn noch offen, als breite Karte unter „Mehr Einstellungen“ im Formular
+// Läuft nur im Projekt „desktop-ha“ (1440 × 900): Stupsen, wenn noch offen, als breite Aufgabe unter „Mehr Einstellungen“ im Formular
 // „Neuer Wächter“. Die drei Felder stehen auf einer Linie (einzeilige Beschriftungen, gleich hohe Felder, gleiche Oberkante), rechts der Zeitstrahl.
 test.describe.configure({ timeout: 90_000 });
 
@@ -11,7 +11,7 @@ const clear = async (request: APIRequestContext) => {
 };
 test.afterEach(async ({ request }) => clear(request));
 
-test('Desktop: Karte „Stupsen, wenn noch offen“, drei Felder auf einer Linie, Zeitstrahl rechts, Satz in der Vorschau', async ({ page, request }) => {
+test('Desktop: Aufgabe „Stupsen, wenn noch offen“, drei Felder auf einer Linie, Zeitstrahl rechts, Satz in der Vorschau', async ({ page, request }) => {
   await clear(request);
   const board = (await (await request.post('/api/boards', { data: { name: `Nachhaken ${Date.now().toString(36)}` } })).json()) as { id: string };
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), board.id);

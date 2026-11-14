@@ -1,4 +1,4 @@
-import { openList, openBoards } from './helpers';
+import { openList, openBoards, setScope } from './helpers';
 import { expect, test, type APIRequestContext } from '@playwright/test';
 
 test.describe.configure({ timeout: 90_000 });
@@ -24,7 +24,7 @@ async function seed(request: APIRequestContext) {
   return { tag, t, own, boardAName: `Haushalt ${tag}`, boardBName: `Umbau ${tag}` };
 }
 
-test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', async ({ page, request }) => {
+test('Agenda: Aufgaben aller Boards nach Tagen, Filter nach Person und Board', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
   await openBoards(page);
@@ -34,12 +34,12 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
   for (const title of Object.values(s.t)) await expect(agenda.getByText(title)).toBeVisible();
 
   // Person: nur Conny
-  await page.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
+  await setScope(page, 'Conny');
   await expect(agenda.getByText(s.t.fenster)).toBeVisible();
   await expect(agenda.getByText(s.t.elektriker)).toBeHidden();
   await expect(agenda.getByText(s.t.papier)).toBeHidden();
 
-  // „Niemand" dazu: die Karten ohne Zuständige kommen mit („Niemand" und die Boards stehen im Blatt hinter dem Knopf „Filter")
+  // „Niemand" dazu: die Aufgaben ohne Zuständige kommen mit („Niemand" und die Boards stehen im Blatt hinter dem Knopf „Filter")
   await page.getByRole('button', { name: 'Filter' }).click();
   const sheet = page.getByTestId('filter-sheet');
   await sheet.getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Niemand/ }).click();
@@ -56,16 +56,14 @@ test('Agenda: Karten aller Boards nach Tagen, Filter nach Person und Board', asy
   await page.getByRole('dialog').getByRole('button', { name: /Aufgaben? anzeigen/ }).click();
 
   // Nach dem Neuladen ist wieder „Meine" gewählt (Start immer bei Meine), eine andere Personenwahl bleibt nicht stehen
-  await page.getByTestId('tasks').getByRole('group', { name: 'Personen' }).getByRole('button', { name: /Conny/ }).click();
+  await setScope(page, 'Conny');
   await page.reload();
   await expect(page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByTestId('tasks')).toBeVisible();
-  const people = page.getByTestId('tasks').getByRole('group', { name: 'Personen' });
-  await expect(people.getByRole('button', { name: 'Meine' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(people.getByRole('button', { name: /Conny/ })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByTestId('scope-button')).toContainText('Meine Aufgaben');
 });
 
-test('Agenda: Karte aus einem anderen Board öffnen und von dort erledigen', async ({ page, request }) => {
+test('Agenda: Aufgabe aus einem anderen Board öffnen und von dort erledigen', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
   await openBoards(page);
@@ -85,7 +83,7 @@ test('Agenda: Karte aus einem anderen Board öffnen und von dort erledigen', asy
   await expect(agenda.getByText(s.t.papier)).toBeVisible();
 });
 
-test('Karte löschen fragt vorher nach', async ({ page, request }) => {
+test('Aufgabe löschen fragt vorher nach', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
   await openBoards(page);
@@ -93,15 +91,15 @@ test('Karte löschen fragt vorher nach', async ({ page, request }) => {
   const agenda = page.getByTestId('tasks');
 
   await agenda.getByText(s.t.fenster).click();
-  await page.getByRole('button', { name: 'Karte löschen' }).click();
+  await page.getByRole('button', { name: 'Aufgabe löschen' }).click();
   const ask = page.getByRole('alertdialog');
-  await expect(ask).toContainText('Karte löschen?');
+  await expect(ask).toContainText('Aufgabe löschen?');
 
   await ask.getByRole('button', { name: 'Abbrechen' }).click();
   await expect(ask).toBeHidden();
   await expect(page.getByRole('dialog').locator('input, textarea').first()).toHaveValue(s.t.fenster);
 
-  await page.getByRole('button', { name: 'Karte löschen' }).click();
+  await page.getByRole('button', { name: 'Aufgabe löschen' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Löschen' }).click();
-  await expect(page.getByText('Karte gelöscht')).toBeVisible();
+  await expect(page.getByText('Aufgabe gelöscht')).toBeVisible();
 });

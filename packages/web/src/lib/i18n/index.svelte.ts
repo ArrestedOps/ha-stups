@@ -1,7 +1,7 @@
 import type { Catalog } from './en';
 
 /**
- * Sprachen der Oberfläche. Der deutsche Text steht im Quelltext und ist der Schlüssel: t('Karte löschen?').
+ * Sprachen der Oberfläche. Der deutsche Text steht im Quelltext und ist der Schlüssel: t('Aufgabe löschen?').
  * Fehlt der englische Eintrag, erscheint der deutsche Text.
  */
 export type Lang = 'de' | 'en';

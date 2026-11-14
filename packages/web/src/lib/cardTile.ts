@@ -20,7 +20,7 @@ const MAP: Record<string, TileColor> = {
 export const tileColorOf = (colorKey: string | null | undefined): TileColor => MAP[colorKey ?? ''] ?? 'gray';
 
 /**
- * Symbol und Farbe der Kachel einer Karte: das Symbol der Karte, sonst „Aufgabe“ (Haken); die feste Farbe der Karte, sonst die
+ * Symbol und Farbe der Kachel einer Aufgabe: das Symbol der Aufgabe, sonst „Aufgabe“ (Haken); die feste Farbe der Aufgabe, sonst die
  * des Bereichs ihres Symbols, ohne Symbol Orange. Kategorie und Board bestimmen die Kachel nicht mehr (Kategorien stehen als
  * Wort in der Meta-Zeile und im Filter).
  */

@@ -135,7 +135,7 @@ export function entryView(e: InboxEntry, ctx: InboxContext): InboxView {
     case 'reply':
       return { title: t('{name}: Mach ich 👍', { name: who }), meta: t('Antwort auf deinen Stups · {card}', { card: e.cardTitle }), icon: 'user', color: 'teal' };
     case 'watcher': {
-      // Ohne Karte: Zuständige weg (der Wächter legt keine Karten mehr an) oder nur kleiner geworden (läuft weiter)
+      // Ohne Aufgabe: Zuständige weg (der Wächter legt keine Aufgaben mehr an) oder nur kleiner geworden (läuft weiter)
       if (e.notice && e.detail === 'assignees_missing') {
         return {
           title: t('{name} braucht neue Zuständige', { name: e.watcherName ?? '' }),
@@ -158,9 +158,9 @@ export function entryView(e: InboxEntry, ctx: InboxContext): InboxView {
       const title = t('Wächter: {name}', { name: e.watcherName ?? '' });
       let meta: string;
       if (!e.assigned) meta = t('„{title}“ sucht jemanden, der sie übernimmt', { title: e.cardTitle });
-      else if (e.detail === 'passed') meta = t('Karte „{title}“ wurde dir weitergegeben', { title: e.cardTitle });
-      else if (e.detail === 'nudged') meta = t('Karte „{title}“ wartet noch auf dich', { title: e.cardTitle });
-      else meta = t('Karte „{title}“ ist jetzt deine', { title: e.cardTitle });
+      else if (e.detail === 'passed') meta = t('Aufgabe „{title}“ wurde dir weitergegeben', { title: e.cardTitle });
+      else if (e.detail === 'nudged') meta = t('Aufgabe „{title}“ wartet noch auf dich', { title: e.cardTitle });
+      else meta = t('Aufgabe „{title}“ ist jetzt deine', { title: e.cardTitle });
       return { title, meta, icon: 'shield', color: 'orange' };
     }
     case 'done':

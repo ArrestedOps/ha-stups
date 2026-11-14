@@ -7,6 +7,7 @@
   import { COL_LAST, COL_MID, COL_WIDE, rowStatus, statusLabel, TABLE_COLS, triggerText, whoText, type RowStatus } from '../lib/watcherList';
   import AvatarStack from './AvatarStack.svelte';
   import Icon from './Icon.svelte';
+  import SelectBox from './ui/SelectBox.svelte';
   import Tile, { type TileColor } from './ui/Tile.svelte';
   import Toggle from './ui/Toggle.svelte';
 
@@ -21,9 +22,25 @@
     canToggle,
     busy = false,
     fresh = false,
+    selecting = false,
+    selected = false,
     onopen,
     ontoggle,
-  }: { item: HomeItem; nowMs: number; canToggle: boolean; busy?: boolean; /** gerade angelegt: kurz hervorgehoben */ fresh?: boolean; onopen: () => void; ontoggle: (on: boolean) => void } = $props();
+    onselect,
+  }: {
+    item: HomeItem;
+    nowMs: number;
+    canToggle: boolean;
+    busy?: boolean;
+    /** gerade angelegt: kurz hervorgehoben */
+    fresh?: boolean;
+    /** Auswahlmodus: Kästchen links in der Zeile, ein Klick auf die Zeile wählt statt zu öffnen */
+    selecting?: boolean;
+    selected?: boolean;
+    onopen: () => void;
+    ontoggle: (on: boolean) => void;
+    onselect?: () => void;
+  } = $props();
 
   const status = $derived<RowStatus>(rowStatus(i));
   const TILE: Record<RowStatus, TileColor> = { waiting: 'orange', running: 'green', soon: 'blue', quiet: 'teal', off: 'gray', missing: 'red', noassign: 'red', target: 'red' };
@@ -35,10 +52,13 @@
   const dim = $derived(i.active ? '' : 'opacity-70');
 </script>
 
-<li class="relative grid min-h-16 scroll-mt-14 items-center gap-x-3 px-3.5 py-2 transition-colors duration-700 hover:bg-surface2 {fresh ? 'row-fresh' : ''} has-[[data-row-open]:focus-visible]:bg-surface2 has-[[data-row-open]:focus-visible]:outline-2 has-[[data-row-open]:focus-visible]:-outline-offset-2 has-[[data-row-open]:focus-visible]:outline-accent {TABLE_COLS}" data-testid="watcher-row" data-status={status} data-watcher-id={i.watcherId} data-fresh={fresh ? '' : undefined}>
+<li class="relative grid min-h-16 scroll-mt-14 items-center gap-x-3 px-3.5 py-2 transition-colors duration-700 hover:bg-surface2 {fresh ? 'row-fresh' : ''} {selecting ? 'pl-12' : ''} {selected ? 'bg-surface2' : ''} has-[[data-row-open]:focus-visible]:bg-surface2 has-[[data-row-open]:focus-visible]:outline-2 has-[[data-row-open]:focus-visible]:-outline-offset-2 has-[[data-row-open]:focus-visible]:outline-accent {TABLE_COLS}" data-testid="watcher-row" data-status={status} data-watcher-id={i.watcherId} data-fresh={fresh ? '' : undefined} data-selected={selected ? '' : undefined}>
   <!-- Die ganze Zeile öffnet den Wächter: ein Knopf, der die Zeile ausfüllt und über den Zellen liegt (ohne Text, der Name steht im Label);
        er steht zuerst, damit die Tab-Reihenfolge stimmt. Der Schalter liegt darüber. -->
-  <button type="button" class="absolute inset-0 z-[1] cursor-pointer focus-visible:outline-none" data-row-open aria-label={t('Wächter {name} öffnen', { name: i.name })} onclick={onopen}></button>
+  <button type="button" class="absolute inset-0 z-[1] cursor-pointer focus-visible:outline-none" data-row-open aria-label={selecting ? t('{name} auswählen', { name: i.name }) : t('Wächter {name} öffnen', { name: i.name })} onclick={selecting ? onselect : onopen}></button>
+  {#if selecting}
+    <span class="absolute top-1/2 left-1 z-10 -translate-y-1/2"><SelectBox checked={selected} label={t('{name} auswählen', { name: i.name })} onchange={() => onselect?.()} /></span>
+  {/if}
   <!-- Wächter -->
   <div class="flex min-w-0 items-center gap-3 {dim}">
     <Tile color={TILE[status]}><Icon name="eye" size={24} /></Tile>
@@ -67,6 +87,6 @@
   </span>
   <!-- Schalter -->
   <span class="relative z-10 flex justify-end">
-    <Toggle checked={i.active} label={t('{name} aktiv', { name: i.name })} disabled={!canToggle || busy} onchange={ontoggle} />
+    <Toggle checked={i.active} label={t('{name} aktiv', { name: i.name })} disabled={!canToggle || busy || selecting} onchange={ontoggle} />
   </span>
 </li>

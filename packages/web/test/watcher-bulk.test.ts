@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bulkFields, commonValues, devicesOf, MIXED, toBulkPatch } from '../src/lib/watcher-bulk';
+import { bulkFields, commonValues, devicesOf, formValues, MIXED, resetField, toBulkPatch, valueText } from '../src/lib/watcher-bulk';
 import type { WatcherItem } from '../src/lib/watcher-types';
 import { emptyForm, fromWatcher } from '../src/lib/watchers';
 
@@ -122,5 +122,35 @@ describe('devicesOf', () => {
   it('entfernt doppelte Entitäten und behält die Reihenfolge', () => {
     const hits = [{ entityId: 'sensor.b' }, { entityId: 'sensor.a', name: 'A' }, { entityId: 'sensor.b' }, { entityId: 'sensor.c' }];
     expect(devicesOf(hits)).toEqual([{ entityId: 'sensor.b' }, { entityId: 'sensor.a' }, { entityId: 'sensor.c' }]);
+  });
+});
+
+describe('formValues, valueText, resetField', () => {
+  const ctx = { personName: (id: string) => (id === 'p1' ? 'Anna' : '?'), boardName: (id: string) => `Board ${id}`, unit: '%' };
+
+  it('formValues liefert dieselbe Form wie commonValues', () => {
+    const items = [w('a'), w('b')];
+    const form = fromWatcher(items[0]!);
+    expect(formValues(form)).toEqual(commonValues(items));
+  });
+
+  it('valueText: verschieden, Zahlen mit Einheit, Zuteilung, Board', () => {
+    expect(valueText('board', MIXED, ctx)).toBe('verschieden');
+    expect(valueText('threshold', 20, ctx)).toBe('20 %');
+    expect(valueText('cooldown', 10, ctx)).toBe('10 Min.');
+    expect(valueText('assign', { mode: 'fixed', personIds: ['p1'] }, ctx)).toBe('Anna');
+    expect(valueText('board', { boardId: 'b1', columnId: 'c1' }, ctx)).toBe('Board b1');
+    expect(valueText('due', { kind: 'none' }, ctx)).toBe('ohne Termin');
+    expect(valueText('active', false, ctx)).toBe('pausiert');
+    expect(valueText('lead', 720, ctx)).toBe('12 Stunden');
+  });
+
+  it('resetField setzt nur die Felder des einen Feldes zurück', () => {
+    const initial = fromWatcher(w('a'));
+    const changed = { ...initial, assignMode: 'fixed' as const, personIds: ['p1'], cooldownMin: '99' };
+    const back = resetField(changed, initial, 'assign');
+    expect(back.assignMode).toBe('rotation_present');
+    expect(back.personIds).toEqual([]);
+    expect(back.cooldownMin).toBe('99');
   });
 });

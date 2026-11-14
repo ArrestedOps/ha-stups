@@ -6,6 +6,7 @@
   import { isProblem, problemText, rowStatus, statusLabel, type RowStatus } from '../lib/watcherList';
   import Icon from './Icon.svelte';
   import ListRow from './ui/ListRow.svelte';
+  import SelectBox from './ui/SelectBox.svelte';
   import Tile, { type TileColor } from './ui/Tile.svelte';
   import Toggle from './ui/Toggle.svelte';
 
@@ -20,9 +21,24 @@
     current = false,
     canToggle,
     busy = false,
+    selecting = false,
+    selected = false,
     onopen,
     ontoggle,
-  }: { item: HomeItem; nowMs: number; current?: boolean; canToggle: boolean; busy?: boolean; onopen: () => void; ontoggle: (on: boolean) => void } = $props();
+    onselect,
+  }: {
+    item: HomeItem;
+    nowMs: number;
+    current?: boolean;
+    canToggle: boolean;
+    busy?: boolean;
+    /** Auswahlmodus: Kästchen vor der Zeile, Tippen wählt statt zu öffnen */
+    selecting?: boolean;
+    selected?: boolean;
+    onopen: () => void;
+    ontoggle: (on: boolean) => void;
+    onselect?: () => void;
+  } = $props();
 
   const status = $derived<RowStatus>(rowStatus(i));
   const TILE: Record<RowStatus, TileColor> = { waiting: 'orange', running: 'green', soon: 'blue', quiet: 'teal', off: 'gray', missing: 'red', noassign: 'red', target: 'red' };
@@ -30,7 +46,8 @@
   const filled = $derived(i.progress ? Math.round((Math.min(i.progress.n, i.progress.of) / Math.max(i.progress.of, 1)) * 3) : 0);
 </script>
 
-<ListRow title={i.name} label={t('Wächter {name} öffnen', { name: i.name })} rightFull dim={!i.active} {problem} onclick={onopen}>
+{#snippet row()}
+<ListRow title={i.name} label={selecting ? t('{name} auswählen', { name: i.name }) : t('Wächter {name} öffnen', { name: i.name })} rightFull dim={!i.active} {problem} onclick={selecting ? onselect : onopen}>
   {#snippet tile()}<Tile color={TILE[status]}><Icon name="eye" size={24} /></Tile>{/snippet}
   {#snippet meta()}
     {#if current && status === 'running'}
@@ -58,7 +75,17 @@
       {:else if i.value}
         <span class="self-start pt-[13px] text-[13px] leading-[22px] text-fg2 tabular-nums" data-testid="watcher-value">{i.value}</span>
       {/if}
-      <Toggle checked={i.active} label={t('{name} aktiv', { name: i.name })} disabled={!canToggle || busy} onchange={ontoggle} />
+      <Toggle checked={i.active} label={t('{name} aktiv', { name: i.name })} disabled={!canToggle || busy || selecting} onchange={ontoggle} />
     </span>
   {/snippet}
 </ListRow>
+{/snippet}
+
+{#if selecting}
+  <div class="flex items-center gap-1" data-selected={selected ? '' : undefined}>
+    <SelectBox checked={selected} label={t('{name} auswählen', { name: i.name })} onchange={() => onselect?.()} />
+    <div class="min-w-0 flex-1">{@render row()}</div>
+  </div>
+{:else}
+  {@render row()}
+{/if}

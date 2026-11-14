@@ -1,5 +1,7 @@
-import type { BulkPatch, TriggerKind, WatcherItem } from './watcher-types';
-import { toInput, type WatcherForm } from './watchers';
+import { t, tn } from './i18n/index.svelte';
+import { nudgeSentence, type Nudge } from './reminder';
+import type { AssignMode, BulkPatch, DueRule, TriggerKind, WatcherItem } from './watcher-types';
+import { toInput, whoText, type WatcherForm } from './watchers';
 
 // Mehrere Wächter auf einmal bearbeiten: welche Felder für alle passen, welcher Wert gilt für alle („verschieden“, wenn keiner), und aus dem
 // Formular der Patch für `POST /api/watchers/bulk`. Entität, Name und Titel der Karte sind nie dabei.
@@ -141,5 +143,145 @@ export function devicesOf(hits: { entityId: string }[]): { entityId: string }[] 
     seen.add(h.entityId);
     out.push({ entityId: h.entityId });
   }
+  return out;
+}
+
+// ---------- Anzeige im Sammel-Formular ----------
+
+/** Der Wert, den das Formular für jedes Feld hält (in derselben Form wie `commonValues`): so zeigt das Sammel-Formular einen geänderten Wert */
+export function formValues(form: WatcherForm): Record<BulkField, unknown> {
+  const input = toInput(form);
+  return {
+    active: form.active,
+    category: input.category,
+    assign: input.assign,
+    board: { boardId: input.card.boardId, columnId: input.card.columnId },
+    due: input.card.due,
+    priority: input.card.priority,
+    nudge: input.nudge,
+    cooldown: input.cooldownMin,
+    dedupe: input.dedupe,
+    fairness: form.countsForFairness ?? true,
+    threshold: input.trigger.value,
+    forMin: input.trigger.forMin,
+    count: input.trigger.count,
+    lead: input.trigger.leadMin ?? null,
+    forecastHours: input.trigger.forecast?.hours ?? null,
+    doneValue: input.done?.value ?? null,
+  };
+}
+
+export function fieldLabel(field: BulkField): string {
+  switch (field) {
+    case 'active':
+      return t('Aktiv');
+    case 'category':
+      return t('Kategorie');
+    case 'assign':
+      return t('Wer');
+    case 'board':
+      return t('Board und Spalte');
+    case 'due':
+      return t('Fällig');
+    case 'priority':
+      return t('Priorität');
+    case 'nudge':
+      return t('Stupsen');
+    case 'cooldown':
+      return t('Sperrzeit');
+    case 'dedupe':
+      return t('Keine zweite Karte');
+    case 'fairness':
+      return t('Zählt zur Fairness');
+    case 'threshold':
+      return t('Schwelle');
+    case 'forMin':
+      return t('Mindestens so lange');
+    case 'count':
+      return t('Erst beim N-ten Mal');
+    case 'lead':
+      return t('Vorlauf vor dem Termin');
+    case 'forecastHours':
+      return t('Regen in den nächsten Stunden');
+    default:
+      return t('Erledigt sich von selbst ab');
+  }
+}
+
+export interface TextContext {
+  personName: (id: string) => string;
+  boardName: (id: string) => string;
+  /** Einheit der Schwelle (leer: keine) */
+  unit: string;
+}
+
+/** Ein Wert als kurzer Text für die Zeile des Sammel-Formulars; `MIXED` heißt „verschieden“ */
+export function valueText(field: BulkField, v: unknown, ctx: TextContext): string {
+  if (v === MIXED) return t('verschieden');
+  const unit = ctx.unit ? ` ${ctx.unit}` : '';
+  const min = (n: unknown) => (typeof n === 'number' ? t('{n} Min.', { n }) : '–');
+  switch (field) {
+    case 'active':
+      return v ? t('aktiv') : t('pausiert');
+    case 'category':
+      return (v as string | null) || t('Ohne Kategorie');
+    case 'assign': {
+      const a = v as { mode: AssignMode; personIds: string[] };
+      return whoText({ assignMode: a.mode, personIds: a.personIds }, ctx.personName);
+    }
+    case 'board': {
+      const b = v as { boardId: string };
+      return b.boardId ? ctx.boardName(b.boardId) : '–';
+    }
+    case 'due': {
+      const d = v as DueRule;
+      return d.kind === 'in' ? (d.minutes === 0 ? t('sofort') : t('in {n} Min.', { n: d.minutes })) : d.kind === 'at' ? `${d.day === 'today' ? t('heute') : t('morgen')} ${d.time}` : t('ohne Termin');
+    }
+    case 'priority':
+      return v === 'low' ? t('Niedrig') : v === 'high' ? t('Hoch') : t('Mittel');
+    case 'nudge':
+      return v ? nudgeSentence(v as Nudge) : t('nie');
+    case 'cooldown':
+    case 'forMin':
+      return min(v);
+    case 'dedupe':
+    case 'fairness':
+      return v ? t('ja') : t('nein');
+    case 'threshold':
+    case 'doneValue':
+      return typeof v === 'number' ? `${String(v).replace('.', ',')}${unit}` : '–';
+    case 'count':
+      return typeof v === 'number' ? `${v} ×` : '–';
+    case 'lead':
+      return typeof v === 'number' ? tn('{n} Stunde', '{n} Stunden', Math.round(v / 60)) : '–';
+    default:
+      return typeof v === 'number' ? tn('{n} Stunde', '{n} Stunden', v) : '–';
+  }
+}
+
+/** Welche Felder des Formulars zu einem Feld des Sammel-Formulars gehören */
+const FORM_KEYS: Record<BulkField, (keyof WatcherForm)[]> = {
+  active: ['active'],
+  category: ['category', 'categorySource'],
+  assign: ['assignMode', 'personIds', 'fallback', 'waitFallback', 'fallbackPersonId'],
+  board: ['boardId', 'columnId'],
+  due: ['dueKind', 'dueMinutes', 'dueDay', 'dueTime'],
+  priority: ['priority'],
+  nudge: ['nudgeAfter', 'nudgeEvery', 'nudgeMax'],
+  cooldown: ['cooldownMin'],
+  dedupe: ['dedupe'],
+  fairness: ['countsForFairness'],
+  threshold: ['value'],
+  forMin: ['forMin'],
+  count: ['count'],
+  lead: ['leadHours'],
+  forecastHours: ['forecastHours'],
+  doneValue: ['doneValue'],
+};
+
+/** Ein Feld zurücksetzen: die Werte aus `initial` (der Stand beim Öffnen) zurück ins Formular */
+export function resetField(form: WatcherForm, initial: WatcherForm, field: BulkField): WatcherForm {
+  const out: WatcherForm = { ...form };
+  for (const key of FORM_KEYS[field]) (out as unknown as Record<string, unknown>)[key] = structuredClone(initial[key]);
   return out;
 }

@@ -27,6 +27,8 @@ export type Sheet =
   | { type: 'people' }
   | { type: 'watcher'; id: string | null; template?: string; /** geöffnet aus Einstellungen › Wächter oder aus „Gefunden": dorthin geht Zurück */ from?: 'settings' | 'found'; hit?: { entityId: string; name: string; unit?: string; draft?: TemplateDraft } }
   | { type: 'found' }
+  /** mehrere Wächter auf einmal bearbeiten */
+  | { type: 'watcher-bulk'; ids: string[] }
   | { type: 'nudge'; id: string }
   | { type: 'trash' }
   | { type: 'archive'; /** geöffnet aus „Heute erledigt“: dorthin geht Zurück */ from?: 'stats' }

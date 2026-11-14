@@ -7,7 +7,7 @@ const state = (entityId: string, st: string, attributes: Record<string, unknown>
 const ids = (list: { templateId: string; entityId: string }[]) => list.map((s) => `${s.templateId}:${s.entityId}`);
 
 describe('Vorlagen', () => {
-  it('alle Vorlagen aus dem Entwurf sind da: sieben mit Gerät, dazu 19 neue, vier ohne Gerät', () => {
+  it('alle Vorlagen aus dem Entwurf sind da: sieben mit Gerät, dazu 19 neue, vier ohne Gerät (dazu 13 neue, siehe unten)', () => {
     const list = watcherTemplates();
     expect(list.filter((x) => x.kind === 'watcher').map((x) => x.id)).toEqual([
       'washer',
@@ -37,7 +37,7 @@ describe('Vorlagen', () => {
       'unavailable',
       'update',
     ]);
-    expect(list.filter((x) => x.kind === 'recurring').map((x) => x.id)).toEqual(['descale', 'smoke', 'filter', 'bedding']);
+    expect(list.filter((x) => x.kind === 'recurring').map((x) => x.id).slice(0, 4)).toEqual(['descale', 'smoke', 'filter', 'bedding']);
   });
 
   it('Geräte-Vorlagen sagen ehrlich, dass der Sensor das Ausräumen nicht belegt; die Batterie kann sich selbst erledigen', () => {
@@ -342,6 +342,64 @@ describe('Neue Vorlagen: Erkennung', () => {
       expect(en[i]!.title).not.toBe(x.title);
       expect(en[i]!.hint).not.toBe(x.hint);
       expect(en[i]!.draft!.card.title.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+// ---------- Neue wiederkehrende Vorlagen (ohne Gerät) ----------
+
+describe('Neue wiederkehrende Vorlagen', () => {
+  const EXPECTED: Record<string, { freq: string; every: number }> = {
+    fridge_clean: { freq: 'monthly', every: 3 },
+    oven_clean: { freq: 'monthly', every: 3 },
+    windows: { freq: 'monthly', every: 6 },
+    radiators: { freq: 'yearly', every: 1 },
+    tyres: { freq: 'monthly', every: 6 },
+    gutter: { freq: 'yearly', every: 1 },
+    washer_hygiene: { freq: 'monthly', every: 1 },
+    shower_head: { freq: 'monthly', every: 3 },
+    drains: { freq: 'monthly', every: 2 },
+    first_aid: { freq: 'yearly', every: 1 },
+    extinguisher: { freq: 'yearly', every: 2 },
+    mattress: { freq: 'monthly', every: 3 },
+    fertilize: { freq: 'weekly', every: 4 },
+  };
+
+  it('13 neue Vorlagen mit der vorgesehenen Wiederholung, ohne Wächter', () => {
+    const list = watcherTemplates().filter((x) => x.kind === 'recurring');
+    expect(list.map((x) => x.id)).toEqual(['descale', 'smoke', 'filter', 'bedding', ...Object.keys(EXPECTED)]);
+    for (const [id, want] of Object.entries(EXPECTED)) {
+      const tpl = list.find((x) => x.id === id)!;
+      expect(tpl.recurring?.recurrence, id).toEqual({ type: 'fixed', ...want });
+      expect(tpl.draft).toBeNull();
+      expect(tpl.recurring?.title).toBeTruthy();
+    }
+  });
+
+  it('jede hat einen Hinweis, auch auf Englisch (nicht dieselben Worte wie auf Deutsch)', () => {
+    const de = watcherTemplates().filter((x) => x.id in EXPECTED);
+    const en = withLanguage('en', () => watcherTemplates().filter((x) => x.id in EXPECTED));
+    expect(de).toHaveLength(13);
+    for (const [i, x] of de.entries()) {
+      expect(x.hint.trim(), x.id).not.toBe('');
+      expect(en[i]!.hint.trim(), x.id).not.toBe('');
+      expect(en[i]!.hint, x.id).not.toBe(x.hint);
+      expect(en[i]!.title, x.id).not.toBe(x.title);
+      expect(en[i]!.recurring?.title, x.id).not.toBe(x.recurring?.title);
+    }
+  });
+
+  it('Reifen und Heizung nennen den Zeitpunkt im Hinweis', () => {
+    const byId = new Map(watcherTemplates().map((x) => [x.id, x]));
+    expect(byId.get('radiators')!.hint).toMatch(/Herbst/);
+    expect(byId.get('tyres')!.hint).toMatch(/Oktober/);
+  });
+
+  it('die Wiederholungen sind für den Server gültig', async () => {
+    const { parseRecurrence } = await import('../src/store/validate.js');
+    for (const id of Object.keys(EXPECTED)) {
+      const tpl = watcherTemplates().find((x) => x.id === id)!;
+      expect(() => parseRecurrence(tpl.recurring!.recurrence), id).not.toThrow();
     }
   });
 });

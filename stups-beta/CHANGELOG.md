@@ -4,6 +4,22 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.41.1-beta.3
+
+Wächter für viele Geräte: mehrere auf einmal bearbeiten, einrichten und ausblenden, dazu viele neue Vorlagen.
+
+**Mehrere Wächter auswählen.** Im Reiter Wächter schaltet **Auswählen** Kästchen an den Zeilen ein (am Desktop in der Tabelle, auf dem Handy vor der Zeile), im Kopf jeder Gruppe steht „Alle auswählen“. Unten zeigt eine Leiste „N ausgewählt“ mit **Bearbeiten**, **Pausieren / Fortsetzen** und **Löschen**. Löschen fragt vorher „N Wächter löschen?“ und ist endgültig (die Karten, die schon entstanden sind, bleiben).
+
+**Mehrere Wächter gemeinsam bearbeiten.** Das Fenster zeigt nur Felder, die für alle Ausgewählten passen: Zuteilung, Board und Spalte, Kategorie, Fälligkeit, Priorität, Stupsen, Sperrzeit, „keine zweite Karte“, Fairness und aktiv. Schwelle, Dauer, Anzahl und „von selbst erledigt ab“ nur, wenn alle denselben Auslöser (bei Schwellen auch dieselbe Einheit) haben, bei Kalendern der Vorlauf, bei der Vorhersage die Stunden; sonst steht ein Hinweis da. Wo die Wächter verschiedene Werte haben, steht „verschieden“. **Nur, was du anfasst, wird geschrieben**; alles andere bleibt bei jedem Wächter, wie es ist. Entität, Name und Titel der Karte setzt die Sammelbearbeitung nie. Der Server speichert alle oder keinen (eine Transaktion, dieselbe Prüfung wie beim Einzelspeichern): ist einer ungültig oder inzwischen gelöscht, ändert sich keiner.
+
+**Gefunden: mehrere Treffer gemeinsam einrichten oder ausblenden.** **Auswählen** über der Liste, Kästchen an den Treffern, „Alle auswählen“ im Gruppenkopf. Gewählt wird nur innerhalb einer Vorlage (beim Gerät mit Leistung und Programmstatus innerhalb einer Fassung). **Einrichten** öffnet denselben Assistenten; Schritt 1 zeigt statt der Entität die Liste der Geräte mit ihrem aktuellen Wert (einzelne lassen sich abwählen), die Werte des Auslösers gelten für alle, der letzte Knopf heißt „N Wächter anlegen“. Name und Kartentitel setzt Stups je Gerät. Beobachtet eine Entität schon ein Wächter (Doppelklick, zweiter Tab), wird sie übersprungen und gemeldet. Am Desktop öffnet das gemeinsame Einrichten den Assistenten als Fenster (das Formular über der Liste kennt nur ein Gerät). **Ausblenden** blendet alle gewählten Treffer auf einmal aus.
+
+**19 neue Vorlagen für Geräte in „Gefunden“** (mit den heutigen Auslösern): Fenster/Tür lange offen, Kühl-/Gefriertür offen, Wasserleck, Pflanze gießen, Lüften (Feuchte), Lüften (CO₂), Entfeuchter-Tank voll, Roboter steckt fest (Saug- und Mähroboter), Filter verbraucht, Toner oder Tinte fast leer, Füllstand niedrig (Pellets, Heizöl, Zisterne, Futter), Salz/Klarspüler/Wassertank/Trester nachfüllen, Katzenklo voll, E-Auto einstecken, Post im Briefkasten, Garage oder Haustür offen, Gefriertruhe zu warm, Gerät nicht erreichbar und Update verfügbar. Wo der Sensor es belegen kann, erledigt sich die Karte von selbst (Fenster wieder zu, Filter wieder neu …); wo nicht, steht die Begründung da. Schwellen, Minuten und Zuteilung sind Vorbelegungen, die du im Assistenten änderst.
+
+**13 neue wiederkehrende Karten ohne Gerät** unter „Auch ohne Gerät“: Kühlschrank und Backofen reinigen, Fenster putzen, Heizung entlüften, Reifen wechseln, Dachrinne reinigen, Hygienewäsche für die Waschmaschine, Duschkopf entkalken, Abflüsse reinigen, Erste-Hilfe-Kasten und Feuerlöscher prüfen, Matratze wenden, Pflanzen düngen.
+
+**Bitte prüfen (Testliste):** (1) Reiter Wächter › Auswählen: zwei Wächter anhaken, Bearbeiten, nur „Wer“ ändern: beide haben die neue Person, Board und Namen sind unverändert. (2) Pausieren und Fortsetzen, dann Löschen mit Rückfrage. (3) Gemischte Auswahl (Kalender und Batterie): Schwelle und Dauer fehlen mit Hinweis. (4) Gefunden › Auswählen: drei Batterien anhaken, Einrichten, drei Wächter entstehen; ein Treffer einer anderen Vorlage ist dann nicht wählbar. (5) Zwei Treffer ausblenden: sie stehen unter „Ausgeblendet“. (6) Ein Fenstersensor in „Gefunden“: Einrichten füllt „30 Minuten offen, erledigt sich, wenn zu“ vor.
+
 ## 1.41.1-beta.2
 
 Weitere Korrekturen nach der Durchsicht, dazu stabilere Tests. Keine neuen Funktionen.

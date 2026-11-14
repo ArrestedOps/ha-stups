@@ -40,7 +40,20 @@ export type TemplateId =
   | 'garage_lock'
   | 'freezer_warm'
   | 'unavailable'
-  | 'update';
+  | 'update'
+  | 'fridge_clean'
+  | 'oven_clean'
+  | 'windows'
+  | 'radiators'
+  | 'tyres'
+  | 'gutter'
+  | 'washer_hygiene'
+  | 'shower_head'
+  | 'drains'
+  | 'first_aid'
+  | 'extinguisher'
+  | 'mattress'
+  | 'fertilize';
 
 /** Wann sich die Karte von selbst erledigt: ein Wert, den der Sensor erreicht, oder ein Zustand (Fenster wieder zu) */
 export type DraftDone = { kind: 'above' | 'below'; value: number } | { kind: 'state'; to: string };
@@ -220,6 +233,19 @@ export function watcherTemplates(): WatcherTemplate[] {
     recurring('smoke', t('Rauchmelder testen'), t('Alle 6 Monate eine Karte, damit der Test nicht untergeht.'), t('Rauchmelder testen'), { type: 'fixed', freq: 'monthly', every: 6 }),
     recurring('filter', t('Filter wechseln'), t('Luftreiniger, Dunstabzug oder Wasserfilter: alle 3 Monate eine Karte.'), t('Filter wechseln'), { type: 'fixed', freq: 'monthly', every: 3 }),
     recurring('bedding', t('Bettwäsche wechseln'), t('Alle 2 Wochen eine Karte.'), t('Bettwäsche wechseln'), { type: 'fixed', freq: 'weekly', every: 2 }),
+    recurring('fridge_clean', t('Kühlschrank reinigen'), t('Alle 3 Monate eine Karte: auswischen und Abgelaufenes aussortieren.'), t('Kühlschrank reinigen'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('oven_clean', t('Backofen reinigen'), t('Alle 3 Monate eine Karte.'), t('Backofen reinigen'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('windows', t('Fenster putzen'), t('Alle 6 Monate eine Karte, zum Beispiel im Frühjahr und im Herbst.'), t('Fenster putzen'), { type: 'fixed', freq: 'monthly', every: 6 }),
+    recurring('radiators', t('Heizung entlüften'), t('Einmal im Jahr eine Karte, im Herbst vor der Heizperiode. Beim ersten Mal das Datum der Karte auf Oktober setzen.'), t('Heizung entlüften'), { type: 'fixed', freq: 'yearly', every: 1 }),
+    recurring('tyres', t('Reifen wechseln'), t('Alle 6 Monate eine Karte (Sommer- und Winterreifen). Beim ersten Mal das Datum auf Oktober oder April setzen, dann passt der Rhythmus.'), t('Reifen wechseln'), { type: 'fixed', freq: 'monthly', every: 6 }),
+    recurring('gutter', t('Dachrinne reinigen'), t('Einmal im Jahr eine Karte, am besten im Herbst nach dem Laubfall.'), t('Dachrinne reinigen'), { type: 'fixed', freq: 'yearly', every: 1 }),
+    recurring('washer_hygiene', t('Hygienewäsche Waschmaschine'), t('Jeden Monat eine Karte: ein heißer Waschgang ohne Wäsche gegen Geruch und Ablagerungen.'), t('Hygienewäsche Waschmaschine'), { type: 'fixed', freq: 'monthly', every: 1 }),
+    recurring('shower_head', t('Duschkopf entkalken'), t('Alle 3 Monate eine Karte.'), t('Duschkopf entkalken'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('drains', t('Abflüsse reinigen'), t('Alle 2 Monate eine Karte: Siebe leeren, Abflüsse in Bad und Küche durchspülen.'), t('Abflüsse reinigen'), { type: 'fixed', freq: 'monthly', every: 2 }),
+    recurring('first_aid', t('Erste-Hilfe-Kasten prüfen'), t('Einmal im Jahr eine Karte: Inhalt und Verfallsdaten kontrollieren.'), t('Erste-Hilfe-Kasten prüfen'), { type: 'fixed', freq: 'yearly', every: 1 }),
+    recurring('extinguisher', t('Feuerlöscher prüfen'), t('Alle 2 Jahre eine Karte: Prüfplakette und Druck kontrollieren.'), t('Feuerlöscher prüfen'), { type: 'fixed', freq: 'yearly', every: 2 }),
+    recurring('mattress', t('Matratze wenden'), t('Alle 3 Monate eine Karte.'), t('Matratze wenden'), { type: 'fixed', freq: 'monthly', every: 3 }),
+    recurring('fertilize', t('Pflanzen düngen'), t('Alle 4 Wochen eine Karte, in der Wachstumszeit.'), t('Pflanzen düngen'), { type: 'fixed', freq: 'weekly', every: 4 }),
   ];
 }
 

@@ -24,6 +24,8 @@ const conditionChanged = (a: WatchTrigger, b: WatchTrigger): boolean => a.entity
 
 /** So viele Wächter oder Treffer erlaubt eine Sammel-Anfrage höchstens */
 const MAX_BULK = 500;
+/** So viele Geräte lassen sich auf einmal einrichten */
+const MAX_DEVICES = 200;
 
 /** Die Kennungen einer Sammel-Anfrage: eine Liste eindeutiger Texte, 1 bis 500 */
 function idList(raw: unknown): string[] {
@@ -305,6 +307,38 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     const metNow = await engine.onSaved(current.id);
     // gefragt wird nur, wenn sich Entität oder Bedingung geändert haben (nicht beim Umbenennen und Co.)
     return { ...watcherView(current.id), metNow: conditionChanged(current.trigger, config.trigger) ? metNow : null };
+  });
+  /**
+   * Mehrere Treffer von „Gefunden" gemeinsam einrichten: `{ base, devices }`. `base` ist ein vollständiger Entwurf wie bei `POST /api/watchers`;
+   * je Gerät gilt dessen Entität als Auslöser (und als Bedingung zum Erledigen, wenn der Entwurf dort dieselbe Entität nutzt). Name und
+   * Kartentitel bleiben die des Entwurfs (die Karte nennt das Gerät zur Laufzeit). Entitäten, die schon ein Wächter beobachtet, werden
+   * übersprungen (`skipped`). Alles wird erst geprüft, dann in einer Transaktion angelegt: ist der Entwurf ungültig, entsteht keiner.
+   */
+  app.post('/api/watchers/bulk-create', async (req, reply) => {
+    requirePermission(req, 'watchers');
+    const { engine, data } = watcherEngine();
+    const b = body(req);
+    if (typeof b.base !== 'object' || b.base === null || Array.isArray(b.base)) throw new ValidationError(t('{what} fehlt oder ist ungültig', { what: t('Der Entwurf') }));
+    if (!Array.isArray(b.devices) || b.devices.length === 0 || b.devices.length > MAX_DEVICES) {
+      throw new ValidationError(t('Die Geräte fehlen oder sind ungültig (1 bis {max})', { max: MAX_DEVICES }));
+    }
+    const entityIds = [...new Set(b.devices.map((d: unknown) => (typeof d === 'object' && d !== null ? (d as Record<string, unknown>).entityId : undefined)))];
+    const base = withBoardFairness(b.base);
+    const baseDone = typeof base.done === 'object' && base.done !== null ? (base.done as Record<string, unknown>) : null;
+    const sharedDone = baseDone !== null && baseDone.entityId === base.trigger?.entityId;
+    const configs = entityIds.map((entityId) => ({
+      entityId,
+      config: parseWatcher({ ...base, trigger: { ...(typeof base.trigger === 'object' ? base.trigger : {}), entityId }, ...(sharedDone ? { done: { ...baseDone, entityId } } : {}) }),
+    }));
+    for (const c of configs) checkWatcherTargets(req, c.config);
+    const watched = new Set(data.list().flatMap((w) => [w.trigger.entityId, ...(w.done ? [w.done.entityId] : [])]));
+    const fresh = configs.filter((c) => !watched.has(c.config.trigger.entityId));
+    const created = store.transaction(() => fresh.map((c) => data.create(c.config)));
+    for (const w of created) await engine.onSaved(w.id);
+    return reply.code(201).send({
+      created: hideCards(req, created.map((w) => watcherView(w.id)!)),
+      skipped: configs.filter((c) => watched.has(c.config.trigger.entityId)).map((c) => c.config.trigger.entityId),
+    });
   });
   /**
    * Mehrere Wächter auf einmal ändern: `{ ids, patch }`. Der Patch fasst nur an, was er nennt (nie Entität, Name oder Kartentitel);

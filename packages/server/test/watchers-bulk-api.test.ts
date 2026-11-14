@@ -285,3 +285,71 @@ describe('POST /api/watchers/suggestions/hide-many', () => {
     expect((await suggestions()).hidden).toHaveLength(1);
   });
 });
+
+describe('POST /api/watchers/bulk-create', () => {
+  const base = (extra: Record<string, unknown> = {}) => battery(BAT_A, { assign: fixed(annaId), ...extra });
+  const devices = (...ids: string[]) => ids.map((entityId) => ({ entityId }));
+
+  it('legt je Gerät einen Wächter an: eigene Entität (auch beim Erledigen), gleiches Board, gleiche Zuteilung, gleicher Name', async () => {
+    const res = await call(chef, 'POST', '/api/watchers/bulk-create', { base: base(), devices: devices(BAT_A, BAT_B, BAT_C) });
+    expect(res.status).toBe(201);
+    expect(res.body.skipped).toEqual([]);
+    expect(res.body.created).toHaveLength(3);
+    const all = await list();
+    expect(all.map((w) => w.trigger.entityId)).toEqual([BAT_A, BAT_B, BAT_C]);
+    expect(all.map((w) => w.done.entityId)).toEqual([BAT_A, BAT_B, BAT_C]);
+    for (const w of all) {
+      expect(w).toMatchObject({ name: 'Batterie schwach', card: { boardId, columnId, title: 'Batterie wechseln' }, assign: { mode: 'fixed', personIds: [annaId] }, trigger: { value: 20, forMin: 10 }, done: { value: 50 } });
+      expect(ha.subs.has(`w:${w.id}:fire`)).toBe(true);
+    }
+  });
+
+  it('Review 4: eine Entität, die schon beobachtet wird, wird übersprungen und gemeldet, die übrigen entstehen', async () => {
+    await create(battery(BAT_B));
+    const res = await call(chef, 'POST', '/api/watchers/bulk-create', { base: base(), devices: devices(BAT_A, BAT_B, BAT_C) });
+    expect(res.status).toBe(201);
+    expect(res.body.skipped).toEqual([BAT_B]);
+    expect(res.body.created.map((w: any) => w.trigger.entityId)).toEqual([BAT_A, BAT_C]);
+    expect(await list()).toHaveLength(3);
+    // noch einmal (Doppelklick, zweiter Tab): alles übersprungen, nichts Neues
+    const again = await call(chef, 'POST', '/api/watchers/bulk-create', { base: base(), devices: devices(BAT_A, BAT_B, BAT_C) });
+    expect(again.status).toBe(201);
+    expect(again.body).toMatchObject({ created: [], skipped: [BAT_A, BAT_B, BAT_C] });
+    expect(await list()).toHaveLength(3);
+  });
+
+  it('doppelte Geräte in der Anfrage zählen einmal', async () => {
+    const res = await call(chef, 'POST', '/api/watchers/bulk-create', { base: base(), devices: devices(BAT_A, BAT_A, BAT_B) });
+    expect(res.body.created).toHaveLength(2);
+  });
+
+  it('ein ungültiger Entwurf ergibt 400, es entsteht keiner', async () => {
+    const wrongBoard = base({ card: { boardId: 'gibt-es-nicht', columnId, title: 'x' } });
+    expect((await call(chef, 'POST', '/api/watchers/bulk-create', { base: wrongBoard, devices: devices(BAT_A, BAT_B) })).status).toBe(400);
+    expect((await call(chef, 'POST', '/api/watchers/bulk-create', { base: base({ name: '' }), devices: devices(BAT_A) })).status).toBe(400);
+    expect((await call(chef, 'POST', '/api/watchers/bulk-create', { base: base(), devices: devices(BAT_A, 'kaputt') })).status).toBe(400);
+    expect((await call(chef, 'POST', '/api/watchers/bulk-create', { base: base(), devices: [] })).status).toBe(400);
+    expect((await call(chef, 'POST', '/api/watchers/bulk-create', { base: 'x', devices: devices(BAT_A) })).status).toBe(400);
+    expect(await list()).toEqual([]);
+  });
+
+  it('ohne Angabe zählt die Fairness wie das Board; ein Wert im Entwurf geht vor', async () => {
+    const b = store.createBoard({ name: 'Ohne Zählung', countsForFairness: false, withPlanned: true });
+    const col = store.getBoardView(b.id).columns.find((c) => !c.isDone && !c.isPlanned)!.id;
+    await call(chef, 'POST', '/api/watchers/bulk-create', { base: base({ card: { boardId: b.id, columnId: col, title: 'x' } }), devices: devices(BAT_A) });
+    await call(chef, 'POST', '/api/watchers/bulk-create', { base: base({ card: { boardId: b.id, columnId: col, title: 'x' }, countsForFairness: true }), devices: devices(BAT_B) });
+    expect((await list()).map((w) => w.countsForFairness)).toEqual([false, true]);
+  });
+
+  it('eine Batterie, die schon leer ist, löst gleich eine Karte aus (wie beim Einzelanlegen)', async () => {
+    ha.set(BAT_C, '3');
+    await call(chef, 'POST', '/api/watchers/bulk-create', { base: base({ trigger: { entityId: BAT_A, kind: 'below', value: 20, forMin: 0 } }), devices: devices(BAT_A, BAT_C) });
+    expect(store.getBoardView(boardId).cards).toHaveLength(1);
+  });
+
+  it('Rechte: nicht für Mitglieder ohne „watchers" und nicht für Kinder', async () => {
+    expect((await call(anna, 'POST', '/api/watchers/bulk-create', { base: base(), devices: devices(BAT_A) })).status).toBe(403);
+    expect((await call(kid, 'POST', '/api/watchers/bulk-create', { base: base(), devices: devices(BAT_A) })).status).toBe(403);
+    expect((await call(tom, 'POST', '/api/watchers/bulk-create', { base: base(), devices: devices(BAT_A) })).status).toBe(201);
+  });
+});

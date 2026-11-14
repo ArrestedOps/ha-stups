@@ -232,6 +232,8 @@ export const en: Catalog = {
   'Wächter nicht gefunden': 'Watcher not found',
   'Die Auswahl der Wächter fehlt oder ist ungültig (1 bis {max}, ohne Doppelte)': 'The selection of watchers is missing or invalid (1 to {max}, no duplicates)',
   'Die Treffer fehlen oder sind ungültig (1 bis {max})': 'The hits are missing or invalid (1 to {max})',
+  'Der Entwurf': 'The draft',
+  'Die Geräte fehlen oder sind ungültig (1 bis {max})': 'The devices are missing or invalid (1 to {max})',
   'Die Änderung': 'The change',
   'Die Änderung ist leer': 'The change is empty',
   'Unbekannte Angabe: {key}': 'Unknown field: {key}',

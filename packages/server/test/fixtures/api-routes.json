@@ -171,6 +171,7 @@
   "POST /api/watchers/:id/reset-counter",
   "POST /api/watchers/:id/test",
   "POST /api/watchers/bulk",
+  "POST /api/watchers/bulk-create",
   "POST /api/watchers/bulk-delete",
   "POST /api/watchers/dry-run",
   "POST /api/watchers/suggest-categories",

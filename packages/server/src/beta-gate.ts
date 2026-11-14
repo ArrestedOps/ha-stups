@@ -3,9 +3,9 @@ import type { PushGateway } from './push.js';
 import { t } from './i18n/index.js';
 
 /**
- * In der Beta sind Push und Wächter zunächst aus. Die Beta bekommt per Umzug die Daten der normalen App; ohne dieses Tor
- * würde sie dieselben Erinnerungen ein zweites Mal an die Familie schicken und dieselben Wächter doppelt Aufgaben anlegen lassen.
- * Ein Administrator schaltet beides gezielt ein. In der normalen App tut das Tor nichts.
+ * In der Beta ist Push zunächst aus, die Wächter laufen (die Beta soll sie ausprobieren). Die Beta bekommt per Umzug die Daten der normalen
+ * App; ohne dieses Tor würde sie dieselben Erinnerungen ein zweites Mal an die Familie schicken. Laufen in beiden Apps dieselben Wächter,
+ * legen sie Aufgaben doppelt an: dann schaltet ein Administrator sie hier aus. In der normalen App tut das Tor nichts.
  */
 export type BetaPush = { mode: 'off' } | { mode: 'only'; personId: string } | { mode: 'all' };
 
@@ -40,7 +40,7 @@ export function createBetaGate(deps: BetaGateDeps) {
     return { mode: 'off' };
   }
 
-  const watchersEnabled = (): boolean => !deps.enabled || deps.settings.get(WATCHERS_KEY) === 'on';
+  const watchersEnabled = (): boolean => !deps.enabled || deps.settings.get(WATCHERS_KEY) !== 'off';
 
   function state(): BetaState {
     if (!deps.enabled) return { push: { mode: 'all' }, watchers: true };

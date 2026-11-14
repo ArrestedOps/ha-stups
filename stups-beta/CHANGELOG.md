@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.11
+
+**In der Beta laufen die Wächter jetzt von Anfang an.** Bisher waren sie dort zunächst ausgeschaltet, ein neuer Wächter legte deshalb keine Aufgabe an. Push bleibt zunächst aus (sonst bekäme die Familie Nachrichten doppelt). Bewusst ausgeschaltet bleibt ein Wächter-Schalter, den du in der Beta selbst auf „aus“ gestellt hast. **Achtung:** Laufen dieselben Wächter auch in der normalen App, entstehen Aufgaben doppelt; dann schaltest du sie unter Einstellungen › Beta aus.
+
+**Bitte prüfen:** Beta aktualisieren, Wächter-Seite öffnen: kein Hinweis „ausgeschaltet“. Wächter „Batterie schwach“ für einen Sensor unter 20 % anlegen: Die Aufgabe entsteht sofort.
+
 ## 1.42.0-beta.10
 
 **Die Wächter-Seite sagt, wenn die Wächter in der Beta aus sind.** In der Beta sind Push und Wächter zunächst ausgeschaltet, damit die übernommenen Daten der normalen App keine doppelten Aufgaben und Nachrichten erzeugen. Bisher stand das nur in den Einstellungen unter „Beta“; ein neu angelegter Wächter legte deshalb keine Aufgabe an, ohne dass die App es sagte. Jetzt steht oben auf der Wächter-Seite ein Hinweis, und ein Administrator schaltet die Wächter dort mit einem Tipp (und einer Rückfrage) ein.

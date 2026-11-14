@@ -226,3 +226,62 @@ describe('POST /api/watchers/bulk', () => {
     expect((await one(a)).cooldownMin).toBe(20);
   });
 });
+
+describe('POST /api/watchers/bulk-delete', () => {
+  it('löscht alle Ausgewählten auf einmal und meldet die Abos ab', async () => {
+    const a = await create(battery(BAT_A));
+    const b = await create(battery(BAT_B));
+    const c = await create(battery(BAT_C));
+    const res = await call(chef, 'POST', '/api/watchers/bulk-delete', { ids: [a, b] });
+    expect(res.status).toBe(204);
+    expect((await list()).map((w) => w.id)).toEqual([c]);
+    expect(ha.subs.has(`w:${a}:fire`)).toBe(false);
+    expect(ha.subs.has(`w:${c}:fire`)).toBe(true);
+  });
+
+  it('eine unbekannte Kennung ergibt 404, nichts wird gelöscht', async () => {
+    const a = await create(battery(BAT_A));
+    const b = await create(battery(BAT_B));
+    expect((await call(chef, 'POST', '/api/watchers/bulk-delete', { ids: [a, 'gibt-es-nicht', b] })).status).toBe(404);
+    expect(await list()).toHaveLength(2);
+  });
+
+  it('prüft die Kennungen; Rechte wie beim Einzellöschen', async () => {
+    const a = await create(battery(BAT_A));
+    expect((await call(chef, 'POST', '/api/watchers/bulk-delete', { ids: [] })).status).toBe(400);
+    expect((await call(chef, 'POST', '/api/watchers/bulk-delete', { ids: [a, a] })).status).toBe(400);
+    expect((await call(anna, 'POST', '/api/watchers/bulk-delete', { ids: [a] })).status).toBe(403);
+    expect((await call(kid, 'POST', '/api/watchers/bulk-delete', { ids: [a] })).status).toBe(403);
+    expect(await list()).toHaveLength(1);
+    expect((await call(tom, 'POST', '/api/watchers/bulk-delete', { ids: [a] })).status).toBe(204);
+    expect(await list()).toHaveLength(0);
+  });
+});
+
+describe('POST /api/watchers/suggestions/hide-many', () => {
+  const hits = [BAT_A, BAT_B, BAT_C].map((entityId) => ({ templateId: 'battery', entityId }));
+  const suggestions = async () => (await call(chef, 'GET', '/api/watchers/suggestions')).body;
+
+  it('blendet mehrere Treffer aus: sie stehen unter „hidden", nicht unter „items"', async () => {
+    const res = await call(chef, 'POST', '/api/watchers/suggestions/hide-many', { hits });
+    expect(res.status).toBe(204);
+    const s = await suggestions();
+    expect(s.items.filter((x: any) => x.templateId === 'battery')).toEqual([]);
+    expect(s.hidden.map((x: any) => x.entityId).sort()).toEqual([BAT_A, BAT_B, BAT_C]);
+  });
+
+  it('ein ungültiger Treffer ergibt 400, nichts wird ausgeblendet', async () => {
+    expect((await call(chef, 'POST', '/api/watchers/suggestions/hide-many', { hits: [hits[0], { templateId: 'gibtsnicht', entityId: BAT_B }] })).status).toBe(400);
+    expect((await call(chef, 'POST', '/api/watchers/suggestions/hide-many', { hits: [hits[0], { templateId: 'battery', entityId: 'kaputt' }] })).status).toBe(400);
+    expect((await call(chef, 'POST', '/api/watchers/suggestions/hide-many', { hits: [] })).status).toBe(400);
+    expect((await call(chef, 'POST', '/api/watchers/suggestions/hide-many', { hits: 'x' })).status).toBe(400);
+    expect((await suggestions()).hidden).toEqual([]);
+  });
+
+  it('Rechte: Administratoren und „watchers", Kinder nie; doppelte Treffer sind harmlos', async () => {
+    expect((await call(anna, 'POST', '/api/watchers/suggestions/hide-many', { hits })).status).toBe(403);
+    expect((await call(kid, 'POST', '/api/watchers/suggestions/hide-many', { hits })).status).toBe(403);
+    expect((await call(tom, 'POST', '/api/watchers/suggestions/hide-many', { hits: [hits[0], hits[0]] })).status).toBe(204);
+    expect((await suggestions()).hidden).toHaveLength(1);
+  });
+});

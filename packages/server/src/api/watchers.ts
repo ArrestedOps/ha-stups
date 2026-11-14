@@ -135,8 +135,8 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     };
   });
   /** Einen Treffer ausblenden (er wird nie wieder vorgeschlagen) oder wieder einblenden */
-  const hitOf = (req: Parameters<typeof body>[0]): { templateId: string; entityId: string } => {
-    const b = body(req);
+  const hitOf = (raw: unknown): { templateId: string; entityId: string } => {
+    const b = typeof raw === 'object' && raw !== null && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
     if (typeof b.templateId !== 'string' || !watcherTemplates().some((x) => x.id === b.templateId)) throw new ValidationError(t('Diese Vorlage gibt es nicht'));
     if (typeof b.entityId !== 'string' || !/^[a-z0-9_]+\.[a-z0-9_]+$/.test(b.entityId)) throw new ValidationError(t('Die Entität muss die Form domain.name haben'));
     return { templateId: b.templateId, entityId: b.entityId };
@@ -144,14 +144,24 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
   app.post('/api/watchers/suggestions/hide', async (req, reply) => {
     requirePermission(req, 'watchers');
     const { data } = watcherEngine();
-    const hit = hitOf(req);
+    const hit = hitOf(body(req));
     data.hide(hit.templateId, hit.entityId);
+    return noContent(reply);
+  });
+  /** Mehrere Treffer auf einmal ausblenden (`{ hits }`, 1 bis 500): ist einer ungültig, wird keiner ausgeblendet */
+  app.post('/api/watchers/suggestions/hide-many', async (req, reply) => {
+    requirePermission(req, 'watchers');
+    const { data } = watcherEngine();
+    const raw = body(req).hits;
+    if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_BULK) throw new ValidationError(t('Die Treffer fehlen oder sind ungültig (1 bis {max})', { max: MAX_BULK }));
+    const hits = raw.map(hitOf);
+    store.transaction(() => hits.forEach((h) => data.hide(h.templateId, h.entityId)));
     return noContent(reply);
   });
   app.post('/api/watchers/suggestions/unhide', async (req, reply) => {
     requirePermission(req, 'watchers');
     const { data } = watcherEngine();
-    const hit = hitOf(req);
+    const hit = hitOf(body(req));
     data.unhide(hit.templateId, hit.entityId);
     return noContent(reply);
   });
@@ -251,19 +261,20 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     }
     return { updated };
   });
+  /** Ohne Angabe gilt für die Fairness der Wert des Boards (ein Board, das nicht zählt, nimmt seine Wächter mit) */
+  function withBoardFairness(raw: Record<string, any>): Record<string, any> {
+    if (raw.countsForFairness !== undefined || typeof raw.card?.boardId !== 'string') return raw;
+    try {
+      const board = store.getBoard(raw.card.boardId);
+      return { ...raw, countsForFairness: board.visibility !== 'private' && board.countsForFairness };
+    } catch {
+      return raw; // unbekanntes Board: die Prüfung meldet es
+    }
+  }
   app.post('/api/watchers', async (req, reply) => {
     requirePermission(req, 'watchers');
     const { engine, data } = watcherEngine();
-    const raw = body(req);
-    // Ohne Angabe gilt der Wert des Boards (ein Board, das nicht zählt, nimmt seine Wächter mit)
-    if (raw.countsForFairness === undefined && typeof raw.card?.boardId === 'string') {
-      try {
-        const board = store.getBoard(raw.card.boardId);
-        raw.countsForFairness = board.visibility !== 'private' && board.countsForFairness;
-      } catch {
-        /* unbekanntes Board: die Prüfung unten meldet es */
-      }
-    }
+    const raw = withBoardFairness(body(req));
     const config = parseWatcher(raw);
     checkWatcherTargets(req, config);
     const created = data.create(config);
@@ -324,6 +335,16 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       for (const p of prepared) await engine.onSaved(p.w.id);
     }
     return { items: hideCards(req, ids.map((id) => watcherView(id)!)) };
+  });
+  /** Mehrere Wächter auf einmal löschen (endgültig, die Oberfläche fragt vorher): ist eine Kennung unbekannt, wird keiner gelöscht */
+  app.post('/api/watchers/bulk-delete', async (req, reply) => {
+    requirePermission(req, 'watchers');
+    const { engine, data } = watcherEngine();
+    const ids = idList(body(req).ids);
+    ids.forEach((id) => data.get(id));
+    store.transaction(() => ids.forEach((id) => data.remove(id)));
+    engine.syncSubscriptions();
+    return noContent(reply);
   });
   app.delete<{ Params: Params }>('/api/watchers/:id', async (req, reply) => {
     requirePermission(req, 'watchers');

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupTasks, nudgesToMe, parseTasksView, taskStats } from '../src/lib/tasks';
+import { groupTasks, nudgesToMe, parseTasksView, taskStats, taskStatsFor } from '../src/lib/tasks';
 import type { ScheduleCard } from '../src/lib/schedule';
 
 const TZ = 'Europe/Berlin';
@@ -132,5 +132,38 @@ describe('nudgesToMe: das Stups-Banner oben', () => {
     expect(nudgesToMe(cards, null)).toEqual([]);
     expect(nudgesToMe(cards, 'nobody')).toEqual([]);
     expect(nudgesToMe([mk('x', '2026-11-04T17:00:00Z', { openNudges: undefined })], 'anna')).toEqual([]);
+  });
+});
+
+describe('taskStatsFor: Zahlen der Kacheln für eine Auswahl von Personen', () => {
+  const NOW = Date.parse('2026-11-18T12:00:00Z');
+  const TZ = 'UTC';
+  const card = (id: string, assignees: string[], dueAt: string | null, completedAt: string | null = null) => ({ id, assigneeIds: assignees, dueAt, completedAt }) as never;
+  const cards = [
+    card('a', ['u1'], '2026-11-18T08:00:00Z'), // überfällig
+    card('b', ['u1'], '2026-11-18T18:00:00Z'), // heute
+    card('c', ['u2'], '2026-11-20T09:00:00Z'), // diese Woche
+    card('d', ['u2'], '2026-12-30T09:00:00Z'), // später
+    card('e', ['u1'], null), // ohne Termin
+    card('f', ['u2'], '2026-11-18T07:00:00Z', '2026-11-18T09:00:00Z'), // heute erledigt
+  ];
+
+  it('ohne Personen zählen alle Aufgaben', () => {
+    expect(taskStatsFor(cards, [], NOW, TZ)).toEqual({ today: 1, overdue: 1, done: 1, week: 2 });
+  });
+
+  it('mit einer Person nur ihre; „Diese Woche“ umfasst die nächsten sieben Tage', () => {
+    expect(taskStatsFor(cards, ['u1'], NOW, TZ)).toEqual({ today: 1, overdue: 1, done: 0, week: 1 });
+    expect(taskStatsFor(cards, ['u2'], NOW, TZ)).toEqual({ today: 0, overdue: 0, done: 1, week: 1 });
+  });
+
+  it('mehrere Personen zählen zusammen, und eine unbekannte Person nichts', () => {
+    expect(taskStatsFor(cards, ['u1', 'u2'], NOW, TZ)).toEqual(taskStatsFor(cards, [], NOW, TZ));
+    expect(taskStatsFor(cards, ['x'], NOW, TZ)).toEqual({ today: 0, overdue: 0, done: 0, week: 0 });
+  });
+
+  it('stimmt für eine Person mit taskStats überein (außer „week“)', () => {
+    const { week: _w, ...rest } = taskStatsFor(cards, ['u1'], NOW, TZ);
+    expect(rest).toEqual(taskStats(cards, 'u1', NOW, TZ));
   });
 });

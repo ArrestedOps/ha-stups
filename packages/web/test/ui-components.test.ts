@@ -197,6 +197,27 @@ describe('StatsBar', () => {
   });
 });
 
+describe('StatsBar am Desktop', () => {
+  const items = [
+    { id: 'today', label: 'Heute fällig', value: 3 },
+    { id: 'overdue', label: 'Überfällig', value: 2, tone: 'danger' as const },
+    { id: 'zero', label: 'Nichts', value: 0, tone: 'danger' as const },
+  ];
+  it('Knöpfe mit Auswahl: die gewählte Kachel ist „gedrückt“, nur sie', () => {
+    const out = html(StatsBar, { label: 'Stand', items, desk: true, selected: 'today', onselect: () => undefined });
+    expect(out).toContain('grid-cols-4');
+    expect(out.match(/aria-pressed="true"/g)).toHaveLength(1);
+    expect(out.match(/aria-pressed="false"/g)).toHaveLength(2);
+    for (const n of ['Heute fällig, 3', 'Überfällig, 2']) expect(out).toContain(`aria-label="${n}"`);
+    expect(out).toContain('data-testid="desk-stat-today"');
+  });
+  it('die Zahl der Überfälligen ist rot, aber nur über null; keine Symbole in den Kacheln', () => {
+    const out = html(StatsBar, { label: 'Stand', items, desk: true });
+    expect(out.match(/text-danger/g)).toHaveLength(1);
+    expect(out).not.toContain('tile-');
+  });
+});
+
 describe('CtaButton und SheetFooter', () => {
   it('großer Knopf 52 px in Akzentfarbe; ghost ohne', () => {
     const cta = html(CtaButton, { children: snip('Speichern') });

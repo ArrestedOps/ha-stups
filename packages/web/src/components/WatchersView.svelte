@@ -250,6 +250,7 @@
 
   /** Das offene Formular (null: zu); jedes Aufklappen bekommt einen frischen Editor, der Entwurf geht beim Zuklappen verloren */
   let desk = $state.raw<{ ed: WatcherEditor; init: NewWatcherRequest } | null>(null);
+  let deskRef = $state<{ requestClose(): void }>();
   /** Der gerade angelegte Wächter: seine Zeile ist kurz hervorgehoben */
   let fresh = $state<string | null>(null);
   let freshTimer: ReturnType<typeof setTimeout> | undefined;
@@ -260,6 +261,20 @@
     desk = { ed: new WatcherEditor(null, { onsaved: created }), init };
   }
   const closeDesk = () => (desk = null);
+  // Der Knopf „Neuer Wächter“ im Seitenkopf zeigt, ob das Formular offen ist, und bittet über `watcherDeskClose` um das Schließen (mit der Rückfrage bei einem Entwurf)
+  $effect(() => {
+    ui.watcherDesk = desk !== null;
+  });
+  $effect(() => {
+    if (!ui.watcherDeskClose) return;
+    untrack(() => {
+      ui.watcherDeskClose = false;
+      deskRef?.requestClose();
+    });
+  });
+  onMount(() => () => {
+    ui.watcherDesk = false;
+  });
 
   // Anfragen aus „Gefunden“ und den Einstellungen (siehe `openNewWatcher`): aufklappen, mit Vorlage oder Treffer vorbelegt
   $effect(() => {
@@ -536,7 +551,7 @@
         </div>
         {#if desk}
           <div id="new-watcher-panel" transition:slide={{ duration: 180 }} data-testid="new-watcher-panel">
-            {#key desk.ed}<WatcherDesk ed={desk.ed} init={desk.init} onclose={closeDesk} />{/key}
+            {#key desk.ed}<WatcherDesk bind:this={deskRef} ed={desk.ed} init={desk.init} onclose={closeDesk} />{/key}
           </div>
         {/if}
       {:else}

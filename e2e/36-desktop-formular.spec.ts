@@ -74,14 +74,14 @@ test('Der Knopf klappt das Formular über der Liste auf und zu, die Liste rutsch
   });
   await openList(page, s);
   await expect(page.getByTestId('watchers-summary')).toContainText('1 Wächter');
-  // „Gefunden“ mit Zähler und „Neuer Wächter“ stehen in der Leiste, rechts, Gefunden links vom Knopf
+  // „Neuer Wächter“ ist die Hauptaktion oben rechts im Seitenkopf, „Gefunden“ mit Zähler steht darunter in der Leiste, rechtsbündig mit ihm
   const found = page.getByTestId('home-found');
   const bar = page.getByTestId('new-watcher');
   await expect(found).toContainText('Gefunden');
   const fb = (await found.boundingBox())!;
   const nb = (await bar.boundingBox())!;
-  expect(fb.x + fb.width).toBeLessThanOrEqual(nb.x);
-  expect(Math.abs(fb.y - nb.y)).toBeLessThanOrEqual(2);
+  expect(nb.y).toBeLessThan(fb.y);
+  expect(Math.abs(fb.x + fb.width - (nb.x + nb.width))).toBeLessThanOrEqual(4);
   const listTop = async () => (await page.getByTestId('watcher-list').boundingBox())!.y;
   const before = await listTop();
 

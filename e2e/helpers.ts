@@ -30,6 +30,14 @@ export async function openBoardFilters(page: Page): Promise<void> {
  * Desktop: die Einträge unter „Personen“ in der Seitenleiste.
  */
 export async function setScope(page: Page, who: string): Promise<void> {
+  // Desktop: das Menü „Für wen?“ oben rechts (Aufgaben, Kalender, Wächter)
+  const trigger = page.getByTestId('scope-trigger');
+  if ((await trigger.count()) > 0) {
+    await trigger.click();
+    const name = who === 'Alle' ? /Alle (Aufgaben|Wächter)$/ : who === 'Meine' ? /Meine (Aufgaben|Wächter)$/ : new RegExp(`${who}$`);
+    await page.getByRole('menu', { name: 'Personen' }).getByRole('menuitemradio', { name }).click();
+    return;
+  }
   const button = page.getByTestId('scope-button');
   const chips = page.getByRole('group', { name: 'Personen' });
   if ((await button.count()) === 0 && (await page.getByTestId('board-filter-toggle').count()) > 0) {
@@ -41,7 +49,7 @@ export async function setScope(page: Page, who: string): Promise<void> {
     const label = who === 'Alle' ? 'Alle Aufgaben' : who === 'Meine' ? 'Meine Aufgaben' : `Aufgaben von ${who}`;
     await page.getByRole('menuitemradio', { name: label }).click();
   } else {
-    await page.getByTestId('sidebar').getByRole('button', { name: who, exact: true }).click();
+    throw new Error('setScope: weder das Menü oben rechts noch der Bereichs-Chip am Handy ist da');
   }
 }
 

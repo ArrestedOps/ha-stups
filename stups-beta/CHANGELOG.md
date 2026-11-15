@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.12
+
+**Neue Desktop-Oberfläche.** Die Seitenleiste ist ruhig: vier Ziele (Aufgaben, Boards, Kalender, Wächter) und deine Boards, einklappbar auf Symbole. Was zu einer Seite gehört, steht in der Seite: oben rechts ein Menü „Meine Aufgaben ▾“ (für wen) und die Hauptaktion; darunter vier Zahlenkacheln, die die Liste filtern. **Wächter:** Statuskacheln, Reiter für die größten Kategorien und „Weitere“ mit Suche (auch bei 30 Kategorien), gruppierte zuklappbare Liste. **Kalender:** Zeitraster wie bei Google Kalender, überlappende Termine nebeneinander, Monat mit Uhrzeiten und „+N weitere“, Boards ein- und ausblenden; die Leiste springt bei „Tag“ nicht mehr.
+
+**Bitte prüfen (Testliste):** (1) Seitenleiste ein- und ausklappen. (2) Aufgaben: Kachel „Überfällig“ anklicken, noch einmal anklicken. (3) Menü „Meine Aufgaben ▾“: eine andere Person wählen, die Zahlen ändern sich. (4) Wächter: „Weitere“ öffnen, suchen, eine Kategorie wählen (sie rückt als Reiter nach vorn). (5) Kalender: Tag, 3 Tage, Woche, Monat; Boards ausblenden; langer Titel bleibt im Kasten. (6) „Neuer Wächter“ oben rechts auf der Wächter-Seite.
+
 ## 1.42.0-beta.11
 
 **In der Beta laufen die Wächter jetzt von Anfang an.** Bisher waren sie dort zunächst ausgeschaltet, ein neuer Wächter legte deshalb keine Aufgabe an. Push bleibt zunächst aus (sonst bekäme die Familie Nachrichten doppelt). Bewusst ausgeschaltet bleibt ein Wächter-Schalter, den du in der Beta selbst auf „aus“ gestellt hast. **Achtung:** Laufen dieselben Wächter auch in der normalen App, entstehen Aufgaben doppelt; dann schaltest du sie unter Einstellungen › Beta aus.

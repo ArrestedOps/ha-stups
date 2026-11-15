@@ -90,8 +90,8 @@
   {#if showScope}<ScopeMenu noun={onWatchers ? 'watchers' : 'tasks'} />{/if}
 
   {#if canNewWatcher}
-    <button class="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-accent px-4 text-[14px] font-bold text-on-accent hover:brightness-110" data-testid="new-watcher" onclick={() => openNewWatcher()}>
-      <Icon name="plus" size={16} stroke={2.4} /><span class="max-xl:sr-only">{t('Neuer Wächter')}</span>
+    <button class="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-[14px] font-bold hover:brightness-110 {ui.watcherDesk ? 'bg-surface text-accent-text shadow-[0_0_0_1px_var(--accent)]' : 'bg-accent text-on-accent'}" data-testid="new-watcher" aria-expanded={ui.watcherDesk} aria-controls="new-watcher-panel" onclick={() => (ui.watcherDesk ? (ui.watcherDeskClose = true) : openNewWatcher())}>
+      <Icon name={ui.watcherDesk ? 'minus' : 'plus'} size={16} stroke={2.4} /><span class="max-xl:sr-only">{t('Neuer Wächter')}</span>
     </button>
   {:else if canCreate && !onWatchers}
     <button class="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-accent px-4 text-[14px] font-bold text-on-accent hover:brightness-110" data-testid="new-task" onclick={() => openSheet({ type: 'new', columnId: newColumn! })}>

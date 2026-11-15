@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { setScope } from './helpers';
 
 // Wächter am Desktop (Server mit nachgebautem Home Assistant): Raster aus gleich hohen Aufgaben, „Neuer Wächter“ als Knopf neben dem Kopf.
 const MOCK = 'http://127.0.0.1:18411';
@@ -49,8 +50,9 @@ test('Wächter: Raster in zwei oder drei Spalten, alle Aufgaben einer Reihe glei
   const heights = await rows.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().height)));
   expect(new Set(heights).size, `Zeilenhöhen ${heights.join('/')}`).toBe(1);
   expect(heights[0]).toBe(64);
-  // „Wächter“ ist eine eigene Gruppe in der Seitenleiste (Filter und Kategorien), kein zweites Auswahlfeld in der Seite
-  await expect(page.getByTestId('sidebar').getByRole('button', { name: /^Mit Problem/ })).toBeVisible();
+  // Der Zustand („Mit Problem“ …) steht als Kacheln in der Seite, die Seitenleiste hat nur das Ziel „Wächter“, kein zweites Auswahlfeld in der Seite
+  await expect(page.getByTestId('desk-stat-problem')).toBeVisible();
+  await expect(page.getByTestId('sidebar').getByRole('button', { name: /^Mit Problem/ })).toHaveCount(0);
   await expect(page.getByTestId('watchers-panel')).toHaveCount(0);
   const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(over).toBeLessThanOrEqual(0);
@@ -205,7 +207,7 @@ test('Wächter am Desktop: Zeilen markieren, Sammelaktionen Pausieren und Aktivi
   }
   await page.goto('/');
   await sideNav(page).getByRole('button', { name: 'Wächter' }).click();
-  await page.getByTestId('sidebar').getByRole('button', { name: /^Sammel 2$/ }).click();
+  await page.getByTestId('watcher-tabs').getByRole('tab', { name: /^Sammel/ }).click();
   await page.getByRole('checkbox', { name: `Sammel ${tag} 0 auswählen` }).check();
   await page.getByRole('checkbox', { name: `Sammel ${tag} 1 auswählen` }).check();
   const bar = page.getByTestId('watcher-bulk');
@@ -292,20 +294,79 @@ test('Ansicht für: das Feld oben in der Seitenleiste filtert Wächter (und Aufg
   }
   await page.goto('/');
   await sideNav(page).getByRole('button', { name: 'Wächter' }).click();
-  const who = page.getByTestId('side-who');
-  await expect(who).toBeVisible();
-  await expect(who).toContainText('Ansicht für');
-  // Standard: meine (Rene): nur sein Wächter, der Chip nennt es
-  await who.getByRole('button', { name: 'Alle', exact: true }).click();
+  // Das Menü „Für wen?“ oben rechts: der Standard ist „Meine“ (Rene), die Beschriftung nennt, was gilt
+  await expect(page.getByTestId('scope-trigger')).toBeVisible();
+  await expect(page.getByTestId('scope-label')).toHaveText('Meine Wächter');
+  await setScope(page, 'Alle');
   await expect(page.getByTestId('watcher-row')).toHaveCount(2);
-  await expect(page.getByTestId('scope-chip')).toHaveCount(0);
-  await who.getByRole('button', { name: 'Conny' }).click();
+  await expect(page.getByTestId('scope-label')).toHaveText('Alle Wächter');
+  await setScope(page, 'Conny');
   await expect(page.getByTestId('watcher-row')).toHaveCount(1);
   await expect(page.getByTestId('watcher-row')).toContainText(`FürConny ${tag}`);
-  await expect(page.getByTestId('scope-chip')).toContainText('Nur Conny');
-  await expect(page.getByTestId('side-who-text')).toContainText('Conny');
-  await page.getByTestId('scope-chip').getByRole('button', { name: 'Filter aufheben' }).click();
+  await expect(page.getByTestId('scope-label')).toHaveText('Wächter von Conny');
+  await setScope(page, 'Alle');
   await expect(page.getByTestId('watcher-row')).toHaveCount(2);
   for (const id of ids) await request.delete(`/api/watchers/${id}`);
   await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '12' } });
+});
+
+test('Wächter mit vielen Kategorien: die größten als Reiter, der Rest hinter „Weitere“ mit Suche; die Wahl rückt als Reiter nach vorn; große Listen starten zugeklappt', async ({ page, request }) => {
+  const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
+  const rene = people.find((p) => p.name === 'Rene')!;
+  const tag = Date.now().toString(36);
+  const board = (await (await request.post('/api/boards', { data: { name: `Viele Kat ${tag}` } })).json()) as { id: string };
+  const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
+  const columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;
+  const ids: string[] = [];
+  // acht Kategorien: A hat drei Wächter, B zwei, die übrigen je einen (zusammen 13, bei mehr als sechs Kategorien gibt es „Weitere“)
+  const counts = [3, 2, 1, 1, 1, 1, 1, 1];
+  for (const [ci, n] of counts.entries()) {
+    for (let i = 0; i < n; i += 1) {
+      const r = await request.post('/api/watchers', {
+        data: {
+          name: `Gerät ${tag} ${ci}${i}`,
+          category: `Kat${String.fromCharCode(65 + ci)} ${tag}`,
+          trigger: { entityId: 'sensor.bad_batterie', kind: 'below', value: 10, forMin: 10 },
+          card: { boardId: board.id, columnId, title: `Prüfen ${tag} ${ci}${i}`, due: { kind: 'none' } },
+          assign: { mode: 'fixed', personIds: [rene.id] },
+        },
+      });
+      expect(r.status()).toBe(201);
+      ids.push(((await r.json()) as { id: string }).id);
+    }
+  }
+  await page.goto('/');
+  await sideNav(page).getByRole('button', { name: 'Wächter' }).click();
+  const tabs = page.getByTestId('watcher-tabs');
+  await expect(tabs).toBeVisible();
+  await expect(page.getByTestId('desk-stat-problem')).toBeVisible();
+  // Alle, Pausiert, vier Kategorien, Weitere (mit der Zahl der übrigen)
+  await expect(tabs.getByTestId('watcher-tab')).toHaveCount(4);
+  await expect(tabs.getByTestId('watcher-more')).toContainText('Weitere');
+  const rest = tabs.getByTestId('watcher-more');
+  // die Reiter passen in die Breite: kein Umbruch, nichts läuft aus der Zeile
+  const rowH = await tabs.evaluate((el) => el.getBoundingClientRect().height);
+  expect(rowH).toBeLessThan(60);
+  const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(over).toBeLessThanOrEqual(0);
+
+  // Menü: Suche, eine Kategorie wählen
+  await rest.click();
+  const menu = page.getByTestId('watcher-more-menu');
+  await expect(menu.getByRole('menuitem').first()).toBeVisible();
+  await menu.getByRole('searchbox', { name: 'Kategorie suchen' }).fill(`KatH ${tag}`);
+  await expect(menu.getByRole('menuitem')).toHaveCount(1);
+  await menu.getByRole('menuitem').click();
+  await expect(menu).toHaveCount(0);
+  // die Wahl steht jetzt als Reiter (ausgewählt) vorn in der Reihe, die Liste zeigt nur diese Kategorie
+  await expect(tabs.getByRole('tab', { name: new RegExp(`^KatH ${tag}`) })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByTestId('watcher-row')).toHaveCount(1);
+  // zurück zu „Alle“: mehr als sechs Kategorien und weniger als 21 Wächter: alle Gruppen sind offen
+  await tabs.getByTestId('watcher-tab-all').click();
+  await expect(page.getByTestId('watcher-row')).toHaveCount(ids.length);
+  await page.getByTestId('watcher-toggle-all').click(); // „Alle zuklappen“
+  await expect(page.getByTestId('watcher-row')).toHaveCount(0);
+  await page.getByTestId('watcher-toggle-all').click(); // „Alle aufklappen“
+  await expect(page.getByTestId('watcher-row')).toHaveCount(ids.length);
+  for (const id of ids) await request.delete(`/api/watchers/${id}`);
 });

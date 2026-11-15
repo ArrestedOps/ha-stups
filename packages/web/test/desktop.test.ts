@@ -31,6 +31,8 @@ beforeEach(() => {
   ui.filter.search = '';
   ui.tasksCalendar = false;
   ui.desktop = true;
+  ui.sideSlim = false;
+  ui.watcherNav = null;
 });
 
 describe('Seitenleiste', () => {
@@ -64,6 +66,29 @@ describe('Seitenleiste', () => {
     expect(out.match(/aria-current="true"/g)).toHaveLength(1);
     ui.tab = 'tasks';
     expect(render(Sidebar).body).not.toContain('aria-current="true"'); // außerhalb von Boards ist keins „geöffnet“
+  });
+
+  it('eingeklappt: nur Symbole mit Namen als Beschriftung, „Seitenleiste ausklappen“ und kein Wortmarken-Text', () => {
+    ui.sideSlim = true;
+    const out = render(Sidebar).body;
+    expect(out).toContain('w-[68px]');
+    expect(out).toContain('aria-label="Seitenleiste ausklappen"');
+    for (const label of ['Aufgaben', 'Boards', 'Kalender', 'Wächter']) expect(out).toContain(`aria-label="${label}"`);
+    expect(out).toContain('aria-label="Haushalt"'); // ein Board nur als Symbol, mit Namen
+    expect(out).not.toContain('Administrator'); // die Rolle steht nur in der breiten Leiste
+    ui.sideSlim = false;
+    const wide = render(Sidebar).body;
+    expect(wide).toContain('w-[244px]');
+    expect(wide).toContain('aria-label="Seitenleiste einklappen"');
+  });
+
+  it('Zahlen nur, wo etwas zu tun ist: Probleme an Wächter', () => {
+    ui.watcherNav = { counts: { all: 3, problem: 2, waiting: 0, running: 0, soon: 0, paused: 0 }, cats: [] };
+    ui.caps = { watchers: true, auth: 'ingress' } as never;
+    const out = render(Sidebar).body;
+    expect(out).toMatch(/data-testid="nav-watchers"[\s\S]*?>2</);
+    ui.watcherNav = null;
+    expect(render(Sidebar).body).not.toMatch(/data-testid="nav-watchers"[\s\S]{0,400}bg-danger/);
   });
 
   it('unten die Person mit Rolle und dem Zahnrad „Einstellungen öffnen“', () => {

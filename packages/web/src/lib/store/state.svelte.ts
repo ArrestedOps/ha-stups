@@ -113,6 +113,9 @@ export const ui = $state({
   taskCount: 0,
   /** Desktop, Reiter Wächter: welcher Reiter gilt (all, paused oder cat:<Schlüssel>) */
   watcherScope: 'all' as string,
+  /** Desktop, Wächter: das Formular „Neuer Wächter“ ist aufgeklappt (der Knopf im Seitenkopf zeigt es); `watcherDeskClose` bittet die Seite, es zu schließen */
+  watcherDesk: false,
+  watcherDeskClose: false,
   /** Desktop, Reiter Wächter: welche Statuskachel die Liste filtert (leer: keine) */
   watcherStat: '' as '' | 'problem' | 'waiting' | 'running' | 'soon',
   /** Desktop: Zahlen und Kategorien für die Gruppe „Wächter“ in der Seitenleiste (die Seite Wächter füllt sie, solange sie offen ist) */

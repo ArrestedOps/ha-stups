@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import { newTaskSheet } from './helpers';
+import { newTaskSheet, setScope } from './helpers';
 
 // Desktop (1440 × 900, Dunkel und Hell): Seitenleiste statt Leiste unten, Detailspalte statt Sheet, Dialoge statt Bottom-Sheets, Kanban, Tasten.
 // Der Test-Server meldet jeden als „rene“ an; die Aufgaben gehören Rene, damit sie unter „Meine“ in Aufgaben stehen.
@@ -56,10 +56,14 @@ test.describe('Aufbau', () => {
     await page.goto('/');
     const side = page.getByTestId('sidebar');
     await expect(side).toBeVisible();
-    expect((await side.boundingBox())!.width).toBe(256);
-    for (const name of ['Aufgaben', 'Gestupst', 'Heute', 'Überfällig', 'Diese Woche', 'Erledigt', 'Kalender', 'Wächter']) await expect(sideNav(page).getByRole('button', { name: new RegExp(`^${name}( \\d+)?$`) })).toBeVisible();
-    await expect(sideNav(page).getByRole('button', { name: 'Aufgaben' })).toHaveAttribute('aria-current', 'page');
-    await expect(page.getByRole('heading', { name: 'Alle offen' })).toBeVisible();
+    expect((await side.boundingBox())!.width).toBe(244);
+    // vier Ziele; die Ansichten (Heute, Überfällig …) stehen als Kacheln in der Seite, nicht in der Seitenleiste
+    for (const name of ['Aufgaben', 'Boards', 'Kalender', 'Wächter']) await expect(sideNav(page).getByRole('button', { name: new RegExp(`^${name}( \\d+)?$`) })).toBeVisible();
+    for (const name of ['Gestupst', 'Heute', 'Überfällig', 'Diese Woche', 'Erledigt']) await expect(sideNav(page).getByRole('button', { name: new RegExp(`^${name}`) })).toHaveCount(0);
+    await expect(sideNav(page).getByRole('button', { name: /^Aufgaben/ })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('heading', { name: 'Aufgaben', exact: true })).toBeVisible();
+    for (const id of ['today', 'overdue', 'week', 'done']) await expect(page.getByTestId(`desk-stat-${id}`)).toBeVisible();
+    await expect(page.getByTestId('scope-trigger')).toBeVisible();
     await expect(page.getByTestId('new-task')).toBeVisible();
     await expect(sideNav(page).getByRole('button', { name: 'Neue Aufgabe', exact: true })).toHaveCount(0);
     // Person unten mit Zahnrad
@@ -355,5 +359,102 @@ test.describe('Rechtsklick-Menü', () => {
     await r.click({ button: 'right' });
     await menu.getByRole('menuitem', { name: 'Erledigt' }).click();
     await expect(row(page, s.cards[0]!.title)).toHaveCount(0);
+  });
+});
+
+test.describe('Ruhige Navigation', () => {
+  test('Die Seitenleiste klappt auf Symbole ein, merkt es nach dem Neuladen und klappt wieder aus', async ({ page }) => {
+    await page.goto('/');
+    const side = page.getByTestId('sidebar');
+    await expect(side).toBeVisible();
+    expect((await side.boundingBox())!.width).toBe(244);
+    await page.getByTestId('side-toggle').click();
+    await expect.poll(async () => (await side.boundingBox())!.width).toBe(68);
+    // der Inhalt rückt mit: nichts liegt unter der Leiste
+    const main = await page.getByTestId('desktop-header').boundingBox();
+    expect(main!.x).toBeGreaterThanOrEqual(68);
+    for (const name of ['Aufgaben', 'Boards', 'Kalender']) await expect(sideNav(page).getByRole('button', { name, exact: true })).toBeVisible(); // Beschriftung als Name
+    await page.reload();
+    await expect.poll(async () => (await page.getByTestId('sidebar').boundingBox())?.width).toBe(68);
+    await page.getByTestId('side-toggle').click();
+    await expect.poll(async () => (await page.getByTestId('sidebar').boundingBox())!.width).toBe(244);
+    await noHorizontalScroll(page);
+  });
+
+  test('Zahlenkacheln filtern die Liste: ein Klick filtert, der Chip und ein zweiter Klick heben auf', async ({ page, request }) => {
+    const s = await seed(request);
+    await page.goto('/');
+    const today = page.getByTestId('desk-stat-today');
+    await expect(row(page, s.cards[0]!.title)).toBeVisible();
+    await expect(today).toHaveAttribute('aria-pressed', 'false');
+    await today.click();
+    await expect(today).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('view-chip')).toContainText('Heute fällig');
+    await expect(row(page, s.cards[0]!.title)).toBeVisible(); // die Aufgaben von Rene sind heute fällig
+    await page.getByTestId('desk-stat-overdue').click(); // wechselt den Filter
+    await expect(page.getByTestId('desk-stat-overdue')).toHaveAttribute('aria-pressed', 'true');
+    await expect(today).toHaveAttribute('aria-pressed', 'false');
+    await expect(row(page, s.cards[0]!.title)).toHaveCount(0); // nichts ist überfällig
+    await page.getByTestId('view-chip').getByRole('button', { name: 'Filter aufheben' }).click();
+    await expect(page.getByTestId('view-chip')).toHaveCount(0);
+    await expect(row(page, s.cards[0]!.title)).toBeVisible();
+  });
+
+  test('Das Menü „Für wen?“ oben rechts: Standard Meine, Alle und andere Personen; die Beschriftung sagt, was gilt', async ({ page }) => {
+    await page.goto('/');
+    const label = page.getByTestId('scope-label');
+    await expect(label).toHaveText('Meine Aufgaben');
+    await setScope(page, 'Alle');
+    await expect(label).toHaveText('Alle Aufgaben');
+    // das Menü gilt auch auf Wächter und Kalender
+    await sideNav(page).getByRole('button', { name: 'Kalender' }).click();
+    await expect(page.getByTestId('calendar-page')).toBeVisible();
+    await expect(label).toHaveText('Alle Aufgaben');
+    await setScope(page, 'Meine');
+    await expect(label).toHaveText('Meine Aufgaben');
+  });
+});
+
+test.describe('Kalender (Desktop)', () => {
+  test('Zeitraster: Aufgaben bleiben in ihren Kästen, die Leiste springt zwischen Tag, 3 Tage und Woche nicht, der Monat zeigt Uhrzeit und Titel', async ({ page, request }) => {
+    const s = await seed(request);
+    await page.goto('/');
+    await sideNav(page).getByRole('button', { name: 'Kalender' }).click();
+    const head = page.getByTestId('calendar-head');
+    await expect(head).toBeVisible();
+    await expect(page.getByTestId('calendar-event').first()).toBeVisible();
+    const boxes = async () => ({ head: await head.boundingBox(), seg: await head.getByRole('radio', { name: 'Woche', exact: true }).boundingBox(), boards: await page.getByTestId('calendar-boards-button').boundingBox() });
+    const week = await boxes();
+    for (const mode of ['Tag', '3 Tage', 'Monat', 'Woche']) {
+      await head.getByRole('radio', { name: mode, exact: true }).click();
+      const now = await boxes();
+      // die Leiste bleibt eine Zeile hoch, und Boards und Umschalter bleiben an ihrem Platz, egal wie lang der Zeitraum-Titel ist
+      expect(now.head!.height, `Höhe bei ${mode}`).toBe(week.head!.height);
+      expect(now.seg!.x, `Umschalter bei ${mode}`).toBe(week.seg!.x);
+      expect(now.boards!.x, `Boards bei ${mode}`).toBe(week.boards!.x);
+    }
+    // Wochenraster: kein Text läuft aus seinem Kasten
+    const overflow = await page.getByTestId('calendar-event').evaluateAll((els) => els.filter((el) => el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1).length);
+    expect(overflow, 'Kästen mit überlaufendem Text').toBe(0);
+    await head.getByRole('radio', { name: 'Monat', exact: true }).click();
+    const month = page.getByTestId('calendar-month');
+    await expect(month).toBeVisible();
+    await expect(month.getByTestId('calendar-month-event').filter({ hasText: s.cards[0]!.title }).first()).toContainText(/\d\d:\d\d/);
+    await noHorizontalScroll(page);
+  });
+
+  test('Boards lassen sich im Menü ein- und ausblenden', async ({ page, request }) => {
+    const s = await seed(request);
+    await page.goto('/');
+    await sideNav(page).getByRole('button', { name: 'Kalender' }).click();
+    await page.getByTestId('calendar-head').getByRole('radio', { name: 'Tag', exact: true }).click();
+    const events = page.getByTestId('calendar-event').filter({ hasText: s.cards[0]!.title });
+    await expect(events.first()).toBeVisible();
+    await page.getByTestId('calendar-boards-button').click();
+    await page.getByRole('menuitemcheckbox', { name: s.boardName }).click(); // ausblenden: ein Board wird abgewählt
+    await expect(events).toHaveCount(0);
+    await page.getByRole('menuitemcheckbox', { name: s.boardName }).click();
+    await page.getByRole('button', { name: 'Schließen' }).first().click();
+    await expect(events.first()).toBeVisible();
   });
 });

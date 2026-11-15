@@ -1,0 +1,403 @@
+<title>Stups Desktop Kacheln</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: schwebende Seitenleiste (Karte mit Abstand zum Rand) mit sechs Kacheln für die Ansichten, darunter Kalender, Wächter und die Boards mit farbigen Symbolen.
+   Der Inhalt liegt offen auf dem Grund: großer Titel in der Farbe der Ansicht, Gruppen mit Abschnitten statt einer flachen Tabelle. */
+:root {
+  --bg: #f2f2f7; --card: #ffffff; --card2: #f7f7fa;
+  --label: #111114; --label2: #5f5f68; --label3: #8a8a93;
+  --sep: rgba(60,60,67,.18); --hover: rgba(60,60,67,.07);
+  --accent: #d24600; --accent-text: #b03800; --accent-soft: rgba(210,70,0,.10); --on-accent: #ffffff;
+  --ok: #1d8a3f; --ok-bg: rgba(29,138,63,.12);
+  --warn: #b25e00; --warn-bg: rgba(210,120,0,.14);
+  --bad: #c62828; --bad-bg: rgba(198,40,40,.11);
+  --info: #0a6fe0; --info-bg: rgba(10,111,224,.11);
+  --off: #6d6d76; --off-bg: rgba(138,138,147,.16);
+  --ha: #0a6fa8;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 0 0 .5px rgba(60,60,67,.14);
+  --c-haus: #d24600; --c-fam: #8e4ec6; --c-gar: #1d8a3f; --c-url: #0a6fe0;
+  --p-rene: #b8541a; --p-conny: #8e4ec6; --p-ben: #0a6fe0; --p-mia: #1d8a3f;
+  --font: 'Inter', -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --card: #1c1c1e; --card2: #2a2a2d;
+    --label: #f5f5f7; --label2: #aeaeb4; --label3: #7c7c84;
+    --sep: rgba(255,255,255,.14); --hover: rgba(255,255,255,.07);
+    --accent: #ff7a2e; --accent-text: #ff9a58; --accent-soft: rgba(255,122,46,.16); --on-accent: #1a0c00;
+    --ok: #4cd27a; --ok-bg: rgba(76,210,122,.16); --warn: #ffb04a; --warn-bg: rgba(255,176,74,.16);
+    --bad: #ff6b63; --bad-bg: rgba(255,107,99,.16); --info: #5aaeff; --info-bg: rgba(90,174,255,.16);
+    --off: #9a9aa2; --off-bg: rgba(154,154,162,.18); --ha: #3db4ee;
+    --shadow: 0 0 0 .5px rgba(255,255,255,.1);
+    --c-haus: #ff7a2e; --c-fam: #b987ea; --c-gar: #4cd27a; --c-url: #5aaeff;
+    --p-rene: #d9773a; --p-conny: #a46fd8; --p-ben: #3b8ff0; --p-mia: #35a85f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --card: #1c1c1e; --card2: #2a2a2d;
+  --label: #f5f5f7; --label2: #aeaeb4; --label3: #7c7c84;
+  --sep: rgba(255,255,255,.14); --hover: rgba(255,255,255,.07);
+  --accent: #ff7a2e; --accent-text: #ff9a58; --accent-soft: rgba(255,122,46,.16); --on-accent: #1a0c00;
+  --ok: #4cd27a; --ok-bg: rgba(76,210,122,.16); --warn: #ffb04a; --warn-bg: rgba(255,176,74,.16);
+  --bad: #ff6b63; --bad-bg: rgba(255,107,99,.16); --info: #5aaeff; --info-bg: rgba(90,174,255,.16);
+  --off: #9a9aa2; --off-bg: rgba(154,154,162,.18); --ha: #3db4ee;
+  --shadow: 0 0 0 .5px rgba(255,255,255,.1);
+  --c-haus: #ff7a2e; --c-fam: #b987ea; --c-gar: #4cd27a; --c-url: #5aaeff;
+  --p-rene: #d9773a; --p-conny: #a46fd8; --p-ben: #3b8ff0; --p-mia: #35a85f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--label); font-family: var(--font); font-size: 14px; line-height: 1.35; -webkit-font-smoothing: antialiased; padding-block: 16px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; text-align: left; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+svg { display: block; flex: none; }
+h1, h2, h3, p { margin: 0; text-wrap: balance; }
+
+
+:root { --t-all: #55555c; } 
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --t-all: #6c6c74; } }
+:root[data-theme="dark"] { --t-all: #6c6c74; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--label); font-family: var(--font); font-size: 14px; line-height: 1.35; -webkit-font-smoothing: antialiased; padding-block: 16px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; text-align: left; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+svg { display: block; flex: none; }
+h1, h2, h3, p { margin: 0; text-wrap: balance; }
+.wrap { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.intro h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.intro p { color: var(--label2); margin-top: 4px; max-width: 80ch; text-wrap: pretty; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+.grp { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.grp > span { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--label3); margin-right: 2px; }
+.pill { height: 32px; padding: 0 14px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; }
+.pill[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.pills { margin-left: auto; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.notes > div { background: var(--card); border-radius: 14px; padding: 12px 14px; box-shadow: var(--shadow); color: var(--label2); font-size: 13px; text-wrap: pretty; }
+.notes b { display: block; color: var(--label); font-size: 14px; margin-bottom: 3px; }
+.stage { border-radius: 14px; box-shadow: var(--shadow); overflow: auto; background: var(--bg); }
+.app { min-width: 1120px; height: 740px; display: grid; background: var(--bg); }
+.rec { background: var(--accent-soft); border-radius: 14px; padding: 12px 16px; color: var(--label); text-wrap: pretty; }
+.rec b { color: var(--accent-text); }
+
+/* App */
+.logo { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; flex: none; }
+.wm { display: flex; flex-direction: column; line-height: 1; }
+.wm b { font-size: 21px; font-weight: 800; letter-spacing: -.02em; } .wm b i { color: var(--accent); font-style: normal; }
+.wm small { font-size: 9px; font-weight: 800; letter-spacing: .14em; color: var(--accent); margin-top: 1px; }
+.ic { width: 32px; height: 32px; border-radius: 16px; display: grid; place-items: center; flex: none; position: relative; color: var(--label2); }
+.ic:hover { background: var(--hover); color: var(--label); }
+.ic .dot { position: absolute; top: -1px; right: -2px; min-width: 16px; height: 16px; border-radius: 8px; background: var(--bad); color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center; padding: 0 4px; }
+.av { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; background: var(--c); flex: none; }
+.av.s { width: 22px; height: 22px; font-size: 10px; }
+.avs { display: flex; } .avs .av { box-shadow: 0 0 0 2px var(--card); margin-left: -6px; } .avs .av:first-child { margin-left: 0; }
+.kbd { font-size: 11px; font-weight: 600; background: var(--card); border-radius: 6px; padding: 1px 6px; color: var(--label2); box-shadow: var(--shadow); }
+.search { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 11px; border-radius: 11px; background: var(--hover); color: var(--label2); font-size: 14px; width: 100%; white-space: nowrap; }
+.sq { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #fff; flex: none; background: var(--c); }
+.n { font-size: 13px; color: var(--label3); font-variant-numeric: tabular-nums; }
+.n.hot { background: var(--bad); color: #fff; font-weight: 700; font-size: 11px; min-width: 18px; height: 18px; border-radius: 9px; display: grid; place-items: center; padding: 0 5px; }
+
+/* Schwebende Seitenleiste */
+.d { grid-template-columns: 272px minmax(0,1fr); transition: none; }
+.d.slim { grid-template-columns: 76px minmax(0,1fr); }
+.side { margin: 10px 0 10px 10px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow), 0 10px 30px rgba(0,0,0,.05); padding: 12px 10px 10px; display: flex; flex-direction: column; gap: 4px; min-height: 0; overflow: hidden; }
+.side .sh { display: flex; align-items: center; gap: 9px; height: 42px; padding: 0 4px; }
+.side .sh .sp { flex: 1; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 0 8px; }
+.tile { background: var(--card2); border-radius: 14px; padding: 8px 10px 8px; height: 62px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 0 0 .5px var(--sep); }
+.tile:hover { background: var(--hover); }
+.tile .tp { display: flex; align-items: center; justify-content: space-between; }
+.tile .ti { width: 26px; height: 26px; border-radius: 50%; background: var(--tc); color: #fff; display: grid; place-items: center; }
+.tile .tn { font-size: 21px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+.tile .tl { font-size: 12.5px; font-weight: 600; color: var(--label2); white-space: nowrap; }
+.tile[aria-pressed="true"] { background: var(--tc); box-shadow: none; }
+.tile[aria-pressed="true"] .tn, .tile[aria-pressed="true"] .tl { color: #fff; }
+.tile[aria-pressed="true"] .ti { background: rgba(255,255,255,.25); }
+.nv { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 8px; border-radius: 11px; width: 100%; font-size: 14.5px; font-weight: 600; }
+.nv:hover { background: var(--hover); }
+.nv[aria-current] { background: var(--accent-soft); color: var(--accent-text); }
+.nv .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sec { display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 2px; font-size: 13px; font-weight: 700; color: var(--label2); }
+.foot { margin-top: auto; border-top: .5px solid var(--sep); padding: 8px 4px 0; display: flex; align-items: center; gap: 6px; }
+.foot .nm { flex: 1; min-width: 0; font-size: 13px; line-height: 1.2; font-weight: 700; }
+.foot .nm small { display: block; color: var(--label3); font-size: 11.5px; font-weight: 500; }
+.rail { align-items: center; padding: 12px 0 10px; }
+.rail .tiles { display: flex; flex-direction: column; gap: 6px; margin: 6px 0; }
+.rail .rt { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #fff; background: var(--tc); position: relative; }
+.rail .rt[aria-pressed="false"] { background: var(--card2); color: var(--tc); box-shadow: 0 0 0 .5px var(--sep); }
+.rail .rt .b { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; border-radius: 9px; background: var(--label); color: var(--bg); font-size: 10px; font-weight: 800; display: grid; place-items: center; padding: 0 4px; }
+.rail .nv { width: 44px; justify-content: center; padding: 0; height: 44px; }
+
+/* Inhalt */
+.main { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.top { padding: 22px 32px 14px; display: flex; flex-direction: column; gap: 14px; }
+.r1 { display: flex; align-items: flex-end; gap: 14px; }
+.title { font-size: 32px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
+.sub { color: var(--label2); font-size: 14px; margin-top: 4px; }
+.body { padding: 0 32px 28px; overflow: auto; flex: 1; min-height: 0; }
+.who { display: inline-flex; align-items: center; gap: 4px; background: var(--hover); border-radius: 19px; padding: 3px; }
+.who button { height: 30px; min-width: 30px; border-radius: 15px; display: grid; place-items: center; font-size: 13px; font-weight: 700; padding: 0 10px; }
+.who button.av { padding: 0; width: 30px; height: 30px; font-size: 12px; }
+.who button[aria-pressed="true"] { box-shadow: 0 0 0 2.5px var(--accent); }
+.who button.all[aria-pressed="true"] { background: var(--card); box-shadow: var(--shadow); }
+.lbl { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--label3); }
+.btn { height: 36px; padding: 0 16px; border-radius: 18px; background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip { height: 30px; padding: 0 12px; border-radius: 15px; background: var(--hover); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.chip[aria-pressed="true"] { background: var(--label); color: var(--bg); }
+.chip .n { color: inherit; opacity: .6; } .chip .n.hot { opacity: 1; color: #fff; height: 16px; min-width: 16px; }
+.sep1 { width: 1px; height: 20px; background: var(--sep); margin: 0 4px; }
+.menu { position: relative; display: inline-flex; }
+.pop { position: absolute; z-index: 5; top: 36px; left: 0; min-width: 210px; background: var(--card); border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.18), var(--shadow); padding: 6px; display: flex; flex-direction: column; gap: 1px; }
+.pop .it { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 8px; font-size: 14px; font-weight: 500; }
+.pop .it:hover { background: var(--hover); } .pop .it[aria-current] { background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
+.pop .it .t { flex: 1; }
+.list { background: var(--card); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 18px; }
+.gh { display: flex; align-items: center; gap: 8px; padding: 8px 18px; font-size: 13px; font-weight: 700; color: var(--gc, var(--label2)); background: var(--card2); border-top: .5px solid var(--sep); }
+.gh:first-child { border-top: 0; }
+.gh .n { margin-left: auto; }
+.row { display: grid; align-items: center; gap: 12px; min-height: 54px; padding: 6px 18px; border-top: .5px solid var(--sep); }
+.row:first-child, .gh + .row { border-top: 0; }
+.rt2 { grid-template-columns: 24px minmax(0,1fr) 160px 96px 118px; }
+.rw { grid-template-columns: minmax(0,1fr) 130px 150px 90px 44px; }
+.row.th { min-height: 32px; font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--label3); background: var(--card2); }
+.tt { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 8px; align-items: center; }
+.ts { font-size: 12.5px; color: var(--label2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.circle { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--label3); flex: none; }
+.circle.done { background: var(--ok); border-color: var(--ok); }
+.bd { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--label2); min-width: 0; }
+.bd i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+.bd span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.due { font-size: 13px; font-weight: 600; color: var(--label2); }
+.due.over { color: var(--bad); } .due.today { color: var(--accent-text); }
+.tag { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 9px; background: var(--info-bg); color: var(--info); white-space: nowrap; }
+.tag.w { background: var(--accent-soft); color: var(--accent-text); }
+.st { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; display: inline-block; white-space: nowrap; }
+.st.ok { background: var(--ok-bg); color: var(--ok); } .st.problem { background: var(--bad-bg); color: var(--bad); }
+.st.waiting { background: var(--warn-bg); color: var(--warn); } .st.running, .st.soon { background: var(--info-bg); color: var(--info); }
+.st.paused { background: var(--off-bg); color: var(--off); }
+.sw { width: 40px; height: 24px; border-radius: 12px; background: var(--off-bg); position: relative; flex: none; }
+.sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.sw.on { background: var(--ok); } .sw.on::after { left: 18px; }
+.empty { padding: 40px; text-align: center; color: var(--label2); }
+.kan { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+.col { background: var(--hover); border-radius: 16px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.col h3 { font-size: 13px; padding: 2px 6px; display: flex; justify-content: space-between; color: var(--label2); }
+.kc { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 10px 12px; font-weight: 600; font-size: 14px; display: flex; flex-direction: column; gap: 8px; }
+.kc .meta { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--label2); font-weight: 500; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 8px; }
+.day { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); min-height: 340px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.day h3 { font-size: 12px; color: var(--label2); text-transform: uppercase; letter-spacing: .05em; padding: 2px 4px; }
+.day h3.now { color: var(--accent-text); }
+.ev { border-radius: 8px; padding: 6px 8px; font-size: 12.5px; font-weight: 600; background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--label); border-left: 3px solid var(--c); }
+
+</style>
+<div class="wrap">
+  <div class="intro">
+    <h1>Desktop-Navigation: ein viertes Konzept</h1>
+    <p>A, B und C ordnen dieselben Zeilen anders an. Dieses Konzept ändert die Art der Navigation: Die sechs Ansichten werden zu Kacheln mit Zahlen (wie am Handy), Bereiche und Boards bekommen farbige Symbole, die Seitenleiste schwebt als weiche Karte, und der Inhalt liegt offen auf dem Grund. Alles ist klickbar.</p>
+  </div>
+  <div class="bar">
+    <div class="grp" id="gp"><span>Seite</span></div>
+    <div class="grp" id="gs"><span>Seitenleiste</span></div>
+    <div class="grp pills" id="gt"><span>Farben</span></div>
+  </div>
+  <div class="stage"><div id="app"></div></div>
+  <div class="notes">
+    <div><b>Kacheln statt Zeilen</b>Die sechs Ansichten (Heute, Überfällig, Gestupst, Diese Woche, Alle offen, Erledigt) sind zwei mal drei Kacheln mit großer Zahl. Man sieht auf einen Blick, was brennt, und klickt direkt hin. Die gewählte Kachel füllt sich mit ihrer Farbe.</div>
+    <div><b>Farbe sagt, was es ist</b>Heute ist orange, Überfällig rot, Gestupst lila, Erledigt grün. Kalender, Wächter und jedes Board tragen ihr Symbol in der eigenen Farbe. Der Titel rechts übernimmt die Farbe der Ansicht, damit klar ist, wo man ist.</div>
+    <div><b>Der Inhalt atmet</b>Keine Karte in der Karte, keine graue Kopfzeile. Aufgaben stehen in Gruppen (Überfällig, Heute, Diese Woche, Später), wie am Handy. Die Personenwahl sitzt beschriftet oben rechts und gilt für die ganze Seite.</div>
+    <div><b>Einklappbar</b>Mit dem Knopf oben links schrumpft die Seitenleiste auf 76 px: Kacheln, Kalender, Wächter und Boards bleiben als Symbole mit Zahl erreichbar.</div>
+  </div>
+  <p class="rec"><b>Warum es sich anders anfühlt:</b> Es sieht aus wie eine App und nicht wie ein Verwaltungswerkzeug. Die Seitenleiste enthält keine grauen Großbuchstaben-Überschriften mehr, nur noch zwei Abschnitte (Kacheln und Boards), und sie bleibt auch bei zehn Boards kurz, weil die Ansichten in Kacheln stecken und nicht in einer Liste.</p>
+</div>
+<script>
+/* Daten, geteilt von allen Vorschlägen */
+const P = { rene: { n: 'Rene', i: 'R', c: 'var(--p-rene)' }, conny: { n: 'Conny', i: 'C', c: 'var(--p-conny)' }, ben: { n: 'Ben', i: 'B', c: 'var(--p-ben)' }, mia: { n: 'Mia', i: 'M', c: 'var(--p-mia)' } };
+const BOARDS = [
+  { id: 'haus', n: 'Haushalt', c: 'var(--c-haus)', ic: 'house', open: 9 },
+  { id: 'fam', n: 'Familie', c: 'var(--c-fam)', ic: 'heart', open: 5 },
+  { id: 'gar', n: 'Garten', c: 'var(--c-gar)', ic: 'leaf', open: 3 },
+  { id: 'urlaub', n: 'Urlaub Italien', c: 'var(--c-url)', ic: 'plane', open: 7 },
+];
+const TASKS = [
+  { t: 'Elternabend: Anmeldung abgeben', b: 'fam', who: ['conny'], due: 'vor 2 Tagen', k: 'over', nudge: true },
+  { t: 'Batterie wechseln: Schließzylinder Wohnungstür', b: 'haus', who: ['rene'], due: 'Heute', k: 'today', watcher: true, nudge: true },
+  { t: 'Müll rausbringen', b: 'haus', who: ['ben'], due: 'Heute, 18:00', k: 'today' },
+  { t: 'Waschmaschine ausräumen', b: 'haus', who: ['mia'], due: 'Heute, 19:30', k: 'today', watcher: true },
+  { t: 'Geschenk für Oma besorgen', b: 'fam', who: ['rene', 'conny'], due: 'Do', k: 'week' },
+  { t: 'Rasen mähen', b: 'gar', who: ['rene'], due: 'Sa', k: 'week' },
+  { t: 'Fährtickets prüfen', b: 'urlaub', who: ['conny'], due: 'Mo', k: 'week' },
+  { t: 'Hecke schneiden', b: 'gar', who: ['ben'], due: '24. Nov', k: 'later' },
+  { t: 'Reisepässe verlängern', b: 'urlaub', who: ['rene'], due: '30. Nov', k: 'later' },
+  { t: 'Spülmaschine: Salz nachfüllen', b: 'haus', who: ['mia'], due: 'gestern', k: 'done' },
+];
+const WATCH = [
+  { n: 'Batterie schwach', e: 'Schließzylinder Wohnungstür', cond: 'Batterie unter 20 % (16 %)', s: 'problem', cat: 'Batterien', last: 'vor 2 Std.', who: ['rene'], on: 1 },
+  { n: 'Batterie schwach', e: 'Rauchmelder Flur', cond: 'Batterie unter 20 % (74 %)', s: 'ok', cat: 'Batterien', last: 'vor 3 Mon.', who: ['conny'], on: 1 },
+  { n: 'Batterie schwach', e: 'iPad Küche', cond: 'Batterie unter 20 % (65 %)', s: 'ok', cat: 'Batterien', last: '–', who: ['ben'], on: 1 },
+  { n: 'Waschmaschine fertig', e: 'Waschmaschine Leistung', cond: 'Leistung unter 5 W seit 3 Min.', s: 'running', cat: 'Haushaltsgeräte', last: 'gestern', who: ['mia'], on: 1 },
+  { n: 'Trockner fertig', e: 'Trockner Leistung', cond: 'Leistung unter 5 W seit 3 Min.', s: 'waiting', cat: 'Haushaltsgeräte', last: 'vor 5 Tagen', who: ['mia', 'ben'], on: 1 },
+  { n: 'Fenster zu lange offen', e: 'Fenster Bad', cond: 'ist 20 Min. offen', s: 'soon', cat: 'Türen und Fenster', last: '–', who: ['ben'], on: 1 },
+  { n: 'Regen angesagt: Wäsche rein', e: 'Wetter Zuhause', cond: 'Regen in den nächsten 3 Std.', s: 'paused', cat: 'Wetter', last: 'vor 2 Wo.', who: ['rene'], on: 0 },
+];
+const WCATS = [['Batterien', 3], ['Haushaltsgeräte', 2], ['Türen und Fenster', 1], ['Wetter', 1]];
+const WSCOPES = [['all', 'Alle Wächter', 'eye', 7], ['problem', 'Mit Problem', 'alert', 1, 1], ['waiting', 'Wartet auf jemanden', 'flag', 1], ['running', 'Läuft gerade', 'play', 1], ['soon', 'Kommt bald', 'clock', 1], ['paused', 'Pausiert', 'pause', 1]];
+const VIEWS = [['all', 'Alle offen', 'list', 9], ['nudged', 'Gestupst', 'hand', 2, 1], ['today', 'Heute', 'calendar', 3], ['over', 'Überfällig', 'alert', 1, 1], ['week', 'Diese Woche', 'calendar', 3], ['done', 'Erledigt', 'done', 1]];
+
+const IC = {
+  list: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  boards: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>',
+  gear: '<path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+  home: '<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  hand: '<path d="M9 11V5a2 2 0 0 1 4 0v6M13 10a2 2 0 0 1 4 0v3a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-2-4a2 2 0 0 1 3-2l1 1"/>',
+  alert: '<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+  pause: '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>', play: '<path d="M6 4l14 8-14 8z"/>',
+  flag: '<path d="M4 22V4M4 4h13l-2 4 2 4H4"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  done: '<path d="M20 6L9 17l-5-5"/>', chev: '<path d="M6 9l6 6 6-6"/>', panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
+  house: '<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  heart: '<path d="M12 21s-8-5-8-11a5 5 0 0 1 8-3 5 5 0 0 1 8 3c0 6-8 11-8 11z"/>',
+  leaf: '<path d="M5 19c0-9 6-14 15-14 0 9-5 15-14 15M5 19l8-8"/>',
+  plane: '<path d="M2 16l20-8-8 14-3-6z"/>',
+};
+const svg = (n, s = 18, w = 1.8) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+const av = (id, cls = '') => `<span class="av ${cls}" style="--c:${P[id].c}" title="${P[id].n}">${P[id].i}</span>`;
+const bsym = (b, s = 20) => `<span class="bsym" style="background:${b.c};width:${s}px;height:${s}px">${svg(b.ic, s - 8, 2.2)}</span>`;
+
+const S = { menu: false, col: false, page: 'tasks', view: 'all', wscope: 'all', board: 'haus', who: 'all', theme: 'auto' };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+/* Inhalt: Aufgaben, Wächter, Boards, Kalender */
+function watchList() {
+  let rows = WATCH;
+  if (S.wscope.startsWith('cat:')) rows = rows.filter((w) => w.cat === S.wscope.slice(4));
+  else if (S.wscope !== 'all') rows = rows.filter((w) => w.s === S.wscope);
+  if (S.who !== 'all') rows = rows.filter((w) => w.who.includes(S.who));
+  const lab = { ok: 'Aktuell', problem: 'Problem', waiting: 'Wartet', running: 'Läuft', soon: 'Kommt bald', paused: 'Pausiert' };
+  if (!rows.length) return '<div class="list"><div class="empty">Kein Wächter in dieser Auswahl.</div></div>';
+  return `<div class="list"><div class="row th rw"><span>Wächter</span><span>Status</span><span>Letzte Aufgabe</span><span>Wer</span><span></span></div>${rows
+    .map((w) => `<div class="row rw"><div style="min-width:0"><div class="tt">${esc(w.n)} <span style="color:var(--label3);font-weight:500;overflow:hidden;text-overflow:ellipsis">${esc(w.e)}</span></div><div class="ts">Wenn ${esc(w.cond)}</div></div><span><span class="st ${w.s}">${lab[w.s]}</span></span><span class="due">${w.last}</span><span class="avs">${w.who.map((x) => av(x, 's')).join('')}</span><span class="sw ${w.on ? 'on' : ''}"></span></div>`)
+    .join('')}</div>`;
+}
+function boardView() {
+  const b = BOARDS.find((x) => x.id === S.board);
+  const cards = TASKS.filter((t) => t.b === b.id && t.k !== 'done');
+  const col = (h, list) => `<div class="col"><h3><span>${h}</span><span>${list.length}</span></h3>${list.map((t) => `<div class="kc"><span>${esc(t.t)}</span><div class="meta"><span class="due ${t.k}">${t.due}</span><span class="avs">${t.who.map((w) => av(w, 's')).join('')}</span></div></div>`).join('')}</div>`;
+  return `<div class="kan">${col('Offen', cards.slice(0, 2))}${col('In Arbeit', cards.slice(2, 3))}${col('Erledigt', TASKS.filter((t) => t.b === b.id && t.k === 'done'))}</div>`;
+}
+function calView() {
+  const days = [['Mo', 'Fährtickets prüfen', 'urlaub'], ['Di', '', ''], ['Mi', '', ''], ['Do', 'Geschenk für Oma', 'fam'], ['Fr', '', ''], ['Sa', 'Rasen mähen', 'gar'], ['So', '', '']];
+  return `<div class="week">${days.map((d, i) => `<div class="day"><h3 class="${i === 2 ? 'now' : ''}">${d[0]} ${16 + i}.</h3>${i === 2 ? `<div class="ev" style="--c:var(--c-haus)">Müll rausbringen · 18:00</div><div class="ev" style="--c:var(--c-haus)">Waschmaschine ausräumen</div>` : ''}${d[1] ? `<div class="ev" style="--c:${BOARDS.find((b) => b.id === d[2]).c}">${d[1]}</div>` : ''}</div>`).join('')}</div>`;
+}
+
+const PAGE = { tasks: 'Aufgaben', boards: 'Boards', cal: 'Kalender', watchers: 'Wächter' };
+/* Kacheln der sechs Ansichten */
+const TILES = [
+  ['today', 'Heute', 'calendar', 3, 'var(--accent)'], ['over', 'Überfällig', 'alert', 1, 'var(--bad)'],
+  ['nudged', 'Gestupst', 'hand', 2, 'var(--c-fam)'], ['week', 'Diese Woche', 'calendar', 3, 'var(--info)'],
+  ['all', 'Alle offen', 'list', 9, 'var(--t-all)'], ['done', 'Erledigt', 'done', 1, 'var(--ok)'],
+];
+function tasksList() {
+  let rows = TASKS.filter((t) => (S.view === 'done' ? t.k === 'done' : t.k !== 'done'));
+  if (S.view === 'nudged') rows = rows.filter((t) => t.nudge);
+  if (S.view === 'today') rows = rows.filter((t) => t.k === 'today');
+  if (S.view === 'over') rows = rows.filter((t) => t.k === 'over');
+  if (S.view === 'week') rows = rows.filter((t) => t.k === 'week' || t.k === 'today');
+  if (S.who !== 'all') rows = rows.filter((t) => t.who.includes(S.who));
+  if (!rows.length) return '<div class="list"><div class="empty">Nichts offen. Gut gemacht.</div></div>';
+  const b = (id) => BOARDS.find((x) => x.id === id);
+  const G = [['over', 'Überfällig', 'var(--bad)'], ['today', 'Heute', 'var(--accent-text)'], ['week', 'Diese Woche', 'var(--label2)'], ['later', 'Später', 'var(--label2)'], ['done', 'Erledigt', 'var(--ok)']];
+  const row = (t) => `<div class="row rt2"><span class="circle ${t.k === 'done' ? 'done' : ''}"></span><div style="min-width:0"><div class="tt"><span style="overflow:hidden;text-overflow:ellipsis">${esc(t.t)}</span>${t.watcher ? '<span class="tag w">Wächter</span>' : ''}${t.nudge ? '<span class="tag">Gestupst</span>' : ''}</div></div><span class="bd" style="--c:${b(t.b).c}"><i></i><span>${b(t.b).n}</span></span><span class="avs">${t.who.map((w) => av(w, 's')).join('')}</span><span class="due ${t.k}">${t.due}</span></div>`;
+  return G.map((g) => ({ g, items: rows.filter((t) => t.k === g[0]) })).filter((x) => x.items.length)
+    .map((x) => `<div class="list"><div class="gh" style="--gc:${x.g[2]}">${x.g[1]}<span class="n">${x.items.length}</span></div>${x.items.map(row).join('')}</div>`).join('');
+}
+const content = () => (S.page === 'tasks' ? tasksList() : S.page === 'watchers' ? watchList() : S.page === 'boards' ? boardView() : calView());
+const TILE = (id) => TILES.find((t) => t[0] === id);
+function pageTitle() {
+  if (S.page === 'tasks') return TILE(S.view)[1];
+  if (S.page === 'boards') return BOARDS.find((b) => b.id === S.board).n;
+  return { cal: 'Kalender', watchers: 'Wächter' }[S.page];
+}
+function titleColor() {
+  if (S.page === 'tasks') return TILE(S.view)[4] === 'var(--t-all)' ? 'var(--label)' : TILE(S.view)[4];
+  if (S.page === 'boards') return BOARDS.find((b) => b.id === S.board).c;
+  return 'var(--accent-text)';
+}
+function pageSub() {
+  if (S.page === 'tasks') return { today: '3 Aufgaben für heute', over: '1 Aufgabe überfällig', nudged: '2 Aufgaben wurden dir gestupst', week: '3 Aufgaben in den nächsten 7 Tagen', all: '9 offen in 4 Boards', done: 'Zuletzt erledigt' }[S.view];
+  return { boards: BOARDS.find((b) => b.id === S.board).open + ' offene Aufgaben', cal: 'Woche 47 · alle Boards', watchers: '7 Wächter · 1 mit Problem · 1 aus' }[S.page];
+}
+const who = () => `<div style="display:flex;align-items:center;gap:8px"><span class="lbl">Ansicht für</span><div class="who" role="group" aria-label="Ansicht für"><button class="all" data-who="all" aria-pressed="${S.who === 'all'}">Alle</button>${Object.keys(P).map((id) => `<button class="av" style="--c:${P[id].c}" data-who="${id}" aria-pressed="${S.who === id}" aria-label="${P[id].n}" title="${P[id].n}">${P[id].i}</button>`).join('')}</div></div>`;
+const catMenu = () => {
+  const cur = S.wscope.startsWith('cat:') ? S.wscope.slice(4) : '';
+  return `<span class="menu"><button class="chip" data-menu="1" aria-pressed="${!!cur}" aria-expanded="${S.menu}">Kategorie${cur ? ': ' + cur : ''}${svg('chev', 14, 2.4)}</button>${S.menu ? `<span class="pop" role="menu">${WCATS.map((c) => `<button class="it" role="menuitem" data-ws="cat:${c[0]}" ${cur === c[0] ? 'aria-current="true"' : ''}><span class="t">${c[0]}</span><span class="n">${c[1]}</span></button>`).join('')}</span>` : ''}</span>`;
+};
+const wchips = () => `<div class="chips">${WSCOPES.map((v) => `<button class="chip" data-ws="${v[0]}" aria-pressed="${S.wscope === v[0]}">${v[1]}<span class="n ${v[4] ? 'hot' : ''}">${v[3]}</span></button>`).join('')}<span class="sep1"></span>${catMenu()}</div>`;
+const ha = '<button class="ic" style="color:var(--ha)" aria-label="Zurück zu Home Assistant">' + svg('home', 20) + '</button>';
+const bell = '<button class="ic" aria-label="Mitteilungen">' + svg('bell', 20) + '<span class="dot">2</span></button>';
+const gear = '<button class="ic" aria-label="Einstellungen">' + svg('gear', 20) + '</button>';
+const sq = (c, ic) => `<span class="sq" style="--c:${c}">${svg(ic, 15, 2.2)}</span>`;
+
+function side() {
+  const onTasks = S.page === 'tasks';
+  if (S.col) {
+    return `<aside class="side rail"><div class="logo" style="margin-bottom:4px">s</div><button class="ic" data-col="1" aria-label="Seitenleiste ausklappen">${svg('panel', 20)}</button><button class="nv" aria-label="Suchen">${svg('search', 20, 2)}</button>
+    <div class="tiles">${TILES.map((t) => `<button class="rt" style="--tc:${t[4]}" data-view="${t[0]}" aria-pressed="${onTasks && S.view === t[0]}" aria-label="${t[1]}" title="${t[1]}">${svg(t[2], 20, 2)}<span class="b">${t[3]}</span></button>`).join('')}</div>
+    <button class="nv" data-page="cal" ${S.page === 'cal' ? 'aria-current="page"' : ''} aria-label="Kalender">${sq('var(--bad)', 'calendar')}</button>
+    <button class="nv" data-page="watchers" ${S.page === 'watchers' ? 'aria-current="page"' : ''} aria-label="Wächter">${sq('var(--accent)', 'eye')}</button>
+    ${BOARDS.map((b) => `<button class="nv" data-board="${b.id}" ${S.page === 'boards' && S.board === b.id ? 'aria-current="page"' : ''} aria-label="${b.n}">${sq(b.c, b.ic)}</button>`).join('')}
+    <div class="foot" style="flex-direction:column;border:0;margin-top:auto;padding:0">${bell}${gear}${av('rene')}</div></aside>`;
+  }
+  return `<aside class="side"><div class="sh"><div class="logo">s</div><div class="wm"><b>stups<i>.</i></b><small>BETA</small></div><span class="sp"></span><button class="ic" data-col="1" aria-label="Seitenleiste einklappen">${svg('panel', 20)}</button></div>
+  <button class="search" style="margin-top:2px">${svg('search', 16, 2)}<span style="flex:1;text-align:left">Suchen oder Befehl</span><span class="kbd">⌘ K</span></button>
+  <div class="tiles">${TILES.map((t) => `<button class="tile" style="--tc:${t[4]}" data-view="${t[0]}" aria-pressed="${onTasks && S.view === t[0]}"><span class="tp"><span class="ti">${svg(t[2], 15, 2.2)}</span><span class="tn">${t[3]}</span></span><span class="tl">${t[1]}</span></button>`).join('')}</div>
+  <button class="nv" data-page="cal" ${S.page === 'cal' ? 'aria-current="page"' : ''}>${sq('var(--bad)', 'calendar')}<span class="t">Kalender</span></button>
+  <button class="nv" data-page="watchers" ${S.page === 'watchers' ? 'aria-current="page"' : ''}>${sq('var(--accent)', 'eye')}<span class="t">Wächter</span><span class="n hot">1</span></button>
+  <div class="sec"><span>Boards</span><button class="ic" style="width:22px;height:22px;margin-right:-4px" aria-label="Neues Board">${svg('plus', 14, 2.4)}</button></div>
+  ${BOARDS.map((b) => `<button class="nv" data-board="${b.id}" ${S.page === 'boards' && S.board === b.id ? 'aria-current="page"' : ''}>${sq(b.c, b.ic)}<span class="t">${b.n}</span><span class="n">${b.open}</span></button>`).join('')}
+  <div class="foot">${av('rene')}<div class="nm">Rene<small>Administrator</small></div>${ha}${bell}${gear}</div></aside>`;
+}
+function view() {
+  const cta = `<button class="btn">${svg('plus', 16, 2.4)}${S.page === 'watchers' ? 'Neuer Wächter' : 'Neue Aufgabe'}</button>`;
+  const showWho = S.page === 'tasks' || S.page === 'watchers';
+  return `<div class="app d ${S.col ? 'slim' : ''}">${side()}<main class="main"><div class="top"><div class="r1"><div style="flex:1;min-width:0"><div class="title" style="color:${titleColor()}">${pageTitle()}</div><div class="sub">${pageSub()}</div></div>${showWho ? who() : ''}${cta}</div>${S.page === 'watchers' ? wchips() : ''}</div><div class="body">${content()}</div></main></div>`;
+}
+function mk(id, label, key, pressed) {
+  const b = document.createElement('button');
+  b.className = 'pill'; b.textContent = label; b.setAttribute('aria-pressed', pressed); b.dataset.k = key + ':' + id;
+  return b;
+}
+function render() {
+  if (S.theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = S.theme;
+  for (const id of ['gp', 'gs', 'gt']) [...$(id).querySelectorAll('button')].forEach((x) => x.remove());
+  Object.entries(PAGE).forEach(([k, l]) => $('gp').append(mk(k, l, 'page', S.page === k)));
+  [['open', 'Ausgeklappt'], ['col', 'Eingeklappt']].forEach((x) => $('gs').append(mk(x[0], x[1], 'side', (x[0] === 'col') === S.col)));
+  [['auto', 'Automatisch'], ['light', 'Hell'], ['dark', 'Dunkel']].forEach((x) => $('gt').append(mk(x[0], x[1], 'theme', S.theme === x[0])));
+  $('app').innerHTML = view();
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button');
+  if (!t) return;
+  const d = t.dataset;
+  if (d.menu) { S.menu = !S.menu; render(); return; }
+  S.menu = false;
+  if (d.k) { const [k, id] = d.k.split(':'); if (k === 'page') S.page = id; else if (k === 'side') S.col = id === 'col'; else S.theme = id; }
+  else if (d.col) S.col = !S.col;
+  else if (d.page) S.page = d.page;
+  else if (d.view) { S.view = d.view; S.page = 'tasks'; }
+  else if (d.ws) { S.wscope = d.ws; S.page = 'watchers'; }
+  else if (d.board) { S.board = d.board; S.page = 'boards'; }
+  else if (d.who) S.who = S.who === d.who && d.who !== 'all' ? 'all' : d.who;
+  render();
+});
+render();
+
+</script>

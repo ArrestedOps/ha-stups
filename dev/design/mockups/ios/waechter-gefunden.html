@@ -1,0 +1,554 @@
+<title>Stups Gefunden und Assistent</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: „Gefunden“ als Seite mit Art links und Geräten rechts (Kästchen immer da, Unpassendes sichtbar gesperrt);
+   Assistent mit mehreren Geräten: eine Geräteleiste in jedem Schritt, dazu ein Überblick „Alle“. Am Desktop eine Tabelle „Das entsteht“. */
+:root {
+  --bg: #f2f2f7; --card: #ffffff; --card2: #f7f7fa;
+  --label: #111114; --label2: #5f5f68; --label3: #8a8a93;
+  --sep: rgba(60,60,67,.18); --hover: rgba(60,60,67,.07); --seg: rgba(118,118,128,.14);
+  --accent: #d24600; --accent-text: #b03800; --accent-soft: rgba(210,70,0,.10); --on-accent: #ffffff;
+  --ok: #1d8a3f; --ok-bg: rgba(29,138,63,.12);
+  --warn: #b25e00; --warn-bg: rgba(210,120,0,.14);
+  --bad: #c62828; --bad-bg: rgba(198,40,40,.11);
+  --info: #0a6fe0; --info-bg: rgba(10,111,224,.11);
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 0 0 .5px rgba(60,60,67,.14);
+  --pop: 0 10px 30px rgba(0,0,0,.22), 0 0 0 .5px rgba(60,60,67,.2);
+  --p-rene: #b8541a; --p-conny: #8e4ec6; --p-ben: #0a6fe0;
+  --side: #ebebf0; --frame: #1b1b1f; --font: 'Inter', -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --card: #1c1c1e; --card2: #2a2a2d;
+    --label: #f5f5f7; --label2: #aeaeb4; --label3: #7c7c84;
+    --sep: rgba(255,255,255,.14); --hover: rgba(255,255,255,.07); --seg: rgba(118,118,128,.3);
+    --accent: #ff7a2e; --accent-text: #ff9a58; --accent-soft: rgba(255,122,46,.16); --on-accent: #1a0c00;
+    --ok: #4cd27a; --ok-bg: rgba(76,210,122,.16); --warn: #ffb04a; --warn-bg: rgba(255,176,74,.16);
+    --bad: #ff6b63; --bad-bg: rgba(255,107,99,.16); --info: #5aaeff; --info-bg: rgba(90,174,255,.16);
+    --shadow: 0 0 0 .5px rgba(255,255,255,.1); --pop: 0 10px 30px rgba(0,0,0,.6), 0 0 0 .5px rgba(255,255,255,.14);
+    --p-rene: #d9773a; --p-conny: #a46fd8; --p-ben: #3b8ff0; --side: #0c0c0d; --frame: #3a3a3f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --card: #1c1c1e; --card2: #2a2a2d;
+  --label: #f5f5f7; --label2: #aeaeb4; --label3: #7c7c84;
+  --sep: rgba(255,255,255,.14); --hover: rgba(255,255,255,.07); --seg: rgba(118,118,128,.3);
+  --accent: #ff7a2e; --accent-text: #ff9a58; --accent-soft: rgba(255,122,46,.16); --on-accent: #1a0c00;
+  --ok: #4cd27a; --ok-bg: rgba(76,210,122,.16); --warn: #ffb04a; --warn-bg: rgba(255,176,74,.16);
+  --bad: #ff6b63; --bad-bg: rgba(255,107,99,.16); --info: #5aaeff; --info-bg: rgba(90,174,255,.16);
+  --shadow: 0 0 0 .5px rgba(255,255,255,.1); --pop: 0 10px 30px rgba(0,0,0,.6), 0 0 0 .5px rgba(255,255,255,.14);
+  --p-rene: #d9773a; --p-conny: #a46fd8; --p-ben: #3b8ff0; --side: #0c0c0d; --frame: #3a3a3f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--label); font-family: var(--font); font-size: 14px; line-height: 1.35; -webkit-font-smoothing: antialiased; padding-block: 16px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; text-align: left; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+svg { display: block; flex: none; }
+h1, h2, h3, p { margin: 0; text-wrap: balance; }
+small { font-size: 12px; color: var(--label2); }
+.wrap { max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.intro h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.intro p { color: var(--label2); margin-top: 4px; max-width: 86ch; text-wrap: pretty; }
+.found { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); padding: 12px 16px; display: grid; gap: 6px; }
+.found b { font-size: 13px; }
+.found ul { margin: 0; padding-left: 18px; color: var(--label2); text-wrap: pretty; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { height: 34px; padding: 0 14px; border-radius: 17px; background: var(--card); box-shadow: var(--shadow); font-weight: 600; font-size: 13px; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+.notes > div { background: var(--card); border-radius: 14px; padding: 12px 14px; box-shadow: var(--shadow); color: var(--label2); font-size: 13px; text-wrap: pretty; }
+.notes b { display: block; color: var(--label); font-size: 14px; margin-bottom: 3px; }
+.rec { background: var(--accent-soft); border-radius: 14px; padding: 12px 16px; text-wrap: pretty; }
+.rec b { color: var(--accent-text); }
+.stage { border-radius: 14px; box-shadow: var(--shadow); overflow: auto; background: var(--bg); }
+
+/* Desktop-App */
+.app { min-width: 1100px; display: grid; grid-template-columns: 64px 1fr; min-height: 640px; }
+.side { background: var(--side); display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 18px; color: var(--label3); }
+.side i { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.side i.on { background: var(--card); color: var(--accent-text); box-shadow: var(--shadow); }
+.main { padding: 22px 28px 28px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.head h2 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+.head .sp { flex: 1; }
+.cta { height: 40px; padding: 0 18px; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
+.btn { height: 36px; padding: 0 14px; border-radius: 10px; background: var(--card); box-shadow: var(--shadow); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn.sm { height: 30px; padding: 0 12px; font-size: 13px; }
+.btn.pri { background: var(--accent); color: var(--on-accent); box-shadow: none; font-weight: 700; }
+.btn:hover { background: var(--card2); }
+.btn.pri:hover { filter: brightness(1.06); background: var(--accent); }
+.lnk { color: var(--accent-text); font-weight: 600; font-size: 13px; }
+.seg { display: inline-flex; background: var(--seg); border-radius: 10px; padding: 2px; }
+.seg button { height: 32px; padding: 0 14px; border-radius: 8px; font-weight: 600; font-size: 13px; color: var(--label2); text-align: center; }
+.seg button[aria-pressed="true"] { background: var(--card); color: var(--label); box-shadow: 0 1px 3px rgba(0,0,0,.16); }
+.seg.full { display: flex; } .seg.full button { flex: 1; height: 36px; }
+.search { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 10px; background: var(--seg); color: var(--label2); min-width: 240px; }
+.search span { color: var(--label3); }
+
+/* Gefunden Desktop */
+.gf { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 16px; align-items: start; }
+.rail { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.rail button { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 6px 10px; border-radius: 10px; font-weight: 600; }
+.rail button:hover { background: var(--hover); }
+.rail button[aria-current="true"] { background: var(--accent-soft); color: var(--accent-text); }
+.rail button.dim { opacity: .5; }
+.rail .n { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--label2); background: var(--seg); border-radius: 10px; padding: 1px 8px; }
+.rail .picked { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--on-accent); background: var(--accent); border-radius: 10px; padding: 1px 8px; }
+.rail h3 { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--label3); padding: 8px 10px 4px; }
+.panel { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); min-width: 0; }
+.ph { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: .5px solid var(--sep); }
+.tile { width: 42px; height: 42px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text); display: flex; align-items: center; justify-content: center; flex: none; }
+.ph h3 { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.ph p { color: var(--label2); font-size: 13px; margin-top: 2px; text-wrap: pretty; }
+.ph .sp { flex: 1; min-width: 0; }
+.lock-note { margin: 12px 18px 0; padding: 10px 14px; border-radius: 12px; background: var(--warn-bg); color: var(--label); display: flex; gap: 10px; align-items: center; font-size: 13px; text-wrap: pretty; }
+.lock-note svg { color: var(--warn); }
+.gh { display: flex; align-items: center; gap: 10px; padding: 10px 18px 6px; margin-top: 4px; }
+.gh b { font-size: 13px; } .gh small { margin-left: 2px; }
+.gh.dim { opacity: .5; }
+.hrow { display: grid; grid-template-columns: 40px minmax(0, 1.7fr) 100px 150px minmax(190px, auto); align-items: center; gap: 8px; min-height: 60px; padding: 6px 18px; border-top: .5px solid var(--sep); cursor: pointer; }
+.hrow:hover { background: var(--hover); }
+.hrow.on { background: var(--accent-soft); }
+.hrow.off { opacity: .5; cursor: default; }
+.hrow.off:hover { background: none; opacity: .9; }
+.hrow.off .nm, .hrow.off .rm, .hrow.off .val { opacity: .6; }
+.nm b { display: block; font-size: 14px; font-weight: 600; } .nm small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rm { color: var(--label2); }
+.val { display: flex; align-items: center; gap: 8px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.meter { width: 54px; height: 6px; border-radius: 3px; background: var(--seg); overflow: hidden; } .meter i { display: block; height: 100%; border-radius: 3px; background: var(--ok); } .meter i.bad { background: var(--bad); }
+.acts { display: flex; justify-content: flex-end; gap: 6px; align-items: center; }
+.hrow .acts .btn { opacity: 0; } .hrow:hover .acts .btn, .hrow:focus-within .acts .btn, .hrow.off .acts .btn { opacity: 1; }
+.ico { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--label2); } .ico:hover { background: var(--hover); }
+.cb { width: 22px; height: 22px; border-radius: 7px; border: 1.6px solid var(--label3); display: flex; align-items: center; justify-content: center; color: var(--on-accent); flex: none; background: transparent; }
+.cb.on { background: var(--accent); border-color: var(--accent); }
+.cb.part { background: var(--accent); border-color: var(--accent); }
+.cb.lock { border: 0; background: var(--seg); color: var(--label2); border-radius: 50%; }
+.selbar { position: sticky; bottom: 14px; margin: 14px 18px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px 10px 16px; border-radius: 16px; background: var(--label); color: var(--bg); box-shadow: var(--pop); }
+.selbar .what { margin-right: auto; display: flex; flex-direction: column; } .selbar b { font-size: 14px; } .selbar .what span { font-size: 12px; opacity: .72; }
+.selbar .btn { background: rgba(127,127,127,.28); color: var(--bg); box-shadow: none; } .selbar .btn:hover { background: rgba(127,127,127,.4); }
+.selbar .btn.pri { background: var(--accent); color: var(--on-accent); }
+.foot { padding: 12px 18px 16px; color: var(--label2); font-size: 13px; display: flex; gap: 14px; align-items: center; border-top: .5px solid var(--sep); }
+
+/* Telefon */
+.phones { display: flex; gap: 22px; flex-wrap: wrap; padding: 22px; align-items: flex-start; justify-content: center; }
+.pcol { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.pcol > b { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--label2); }
+.phone { width: 372px; height: 780px; border-radius: 40px; border: 8px solid var(--frame); background: var(--bg); overflow: hidden; display: flex; flex-direction: column; position: relative; }
+.pscroll { flex: 1; overflow: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: none; }
+.pscroll::-webkit-scrollbar { display: none; }
+.ptop { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 30px 16px 6px; font-size: 16px; }
+.ptop b { font-size: 17px; } .ptop .l { color: var(--accent-text); font-weight: 600; } .ptop .r { text-align: right; color: var(--label2); }
+.pfoot { padding: 10px 16px 18px; background: var(--bg); display: grid; gap: 8px; }
+.pcta { height: 50px; border-radius: 14px; background: var(--accent); color: var(--on-accent); font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center; }
+.pcta.ghost { background: var(--card); color: var(--label); box-shadow: var(--shadow); }
+.ptitle { font-size: 22px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+.prog { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; color: var(--label2); }
+.prog i { flex: 1; height: 5px; border-radius: 3px; background: var(--seg); overflow: hidden; } .prog i u { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.card { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); }
+.pad { padding: 14px; }
+.cap { font-size: 12px; color: var(--label2); text-wrap: pretty; }
+.sh { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--label2); }
+.lrow { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-top: .5px solid var(--sep); min-height: 48px; } .lrow:first-child { border-top: 0; }
+.lrow .g { flex: 1; min-width: 0; } .lrow b { font-weight: 600; display: block; } .lrow small { display: block; }
+.pill { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.pill.bad { background: var(--bad-bg); color: var(--bad); } .pill.ok { background: var(--ok-bg); color: var(--ok); } .pill.mute { background: var(--seg); color: var(--label2); } .pill.acc { background: var(--accent-soft); color: var(--accent-text); }
+.av { width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.av.rene { background: var(--p-rene); } .av.conny { background: var(--p-conny); } .av.ben { background: var(--p-ben); }
+.who { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+
+/* Geräteleiste */
+.strip { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); padding: 10px 12px 12px; }
+.strip-h { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; } .strip-h b { font-size: 14px; } .strip-h span { color: var(--label2); font-size: 12px; flex: 1; }
+.strip .chips { -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; } .chips::-webkit-scrollbar { display: none; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 17px; background: var(--seg); font-weight: 600; font-size: 13px; white-space: nowrap; flex: none; }
+.chip small { color: inherit; opacity: .75; font-variant-numeric: tabular-nums; }
+.chip.on { background: var(--accent); color: var(--on-accent); }
+.chip.add { background: var(--accent-soft); color: var(--accent-text); }
+.chip .x { margin-left: 2px; opacity: .7; display: flex; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--label3); flex: none; display: inline-block; } .dot.bad { background: var(--bad); } .dot.ok { background: var(--ok); }
+.chip.on .dot { box-shadow: 0 0 0 2px rgba(255,255,255,.55); }
+.step { display: flex; align-items: center; gap: 6px; background: var(--seg); border-radius: 12px; padding: 4px; }
+.step button { width: 44px; height: 40px; border-radius: 9px; background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.14); display: flex; align-items: center; justify-content: center; }
+.step output { flex: 1; text-align: center; font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.field { display: grid; gap: 6px; } .field > span { font-size: 12px; font-weight: 700; color: var(--label2); }
+.input { height: 44px; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); padding: 0 12px; display: flex; align-items: center; font-weight: 600; }
+.radio { width: 22px; height: 22px; border-radius: 50%; border: 1.6px solid var(--label3); flex: none; display: flex; align-items: center; justify-content: center; } .radio.on { border-color: var(--accent); } .radio.on::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+.banner { display: flex; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--info-bg); text-wrap: pretty; } .banner svg { color: var(--info); margin-top: 1px; } .banner.warn { background: var(--warn-bg); } .banner.warn svg { color: var(--warn); }
+.chart text { font-family: var(--font); font-size: 10px; fill: var(--label3); }
+
+/* Gefunden Handy */
+.psearch { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 10px; background: var(--seg); color: var(--label2); }
+.sec { display: flex; align-items: center; gap: 8px; padding: 6px 2px 6px; }
+.sec b { font-size: 15px; } .sec .n { color: var(--label2); font-size: 13px; } .sec .sp { flex: 1; } .sec.dim { opacity: .5; }
+.prow { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: .5px solid var(--sep); min-height: 56px; }
+.prow:first-child { border-top: 0; } .prow.on { background: var(--accent-soft); } .prow.off { opacity: .55; }
+.prow .g { flex: 1; min-width: 0; } .prow b { font-weight: 600; font-size: 14px; display: block; } .prow small { display: block; }
+.prow .sw { font-size: 12px; font-weight: 700; color: var(--accent-text); text-align: right; max-width: 78px; line-height: 1.2; }
+.pbar { margin: 0 16px 0; padding: 10px 10px 10px 14px; border-radius: 16px; background: var(--label); color: var(--bg); box-shadow: var(--pop); display: flex; align-items: center; gap: 8px; }
+.pbar .what { flex: 1; min-width: 0; display: flex; flex-direction: column; } .pbar b { font-size: 14px; white-space: nowrap; } .pbar .what span { font-size: 11.5px; opacity: .72; }
+.pbar .btn { background: rgba(127,127,127,.28); color: var(--bg); box-shadow: none; height: 36px; padding: 0 12px; } .pbar .btn.pri { background: var(--accent); color: var(--on-accent); }
+
+/* Assistent Desktop */
+.wd { background: var(--bg); border: 1.5px solid var(--accent); border-radius: 22px; padding: 20px 22px; box-shadow: 0 0 0 3px var(--accent-soft); }
+.wd-h { display: flex; align-items: flex-start; gap: 12px; } .wd-h h3 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; } .wd-h p { color: var(--label2); margin-top: 2px; } .wd-h .sp { flex: 1; }
+.wd-g { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 600px); gap: 18px; margin-top: 16px; align-items: start; }
+.blk { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 14px 16px; display: grid; gap: 12px; }
+.blk > h4 { margin: 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--label2); display: flex; align-items: center; gap: 8px; }
+.blk > h4 .tag { background: var(--accent); color: var(--on-accent); border-radius: 6px; padding: 1px 7px; letter-spacing: 0; }
+.cond { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 15px; font-weight: 600; }
+.cond .step { width: 168px; }
+.tbl { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); position: sticky; top: 8px; }
+.tbl > h4 { margin: 0; padding: 14px 16px 4px; font-size: 15px; font-weight: 800; display: flex; align-items: baseline; gap: 8px; } .tbl > h4 small { font-weight: 500; }
+.trow { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 16px; border-top: .5px solid var(--sep); cursor: pointer; }
+.trow:hover { background: var(--hover); } .trow.on { background: var(--accent-soft); }
+.trow .g b { font-weight: 600; display: flex; gap: 8px; align-items: center; } .trow .g small { display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+.trow .r { text-align: right; display: grid; gap: 4px; justify-items: end; font-weight: 700; font-variant-numeric: tabular-nums; }
+.big { padding: 12px 16px 14px; border-top: .5px solid var(--sep); }
+.wd-f { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; border-top: .5px solid var(--sep); margin-top: 16px; padding-top: 14px; }
+.wd-f .name { flex: 1; min-width: 14rem; max-width: 36rem; height: 44px; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px; padding: 0 14px; } .wd-f .name span { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--label2); } .wd-f .name em { font-style: normal; color: var(--label3); font-weight: 600; }
+.wd-f .sp { flex: 1; }
+.pop { position: relative; }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--label); color: var(--bg); padding: 10px 16px; border-radius: 12px; box-shadow: var(--pop); z-index: 20; max-width: min(520px, 92vw); text-wrap: pretty; }
+.picker { width: 100%; max-width: 372px; }
+@media (max-width: 720px) { .phones { padding: 14px 4px; } }
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Wächter: Gefunden, Mehrfachauswahl und Assistent mit mehreren Geräten</h1>
+    <p>Alle Beispiele sind bedienbar: Zeilen antippen, Grenzwert ändern, Geräte umschalten. Die Daten sind Beispiele.</p>
+  </div>
+  <div class="found">
+    <b>Was heute schiefgeht (im Code nachgesehen)</b>
+    <ul>
+      <li>„Gefunden“ öffnet am Desktop ein Handy-Fenster. Das gemeinsame Einrichten weicht am Desktop ebenfalls auf den Handy-Assistenten aus, weil das Formular nur ein Gerät kennt.</li>
+      <li>Der Assistent zeigt Verlauf und Zustand nur für das erste Gerät. Die anderen stehen als Zeilen in einer Liste, ohne Wert, ohne Vorschau und ohne Umschalten.</li>
+      <li>Die Auswahl sperrt, sobald eine Art gewählt ist, alle anderen Kästchen ohne Erklärung. Der Auswahlmodus braucht einen eigenen Knopf.</li>
+    </ul>
+  </div>
+  <div class="tabs" role="tablist" aria-label="Mockups">
+    <button class="tab" role="tab" data-act="tab" data-t="1" aria-selected="true">1 · Gefunden am Desktop</button>
+    <button class="tab" role="tab" data-act="tab" data-t="2" aria-selected="false">2 · Gefunden am Handy</button>
+    <button class="tab" role="tab" data-act="tab" data-t="3" aria-selected="false">3 · Assistent am Handy</button>
+    <button class="tab" role="tab" data-act="tab" data-t="4" aria-selected="false">4 · Assistent am Desktop</button>
+  </div>
+
+  <section id="t1" role="tabpanel">
+    <div class="notes">
+      <div><b>Kein Auswahlmodus</b>Die Kästchen sind immer da. Eine Zeile anzutippen wählt sie. Der Knopf „Auswählen“ entfällt.</div>
+      <div><b>Links die Art, rechts die Geräte</b>Auch bei 30 Arten und 100 Geräten bleibt es übersichtlich. Das Suchfeld sucht über alle Arten.</div>
+      <div><b>Was nicht passt, bleibt sichtbar</b>Gedimmt, mit Schloss und dem Grund. „Stattdessen wählen“ tauscht die Auswahl mit einem Klick.</div>
+    </div>
+    <div class="stage" style="margin-top:10px"><div class="app"><div class="side" aria-hidden="true"></div><div class="main" id="deskFound"></div></div></div>
+  </section>
+
+  <section id="t2" role="tabpanel" hidden>
+    <div class="notes">
+      <div><b>Dieselbe Regel wie am Desktop</b>Kästchen immer sichtbar, Gruppen mit „Alle wählen“. Graue Zeilen nennen den Grund.</div>
+      <div><b>Die Leiste unten erklärt sich</b>Sie nennt die Art der Auswahl. Der Hinweis „Nur Geräte derselben Art passen zusammen“ steht direkt darüber, mit „Auswahl ändern“.</div>
+      <div><b>Waschmaschine zeigt den Unterschied</b>Dasselbe Gerät kann über Leistung oder Programmstatus laufen. Das sind zwei Auslöser und sie passen nicht zusammen.</div>
+    </div>
+    <div class="stage" style="margin-top:10px"><div class="phones"><div class="pcol"><b>Gefunden</b><div class="phone" id="phoneFound"></div></div></div></div>
+  </section>
+
+  <section id="t3" role="tabpanel" hidden>
+    <div class="notes">
+      <div><b>Geräteleiste in jedem Schritt</b>Oben immer dieselben Chips. „Alle“ zeigt den Überblick, ein Gerät zeigt Verlauf, Titel, Zuständige und Probelauf nur für dieses Gerät.</div>
+      <div><b>Die Werte gelten für alle</b>Der Grenzwert steht einmal da. Darunter sieht man sofort, bei welchen Geräten er jetzt auslöst. Ändere die Grenze, die Anzeige folgt.</div>
+      <div><b>Gleiches Muster in allen Schritten</b>Wenn: Verlauf. Dann: Titel je Gerät. Wer: Verteilung. Feinschliff: Probelauf je Gerät.</div>
+    </div>
+    <div class="stage" style="margin-top:10px">
+      <div class="phones" id="wizPhones"></div>
+      <div class="phones" style="padding-top:0">
+        <div class="pcol" style="max-width:372px"><b>Bei 30 Geräten</b>
+          <div class="card picker pad" style="display:grid;gap:10px">
+            <div class="strip-h" style="margin:0"><b>30 Geräte</b><span>Batterie niedrig</span><button class="lnk" data-act="noop">Ändern</button></div>
+            <div style="display:flex;gap:6px;align-items:center"><button class="btn sm" style="flex:1;height:40px;justify-content:space-between" data-act="noop"><span class="who"><i class="dot bad"></i>Flur Rauchmelder</span><span style="display:flex;align-items:center;gap:6px;color:var(--label2)">4 von 30 <span data-i="chevron-down"></span></span></button><button class="ico" style="background:var(--seg)" data-act="noop" aria-label="Voriges Gerät"><span data-i="chevron-left"></span></button><button class="ico" style="background:var(--seg)" data-act="noop" aria-label="Nächstes Gerät"><span data-i="chevron-right"></span></button></div>
+            <div class="psearch"><span data-i="search"></span><span>Gerät suchen</span></div>
+            <div class="chips"><button class="chip on" data-act="noop">Alle 30</button><button class="chip" data-act="noop"><i class="dot bad"></i>Löst aus · 11</button><button class="chip" data-act="noop"><i class="dot ok"></i>Noch nicht · 19</button></div>
+            <p class="cap">Ab 6 Geräten wird die Leiste zur Auswahl mit Suche. Die Filter „Löst aus“ und „Noch nicht“ ersetzen das Blättern.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="t4" role="tabpanel" hidden>
+    <div class="notes">
+      <div><b>Ein Formular statt Handy-Fenster</b>Auch beim gemeinsamen Einrichten klappt „Neuer Wächter“ im Reiter auf, wie bei einem Gerät.</div>
+      <div><b>„Das entsteht“: eine Tabelle für alle Schritte</b>Je Gerät eine Zeile mit Verlauf, aktuellem Wert, Aufgabentitel, Zuständigem und ob es jetzt auslöst. Die Zeile wählen zeigt unten den Verlauf groß.</div>
+      <div><b>Geräte direkt im Formular ändern</b>Mit × entfernen. „+ passende“ zeigt nur Geräte derselben Art, auch hier zählt dieselbe Regel.</div>
+    </div>
+    <div class="stage" style="margin-top:10px"><div class="app"><div class="side" aria-hidden="true"></div><div class="main" id="deskWiz"></div></div></div>
+  </section>
+
+  <div class="rec"><b>Meine Empfehlung:</b> alle vier so umsetzen. Die Regel „gleiche Art“ bleibt (der Auslöser gilt für alle), wird aber nie mehr stumm: gedimmt, mit Grund und mit „Stattdessen wählen“. Das Handy-Fenster bleibt nur am Handy.</div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const ICON = {
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>', check: '<path d="M20 6 9 17l-5-5"/>', x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  'chevron-right': '<path d="m9 18 6-6-6-6"/>', 'chevron-left': '<path d="m15 18-6-6 6-6"/>', 'chevron-down': '<path d="m6 9 6 6 6-6"/>', plus: '<path d="M12 5v14M5 12h14"/>', minus: '<path d="M5 12h14"/>',
+  lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>', pencil: '<path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
+  battery: '<rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2M6 11v2"/>', window: '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M12 3v18M4 12h16"/>',
+  washer: '<rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="14" r="4"/><path d="M8 6h.01M11 6h.01"/>', leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5.7-7.3"/>',
+  trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>', eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  more: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>', bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/>', grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+};
+const ic = (n, sz = 18, sw = 2) => `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+const $ = (s, r = document) => r.querySelector(s);
+const CB = (st) => `<span class="cb ${st === 'on' ? 'on' : st === 'part' ? 'part' : st === 'lock' ? 'lock' : ''}">${st === 'on' ? ic('check', 14, 3) : st === 'part' ? ic('minus', 14, 3) : st === 'lock' ? ic('lock', 12, 2.2) : ''}</span>`;
+
+/* ---------- Gefunden: Daten ---------- */
+const KINDS = [
+  { id: 'battery', t: 'Batterie niedrig', i: 'battery', d: 'Eine Aufgabe „Batterie wechseln“, wenn der Ladestand unter 20 % fällt.', f: [{ id: 'level', t: 'Ladestand' }] },
+  { id: 'window', t: 'Fenster lange offen', i: 'window', d: 'Eine Aufgabe, wenn ein Fenster oder eine Tür länger als 10 Minuten offen steht.', f: [{ id: 'state', t: 'Zustand' }] },
+  { id: 'washer', t: 'Waschmaschine fertig', i: 'washer', d: 'Eine Aufgabe „Wäsche aufhängen“, sobald die Maschine fertig ist.', f: [{ id: 'power', t: 'Über die Leistung', d: 'fertig, wenn sie unter 5 W fällt' }, { id: 'state', t: 'Über den Programmstatus', d: 'fertig, wenn der Status auf „Fertig“ springt' }] },
+  { id: 'plant', t: 'Pflanze durstig', i: 'leaf', d: 'Eine Aufgabe „Gießen“, wenn die Bodenfeuchte unter 25 % fällt.', f: [{ id: 'moist', t: 'Bodenfeuchte' }] },
+  { id: 'bins', t: 'Müllabfuhr', i: 'trash', d: 'Eine Aufgabe am Vortag der Abholung.', f: [{ id: 'cal', t: 'Abfallkalender' }] },
+];
+const H = (id, k, f, n, room, ent, val, pct) => ({ id, k, f, n, room, ent, val, pct });
+const HITS = [
+  H('b1', 'battery', 'level', 'Flur Rauchmelder', 'Flur', 'sensor.flur_rauchmelder_battery', '14 %', 14),
+  H('b2', 'battery', 'level', 'Bad Thermostat', 'Bad', 'sensor.bad_thermostat_battery', '17 %', 17),
+  H('b3', 'battery', 'level', 'Küche Fenstersensor', 'Küche', 'sensor.kueche_fenster_battery', '21 %', 21),
+  H('b4', 'battery', 'level', 'Schlafzimmer Tür', 'Schlafzimmer', 'sensor.schlafzimmer_tuer_battery', '34 %', 34),
+  H('b5', 'battery', 'level', 'Kinderzimmer Bewegungsmelder', 'Kinderzimmer', 'sensor.kinder_motion_battery', '48 %', 48),
+  H('b6', 'battery', 'level', 'Garage Torsensor', 'Garage', 'sensor.garage_tor_battery', '62 %', 62),
+  H('b7', 'battery', 'level', 'Keller Wassermelder', 'Keller', 'sensor.keller_wasser_battery', '77 %', 77),
+  H('b8', 'battery', 'level', 'Wohnzimmer Fernbedienung', 'Wohnzimmer', 'sensor.wz_fernbedienung_battery', '88 %', 88),
+  H('w1', 'window', 'state', 'Flur | Schließzylinder | Wohnungseingangstür', 'Flur', 'binary_sensor.flur_schlieszylinder', 'zu'),
+  H('w2', 'window', 'state', 'Wohnzimmer Window', 'Wohnzimmer', 'binary_sensor.wohnzimmer_window', 'zu'),
+  H('m1', 'washer', 'power', 'Waschmaschine Bad', 'Bad', 'sensor.waschmaschine_bad_power', '0 W'),
+  H('m2', 'washer', 'power', 'Waschmaschine Keller', 'Keller', 'sensor.waschmaschine_keller_power', '2 W'),
+  H('m3', 'washer', 'state', 'Waschmaschine Bad', 'Bad', 'sensor.waschmaschine_bad_programm', 'Aus'),
+  H('p1', 'plant', 'moist', 'Basilikum Küche', 'Küche', 'sensor.basilikum_moisture', '18 %', 18),
+  H('p2', 'plant', 'moist', 'Monstera Flur', 'Flur', 'sensor.monstera_moisture', '22 %', 22),
+  H('p3', 'plant', 'moist', 'Ficus Wohnzimmer', 'Wohnzimmer', 'sensor.ficus_moisture', '31 %', 31),
+  H('c1', 'bins', 'cal', 'Abfallkalender Restmüll', '—', 'calendar.abfall_restmuell', 'morgen'),
+];
+const kindOf = (id) => KINDS.find((k) => k.id === id);
+const fassOf = (h) => kindOf(h.k).f.find((x) => x.id === h.f);
+const G = { sel: new Set(), kind: 'battery', hidden: new Set(), q: '' };
+const key = (h) => h.k + ':' + h.f;
+const live = () => HITS.filter((h) => !G.hidden.has(h.id));
+const selHits = () => live().filter((h) => G.sel.has(h.id));
+const selKey = () => (G.sel.size ? key(selHits()[0]) : null);
+const canJoin = (h) => !G.sel.size || key(h) === selKey();
+const byId = (id) => HITS.find((h) => h.id === id);
+const low = (h) => h.pct !== undefined && h.pct < (h.k === 'plant' ? 25 : 20);
+const val = (h) => `<span class="val">${h.val}${h.pct !== undefined ? `<span class="meter"><i class="${low(h) ? 'bad' : ''}" style="width:${h.pct}%"></i></span>` : ''}</span>`;
+const reason = (h) => { const s = selHits()[0]; return s.k === h.k ? 'Anderer Auslöser: ' + fassOf(h).t : 'Andere Art als ' + kindOf(s.k).t; };
+const toastEl = $('#toast'); let tt;
+const toast = (m) => { toastEl.textContent = m; toastEl.hidden = false; clearTimeout(tt); tt = setTimeout(() => (toastEl.hidden = true), 2600); };
+
+function deskFound() {
+  const k = kindOf(G.kind), items = live().filter((h) => h.k === k.id && (!G.q || (h.n + h.ent + h.room).toLowerCase().includes(G.q)));
+  const total = live().length, hid = G.hidden.size, sk = selKey();
+  const rail = KINDS.map((x) => {
+    const n = live().filter((h) => h.k === x.id).length, p = selHits().filter((h) => h.k === x.id).length;
+    const dim = sk && !x.f.some((f) => x.id + ':' + f.id === sk);
+    return n ? `<button data-act="kind" data-id="${x.id}" aria-current="${x.id === G.kind}" class="${dim ? 'dim' : ''}"><span style="display:flex;color:inherit">${ic(x.i, 20)}</span><span>${x.t}</span>${p ? `<span class="picked">${p}</span>` : `<span class="n">${n}</span>`}${dim ? `<span style="display:flex;color:var(--label3)">${ic('lock', 13)}</span>` : ''}</button>` : '';
+  }).join('');
+  const row = (h) => {
+    const on = G.sel.has(h.id), off = !canJoin(h);
+    return `<div class="hrow ${on ? 'on' : ''} ${off ? 'off' : ''}" ${off ? '' : `data-act="row" data-id="${h.id}"`} role="row">
+      ${CB(on ? 'on' : off ? 'lock' : '')}
+      <div class="nm"><b>${h.n}</b><small>${off ? reason(h) : h.ent}</small></div><span class="rm">${h.room}</span>${val(h)}
+      <span class="acts">${off ? `<button class="btn sm" data-act="only" data-id="${h.id}">Stattdessen wählen</button>` : `<button class="btn sm" data-act="one" data-id="${h.id}">Einrichten</button><button class="ico" data-act="hide" data-id="${h.id}" aria-label="${h.n} ausblenden" title="Ausblenden">${ic('eye', 17)}</button>`}</span></div>`;
+  };
+  let body = '';
+  if (k.f.length > 1) {
+    body = k.f.map((f) => {
+      const list = items.filter((h) => h.f === f.id); if (!list.length) return '';
+      const can = canJoin(list[0]), all = list.every((h) => G.sel.has(h.id)), some = list.some((h) => G.sel.has(h.id));
+      return `<div class="gh ${can ? '' : 'dim'}"><button data-act="grp" data-k="${k.id}" data-f="${f.id}" ${can ? '' : 'disabled'} aria-label="Alle ${f.t} wählen" style="display:flex">${CB(!can ? 'lock' : all ? 'on' : some ? 'part' : '')}</button><b>${f.t}</b><small>${f.d}</small></div>${list.map(row).join('')}`;
+    }).join('');
+  } else body = items.map(row).join('');
+  const lead = items[0], can = lead && canJoin(lead), allOn = items.length && items.every((h) => G.sel.has(h.id)), someOn = items.some((h) => G.sel.has(h.id));
+  const note = sk && !items.some((h) => canJoin(h)) ? `<div class="lock-note">${ic('lock', 18)}<span><b>Hier passt nichts zur Auswahl.</b> Du hast ${G.sel.size} × „${kindOf(selHits()[0].k).t}“ gewählt. Ein Wächter hat einen Auslöser, deshalb lassen sich nur Geräte derselben Art zusammen einrichten.</span><button class="btn sm" data-act="clear" style="margin-left:auto">Auswahl aufheben</button></div>` : '';
+  const sel = selHits(), sf = sel[0] && fassOf(sel[0]);
+  const bar = sel.length ? `<div class="selbar" role="toolbar" aria-label="Auswahl"><span class="what"><b>${sel.length} ausgewählt</b><span>${kindOf(sel[0].k).t}${kindOf(sel[0].k).f.length > 1 ? ' · ' + sf.t : ''}</span></span><button class="btn" data-act="clear">Auswahl aufheben</button><button class="btn" data-act="bulkhide">Ausblenden</button><button class="btn pri" data-act="bulk">${sel.length === 1 ? 'Einrichten' : sel.length + ' gemeinsam einrichten'}${ic('chevron-right', 16, 2.4)}</button></div>` : '';
+  $('#deskFound').innerHTML = `
+    <div class="head"><h2>Wächter</h2><span class="sp"></span><button class="cta">${ic('plus', 18, 2.4)}Neuer Wächter</button></div>
+    <div class="head"><div class="seg" role="tablist"><button aria-pressed="false">Wächter</button><button aria-pressed="false">Aktivität</button><button aria-pressed="true">Gefunden <span class="pill acc" style="margin-left:4px">${total}</span></button></div>
+      <span class="cap" style="max-width:52ch">Stups hat in Home Assistant Geräte gefunden, zu denen ein Wächter passt.</span><span class="sp"></span>
+      ${hid ? `<button class="lnk" data-act="unhide">Ausgeblendet (${hid}) · wieder anzeigen</button>` : ''}
+      <label class="search">${ic('search', 17)}<input id="q" value="${G.q}" placeholder="Name, Raum oder Entität" aria-label="Gefundene Geräte durchsuchen" style="all:unset;flex:1;color:var(--label)"></label></div>
+    <div class="gf"><nav class="rail" aria-label="Arten"><h3>Arten · ${KINDS.filter((x) => live().some((h) => h.k === x.id)).length}</h3>${rail}</nav>
+      <section class="panel"><div class="ph"><span class="tile">${ic(k.i, 22)}</span><div class="sp"><h3>${k.t}</h3><p>${k.d}</p></div>
+        <button data-act="grpall" ${can || !lead ? '' : 'disabled'} style="display:flex;align-items:center;gap:8px;font-weight:600;opacity:${can || !lead ? 1 : .5}">${CB(!can && lead ? 'lock' : allOn ? 'on' : someOn ? 'part' : '')}Alle ${items.length} wählen</button></div>
+        ${note}${body || '<p class="cap" style="padding:24px 18px">Nichts gefunden.</p>'}${bar || `<div class="foot">${ic('info', 16)}Zeile antippen wählt sie. Mit „Einrichten“ öffnet sich das Formular schon ausgefüllt.</div>`}</section></div>`;
+}
+
+function phoneFound() {
+  const sk = selKey(), sel = selHits();
+  const secs = KINDS.map((k) => {
+    const items = live().filter((h) => h.k === k.id); if (!items.length) return '';
+    const joinable = items.filter(canJoin), dim = sk && !joinable.length, all = joinable.length && joinable.every((h) => G.sel.has(h.id));
+    const rows = items.slice(0, k.id === 'battery' ? 4 : 9).map((h) => {
+      const on = G.sel.has(h.id), off = !canJoin(h);
+      return `<div class="prow ${on ? 'on' : ''} ${off ? 'off' : ''}" ${off ? '' : `data-act="row" data-id="${h.id}"`}>${CB(on ? 'on' : off ? 'lock' : '')}
+        <div class="g"><b>${h.n}</b><small>${off ? reason(h) : (k.f.length > 1 ? fassOf(h).t.replace('Über die ', '') + ' · ' : '') + h.val + ' · ' + h.room}</small></div>
+        ${off ? `<button class="sw" data-act="only" data-id="${h.id}">Stattdessen wählen</button>` : `<button class="btn sm" data-act="one" data-id="${h.id}">Einrichten</button>`}</div>`;
+    }).join('');
+    const more = k.id === 'battery' && items.length > 4 ? `<div class="prow" style="justify-content:space-between;color:var(--accent-text);font-weight:600">Alle ${items.length} anzeigen ${ic('chevron-down', 16)}</div>` : '';
+    return `<section><div class="sec ${dim ? 'dim' : ''}"><span style="display:flex;color:var(--label2)">${ic(k.i, 18)}</span><b>${k.t}</b><span class="n">${items.length}</span><span class="sp"></span>${dim ? `<span class="cap">${ic('lock', 12)} passt nicht</span>` : `<button class="lnk" data-act="grpk" data-id="${k.id}">${all ? 'Auswahl aufheben' : 'Alle wählen'}</button>`}</div><div class="card" style="overflow:hidden">${rows}${more}</div></section>`;
+  }).join('');
+  const bar = sel.length ? `<div class="pbar"><span class="what"><b>${sel.length} ausgewählt</b><span>${kindOf(sel[0].k).t}${kindOf(sel[0].k).f.length > 1 ? ' · ' + fassOf(sel[0]).t.replace('Über die ', '') : ''}</span></span><button class="btn" data-act="bulkhide">Ausblenden</button><button class="btn pri" data-act="bulk">Einrichten</button></div>` : '';
+  const hint = sel.length ? `<div class="banner warn" style="margin:0 16px 8px;padding:8px 12px;font-size:12.5px">${ic('lock', 16)}<span>Graue Geräte haben einen anderen Auslöser und passen nicht dazu. <button class="lnk" data-act="clear" style="font-size:12.5px">Auswahl ändern</button></span></div>` : '';
+  $('#phoneFound').innerHTML = `<div class="ptop"><span class="l">&nbsp;</span><b>Gefunden</b><span class="r"><button class="lnk" data-act="noop" style="font-size:16px">Schließen</button></span></div>
+    <div class="pscroll"><label class="psearch">${ic('search', 17)}<span>Name, Raum oder Entität</span></label>
+    <p class="cap">${live().length} Geräte gefunden, zu denen ein Wächter passt. Wähle eines oder mehrere.</p>${secs}</div>${hint}${bar ? `<div style="padding-bottom:16px">${bar}</div>` : ''}`;
+}
+
+/* ---------- Assistent: Daten ---------- */
+const DEVS = [
+  { n: 'Flur Rauchmelder', ent: 'sensor.flur_rauchmelder_battery', v: 14, s: 31, ph: 0.4 },
+  { n: 'Bad Thermostat', ent: 'sensor.bad_thermostat_battery', v: 17, s: 29, ph: 2.1 },
+  { n: 'Küche Fenstersensor', ent: 'sensor.kueche_fenster_battery', v: 21, s: 28, ph: 4.2 },
+  { n: 'Schlafzimmer Tür', ent: 'sensor.schlafzimmer_tuer_battery', v: 34, s: 39, ph: 1.3 },
+  { n: 'Garage Torsensor', ent: 'sensor.garage_tor_battery', v: 62, s: 66, ph: 3.3 },
+];
+const W = { dev: 'all', thr: 20, dir: 'below', title: 'Batterie wechseln', mode: 'rr', n: 3, row: 0, adds: false };
+const PERS = [['rene', 'René'], ['conny', 'Conny']];
+const series = (d) => Array.from({ length: 24 }, (_, i) => (i === 23 ? d.v : +(d.s + (d.v - d.s) * (i / 23) + 0.3 * Math.sin(i * 1.7 + d.ph)).toFixed(1)));
+const met = (v) => (W.dir === 'below' ? v < W.thr : v > W.thr);
+const events = (d) => { let c = 0, prev = false; series(d).forEach((v) => { const m = met(v); if (m && !prev) c++; prev = m; }); return c; };
+const devs = () => DEVS.slice(0, W.n);
+const trig = () => devs().filter((d) => met(d.v));
+const who = (i) => PERS[i % PERS.length];
+const av = (p) => `<span class="av ${p[0]}">${p[1][0]}</span>`;
+let cid = 0;
+function chart(vals, w, h, o = {}) {
+  const id = 'g' + ++cid, pl = o.axis ? 28 : 4, pr = 8, pt = 8, pb = o.axis ? 18 : 6;
+  const mn = Math.min(...vals, W.thr) - 4, mx = Math.max(...vals, W.thr) + 4;
+  const x = (i) => pl + (i * (w - pl - pr)) / (vals.length - 1), y = (v) => pt + (1 - (v - mn) / (mx - mn)) * (h - pt - pb);
+  const line = vals.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const area = `${line} L${x(vals.length - 1)},${h - pb} L${x(0)},${h - pb} Z`;
+  const last = vals[vals.length - 1], bad = met(last), first = vals.findIndex(met);
+  return `<svg class="chart" width="100%" viewBox="0 0 ${w} ${h}" role="img" aria-label="Verlauf"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    ${o.axis ? [mn + 4, W.thr, mx - 4].map((v) => `<text x="${pl - 5}" y="${y(Math.round(v)) + 3}" text-anchor="end">${Math.round(v)}</text>`).join('') : ''}
+    <path d="${area}" fill="url(#${id})"/><path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="${pl}" x2="${w - pr}" y1="${y(W.thr)}" y2="${y(W.thr)}" stroke="var(--bad)" stroke-width="1.2" stroke-dasharray="4 3"/>
+    ${o.axis ? `<text x="${w - pr}" y="${y(W.thr) - 4}" text-anchor="end" style="fill:var(--bad)">Grenze ${W.thr} %</text><text x="${pl}" y="${h - 3}">vor 7 Tagen</text><text x="${w - pr}" y="${h - 3}" text-anchor="end">jetzt</text>` : ''}
+    ${o.mark && first >= 0 ? `<line x1="${x(first)}" x2="${x(first)}" y1="${pt}" y2="${h - pb}" stroke="var(--bad)" stroke-width="1" opacity=".5"/><circle cx="${x(first)}" cy="${y(vals[first])}" r="4.5" fill="var(--bad)"/>${o.axis ? `<text x="${Math.min(x(first) + 6, w - 90)}" y="${pt + 10}" style="fill:var(--bad);font-weight:700">hätte ausgelöst</text>` : ''}` : ''}
+    <circle cx="${x(vals.length - 1)}" cy="${y(last)}" r="${o.axis ? 4.5 : 3.5}" fill="${bad ? 'var(--bad)' : 'var(--ok)'}" stroke="var(--card)" stroke-width="1.5"/></svg>`;
+}
+const pillFor = (d) => (met(d.v) ? `<span class="pill bad">löst jetzt aus</span>` : `<span class="pill mute">noch nicht</span>`);
+const taskTitle = (d) => `${W.title}: ${d.n}`;
+
+function strip(step, compact) {
+  const dv = devs(), many = dv.length > 5;
+  const chip = (i, d) => `<button class="chip ${W.dev === i ? 'on' : ''}" data-act="dev" data-i="${i}" aria-pressed="${W.dev === i}"><i class="dot ${step === 1 ? (met(d.v) ? 'bad' : 'ok') : step === 4 ? (events(d) ? 'bad' : 'ok') : ''}"></i>${d.n}${step === 1 ? `<small>${d.v} %</small>` : ''}</button>`;
+  return `<section class="strip" aria-label="Geräte"><div class="strip-h"><b>${dv.length} Geräte</b><span>Batterie niedrig · ${W.dir === 'below' ? 'unter' : 'über'} ${W.thr} %</span><button class="lnk" data-act="noop">Ändern</button></div>
+    <div class="chips"><button class="chip ${W.dev === 'all' ? 'on' : ''}" data-act="dev" data-i="all" aria-pressed="${W.dev === 'all'}">Alle ${dv.length}</button>${dv.map((d, i) => chip(i, d)).join('')}</div></section>`;
+}
+const frame = (step, body, foot) => {
+  const q = ['Woran merkt Stups, dass etwas zu tun ist?', 'Welche Aufgabe soll dann entstehen?', 'Wer soll „' + W.title + '“ übernehmen?', 'Fast fertig. Noch Extras?'][step - 1];
+  return `<div class="ptop"><span class="l">Zurück</span><b>Neuer Wächter</b><span class="r">Schließen</span></div>
+    <div class="pscroll"><div class="prog"><span>Schritt ${step} von 4</span><i><u style="width:${step * 25}%"></u></i><span>${['Wenn', 'Dann', 'Wer', 'Feinschliff'][step - 1]}</span></div><h1 class="ptitle">${q}</h1>${body}</div><div class="pfoot">${foot}</div>`;
+};
+const cta = (t) => `<button class="pcta" data-act="noop">${t}${ic('chevron-right', 20, 2.4)}</button>`;
+
+function wiz1() {
+  const dv = devs(), t = trig();
+  const detail = W.dev === 'all'
+    ? `<section class="card"><div class="pad" style="display:flex;justify-content:space-between;align-items:baseline"><b>Überblick</b><span class="cap">letzte 7 Tage</span></div>${dv.map((d, i) => `<button class="lrow" style="width:100%" data-act="dev" data-i="${i}"><div class="g"><b>${d.n}</b><small>${d.v} %</small></div><div style="width:96px">${chart(series(d), 96, 34)}</div>${pillFor(d)}</button>`).join('')}</section>`
+    : (() => { const d = DEVS[W.dev]; return `<section class="card pad" style="display:grid;gap:8px"><div style="display:flex;gap:10px;align-items:center"><span class="tile" style="width:44px;height:44px">${ic('battery', 22)}</span><div style="flex:1;min-width:0"><b style="display:block">${d.n}</b><small>letzte 7 Tage</small></div><div style="text-align:right"><b style="font-size:26px;letter-spacing:-.02em">${d.v} %</b><small style="display:block">jetzt</small></div></div>${chart(series(d), 330, 130, { axis: true })}<div>${pillFor(d)}</div></section>`; })();
+  const cond = `<section style="display:grid;gap:8px"><h3 class="sh">Auslösen, wenn der Ladestand …</h3><div class="seg full" role="group">${[['below', 'unter'], ['above', 'über']].map((x) => `<button data-act="dir" data-d="${x[0]}" aria-pressed="${W.dir === x[0]}">${x[1]}</button>`).join('')}</div>
+    <div class="step"><button data-act="thr" data-d="-1" aria-label="Grenze senken">${ic('minus', 20, 2.4)}</button><output>${W.thr} %</output><button data-act="thr" data-d="1" aria-label="Grenze erhöhen">${ic('plus', 20, 2.4)}</button></div>
+    <p class="cap" style="display:flex;gap:6px;align-items:center">${ic('users', 14)}Die Grenze gilt für alle ${dv.length} Geräte.</p></section>`;
+  const res = `<div class="banner ${t.length ? '' : 'warn'}">${ic('info', 18)}<span>${t.length ? `<b>Löst jetzt bei ${t.length} von ${dv.length} Geräten aus:</b> ${t.map((d) => d.n).join(', ')}. Die Aufgaben entstehen gleich nach dem Anlegen.` : '<b>Löst bei keinem Gerät aus.</b> Es entsteht erst eine Aufgabe, wenn ein Wert die Grenze erreicht.'}</span></div>`;
+  return frame(1, strip(1) + detail + cond + res, cta('Weiter: Dann'));
+}
+function wiz2() {
+  const dv = devs();
+  const prev = W.dev === 'all'
+    ? `<section class="card"><div class="pad" style="padding-bottom:4px"><b>So heißen die Aufgaben</b></div>${dv.map((d, i) => `<div class="lrow"><div class="g"><b>${taskTitle(d)}</b><small>${d.ent}</small></div><button class="ico" data-act="noop" aria-label="Titel für ${d.n} anpassen">${ic('pencil', 16)}</button></div>`).join('')}</section>`
+    : `<section class="card pad" style="display:grid;gap:8px"><span class="sh">Vorschau für ${DEVS[W.dev].n}</span><div class="card pad" style="background:var(--card2);box-shadow:none;display:grid;gap:6px"><b style="font-size:16px">${taskTitle(DEVS[W.dev])}</b><small>Haushalt · Zu erledigen · sofort fällig</small><div class="who">${av(who(W.dev))}${who(W.dev)[1]}</div></div><button class="lnk" data-act="noop">Titel nur für dieses Gerät anpassen</button></section>`;
+  return frame(2, strip(2) + `<div class="field"><span>Titel der Aufgabe (für alle Geräte)</span><div class="input">${W.title}</div><p class="cap">Stups hängt den Namen des Geräts an. Einzelne Titel lassen sich anpassen.</p></div>` + prev + `<section class="card"><div class="lrow"><div class="g"><small>Board</small><b>Haushalt</b></div>${ic('chevron-right', 16)}</div><div class="lrow"><div class="g"><small>Spalte</small><b>Zu erledigen</b></div>${ic('chevron-right', 16)}</div><div class="lrow"><div class="g"><small>Fällig</small><b>Sofort</b></div>${ic('chevron-right', 16)}</div></section>`, cta('Weiter: Wer'));
+}
+function wiz3() {
+  const dv = devs(), idx = W.dev === 'all' ? dv.map((_, i) => i) : [W.dev];
+  return frame(3, strip(3) + `<section class="card">${[['rr', 'Reihum', 'Jede Aufgabe geht an die nächste Person.'], ['one', 'Immer dieselbe Person', ''], ['all', 'Alle gemeinsam', '']].map((o) => `<div class="lrow"><span class="radio ${W.mode === o[0] ? 'on' : ''}"></span><div class="g"><b>${o[1]}</b>${o[2] ? `<small>${o[2]}</small>` : ''}</div></div>`).join('')}</section>
+    <section class="card"><div class="lrow"><b style="flex:1">Wer ist dabei</b><span class="who">${av(PERS[0])}René</span><span class="who">${av(PERS[1])}Conny</span></div></section>
+    <section class="card"><div class="pad" style="padding-bottom:4px"><b>So verteilt Stups</b></div>${idx.map((i) => `<div class="lrow"><div class="g"><b>${dv[i].n}</b><small>${taskTitle(dv[i])}</small></div><span class="who">${av(who(i))}${who(i)[1]}</span></div>`).join('')}</section>`, cta('Weiter: Feinschliff'));
+}
+function wiz4() {
+  const dv = devs(), n = dv.length;
+  const probe = W.dev === 'all'
+    ? `<section class="card"><div class="pad" style="padding-bottom:4px;display:flex;justify-content:space-between"><b>Probelauf</b><span class="cap">letzte 7 Tage</span></div>${dv.map((d) => { const e = events(d); return `<div class="lrow"><div class="g"><b>${d.n}</b></div><span class="pill ${e ? 'bad' : 'ok'}">${e ? e + ' × ausgelöst' : 'nie ausgelöst'}</span></div>`; }).join('')}</section>`
+    : (() => { const d = DEVS[W.dev], e = events(d); return `<section class="card pad" style="display:grid;gap:8px"><div style="display:flex;justify-content:space-between"><b>Probelauf · ${d.n}</b><span class="cap">letzte 7 Tage</span></div>${chart(series(d), 330, 130, { axis: true, mark: true })}<p class="cap">${e ? `Hätte ${e} × eine Aufgabe angelegt: „${taskTitle(d)}“.` : 'Hätte keine Aufgabe angelegt.'}</p></section>`; })();
+  return frame(4, strip(4) + `<dl class="card pad" style="margin:0;display:grid;gap:8px"><div><span class="sh">Wenn</span><p style="font-weight:600">Der Ladestand von ${n} Geräten ${W.dir === 'below' ? 'unter' : 'über'} ${W.thr} % ${W.dir === 'below' ? 'fällt' : 'steigt'}</p></div><div><span class="sh">Dann</span><p style="font-weight:600">Aufgabe „${W.title}: Gerät“</p></div><div><span class="sh">Wer</span><p style="font-weight:600">Reihum René und Conny</p></div></dl>` + probe, `<div style="display:grid;grid-template-columns:1fr 2fr;gap:8px"><button class="pcta ghost" data-act="noop">Testen</button><button class="pcta" data-act="noop">${ic('check', 20, 2.6)}${n} Wächter anlegen</button></div>`);
+}
+function wizPhones() {
+  const pc = (t, h) => `<div class="pcol"><b>${t}</b><div class="phone">${h}</div></div>`;
+  $('#wizPhones').innerHTML = pc('Schritt 1 · Wenn', wiz1()) + pc('Schritt 2 · Dann', wiz2()) + pc('Schritt 3 · Wer', wiz3()) + pc('Schritt 4 · Feinschliff', wiz4());
+}
+
+function deskWiz() {
+  const dv = devs(), t = trig(), d = dv[Math.min(W.row, dv.length - 1)];
+  const popup = W.adds ? `<div class="card pop" style="position:absolute;z-index:5;top:42px;left:0;width:300px;box-shadow:var(--pop)"><div class="pad" style="padding-bottom:2px"><b>Passt dazu</b><p class="cap">Nur Batterien. Andere Arten haben einen anderen Auslöser.</p></div>${DEVS.slice(W.n).map((x, i) => `<button class="lrow" style="width:100%" data-act="addone" data-i="${W.n + i}">${CB('')}<div class="g"><b>${x.n}</b><small>${x.v} %</small></div></button>`).join('')}</div>` : '';
+  $('#deskWiz').innerHTML = `
+    <div class="head"><h2>Wächter</h2><span class="sp"></span><button class="cta">${ic('plus', 18, 2.4)}Neuer Wächter</button></div>
+    <div class="head"><div class="seg"><button aria-pressed="true">Wächter</button><button aria-pressed="false">Aktivität</button><button aria-pressed="false">Gefunden <span class="pill acc" style="margin-left:4px">12</span></button></div></div>
+    <section class="wd"><div class="wd-h"><div><h3>Neuer Wächter · ${dv.length} Geräte</h3><p>Du richtest ${dv.length} Wächter gemeinsam ein. Die Einstellungen gelten für alle.</p></div><span class="sp"></span><button class="ico" style="background:var(--card)" aria-label="Schließen">${ic('x', 20, 2.2)}</button></div>
+    <div class="wd-g"><div style="display:grid;gap:14px">
+      <section class="blk"><h4><span class="tag">Wenn</span>Geräte und Auslöser</h4>
+        <div class="chips" style="flex-wrap:wrap;overflow:visible;position:relative">${dv.map((x) => `<span class="chip" style="background:var(--seg)"><i class="dot ${met(x.v) ? 'bad' : 'ok'}"></i>${x.n}<button class="x" data-act="rm" data-n="${x.n}" aria-label="${x.n} entfernen">${ic('x', 14, 2.6)}</button></span>`).join('')}<span class="pop"><button class="chip add" data-act="adds">${ic('plus', 14, 2.6)}${DEVS.length - W.n} passende</button>${popup}</span></div>
+        <div class="cond"><span>Auslösen, wenn der Ladestand</span><div class="seg">${[['below', 'unter'], ['above', 'über']].map((x) => `<button data-act="dir" data-d="${x[0]}" aria-pressed="${W.dir === x[0]}">${x[1]}</button>`).join('')}</div><div class="step"><button data-act="thr" data-d="-1" aria-label="Grenze senken">${ic('minus', 18, 2.4)}</button><output>${W.thr} %</output><button data-act="thr" data-d="1" aria-label="Grenze erhöhen">${ic('plus', 18, 2.4)}</button></div><span>liegt.</span></div>
+        <p class="cap">Gilt für alle ${dv.length} Geräte. Rechts siehst du, bei welchen es jetzt auslöst.</p></section>
+      <section class="blk"><h4><span class="tag">Dann</span>Aufgabe</h4><div class="field"><span>Titel (für alle, Stups ergänzt das Gerät)</span><div class="input">${W.title}</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="field"><span>Board</span><div class="input">Haushalt</div></div><div class="field"><span>Spalte</span><div class="input">Zu erledigen</div></div></div></section>
+      <section class="blk"><h4><span class="tag">Wer</span>Wer bekommt die Aufgabe?</h4><div class="seg full"><button aria-pressed="true">Reihum</button><button aria-pressed="false">Eine Person</button><button aria-pressed="false">Alle</button></div><div style="display:flex;gap:14px"><span class="who">${av(PERS[0])}René</span><span class="who">${av(PERS[1])}Conny</span></div></section>
+      <div style="border:1.5px dashed var(--sep);border-radius:18px;padding:14px 16px;display:flex;gap:10px;align-items:center;font-weight:700"><span style="display:flex;color:var(--label2)">${ic('chevron-right', 18)}</span>Mehr Einstellungen<small style="font-weight:500">Sperrzeit, erledigt sich selbst, Stupsen, Zähler</small></div>
+    </div>
+    <div style="display:grid;gap:14px;position:sticky;top:8px"><section class="tbl"><h4>Das entsteht <small>${t.length} von ${dv.length} lösen jetzt aus</small></h4>
+      ${dv.map((x, i) => `<div class="trow ${i === W.row ? 'on' : ''}" data-act="trow" data-i="${i}">${chart(series(x), 92, 34)}<div class="g"><b>${x.n}</b><small>${ic('chevron-right', 12)}${taskTitle(x)} · ${who(i)[1]}</small></div><span class="r"><span>${x.v} %</span>${pillFor(x)}</span></div>`).join('')}
+      <div class="big"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><b>Verlauf · ${d.n}</b><span class="cap">letzte 7 Tage</span></div>${chart(series(d), 560, 150, { axis: true, mark: true })}<p class="cap" style="margin-top:2px">${events(d) ? `Im Probelauf hätte es ${events(d)} × ausgelöst.` : 'Im Probelauf hätte es nie ausgelöst.'}</p></div></section></div></div>
+    <div class="wd-f"><label class="name"><span>Name</span><em>automatisch: je Gerät</em></label><span class="sp"></span><button class="btn" style="height:44px" data-act="noop">Probelauf</button><button class="btn" style="height:44px" data-act="noop">Abbrechen</button><button class="cta" style="height:44px" data-act="noop">${ic('check', 18, 2.6)}${dv.length} Wächter anlegen</button></div></section>`;
+}
+
+/* ---------- Steuerung ---------- */
+function renderAll() { deskFound(); phoneFound(); wizPhones(); deskWiz(); document.querySelectorAll('[data-i]').forEach((el) => { if (el.dataset.i && ICON[el.dataset.i] && el.tagName === 'SPAN') el.innerHTML = ic(el.dataset.i, 16); }); }
+function pick(id) { const h = byId(id); if (!canJoin(h)) return; G.sel.has(id) ? G.sel.delete(id) : G.sel.add(id); }
+function setGroup(list) { const anchor = G.sel.size ? selKey() : key(list[0]); const j = list.filter((h) => key(h) === anchor); const all = j.every((h) => G.sel.has(h.id)); j.forEach((h) => (all ? G.sel.delete(h.id) : G.sel.add(h.id))); }
+function goBulk() { const s = selHits(); W.n = Math.max(2, Math.min(s.length, 5)); W.dev = 'all'; W.row = 0; showTab(window.innerWidth < 760 ? '3' : '4'); toast(`Öffnet „Neuer Wächter“ mit ${s.length} Geräten. Die Einstellungen gelten für alle.`); }
+function showTab(n) { document.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', b.dataset.t === n)); ['1', '2', '3', '4'].forEach((i) => ($('#t' + i).hidden = i !== n)); }
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]'); if (!el) return; const a = el.dataset.act, id = el.dataset.id;
+  if (a === 'tab') return showTab(el.dataset.t);
+  if (a === 'noop') return toast('Nur ein Mockup: hier passiert nichts.');
+  if (a === 'kind') G.kind = id;
+  else if (a === 'row') pick(id);
+  else if (a === 'one') { G.sel = new Set([id]); toast(`Öffnet „Neuer Wächter“ für ${byId(id).n}, schon ausgefüllt.`); }
+  else if (a === 'only') G.sel = new Set([id]);
+  else if (a === 'hide') { G.hidden.add(id); G.sel.delete(id); toast('Ausgeblendet. Stups schlägt es nicht mehr vor.'); }
+  else if (a === 'unhide') G.hidden.clear();
+  else if (a === 'clear') G.sel = new Set();
+  else if (a === 'bulkhide') { selHits().forEach((h) => G.hidden.add(h.id)); toast(`${G.sel.size} Treffer ausgeblendet.`); G.sel = new Set(); }
+  else if (a === 'bulk') return goBulk();
+  else if (a === 'grp') setGroup(live().filter((h) => h.k === el.dataset.k && h.f === el.dataset.f));
+  else if (a === 'grpall') setGroup(live().filter((h) => h.k === G.kind));
+  else if (a === 'grpk') setGroup(live().filter((h) => h.k === id));
+  else if (a === 'dev') W.dev = el.dataset.i === 'all' ? 'all' : +el.dataset.i;
+  else if (a === 'dir') W.dir = el.dataset.d;
+  else if (a === 'thr') W.thr = Math.max(5, Math.min(95, W.thr + +el.dataset.d * 1));
+  else if (a === 'trow') W.row = +el.dataset.i;
+  else if (a === 'adds') W.adds = !W.adds;
+  else if (a === 'addone') { W.n = Math.min(DEVS.length, W.n + 1); W.adds = false; }
+  else if (a === 'rm') { if (W.n > 1) { W.n -= 1; if (W.dev !== 'all' && W.dev >= W.n) W.dev = 'all'; W.row = 0; } }
+  renderAll();
+});
+document.addEventListener('input', (e) => { if (e.target.id === 'q') { G.q = e.target.value.trim().toLowerCase(); const pos = e.target.selectionStart; deskFound(); const q = $('#q'); q.focus(); q.setSelectionRange(pos, pos); } });
+renderAll();
+</script>

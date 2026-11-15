@@ -3,17 +3,17 @@
   import { clock } from '../lib/clock.svelte';
   import { agenda } from '../lib/agenda.svelte';
   import { type TodayCard } from '../lib/api';
-  import { columnForNew, dayKeyOf, dayNumber, isoWeek, monthGrid, rangeTitle, step as stepCal, weekdayShort, type CalMode } from '../lib/calendar';
+  import { columnForNew, dayKeyOf, isoWeek, rangeTitle, step as stepCal, type CalMode } from '../lib/calendar';
   import { deviceTz } from '../lib/datetime';
-  import { names as monthNames } from '../lib/i18n/names';
   import { t, tn } from '../lib/i18n/index.svelte';
   import { activeFilterCount, DEFAULT_FILTER, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId } from '../lib/schedule';
   import { matchesQuery } from '../lib/search';
   import type { StatsKind } from '../lib/statsSheets';
-  import { groupTasks, nudgesToMe, parseTasksView, taskStats, type TasksView } from '../lib/tasks';
+  import { groupTasks, nudgesToMe, parseTasksView, taskStats, taskStatsFor, type TasksView } from '../lib/tasks';
   import { ageText, sourceLine } from '../lib/today';
     import { activeScheduleFilter, claimCard, closeDetail, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
+  import CalendarBoards from './CalendarBoards.svelte';
   import CalendarView from './CalendarView.svelte';
   import FeedbackLink from './FeedbackLink.svelte';
   import Icon from './Icon.svelte';
@@ -156,6 +156,14 @@
   const weekCount = $derived(
     meId ? open.filter((c) => c.assigneeIds.includes(meId) && !!c.dueAt && Date.parse(c.dueAt) >= nowMs && Date.parse(c.dueAt) < nowMs + 7 * 86_400_000).length : 0,
   );
+  /** Desktop: die Zahlen der Kacheln folgen dem Menü „Für wen?“ (ohne Auswahl alle Personen; ein Kind sieht nur das Eigene) */
+  const deskStats = $derived(taskStatsFor([...open, ...recentDone], ui.isChild ? (meId ? [meId] : []) : sf.personIds, nowMs, tz));
+  /** Die Kachel, die gerade die Liste filtert (Gestupst und Alle offen haben keine Kachel) */
+  const deskTile = $derived(ui.taskView === 'today' || ui.taskView === 'overdue' || ui.taskView === 'week' || ui.taskView === 'done' ? ui.taskView : null);
+  const pickTile = (id: string) => {
+    const v = id as 'today' | 'overdue' | 'week' | 'done';
+    ui.taskView = ui.taskView === v ? 'all' : v;
+  };
   const nudges = $derived(
     (ui.isChild ? [] : nudgesToMe(open, meId)).sort((a, b) => (a.card.updatedAt < b.card.updatedAt ? 1 : a.card.updatedAt > b.card.updatedAt ? -1 : 0)),
   );
@@ -163,10 +171,6 @@
     (today?.others ?? []).map((o) => ({ ...o, person: personById(o.personId) })).filter((o): o is typeof o & { person: NonNullable<typeof o.person> } => o.person !== undefined),
   );
   const othersOpen = $derived(others.reduce((sum, o) => sum + o.open, 0));
-  const calMonthTitle = $derived.by(() => {
-    const [y, m] = day.split('-');
-    return `${monthNames().monthsLong[Number(m) - 1]} ${y}`;
-  });
 
   // ---------- Chips: Meine, Alle, Personen, Filter ----------
   const people = $derived(ui.people.filter((p) => p.isPerson && p.id !== meId));
@@ -190,7 +194,6 @@
 
   const done = (c: TodayCard) => void completeCard(c);
   const openHouse = (c: TodayCard) => void openCardAnywhere(c);
-  const todayKey = $derived(dayKeyOf(nowMs));
 
   /** Desktop: Schnellzeile über der Tabelle */
   let quick = $state('');
@@ -245,16 +248,17 @@
         {#if !ui.desktop}
         <TopBar title={t('Kalender')} sub={t('Deine Aufgaben, Termine und To-dos an einem Ort.')} />
         {:else}
-        <!-- Desktop (Entwurf): Pfeile und „Heute“, Zeitraum mit Kalenderwoche, rechts Tag, 3 Tage, Woche, Monat -->
-        <div class="flex items-center gap-3" data-testid="calendar-head">
-          <span class="flex items-center gap-1">
-            <button class="flex h-9 w-9 items-center justify-center rounded-full bg-surface2 text-accent-text" aria-label={t('Zurück')} onclick={() => (day = stepCal(calMode, day, -1))}><Icon name="chevron-left" size={18} stroke={2.6} /></button>
-            <button class="flex h-9 w-9 items-center justify-center rounded-full bg-surface2 text-accent-text" aria-label={t('Weiter')} onclick={() => (day = stepCal(calMode, day, 1))}><Icon name="chevron-right" size={18} stroke={2.6} /></button>
+        <!-- Desktop: Heute und Pfeile, Zeitraum mit Kalenderwoche; rechts Boards, Tag, 3 Tage, Woche, Monat und der Filter. Kein Umbruch: der Zeitraum
+             wird gekürzt, damit nichts springt, wenn er bei „Tag“ länger wird -->
+        <div class="flex flex-nowrap items-center gap-2.5" data-testid="calendar-head">
+          <button class="inline-flex h-9 shrink-0 items-center rounded-full bg-surface px-4 text-[14px] font-semibold shadow-[0_0_0_0.5px_var(--sep)] hover:bg-surface2" onclick={() => (day = dayKeyOf(nowMs))}>{t('Heute')}</button>
+          <span class="flex shrink-0 items-center">
+            <button class="flex h-9 w-9 items-center justify-center rounded-full text-text-soft hover:bg-surface2 hover:text-fg" aria-label={t('Zurück')} onclick={() => (day = stepCal(calMode, day, -1))}><Icon name="chevron-left" size={18} stroke={2.4} /></button>
+            <button class="flex h-9 w-9 items-center justify-center rounded-full text-text-soft hover:bg-surface2 hover:text-fg" aria-label={t('Weiter')} onclick={() => (day = stepCal(calMode, day, 1))}><Icon name="chevron-right" size={18} stroke={2.4} /></button>
           </span>
-          <button class="inline-flex h-9 items-center rounded-full bg-surface2 px-4 text-[14px] font-semibold" onclick={() => (day = dayKeyOf(nowMs))}>{t('Heute')}</button>
-          <h2 class="flex items-baseline gap-2 truncate text-[22px] font-bold" aria-live="polite">{rangeTitle(calMode, day)}{#if calMode === 'week' || calMode === 'days3'}<span class="text-[14px] font-medium text-text-soft">KW {isoWeek(day)}</span>{/if}</h2>
-          <span class="flex-1"></span>
-          <div class="w-[360px]"><Segmented items={VIEWS} value={calMode} label={t('Ansicht')} small onchange={(v) => setCalMode(v as CalMode)} /></div>
+          <h2 class="flex min-w-0 flex-1 items-baseline gap-2 text-[19px] font-bold tracking-tight" aria-live="polite"><span class="truncate">{rangeTitle(calMode, day)}</span>{#if calMode === 'week' || calMode === 'days3'}<span class="shrink-0 text-[14px] font-medium text-text-soft">KW {isoWeek(day)}</span>{/if}</h2>
+          <CalendarBoards />
+          <div class="w-[290px] shrink-0"><Segmented items={VIEWS} value={calMode} label={t('Ansicht')} small onchange={(v) => setCalMode(v as CalMode)} /></div>
           {@render filterButton(activeFilterCount(sf), true)}
         </div>
         {/if}
@@ -273,55 +277,6 @@
         {/if}
       </div>
       <div class="flex min-h-0 flex-1 gap-6">
-        {#if ui.desktop}
-          <!-- Desktop (Entwurf): links der Mini-Monat und die Boards zum Ein- und Ausblenden -->
-          <aside class="hidden w-[236px] shrink-0 flex-col gap-5 pt-3 xl:flex" aria-label={t('Kalender-Auswahl')} data-testid="calendar-side">
-            <div>
-              <div class="mb-2 flex items-center justify-between px-1">
-                <h3 class="text-[15px] font-semibold">{calMonthTitle}</h3>
-                <span class="flex">
-                  <button class="flex h-7 w-7 items-center justify-center text-text-soft" aria-label={t('Voriger Monat')} onclick={() => (day = stepCal('month', day, -1))}><Icon name="chevron-left" size={16} stroke={2.4} /></button>
-                  <button class="flex h-7 w-7 items-center justify-center text-text-soft" aria-label={t('Nächster Monat')} onclick={() => (day = stepCal('month', day, 1))}><Icon name="chevron-right" size={16} stroke={2.4} /></button>
-                </span>
-              </div>
-              <div class="grid grid-cols-7 text-center text-[11px] font-semibold text-text-soft">
-                {#each monthGrid(day)[0]! as d (d)}<span class="py-1">{weekdayShort(d).slice(0, 1)}</span>{/each}
-              </div>
-              {#each monthGrid(day) as week (week[0])}
-                {@const inView = week.includes(day) && (calMode === 'week' || calMode === 'days3' || calMode === 'day')}
-                <div class="grid grid-cols-7 rounded-md text-center text-[13px] {inView ? 'bg-accent/12' : ''}">
-                  {#each week as d (d)}
-                    <button
-                      class="flex h-7 items-center justify-center rounded-full {d === todayKey ? 'bg-brand-dot font-bold text-on-accent' : ''} {d.slice(0, 7) === day.slice(0, 7) ? '' : 'text-text-soft2'}"
-                      aria-label={d}
-                      aria-current={d === day ? 'date' : undefined}
-                      onclick={() => (day = d)}
-                    >{dayNumber(d)}</button>
-                  {/each}
-                </div>
-              {/each}
-            </div>
-            <div>
-              <p class="side-head !px-1">Boards</p>
-              {#each ui.boards as b (b.id)}
-                {@const on = sf.boardIds.length === 0 || sf.boardIds.includes(b.id)}
-                <label class="flex h-8 cursor-pointer items-center gap-2.5 px-1 text-[14px]">
-                  <input
-                    type="checkbox"
-                    class="h-[18px] w-[18px] accent-(--brand-dot)"
-                    checked={on}
-                    onchange={() => {
-                      const all = ui.boards.map((x) => x.id);
-                      const current = sf.boardIds.length === 0 ? all : sf.boardIds;
-                      const next = current.includes(b.id) ? current.filter((x) => x !== b.id) : [...current, b.id];
-                      setScheduleFilter({ boardIds: next.length === all.length || next.length === 0 ? [] : next });
-                    }}
-                  />{b.name}
-                </label>
-              {/each}
-            </div>
-          </aside>
-        {/if}
         <div class="flex min-h-0 min-w-0 flex-1 flex-col"><CalendarView mode={calMode} bind:day onopenday={openDay} hideNav={ui.desktop} /></div>
       </div>
     </div>
@@ -395,6 +350,36 @@
           {#if ui.desktop}
             <!-- Desktop (Entwurf): Stups-Leiste, Schnellzeile, Tabelle mit den Spalten Aufgabe, Board, Fällig, Wer; die Ansicht wählt die Seitenleiste -->
             {#if nudges.length > 0 && (ui.taskView === 'all' || ui.taskView === 'nudged')}<StupsCard bar {nudges} />{/if}
+            <StatsBar
+              desk
+              label={t('Deine Zahlen')}
+              selected={deskTile}
+              onselect={pickTile}
+              items={[
+                { id: 'today', label: t('Heute fällig'), value: deskStats.today },
+                { id: 'overdue', label: t('Überfällig'), value: deskStats.overdue, tone: 'danger' },
+                { id: 'week', label: t('Diese Woche'), value: deskStats.week },
+                { id: 'done', label: t('Erledigt heute'), value: deskStats.done },
+              ]}
+            />
+            <div class="flex items-center justify-between gap-3" data-testid="desk-toolbar">
+              <span class="flex min-h-7 items-center">
+                {#if ui.taskView !== 'all'}
+                  <span class="inline-flex h-7 items-center gap-1 rounded-full bg-accent-soft pr-1 pl-3 text-[13px] font-bold text-accent-text" data-testid="view-chip">
+                    {{ nudged: t('Gestupst'), today: t('Heute fällig'), overdue: t('Überfällig'), week: t('Diese Woche'), done: t('Erledigt heute') }[ui.taskView as 'nudged' | 'today' | 'overdue' | 'week' | 'done']}
+                    <button class="flex h-5 w-5 items-center justify-center rounded-full hover:bg-surface2" aria-label={t('Filter aufheben')} onclick={() => (ui.taskView = 'all')}><Icon name="x" size={12} stroke={2.6} /></button>
+                  </span>
+                {/if}
+              </span>
+              <span class="flex items-center gap-2 text-[13px] font-medium text-text-soft">
+                {t('Gruppieren')}
+                <span class="flex h-8 shrink-0 items-center gap-0.5 rounded-[10px] bg-surface2 p-0.5" role="radiogroup" aria-label={t('Gruppieren')}>
+                  {#each [['due', t('Fälligkeit')], ['board', 'Board']] as [id, label] (id)}
+                    <button class="h-7 rounded-[8px] px-3 text-[13px] font-semibold {ui.taskGroupBy === id ? 'bg-surface shadow-sm' : 'text-text-soft'}" role="radio" aria-checked={ui.taskGroupBy === id} onclick={() => (ui.taskGroupBy = id as 'due' | 'board')}>{label}</button>
+                  {/each}
+                </span>
+              </span>
+            </div>
             {#if !ui.isChild && quickColumn}
               <label class="flex h-11 items-center gap-3 rounded-[12px] bg-surface px-3 text-text-soft">
                 <span class="flex h-6 w-6 items-center justify-center rounded-full bg-accent/14 text-accent-text"><Icon name="plus" size={14} stroke={2.6} /></span>

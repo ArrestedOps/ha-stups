@@ -15,6 +15,7 @@
   --color-hint: var(--hint);
   --color-track: var(--track);
   --color-bg-dim: var(--bg-dim);
+  --color-side: var(--side);
   --color-accent-end: var(--accent-end);
   --color-on-banner: var(--on-banner);
   --color-media: var(--media);
@@ -69,6 +70,7 @@
   color-scheme: dark;
   --bg: #000000;
   --bg-dim: #000000; /* hinter Sheets */
+  --side: #0c0c0d; /* Seitenleiste des Desktops: etwas abgesetzt vom Grund */
   --surface: #1c1c1e;
   --ha: #4cc8f4;
   --ha-soft: rgba(24, 188, 242, 0.2);
@@ -184,6 +186,7 @@
     --ha-soft: rgba(24, 188, 242, 0.16);
     --bg: #f2f2f7;
     --bg-dim: #e5e5ea;
+    --side: #ebebf0;
     --surface: #ffffff;
     --surface2: #e9e9ee;
     --border: #d6d6da;
@@ -690,6 +693,15 @@
 
 /* Seitenleiste (Desktop, Entwurf): Abschnittsköpfe und kleine runde Knöpfe oben */
 .side-head { padding: 4px 10px 4px; font-size: 12px; font-weight: 600; color: var(--text-soft); }
+/* Seitenleiste (ruhig): Ziele und Boards als flache Zeilen; das gewählte Ziel steht als helle Fläche mit feinem Schatten, sein Symbol in Akzentfarbe */
+.nav-item { position: relative; display: flex; width: 100%; align-items: center; gap: 11px; height: 36px; padding: 0 10px; border-radius: 9px; font-size: 14.5px; font-weight: 500; color: var(--text2); }
+.nav-item:hover { background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--text); }
+.nav-item[aria-current='page'],
+.nav-item[aria-current='true'] { background: var(--surface); color: var(--text); font-weight: 650; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 0 0 0.5px var(--sep); }
+.nav-item[aria-current='page'] .nav-ico,
+.nav-item[aria-current='true'] .nav-ico { color: var(--accent-text); }
+.nav-ico { flex: none; color: var(--hint); }
+.nav-item.slim { width: 44px; height: 44px; justify-content: center; padding: 0; border-radius: 12px; }
 .side-icon { display: inline-flex; flex-shrink: 0; height: 32px; width: 32px; align-items: center; justify-content: center; border-radius: 9999px; color: var(--text); }
 .side-icon:hover { background: var(--surface2); }
 

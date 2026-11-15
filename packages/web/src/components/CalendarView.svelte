@@ -26,7 +26,8 @@
   import SectionHeader from './ui/SectionHeader.svelte';
   import TaskRow from './TaskRow.svelte';
 
-  const HOUR_PX = 44;
+  /** Am Desktop ist das Raster etwas höher (mehr Platz für Titel und Uhrzeit), am Handy bleibt es kompakt */
+  const HOUR_PX = $derived(ui.desktop ? 52 : 44);
 
   /**
    * Die Rasteransichten von Aufgaben: Tag, Woche, Monat. Die Ansicht und der gezeigte Tag gehören der Seite Aufgaben
@@ -157,6 +158,40 @@
 
   {#if failed}
     <p class="py-10 text-center text-fg2">{t('Der Kalender konnte nicht geladen werden.')}</p>
+  {:else if mode === 'month' && ui.desktop}
+    <!-- Desktop: ein großes Monatsraster, jede Zelle mit den Aufgaben des Tages (Uhrzeit und Titel), sonst „+N weitere“ -->
+    <div class="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-row bg-surface shadow-[0_0_0_0.5px_var(--sep)]" data-testid="calendar-month">
+      <div class="grid shrink-0 grid-cols-7 border-b border-line">
+        {#each weeks[0]! as d (d)}<span class="px-2.5 py-2 text-[11.5px] font-bold tracking-[0.06em] text-hint uppercase">{weekdayShort(d)}</span>{/each}
+      </div>
+      <div class="grid min-h-0 flex-1 grid-cols-7" style:grid-template-rows="repeat({weeks.length}, minmax(0, 1fr))">
+        {#each weeks.flat() as d (d)}
+          {@const list = [...(byDay.get(d) ?? [])].sort((a, b) => (a.dueAt ?? '').localeCompare(b.dueAt ?? ''))}
+          {@const showList = list.length > 3 ? list.slice(0, 2) : list}
+          <div class="flex min-h-0 min-w-0 flex-col gap-0.5 overflow-hidden border-t border-l border-line px-1 py-1 first:border-l-0 [&:nth-child(7n+1)]:border-l-0 [&:nth-child(-n+7)]:border-t-0" data-day={d}>
+            <button
+              class="flex h-[26px] w-[26px] shrink-0 items-center justify-center self-start rounded-full text-[13px] {d === today ? 'bg-accent font-bold text-on-accent' : inMonth(d, day) ? 'font-semibold' : 'font-medium text-hint'}"
+              aria-label={`${dayLabel(d)}, ${tn('{n} Aufgabe', '{n} Aufgaben', list.length)}`}
+              data-today={d === today ? '' : undefined}
+              onclick={() => openDay(d)}
+            >{dayNumber(d)}</button>
+            {#each showList as c (c.id)}
+              <button
+                class="block w-full shrink-0 truncate rounded-[5px] border-l-[3px] px-1.5 py-px text-left text-[12px] font-medium {c.completedAt ? 'line-through opacity-60' : ''}"
+                style:background="color-mix(in srgb, var(--c-{color(c)}-fg) 14%, var(--surface))"
+                style:border-left-color="var(--c-{color(c)}-fg)"
+                title="{c.title} · {c.boardName}"
+                data-testid="calendar-month-event"
+                onclick={() => openCardAnywhere(c)}
+              ><b class="mr-1 font-bold tabular-nums">{clock(minutesOfDay(c.dueAt!))}</b>{c.title}</button>
+            {/each}
+            {#if list.length > showList.length}
+              <button class="shrink-0 px-1.5 text-left text-[11.5px] font-semibold text-fg2 hover:text-fg" onclick={() => openDay(d)}>{t('+{n} weitere', { n: list.length - showList.length })}</button>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    </div>
   {:else if mode === 'month'}
     <div class="-mr-3 mt-3 min-h-0 flex-1 overflow-y-auto pr-3 pb-tabbar" data-testid="calendar-month">
       <div class="rounded-row border border-line bg-surface">
@@ -193,7 +228,7 @@
       </div>
     </div>
   {:else}
-    <div class="mt-3 grid shrink-0 gap-0.5" style:grid-template-columns="34px repeat({days.length}, minmax(0, 1fr))" aria-hidden={mode === 'day'}>
+    <div class="mt-3 grid shrink-0 gap-0.5" style:grid-template-columns="{ui.desktop ? 56 : 34}px repeat({days.length}, minmax(0, 1fr))" aria-hidden={mode === 'day'}>
       <span></span>
       {#each days as d (d)}
         <button
@@ -211,9 +246,9 @@
     <div class="mt-3 min-h-0 flex-1 overflow-hidden rounded-row border border-line bg-surface" role="presentation" ontouchstart={swipeStart} ontouchend={swipeEnd}>
       <div bind:this={scroller} class="h-full overflow-y-auto overscroll-contain" data-testid="calendar-grid">
         <div class="relative flex" style:height="{24 * HOUR_PX}px">
-          <div class="relative w-[34px] shrink-0">
+          <div class="relative shrink-0 {ui.desktop ? 'w-[56px]' : 'w-[34px]'}">
             {#each Array.from({ length: 24 }, (_, h) => h) as h (h)}
-              <span class="absolute right-1 -translate-y-1/2 text-[10px] text-dim" style:top="{h * HOUR_PX}px" class:hidden={h === 0}>{h}</span>
+              <span class="absolute right-2 -translate-y-1/2 text-dim tabular-nums {ui.desktop ? 'text-[11px]' : 'right-1 text-[10px]'}" style:top="{h * HOUR_PX}px" class:hidden={h === 0}>{ui.desktop ? clock(h * 60) : h}</span>
             {/each}
           </div>
           <div class="relative flex flex-1">
@@ -235,20 +270,25 @@
                 {/if}
                 {#each placed.get(d) ?? [] as p (p.card.id)}
                   {@const c = p.card}
+                  {@const hpx = Math.max((p.height / 60) * HOUR_PX - 3, 24)}
+                  {@const lines = ui.desktop ? (hpx < 44 ? 1 : Math.max(1, Math.floor((hpx - 28) / 16))) : 2}
                   <button
-                    class="absolute z-[2] overflow-hidden rounded-lg border-l-[3px] px-[5px] py-1 text-left {c.completedAt ? 'opacity-60' : ''}"
-                    style:background="color-mix(in srgb, var(--c-{color(c)}-fg) 15%, var(--surface))"
+                    class="absolute z-[2] overflow-hidden rounded-lg border-l-[3px] text-left {ui.desktop ? 'px-[7px] py-[3px]' : 'px-[5px] py-1'} {c.completedAt ? 'opacity-60' : ''}"
+                    style:background="color-mix(in srgb, var(--c-{color(c)}-fg) {ui.desktop ? 16 : 15}%, var(--surface))"
                     style:border-left-color="var(--c-{color(c)}-fg)"
-                    style:color="var(--c-{color(c)}-fg)"
+                    style:color={ui.desktop ? 'var(--text)' : `var(--c-${color(c)}-fg)`}
                     style:top="{(p.top / 60) * HOUR_PX + 1}px"
-                    style:height="{Math.max((p.height / 60) * HOUR_PX - 3, 24)}px"
+                    style:height="{hpx}px"
                     style:left="calc({(p.col / p.cols) * 100}% + 2px)"
                     style:width="calc({100 / p.cols}% - 4px)"
                     aria-label="{c.title}, {c.boardName}"
+                    title="{c.title} · {clock(p.top)}–{clock(p.top + p.height)} · {c.boardName}"
+                    data-testid="calendar-event"
                     onclick={() => openCardAnywhere(c)}
                   >
-                    <span class="block text-[10.5px] leading-[1.2] font-bold {c.completedAt ? 'line-through' : ''} {mode === 'week' ? 'break-all' : ''}" style:display="-webkit-box" style:-webkit-line-clamp="2" style:-webkit-box-orient="vertical">{c.title}</span>
-                    {#if mode === 'day'}<span class="block truncate text-[10.5px] opacity-80">{c.boardName}</span>{/if}
+                    <span class="block min-w-0 overflow-hidden font-bold {ui.desktop ? 'text-[12.5px] leading-[1.25] [overflow-wrap:anywhere]' : 'text-[10.5px] leading-[1.2]'} {c.completedAt ? 'line-through' : ''} {!ui.desktop && mode === 'week' ? 'break-all' : ''}" style:display="-webkit-box" style:-webkit-line-clamp={lines} style:-webkit-box-orient="vertical">{c.title}</span>
+                    {#if ui.desktop && hpx >= 44}<span class="block truncate text-[11.5px] opacity-75 tabular-nums">{clock(p.top)}–{clock(p.top + p.height)}</span>{/if}
+                    {#if !ui.desktop && mode === 'day'}<span class="block truncate text-[10.5px] opacity-80">{c.boardName}</span>{/if}
                   </button>
                 {/each}
               </div>

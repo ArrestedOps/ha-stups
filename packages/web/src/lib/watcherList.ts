@@ -91,8 +91,34 @@ export function categoryOptions(names: (string | null | undefined)[], current = 
 export type CollapseMemo = Record<string, boolean>;
 export const COLLAPSE_KEY = 'stups.watcher-groups';
 
-/** Eine Kategorie ist offen, solange nichts anderes gemerkt ist; bei einer Suche immer (der gemerkte Zustand bleibt unberührt) */
-export const groupOpen = (key: string, memo: CollapseMemo, searching: boolean): boolean => searching || (memo[key] ?? true);
+/**
+ * Eine Kategorie ist offen, solange nichts anderes gemerkt ist (`fallback`: bei vielen Kategorien nur die mit einem Problem); bei einer Suche immer
+ * (der gemerkte Zustand bleibt unberührt)
+ */
+export const groupOpen = (key: string, memo: CollapseMemo, searching: boolean, fallback = true): boolean => searching || (memo[key] ?? fallback);
+
+/** Eine Kategorie für die Reiter oben: Schlüssel, Name (null: ohne Kategorie), Anzahl und wie viele davon ein Problem haben */
+export interface CatTab {
+  key: string;
+  name: string | null;
+  n: number;
+  problems: number;
+}
+
+/**
+ * Welche Kategorien als Reiter stehen und welche im Menü „Weitere“ landen. Bis `limit` Kategorien stehen alle als Reiter (alphabetisch, wie gegeben);
+ * bei mehr sind es die `max` größten, und die gerade gewählte Kategorie ist immer sichtbar (sie ersetzt den letzten Reiter). Der Rest bleibt
+ * alphabetisch im Menü.
+ */
+export function categoryTabs(groups: CatTab[], activeKey: string | null, max = 4, limit = 6): { shown: CatTab[]; rest: CatTab[] } {
+  if (groups.length <= limit) return { shown: groups, rest: [] };
+  const bySize = [...groups].sort((a, b) => b.n - a.n || (a.name ?? '').localeCompare(b.name ?? '', undefined, { sensitivity: 'base' }));
+  let shown = bySize.slice(0, max);
+  const active = activeKey === null ? undefined : groups.find((g) => g.key === activeKey);
+  if (active && !shown.includes(active)) shown = [...shown.slice(0, max - 1), active];
+  const rest = groups.filter((g) => !shown.includes(g)).sort((a, b) => (a.name === null ? 1 : b.name === null ? -1 : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })));
+  return { shown, rest };
+}
 
 /** Der Zustand nach einem Tipp auf den Kopf: das Gegenteil dessen, was gerade zu sehen war */
 export const toggleGroup = (memo: CollapseMemo, key: string, currentlyOpen: boolean): CollapseMemo => ({ ...memo, [key]: !currentlyOpen });

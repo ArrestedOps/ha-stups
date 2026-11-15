@@ -4,6 +4,8 @@ import { setLanguage } from '../src/lib/i18n/index.svelte';
 import {
   COLLAPSE_KEY,
   categoryKeyOf,
+  categoryTabs,
+  type CatTab,
   categoryOptions,
   groupOpen,
   loadCollapse,
@@ -188,5 +190,45 @@ describe('Auswahl der Kategorien im Editor', () => {
     expect(categoryOptions(['Garten'], 'Neu')).toEqual(['Garten', 'Neu']);
     expect(categoryOptions(['Garten'], ' GARTEN ')).toEqual(['Garten']);
     expect(categoryOptions([], '')).toEqual([]);
+  });
+});
+
+describe('categoryTabs: Reiter und Menü „Weitere“', () => {
+  const g = (name: string, n: number, problems = 0): CatTab => ({ key: name.toLowerCase(), name, n, problems });
+  const few = [g('Batterien', 5), g('Heizung', 3), g('Wetter', 1)];
+  const many = [g('Alarm', 1), g('Batterien', 5), g('Bad', 1), g('Garten', 2), g('Heizung', 3), g('Keller', 1), g('Licht', 2), g('Wetter', 1)];
+
+  it('bis sechs Kategorien stehen alle als Reiter, ohne Menü', () => {
+    expect(categoryTabs(few, null)).toEqual({ shown: few, rest: [] });
+    expect(categoryTabs([...few, g('A', 1), g('B', 1), g('C', 1)], null).rest).toEqual([]);
+  });
+
+  it('bei mehr sind es die vier größten, der Rest steht alphabetisch im Menü', () => {
+    const { shown, rest } = categoryTabs(many, null);
+    expect(shown.map((x) => x.name)).toEqual(['Batterien', 'Heizung', 'Garten', 'Licht']);
+    expect(rest.map((x) => x.name)).toEqual(['Alarm', 'Bad', 'Keller', 'Wetter']);
+  });
+
+  it('die gewählte Kategorie ist immer sichtbar und ersetzt den letzten Reiter', () => {
+    const { shown, rest } = categoryTabs(many, 'wetter');
+    expect(shown.map((x) => x.name)).toEqual(['Batterien', 'Heizung', 'Garten', 'Wetter']);
+    expect(rest.map((x) => x.name)).toEqual(['Alarm', 'Bad', 'Keller', 'Licht']);
+    // eine schon sichtbare Wahl ändert nichts
+    expect(categoryTabs(many, 'batterien').shown.map((x) => x.name)).toEqual(['Batterien', 'Heizung', 'Garten', 'Licht']);
+  });
+
+  it('„Ohne Kategorie“ steht im Menü am Ende', () => {
+    const list = [...many, { key: '', name: null, n: 1, problems: 0 }];
+    expect(categoryTabs(list, null).rest.at(-1)?.name).toBeNull();
+  });
+});
+
+describe('groupOpen mit Standard', () => {
+  it('ohne gemerkte Entscheidung gilt der Standard, bei einer Suche immer offen', () => {
+    expect(groupOpen('a', {}, false)).toBe(true);
+    expect(groupOpen('a', {}, false, false)).toBe(false);
+    expect(groupOpen('a', {}, true, false)).toBe(true);
+    expect(groupOpen('a', { a: true }, false, false)).toBe(true);
+    expect(groupOpen('a', { a: false }, false, true)).toBe(false);
   });
 });

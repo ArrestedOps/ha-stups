@@ -34,11 +34,13 @@ beforeEach(() => {
 });
 
 describe('Seitenleiste', () => {
-  it('Navigation „Ansicht“ wie die Leiste unten: drei Reiter, der aktive mit aria-current', () => {
+  it('Navigation „Ansicht“ wie die Leiste unten: vier Ziele, das aktive mit aria-current', () => {
     ui.tab = 'boards';
     const out = render(Sidebar).body;
     expect(out).toContain('aria-label="Ansicht"');
-    for (const label of ['Aufgaben', 'Boards', 'Wächter']) expect(out).toContain(label);
+    for (const label of ['Aufgaben', 'Boards', 'Kalender', 'Wächter']) expect(out).toContain(label);
+    // keine Ansichten und keine Personenwahl mehr: die stehen in der Seite
+    for (const gone of ['Alle offen', 'Überfällig', 'Ansicht für', 'Mit Problem']) expect(out).not.toContain(gone);
     const active = [...out.matchAll(/<button[^>]*aria-current="page"[^>]*>/g)];
     expect(active).toHaveLength(1);
     expect(out.slice(out.indexOf(active[0]![0]), out.indexOf(active[0]![0]) + 900)).toContain('Boards');

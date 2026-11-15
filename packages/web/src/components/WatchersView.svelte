@@ -20,6 +20,8 @@
   import WatcherRow from './WatcherRow.svelte';
   import WatcherSheet from './WatcherSheet.svelte';
   import WatcherTableRow from './WatcherTableRow.svelte';
+  import WatcherTabs from './WatcherTabs.svelte';
+  import StatsBar from './ui/StatsBar.svelte';
   import Segmented from './ui/Segmented.svelte';
   import ListRow from './ui/ListRow.svelte';
   import Banner from './ui/Banner.svelte';
@@ -104,7 +106,10 @@
 
   // Kategorien: auf- und zuklappbar, der Zustand wird je Gerät gemerkt (Standard: aufgeklappt); bei einer Suche sind Treffer-Gruppen offen
   let memo = $state(loadCollapse());
-  const open = (key: string) => groupOpen(key, memo, query !== '');
+  /** Bei vielen Kategorien (mehr als sechs) und vielen Wächtern (mehr als 20) sind zunächst nur die Kategorien mit einem Problem offen, sonst alle; was man selbst auf- oder zuklappt, bleibt gemerkt */
+  const manyGroups = $derived(ui.desktop && groupItems(allItems).length > 6 && allItems.length > 20);
+  const hasProblem = (key: string) => layoutAll.problems.some((i) => categoryKeyOf(i.category) === key);
+  const open = (key: string) => groupOpen(key, memo, query !== '', manyGroups ? hasProblem(key) : true);
   function toggleCategory(key: string) {
     memo = toggleGroup(memo, key, open(key));
     saveCollapse(memo);
@@ -113,15 +118,15 @@
   // Desktop: die Seitenleiste wählt (ui.watcherScope), was die Tabelle zeigt: alle, ein Zustand oder eine Kategorie; immer nach Kategorie gruppiert
   const scope = $derived(ui.watcherScope);
   const scopeAll = $derived(!ui.desktop);
-  const paused = $derived(items.filter((i) => !i.active));
-  const scopeItems = $derived.by(() => {
-    if (scope === 'problem') return layout.problems;
-    if (scope === 'waiting') return layout.waiting;
-    if (scope === 'running') return layout.running;
-    if (scope === 'soon') return layout.soon;
-    if (scope === 'paused') return paused;
+  const statItems = $derived.by(() => {
+    const st = ui.watcherStat;
+    if (st === 'problem') return layout.problems;
+    if (st === 'waiting') return layout.waiting;
+    if (st === 'running') return layout.running;
+    if (st === 'soon') return layout.soon;
     return items;
   });
+  const scopeItems = $derived(scope === 'paused' ? statItems.filter((i) => !i.active) : statItems);
   const deskGroups = $derived.by(() => {
     const groups = groupItems(scopeItems);
     return scope.startsWith('cat:') ? groups.filter((g) => `cat:${g.key}` === scope) : groups;
@@ -139,6 +144,20 @@
     if (scope.startsWith('cat:') && data && !groupItems(allItems).some((g) => `cat:${g.key}` === scope)) ui.watcherScope = 'all';
   });
   const layoutAll = $derived(watcherLayout(allItems));
+  const catTabsData = $derived(groupItems(allItems).map((g) => ({ key: g.key, name: g.name, n: g.items.length, problems: g.items.filter((i) => layoutAll.problems.includes(i)).length })));
+  const pausedCount = $derived(allItems.filter((i) => !i.active).length);
+  const pickStat = (id: string) => {
+    const v = id as 'problem' | 'waiting' | 'running' | 'soon';
+    ui.watcherStat = ui.watcherStat === v ? '' : v;
+  };
+  /** Alle Gruppen auf einmal auf- oder zuklappen (nur in „Alle“ mit mehr als einer Kategorie) */
+  const allClosed = $derived(deskGroups.length > 0 && deskGroups.every((g) => !open(g.key)));
+  function setAllGroups(on: boolean) {
+    const next = { ...memo };
+    for (const g of deskGroups) next[g.key] = on;
+    memo = next;
+    saveCollapse(memo);
+  }
   /** Desktop: der aufgeklappte Wächter (Ablauf direkt unter der Zeile) und der Reiter Wächter / Aktivität */
   let openId = $state<string | null>(null);
   let deskTab = $state<'list' | 'activity'>('list');
@@ -231,7 +250,6 @@
 
   /** Das offene Formular (null: zu); jedes Aufklappen bekommt einen frischen Editor, der Entwurf geht beim Zuklappen verloren */
   let desk = $state.raw<{ ed: WatcherEditor; init: NewWatcherRequest } | null>(null);
-  let deskRef = $state<{ requestClose(): void }>();
   /** Der gerade angelegte Wächter: seine Zeile ist kurz hervorgehoben */
   let fresh = $state<string | null>(null);
   let freshTimer: ReturnType<typeof setTimeout> | undefined;
@@ -242,7 +260,6 @@
     desk = { ed: new WatcherEditor(null, { onsaved: created }), init };
   }
   const closeDesk = () => (desk = null);
-  const toggleDesk = () => (desk ? deskRef?.requestClose() : openDesk());
 
   // Anfragen aus „Gefunden“ und den Einstellungen (siehe `openNewWatcher`): aufklappen, mit Vorlage oder Treffer vorbelegt
   $effect(() => {
@@ -317,6 +334,24 @@
       </section>
     {:else}
       <div class="@container flex flex-col gap-3.5" data-testid="watcher-list">
+        <StatsBar
+          desk
+          label={t('Zustand der Wächter')}
+          selected={ui.watcherStat || null}
+          onselect={pickStat}
+          items={[
+            { id: 'problem', label: t('Mit Problem'), value: layoutAll.problems.length, tone: 'danger' },
+            { id: 'waiting', label: t('Wartet auf jemanden'), value: layoutAll.waiting.length },
+            { id: 'running', label: t('Läuft gerade'), value: layoutAll.running.length },
+            { id: 'soon', label: t('Kommt bald'), value: layoutAll.soon.length },
+          ]}
+        />
+        <WatcherTabs groups={catTabsData} total={allItems.length} paused={pausedCount} {scope} onpick={(v) => (ui.watcherScope = v)} />
+        {#if scope === 'all' && deskGroups.length > 1}
+          <div class="-mb-1 flex items-center">
+            <button class="text-[13px] font-semibold text-accent-text" data-testid="watcher-toggle-all" onclick={() => setAllGroups(allClosed)}>{allClosed ? t('Alle aufklappen') : t('Alle zuklappen')}</button>
+          </div>
+        {/if}
         {#if selected.length > 0}
           <div class="flex items-center gap-3 rounded-[12px] bg-surface px-4 py-2.5 text-[14px]" role="toolbar" aria-label={t('Sammelaktionen')} data-testid="watcher-bulk">
             <b>{tn('{n} ausgewählt', '{n} ausgewählt', selected.length)}</b>
@@ -498,22 +533,10 @@
               <span class="inline-flex h-5 min-w-5 items-center justify-center rounded-[10px] bg-count px-1.5 text-[12px] font-extrabold text-tok">{found}</span>
             </button>
           {/if}
-          {#if canCreate}
-            <button
-              type="button"
-              class="flex h-11 items-center gap-2 rounded-row px-4 text-[15px] font-extrabold {desk ? 'border border-accent bg-surface text-accent-text hover:bg-surface2' : 'fab-grad hover:brightness-110'}"
-              data-testid="new-watcher"
-              aria-expanded={desk !== null}
-              aria-controls="new-watcher-panel"
-              onclick={toggleDesk}
-            >
-              <Icon name={desk ? 'minus' : 'plus'} size={18} stroke={2.4} />{t('Neuer Wächter')}
-            </button>
-          {/if}
         </div>
         {#if desk}
           <div id="new-watcher-panel" transition:slide={{ duration: 180 }} data-testid="new-watcher-panel">
-            {#key desk.ed}<WatcherDesk bind:this={deskRef} ed={desk.ed} init={desk.init} onclose={closeDesk} />{/key}
+            {#key desk.ed}<WatcherDesk ed={desk.ed} init={desk.init} onclose={closeDesk} />{/key}
           </div>
         {/if}
       {:else}

@@ -162,7 +162,7 @@
   {#if ui.desktop}
     <!-- Desktop: feste Seitenleiste, rechts davon Kopfzeile und Reiter (Inhalt höchstens 1560 px breit, bei sehr breiten Fenstern mittig) -->
     <Sidebar />
-    <div class="relative z-[1] h-full pl-64">
+    <div class="relative z-[1] h-full {ui.sideSlim ? 'pl-[68px]' : 'pl-[244px]'}">
       <div class="mx-auto flex h-full max-w-[1560px] flex-col px-8">
         <DesktopHeader />
         <div class="min-h-0 flex-1">{@render pages()}</div>

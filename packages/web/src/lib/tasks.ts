@@ -87,6 +87,30 @@ export function taskStats(cards: ScheduleCard[], meId: string | null, nowMs: num
   return out;
 }
 
+/**
+ * Dieselben Zahlen für eine Auswahl von Personen (die Kacheln am Desktop folgen dem Menü „Für wen?“): ohne Personen zählen alle Aufgaben, sonst die,
+ * die mindestens einer der Personen zugewiesen sind.
+ */
+export function taskStatsFor(cards: ScheduleCard[], personIds: string[], nowMs: number, tz = deviceTz()): TaskStats & { week: number } {
+  const out = { today: 0, overdue: 0, done: 0, week: 0 };
+  const todayKey = dayKeyOf(nowMs, tz);
+  for (const c of cards) {
+    if (personIds.length > 0 && !personIds.some((id) => c.assigneeIds.includes(id))) continue;
+    if (c.completedAt) {
+      if (dayKeyOf(Date.parse(c.completedAt), tz) === todayKey) out.done += 1;
+      continue;
+    }
+    if (!c.dueAt) continue;
+    const due = Date.parse(c.dueAt);
+    if (due < nowMs) out.overdue += 1;
+    else {
+      if (dayKeyOf(due, tz) === todayKey) out.today += 1;
+      if (due < nowMs + 7 * 86_400_000) out.week += 1;
+    }
+  }
+  return out;
+}
+
 /** Aufgaben, bei denen ein Stups an mich offen ist (für das Banner oben): mit den Absendern, ohne Doppelte; Erledigtes zählt nicht */
 export function nudgesToMe<C extends Pick<Card, 'completedAt' | 'openNudges'>>(cards: C[], meId: string | null): { card: C; fromIds: string[] }[] {
   if (!meId) return [];

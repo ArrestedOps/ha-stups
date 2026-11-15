@@ -220,7 +220,7 @@ test('Wächter am Desktop: Zeilen markieren, Sammelaktionen Pausieren und Aktivi
   await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '12' } }); // andere Tests erwarten den Stand von vorher
 });
 
-test('Wächter am Desktop: Filter in der Seitenleiste, aufgeklappter Ablauf bearbeitet und speichert, Aktivität als Reiter', async ({ page, request }) => {
+test('Wächter am Desktop: Kategorie-Reiter, aufgeklappter Ablauf bearbeitet und speichert, Aktivität als Reiter', async ({ page, request }) => {
   const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
   const rene = people.find((p) => p.name === 'Rene')!;
   const tag = Date.now().toString(36);
@@ -244,14 +244,13 @@ test('Wächter am Desktop: Filter in der Seitenleiste, aufgeklappter Ablauf bear
   }
   await page.goto('/');
   await sideNav(page).getByRole('button', { name: 'Wächter' }).click();
-  const side = page.getByTestId('sidebar');
   await expect(page.getByTestId('watcher-row')).toHaveCount(2);
 
-  // Seitenleiste: Kategorie wählen filtert die Tabelle, „Alle Wächter“ zeigt wieder alles
-  await side.getByRole('button', { name: /^Gruppe A/ }).click();
+  // Reiter: Kategorie wählen filtert die Tabelle, „Alle“ zeigt wieder alles
+  await page.getByTestId('watcher-tabs').getByRole('tab', { name: /^Gruppe A/ }).click();
   await expect(page.getByTestId('watcher-row')).toHaveCount(1);
   await expect(page.getByTestId('watcher-row')).toContainText(`Alpha ${tag}`);
-  await side.getByRole('button', { name: 'Wächter', exact: true }).click();
+  await page.getByTestId('watcher-tab-all').click();
   await expect(page.getByTestId('watcher-row')).toHaveCount(2);
 
   // Aufklappen: der Ablauf steht unter der Zeile, ändert man etwas und speichert, gilt es sofort; nur eine Zeile ist offen

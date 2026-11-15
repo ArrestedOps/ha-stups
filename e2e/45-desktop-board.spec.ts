@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openBoardMenu } from './helpers';
 
 // Läuft nur im Projekt „desktop-ha“ (1440 × 900, nachgebautes Home Assistant). Desktop: Seitenleiste mit „Neues Board“, „Board-Einstellungen“,
 // „Archivierte Boards“ und „Reihenfolge ändern“; die Board-Einstellungen als breites Fenster (links die Boards, rechts die Einstellungen des
@@ -31,8 +32,12 @@ test('Seitenleiste: Neues Board, Board-Einstellungen und Reihenfolge ändern; Ar
   const second = await board(request, `Zweite ${tag}`);
   await page.goto('/');
   await expect(side(page)).toBeVisible();
-  for (const name of ['Neues Board', 'Board-Einstellungen', 'Reihenfolge ändern']) await expect(sideBoards(page).getByRole('button', { name })).toBeVisible();
-  await expect(sideBoards(page).getByRole('button', { name: /^Archivierte Boards/ })).toHaveCount(0);
+  // „Neues Board“ ist ein Knopf am Abschnitt, der Rest steht im Menü „…“ daneben
+  await expect(sideBoards(page).getByRole('button', { name: 'Neues Board' })).toBeVisible();
+  const menu = await openBoardMenu(page);
+  for (const name of ['Board-Einstellungen', 'Reihenfolge ändern']) await expect(menu.getByRole('menuitem', { name })).toBeVisible();
+  await expect(menu.getByRole('menuitem', { name: /^Archivierte Boards/ })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Schließen' }).first().click();
   // Neues Board öffnet das Anlegen (mit Sichtbarkeit und Fairness)
   await sideBoards(page).getByRole('button', { name: 'Neues Board' }).click();
   await expect(page.getByRole('dialog', { name: 'Neues Board erstellen' })).toBeVisible();
@@ -42,9 +47,10 @@ test('Seitenleiste: Neues Board, Board-Einstellungen und Reihenfolge ändern; Ar
   // archivieren: die Zeile „Archivierte Boards (1)“ erscheint, das Board ist aus der Seitenleiste verschwunden
   await request.post(`/api/boards/${second.id}/archive-board`);
   await page.reload();
-  await expect(sideBoards(page).getByRole('button', { name: /^Archivierte Boards \(\d+\)/ })).toBeVisible();
+  const menu2 = await openBoardMenu(page);
+  await expect(menu2.getByRole('menuitem', { name: /^Archivierte Boards \(\d+\)/ })).toBeVisible();
   await expect(sideBoards(page).getByRole('button', { name: new RegExp(`^Zweite ${tag}`) })).toHaveCount(0);
-  await sideBoards(page).getByRole('button', { name: /^Archivierte Boards/ }).click();
+  await menu2.getByRole('menuitem', { name: /^Archivierte Boards/ }).click();
   await page.getByTestId(`archived-${second.id}`).getByRole('button', { name: 'Wiederherstellen' }).click();
   await expect(sideBoards(page).getByRole('button', { name: new RegExp(`^Zweite ${tag}`) })).toBeVisible();
 });
@@ -54,7 +60,7 @@ test('Board-Einstellungen: breites Fenster, links die Boards (Wechsel ohne Schli
   const b = await board(request, `Beta ${tag}`);
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), a.id);
   await page.goto('/');
-  await sideBoards(page).getByRole('button', { name: 'Board-Einstellungen' }).click();
+  await (await openBoardMenu(page)).getByRole('menuitem', { name: 'Board-Einstellungen' }).click();
   const settings = page.getByRole('dialog', { name: 'Board-Einstellungen' });
   const box = (await settings.boundingBox())!;
   expect(box.width).toBeGreaterThan(900);
@@ -85,7 +91,7 @@ test('Reihenfolge ändern über die Seitenleiste: die Seitenleiste folgt, die Re
   const a = await board(request, `Eins ${tag}`);
   const b = await board(request, `Zwei ${tag}`);
   await page.goto('/');
-  await sideBoards(page).getByRole('button', { name: 'Reihenfolge ändern' }).click();
+  await (await openBoardMenu(page)).getByRole('menuitem', { name: 'Reihenfolge ändern' }).click();
   const sheet = page.getByRole('dialog', { name: 'Reihenfolge' });
   // „Zwei“ ganz nach oben schieben (wie viele Boards davor stehen, hängt von den anderen Tests ab)
   const up = sheet.getByRole('button', { name: `Zwei ${tag} nach oben` });

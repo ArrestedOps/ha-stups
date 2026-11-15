@@ -53,6 +53,14 @@ export async function setScope(page: Page, who: string): Promise<void> {
   }
 }
 
+/** Desktop: das Menü „…“ am Abschnitt Boards in der Seitenleiste (Board-Einstellungen, Archivierte Boards, Reihenfolge ändern) öffnen */
+export async function openBoardMenu(page: Page) {
+  await page.getByTestId('board-more').click();
+  const menu = page.getByRole('menu', { name: 'Boards' });
+  await expect(menu).toBeVisible();
+  return menu;
+}
+
 /**
  * Nach der ersten Anmeldung in einem frischen Container zeigt Stups die Einrichtung (46-onboarding.spec.ts testet sie): Wer die App
  * danach braucht, überspringt sie. Ist sie nicht da (Bestand, Mitglied mit Status), passiert nichts.

@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { openBoardMenu } from './helpers';
 
 // Läuft nur im Projekt „desktop-ha“ (1440 × 900, nachgebautes Home Assistant). Desktop-Optik zu Boards und Wächtern: der Dialog „Person entfernen"
 // (breit, Wächter und „Zuständige jetzt" einzeilig, nur „Danach" bricht um), die Felder einer Reihe auf einer Linie, Board-Auswahl und
@@ -39,7 +40,7 @@ test('Dialog „Conny entfernen": breit, Spalten „Wächter" und „Zuständige
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), boardId);
   await page.goto('/');
   await nav(page).getByRole('button', { name: 'Boards' }).click();
-  await page.getByRole('button', { name: 'Board-Einstellungen' }).click();
+  await (await openBoardMenu(page)).getByRole('menuitem', { name: 'Board-Einstellungen' }).click();
   const settings = page.getByRole('dialog', { name: 'Board-Einstellungen' });
   await settings.getByTestId('visibility-members').getByRole('button', { name: /Conny/ }).click();
   const dialog = page.getByTestId('board-access-dialog');

@@ -112,7 +112,7 @@ test('Löschen am Desktop: Dialog mit Wahl je Wächter (Umziehen), danach läuft
   const wid = ((await res.json()) as { id: string }).id;
   await page.addInitScript((id) => localStorage.setItem('stups.board', id), quelle.id);
   await page.goto('/');
-  await sideBoards(page).getByRole('button', { name: 'Board-Einstellungen' }).click();
+  await (await openBoardMenu(page)).getByRole('menuitem', { name: 'Board-Einstellungen' }).click();
   const settings = page.getByRole('dialog', { name: 'Board-Einstellungen' });
   await settings.getByTestId('board-delete').click();
   const dialog = page.getByTestId('board-delete-dialog');

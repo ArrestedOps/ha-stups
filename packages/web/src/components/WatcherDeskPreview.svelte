@@ -17,7 +17,7 @@
    * Entität mit der Schwellenlinie (derselbe Verlauf wie im Assistenten) und „So erscheint die Aufgabe“ als Zeile wie in den Aufgaben.
    * Nur zum Lesen: alles, was hier steht, kommt aus dem Formular.
    */
-  let { ed }: { ed: WatcherEditor } = $props();
+  let { ed, many = false }: { ed: WatcherEditor; /** mehrere Geräte gemeinsam: der Verlauf steht schon in „Das entsteht“, hier fehlt er */ many?: boolean } = $props();
 
   const f = $derived(ed.form);
   const graphKind = $derived(f.kind !== 'calendar_event' && f.kind !== 'forecast');
@@ -42,7 +42,7 @@
   <h3 id="desk-preview-t" class="text-[12px] font-bold tracking-[0.08em] text-fg2 uppercase">{t('Vorschau')}</h3>
   <WatcherSummary form={f} personName={ed.personName} />
 
-  {#if graphKind && f.entityId}
+  {#if graphKind && f.entityId && !many}
     <div class="rounded-[16px] border border-line bg-bg px-3.5 pt-3 pb-2.5" data-testid="graph-card">
       <div class="flex items-baseline justify-between gap-3">
         <span class="text-[13px] text-fg2">{t('jetzt')} <b class="text-[17px] font-extrabold text-fg" data-testid="desk-current">{current || '–'}</b></span>
@@ -53,7 +53,7 @@
     {#if ed.history?.status === 'ok' && ed.history.points.length >= 2}
       <p class="px-1 text-[12.5px] leading-[1.45] text-hint" data-testid="duration-hint">{durationHint(minutes, ed.history.hours, ed.history.fired.length)}</p>
     {/if}
-  {:else if graphKind}
+  {:else if graphKind && !many}
     <div class="flex h-[120px] items-center justify-center rounded-[16px] border border-dashed border-track px-4 text-center text-[13px] text-fg2" data-testid="graph-placeholder">
       {t('Wähle eine Entität, dann erscheint ihr Verlauf.')}
     </div>

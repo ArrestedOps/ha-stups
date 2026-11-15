@@ -157,8 +157,7 @@ export function openSheet(s: Sheet): void {
  */
 export function openNewWatcher(init: NewWatcherRequest & { from?: 'settings' | 'found' } = {}): void {
   const { from, ...request } = init;
-  // Mehrere Treffer gemeinsam einrichten: immer der Assistent als Fenster (das Formular am Desktop kennt nur ein Gerät)
-  if (ui.desktop && !(request.hits && request.hits.length > 1)) {
+  if (ui.desktop) {
     ui.sheet = null;
     ui.detailId = null;
     ui.tab = 'watchers';

@@ -4,6 +4,16 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.0-beta.14
+
+**Gefunden: eine Seite am Desktop, Kästchen immer da.** Am Desktop öffnet „Gefunden“ keine Handy-Fenster mehr, sondern eine Seite im Reiter Wächter: links die Arten mit Zähler (dazu „Auch ohne Gerät“, „Alle Vorlagen“, „Ausgeblendet“), rechts die Geräte der gewählten Art. Das Suchfeld sucht über alle Arten. **Der Knopf „Auswählen“ entfällt:** die Kästchen stehen immer da, eine Zeile anklicken wählt sie, „Alle N wählen“ steht im Kopf jeder Art. Eine Leiste unten nennt die Auswahl und bietet „N gemeinsam einrichten“, „Ausblenden“ und „Auswahl aufheben“. Am Handy gilt dieselbe Regel in der Liste.
+
+**Was nicht passt, bleibt sichtbar.** Ein Wächter hat einen Auslöser für alle Geräte, deshalb passen nur Geräte derselben Art und Fassung zusammen. Alles andere ist nicht mehr stumm gesperrt, sondern gedimmt, mit Schloss und Grund („Andere Art als „Batterie schwach““, „Anderer Auslöser: Programmstatus“), die Art in der Leiste trägt ein Schloss, und **Stattdessen wählen** tauscht die Auswahl mit einem Klick.
+
+**Mehrere Geräte im Assistenten und im Formular.** Am Desktop öffnet das gemeinsame Einrichten das Formular über der Liste (vorher fiel es auf das Handy-Fenster zurück). Oben im Block „Wenn“ stehen die Geräte als Chips (× entfernt eines, „+ N passende“ nimmt Geräte derselben Art dazu); rechts zeigt „Das entsteht“ je Gerät Verlauf, Wert, den Titel der Aufgabe und ob die Bedingung jetzt gilt, nach „Probelauf“ auch, wie oft es in 7 Tagen ausgelöst hätte. Am Handy steht in den Schritten Wenn, Dann und Feinschliff eine Geräteleiste: „Alle“ ist der Überblick (mit Kästchen zum Abwählen), ein Gerät zeigt seinen eigenen Verlauf, Titel und Probelauf. Im Schritt Wer steht ehrlich, dass die Zuständigen für alle gelten und je Gerät nichts festgelegt wird; Titel je Gerät lassen sich nicht ändern (Stups setzt sie).
+
+**Bitte prüfen (Testliste):** (1) Desktop: Wächter › Gefunden: eine Art links wählen, zwei Geräte anhaken. (2) Eine andere Art links öffnen: grau, mit Schloss und Grund; „Stattdessen wählen“ tauscht. (3) Suche über alle Arten. (4) „2 gemeinsam einrichten“: das Formular zeigt beide Geräte, „Das entsteht“ und „Probelauf“. (5) Handy: Gefunden › drei Batterien anhaken › Einrichten › in der Geräteleiste ein Gerät antippen, dann „Alle“. (6) Der Wert pro Gerät steht auch ohne Verlauf (Recorder aus).
+
 ## 1.42.0-beta.13
 
 **Neue Desktop-Oberfläche.** Die Seitenleiste ist ruhig: vier Ziele (Aufgaben, Boards, Kalender, Wächter) und deine Boards, einklappbar auf Symbole. Was zu einer Seite gehört, steht in der Seite: oben rechts ein Menü „Meine Aufgaben ▾“ (für wen) und die Hauptaktion; darunter vier Zahlenkacheln, die die Liste filtern. **Wächter:** Statuskacheln, Reiter für die größten Kategorien und „Weitere“ mit Suche (auch bei 30 Kategorien), gruppierte zuklappbare Liste. **Kalender:** Zeitraster wie bei Google Kalender, überlappende Termine nebeneinander, Monat mit Uhrzeiten und „+N weitere“, Boards ein- und ausblenden; die Leiste springt bei „Tag“ nicht mehr.

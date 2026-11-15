@@ -293,7 +293,9 @@ test('Gefunden: „Einrichten“ am Desktop öffnet das Formular mit vorbelegten
   await setState(request, 'sensor.bad_batterie', '64');
   await openList(page, s);
   await page.getByTestId('home-found').click();
-  const d = page.getByRole('dialog');
+  // Desktop: „Gefunden“ ist eine Seite im Reiter Wächter, kein Fenster
+  const d = page.getByTestId('found-desk');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await d.getByTestId('found-search').fill('Bad Fenster');
   await d.getByTestId('found-hit').filter({ hasText: 'Bad Fenster Batterie' }).getByRole('button', { name: 'Einrichten' }).click();
   await expect(d).toHaveCount(0);
@@ -377,4 +379,58 @@ test('Ohne Recht „Wächter“ gibt es den Knopf nicht (die Liste bleibt lesbar
   } finally {
     await ctx.close();
   }
+});
+
+test('Gefunden (Desktop): Arten links, Kästchen immer da, Unpassendes gesperrt; mehrere gemeinsam einrichten öffnet das Formular mit allen Geräten', async ({ page, request }) => {
+  const s = await setup(request);
+  await openList(page, s);
+  await page.getByTestId('home-found').click();
+  const d = page.getByTestId('found-desk');
+  await expect(d.getByTestId('found-kind').first()).toBeVisible();
+  await expect(d.getByTestId('select-mode')).toHaveCount(0);
+
+  // Batterien: zwei Kästchen anhaken, die Leiste nennt die Art
+  await d.locator('[data-testid="found-kind"][data-kind="battery"]').click();
+  const batteries = d.locator('[data-testid="found-group"][data-group="battery"]');
+  await batteries.getByRole('checkbox', { name: 'Bad Fenster Batterie auswählen', exact: true }).check();
+  await batteries.getByRole('checkbox', { name: 'iPhone Rene Battery Level auswählen', exact: true }).check();
+  await expect(d.getByTestId('selection-count')).toHaveText('2 ausgewählt');
+
+  // Andere Arten bleiben sichtbar, aber gesperrt: in der Leiste ein Schloss, in der Liste der Grund
+  await d.locator('[data-testid="found-kind"][data-kind="bins"]').click();
+  const bins = d.getByTestId('found-hit').filter({ hasText: 'Abfallkalender' });
+  await expect(bins).toHaveAttribute('data-blocked', '');
+  await expect(bins.getByTestId('found-why')).toContainText('Andere Art als');
+  await expect(d.getByTestId('found-lock-hint')).toBeVisible();
+  // Die Suche geht über alle Arten
+  await d.getByTestId('found-search').fill('Bad Fenster');
+  await expect(d.getByTestId('found-hit').filter({ hasText: 'Bad Fenster Batterie' })).toBeVisible();
+  await d.getByRole('button', { name: 'Suche leeren' }).click();
+
+  // Gemeinsam einrichten: das Formular klappt auf, mit beiden Geräten als Chips und der Tabelle „Das entsteht“
+  await d.getByTestId('selection-setup').click();
+  await expect(d).toHaveCount(0);
+  await expect(desk(page)).toBeVisible();
+  await expect(page.getByTestId('desk-device')).toHaveCount(2);
+  await expect(page.getByTestId('desk-devices-table').getByTestId('device-row')).toHaveCount(2);
+  await expect(page.getByTestId('desk-devices-table')).toContainText('Bad Fenster Batterie');
+  await expect(page.getByTestId('desk-devices-table')).toContainText('iPhone Rene Battery Level');
+  await expect(page.getByTestId('desk-entity')).toBeHidden();
+  await expect(page.getByTestId('desk-submit')).toHaveText(/2 Wächter anlegen/);
+  // ein Gerät entfernen: eines bleibt, der Knopf zählt mit
+  await page.getByRole('button', { name: 'iPhone Rene Battery Level entfernen' }).click();
+  await expect(page.getByTestId('desk-submit')).toHaveText(/Wächter anlegen/);
+  await expect(page.getByRole('button', { name: 'Bad Fenster Batterie entfernen' })).toBeDisabled();
+  // und wieder dazunehmen: „+ passende“ nennt nur Geräte derselben Art
+  await page.getByTestId('desk-devices-more').click();
+  await page.getByRole('button', { name: 'iPhone Rene Battery Level' }).click();
+  await expect(page.getByTestId('desk-device')).toHaveCount(2);
+  // Probelauf je Gerät steht in der Tabelle
+  await page.getByTestId('desk-probe').click();
+  await expect(page.getByTestId('device-probe').first()).toBeVisible({ timeout: 20_000 });
+
+  await page.getByTestId('desk-then').getByLabel('Board', { exact: true }).selectOption(s.boardId);
+  await page.getByTestId('desk-submit').click();
+  await expect(page.getByText('2 Wächter angelegt')).toBeVisible();
+  await expect.poll(async () => (await watchers(request)).map((w) => w.name)).toEqual(['Batterie schwach', 'Batterie schwach']);
 });

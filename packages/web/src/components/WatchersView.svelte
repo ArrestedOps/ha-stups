@@ -11,13 +11,14 @@
   import { allSelected, clearAll, prune, selectAll, toggle as toggleSelected, type Selection } from '../lib/selection';
   import { listSummary } from '../lib/watcher-desk';
   import { WatcherEditor } from '../lib/watcher-editor.svelte';
-  import type { SavedWatcher } from '../lib/watcher-types';
+  import type { SavedWatcher, WatcherSuggestion } from '../lib/watcher-types';
   import { categoryKeyOf, COL_LAST, COL_WIDE, groupOpen, loadCollapse, saveCollapse, TABLE_COLS, toggleGroup, uncategorizedCount, watcherLayout } from '../lib/watcherList';
   import { noteText, RUN_TEXT } from '../lib/watchers';
   import { activeScheduleFilter, askSuggestWatcherCategories, can, completeCard, feat, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
   import SelectionBar from './SelectionBar.svelte';
   import TopBar from './TopBar.svelte';
+  import FoundDesk from './FoundDesk.svelte';
   import WatcherDesk from './WatcherDesk.svelte';
   import WatcherRow from './WatcherRow.svelte';
   import WatcherSheet from './WatcherSheet.svelte';
@@ -162,7 +163,7 @@
   }
   /** Desktop: der aufgeklappte Wächter (Ablauf direkt unter der Zeile) und der Reiter Wächter / Aktivität */
   let openId = $state<string | null>(null);
-  let deskTab = $state<'list' | 'activity'>('list');
+  let deskTab = $state<'list' | 'activity' | 'found'>('list');
   const toggleOpen = (id: string) => (openId = openId === id ? null : id);
 
   // Handy: eine Kategorie öffnet als eigene Seite (einheitlich für alle, auch mit 100 Batterien): Suche, Filter, „Mehr anzeigen“
@@ -321,7 +322,11 @@
   const summary = $derived(listSummary(allItems));
   const canCreate = $derived(can('watchers') && !!data?.available);
 
+  /** Ein Treffer aus „Gefunden“ als Vorbelegung des Formulars */
+  const foundHit = (s: WatcherSuggestion) => ({ entityId: s.entityId, name: s.name, reason: s.reason, templateId: s.templateId, variant: s.variant, ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) });
   function openDesk(init: NewWatcherRequest = {}) {
+    // das Formular klappt über der Liste auf; „Gefunden“ tritt zurück, das neue Wächter-Ergebnis steht danach in der Liste
+    deskTab = 'list';
     desk = { ed: new WatcherEditor(null, { onsaved: created }), init };
   }
   const closeDesk = () => (desk = null);
@@ -621,10 +626,11 @@
           {#if can('watchers') && found > 0 && data?.available}
             <button
               type="button"
-              class="flex h-11 items-center gap-2 rounded-row bg-surface px-4 text-[15px] font-bold hover:bg-surface2"
+              class="flex h-11 items-center gap-2 rounded-row px-4 text-[15px] font-bold {deskTab === 'found' ? 'bg-accent/12 text-accent-text' : 'bg-surface hover:bg-surface2'}"
               data-testid="home-found"
+              aria-pressed={deskTab === 'found'}
               aria-label={tn('Gefunden: {n} weiteres Gerät', 'Gefunden: {n} weitere Geräte', found)}
-              onclick={() => openSheet({ type: 'found' })}
+              onclick={() => (deskTab = deskTab === 'found' ? 'list' : 'found')}
             >
               <Icon name="eye" size={18} stroke={2} />{t('Gefunden')}
               <span class="inline-flex h-5 min-w-5 items-center justify-center rounded-[10px] bg-count px-1.5 text-[12px] font-extrabold text-tok">{found}</span>
@@ -688,6 +694,13 @@
           </p>
           <p class="mt-1 text-[15px] text-fg2">{t('Boards und Aufgaben funktionieren weiter. Sobald die Verbindung steht, erscheint hier wieder, was das Haus tut.')}</p>
         </div>
+      {:else if ui.desktop && deskTab === 'found'}
+        <FoundDesk
+          onsetup={(s) => openNewWatcher({ template: s.templateId, hit: foundHit(s) })}
+          onsetupmany={(list) => openNewWatcher({ template: list[0]!.templateId, hit: foundHit(list[0]!), hits: list.map(foundHit) })}
+          ontemplate={(tpl) => openNewWatcher({ template: tpl.id })}
+          oncount={(n) => (found = n)}
+        />
       {:else if !hasAny}
         <div class="rounded-row bg-surface p-5" data-testid="home-empty">
           <p class="text-[17px] font-semibold">{t('Noch kein Wächter')}</p>

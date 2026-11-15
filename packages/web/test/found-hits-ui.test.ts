@@ -67,35 +67,45 @@ describe('Gefunden: mehrere Treffer auswählen', () => {
   const batteries = [1, 2, 3].map((n) => hit('battery', n));
   const withBins = [...batteries, hit('bins', 1)];
   const sel = (suggestions: WatcherSuggestion[], over: Record<string, unknown> = {}) =>
-    render(FoundHits, { props: { suggestions, templates, onsetup: () => undefined, onhide: () => undefined, selecting: true, selected: [], onpick: () => undefined, onpickgroup: () => undefined, ...over } }).body;
+    render(FoundHits, { props: { suggestions, templates, onsetup: () => undefined, onhide: () => undefined, selectable: true, selected: [], onpick: () => undefined, onpickgroup: () => undefined, ...over } }).body;
+  const blocked = (selected: WatcherSuggestion[]) => (s: WatcherSuggestion) => (selected.length > 0 && selected[0]!.templateId !== s.templateId ? 'Andere Art als „Batterie schwach“' : null);
 
-  it('ohne Auswahlmodus keine Kästchen und kein „Alle auswählen“', () => {
+  it('ohne `selectable` (Einrichtung beim ersten Start) keine Kästchen und kein „Alle auswählen“', () => {
     const out = html(withBins);
     expect(count(out, /data-testid="select-box"/g)).toBe(0);
     expect(count(out, /data-testid="select-all"/g)).toBe(0);
   });
 
-  it('im Auswahlmodus: ein Kästchen je Treffer, „Alle auswählen“ je Gruppe, und große Gruppen stehen ganz offen', () => {
+  it('mit `selectable`: Kästchen sind immer da (kein Auswahlmodus), „Alle auswählen“ je Gruppe; große Gruppen zeigen weiter die ersten fünf', () => {
     const many = Array.from({ length: 9 }, (_, i) => hit('battery', i));
     const out = sel([...many, hit('bins', 1)]);
-    expect(count(out, /data-testid="select-box"/g)).toBe(10);
+    expect(count(out, /data-testid="select-box"/g)).toBe(6); // 5 Batterien und 1 Tonne
     expect(count(out, /data-testid="select-all"/g)).toBe(2);
-    expect(out).not.toContain('found-more');
+    expect(out).toContain('Alle 9 anzeigen');
   });
 
-  it('Kästchen anderer Gruppen sind aus, wenn schon eine Art gewählt ist, mit Hinweis', () => {
-    const out = sel(withBins, { selected: [batteries[0]] });
+  it('Treffer anderer Art bleiben sichtbar: Kästchen aus, Schloss mit Grund und „Stattdessen wählen“; die Gruppe sagt „Passt nicht zur Auswahl“', () => {
+    const selected = [batteries[0]!];
+    const out = sel(withBins, { selected, blockedReason: blocked(selected) });
     const boxes = [...out.matchAll(/<input type="checkbox"[^>]*>/g)].map((m) => m[0]);
     expect(boxes).toHaveLength(4);
-    const disabled = boxes.filter((b) => b.includes('disabled'));
-    expect(disabled).toHaveLength(1);
-    expect(disabled[0]).toContain('Gerät 1 auswählen'.replace('Gerät 1', 'Gerät 1'));
-    expect(out).toContain('Nur Treffer einer Art lassen sich zusammen einrichten');
+    expect(boxes.filter((b) => b.includes('disabled'))).toHaveLength(1);
+    expect(out).toContain('Andere Art als „Batterie schwach“');
+    expect(count(out, /data-testid="found-replace"/g)).toBe(1);
+    expect(out).toContain('Stattdessen wählen');
+    expect(count(out, /data-testid="found-dim"/g)).toBe(1);
+    expect(out).toContain('Passt nicht zur Auswahl');
+    // den gesperrten Treffer lässt sich nicht einzeln einrichten oder ausblenden: dafür gibt es „Stattdessen wählen“
+    expect(count(out, /data-testid="found-hide"/g)).toBe(3);
   });
 
-  it('gewählte Treffer sind angehakt; der Hinweis fehlt ohne Auswahl', () => {
-    const out = sel(withBins, { selected: [batteries[0], batteries[1]] });
+  it('gewählte Treffer sind angehakt und hinterlegt; ohne Auswahl gibt es keine Sperre', () => {
+    const selected = [batteries[0]!, batteries[1]!];
+    const out = sel(withBins, { selected, blockedReason: blocked(selected) });
     expect(count(out, /type="checkbox"[^>]*checked/g)).toBe(2);
-    expect(sel(withBins)).not.toContain('Nur Treffer einer Art');
+    expect(count(out, /data-selected/g)).toBe(2);
+    const none = sel(withBins, { blockedReason: blocked([]) });
+    expect(none).not.toContain('found-replace');
+    expect(none).not.toContain('Passt nicht zur Auswahl');
   });
 });

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import { api, ApiError } from '../lib/api';
-  import { t } from '../lib/i18n/index.svelte';
+  import { t, tn } from '../lib/i18n/index.svelte';
   import { toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
   import { autoName, deskProblem, formDirty } from '../lib/watcher-desk';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
@@ -9,6 +9,7 @@
   import type { WatcherForm } from '../lib/watchers';
   import DryRunPanel from './DryRunPanel.svelte';
   import Icon from './Icon.svelte';
+  import WatcherDeskDevices from './WatcherDeskDevices.svelte';
   import WatcherDeskPreview from './WatcherDeskPreview.svelte';
   import WatcherDeskThen from './WatcherDeskThen.svelte';
   import WatcherDeskWhen from './WatcherDeskWhen.svelte';
@@ -39,7 +40,7 @@
 
   onMount(() => {
     void (async () => {
-      await ed.load(init.template, init.hit, init.personIds, init.category);
+      await ed.load(init.template, init.hit, init.personIds, init.category, init.hits);
       if (!ed.form.boardId) ed.form.boardId = ui.boardId ?? ui.boards[0]?.id ?? '';
       await tick();
       // Mit einem Treffer ist die Entität schon gewählt: das Feld nimmt den Fokus, ohne die Liste aufzuklappen
@@ -69,6 +70,16 @@
     void [x.assignMode, x.personIds.join(','), x.fallback, x.fallbackPersonId];
     if (ed.loading) return;
     const timer = setTimeout(() => ed.loadOrder(), 250);
+    return () => clearTimeout(timer);
+  });
+
+  // Mehrere Geräte gemeinsam: Verlauf je Gerät, kurz verzögert beim Tippen der Regel
+  const many = $derived(ed.devices.length > 1);
+  $effect(() => {
+    const x = ed.form;
+    void [x.kind, x.to, x.value, x.forMin, x.count, x.cooldownMin, ed.selectedDevices.length];
+    if (ed.loading || !many) return;
+    const timer = setTimeout(() => ed.loadDeviceHistories(), 350);
     return () => clearTimeout(timer);
   });
 
@@ -124,7 +135,8 @@
   }
 
   async function probe() {
-    await dry?.run();
+    if (many) await ed.probeDevices();
+    else await dry?.run();
     await tick();
     dryBox?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
@@ -192,7 +204,10 @@
         </div>
       </div>
 
-      <div class="min-w-0 @min-[1000px]:sticky @min-[1000px]:top-12"><WatcherDeskPreview {ed} /></div>
+      <div class="flex min-w-0 flex-col gap-3 @min-[1000px]:sticky @min-[1000px]:top-12">
+        {#if many}<WatcherDeskDevices {ed} />{/if}
+        <WatcherDeskPreview {ed} {many} />
+      </div>
     </div>
 
     <div bind:this={dryBox} class="mt-4 empty:hidden"><DryRunPanel bind:this={dry} form={f} button={false} /></div>
@@ -206,7 +221,7 @@
         <button type="button" class="h-12 rounded-[14px] border border-line bg-surface px-5 text-[15px] font-bold hover:bg-surface2" onclick={probe} data-testid="desk-probe">{t('Probelauf')}</button>
         <button type="button" class="h-12 rounded-[14px] border border-line bg-surface px-5 text-[15px] font-bold hover:bg-surface2" onclick={requestClose} data-testid="desk-cancel">{t('Abbrechen')}</button>
         <button type="button" class="bg-accent-grad glow-cta flex h-12 items-center gap-2 rounded-[14px] px-6 text-[15px] font-extrabold hover:brightness-110 disabled:opacity-40" disabled={ed.busy} onclick={submit} data-testid="desk-submit">
-          <Icon name="check" size={18} stroke={2.6} />{ed.busy ? t('Speichert …') : t('Wächter anlegen')}
+          <Icon name="check" size={18} stroke={2.6} />{ed.busy ? t('Speichert …') : many ? tn('{n} Wächter anlegen', '{n} Wächter anlegen', ed.selectedDevices.length) : t('Wächter anlegen')}
         </button>
       </span>
     </footer>

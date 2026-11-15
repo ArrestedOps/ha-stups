@@ -6,7 +6,7 @@
   import Sheet from './Sheet.svelte';
 
   /** Gefunden: das Fenster um die Liste (FoundList.svelte). „Einrichten" öffnet den Assistenten, „Zurück" dort führt hierher zurück. */
-  const asHit = (s: WatcherSuggestion) => ({ entityId: s.entityId, name: s.name, reason: s.reason, ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) });
+  const asHit = (s: WatcherSuggestion) => ({ entityId: s.entityId, name: s.name, reason: s.reason, templateId: s.templateId, variant: s.variant, ...(s.unit ? { unit: s.unit } : {}), ...(s.draft ? { draft: s.draft } : {}) });
   const setup = (s: WatcherSuggestion) => openNewWatcher({ template: s.templateId, from: 'found', hit: asHit(s) });
   /** Mehrere Treffer derselben Art: der Assistent richtet sie gemeinsam ein (Schritt 1 zeigt die Liste der Geräte) */
   const setupMany = (list: WatcherSuggestion[]) =>

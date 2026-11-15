@@ -87,12 +87,68 @@ describe('Gemeinsam einrichten: mehrere Geräte im Assistenten', () => {
     return ed;
   }
 
-  it('Schritt 1 zeigt statt der Entität die Liste der Geräte mit aktuellem Wert', () => {
+  it('Schritt 1 zeigt statt der Entität die Geräteleiste und den Überblick mit einer Zeile je Gerät', () => {
     const out = html(many(1));
     expect(count(out, /data-testid="device-row"/g)).toBe(3);
     expect(out).toContain('3 Geräte');
-    expect(out).toContain('Gerät 2: Batterie bei 2 %');
+    expect(out).toContain('data-testid="device-strip"');
+    expect(out).toContain('Alle 3');
+    expect(out).toContain('sensor.bat_2');
     expect(out).not.toContain('data-testid="when-entity"');
+  });
+
+  it('ein gewähltes Gerät zeigt seinen eigenen Verlauf statt des Überblicks; „Alle“ bringt ihn zurück', () => {
+    const ed = many(1);
+    ed.focus = 'sensor.bat_2';
+    const one = html(ed);
+    expect(count(one, /data-testid="device-row"/g)).toBe(0);
+    expect(one).toContain('data-testid="graph-card"');
+    expect(one).toContain('Gerät 2');
+    ed.focus = 'all';
+    expect(count(html(ed), /data-testid="device-row"/g)).toBe(3);
+  });
+
+  it('Schritt 2 zeigt den Titel der Aufgabe je Gerät, wie ihn Stups setzt', () => {
+    const ed = many(2);
+    ed.form.title = 'Batterie wechseln';
+    const out = html(ed);
+    expect(out).toContain('data-testid="device-strip"');
+    expect(out).toContain('Batterie wechseln: Gerät 1');
+    expect(out).toContain('Batterie wechseln: Gerät 3');
+  });
+
+  it('Schritt 3 sagt ehrlich, dass die Zuständigen für alle gelten und je Gerät nichts festgelegt wird', () => {
+    const out = html(many(3));
+    expect(out).toContain('data-testid="devices-who-note"');
+    expect(out).toContain('Wer dran ist, entscheidet sich erst, wenn eine Aufgabe entsteht');
+    expect(out).not.toContain('data-testid="device-strip"');
+  });
+
+  it('Schritt 4 zeigt die Geräteleiste und den Probelauf je Gerät', () => {
+    const ed = many(4);
+    ed.deviceProbe = { 'sensor.bat_1': { fired: [{ at: '2026-01-01T00:00:00Z' }, { at: '2026-01-02T00:00:00Z' }], quick: 0, sentence: '', points: [], noHistory: false, truncated: false, from: '', to: '' }, 'sensor.bat_2': { fired: [], quick: 0, sentence: '', points: [], noHistory: true, truncated: false, from: '', to: '' } };
+    const out = html(ed);
+    expect(out).toContain('data-testid="device-strip"');
+    expect(out).toContain('2 × ausgelöst');
+    expect(out).toContain('keine Historie');
+  });
+
+  it('gewählte und neu dazugenommene Geräte: abgewähltes Gerät kommt mit addDevice zurück, ein neues steht danach in der Liste', () => {
+    const ed = many(1);
+    ed.toggleDevice('sensor.bat_2');
+    expect(ed.selectedDevices).toHaveLength(2);
+    ed.addDevice(hits[1]!);
+    expect(ed.selectedDevices).toHaveLength(3);
+    ed.addDevice({ entityId: 'sensor.bat_9', name: 'Gerät 9' });
+    expect(ed.devices.map((d) => d.entityId)).toContain('sensor.bat_9');
+    expect(ed.selectedDevices).toHaveLength(4);
+  });
+
+  it('wird das gezeigte Gerät abgewählt, springt die Leiste auf „Alle“', () => {
+    const ed = many(1);
+    ed.focus = 'sensor.bat_2';
+    ed.toggleDevice('sensor.bat_2');
+    expect(ed.focus).toBe('all');
   });
 
   it('abgewählte Geräte sind nicht mehr angehakt, der Knopf zählt nur die gewählten', () => {

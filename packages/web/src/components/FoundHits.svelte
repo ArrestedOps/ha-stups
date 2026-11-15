@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { canJoin, FOUND_PREVIEW, foundIcon, groupSuggestions, hitId, pickableInGroup, showFoundSearch, visibleHits } from '../lib/foundGroups';
+  import { FOUND_PREVIEW, foundIcon, groupSuggestions, hitId, pickableInGroup, showFoundSearch, visibleHits } from '../lib/foundGroups';
   import { t } from '../lib/i18n/index.svelte';
   import type { WatcherSuggestion, WatcherTemplate } from '../lib/watcher-types';
   import Icon from './Icon.svelte';
@@ -9,26 +9,33 @@
   /**
    * Die Treffer von „Gefunden“ nach Vorlage gruppiert: Kopf mit Symbol, Titel und Zähler; große Gruppen (> 5) zeigen die ersten fünf und
    * „Alle N anzeigen“. Ab 12 Treffern filtert ein Suchfeld nach Gerätename, Entität und Begründung (im Gerät, nichts geht an den Server).
+   * Mit `selectable` stehen an jedem Treffer Kästchen (kein Auswahlmodus); Treffer, die nicht zur Auswahl passen, bleiben sichtbar:
+   * gedimmt, mit Schloss und dem Grund, und „Stattdessen wählen“ tauscht die Auswahl.
    */
   let {
     suggestions,
     templates,
     onsetup,
     onhide,
-    selecting = false,
+    selectable = false,
     selected = [],
+    blockedReason = () => null,
     onpick,
     onpickgroup,
+    onreplace,
   }: {
     suggestions: WatcherSuggestion[];
     templates: Pick<WatcherTemplate, 'id' | 'title'>[];
     onsetup: (s: WatcherSuggestion) => void;
     onhide: (s: WatcherSuggestion) => void;
-    /** Auswahlmodus: Kästchen an den Treffern und „Alle auswählen“ in den Gruppenköpfen; gewählt wird nur innerhalb einer Vorlage und Fassung */
-    selecting?: boolean;
+    /** Kästchen an den Treffern und „Alle auswählen“ in den Gruppenköpfen; gewählt wird nur innerhalb einer Vorlage und Fassung */
+    selectable?: boolean;
     selected?: WatcherSuggestion[];
+    /** Warum ein Treffer zur Auswahl nicht passt (null: er passt) */
+    blockedReason?: (s: WatcherSuggestion) => string | null;
     onpick?: (s: WatcherSuggestion) => void;
     onpickgroup?: (items: WatcherSuggestion[]) => void;
+    onreplace?: (s: WatcherSuggestion) => void;
   } = $props();
 
   let query = $state('');
@@ -37,8 +44,7 @@
   const filtering = $derived(query.trim() !== '');
   const groups = $derived(groupSuggestions(suggestions, templates, query));
   const chosen = $derived(new Set(selected.map(hitId)));
-  /** Gibt es Kästchen, die gerade aus sind, weil schon eine andere Art gewählt ist? */
-  const locked = $derived(selecting && selected.length > 0 && suggestions.some((s) => !canJoin(selected, s)));
+  const select = $derived(selectable && onpick !== undefined);
 </script>
 
 {#if showFoundSearch(suggestions.length)}
@@ -63,33 +69,53 @@
   </div>
 {/if}
 
-{#if locked}
-  <p class="mt-3 px-1 text-[12.5px] leading-[1.45] text-hint" data-testid="found-lock-hint">{t('Nur Treffer einer Art lassen sich zusammen einrichten.')}</p>
-{/if}
-
 {#each groups as g (g.id)}
-  {@const rows = visibleHits(g, !!expanded[g.id] || selecting, filtering)}
+  {@const rows = visibleHits(g, !!expanded[g.id], filtering)}
   {@const pick = pickableInGroup(g.items, selected)}
   {@const allOn = pick.length > 0 && pick.every((s) => chosen.has(hitId(s)))}
+  {@const dim = select && selected.length > 0 && pick.length === 0}
   <section class="mt-3.5" data-testid="found-group" data-group={g.id} aria-label={g.title}>
     <SectionHeader title={g.title} count={g.items.length} icon={foundIcon(g.id)} iconTone="soft">
-      {#if selecting}
-        <button type="button" class="flex h-11 shrink-0 items-center px-2 text-[14px] font-bold text-accent-text disabled:opacity-40" disabled={pick.length === 0} data-testid="select-all" onclick={() => onpickgroup?.(pick)}>
-          {allOn ? t('Auswahl aufheben') : t('Alle auswählen')}
-        </button>
+      {#if select}
+        {#if dim}
+          <span class="flex h-11 shrink-0 items-center gap-1 px-2 text-[13px] font-semibold text-fg2" data-testid="found-dim"><Icon name="lock" size={14} stroke={2.2} />{t('Passt nicht zur Auswahl')}</span>
+        {:else}
+          <button type="button" class="flex h-11 shrink-0 items-center px-2 text-[14px] font-bold text-accent-text disabled:opacity-40" disabled={pick.length === 0} data-testid="select-all" onclick={() => onpickgroup?.(pick)}>
+            {allOn ? t('Auswahl aufheben') : t('Alle auswählen')}
+          </button>
+        {/if}
       {/if}
     </SectionHeader>
     <div class="divide-y divide-line overflow-hidden rounded-row border border-line bg-surface">
       {#each rows as s (s.templateId + s.entityId)}
-        <div class="flex items-center gap-3 px-4 py-3" data-testid="found-hit" data-selected={chosen.has(hitId(s)) ? '' : undefined}>
-          {#if selecting}
-            <span class="-ml-2 shrink-0"><SelectBox checked={chosen.has(hitId(s))} disabled={!canJoin(selected, s)} label={t('{name} auswählen', { name: s.name })} onchange={() => onpick?.(s)} /></span>
+        {@const on = chosen.has(hitId(s))}
+        {@const why = select ? blockedReason(s) : null}
+        <!-- Die Zeile antippen wählt sie (Zeigergerät); mit der Tastatur geht es über das Kästchen -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div
+          class="flex items-center gap-3 px-4 py-3 {on ? 'bg-accent/10' : ''} {select && !why ? 'cursor-pointer' : ''}"
+          data-testid="found-hit"
+          data-selected={on ? '' : undefined}
+          data-blocked={why ? '' : undefined}
+          onclick={(e) => {
+            if (select && !why && !(e.target as HTMLElement).closest('button,label,input')) onpick?.(s);
+          }}
+        >
+          {#if select}
+            <span class="-ml-2 shrink-0"><SelectBox checked={on} disabled={!!why} label={t('{name} auswählen', { name: s.name })} onchange={() => onpick?.(s)} /></span>
           {/if}
-          <span class="min-w-0 flex-1">
+          <span class="min-w-0 flex-1 {why ? 'opacity-60' : ''}">
             <span class="block text-[15px] leading-snug font-semibold break-words">{s.reason}</span>
-            <span class="block truncate text-[12.5px] text-fg2">{s.entityId}</span>
+            {#if why}
+              <span class="flex items-center gap-1 text-[12.5px] text-fg2" data-testid="found-why"><Icon name="lock" size={12} stroke={2.2} />{why}</span>
+            {:else}
+              <span class="block truncate text-[12.5px] text-fg2">{s.entityId}</span>
+            {/if}
           </span>
-          {#if !selecting}
+          {#if why}
+            <button class="min-h-10 shrink-0 rounded-xl px-2 text-right text-[13px] leading-tight font-bold text-accent-text" data-testid="found-replace" aria-label={t('{name} stattdessen wählen', { name: s.name })} onclick={() => onreplace?.(s)}>{t('Stattdessen wählen')}</button>
+          {:else}
             <span class="flex shrink-0 flex-col items-stretch gap-1">
               <button class="min-h-10 rounded-xl bg-house px-4 font-semibold text-bg" onclick={() => onsetup(s)}>{t('Einrichten')}</button>
               <button class="min-h-9 rounded-xl px-4 text-[14px] font-semibold text-fg2" aria-label={t('{name} ausblenden', { name: s.name })} data-testid="found-hide" onclick={() => onhide(s)}>{t('Ausblenden')}</button>
@@ -97,7 +123,7 @@
           {/if}
         </div>
       {/each}
-      {#if !filtering && !selecting && g.items.length > FOUND_PREVIEW}
+      {#if !filtering && g.items.length > FOUND_PREVIEW}
         <button
           class="flex min-h-12 w-full items-center justify-between px-4 text-[15px] font-semibold text-accent-text"
           aria-expanded={!!expanded[g.id]}

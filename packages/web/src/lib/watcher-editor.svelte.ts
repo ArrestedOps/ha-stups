@@ -3,14 +3,14 @@ import { boardCounts, boardPeople, watcherBoardOption } from './boardAccess';
 import { t, tn } from './i18n/index.svelte';
 import type { EntityHistory } from './history';
 import { can, closeSheet, openSheet, toast, ui } from './store.svelte';
-import type { OrderView, TemplateDraft, WatcherSuggestion, WatcherTemplate } from './watcher-types';
+import type { DryRunResult, OrderView, TemplateDraft, WatcherSuggestion, WatcherTemplate } from './watcher-types';
 import { applyEntity, applyTemplate, emptyForm, formProblem, fromWatcher, stepProblem, toInput, withCategory, type WatcherForm } from './watchers';
 import { askCard, metNowOf } from './watcher-ask';
 import { devicesOf } from './watcher-bulk';
 import { backAction } from './watcher-wizard';
 
 /** Ein Treffer aus „Gefunden“; `reason` nennt das Gerät mit seinem aktuellen Wert (für die Liste beim gemeinsamen Einrichten) */
-export type Hit = { entityId: string; name: string; unit?: string; reason?: string; draft?: TemplateDraft };
+export type Hit = { entityId: string; name: string; unit?: string; reason?: string; draft?: TemplateDraft; /** Vorlage und Fassung des Treffers: danach richtet sich, welche Geräte noch dazupassen */ templateId?: string; variant?: string };
 
 /**
  * Der Zustand des Wächter-Editors, den Ablauf (Bearbeiten) und Assistent (Anlegen) teilen: das Formular, was vom Server dazukommt
@@ -40,6 +40,12 @@ export class WatcherEditor {
   /** Gemeinsam einrichten: alle Treffer (ab zwei) und die davon abgewählten; angelegt wird je gewähltes Gerät ein Wächter */
   devices = $state<Hit[]>([]);
   off = $state<string[]>([]);
+  /** Welches Gerät die Geräteleiste zeigt: „all“ (Überblick) oder die Entität */
+  focus = $state<string>('all');
+  /** Verlauf und Probelauf je Gerät (Entität → Ergebnis; null: nicht abrufbar); die Leiste und die Tabelle lesen sie */
+  deviceHistory = $state<Record<string, EntityHistory | null>>({});
+  deviceProbe = $state<Record<string, DryRunResult | null>>({});
+  probeBusy = $state(false);
   readonly selectedDevices = $derived(this.devices.filter((d) => !this.off.includes(d.entityId)));
   /** Welche Suche offen ist (Auslöser oder „erledigt sich selbst") */
   picking = $state<'trigger' | 'done' | null>(null);
@@ -65,6 +71,8 @@ export class WatcherEditor {
   /** Der angezeigte Wert des Schalters: die eigene Wahl, sonst der Wert des Boards (beim Anlegen) */
   readonly counts = $derived(this.form.countsForFairness ?? this.boardCounts);
   private historySeq = 0;
+  private deviceSeq = 0;
+  private probeSeq = 0;
   private orderSeq = 0;
   private viewSeq = 0;
 
@@ -152,6 +160,13 @@ export class WatcherEditor {
     this.loadOrder();
   }
 
+  /** Die Regel des Formulars als Anfrage an den Verlauf (Auslösepunkte) */
+  private historyQuery(entityId: string): Parameters<typeof api.entityHistory>[0] {
+    const f = this.form;
+    const rule = f.kind === 'state' ? { kind: 'state', to: f.to.trim() } : f.kind === 'above' || f.kind === 'below' ? { kind: f.kind, value: f.value.trim().replace(',', '.') } : {};
+    return { entityId, hours: 3, ...rule, ...(rule.kind ? { forMin: f.forMin.trim() === '' ? (f.kind === 'state' ? '0' : '3') : f.forMin.trim(), count: f.count.trim() || '1', cooldownMin: f.cooldownMin.trim() || '10' } : {}) };
+  }
+
   /** Verlauf der Entität mit der Regel des Formulars (Auslösepunkte); veraltete Antworten fallen weg */
   loadHistory(): void {
     const f = this.form;
@@ -161,9 +176,8 @@ export class WatcherEditor {
     }
     const mine = ++this.historySeq;
     this.historyBusy = true;
-    const rule = f.kind === 'state' ? { kind: 'state', to: f.to.trim() } : f.kind === 'above' || f.kind === 'below' ? { kind: f.kind, value: f.value.trim().replace(',', '.') } : {};
     api
-      .entityHistory({ entityId: f.entityId, hours: 3, ...rule, ...(rule.kind ? { forMin: f.forMin.trim() === '' ? (f.kind === 'state' ? '0' : '3') : f.forMin.trim(), count: f.count.trim() || '1', cooldownMin: f.cooldownMin.trim() || '10' } : {}) })
+      .entityHistory(this.historyQuery(f.entityId))
       .then((h) => {
         if (mine === this.historySeq) this.history = h;
       })
@@ -173,6 +187,48 @@ export class WatcherEditor {
       .finally(() => {
         if (mine === this.historySeq) this.historyBusy = false;
       });
+  }
+
+  /** Gemeinsam einrichten: der Verlauf jedes gewählten Geräts mit der Regel des Formulars (höchstens vier Anfragen gleichzeitig, höchstens 30 Geräte) */
+  loadDeviceHistories(): void {
+    if (this.devices.length < 2) return;
+    const mine = ++this.deviceSeq;
+    const ids = this.selectedDevices.slice(0, 30).map((d) => d.entityId);
+    let next = 0;
+    const worker = async (): Promise<void> => {
+      while (next < ids.length) {
+        const id = ids[next++]!;
+        let h = await api.entityHistory(this.historyQuery(id)).catch(() => null);
+        // Ohne Verlauf (Recorder aus, neues Gerät) bleibt wenigstens der aktuelle Wert: Home Assistant kennt ihn
+        if (!h || h.current === null) {
+          const e = (await api.haEntities(id).catch(() => [])).find((x) => x.entityId === id);
+          if (e) h = { status: 'no_data', from: '', to: '', hours: 3, kind: Number.isFinite(Number(e.state)) && e.state.trim() !== '' ? 'numeric' : 'state', states: [], points: [], fired: [], min: null, max: null, ...(h ?? {}), current: e.state };
+        }
+        if (mine !== this.deviceSeq) return;
+        this.deviceHistory = { ...this.deviceHistory, [id]: h };
+      }
+    };
+    void Promise.all([worker(), worker(), worker(), worker()]);
+  }
+
+  /** Probelauf über 7 Tage für jedes gewählte Gerät (die Regel des Formulars, die Entität des Geräts) */
+  async probeDevices(): Promise<void> {
+    const input = toInput(this.form);
+    const mine = ++this.probeSeq;
+    const ids = this.selectedDevices.slice(0, 30).map((d) => d.entityId);
+    this.probeBusy = true;
+    this.deviceProbe = {};
+    let next = 0;
+    const worker = async (): Promise<void> => {
+      while (next < ids.length) {
+        const id = ids[next++]!;
+        const r = await api.dryRun({ trigger: { ...input.trigger, entityId: id }, cooldownMin: input.cooldownMin }).catch(() => null);
+        if (mine !== this.probeSeq) return;
+        this.deviceProbe = { ...this.deviceProbe, [id]: r };
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]);
+    if (mine === this.probeSeq) this.probeBusy = false;
   }
 
   /** Reihenfolge der Personen: für den gespeicherten Wächter dessen Stand (wer als Nächstes dran ist), mit dem Entwurf des Formulars */
@@ -228,6 +284,7 @@ export class WatcherEditor {
     const on = !this.off.includes(entityId);
     if (on && this.selectedDevices.length <= 1) return;
     this.off = on ? [...this.off, entityId] : this.off.filter((x) => x !== entityId);
+    if (on && this.focus === entityId) this.focus = 'all';
     const first = this.selectedDevices[0];
     if (first && first.entityId !== this.form.entityId) {
       const old = this.form.entityId;
@@ -239,6 +296,15 @@ export class WatcherEditor {
         ...(this.form.doneEntityId === old ? { doneEntityId: first.entityId, doneEntityName: first.name } : {}),
       };
     }
+  }
+
+  /** Ein weiteres Gerät dazunehmen (Desktop: „+ passende“): ein abgewähltes kommt zurück, ein neues steht danach in der Liste */
+  addDevice(hit: Hit): void {
+    if (this.devices.some((d) => d.entityId === hit.entityId)) {
+      this.off = this.off.filter((x) => x !== hit.entityId);
+      return;
+    }
+    this.devices = [...this.devices, hit];
   }
 
   // ---------- Assistent ----------

@@ -4,7 +4,8 @@
   import DryRunPanel from './DryRunPanel.svelte';
   import Icon from './Icon.svelte';
   import Sheet from './Sheet.svelte';
-  import WatcherDevices from './WatcherDevices.svelte';
+  import WatcherDeviceStrip from './WatcherDeviceStrip.svelte';
+  import WatcherDeviceView from './WatcherDeviceView.svelte';
   import WatcherFineEditor from './WatcherFineEditor.svelte';
   import WatcherSummary from './WatcherSummary.svelte';
   import WatcherThenEditor from './WatcherThenEditor.svelte';
@@ -40,12 +41,24 @@
   );
   const NEXT = $derived(ed.step === 1 ? t('Weiter: Dann') : ed.step === 2 ? t('Weiter: Wer') : t('Weiter: Feinschliff'));
   let dry = $state<{ run(): Promise<void> }>();
+  /** Gemeinsam einrichten (mehrere Geräte): Geräteleiste in den Schritten Wenn, Dann und Feinschliff */
+  const many = $derived(ed.devices.length > 1);
+
+  // Verlauf je Gerät, kurz verzögert beim Tippen der Regel
+  $effect(() => {
+    const x = ed.form;
+    void [x.kind, x.to, x.value, x.forMin, x.count, x.cooldownMin, ed.selectedDevices.length];
+    if (ed.loading || !many) return;
+    const timer = setTimeout(() => ed.loadDeviceHistories(), 350);
+    return () => clearTimeout(timer);
+  });
+  const test = () => (many ? ed.probeDevices() : dry?.run());
 </script>
 
 {#snippet foot()}
   {#if ed.step === 4}
     <div class="grid grid-cols-[1fr_2fr] gap-2">
-      <CtaButton ghost onclick={() => dry?.run()}>{t('Testen')}</CtaButton>
+      <CtaButton ghost onclick={test}>{t('Testen')}</CtaButton>
       <CtaButton disabled={ed.busy} onclick={() => ed.save()}><Icon name="check" size={20} stroke={2.6} />{ed.busy ? t('Speichert …') : ed.selectedDevices.length > 1 ? tn('{n} Wächter anlegen', '{n} Wächter anlegen', ed.selectedDevices.length) : t('Wächter anlegen')}</CtaButton>
     </div>
   {:else}
@@ -85,11 +98,19 @@
           </div>
           <p class="-mt-1 px-1 text-[12.5px] leading-[1.45] text-hint">{t('Füllt die Schritte vor, alles bleibt änderbar. Danach noch die Entität wählen.')}</p>
         {/if}
-        {#if ed.devices.length > 1}<WatcherDevices {ed} />{/if}
-        <WatcherWhenEditor {ed} entityRow={ed.devices.length < 2} />
+        {#if many}
+          <WatcherDeviceStrip {ed} values />
+          <WatcherDeviceView {ed} mode="value" />
+        {/if}
+        <WatcherWhenEditor {ed} entityRow={!many} graph={!many} />
       {:else if ed.step === 2}
+        {#if many}
+          <WatcherDeviceStrip {ed} />
+          <WatcherDeviceView {ed} mode="title" />
+        {/if}
         <WatcherThenEditor {ed} />
       {:else if ed.step === 3}
+        {#if many}<p class="rounded-row bg-surface px-4 py-3 text-[13.5px] leading-[1.45] text-fg2" data-testid="devices-who-note">{tn('Jedes der {n} Geräte bekommt einen eigenen Wächter mit denselben Zuständigen. Wer dran ist, entscheidet sich erst, wenn eine Aufgabe entsteht.', 'Jedes der {n} Geräte bekommt einen eigenen Wächter mit denselben Zuständigen. Wer dran ist, entscheidet sich erst, wenn eine Aufgabe entsteht.', ed.selectedDevices.length)}</p>{/if}
         <WatcherWhoEditor {ed} />
       {:else}
         <!-- Kurzfassung wie im Entwurf: WENN, DANN, WER als drei beschriftete Zeilen -->
@@ -104,7 +125,13 @@
         <WatcherFineEditor {ed} />
         <SectionHeader title={t('Zusammenfassung')} />
         <WatcherSummary form={f} personName={ed.personName} />
-        <DryRunPanel bind:this={dry} form={f} button={false} />
+        {#if many}
+          <SectionHeader title={t('Probelauf')} />
+          <WatcherDeviceStrip {ed} />
+          <WatcherDeviceView {ed} mode="probe" />
+        {:else}
+          <DryRunPanel bind:this={dry} form={f} button={false} />
+        {/if}
       {/if}
     </div>
   {/if}

@@ -1,3 +1,4 @@
+import { t } from './i18n/index.svelte';
 import { matchesQuery } from './search';
 import type { WatcherSuggestion, WatcherTemplate } from './watcher-types';
 
@@ -95,4 +96,35 @@ export function pickableInGroup(items: WatcherSuggestion[], selected: WatcherSug
   if (!first) return [];
   const anchor = selected.length > 0 ? selected : [first];
   return items.filter((s) => canJoin(anchor, s));
+}
+
+/** Wie der Auslöser eines Treffers heißt, wenn dieselbe Vorlage ihn auf zwei Arten beobachtet (Leistung oder Programmstatus eines Geräts) */
+export function variantName(variant: WatcherSuggestion['variant']): string {
+  switch (variant) {
+    case 'power':
+      return t('Leistung');
+    case 'status':
+      return t('Programmstatus');
+    case 'level':
+      return t('Pegel');
+    case 'switch':
+      return t('Schalter');
+    case 'cover':
+      return t('Abdeckung');
+    case 'lock':
+      return t('Schloss');
+    default:
+      return t('Zustand');
+  }
+}
+
+/**
+ * Warum sich ein Treffer nicht zur Auswahl dazunehmen lässt (null: er passt). Ein Wächter hat einen Auslöser, der für alle Geräte gilt;
+ * deshalb nennt der Grund, was anders ist: die Art (Vorlage) oder die Fassung (Leistung oder Programmstatus).
+ */
+export function blockReason(selected: Pick<WatcherSuggestion, 'templateId' | 'variant'>[], s: Pick<WatcherSuggestion, 'templateId' | 'variant'>, titleOf: (templateId: string) => string): string | null {
+  if (canJoin(selected, s)) return null;
+  const first = selected[0]!;
+  if (first.templateId !== s.templateId) return t('Andere Art als „{title}“', { title: titleOf(first.templateId) });
+  return t('Anderer Auslöser: {what}', { what: variantName(s.variant) });
 }

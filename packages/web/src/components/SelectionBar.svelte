@@ -11,17 +11,23 @@
     actions,
     ondone,
     inSheet = false,
+    inline = false,
+    doneLabel,
   }: {
     count: number;
     actions: { id: string; label: string; run: () => void; tone?: 'danger'; disabled?: boolean }[];
     ondone: () => void;
     /** in einem Fenster (Gefunden): am unteren Rand des Fensters, nicht über der Tab-Leiste */
     inSheet?: boolean;
+    /** auf einer Seite (Gefunden am Desktop): klebt am unteren Rand der Karte, in der es steht */
+    inline?: boolean;
+    /** Text des Knopfes, der die Auswahl beendet (Standard „Fertig“; in „Gefunden“ „Auswahl aufheben“) */
+    doneLabel?: string;
   } = $props();
 </script>
 
 <div
-  class="pointer-events-none {inSheet ? 'sticky bottom-0 z-20 -mx-1 px-1 pt-2 pb-[var(--pad-bottom)]' : 'fixed inset-x-0 bottom-[calc(var(--nav-h)+10px)] z-30 px-3 lg:bottom-4 lg:left-auto lg:px-0 lg:right-6'}"
+  class="pointer-events-none {inline ? 'sticky bottom-3 z-20 px-3 pt-2 pb-3' : inSheet ? 'sticky bottom-0 z-20 -mx-1 px-1 pt-2 pb-[var(--pad-bottom)]' : 'fixed inset-x-0 bottom-[calc(var(--nav-h)+10px)] z-30 px-3 lg:bottom-4 lg:left-auto lg:px-0 lg:right-6'}"
   data-testid="selection-bar"
 >
   <div
@@ -41,6 +47,6 @@
         {a.label}
       </button>
     {/each}
-    <button type="button" class="flex h-11 items-center rounded-row px-3 text-[14px] font-bold text-accent-text" data-testid="selection-done" onclick={ondone}>{t('Fertig')}</button>
+    <button type="button" class="flex h-11 items-center rounded-row px-3 text-[14px] font-bold text-accent-text" data-testid="selection-done" onclick={ondone}>{doneLabel ?? t('Fertig')}</button>
   </div>
 </div>

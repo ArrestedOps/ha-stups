@@ -66,6 +66,9 @@ export interface HitInit {
   unit?: string;
   reason?: string;
   draft?: TemplateDraft;
+  /** Vorlage und Fassung des Treffers (beim gemeinsamen Einrichten: welche Geräte noch dazupassen) */
+  templateId?: string;
+  variant?: string;
 }
 
 /** Womit der Bereich „Neuer Wächter“ aufklappt: eine Vorlage und/oder ein Treffer aus „Gefunden“ (Entität schon gewählt) */

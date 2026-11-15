@@ -250,7 +250,11 @@ test('Gefunden: ein Treffer aus der Suche lässt sich einrichten (Tastatur: Such
   await expect(hit).toHaveCount(1);
 
   // Tastatur: aus dem Suchfeld mit Tab auf „Einrichten", Enter öffnet den Assistenten mit diesem Gerät
-  await search.press('Tab'); // zuerst „Suche leeren"
+  await search.press('Tab'); // zuerst „Suche leeren“, dann „Alle auswählen“ der Gruppe, dann das Kästchen des Treffers
+  await page.keyboard.press('Tab');
+  await expect(dialog.getByTestId('select-all')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(hit.getByRole('checkbox')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(hit.getByRole('button', { name: 'Einrichten' })).toBeFocused();
   await page.keyboard.press('Enter');
@@ -276,23 +280,54 @@ test('Gefunden: drei Batterien auswählen, gemeinsam einrichten (drei Wächter);
     await openBoards(page);
     let dialog = await found(page);
 
-    // Auswählen: Kästchen an den Treffern, eine Art nach der anderen
-    await dialog.getByTestId('select-mode').click();
+    // Auswählen: die Kästchen sind immer da (kein Auswahlmodus), eine Art nach der anderen
+    await expect(dialog.getByTestId('select-mode')).toHaveCount(0);
     for (const n of NAMES) await dialog.getByRole('checkbox', { name: `${n} auswählen`, exact: true }).check();
     await expect(dialog.getByTestId('selection-count')).toHaveText('3 ausgewählt');
-    // Treffer einer anderen Vorlage lassen sich dazu nicht wählen
+    // Treffer einer anderen Vorlage lassen sich dazu nicht wählen, bleiben aber sichtbar: gesperrt, mit Grund und „Stattdessen wählen“
     await expect(dialog.getByRole('checkbox', { name: 'Abfallkalender auswählen' })).toBeDisabled();
     await expect(dialog.getByTestId('found-lock-hint')).toBeVisible();
+    const bins = dialog.getByTestId('found-hit').filter({ hasText: 'Abfallkalender' });
+    await expect(bins).toHaveAttribute('data-blocked', '');
+    await expect(bins.getByTestId('found-why')).toContainText('Andere Art als „Batterie schwach“');
+    await expect(dialog.locator('[data-testid="found-group"][data-group="bins"]').getByTestId('found-dim')).toBeVisible();
+    // „Stattdessen wählen“ tauscht die Auswahl: nur noch der Abfallkalender, die Batterien sind frei
+    await bins.getByTestId('found-replace').click();
+    await expect(dialog.getByTestId('selection-count')).toHaveText('1 ausgewählt');
+    await expect(dialog.getByRole('checkbox', { name: `${NAMES[0]} auswählen`, exact: true })).toBeDisabled();
+    // „Auswahl aufheben“ in der Leiste: nichts ist gewählt, nichts ist gesperrt
+    await dialog.getByTestId('selection-done').click();
+    await expect(dialog.getByTestId('selection-bar')).toHaveCount(0);
+    await expect(dialog.getByTestId('found-hit').filter({ hasText: 'Abfallkalender' })).not.toHaveAttribute('data-blocked', '');
+    // und wieder die drei Batterien
+    for (const n of NAMES) await dialog.getByRole('checkbox', { name: `${n} auswählen`, exact: true }).check();
 
     // Einrichten: derselbe Assistent, Schritt 1 zeigt die drei Geräte mit ihrem Wert
     await dialog.getByTestId('selection-setup').click();
     await expect(dialog.getByTestId('devices-title')).toContainText('3 Geräte');
     await expect(dialog.getByTestId('device-row')).toHaveCount(3);
-    await expect(dialog.getByTestId('device-row').filter({ hasText: 'Bad Fenster Batterie: Batterie bei 12 %' })).toBeVisible();
+    await expect(dialog.getByTestId('device-row').filter({ hasText: 'Bad Fenster Batterie' })).toBeVisible();
+    // die Geräteleiste: „Alle 3“ und ein Chip je Gerät; ein Gerät antippen zeigt seinen Verlauf, „Alle“ den Überblick
+    const strip = dialog.getByTestId('device-strip');
+    await expect(strip.getByRole('button', { name: 'Alle 3' })).toHaveAttribute('aria-pressed', 'true');
+    await strip.getByRole('button', { name: /Küche Fenstersensor Batterie/ }).click();
+    await expect(dialog.getByTestId('graph-card')).toContainText('Küche Fenstersensor Batterie');
+    await expect(dialog.getByTestId('device-row')).toHaveCount(0);
+    await strip.getByRole('button', { name: 'Alle 3' }).click();
+    await expect(dialog.getByTestId('device-row')).toHaveCount(3);
     await dialog.getByRole('button', { name: 'Weiter: Dann' }).click();
+    // Schritt Dann: der Titel der Aufgabe je Gerät, wie ihn Stups setzt
+    await expect(dialog.getByTestId('device-strip')).toBeVisible();
+    await expect(dialog.getByTestId('device-row').filter({ hasText: 'Batterie wechseln: Bad Fenster Batterie' })).toBeVisible();
     await dialog.getByTestId('then-editor').getByLabel('Board', { exact: true }).selectOption(board.id);
     await dialog.getByRole('button', { name: 'Weiter: Wer' }).click();
+    // Schritt Wer: je Gerät wird nichts festgelegt, das sagt der Hinweis
+    await expect(dialog.getByTestId('devices-who-note')).toContainText('Wer dran ist, entscheidet sich erst, wenn eine Aufgabe entsteht');
     await dialog.getByRole('button', { name: 'Weiter: Feinschliff' }).click();
+    // Feinschliff: Probelauf für alle Geräte, ein Ergebnis je Gerät
+    await dialog.getByRole('button', { name: 'Testen', exact: true }).click();
+    await expect(dialog.getByTestId('device-row')).toHaveCount(3);
+    await expect(dialog.getByTestId('device-row').first()).toContainText(/ausgelöst|keine Historie|nicht abrufbar/, { timeout: 20_000 });
     await dialog.getByRole('button', { name: '3 Wächter anlegen' }).click();
     await expect(page.getByText('3 Wächter angelegt')).toBeVisible();
 
@@ -309,11 +344,10 @@ test('Gefunden: drei Batterien auswählen, gemeinsam einrichten (drei Wächter);
     // Zweiter Durchlauf: zwei Treffer gemeinsam ausblenden, sie stehen unter „Ausgeblendet“
     await page.keyboard.press('Escape');
     dialog = await found(page);
-    await dialog.getByTestId('select-mode').click();
     for (const n of [NAMES[0]!, NAMES[1]!]) await dialog.getByRole('checkbox', { name: `${n} auswählen`, exact: true }).check();
     await dialog.getByTestId('selection-hide').click();
     await expect(page.getByText('2 Treffer ausgeblendet')).toBeVisible();
-    await dialog.getByTestId('selection-done').click();
+    await expect(dialog.getByTestId('selection-bar')).toHaveCount(0);
     await dialog.getByTestId('found-hidden-toggle').click();
     await expect(dialog.getByTestId('found-hidden')).toHaveCount(2);
     await expect(dialog.getByTestId('found-hidden').filter({ hasText: 'Bad Fenster Batterie' })).toBeVisible();

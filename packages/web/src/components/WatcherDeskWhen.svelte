@@ -8,6 +8,7 @@
   import type { TriggerKind, WatcherSuggestion } from '../lib/watcher-types';
   import DeskBlock from './DeskBlock.svelte';
   import DeskField from './DeskField.svelte';
+  import WatcherDeskDeviceChips from './WatcherDeskDeviceChips.svelte';
   import FoundHits from './FoundHits.svelte';
   import Icon from './Icon.svelte';
   import Chip from './ui/Chip.svelte';
@@ -22,6 +23,8 @@
 
   const uid = $props.id();
   const f = $derived(ed.form);
+  /** Gemeinsam einrichten: statt des Suchfelds die Geräte als Chips */
+  const many = $derived(ed.devices.length > 1);
   const open = $derived(ed.picking === 'trigger');
   const unit = $derived(f.entityUnit || null);
   const KINDS = $derived(deskConditionItems());
@@ -101,8 +104,9 @@
 </script>
 
 <DeskBlock n={1} title={t('Wenn')} testid="desk-when">
+  {#if many}<WatcherDeskDeviceChips {ed} {suggestions} />{/if}
   <!-- Entität: ein Suchfeld mit Liste (Kombinationsfeld) -->
-  <div class="relative" bind:this={wrap} onfocusout={leave}>
+  <div class="relative {many ? 'hidden' : ''}" bind:this={wrap} onfocusout={leave}>
     <label class="focus-ring-in flex h-12 items-center gap-2.5 rounded-row border border-line bg-bg px-3.5">
       <span class="flex shrink-0 text-text-soft2"><Icon name="search" size={18} stroke={2} /></span>
       <input
@@ -153,7 +157,7 @@
   </div>
 
   <!-- Vorschläge aus „Gefunden“: die ersten drei, der Rest hinter „+N“ -->
-  {#if suggestions.length > 0}
+  {#if suggestions.length > 0 && !many}
     <div class="flex flex-wrap items-center gap-2" role="group" aria-label={t('Vorschläge')} data-testid="desk-chips">
       {#each plan.chips as c (c.suggestion.templateId + c.suggestion.entityId)}
         <Chip small active={f.entityId === c.suggestion.entityId} pressed={f.entityId === c.suggestion.entityId} onclick={() => ed.applySuggestion(c.suggestion)}>

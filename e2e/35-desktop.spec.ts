@@ -456,7 +456,8 @@ test.describe('Kalender (Desktop)', () => {
     await page.getByRole('menuitemcheckbox', { name: s.boardName }).click(); // ausblenden: ein Board wird abgewählt
     await expect(events).toHaveCount(0);
     await page.getByRole('menuitemcheckbox', { name: s.boardName }).click();
-    await page.getByRole('button', { name: 'Schließen' }).first().click();
+    await page.keyboard.press('Escape'); // Escape schließt das Menü
+    await expect(page.getByRole('menu', { name: 'Boards' })).toHaveCount(0);
     await expect(events.first()).toBeVisible();
   });
 });

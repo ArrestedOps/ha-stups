@@ -20,6 +20,8 @@
   }
 </script>
 
+<svelte:window onkeydown={(e) => { if (open && e.key === 'Escape') open = false; }} />
+
 <span class="relative inline-flex shrink-0" data-testid="calendar-boards">
   <button
     class="inline-flex h-9 items-center gap-2 rounded-full bg-surface pr-2.5 pl-3 text-[14px] font-semibold shadow-[0_0_0_0.5px_var(--sep)] hover:bg-surface2"
@@ -35,7 +37,7 @@
   </button>
   {#if open}
     <button class="fixed inset-0 z-40 cursor-default" aria-label={t('Schließen')} tabindex="-1" onclick={() => (open = false)}></button>
-    <div class="absolute top-11 right-0 z-50 max-h-[360px] min-w-[240px] overflow-y-auto rounded-[14px] bg-surface p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.22)]" role="menu" aria-label="Boards">
+    <div class="absolute top-11 right-0 z-50 max-h-[360px] w-[260px] overflow-y-auto rounded-[14px] bg-surface p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.22)]" role="menu" aria-label="Boards">
       {#each ui.boards as b (b.id)}
         <button class="flex h-10 w-full items-center gap-2.5 rounded-[9px] px-2.5 text-left text-[14px] font-medium hover:bg-surface2" role="menuitemcheckbox" aria-checked={on(b.id)} onclick={() => toggle(b.id)}>
           <span class="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] border-[1.5px] text-bg" style:border-color={colorOf(b.id, b.color)} style:background={on(b.id) ? colorOf(b.id, b.color) : 'transparent'}>

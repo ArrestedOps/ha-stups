@@ -38,6 +38,8 @@
   </button>
 {/snippet}
 
+<svelte:window onkeydown={(e) => { if (open && e.key === 'Escape') open = false; }} />
+
 <span class="relative inline-flex shrink-0" data-testid="scope-menu">
   <button
     class="inline-flex h-9 items-center gap-2 rounded-full bg-surface pr-2.5 pl-[5px] text-[14px] font-semibold shadow-[0_0_0_0.5px_var(--sep)] hover:bg-surface2"

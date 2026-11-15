@@ -47,6 +47,8 @@
   >{text}<span class="text-[13px] font-medium text-hint tabular-nums">{n}</span></button>
 {/snippet}
 
+<svelte:window onkeydown={(e) => { if (open && e.key === 'Escape') open = false; }} />
+
 <div class="flex items-end gap-5 border-b border-line" role="tablist" aria-label={t('Kategorien')} data-testid="watcher-tabs">
   {@render tab('all', t('Alle'), total, 'watcher-tab-all')}
   {@render tab('paused', t('Pausiert'), paused, 'watcher-tab-paused')}

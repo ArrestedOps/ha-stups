@@ -52,6 +52,8 @@
   };
 </script>
 
+<svelte:window onkeydown={(e) => { if (boardMenu && e.key === 'Escape') boardMenu = false; }} />
+
 {#snippet bellButton()}
   <button class="side-icon relative" aria-label={unseen > 0 ? tn('Mitteilungen, {n} ungelesen', 'Mitteilungen, {n} ungelesen', unseen) : t('Mitteilungen')} data-testid="bell" onclick={() => openSheet({ type: 'notifications' })}>
     <Icon name="bell" size={20} />

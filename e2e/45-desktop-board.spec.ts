@@ -37,7 +37,8 @@ test('Seitenleiste: Neues Board, Board-Einstellungen und Reihenfolge ändern; Ar
   const menu = await openBoardMenu(page);
   for (const name of ['Board-Einstellungen', 'Reihenfolge ändern']) await expect(menu.getByRole('menuitem', { name })).toBeVisible();
   await expect(menu.getByRole('menuitem', { name: /^Archivierte Boards/ })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Schließen' }).first().click();
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
   // Neues Board öffnet das Anlegen (mit Sichtbarkeit und Fairness)
   await sideBoards(page).getByRole('button', { name: 'Neues Board' }).click();
   await expect(page.getByRole('dialog', { name: 'Neues Board erstellen' })).toBeVisible();

@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { setScope } from './helpers';
 
 // Läuft nur im Projekt „waechter“ (nachgebautes Home Assistant, e2e/server-ha.mjs). Wächter-Liste: mehrere auswählen, gemeinsam bearbeiten
 // (nur die angefassten Felder), pausieren und löschen; auf dem Handy und in der Breite des Desktops.
@@ -58,8 +59,8 @@ async function setup(request: APIRequestContext) {
 async function selectBoth(page: Page, names: string[], category: string) {
   await nav(page).getByRole('button', { name: 'Wächter' }).click();
   if ((page.viewportSize()?.width ?? 0) < 1024) await page.getByRole('button', { name: `Kategorie ${category} öffnen` }).click();
-  // Desktop: „Ansicht für“ steht auf „Nur meine“ und blendet Wächter ohne Zuständige aus; die Testwächter haben keine
-  else await page.getByTestId('side-who').getByRole('button', { name: 'Alle', exact: true }).click();
+  // Desktop: das Menü „Für wen?“ steht auf „Meine“ und blendet Wächter ohne Zuständige aus; die Testwächter haben keine
+  else await setScope(page, 'Alle');
   await page.getByTestId('select-mode').click();
   for (const n of names) await page.getByRole('checkbox', { name: `${n} auswählen` }).check();
   await expect(page.getByTestId('selection-count')).toHaveText('2 ausgewählt');

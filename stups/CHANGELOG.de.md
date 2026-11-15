@@ -2,7 +2,7 @@
 
 > 🇬🇧 [English version](CHANGELOG.md) · Die englische Fassung ist maßgeblich.
 
-## Unreleased
+## 1.42.0
 
 - **Neues Design.** Stups wirkt ruhiger und mehr wie eine iPhone-App: flaches Orange statt leuchtender Verläufe, gruppierte Listen mit feinen Linien, eine schwebende Leiste (Aufgaben · Boards · **+** · Kalender · Wächter) und vier Zahlenkacheln bei Aufgaben. Das Board steht in jeder Zeile als farbiger Punkt mit Namen; der Erledigt-Kreis bleibt neutral. Der dunkle Modus folgt denselben Regeln, der Kontrast jedes Farbpaars wird getestet.
 - **Stups-Karte bei Aufgaben.** Hat dich jemand angestupst, antwortest du direkt oben: **Erledigt**, **Mach ich** oder **Später**. Nach der Antwort verschwindet die Karte, die Zeile behält eine leise Spur mit **Rückgängig**.

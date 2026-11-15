@@ -2,7 +2,7 @@
 
 > 🇩🇪 [Deutsche Fassung](CHANGELOG.de.md) · This English version is the authoritative one.
 
-## Unreleased
+## 1.42.0
 
 - **New design.** Stups looks calmer and more like an iPhone app: flat orange instead of glowing gradients, grouped lists with hairlines, a floating tab bar (Tasks · Boards · **+** · Calendar · Watchers) and four number tiles on Tasks. The board shows as a coloured dot with its name in every row; the check circle stays neutral. Dark mode follows the same rules, and the contrast of every colour pair is tested.
 - **“Nudge” card on Tasks.** When someone nudged you, a card at the top lets you answer right there: **Done**, **On it** or **Later**. The card disappears after your reply and the row keeps a quiet trace with **Undo**.

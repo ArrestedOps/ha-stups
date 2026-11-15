@@ -76,3 +76,56 @@ describe('Zurück-Knopf: was er tut, die Eingaben bleiben', () => {
     expect(ui.sheet).toBeNull();
   });
 });
+
+describe('Gemeinsam einrichten: mehrere Geräte im Assistenten', () => {
+  const hits = [1, 2, 3].map((n) => ({ entityId: `sensor.bat_${n}`, name: `Gerät ${n}`, reason: `Gerät ${n}: Batterie bei ${n} %`, unit: '%' }));
+  function many(step: 1 | 2 | 3 | 4) {
+    const ed = editor(step);
+    ed.devices = hits;
+    ed.form.entityId = 'sensor.bat_1';
+    ed.form.entityName = 'Gerät 1';
+    return ed;
+  }
+
+  it('Schritt 1 zeigt statt der Entität die Liste der Geräte mit aktuellem Wert', () => {
+    const out = html(many(1));
+    expect(count(out, /data-testid="device-row"/g)).toBe(3);
+    expect(out).toContain('3 Geräte');
+    expect(out).toContain('Gerät 2: Batterie bei 2 %');
+    expect(out).not.toContain('data-testid="when-entity"');
+  });
+
+  it('abgewählte Geräte sind nicht mehr angehakt, der Knopf zählt nur die gewählten', () => {
+    const ed = many(4);
+    ed.toggleDevice('sensor.bat_2');
+    expect(ed.selectedDevices.map((d) => d.entityId)).toEqual(['sensor.bat_1', 'sensor.bat_3']);
+    expect(html(ed)).toContain('2 Wächter anlegen');
+    expect(html(many(4))).toContain('3 Wächter anlegen');
+  });
+
+  it('mindestens ein Gerät bleibt gewählt', () => {
+    const ed = many(1);
+    ed.toggleDevice('sensor.bat_1');
+    ed.toggleDevice('sensor.bat_2');
+    ed.toggleDevice('sensor.bat_3');
+    expect(ed.selectedDevices.map((d) => d.entityId)).toEqual(['sensor.bat_3']);
+  });
+
+  it('wird das erste Gerät abgewählt, rückt das nächste an die Stelle der Entität (auch beim Erledigen)', () => {
+    const ed = many(1);
+    ed.form.doneOn = true;
+    ed.form.doneEntityId = 'sensor.bat_1';
+    ed.toggleDevice('sensor.bat_1');
+    expect(ed.form.entityId).toBe('sensor.bat_2');
+    expect(ed.form.entityName).toBe('Gerät 2');
+    expect(ed.form.doneEntityId).toBe('sensor.bat_2');
+  });
+
+  it('mit einem Gerät bleibt alles wie bisher', () => {
+    const ed = editor(4);
+    expect(html(ed)).toContain('Wächter anlegen');
+    expect(html(ed)).not.toContain('2 Wächter anlegen');
+    const one = editor(1);
+    expect(html(one)).not.toContain('data-testid="device-row"');
+  });
+});

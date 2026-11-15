@@ -39,6 +39,7 @@
   const loadPeopleSheet = () => import('./components/PeopleSheet.svelte');
   const loadWatcherSheet = () => import('./components/WatcherSheet.svelte');
   const loadFoundSheet = () => import('./components/FoundSheet.svelte');
+  const loadWatcherBulkSheet = () => import('./components/WatcherBulkSheet.svelte');
   const loadNudgeSheet = () => import('./components/NudgeSheet.svelte');
   const loadTrashSheet = () => import('./components/TrashSheet.svelte');
   const loadArchiveSheet = () => import('./components/ArchiveSheet.svelte');
@@ -198,9 +199,11 @@
   {:else if ui.sheet?.type === 'people'}
     <Lazy load={loadPeopleSheet} />
   {:else if ui.sheet?.type === 'watcher'}
-    {#key ui.sheet.id ?? 'neu'}<Lazy load={loadWatcherSheet} props={{ id: ui.sheet.id, template: ui.sheet.template, hit: ui.sheet.hit, category: ui.sheet.category }} />{/key}
+    {#key ui.sheet.id ?? 'neu'}<Lazy load={loadWatcherSheet} props={{ id: ui.sheet.id, template: ui.sheet.template, hit: ui.sheet.hit, category: ui.sheet.category, hits: ui.sheet.hits }} />{/key}
   {:else if ui.sheet?.type === 'found'}
     <Lazy load={loadFoundSheet} />
+  {:else if ui.sheet?.type === 'watcher-bulk'}
+    <Lazy load={loadWatcherBulkSheet} props={{ ids: ui.sheet.ids }} />
   {:else if ui.sheet?.type === 'nudge'}
     {#key ui.sheet.id}<Lazy load={loadNudgeSheet} props={{ id: ui.sheet.id }} />{/key}
   {:else if ui.sheet?.type === 'trash'}

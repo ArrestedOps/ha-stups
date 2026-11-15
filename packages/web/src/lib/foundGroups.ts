@@ -43,6 +43,56 @@ export const visibleHits = (g: FoundGroup, expanded: boolean, filtering: boolean
 
 export const showFoundSearch = (total: number): boolean => total >= FOUND_SEARCH_FROM;
 
-const ICONS: Record<string, string> = { washer: 'washer', dryer: 'fan', dishwasher: 'dish', bins: 'trash', rain: 'globe', battery: 'plug', vacuum: 'vacuum' };
+const ICONS: Record<string, string> = {
+  washer: 'washer',
+  dryer: 'fan',
+  dishwasher: 'dish',
+  bins: 'trash',
+  rain: 'globe',
+  battery: 'plug',
+  vacuum: 'vacuum',
+  window_open: 'window',
+  fridge_open: 'door',
+  leak: 'alert',
+  plant: 'leaf',
+  humid: 'fan',
+  co2: 'fan',
+  dehumidifier: 'fan',
+  robot_error: 'robot',
+  filter_life: 'layers',
+  toner: 'file',
+  level: 'layers',
+  refill: 'dish',
+  litter: 'trash',
+  ev_plug: 'plug',
+  mail: 'message',
+  garage_lock: 'shield',
+  freezer_warm: 'heat',
+  unavailable: 'wifi-off',
+  update: 'download',
+};
 /** Symbol der Vorlage am Gruppenkopf */
 export const foundIcon = (templateId: string): string => ICONS[templateId] ?? 'eye';
+
+// ---------- Mehrere Treffer auswählen ----------
+
+/** Kennung eines Treffers in der Auswahl (dieselbe Entität kann unter zwei Vorlagen stehen) */
+export const hitId = (s: Pick<WatcherSuggestion, 'templateId' | 'entityId'>): string => `${s.templateId}|${s.entityId}`;
+
+/** Gemeinsam einrichten lassen sich nur Treffer derselben Vorlage und Fassung (Leistung oder Programmstatus eines Geräts haben verschiedene Auslöser) */
+export const selectionKey = (s: Pick<WatcherSuggestion, 'templateId' | 'variant'>): string => `${s.templateId}:${s.variant}`;
+
+/** Passt der Treffer zu dem, was schon gewählt ist? Ohne Auswahl passt jeder */
+export const canJoin = (selected: Pick<WatcherSuggestion, 'templateId' | 'variant'>[], s: Pick<WatcherSuggestion, 'templateId' | 'variant'>): boolean =>
+  selected.length === 0 || selectionKey(selected[0]!) === selectionKey(s);
+
+/**
+ * „Alle auswählen“ im Kopf einer Gruppe: alle Treffer der Gruppe, die zur Auswahl passen. Ist noch nichts gewählt, gilt die Fassung des
+ * ersten Treffers (beim Gerät mit Leistung und Programmstatus zählt die Leistung, sie steht zuerst).
+ */
+export function pickableInGroup(items: WatcherSuggestion[], selected: WatcherSuggestion[]): WatcherSuggestion[] {
+  const first = items[0];
+  if (!first) return [];
+  const anchor = selected.length > 0 ? selected : [first];
+  return items.filter((s) => canJoin(anchor, s));
+}

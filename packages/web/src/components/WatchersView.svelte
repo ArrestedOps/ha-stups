@@ -8,6 +8,7 @@
   import { t, tn } from '../lib/i18n/index.svelte';
   import { canNudge } from '../lib/nudge';
   import { matchesQuery } from '../lib/search';
+  import { allSelected, clearAll, prune, selectAll, toggle as toggleSelected, type Selection } from '../lib/selection';
   import { listSummary } from '../lib/watcher-desk';
   import { WatcherEditor } from '../lib/watcher-editor.svelte';
   import type { SavedWatcher } from '../lib/watcher-types';
@@ -15,6 +16,7 @@
   import { noteText, RUN_TEXT } from '../lib/watchers';
   import { activeScheduleFilter, askSuggestWatcherCategories, can, completeCard, feat, openCardAnywhere, openNewWatcher, openSheet, personById, toast, ui, type NewWatcherRequest } from '../lib/store.svelte';
   import Icon from './Icon.svelte';
+  import SelectionBar from './SelectionBar.svelte';
   import TopBar from './TopBar.svelte';
   import WatcherDesk from './WatcherDesk.svelte';
   import WatcherRow from './WatcherRow.svelte';
@@ -163,19 +165,6 @@
   let deskTab = $state<'list' | 'activity'>('list');
   const toggleOpen = (id: string) => (openId = openId === id ? null : id);
 
-  // Desktop: Mehrfachauswahl und Sammelaktionen (Pausieren, Aktivieren) für viele gleiche Wächter, zum Beispiel 100 Batterien
-  let selected = $state<string[]>([]);
-  const toggleSelected = (id: string, on: boolean) => (selected = on ? [...new Set([...selected, id])] : selected.filter((x) => x !== id));
-  $effect(() => {
-    const ids = new Set(allItems.map((i) => i.watcherId));
-    if (selected.some((id) => !ids.has(id))) selected = selected.filter((id) => ids.has(id));
-  });
-  async function bulkActive(on: boolean) {
-    const targets = allItems.filter((i) => selected.includes(i.watcherId) && i.active !== on);
-    for (const i of targets) await setActive(i, on);
-    selected = [];
-  }
-
   // Handy: eine Kategorie öffnet als eigene Seite (einheitlich für alle, auch mit 100 Batterien): Suche, Filter, „Mehr anzeigen“
   const PAGE_SIZE = 30;
   let page = $state<string | null>(null);
@@ -245,6 +234,81 @@
       busy = busy.filter((x) => x !== i.watcherId);
     }
   }
+
+  // ---------- Auswählen: mehrere Wächter gemeinsam bearbeiten, pausieren, löschen ----------
+
+  /** Der Auswahlmodus (Kästchen an den Zeilen, Leiste unten) und was gewählt ist */
+  let selecting = $state(false);
+  let selection = $state<Selection>(clearAll());
+  let acting = $state(false);
+  const canSelect = $derived(can('watchers') && !!data?.available && allItems.length > 0);
+  const selectedIds = $derived(allItems.filter((i) => selection.has(i.watcherId)).map((i) => i.watcherId));
+  /** Pausieren, solange mindestens ein gewählter Wächter aktiv ist; sonst Fortsetzen */
+  const anyActive = $derived(allItems.some((i) => selection.has(i.watcherId) && i.active));
+  const pick = (id: string) => (selection = toggleSelected(selection, id));
+  const pickAll = (list: HomeItem[]) => {
+    const ids = list.map((i) => i.watcherId);
+    selection = allSelected(selection, ids) ? new Set([...selection].filter((id) => !ids.includes(id))) : selectAll(selection, ids);
+  };
+  function endSelecting() {
+    selecting = false;
+    selection = clearAll();
+  }
+  // Wächter, die es nicht mehr gibt (gelöscht, auch von jemand anderem), fallen aus der Auswahl
+  $effect(() => {
+    const existing = allItems.map((i) => i.watcherId);
+    untrack(() => (selection = prune(selection, existing)));
+  });
+  // Ohne Recht oder ohne Verbindung gibt es keinen Auswahlmodus
+  $effect(() => {
+    if (!canSelect && selecting) untrack(endSelecting);
+  });
+
+  /** Nach einer Sammel-Änderung: die Listen neu laden; bei „nicht gefunden“ räumt sich die Auswahl danach selbst auf */
+  async function reloadAfterBulk() {
+    ui.watchers = await api.watchers().catch(() => ui.watchers);
+    ui.rev += 1;
+    await load();
+  }
+  async function bulkActive(on: boolean) {
+    if (acting || selectedIds.length === 0) return;
+    acting = true;
+    const n = selectedIds.length;
+    try {
+      await api.bulkUpdateWatchers(selectedIds, { active: on });
+      toast(on ? tn('{n} Wächter fortgesetzt', '{n} Wächter fortgesetzt', n) : tn('{n} Wächter pausiert', '{n} Wächter pausiert', n));
+    } catch (e) {
+      toast(e instanceof ApiError ? e.message : t('Änderung fehlgeschlagen'), { tone: 'error' });
+    }
+    await reloadAfterBulk();
+    acting = false;
+  }
+  function askBulkDelete() {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    ui.confirm = {
+      title: tn('{n} Wächter löschen?', '{n} Wächter löschen?', ids.length),
+      text: t('Das lässt sich nicht rückgängig machen. Bereits angelegte Aufgaben bleiben.'),
+      label: t('Löschen'),
+      run: async () => {
+        try {
+          await api.bulkDeleteWatchers(ids);
+          selection = new Set([...selection].filter((id) => !ids.includes(id)));
+          // nichts mehr gewählt: das Auswählen endet (die Wächter sind weg, die Leiste hätte nichts mehr zu tun)
+          if (selection.size === 0) endSelecting();
+          toast(tn('{n} Wächter gelöscht', '{n} Wächter gelöscht', ids.length));
+        } catch (e) {
+          toast(e instanceof ApiError ? e.message : t('Löschen fehlgeschlagen'), { tone: 'error' });
+        }
+        await reloadAfterBulk();
+      },
+    };
+  }
+  const bulkActions = $derived([
+    { id: 'edit', label: t('Bearbeiten'), run: () => openSheet({ type: 'watcher-bulk', ids: [...selectedIds] }) },
+    { id: 'pause', label: anyActive ? t('Pausieren') : t('Fortsetzen'), run: () => void bulkActive(!anyActive), disabled: acting },
+    { id: 'delete', label: t('Löschen'), run: askBulkDelete, tone: 'danger' as const, disabled: acting },
+  ]);
 
   // ---------- Desktop: „Neuer Wächter“ klappt über der Liste auf (statt Fenster mit vier Schritten) ----------
 
@@ -367,15 +431,6 @@
             <button class="text-[13px] font-semibold text-accent-text" data-testid="watcher-toggle-all" onclick={() => setAllGroups(allClosed)}>{allClosed ? t('Alle aufklappen') : t('Alle zuklappen')}</button>
           </div>
         {/if}
-        {#if selected.length > 0}
-          <div class="flex items-center gap-3 rounded-[12px] bg-surface px-4 py-2.5 text-[14px]" role="toolbar" aria-label={t('Sammelaktionen')} data-testid="watcher-bulk">
-            <b>{tn('{n} ausgewählt', '{n} ausgewählt', selected.length)}</b>
-            <span class="flex-1"></span>
-            <button class="h-9 rounded-full bg-surface2 px-4 font-semibold" onclick={() => void bulkActive(false)}>{t('Pausieren')}</button>
-            <button class="h-9 rounded-full bg-surface2 px-4 font-semibold" onclick={() => void bulkActive(true)}>{t('Aktivieren')}</button>
-            <button class="h-9 px-2 font-semibold text-accent-text" onclick={() => (selected = [])}>{t('Auswahl aufheben')}</button>
-          </div>
-        {/if}
         {#if query && items.length === 0}
           <p class="py-10 text-center text-fg2" data-testid="home-no-match">{t('Keine Treffer')}</p>
         {:else if deskGroups.length === 0}
@@ -395,11 +450,11 @@
           <section aria-label={t('Kategorien')} class="flex flex-col gap-3" data-testid="watcher-categories">
             {#each deskGroups as g (g.key)}
               <div data-testid="watcher-category" data-category={g.name ?? ''}>
-                <SectionHeader title={g.name ?? t('Ohne Kategorie')} count={g.items.length} plain open={open(g.key)} ontoggle={() => toggleCategory(g.key)} />
+                <SectionHeader title={g.name ?? t('Ohne Kategorie')} count={g.items.length} plain open={open(g.key)} ontoggle={() => toggleCategory(g.key)}>{@render selectAllButton(g.items)}</SectionHeader>
                 {#if open(g.key)}
                   <ul class="mt-2 divide-y divide-line overflow-hidden rounded-row border bg-surface border-line">
                     {#each g.items as i (i.watcherId)}
-                      <WatcherTableRow item={i} {nowMs} {canToggle} busy={busy.includes(i.watcherId)} fresh={fresh === i.watcherId} open={openId === i.watcherId} selected={selected.includes(i.watcherId)} onselect={canToggle ? (on) => toggleSelected(i.watcherId, on) : undefined} onopen={() => toggleOpen(i.watcherId)} ontoggle={(on) => void setActive(i, on)} />
+                      <WatcherTableRow item={i} {nowMs} {canToggle} busy={busy.includes(i.watcherId)} fresh={fresh === i.watcherId} open={openId === i.watcherId} {selecting} selected={selection.has(i.watcherId)} onselect={() => pick(i.watcherId)} onopen={() => toggleOpen(i.watcherId)} ontoggle={(on) => void setActive(i, on)} />
                       {#if openId === i.watcherId}
                         <li class="bg-surface px-3.5 pt-1 pb-4" data-testid="watcher-inline" data-watcher-open={i.watcherId}>
                           {#if i.openCard}
@@ -436,11 +491,34 @@
   {/if}
 {/snippet}
 
-<!-- Die Zeilen eines Bereichs: auf dem Desktop eine Tabelle mit Spalten, auf dem Handy kompakte Zeilen untereinander -->
+<!-- Auswählen: schaltet die Kästchen an den Zeilen ein (nur mit dem Recht „watchers“) -->
+{#snippet selectButton()}
+  {#if canSelect}
+    <button
+      type="button"
+      class="flex h-11 items-center gap-2 rounded-row border px-4 text-[15px] font-bold {selecting ? 'border-accent bg-surface text-accent-text' : 'border-line bg-surface hover:bg-surface2'}"
+      aria-pressed={selecting}
+      data-testid="select-mode"
+      onclick={() => (selecting ? endSelecting() : (selecting = true))}
+    >
+      <Icon name="checklist" size={18} stroke={2} />{t('Auswählen')}
+    </button>
+  {/if}
+{/snippet}
+
+<!-- „Alle auswählen“ im Kopf einer Gruppe, solange ausgewählt wird -->
+{#snippet selectAllButton(list: HomeItem[])}
+  {#if selecting}
+    {@const all = allSelected(selection, list.map((i) => i.watcherId))}
+    <button type="button" class="flex h-11 shrink-0 items-center px-2 text-[14px] font-bold text-accent-text" data-testid="select-all" onclick={() => pickAll(list)}>{all ? t('Auswahl aufheben') : t('Alle auswählen')}</button>
+  {/if}
+{/snippet}
+
+<!-- Die Zeilen eines Bereichs auf dem Handy (der Desktop zeigt die Tabelle mit aufklappbaren Zeilen) -->
 {#snippet rowList(list: HomeItem[], current: boolean, problem = false)}
   <ul class="list-group {problem ? 'ring-1 ring-danger' : ''}">
       {#each list as i (i.watcherId)}
-        <li data-testid="watcher-row"><WatcherRow item={i} {nowMs} {current} {canToggle} busy={busy.includes(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} /></li>
+        <li data-testid="watcher-row"><WatcherRow item={i} {nowMs} {current} {canToggle} busy={busy.includes(i.watcherId)} {selecting} selected={selection.has(i.watcherId)} onselect={() => pick(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} /></li>
       {/each}
     </ul>
 {/snippet}
@@ -505,12 +583,15 @@
               }}
             />
           {/if}
+          {#if canSelect && pageItems.length > 0}
+            <div class="flex justify-end gap-1">{#if selecting}{@render selectAllButton(pageItems)}{/if}{@render selectButton()}</div>
+          {/if}
           {#if pageItems.length === 0}
             <p class="py-8 text-center text-fg2">{t('Keine Treffer')}</p>
           {:else}
             <ul class="list-group">
               {#each pageItems.slice(0, pageLimit) as i (i.watcherId)}
-                <li data-testid="watcher-row"><WatcherRow item={i} {nowMs} current={false} {canToggle} busy={busy.includes(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} /></li>
+                <li data-testid="watcher-row"><WatcherRow item={i} {nowMs} current={false} {canToggle} busy={busy.includes(i.watcherId)} {selecting} selected={selection.has(i.watcherId)} onselect={() => pick(i.watcherId)} onopen={() => openWatcher(i.watcherId)} ontoggle={(on) => void setActive(i, on)} /></li>
               {/each}
             </ul>
             {#if pageItems.length > pageLimit}
@@ -536,6 +617,7 @@
             <Segmented items={[{ id: 'list', label: t('Wächter') }, { id: 'activity', label: t('Aktivität') }]} value={deskTab} label={t('Ansicht')} small onchange={(v) => (deskTab = v as typeof deskTab)} />
           {/if}
           <span class="flex-1"></span>
+          {@render selectButton()}
           {#if can('watchers') && found > 0 && data?.available}
             <button
               type="button"
@@ -579,6 +661,10 @@
             <span class="text-text-soft2"><Icon name="chevron-right" size={18} stroke={2} /></span>
           </button>
         </div>
+      {/if}
+
+      {#if !ui.desktop && canSelect}
+        <div class="flex justify-end">{@render selectButton()}</div>
       {/if}
 
       {#if uncategorized > 0 && data?.available}
@@ -628,7 +714,7 @@
         <!-- Wächter mit Problem (keine Zuständigen, Entität oder Ziel fehlt): ganz oben, vor allem anderen, mit rotem Rand und dem Grund als Text -->
         {#if layout.problems.length > 0 && (scopeAll || scope === 'problem')}
           <section class="@container" aria-label={t('Wächter mit Problem')} data-testid="home-problems">
-            <SectionHeader title={t('Mit Problem')} count={layout.problems.length} plain tone="danger" />
+            <SectionHeader title={t('Mit Problem')} count={layout.problems.length} plain tone="danger">{@render selectAllButton(layout.problems)}</SectionHeader>
             {@render rowList(layout.problems, false, true)}
           </section>
         {/if}
@@ -685,7 +771,7 @@
           {#each [{ key: 'running', title: t('Läuft gerade'), icon: 'play', tone: 'green', list: layout.running, label: t('Läuft gerade') }, { key: 'soon', title: t('Kommt bald'), icon: 'calendar', tone: 'orange', list: layout.soon, label: t('Kommt bald') }] as sec (sec.key)}
             {#if sec.list.length > 0 && (scopeAll || scope === sec.key)}
               <section aria-label={sec.label} data-testid="home-{sec.key}">
-                <SectionHeader title={sec.title} count={sec.list.length} plain open={!closed.includes(sec.key)} ontoggle={() => toggle(sec.key)} />
+                <SectionHeader title={sec.title} count={sec.list.length} plain open={!closed.includes(sec.key)} ontoggle={() => toggle(sec.key)}>{@render selectAllButton(sec.list)}</SectionHeader>
                 {#if !closed.includes(sec.key)}{@render rowList(sec.list, true)}{/if}
               </section>
             {/if}
@@ -728,7 +814,7 @@
         {/if}
       {/if}
 
-      {#if !ui.desktop && can('watchers') && data?.available}
+      {#if !ui.desktop && can('watchers') && data?.available && !selecting}
         <div class="list-group !mt-0">
           <button class="flex h-[46px] w-full items-center gap-3 px-3.5 text-left text-[17px] font-medium text-accent-text" onclick={() => openSheet({ type: 'watcher', id: null })}>
             <span class="flex h-[30px] w-[30px] items-center justify-center"><Icon name="plus" size={22} stroke={2.2} /></span>{t('Neuer Wächter')}
@@ -742,5 +828,9 @@
       {/if}
     </div>
   </div>
+
+  {#if selecting}
+    <SelectionBar count={selectedIds.length} actions={bulkActions} ondone={endSelecting} />
+  {/if}
 
 </main>

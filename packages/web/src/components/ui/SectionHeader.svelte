@@ -48,10 +48,14 @@
 {#if plain}
   <!-- schlicht wie im Entwurf: Titel links, Zähler rechts -->
   {#if collapsible}
-    <button type="button" class="flex min-h-9 w-full items-baseline justify-between px-1 pt-2 pb-1.5 text-left {toneClass}" aria-expanded={open} onclick={ontoggle}>
-      <h2 class="truncate text-[20px] leading-[1.15] font-bold tracking-[0.01em]">{title}</h2>
-      {#if count !== undefined}<span class="text-[15px] font-medium tabular-nums {tone === 'danger' ? '' : 'text-text-soft'}">{count}</span>{/if}
-    </button>
+    <!-- Zusatzknöpfe (zum Beispiel „Alle auswählen“) stehen rechts neben dem Knopf, nicht darin -->
+    <div class="flex items-center gap-2">
+      <button type="button" class="flex min-h-9 min-w-0 flex-1 items-baseline justify-between px-1 pt-2 pb-1.5 text-left {toneClass}" aria-expanded={open} onclick={ontoggle}>
+        <h2 class="truncate text-[20px] leading-[1.15] font-bold tracking-[0.01em]">{title}</h2>
+        {#if count !== undefined}<span class="text-[15px] font-medium tabular-nums {tone === 'danger' ? '' : 'text-text-soft'}">{count}</span>{/if}
+      </button>
+      {@render children?.()}
+    </div>
   {:else}
     <div class="flex items-baseline justify-between px-1 pt-1 pb-2 {toneClass}">
       <h2 class="truncate text-[20px] leading-[1.15] font-bold tracking-[0.01em]">{title}</h2>

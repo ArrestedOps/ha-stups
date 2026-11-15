@@ -140,7 +140,7 @@ export interface TemplateDraft {
     | { kind: 'forecast'; condition: 'rain'; hours: number };
   card: { title: string; due: DueRule };
   assign: { mode: AssignMode };
-  done: { kind: 'above'; value: number } | null;
+  done: { kind: 'above' | 'below'; value: number } | { kind: 'state'; to: string } | null;
 }
 
 export interface WatcherTemplate {
@@ -164,7 +164,7 @@ export interface WatcherSuggestion {
   entityId: string;
   name: string;
   reason: string;
-  variant: 'power' | 'status' | 'default';
+  variant: 'power' | 'status' | 'default' | 'level' | 'switch' | 'cover' | 'lock';
   unit?: string;
   draft?: TemplateDraft;
   /** Kurzer Gerätename für Name und Aufgabentitel des neuen Wächters */
@@ -190,4 +190,29 @@ export interface OrderView {
   ordered: boolean;
   /** wie viele aus dem Kreis zu Hause sind; null, wenn sich niemand zuordnen lässt */
   home: number | null;
+}
+
+// ---------- Mehrere auf einmal ----------
+
+/**
+ * Die Änderung für `POST /api/watchers/bulk`: nur, was angefasst wurde (Entität, Name und Titel der Aufgabe nie). `trigger` und `done` nur bei
+ * gleicher Auslöser-Art; `done: { value }` ändert nur eine vorhandene Bedingung.
+ */
+export interface BulkPatch {
+  active?: boolean;
+  category?: string | null;
+  assign?: AssignRule;
+  card?: Partial<Pick<WatcherCard, 'boardId' | 'columnId' | 'categoryIds' | 'priority' | 'due'>>;
+  cooldownMin?: number;
+  dedupe?: boolean;
+  nudge?: Nudge | null;
+  countsForFairness?: boolean;
+  trigger?: Partial<Pick<WatchTrigger, 'value' | 'forMin' | 'count' | 'leadMin' | 'to'>> & { forecastHours?: number };
+  done?: { value?: number | null; to?: string | null } | null;
+}
+
+/** Antwort auf „Mehrere Treffer gemeinsam einrichten“: die neuen Wächter und die Entitäten, die schon ein Wächter beobachtete */
+export interface BulkCreated {
+  created: WatcherItem[];
+  skipped: string[];
 }

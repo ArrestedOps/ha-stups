@@ -72,3 +72,29 @@ describe('Kategorie im Formular', () => {
     expect(applyEntity(none, entity('Klima')).category).toBe('');
   });
 });
+
+describe('Vorlage mit „erledigt sich“ als Zustand (Fenster wieder zu)', () => {
+  it('übernimmt den Zustand ins Formular, mit der Entität des Treffers', () => {
+    const tplState = {
+      id: 'window_open',
+      kind: 'watcher' as const,
+      title: 'Fenster lange offen',
+      hint: '',
+      domain: 'binary_sensor',
+      search: '',
+      draft: {
+        name: 'Fenster lange offen',
+        trigger: { kind: 'state' as const, to: 'on', forMin: 30 },
+        card: { title: 'Fenster schließen', due: { kind: 'none' as const } },
+        assign: { mode: 'rotation_present' as const },
+        done: { kind: 'state' as const, to: 'off' },
+      },
+      recurring: null,
+      canSelfComplete: true,
+      whyNoSelfComplete: null,
+    };
+    const f = applyTemplate(emptyForm('b', 'c'), tplState, { entityId: 'binary_sensor.fenster', name: 'Fenster Bad' });
+    expect(f).toMatchObject({ kind: 'state', to: 'on', forMin: '30', doneOn: true, doneKind: 'state', doneTo: 'off', doneEntityId: 'binary_sensor.fenster' });
+    expect(toInput(f).done).toEqual({ entityId: 'binary_sensor.fenster', kind: 'state', to: 'off', value: null });
+  });
+});

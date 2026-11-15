@@ -185,7 +185,7 @@ test('Wächter am Desktop: Tabelle mit Spaltenkopf, bündige Spalten, Schalter, 
   for (const id of ids) await request.delete(`/api/watchers/${id}`);
 });
 
-test('Wächter am Desktop: Zeilen markieren, Sammelaktionen Pausieren und Aktivieren', async ({ page, request }) => {
+test('Wächter am Desktop: Auswählen, zwei Zeilen markieren, Sammelaktion Pausieren', async ({ page, request }) => {
   const tag = Date.now().toString(36);
   const board = (await (await request.post('/api/boards', { data: { name: `Sammel ${tag}` } })).json()) as { id: string };
   const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
@@ -208,14 +208,18 @@ test('Wächter am Desktop: Zeilen markieren, Sammelaktionen Pausieren und Aktivi
   await page.goto('/');
   await sideNav(page).getByRole('button', { name: 'Wächter' }).click();
   await page.getByTestId('watcher-tabs').getByRole('tab', { name: /^Sammel/ }).click();
+  await page.getByTestId('select-mode').click();
   await page.getByRole('checkbox', { name: `Sammel ${tag} 0 auswählen` }).check();
   await page.getByRole('checkbox', { name: `Sammel ${tag} 1 auswählen` }).check();
-  const bar = page.getByTestId('watcher-bulk');
+  const bar = page.getByTestId('selection-bar');
   await expect(bar).toContainText('2 ausgewählt');
-  await bar.getByRole('button', { name: 'Pausieren' }).click();
+  await bar.getByTestId('selection-pause').click();
   await expect
     .poll(async () => ((await (await request.get('/api/watchers')).json()) as { items: { id: string; active: boolean }[] }).items.filter((w) => ids.includes(w.id)).every((w) => !w.active))
     .toBe(true);
+  // die Auswahl bleibt bis „Fertig“: jetzt heißt der Knopf „Fortsetzen“
+  await expect(bar.getByTestId('selection-pause')).toHaveText('Fortsetzen');
+  await bar.getByTestId('selection-done').click();
   await expect(bar).toHaveCount(0);
   await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.bad_batterie', state: '12' } }); // andere Tests erwarten den Stand von vorher
 });

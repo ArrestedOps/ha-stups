@@ -1,0 +1,432 @@
+<title>Stups Desktop Ruhig</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: eine flache, ruhige Seitenleiste mit vier Zielen und den Boards. Alles, was die Seite betrifft (Person, Ansicht, Hauptaktion), steht in der Seite:
+   oben rechts Person und Hauptaktion, darunter wie am Handy die Stups-Karte und vier Zahlenkacheln, die zugleich Filter sind. */
+:root {
+  --bg: #f2f2f7; --card: #ffffff; --card2: #f7f7fa;
+  --label: #111114; --label2: #5f5f68; --label3: #8a8a93;
+  --sep: rgba(60,60,67,.18); --hover: rgba(60,60,67,.07);
+  --accent: #d24600; --accent-text: #b03800; --accent-soft: rgba(210,70,0,.10); --on-accent: #ffffff;
+  --ok: #1d8a3f; --ok-bg: rgba(29,138,63,.12);
+  --warn: #b25e00; --warn-bg: rgba(210,120,0,.14);
+  --bad: #c62828; --bad-bg: rgba(198,40,40,.11);
+  --info: #0a6fe0; --info-bg: rgba(10,111,224,.11);
+  --off: #6d6d76; --off-bg: rgba(138,138,147,.16);
+  --ha: #0a6fa8;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 0 0 .5px rgba(60,60,67,.14);
+  --c-haus: #d24600; --c-fam: #8e4ec6; --c-gar: #1d8a3f; --c-url: #0a6fe0;
+  --p-rene: #b8541a; --p-conny: #8e4ec6; --p-ben: #0a6fe0; --p-mia: #1d8a3f;
+  --side: #ebebf0; --font: 'Inter', -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --card: #1c1c1e; --card2: #2a2a2d;
+    --label: #f5f5f7; --label2: #aeaeb4; --label3: #7c7c84;
+    --sep: rgba(255,255,255,.14); --hover: rgba(255,255,255,.07);
+    --accent: #ff7a2e; --accent-text: #ff9a58; --accent-soft: rgba(255,122,46,.16); --on-accent: #1a0c00;
+    --ok: #4cd27a; --ok-bg: rgba(76,210,122,.16); --warn: #ffb04a; --warn-bg: rgba(255,176,74,.16);
+    --bad: #ff6b63; --bad-bg: rgba(255,107,99,.16); --info: #5aaeff; --info-bg: rgba(90,174,255,.16);
+    --off: #9a9aa2; --off-bg: rgba(154,154,162,.18); --ha: #3db4ee;
+    --shadow: 0 0 0 .5px rgba(255,255,255,.1); --side: #0c0c0d;
+    --c-haus: #ff7a2e; --c-fam: #b987ea; --c-gar: #4cd27a; --c-url: #5aaeff;
+    --p-rene: #d9773a; --p-conny: #a46fd8; --p-ben: #3b8ff0; --p-mia: #35a85f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --card: #1c1c1e; --card2: #2a2a2d;
+  --label: #f5f5f7; --label2: #aeaeb4; --label3: #7c7c84;
+  --sep: rgba(255,255,255,.14); --hover: rgba(255,255,255,.07);
+  --accent: #ff7a2e; --accent-text: #ff9a58; --accent-soft: rgba(255,122,46,.16); --on-accent: #1a0c00;
+  --ok: #4cd27a; --ok-bg: rgba(76,210,122,.16); --warn: #ffb04a; --warn-bg: rgba(255,176,74,.16);
+  --bad: #ff6b63; --bad-bg: rgba(255,107,99,.16); --info: #5aaeff; --info-bg: rgba(90,174,255,.16);
+  --off: #9a9aa2; --off-bg: rgba(154,154,162,.18); --ha: #3db4ee;
+  --shadow: 0 0 0 .5px rgba(255,255,255,.1); --side: #0c0c0d;
+  --c-haus: #ff7a2e; --c-fam: #b987ea; --c-gar: #4cd27a; --c-url: #5aaeff;
+  --p-rene: #d9773a; --p-conny: #a46fd8; --p-ben: #3b8ff0; --p-mia: #35a85f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--label); font-family: var(--font); font-size: 14px; line-height: 1.35; -webkit-font-smoothing: antialiased; padding-block: 16px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; text-align: left; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+svg { display: block; flex: none; }
+h1, h2, h3, p { margin: 0; text-wrap: balance; }
+
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--label); font-family: var(--font); font-size: 14px; line-height: 1.35; -webkit-font-smoothing: antialiased; padding-block: 16px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; text-align: left; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+svg { display: block; flex: none; }
+h1, h2, h3, p { margin: 0; text-wrap: balance; }
+.wrap { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.intro h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.intro p { color: var(--label2); margin-top: 4px; max-width: 82ch; text-wrap: pretty; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+.grp { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.grp > span { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--label3); margin-right: 2px; }
+.pill { height: 32px; padding: 0 14px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; }
+.pill[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.pills { margin-left: auto; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.notes > div { background: var(--card); border-radius: 14px; padding: 12px 14px; box-shadow: var(--shadow); color: var(--label2); font-size: 13px; text-wrap: pretty; }
+.notes b { display: block; color: var(--label); font-size: 14px; margin-bottom: 3px; }
+.stage { border-radius: 14px; box-shadow: var(--shadow); overflow: auto; background: var(--bg); }
+.app { min-width: 1120px; height: 760px; display: grid; background: var(--bg); }
+.rec { background: var(--accent-soft); border-radius: 14px; padding: 12px 16px; color: var(--label); text-wrap: pretty; }
+.rec b { color: var(--accent-text); }
+
+/* Bausteine */
+.logo { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; flex: none; }
+.wm { display: flex; flex-direction: column; line-height: 1; }
+.wm b { font-size: 20px; font-weight: 800; letter-spacing: -.02em; } .wm b i { color: var(--accent); font-style: normal; }
+.wm small { font-size: 9px; font-weight: 800; letter-spacing: .14em; color: var(--accent); margin-top: 1px; }
+.ic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; flex: none; position: relative; color: var(--label2); }
+.ic:hover { background: var(--hover); color: var(--label); }
+.ic .dot { position: absolute; top: 0; right: -1px; min-width: 16px; height: 16px; border-radius: 8px; background: var(--bad); color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center; padding: 0 4px; }
+.av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; background: var(--c); flex: none; }
+.av.s { width: 22px; height: 22px; font-size: 10px; }
+.avs { display: flex; } .avs .av { box-shadow: 0 0 0 2px var(--card); margin-left: -6px; } .avs .av:first-child { margin-left: 0; }
+.kbd { font-size: 11px; font-weight: 600; color: var(--label3); }
+.n { font-size: 13px; color: var(--label3); font-variant-numeric: tabular-nums; }
+.n.hot { background: var(--bad); color: #fff; font-weight: 700; font-size: 11px; min-width: 18px; height: 18px; border-radius: 9px; display: grid; place-items: center; padding: 0 5px; }
+.n.acc { background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 11px; min-width: 18px; height: 18px; border-radius: 9px; display: grid; place-items: center; padding: 0 5px; }
+
+/* Seitenleiste: flach, ruhig, kein Rahmen */
+.e { grid-template-columns: 244px minmax(0,1fr); }
+.e.slim { grid-template-columns: 68px minmax(0,1fr); }
+.side { background: var(--side); padding: 14px 10px 10px; display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow: hidden; }
+.sh { display: flex; align-items: center; gap: 9px; height: 40px; padding: 0 6px; margin-bottom: 8px; }
+.sh .sp { flex: 1; }
+.nv { display: flex; align-items: center; gap: 11px; height: 36px; padding: 0 10px; border-radius: 9px; width: 100%; font-size: 14.5px; font-weight: 500; color: var(--label2); }
+.nv svg { color: var(--label3); }
+.nv:hover { background: var(--hover); color: var(--label); }
+.nv[aria-current] { background: var(--card); color: var(--label); font-weight: 650; box-shadow: var(--shadow); }
+.nv[aria-current] svg { color: var(--accent); }
+.nv .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nv.sm { height: 32px; padding-left: 12px; font-size: 14px; }
+.nv .bdot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin: 0 4px; flex: none; }
+.nv.sm .n { opacity: 0; } .nv.sm:hover .n, .nv.sm[aria-current] .n { opacity: 1; }
+.sec { display: flex; align-items: center; justify-content: space-between; padding: 14px 10px 4px; font-size: 12.5px; font-weight: 650; color: var(--label3); }
+.sec .ic { width: 24px; height: 24px; margin-right: -4px; border-radius: 7px; }
+.foot { margin-top: auto; display: flex; align-items: center; gap: 4px; padding: 10px 4px 0; }
+.foot .nm { flex: 1; min-width: 0; font-size: 13px; line-height: 1.2; font-weight: 650; padding-left: 4px; }
+.foot .nm small { display: block; color: var(--label3); font-size: 11.5px; font-weight: 500; }
+.slim .side { align-items: center; padding: 14px 0 10px; }
+.slim .nv { width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 12px; }
+.slim .sec { padding: 8px 0 2px; }
+.slim .foot { flex-direction: column; padding: 0; }
+
+/* Seite */
+.main { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.top { padding: 26px 40px 0; display: flex; flex-direction: column; gap: 16px; }
+.r1 { display: flex; align-items: flex-end; gap: 12px; }
+.title { font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1.08; }
+.sub { color: var(--label2); font-size: 14px; margin-top: 4px; }
+.body { padding: 16px 40px 32px; overflow: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+.btn { height: 36px; padding: 0 16px; border-radius: 18px; background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.scope { height: 36px; padding: 0 10px 0 5px; border-radius: 18px; background: var(--card); box-shadow: var(--shadow); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.scope .av { width: 26px; height: 26px; font-size: 11px; }
+.scope .allav { width: 26px; height: 26px; border-radius: 50%; background: var(--hover); display: grid; place-items: center; color: var(--label2); }
+.menu { position: relative; display: inline-flex; }
+.pop { position: absolute; z-index: 5; top: 42px; right: 0; min-width: 240px; background: var(--card); border-radius: 14px; box-shadow: 0 10px 34px rgba(0,0,0,.2), var(--shadow); padding: 6px; display: flex; flex-direction: column; gap: 1px; }
+.pop .it { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 10px; border-radius: 9px; font-size: 14px; font-weight: 500; }
+.pop .it:hover { background: var(--hover); } .pop .it[aria-current] { font-weight: 700; }
+.pop .it .t { flex: 1; } .pop .it svg { color: var(--accent); }
+.pop hr { border: 0; border-top: .5px solid var(--sep); margin: 4px 6px; }
+
+/* Stups-Karte */
+.stups { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 16px; background: color-mix(in srgb, var(--c-fam) 12%, var(--card)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-fam) 30%, transparent); }
+.stups .hi { width: 36px; height: 36px; border-radius: 50%; background: var(--c-fam); color: #fff; display: grid; place-items: center; flex: none; }
+.stups .tx { flex: 1; min-width: 0; }
+.stups .tx b { display: block; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stups .tx span { font-size: 12.5px; color: var(--label2); }
+.stups .bt { height: 32px; padding: 0 14px; border-radius: 16px; font-weight: 700; font-size: 13px; background: var(--card); box-shadow: var(--shadow); display: inline-flex; align-items: center; }
+.stups .bt.p { background: var(--c-fam); color: #fff; box-shadow: none; }
+
+/* Zahlenkacheln (wie am Handy, hier als Filter) */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+.stat { background: var(--card); border-radius: 16px; box-shadow: var(--shadow); padding: 12px 16px 12px; display: flex; flex-direction: column; gap: 2px; min-height: 76px; }
+.stat:hover { box-shadow: 0 0 0 1px var(--sep); }
+.stat .sl { font-size: 13px; font-weight: 600; color: var(--label2); display: flex; align-items: center; justify-content: space-between; }
+.stat .sv { font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat.hot .sv { color: var(--bad); }
+.stat[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--card)); }
+.stat .sl svg { color: var(--accent); }
+.fl { display: flex; align-items: center; gap: 8px; }
+.fl .chip { height: 28px; padding: 0 6px 0 12px; border-radius: 14px; background: var(--accent-soft); color: var(--accent-text); font-weight: 650; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
+
+/* Reiter (Kategorien, Zeiträume) */
+.tabs { display: flex; gap: 22px; border-bottom: .5px solid var(--sep); }
+.tab { padding: 8px 0 10px; font-weight: 600; font-size: 14px; color: var(--label2); border-bottom: 2px solid transparent; margin-bottom: -.5px; display: inline-flex; gap: 6px; align-items: center; }
+.tab:hover { color: var(--label); }
+.tab[aria-selected="true"] { color: var(--label); border-bottom-color: var(--accent); font-weight: 700; }
+.seg { display: inline-flex; background: var(--hover); border-radius: 10px; padding: 2px; }
+.seg button { height: 30px; padding: 0 14px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+.seg button[aria-pressed="true"] { background: var(--card); box-shadow: var(--shadow); }
+
+/* Listen */
+.list { background: var(--card); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+.gh { display: flex; align-items: center; gap: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; color: var(--gc, var(--label2)); background: var(--card2); border-top: .5px solid var(--sep); }
+.gh:first-child { border-top: 0; } .gh .n { margin-left: auto; }
+.row { display: grid; align-items: center; gap: 12px; min-height: 54px; padding: 6px 18px; border-top: .5px solid var(--sep); }
+.row:first-child, .gh + .row { border-top: 0; }
+.row:hover { background: var(--hover); }
+.rt2 { grid-template-columns: 24px minmax(0,1fr) 160px 96px 118px; }
+.rw { grid-template-columns: minmax(0,1fr) 130px 150px 90px 44px; }
+.row.th { min-height: 32px; font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--label3); background: var(--card2); }
+.row.th:hover { background: var(--card2); }
+.tt { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 8px; align-items: center; }
+.ts { font-size: 12.5px; color: var(--label2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.circle { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--label3); flex: none; }
+.circle.done { background: var(--ok); border-color: var(--ok); }
+.bd { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--label2); min-width: 0; }
+.bd i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+.bd span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.due { font-size: 13px; font-weight: 600; color: var(--label2); }
+.due.over { color: var(--bad); } .due.today { color: var(--accent-text); }
+.tag { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 9px; background: var(--info-bg); color: var(--info); white-space: nowrap; }
+.tag.w { background: var(--accent-soft); color: var(--accent-text); }
+.st { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; display: inline-block; white-space: nowrap; }
+.st.ok { background: var(--ok-bg); color: var(--ok); } .st.problem { background: var(--bad-bg); color: var(--bad); }
+.st.waiting { background: var(--warn-bg); color: var(--warn); } .st.running, .st.soon { background: var(--info-bg); color: var(--info); }
+.st.paused { background: var(--off-bg); color: var(--off); }
+.sw { width: 40px; height: 24px; border-radius: 12px; background: var(--off-bg); position: relative; flex: none; }
+.sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.sw.on { background: var(--ok); } .sw.on::after { left: 18px; }
+.empty { padding: 36px; text-align: center; color: var(--label2); }
+.kan { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+.colm { background: var(--hover); border-radius: 16px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.colm h3 { font-size: 13px; padding: 2px 6px; display: flex; justify-content: space-between; color: var(--label2); }
+.kc { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 10px 12px; font-weight: 600; font-size: 14px; display: flex; flex-direction: column; gap: 8px; }
+.kc .meta { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--label2); font-weight: 500; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 8px; }
+.day { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); min-height: 340px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.day h3 { font-size: 12px; color: var(--label2); text-transform: uppercase; letter-spacing: .05em; padding: 2px 4px; }
+.day h3.now { color: var(--accent-text); }
+.ev { border-radius: 8px; padding: 6px 8px; font-size: 12.5px; font-weight: 600; background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--label); border-left: 3px solid var(--c); }
+
+</style>
+<div class="wrap">
+  <div class="intro">
+    <h1>Desktop-Navigation: ruhig und wie am Handy</h1>
+    <p>Die Seitenleiste tritt zurück und zeigt nur noch, wohin man gehen kann: vier Bereiche und die Boards. Was die jeweilige Seite betrifft, steht in der Seite selbst, in derselben Reihenfolge wie am Handy: Person und Hauptaktion oben rechts, dann die Stups-Karte, vier Zahlenkacheln als Filter und die Liste. Alles ist klickbar.</p>
+  </div>
+  <div class="bar">
+    <div class="grp" id="gp"><span>Seite</span></div>
+    <div class="grp" id="gs"><span>Seitenleiste</span></div>
+    <div class="grp pills" id="gt"><span>Farben</span></div>
+  </div>
+  <div class="stage"><div id="app"></div></div>
+  <div class="notes">
+    <div><b>Seitenleiste: 4 Ziele statt 25 Zeilen</b>Aufgaben, Boards, Kalender, Wächter, darunter die Boards. Keine Ansichten, keine Kategorien, keine Personenwahl. Zahlen nur, wo etwas zu tun ist: orange bei Gestupst, rot bei einem Problem. Sie ist flach, ohne Rahmen, mit kleinen einfarbigen Symbolen.</div>
+    <div><b>Eine feste Regel für die Seite</b>Oben links steht, wo man ist. Oben rechts stehen immer zwei Dinge: für wen man schaut und die Hauptaktion der Seite. Mit dem Personen-Menü (wie „Meine Aufgaben ▾“ am Handy) bleibt es auch bei acht Personen übersichtlich.</div>
+    <div><b>Ansichten sind Kacheln in der Seite</b>Heute fällig, Überfällig, Diese Woche, Erledigt heute: vier Zahlen, die zugleich filtern (ein Klick, noch einer hebt auf). Dasselbe Muster wie am Handy, dort schon erprobt. Gestupst steht als Karte oben, „Alle offen“ ist der Normalzustand.</div>
+    <div><b>Wächter gleich gebaut</b>Vier Kacheln für den Status (Problem, Wartet, Läuft, Kommt bald), darunter Reiter für die Kategorien. Wer die Aufgaben kann, kann die Wächter.</div>
+  </div>
+  <p class="rec"><b>Warum ich das für das übersichtlichste halte:</b> Jede Information hat genau einen Ort. Die Seitenleiste beantwortet „Wohin?“, der Seitenkopf „Für wen, und was tue ich hier?“, die Kacheln „Was ist los?“ und die Liste „Was ist es genau?“. Nichts steht doppelt, und es gibt nichts, was man erst lernen muss, weil es am Handy genauso ist.</p>
+</div>
+<script>
+/* Daten, geteilt von allen Vorschlägen */
+const P = { rene: { n: 'Rene', i: 'R', c: 'var(--p-rene)' }, conny: { n: 'Conny', i: 'C', c: 'var(--p-conny)' }, ben: { n: 'Ben', i: 'B', c: 'var(--p-ben)' }, mia: { n: 'Mia', i: 'M', c: 'var(--p-mia)' } };
+const BOARDS = [
+  { id: 'haus', n: 'Haushalt', c: 'var(--c-haus)', ic: 'house', open: 9 },
+  { id: 'fam', n: 'Familie', c: 'var(--c-fam)', ic: 'heart', open: 5 },
+  { id: 'gar', n: 'Garten', c: 'var(--c-gar)', ic: 'leaf', open: 3 },
+  { id: 'urlaub', n: 'Urlaub Italien', c: 'var(--c-url)', ic: 'plane', open: 7 },
+];
+const TASKS = [
+  { t: 'Elternabend: Anmeldung abgeben', b: 'fam', who: ['conny'], due: 'vor 2 Tagen', k: 'over', nudge: true },
+  { t: 'Batterie wechseln: Schließzylinder Wohnungstür', b: 'haus', who: ['rene'], due: 'Heute', k: 'today', watcher: true, nudge: true },
+  { t: 'Müll rausbringen', b: 'haus', who: ['ben'], due: 'Heute, 18:00', k: 'today' },
+  { t: 'Waschmaschine ausräumen', b: 'haus', who: ['mia'], due: 'Heute, 19:30', k: 'today', watcher: true },
+  { t: 'Geschenk für Oma besorgen', b: 'fam', who: ['rene', 'conny'], due: 'Do', k: 'week' },
+  { t: 'Rasen mähen', b: 'gar', who: ['rene'], due: 'Sa', k: 'week' },
+  { t: 'Fährtickets prüfen', b: 'urlaub', who: ['conny'], due: 'Mo', k: 'week' },
+  { t: 'Hecke schneiden', b: 'gar', who: ['ben'], due: '24. Nov', k: 'later' },
+  { t: 'Reisepässe verlängern', b: 'urlaub', who: ['rene'], due: '30. Nov', k: 'later' },
+  { t: 'Spülmaschine: Salz nachfüllen', b: 'haus', who: ['mia'], due: 'gestern', k: 'done' },
+];
+const WATCH = [
+  { n: 'Batterie schwach', e: 'Schließzylinder Wohnungstür', cond: 'Batterie unter 20 % (16 %)', s: 'problem', cat: 'Batterien', last: 'vor 2 Std.', who: ['rene'], on: 1 },
+  { n: 'Batterie schwach', e: 'Rauchmelder Flur', cond: 'Batterie unter 20 % (74 %)', s: 'ok', cat: 'Batterien', last: 'vor 3 Mon.', who: ['conny'], on: 1 },
+  { n: 'Batterie schwach', e: 'iPad Küche', cond: 'Batterie unter 20 % (65 %)', s: 'ok', cat: 'Batterien', last: '–', who: ['ben'], on: 1 },
+  { n: 'Waschmaschine fertig', e: 'Waschmaschine Leistung', cond: 'Leistung unter 5 W seit 3 Min.', s: 'running', cat: 'Haushaltsgeräte', last: 'gestern', who: ['mia'], on: 1 },
+  { n: 'Trockner fertig', e: 'Trockner Leistung', cond: 'Leistung unter 5 W seit 3 Min.', s: 'waiting', cat: 'Haushaltsgeräte', last: 'vor 5 Tagen', who: ['mia', 'ben'], on: 1 },
+  { n: 'Fenster zu lange offen', e: 'Fenster Bad', cond: 'ist 20 Min. offen', s: 'soon', cat: 'Türen und Fenster', last: '–', who: ['ben'], on: 1 },
+  { n: 'Regen angesagt: Wäsche rein', e: 'Wetter Zuhause', cond: 'Regen in den nächsten 3 Std.', s: 'paused', cat: 'Wetter', last: 'vor 2 Wo.', who: ['rene'], on: 0 },
+];
+const WCATS = [['Batterien', 3], ['Haushaltsgeräte', 2], ['Türen und Fenster', 1], ['Wetter', 1]];
+const WSCOPES = [['all', 'Alle Wächter', 'eye', 7], ['problem', 'Mit Problem', 'alert', 1, 1], ['waiting', 'Wartet auf jemanden', 'flag', 1], ['running', 'Läuft gerade', 'play', 1], ['soon', 'Kommt bald', 'clock', 1], ['paused', 'Pausiert', 'pause', 1]];
+const VIEWS = [['all', 'Alle offen', 'list', 9], ['nudged', 'Gestupst', 'hand', 2, 1], ['today', 'Heute', 'calendar', 3], ['over', 'Überfällig', 'alert', 1, 1], ['week', 'Diese Woche', 'calendar', 3], ['done', 'Erledigt', 'done', 1]];
+
+const IC = {
+  list: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  boards: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>',
+  gear: '<path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+  home: '<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  x: '<path d="M18 6L6 18M6 6l12 12"/>', chevr: '<path d="M9 6l6 6-6 6"/>', hand: '<path d="M9 11V5a2 2 0 0 1 4 0v6M13 10a2 2 0 0 1 4 0v3a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-2-4a2 2 0 0 1 3-2l1 1"/>',
+  alert: '<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+  pause: '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>', play: '<path d="M6 4l14 8-14 8z"/>',
+  flag: '<path d="M4 22V4M4 4h13l-2 4 2 4H4"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  done: '<path d="M20 6L9 17l-5-5"/>', chev: '<path d="M6 9l6 6 6-6"/>', panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
+  house: '<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  heart: '<path d="M12 21s-8-5-8-11a5 5 0 0 1 8-3 5 5 0 0 1 8 3c0 6-8 11-8 11z"/>',
+  leaf: '<path d="M5 19c0-9 6-14 15-14 0 9-5 15-14 15M5 19l8-8"/>',
+  plane: '<path d="M2 16l20-8-8 14-3-6z"/>',
+};
+const svg = (n, s = 18, w = 1.8) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+const av = (id, cls = '') => `<span class="av ${cls}" style="--c:${P[id].c}" title="${P[id].n}">${P[id].i}</span>`;
+const bsym = (b, s = 20) => `<span class="bsym" style="background:${b.c};width:${s}px;height:${s}px">${svg(b.ic, s - 8, 2.2)}</span>`;
+
+const S = { menu: '', slim: false, page: 'tasks', view: '', wstat: '', wcat: 'all', board: 'haus', who: 'rene', theme: 'auto', cal: 'week' };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+/* Inhalt: Aufgaben, Wächter, Boards, Kalender */
+function boardView() {
+  const b = BOARDS.find((x) => x.id === S.board);
+  const cards = TASKS.filter((t) => t.b === b.id && t.k !== 'done');
+  const col = (h, list) => `<div class="col"><h3><span>${h}</span><span>${list.length}</span></h3>${list.map((t) => `<div class="kc"><span>${esc(t.t)}</span><div class="meta"><span class="due ${t.k}">${t.due}</span><span class="avs">${t.who.map((w) => av(w, 's')).join('')}</span></div></div>`).join('')}</div>`;
+  return `<div class="kan">${col('Offen', cards.slice(0, 2))}${col('In Arbeit', cards.slice(2, 3))}${col('Erledigt', TASKS.filter((t) => t.b === b.id && t.k === 'done'))}</div>`;
+}
+function calView() {
+  const days = [['Mo', 'Fährtickets prüfen', 'urlaub'], ['Di', '', ''], ['Mi', '', ''], ['Do', 'Geschenk für Oma', 'fam'], ['Fr', '', ''], ['Sa', 'Rasen mähen', 'gar'], ['So', '', '']];
+  return `<div class="week">${days.map((d, i) => `<div class="day"><h3 class="${i === 2 ? 'now' : ''}">${d[0]} ${16 + i}.</h3>${i === 2 ? `<div class="ev" style="--c:var(--c-haus)">Müll rausbringen · 18:00</div><div class="ev" style="--c:var(--c-haus)">Waschmaschine ausräumen</div>` : ''}${d[1] ? `<div class="ev" style="--c:${BOARDS.find((b) => b.id === d[2]).c}">${d[1]}</div>` : ''}</div>`).join('')}</div>`;
+}
+
+const PAGE = { tasks: 'Aufgaben', boards: 'Boards', cal: 'Kalender', watchers: 'Wächter' };
+const ME = 'rene';
+const scopeLabel = (noun) => (S.who === 'all' ? `Alle ${noun}` : S.who === ME ? `Meine ${noun}` : `${noun} von ${P[S.who].n}`);
+const nounFor = () => (S.page === 'watchers' ? 'Wächter' : 'Aufgaben');
+
+/* Aufgaben */
+function visibleTasks() {
+  let rows = TASKS.filter((t) => (S.view === 'done' ? t.k === 'done' : t.k !== 'done'));
+  if (S.view === 'today') rows = rows.filter((t) => t.k === 'today');
+  if (S.view === 'over') rows = rows.filter((t) => t.k === 'over');
+  if (S.view === 'week') rows = rows.filter((t) => t.k === 'week' || t.k === 'today');
+  if (S.who !== 'all') rows = rows.filter((t) => t.who.includes(S.who));
+  return rows;
+}
+function tasksList() {
+  const rows = visibleTasks();
+  if (!rows.length) return '<div class="list"><div class="empty">Nichts offen. Gut gemacht.</div></div>';
+  const b = (id) => BOARDS.find((x) => x.id === id);
+  const G = [['over', 'Überfällig', 'var(--bad)'], ['today', 'Heute', 'var(--accent-text)'], ['week', 'Diese Woche', 'var(--label2)'], ['later', 'Später', 'var(--label2)'], ['done', 'Erledigt', 'var(--ok)']];
+  const row = (t) => `<div class="row rt2"><span class="circle ${t.k === 'done' ? 'done' : ''}"></span><div style="min-width:0"><div class="tt"><span style="overflow:hidden;text-overflow:ellipsis">${esc(t.t)}</span>${t.watcher ? '<span class="tag w">Wächter</span>' : ''}${t.nudge ? '<span class="tag">Gestupst</span>' : ''}</div></div><span class="bd" style="--c:${b(t.b).c}"><i></i><span>${b(t.b).n}</span></span><span class="avs">${t.who.map((w) => av(w, 's')).join('')}</span><span class="due ${t.k}">${t.due}</span></div>`;
+  return `<div class="list">${G.map((g) => ({ g, items: rows.filter((t) => t.k === g[0]) })).filter((x) => x.items.length).map((x) => `<div class="gh" style="--gc:${x.g[2]}">${x.g[1]}<span class="n">${x.items.length}</span></div>${x.items.map(row).join('')}`).join('')}</div>`;
+}
+const stat = (id, label, v, hot, ic) => `<button class="stat ${hot && v ? 'hot' : ''}" data-view="${id}" aria-pressed="${S.view === id}"><span class="sl">${label}${S.view === id ? svg('x', 14, 2.4) : ''}</span><span class="sv">${v}</span></button>`;
+const scoped = (arr) => (S.who === 'all' ? arr : arr.filter((x) => x.who.includes(S.who)));
+const cnt = (arr, f) => scoped(arr).filter(f).length;
+const STUPS = `<div class="stups"><span class="hi">${svg('hand', 20, 2)}</span><div class="tx"><b>Conny hat dich gestupst: Batterie wechseln, Schließzylinder Wohnungstür</b><span>vor 20 Minuten · Haushalt</span></div><button class="bt p">Erledigt</button><button class="bt">Bin dran</button><button class="bt">Später</button></div>`;
+const tasksBody = () => `${S.who === ME ? STUPS : ''}
+  <div class="stats">${stat('today', 'Heute fällig', cnt(TASKS, (t) => t.k === 'today'))}${stat('over', 'Überfällig', cnt(TASKS, (t) => t.k === 'over'), 1)}${stat('week', 'Diese Woche', cnt(TASKS, (t) => t.k === 'today' || t.k === 'week'))}${stat('done', 'Erledigt heute', cnt(TASKS, (t) => t.k === 'done'))}</div>
+  ${S.view ? `<div class="fl"><span class="chip">${{ today: 'Heute fällig', over: 'Überfällig', week: 'Diese Woche', done: 'Erledigt heute' }[S.view]}<button class="ic" style="width:22px;height:22px;border-radius:11px" data-view="${S.view}" aria-label="Filter aufheben">${svg('x', 12, 2.6)}</button></span></div>` : ''}
+  ${tasksList()}`;
+
+/* Wächter */
+function watchRows() {
+  let rows = WATCH;
+  if (S.wstat) rows = rows.filter((w) => w.s === S.wstat);
+  if (S.wcat === 'paused') rows = rows.filter((w) => w.s === 'paused');
+  else if (S.wcat !== 'all') rows = rows.filter((w) => w.cat === S.wcat);
+  if (S.who !== 'all') rows = rows.filter((w) => w.who.includes(S.who));
+  return rows;
+}
+function watchList() {
+  const rows = watchRows();
+  const lab = { ok: 'Aktuell', problem: 'Problem', waiting: 'Wartet', running: 'Läuft', soon: 'Kommt bald', paused: 'Pausiert' };
+  if (!rows.length) return '<div class="list"><div class="empty">Kein Wächter in dieser Auswahl.</div></div>';
+  return `<div class="list"><div class="row th rw"><span>Wächter</span><span>Status</span><span>Letzte Aufgabe</span><span>Wer</span><span></span></div>${rows.map((w) => `<div class="row rw"><div style="min-width:0"><div class="tt">${esc(w.n)} <span style="color:var(--label3);font-weight:500;overflow:hidden;text-overflow:ellipsis">${esc(w.e)}</span></div><div class="ts">Wenn ${esc(w.cond)}</div></div><span><span class="st ${w.s}">${lab[w.s]}</span></span><span class="due">${w.last}</span><span class="avs">${w.who.map((x) => av(x, 's')).join('')}</span><span class="sw ${w.on ? 'on' : ''}"></span></div>`).join('')}</div>`;
+}
+const wstat = (id, label, v, hot) => `<button class="stat ${hot && v ? 'hot' : ''}" data-wstat="${id}" aria-pressed="${S.wstat === id}"><span class="sl">${label}${S.wstat === id ? svg('x', 14, 2.4) : ''}</span><span class="sv">${v}</span></button>`;
+const wtab = (id, label, n) => `<button class="tab" role="tab" data-wcat="${id}" aria-selected="${S.wcat === id}">${label}<span class="n">${n}</span></button>`;
+const watchBody = () => `<div class="stats">${wstat('problem', 'Mit Problem', cnt(WATCH, (w) => w.s === 'problem'), 1)}${wstat('waiting', 'Wartet auf jemanden', cnt(WATCH, (w) => w.s === 'waiting'))}${wstat('running', 'Läuft gerade', cnt(WATCH, (w) => w.s === 'running'))}${wstat('soon', 'Kommt bald', cnt(WATCH, (w) => w.s === 'soon'))}</div>
+  <div class="tabs" role="tablist">${wtab('all', 'Alle', cnt(WATCH, () => true))}${WCATS.map((c) => wtab(c[0], c[0], cnt(WATCH, (w) => w.cat === c[0]))).join('')}${wtab('paused', 'Pausiert', cnt(WATCH, (w) => w.s === 'paused'))}</div>${watchList()}`;
+
+/* Kalender */
+const calBody = () => `<div class="week">${[['Mo', 'Fährtickets prüfen', 'urlaub'], ['Di', '', ''], ['Mi', '', ''], ['Do', 'Geschenk für Oma', 'fam'], ['Fr', '', ''], ['Sa', 'Rasen mähen', 'gar'], ['So', '', '']].map((d, i) => `<div class="day"><h3 class="${i === 2 ? 'now' : ''}">${d[0]} ${16 + i}.</h3>${i === 2 ? `<div class="ev" style="--c:var(--c-haus)">Müll rausbringen · 18:00</div><div class="ev" style="--c:var(--c-haus)">Waschmaschine ausräumen</div>` : ''}${d[1] ? `<div class="ev" style="--c:${BOARDS.find((b) => b.id === d[2]).c}">${d[1]}</div>` : ''}</div>`).join('')}</div>`;
+
+/* Kopf der Seite */
+const scopeMenu = () => {
+  const items = [['all', 'Alle ' + nounFor()], [ME, 'Meine ' + nounFor()]];
+  const others = Object.keys(P).filter((k) => k !== ME);
+  const cur = S.who;
+  const ico = cur === 'all' ? `<span class="allav">${svg('list', 14, 2)}</span>` : av(cur);
+  return `<span class="menu"><button class="scope" data-menu="scope" aria-haspopup="menu" aria-expanded="${S.menu === 'scope'}">${ico}${scopeLabel(nounFor())}${svg('chev', 16, 2.4)}</button>${S.menu === 'scope' ? `<span class="pop" role="menu">${items.map((i) => `<button class="it" role="menuitem" data-who="${i[0]}" ${cur === i[0] ? 'aria-current="true"' : ''}>${i[0] === 'all' ? `<span class="allav" style="width:26px;height:26px;border-radius:50%;background:var(--hover);display:grid;place-items:center;color:var(--label2)">${svg('list', 14, 2)}</span>` : av(i[0])}<span class="t">${i[1]}</span>${cur === i[0] ? svg('done', 16, 2.6) : ''}</button>`).join('')}<hr>${others.map((k) => `<button class="it" role="menuitem" data-who="${k}" ${cur === k ? 'aria-current="true"' : ''}>${av(k)}<span class="t">${P[k].n}</span>${cur === k ? svg('done', 16, 2.6) : ''}</button>`).join('')}</span>` : ''}</span>`;
+};
+const heads = () => ({
+  tasks: ['Aufgaben', 'Samstag, 15. November', 'Neue Aufgabe', true],
+  watchers: ['Wächter', `${cnt(WATCH, () => true)} Wächter · ${cnt(WATCH, (w) => w.s === 'problem')} mit Problem · ${cnt(WATCH, (w) => w.s === 'paused')} aus`, 'Neuer Wächter', true],
+  boards: [BOARDS.find((b) => b.id === S.board).n, BOARDS.find((b) => b.id === S.board).open + ' offene Aufgaben', 'Neue Aufgabe', false],
+  cal: ['Kalender', 'Woche 47 · 16. bis 22. November', 'Neue Aufgabe', false],
+})[S.page];
+const boardBody = () => boardView().replace(/class="col"/g, 'class="colm"');
+
+/* Seitenleiste */
+const nav = (id, label, icon, badge) => `<button class="nv" data-page="${id}" ${S.page === id ? 'aria-current="page"' : ''} ${S.slim ? `aria-label="${label}" title="${label}"` : ''}>${svg(icon, 19, 1.8)}${S.slim ? '' : `<span class="t">${label}</span>${badge || ''}`}</button>`;
+function side() {
+  const ha = `<button class="ic" style="color:var(--ha)" aria-label="Zurück zu Home Assistant" title="Zurück zu Home Assistant">${svg('home', 19)}</button>`;
+  const bell = `<button class="ic" aria-label="Mitteilungen">${svg('bell', 19)}<span class="dot">2</span></button>`;
+  const gear = `<button class="ic" aria-label="Einstellungen">${svg('gear', 19)}</button>`;
+  if (S.slim) {
+    return `<aside class="side"><div class="logo" style="margin-bottom:6px">s</div><button class="ic" data-slim="1" aria-label="Seitenleiste ausklappen">${svg('panel', 19)}</button><button class="nv" aria-label="Suchen">${svg('search', 19, 1.9)}</button>
+    ${nav('tasks', 'Aufgaben', 'list')}${nav('boards', 'Boards', 'boards')}${nav('cal', 'Kalender', 'calendar')}${nav('watchers', 'Wächter', 'eye')}
+    <div class="sec"></div>${BOARDS.map((b) => `<button class="nv" data-board="${b.id}" ${S.page === 'boards' && S.board === b.id ? 'aria-current="page"' : ''} aria-label="${b.n}" title="${b.n}"><span class="bdot" style="--c:${b.c};width:12px;height:12px"></span></button>`).join('')}
+    <div class="foot">${bell}${gear}${av('rene')}</div></aside>`;
+  }
+  return `<aside class="side"><div class="sh"><div class="logo">s</div><div class="wm"><b>stups<i>.</i></b><small>BETA</small></div><span class="sp"></span><button class="ic" data-slim="1" aria-label="Seitenleiste einklappen">${svg('panel', 19)}</button></div>
+  <button class="nv" style="margin-bottom:6px">${svg('search', 19, 1.9)}<span class="t">Suchen</span><span class="kbd">⌘ K</span></button>
+  ${nav('tasks', 'Aufgaben', 'list', '<span class="n acc">2</span>')}${nav('boards', 'Boards', 'boards')}${nav('cal', 'Kalender', 'calendar')}${nav('watchers', 'Wächter', 'eye', '<span class="n hot">1</span>')}
+  <div class="sec"><span>Boards</span><button class="ic" aria-label="Neues Board">${svg('plus', 14, 2.4)}</button></div>
+  ${BOARDS.map((b) => `<button class="nv sm" data-board="${b.id}" ${S.page === 'boards' && S.board === b.id ? 'aria-current="page"' : ''}><span class="bdot" style="--c:${b.c}"></span><span class="t">${b.n}</span><span class="n">${b.open}</span></button>`).join('')}
+  <div class="foot">${av('rene')}<div class="nm">Rene<small>Administrator</small></div>${ha}${bell}${gear}</div></aside>`;
+}
+function view() {
+  const h = heads();
+  const calCtl = S.page === 'cal' ? `<div class="seg" role="group" aria-label="Zeitraum">${['Tag', '3 Tage', 'Woche', 'Monat'].map((x) => `<button aria-pressed="${x === 'Woche'}">${x}</button>`).join('')}</div>` : '';
+  const body = S.page === 'tasks' ? tasksBody() : S.page === 'watchers' ? watchBody() : S.page === 'boards' ? boardBody() : calBody();
+  return `<div class="app e ${S.slim ? 'slim' : ''}">${side()}<main class="main"><div class="top"><div class="r1"><div style="flex:1;min-width:0"><div class="title">${h[0]}</div><div class="sub">${h[1]}</div></div>${calCtl}${h[3] ? scopeMenu() : ''}<button class="btn">${svg('plus', 16, 2.4)}${h[2]}</button></div></div><div class="body">${body}</div></main></div>`;
+}
+function mk(id, label, key, pressed) {
+  const b = document.createElement('button');
+  b.className = 'pill'; b.textContent = label; b.setAttribute('aria-pressed', pressed); b.dataset.k = key + ':' + id;
+  return b;
+}
+function render() {
+  if (S.theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = S.theme;
+  for (const id of ['gp', 'gs', 'gt']) [...$(id).querySelectorAll('button')].forEach((x) => x.remove());
+  Object.entries(PAGE).forEach(([k, l]) => $('gp').append(mk(k, l, 'page', S.page === k)));
+  [['open', 'Ausgeklappt'], ['slim', 'Eingeklappt']].forEach((x) => $('gs').append(mk(x[0], x[1], 'side', (x[0] === 'slim') === S.slim)));
+  [['auto', 'Automatisch'], ['light', 'Hell'], ['dark', 'Dunkel']].forEach((x) => $('gt').append(mk(x[0], x[1], 'theme', S.theme === x[0])));
+  $('app').innerHTML = view();
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button');
+  if (!t) { if (S.menu) { S.menu = ''; render(); } return; }
+  const d = t.dataset;
+  if (d.menu) { S.menu = S.menu === d.menu ? '' : d.menu; render(); return; }
+  S.menu = '';
+  if (d.k) { const [k, id] = d.k.split(':'); if (k === 'page') S.page = id; else if (k === 'side') S.slim = id === 'slim'; else S.theme = id; }
+  else if (d.slim) S.slim = !S.slim;
+  else if (d.page) S.page = d.page;
+  else if (d.view !== undefined) S.view = S.view === d.view ? '' : d.view;
+  else if (d.wstat !== undefined) S.wstat = S.wstat === d.wstat ? '' : d.wstat;
+  else if (d.wcat) S.wcat = d.wcat;
+  else if (d.board) { S.board = d.board; S.page = 'boards'; }
+  else if (d.who) S.who = d.who;
+  render();
+});
+render();
+
+</script>

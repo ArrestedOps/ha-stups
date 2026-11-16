@@ -1,0 +1,236 @@
+<title>Stups Vom Haus am Desktop</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: Aufgaben am Desktop in vier Fassungen. Heute steht „Vom Haus“ ganz unten in Handy-Karten; die Fassungen holen es nach oben,
+   als Band, als Gruppe in der Tabelle (Empfehlung) oder als fünfte Kachel mit eigener Ansicht. */
+:root {
+  --bg: #f2f2f7; --card: #ffffff; --card2: #f7f7fa;
+  --label: #111114; --label2: #5f5f68; --label3: #8a8a93;
+  --sep: rgba(60,60,67,.18); --hover: rgba(60,60,67,.07); --seg: rgba(118,118,128,.14);
+  --accent: #d24600; --accent-text: #b03800; --accent-soft: rgba(210,70,0,.10); --on-accent: #ffffff;
+  --house: #0a7d78; --house-text: #0a6b67; --house-bg: rgba(10,125,120,.09); --house-line: rgba(10,125,120,.35);
+  --bad: #c62828; --bad-bg: rgba(198,40,40,.11); --ok: #1d8a3f;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 0 0 .5px rgba(60,60,67,.14); --pop: 0 10px 30px rgba(0,0,0,.22), 0 0 0 .5px rgba(60,60,67,.2);
+  --side: #ebebf0; --font: 'Inter', -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --card: #1c1c1e; --card2: #2a2a2d; --label: #f5f5f7; --label2: #aeaeb4; --label3: #7c7c84;
+    --sep: rgba(255,255,255,.14); --hover: rgba(255,255,255,.07); --seg: rgba(118,118,128,.3);
+    --accent: #ff7a2e; --accent-text: #ff9a58; --accent-soft: rgba(255,122,46,.16); --on-accent: #1a0c00;
+    --house: #3cc9c0; --house-text: #5fd9d1; --house-bg: rgba(60,201,192,.11); --house-line: rgba(60,201,192,.4);
+    --bad: #ff6b63; --bad-bg: rgba(255,107,99,.16); --ok: #4cd27a;
+    --shadow: 0 0 0 .5px rgba(255,255,255,.1); --pop: 0 10px 30px rgba(0,0,0,.6), 0 0 0 .5px rgba(255,255,255,.14); --side: #0c0c0d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --card: #1c1c1e; --card2: #2a2a2d; --label: #f5f5f7; --label2: #aeaeb4; --label3: #7c7c84;
+  --sep: rgba(255,255,255,.14); --hover: rgba(255,255,255,.07); --seg: rgba(118,118,128,.3);
+  --accent: #ff7a2e; --accent-text: #ff9a58; --accent-soft: rgba(255,122,46,.16); --on-accent: #1a0c00;
+  --house: #3cc9c0; --house-text: #5fd9d1; --house-bg: rgba(60,201,192,.11); --house-line: rgba(60,201,192,.4);
+  --bad: #ff6b63; --bad-bg: rgba(255,107,99,.16); --ok: #4cd27a;
+  --shadow: 0 0 0 .5px rgba(255,255,255,.1); --pop: 0 10px 30px rgba(0,0,0,.6), 0 0 0 .5px rgba(255,255,255,.14); --side: #0c0c0d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--label); font-family: var(--font); font-size: 14px; line-height: 1.35; -webkit-font-smoothing: antialiased; padding-block: 16px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; text-align: left; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+svg { display: block; flex: none; }
+h1, h2, h3, p { margin: 0; text-wrap: balance; }
+small { font-size: 12px; color: var(--label2); }
+.wrap { max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.intro h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.intro p { color: var(--label2); margin-top: 4px; max-width: 86ch; text-wrap: pretty; }
+.found { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); padding: 12px 16px; display: grid; gap: 6px; }
+.found ul { margin: 0; padding-left: 18px; color: var(--label2); text-wrap: pretty; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { height: 34px; padding: 0 14px; border-radius: 17px; background: var(--card); box-shadow: var(--shadow); font-weight: 600; font-size: 13px; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+.notes > div { background: var(--card); border-radius: 14px; padding: 12px 14px; box-shadow: var(--shadow); color: var(--label2); font-size: 13px; text-wrap: pretty; }
+.notes b { display: block; color: var(--label); font-size: 14px; margin-bottom: 3px; }
+.rec { background: var(--accent-soft); border-radius: 14px; padding: 12px 16px; text-wrap: pretty; }
+.rec b { color: var(--accent-text); }
+.stage { border-radius: 14px; box-shadow: var(--shadow); overflow: auto; background: var(--bg); }
+
+/* App */
+.app { min-width: 1100px; display: grid; grid-template-columns: 220px 1fr; height: 700px; }
+.side { background: var(--side); padding: 18px 12px; display: flex; flex-direction: column; gap: 4px; color: var(--label2); }
+.side .logo { font-weight: 800; font-size: 19px; color: var(--label); padding: 0 8px 14px; letter-spacing: -.02em; }
+.nav { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 10px; border-radius: 10px; font-weight: 600; }
+.nav.on { background: var(--card); color: var(--label); box-shadow: var(--shadow); }
+.side h4 { margin: 14px 10px 4px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--label3); }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.main { overflow: auto; padding: 20px 26px 40px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.head h2 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin-right: auto; }
+.pill-btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 6px; border-radius: 18px; background: var(--card); box-shadow: var(--shadow); font-weight: 600; }
+.av { width: 24px; height: 24px; border-radius: 50%; background: #b8541a; color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.cta { height: 38px; padding: 0 16px; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
+.tiles { display: grid; gap: 10px; grid-template-columns: repeat(4, 1fr); }
+.tiles.five { grid-template-columns: repeat(5, 1fr); }
+.tile { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.tile b { font-size: 26px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile span { color: var(--label2); font-weight: 600; font-size: 13px; }
+.tile.bad b { color: var(--bad); } .tile.house b, .tile.house span { color: var(--house-text); }
+.tile[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); }
+.tile.house[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--house); }
+.note-hint { color: var(--label2); font-size: 13px; padding: 0 2px; } .note-hint b { color: var(--accent-text); cursor: pointer; }
+
+/* Tabelle */
+.group h3 { font-size: 17px; font-weight: 800; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; padding: 4px 2px 6px; }
+.group h3 .n { font-size: 13px; color: var(--label2); font-weight: 700; }
+.group h3.house { color: var(--house-text); }
+.cols { display: grid; grid-template-columns: 34px minmax(0, 1fr) 150px 150px minmax(150px, auto); gap: 12px; padding: 0 14px; color: var(--label3); font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.tbl { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+.trow { display: grid; grid-template-columns: 34px minmax(0, 1fr) 150px 150px minmax(150px, auto); gap: 12px; align-items: center; min-height: 60px; padding: 6px 14px; border-top: .5px solid var(--sep); }
+.trow:first-child { border-top: 0; }
+.trow:hover { background: var(--hover); }
+.circ { width: 22px; height: 22px; border-radius: 50%; border: 1.8px solid var(--label3); }
+.hico { width: 26px; height: 26px; border-radius: 8px; background: var(--house-bg); color: var(--house-text); display: flex; align-items: center; justify-content: center; }
+.t b { display: block; font-weight: 600; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t.house small { color: var(--house-text); }
+.trow.house { background: var(--house-bg); } .trow.house:hover { background: var(--house-bg); filter: brightness(.97); }
+.bd { display: flex; align-items: center; gap: 7px; color: var(--label2); font-weight: 600; }
+.due { color: var(--label2); font-weight: 600; font-variant-numeric: tabular-nums; }
+.due.bad { color: var(--bad); }
+.who { display: flex; justify-content: flex-end; }
+.acts { display: flex; gap: 6px; justify-content: flex-end; }
+.btn { height: 32px; padding: 0 12px; border-radius: 9px; background: var(--card); box-shadow: var(--shadow); font-weight: 700; font-size: 13px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.btn.house { background: var(--house); color: #fff; box-shadow: none; } .btn.ghost { background: transparent; box-shadow: none; color: var(--label2); }
+:root[data-theme="dark"] .btn.house { color: #04201e; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.house { color: #04201e; } }
+.btn:hover { filter: brightness(.96); }
+
+/* Fassung A: Band */
+.band { background: var(--house-bg); border: 1px solid var(--house-line); border-radius: 16px; padding: 12px 14px 14px; display: grid; gap: 10px; }
+.band-h { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; color: var(--house-text); } .band-h small { color: var(--house-text); font-weight: 600; opacity: .8; }
+.cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.hc { background: var(--card); border-radius: 12px; padding: 12px 14px; display: grid; gap: 6px; box-shadow: var(--shadow); align-content: start; }
+.hc .src { font-size: 12px; font-weight: 700; color: var(--house-text); } .hc b { font-size: 15px; line-height: 1.3; } .hc p { color: var(--label2); font-size: 12.5px; }
+.hc .acts { justify-content: flex-start; margin-top: 4px; }
+
+/* Heute: Handy-Karten unten */
+.old { display: grid; gap: 8px; } .old .hc { padding: 14px 16px; } .old .hc b { font-size: 16px; }
+.fold { border-top: 2px dashed var(--house-line); margin-top: 8px; padding-top: 6px; color: var(--house-text); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+
+.empty { padding: 26px; text-align: center; color: var(--label2); }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--label); color: var(--bg); padding: 10px 16px; border-radius: 12px; box-shadow: var(--pop); z-index: 20; }
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>„Vom Haus“ am Desktop</h1>
+    <p>Aufgaben, die ein Wächter angelegt hat und die mir gehören oder noch niemandem. Am Handy stehen sie als eigener Abschnitt ganz oben. Alle Beispiele sind bedienbar: Übernehmen, Erledigt, Abgeben.</p>
+  </div>
+  <div class="found">
+    <b>Warum du sie am Desktop nicht gefunden hast</b>
+    <ul>
+      <li>„Vom Haus“ gibt es am Desktop schon, aber es steht <b>ganz unten</b>, unter allen Gruppen der Tabelle, als große Handy-Karten. Bei einer langen Liste siehst du es nie.</li>
+      <li>Es ist unabhängig vom Filter „Meine“ und von den Kacheln: keine Kachel zählt es, kein Filter erreicht es.</li>
+    </ul>
+  </div>
+  <div class="tabs" role="tablist" aria-label="Fassungen">
+    <button class="tab" role="tab" data-v="0" aria-selected="true">Heute (unten versteckt)</button>
+    <button class="tab" role="tab" data-v="1" aria-selected="false">A · Band oben</button>
+    <button class="tab" role="tab" data-v="2" aria-selected="false">B · Gruppe in der Tabelle</button>
+    <button class="tab" role="tab" data-v="3" aria-selected="false">C · Fünfte Kachel</button>
+  </div>
+  <div class="notes" id="notes"></div>
+  <div class="stage"><div class="app"><nav class="side" aria-label="Seitenleiste"><div class="logo">stups.</div>
+    <span class="nav on" style="gap:10px">Aufgaben</span><span class="nav">Boards</span><span class="nav">Kalender</span><span class="nav">Wächter</span>
+    <h4>Boards</h4><span class="nav"><i class="dot" style="background:#d24600"></i>Haushalt</span><span class="nav"><i class="dot" style="background:#0a6fe0"></i>Familie</span><span class="nav"><i class="dot" style="background:#1d8a3f"></i>Garten</span>
+  </nav><div class="main" id="main"></div></div></div>
+  <div class="rec" id="rec"></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const ICON = {
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  chevron: '<path d="m6 9 6 6 6-6"/>', plus: '<path d="M12 5v14M5 12h14"/>', check: '<path d="M20 6 9 17l-5-5"/>',
+};
+const ic = (n, sz = 16, sw = 2) => `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+const $ = (s) => document.querySelector(s);
+
+let V = 0, onlyHouse = false;
+const HOUSE = [
+  { id: 'h1', title: 'Batterie wechseln: Flur | Schließzylinder | Wohnungseingangstür', src: 'Batterie schwach', age: 'vor 2 Std.', why: 'Noch niemand zuständig. Reihum unter allen, die zu Hause sind.', mine: false, board: 'Haushalt', color: '#d24600' },
+  { id: 'h2', title: 'Wäsche aus dem Trockner holen', src: 'Trockner fertig', age: 'vor 25 Min.', why: 'Du bist dran: reihum, du bist zu Hause.', mine: true, board: 'Haushalt', color: '#d24600' },
+  { id: 'h3', title: 'Restmüll rausstellen', src: 'Müllabfuhr', age: 'vor 5 Std.', why: 'Noch niemand zuständig.', mine: false, board: 'Haushalt', color: '#d24600' },
+];
+const TASKS = [
+  { g: 'Überfällig', title: 'Steuererklärung abgeben', board: 'Familie', color: '#0a6fe0', due: 'gestern', bad: true },
+  { g: 'Heute', title: 'Paket abholen', board: 'Haushalt', color: '#d24600', due: 'heute, 17:00' },
+  { g: 'Heute', title: 'Bad putzen', board: 'Haushalt', color: '#d24600', due: 'heute, 18:30' },
+  { g: 'Heute', title: 'Rasen mähen', board: 'Garten', color: '#1d8a3f', due: 'heute, 19:00' },
+  { g: 'Diese Woche', title: 'Elternabend vorbereiten', board: 'Familie', color: '#0a6fe0', due: 'Mi, 20:00' },
+  { g: 'Diese Woche', title: 'Heckenschere ölen', board: 'Garten', color: '#1d8a3f', due: 'Fr, 10:00' },
+];
+const NOTES = [
+  ['Heute', 'Was es gibt', 'Die Handy-Karten stehen unter der Tabelle. Man muss ans Ende scrollen, und sie zählen in keiner Kachel mit.'],
+  ['A · Band oben', 'Wie am Handy, nur breiter', 'Karten nebeneinander über der Tabelle, sofort sichtbar. Gut bei 1 bis 3 Aufgaben; bei 10 Aufgaben wird das Band hoch und schiebt die Tabelle weg.'],
+  ['B · Gruppe in der Tabelle', 'Empfehlung', 'Eine Gruppe „Vom Haus“ ganz oben, in denselben Zeilen wie alles andere (gleiche Spalten, 60 px). Türkis hinterlegt, die Aktionen stehen rechts. Wächst sauber mit 1 oder 30 Aufgaben und lässt sich zuklappen.'],
+  ['C · Fünfte Kachel', 'Eigene Ansicht', 'Neben „Heute fällig“ und „Überfällig“ steht „Vom Haus 3“. Ein Klick zeigt nur diese Aufgaben. Dazu bleibt oben ein Hinweis, solange etwas wartet.'],
+];
+const RECS = [
+  'Das ist der Ist-Zustand: scrolle in der Vorschau nach unten, dort steht „Vom Haus“.',
+  'A ist am nächsten am Handy, braucht aber viel Platz und bricht den Rhythmus der Tabelle.',
+  '<b>Meine Empfehlung: B</b> (Gruppe in der Tabelle), dazu die fünfte Kachel aus C als Abkürzung. Dann steht „Vom Haus“ ganz oben, zählt mit und folgt denselben Spalten.',
+  'C allein versteckt die Aufgaben hinter einem Klick. Besser zusammen mit B.',
+];
+let toastT;
+const toast = (m) => { const e = $('#toast'); e.textContent = m; e.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (e.hidden = true), 2400); };
+
+const actions = (h) => h.mine
+  ? `<button class="btn house" data-act="done" data-id="${h.id}">${ic('check', 14, 2.6)}Erledigt</button><button class="btn ghost" data-act="pass" data-id="${h.id}">Abgeben</button>`
+  : `<button class="btn house" data-act="claim" data-id="${h.id}">Übernehmen</button><button class="btn ghost" data-act="done" data-id="${h.id}">Erledigt</button>`;
+const sub = (h) => `${h.src} · ${h.age} · ${h.why}`;
+
+const header = (five) => `<div class="head"><h2>Aufgaben</h2><span class="pill-btn"><span class="av">R</span>Meine Aufgaben ${ic('chevron', 15, 2.4)}</span><button class="cta">${ic('plus', 17, 2.4)}Neue Aufgabe</button></div>
+  <div class="tiles ${five ? 'five' : ''}">
+    <button class="tile" aria-pressed="false"><b>3</b><span>Heute fällig</span></button><button class="tile bad" aria-pressed="false"><b>1</b><span>Überfällig</span></button>
+    <button class="tile" aria-pressed="false"><b>2</b><span>Diese Woche</span></button><button class="tile" aria-pressed="false"><b>4</b><span>Erledigt heute</span></button>
+    ${five ? `<button class="tile house" data-act="onlyhouse" aria-pressed="${onlyHouse}"><b>${HOUSE.length}</b><span>Vom Haus</span></button>` : ''}
+  </div>`;
+const taskRow = (t) => `<div class="trow"><span class="circ"></span><div class="t"><b>${t.title}</b></div><span class="bd"><i class="dot" style="background:${t.color}"></i>${t.board}</span><span class="due ${t.bad ? 'bad' : ''}">${t.due}</span><span class="who"><span class="av">R</span></span></div>`;
+const houseRow = (h) => `<div class="trow house"><span class="hico">${ic('eye', 15)}</span><div class="t house"><b>${h.title}</b><small>${sub(h)}</small></div><span class="bd"><i class="dot" style="background:${h.color}"></i>${h.board}</span><span class="due">${h.mine ? 'Du bist dran' : 'Wartet'}</span><span class="acts">${actions(h)}</span></div>`;
+const cols = `<div class="cols"><span></span><span>Aufgabe</span><span>Board</span><span>Fällig</span><span style="text-align:right">Wer</span></div>`;
+const groups = () => ['Überfällig', 'Heute', 'Diese Woche'].map((g) => { const l = TASKS.filter((t) => t.g === g); return `<section class="group"><h3>${g}<span class="n">${l.length}</span></h3><div class="tbl">${l.map(taskRow).join('')}</div></section>`; }).join('');
+const houseGroup = () => HOUSE.length ? `<section class="group"><h3 class="house">${ic('eye', 18, 2)}Vom Haus<span class="n">${HOUSE.length}</span></h3><div class="tbl">${HOUSE.map(houseRow).join('')}</div></section>` : '';
+const card = (h) => `<div class="hc"><span class="src">${h.src} · ${h.age}</span><b>${h.title}</b><p>${h.why}</p><div class="acts">${actions(h)}</div></div>`;
+
+function render() {
+  let html = '';
+  if (V === 0) {
+    html = header(false) + cols + groups() + `<div class="fold">Weiter unten, nach dem Scrollen</div><section class="old"><h3 class="group" style="font-size:17px;font-weight:800;color:var(--house-text);display:flex;gap:8px;align-items:center">${ic('eye', 18, 2)}Vom Haus <span class="n" style="font-size:13px">${HOUSE.length}</span></h3>${HOUSE.map(card).join('') || '<div class="empty">Nichts vom Haus.</div>'}</section>`;
+  } else if (V === 1) {
+    html = header(false) + (HOUSE.length ? `<section class="band"><div class="band-h">${ic('eye', 18, 2)}Vom Haus<small>${HOUSE.length} warten auf jemanden</small></div><div class="cards">${HOUSE.map(card).join('')}</div></section>` : '') + cols + groups();
+  } else if (V === 2) {
+    html = header(false) + cols + houseGroup() + groups();
+  } else {
+    html = header(true) + (onlyHouse ? `<p class="note-hint">Gefiltert: nur Aufgaben vom Haus. <b data-act="onlyhouse">Filter aufheben</b></p>` + cols + (houseGroup() || '<div class="empty">Nichts vom Haus. Alles erledigt.</div>') : `<p class="note-hint">${HOUSE.length} Aufgaben vom Haus warten. <b data-act="onlyhouse">Anzeigen</b></p>` + cols + groups());
+  }
+  $('#main').innerHTML = html;
+  $('#notes').innerHTML = `<div><b>${NOTES[V][0]}: ${NOTES[V][1]}</b>${NOTES[V][2]}</div>`;
+  $('#rec').innerHTML = RECS[V];
+  document.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', b.dataset.v === String(V)));
+}
+
+document.addEventListener('click', (e) => {
+  const tab = e.target.closest('.tab');
+  if (tab) { V = +tab.dataset.v; onlyHouse = false; render(); return; }
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, h = HOUSE.find((x) => x.id === el.dataset.id);
+  if (a === 'onlyhouse') onlyHouse = !onlyHouse;
+  else if (a === 'claim') { h.mine = true; h.why = 'Du hast sie übernommen.'; toast('Übernommen. Sie steht jetzt bei dir.'); }
+  else if (a === 'pass') { h.mine = false; h.why = 'Von dir abgegeben. Reihum unter allen, die zu Hause sind.'; toast('Abgegeben. Stups fragt die Nächsten.'); }
+  else if (a === 'done') { HOUSE.splice(HOUSE.indexOf(h), 1); toast('Erledigt. Gute Arbeit.'); }
+  render();
+});
+render();
+</script>

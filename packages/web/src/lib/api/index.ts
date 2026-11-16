@@ -249,7 +249,7 @@ export const api = {
   /** Probelauf: die Regel auf die Historie der letzten 7 Tage anwenden, ohne zu speichern */
   dryRun: (b: { trigger: WatcherInput['trigger']; cooldownMin: number }, signal?: AbortSignal) => post<DryRunResult>('watchers/dry-run', b, signal),
   /** Verlauf einer Entität (letzte Stunden) mit den Stellen, an denen die Regel ausgelöst hätte; nie ein Fehler: der Status sagt, wenn es keinen gibt */
-  entityHistory: (q: { entityId: string; hours?: number; kind?: string; value?: string; to?: string; forMin?: string; count?: string; cooldownMin?: string }) => {
+  entityHistory: (q: { entityId: string; hours?: number | 'auto'; kind?: string; value?: string; to?: string; forMin?: string; count?: string; cooldownMin?: string }) => {
     const p = new URLSearchParams();
     for (const [k, v] of Object.entries(q)) if (v !== undefined && v !== '') p.set(k, String(v));
     return get<EntityHistory>(`watchers/history?${p}`);

@@ -316,7 +316,7 @@ export class HaClient {
    * Zustandsverlauf einer Entität aus dem Recorder von Home Assistant (für den Probelauf eines Wächters). Höchstens
    * `DRY_RUN_MAX_STATES + 1` Zustände kommen zurück (die Mehrzahl reicht, um „zu viele" zu erkennen). Ohne Recorder ist die Liste leer.
    */
-  async getHistory(entityId: string, fromIso: string, toIso: string): Promise<HistoryPoint[]> {
+  async getHistory(entityId: string, fromIso: string, toIso: string, keep: 'first' | 'last' = 'first'): Promise<HistoryPoint[]> {
     const res = await this.wsCommand<Record<string, Record<string, any>[]> | null>(
       'history/history_during_period',
       { start_time: fromIso, end_time: toIso, entity_ids: [entityId], minimal_response: true, no_attributes: true, significant_changes_only: false },
@@ -330,7 +330,27 @@ export class HaClient {
       const ms = typeof raw === 'number' ? raw * 1000 : typeof raw === 'string' ? Date.parse(raw) : NaN;
       if (typeof state !== 'string' || !Number.isFinite(ms)) continue;
       out.push({ state, at: new Date(ms).toISOString() });
-      if (out.length > DRY_RUN_MAX_STATES) break;
+      // Probelauf: die ersten reichen (mehr als erlaubt heißt „zu viele“). Verlauf im Editor (`keep: 'last'`): die neuesten bleiben.
+      if (keep === 'first' && out.length > DRY_RUN_MAX_STATES) break;
+    }
+    return keep === 'last' && out.length > DRY_RUN_MAX_STATES ? out.slice(-DRY_RUN_MAX_STATES) : out;
+  }
+
+  /**
+   * Langzeitstatistik einer Entität (Home Assistant hebt sie dauerhaft auf, nicht nur die 10 Tage der Rohdaten): ein Mittelwert je `period`
+   * (hour, day, week, month). Nur Sensoren mit `state_class` haben sie; sonst ist die Liste leer.
+   */
+  async getStatistics(entityId: string, fromIso: string, toIso: string, period: 'hour' | 'day' | 'week' | 'month'): Promise<{ at: string; mean: number }[]> {
+    const res = await this.wsCommand<Record<string, { start: number | string; mean?: number | null }[]> | null>(
+      'recorder/statistics_during_period',
+      { start_time: fromIso, end_time: toIso, statistic_ids: [entityId], period, types: ['mean'] },
+      30_000,
+    );
+    const out: { at: string; mean: number }[] = [];
+    for (const item of res?.[entityId] ?? []) {
+      const ms = typeof item.start === 'number' ? (item.start > 1e11 ? item.start : item.start * 1000) : Date.parse(item.start);
+      if (!Number.isFinite(ms) || typeof item.mean !== 'number' || !Number.isFinite(item.mean)) continue;
+      out.push({ at: new Date(ms).toISOString(), mean: item.mean });
     }
     return out;
   }

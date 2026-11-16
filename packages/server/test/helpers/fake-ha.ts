@@ -10,6 +10,8 @@ export class FakeHa implements WatcherHa {
   /** Historie je Entität für den Probelauf */
   history = new Map<string, { state: string; at: string }[]>();
   failHistory = false;
+  /** Langzeitstatistik je Entität (Mittelwerte) */
+  statistics = new Map<string, { at: string; mean: number }[]>();
   /** Termine je Kalender (start/end wie von Home Assistant: ISO-Text oder nur ein Datum) */
   calendars = new Map<string, { title: string; start: string; end: string; uid?: string; recurrenceId?: string }[]>();
   calendarCalls = 0;
@@ -32,6 +34,10 @@ export class FakeHa implements WatcherHa {
   async getHistory(entityId: string, _from: string, _to: string) {
     if (this.failHistory) throw new Error('nicht erreichbar');
     return this.history.get(entityId) ?? [];
+  }
+  async getStatistics(entityId: string, from: string, _to: string, _period: string) {
+    if (this.failHistory) throw new Error('nicht erreichbar');
+    return (this.statistics.get(entityId) ?? []).filter((p) => p.at >= from);
   }
   subscribe(key: string, payload: Record<string, unknown>, onEvent: (e: Record<string, any>) => void) {
     this.subs.set(key, { payload, onEvent });

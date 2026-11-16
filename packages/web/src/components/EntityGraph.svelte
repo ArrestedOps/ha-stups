@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { clock } from '../lib/nudge';
   import { t } from '../lib/i18n/index.svelte';
-  import { firedText, graphAlt, graphOf, windowText, type EntityHistory } from '../lib/history';
+  import { firedTextLong, graphAlt, graphOf, startText, trendText, WINDOWS, windowLabel, windowText, type EntityHistory } from '../lib/history';
 
   /**
    * Verlauf der Entität (letzte Stunden) als Diagramm: Linie mit Fläche, grün gestrichelte Schwellen-Linie, grüner Punkt dort, wo die Regel
@@ -17,6 +16,7 @@
     threshold = null,
     thresholdState = null,
     compact = false,
+    onwindow,
   }: {
     history: EntityHistory | null;
     busy?: boolean;
@@ -25,6 +25,8 @@
     threshold?: number | null;
     thresholdState?: string | null;
     compact?: boolean;
+    /** Mit dieser Funktion zeigt das Diagramm Knöpfe zum Umschalten des Zeitfensters (3 Std. bis 1 Jahr) */
+    onwindow?: (hours: number) => void;
   } = $props();
 
   const H = $derived(compact ? 70 : 120);
@@ -42,11 +44,16 @@
       ? t('Lädt …')
       : !history || history.status === 'unavailable'
         ? t('Der Verlauf ist gerade nicht abrufbar.')
-        : history.status === 'no_data'
+        : history.needsStatistics
+          ? t('Für so lange Zeiträume braucht die Entität eine Langzeitstatistik. Home Assistant behält sonst nur etwa 10 Tage.')
+          : history.status === 'no_data'
           ? t('Für diese Entität gibt es keinen Verlauf (Recorder aus oder neue Entität).')
           : t('Zu wenig Daten für ein Diagramm.'),
   );
   const fired = $derived(history?.fired ?? []);
+  const trend = $derived(history ? trendText(history, { unit, threshold }) : null);
+  // Ohne Langzeitstatistik in Home Assistant gibt es nur die letzten Tage: die langen Fenster sind dann nicht wählbar
+  const noLong = $derived(history?.needsStatistics === true);
 </script>
 
 <div class={compact ? 'rounded-[14px] border border-line bg-bg px-2.5 pt-2 pb-1.5' : ''} data-testid="entity-graph" data-status={history?.status ?? 'loading'}>
@@ -68,11 +75,27 @@
       {/each}
     </svg>
     <div class="flex justify-between text-[11px] text-dim {compact ? 'mt-1' : 'mt-0.5'}">
-      <span>{compact ? windowText(history.hours) : clock(history.from)}</span>
-      <span class={fired.length > 0 ? 'text-ok' : ''} data-testid="graph-fired">{fired.length > 0 ? '● ' : ''}{firedText(fired, now)}</span>
+      <span data-testid="graph-start">{compact ? windowText(history.hours) : startText(history)}</span>
+      <span class={fired.length > 0 ? 'text-ok' : ''} data-testid="graph-fired">{fired.length > 0 ? '● ' : ''}{firedTextLong(history, now)}</span>
       <span>{t('jetzt')}</span>
     </div>
+    {#if trend}<p class="mt-1.5 text-[12.5px] leading-[1.4] text-fg2" data-testid="graph-trend">{trend}</p>{/if}
   {:else}
     <div class="flex items-center justify-center rounded-[10px] px-4 text-center text-[13px] text-fg2 {compact ? 'h-[70px]' : 'mt-2.5 h-[120px]'}" role="status" data-testid="graph-empty">{message}</div>
+  {/if}
+  {#if onwindow && history}
+    <div class="mt-2.5 grid grid-cols-5 gap-1.5" role="group" aria-label={t('Zeitraum')} data-testid="graph-windows">
+      {#each WINDOWS as w (w)}
+        {@const on = history.hours === w}
+        {@const off = noLong && w >= 720 && !on}
+        <button
+          type="button"
+          class="h-8 rounded-full px-1 text-[12.5px] font-semibold whitespace-nowrap disabled:opacity-40 {on ? 'chip-on' : 'bg-track text-fg2'}"
+          aria-pressed={on}
+          disabled={off}
+          onclick={() => onwindow(w)}
+        >{windowLabel(w)}</button>
+      {/each}
+    </div>
   {/if}
 </div>

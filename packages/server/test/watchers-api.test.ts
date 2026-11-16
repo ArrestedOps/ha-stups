@@ -38,7 +38,7 @@ async function build(withWatchers = true) {
   await app.register(apiRoutes, {
     store,
     directory: { isAdmin: async (id: string) => id === 'ha-chef', persons: async () => [] },
-    ha: { listDashboards: async () => [], getStates: () => ha.getStates(), getHistory: (e: string, a: string, b: string) => ha.getHistory(e, a, b) },
+    ha: { listDashboards: async () => [], getStates: () => ha.getStates(), getHistory: (e: string, a: string, b: string) => ha.getHistory(e, a, b), getStatistics: (e: string, a: string, b: string, p: 'hour' | 'day') => ha.getStatistics(e, a, b, p) },
     now: () => new Date('2026-11-04T12:00:00Z'),
     ...(withWatchers ? { watchers: engine, watcherData: data } : {}),
   });
@@ -362,8 +362,74 @@ describe('Verlauf der Entität (letzte Stunden)', () => {
     expect((await call(chef, 'GET', url())).body).toMatchObject({ status: 'ok', fired: [], hours: 3 });
     expect((await call(chef, 'GET', url('&kind=below&value=abc'))).body).toMatchObject({ status: 'ok', fired: [] });
     expect((await call(chef, 'GET', url('&kind=quatsch'))).body).toMatchObject({ status: 'ok', fired: [] });
-    expect((await call(chef, 'GET', url('&hours=500'))).body.hours).toBe(24);
+    expect((await call(chef, 'GET', url('&hours=99999'))).body.hours).toBe(8760);
     expect((await call(chef, 'GET', url('&hours=0'))).body.hours).toBe(1);
+  });
+
+  describe('lange Fenster: Langzeitstatistik', () => {
+    const NOW_MS = Date.parse('2026-11-04T12:00:00Z');
+    const daysAgo = (d: number) => new Date(NOW_MS - d * 86_400_000).toISOString();
+    /** ein Jahr Tageswerte: 100 % vor 300 Tagen, seitdem gleichmäßig auf 16 % */
+    const year = Array.from({ length: 300 }, (_, i) => ({ at: daysAgo(300 - i), mean: Math.round((100 - (84 * i) / 299) * 10) / 10 }));
+
+    it('ab 7 Tagen kommt der Verlauf aus der Statistik, die Rohdaten liefern den aktuellen Wert', async () => {
+      ha.statistics.set(ENTITY, year);
+      ha.history.set(ENTITY, [{ state: '16', at: at(60) }]);
+      const res = await call(chef, 'GET', url('&hours=8760'));
+      expect(res.body).toMatchObject({ status: 'ok', source: 'statistics', hours: 8760, kind: 'numeric', current: '16' });
+      expect(res.body.points.length).toBeGreaterThan(50);
+      expect(res.body.points.length).toBeLessThanOrEqual(240);
+      expect(res.body.points.at(-1).v).toBe(16);
+      // „sinkt um etwa 8 im Monat“ (84 Punkte in 300 Tagen)
+      expect(res.body.trend.perMonth).toBeCloseTo(-8.4, 0);
+    });
+
+    it('Hinweis „bis die Schwelle erreicht ist“: aus der Regel der Query', async () => {
+      ha.statistics.set(ENTITY, year);
+      ha.history.set(ENTITY, [{ state: '40', at: at(60) }]);
+      const res = await call(chef, 'GET', url('&hours=8760&kind=below&value=20'));
+      // 40 → 20 bei etwa 0,28 je Tag: gut 70 Tage
+      expect(res.body.trend.reachDays).toBeGreaterThan(60);
+      expect(res.body.trend.reachDays).toBeLessThan(80);
+      const reached = await call(chef, 'GET', url('&hours=8760&kind=below&value=50'));
+      expect(reached.body.trend.reachDays).toBeNull(); // schon darunter
+    });
+
+    it('ohne Statistik: bis 7 Tage aus den Rohdaten, darüber ein Hinweis statt eines Fehlers', async () => {
+      ha.history.set(ENTITY, [{ state: '10', at: at(60) }, { state: '12', at: at(30) }]);
+      expect((await call(chef, 'GET', url('&hours=168'))).body).toMatchObject({ status: 'ok', hours: 168 });
+      const long = await call(chef, 'GET', url('&hours=8760'));
+      expect(long.status).toBe(200);
+      expect(long.body).toMatchObject({ status: 'no_data', needsStatistics: true });
+    });
+
+    it('hours=auto: bewegt sich nichts, entscheidet die Statistik; Handy-Akku bekommt einen Tag', async () => {
+      // im letzten Monat gleichbleibend (wie der Türschloss-Sensor): erst das Jahr zeigt etwas
+      const flatMonth = year.map((p) => (Date.parse(p.at) >= NOW_MS - 40 * 86_400_000 ? { ...p, mean: 16 } : p));
+      ha.statistics.set(ENTITY, flatMonth);
+      ha.history.set(ENTITY, [{ state: '16', at: daysAgo(5) }, { state: '16', at: at(60) }]);
+      const slow = await call(chef, 'GET', url('&hours=auto'));
+      expect(slow.body).toMatchObject({ auto: true, hours: 8760, source: 'statistics' });
+      // bewegt sich der Wert im Monat sichtbar, reicht der Monat
+      ha.statistics.set(ENTITY, year);
+      expect((await call(chef, 'GET', url('&hours=auto'))).body).toMatchObject({ auto: true, hours: 720 });
+
+      const busy = Array.from({ length: 30 }, (_, i) => ({ state: String(80 - i), at: at(600 - i * 20) }));
+      ha.history.set(ENTITY, busy);
+      expect((await call(chef, 'GET', url('&hours=auto'))).body).toMatchObject({ auto: true, hours: 24, source: 'recorder' });
+    });
+
+    it('Zustände (an/aus) bekommen in der Automatik einen Tag', async () => {
+      ha.history.set(ENTITY, [{ state: 'off', at: at(600) }, { state: 'on', at: at(60) }]);
+      expect((await call(chef, 'GET', url('&hours=auto'))).body).toMatchObject({ auto: true, hours: 24, kind: 'state' });
+    });
+
+    it('Statistik nicht abrufbar: nie ein Fehler', async () => {
+      ha.failHistory = true;
+      const res = await call(chef, 'GET', url('&hours=auto'));
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('unavailable');
+    });
   });
 
   it('ohne Recorder oder ohne Verbindung: ein Zustand, nie ein Fehler', async () => {

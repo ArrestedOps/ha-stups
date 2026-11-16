@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampHours, HISTORY_MAX_POINTS, historyOf } from '../src/entity-history.js';
+import { autoWindow, clampHours, HISTORY_MAX_POINTS, historyOf, movesInLastMonth, trendOf, windowed } from '../src/entity-history.js';
 import type { WatchTrigger } from '../src/watcher-types.js';
 
 // Feste Uhr: 4. November 2026, 12:00 UTC
@@ -8,7 +8,7 @@ const at = (minAgo: number) => new Date(NOW - minAgo * 60_000).toISOString();
 const below5: WatchTrigger = { entityId: 'sensor.leistung', kind: 'below', to: null, value: 5, forMin: 3, count: 1 };
 
 describe('clampHours', () => {
-  it('begrenzt auf 1 bis 24 ganze Stunden, Vorgabe 3', () => {
+  it('begrenzt auf 1 bis 8760 ganze Stunden (ein Jahr), Vorgabe 3', () => {
     expect(clampHours(undefined)).toBe(3);
     expect(clampHours('')).toBe(3);
     expect(clampHours('abc')).toBe(3);
@@ -16,7 +16,8 @@ describe('clampHours', () => {
     expect(clampHours('-4')).toBe(1);
     expect(clampHours('2.6')).toBe(3);
     expect(clampHours('6')).toBe(6);
-    expect(clampHours('99')).toBe(24);
+    expect(clampHours('99')).toBe(99);
+    expect(clampHours('99999')).toBe(8760);
     expect(clampHours(5)).toBe(5);
   });
 });
@@ -163,5 +164,60 @@ describe('historyOf', () => {
       cooldownMin: 10,
     });
     expect(r.fired).toEqual([]);
+  });
+});
+
+describe('windowed', () => {
+  it('schneidet auf das Fenster zu und behält den letzten Zustand davor', () => {
+    const h = [{ state: '1', at: at(500) }, { state: '2', at: at(400) }, { state: '3', at: at(100) }, { state: '4', at: at(10) }];
+    expect(windowed(h, NOW - 200 * 60_000).map((p) => p.state)).toEqual(['2', '3', '4']);
+    expect(windowed(h, NOW - 5 * 60_000).map((p) => p.state)).toEqual(['4']);
+    expect(windowed([], NOW)).toEqual([]);
+  });
+});
+
+describe('autoWindow', () => {
+  const run = (pts: [string, number][]) => autoWindow(pts.map(([state, min]) => ({ state, at: at(min) })), NOW);
+  it('Zustände: ein Tag; wenig Bewegung: „slow“; viel: 3 Std., 24 Std., 7 Tage', () => {
+    expect(run([['off', 900], ['on', 100]])).toBe(24);
+    expect(run([])).toBe(24);
+    expect(run([['16', 8000], ['16', 100], ['unavailable', 50], ['16', 40]])).toBe('slow');
+    expect(run(Array.from({ length: 80 }, (_, i) => [String(i), 170 - i * 2] as [string, number]))).toBe(3);
+    expect(run(Array.from({ length: 10 }, (_, i) => [String(i), 1200 - i * 100] as [string, number]))).toBe(24);
+    expect(run(Array.from({ length: 10 }, (_, i) => [String(i), 9000 - i * 800] as [string, number]))).toBe(168);
+  });
+});
+
+describe('movesInLastMonth', () => {
+  const day = (d: number) => new Date(NOW - d * 86_400_000).toISOString();
+  it('mehr als 5 % Bewegung im letzten Monat', () => {
+    expect(movesInLastMonth([{ at: day(300), mean: 100 }, { at: day(20), mean: 16 }, { at: day(1), mean: 16 }], NOW)).toBe(false); // der Sprung liegt vor dem Monat
+    expect(movesInLastMonth([{ at: day(25), mean: 30 }, { at: day(1), mean: 16 }], NOW)).toBe(true);
+    expect(movesInLastMonth([], NOW)).toBe(false);
+  });
+});
+
+describe('trendOf', () => {
+  const day = 86_400_000;
+  const series = (n: number, f: (i: number) => number) => Array.from({ length: n }, (_, i) => ({ ms: NOW - (n - i) * day, v: f(i) }));
+  it('sinkende Batterie: je Monat und Tage bis zur Schwelle', () => {
+    const tr = trendOf(series(200, (i) => 100 - i * 0.3), { kind: 'below', value: 20 }, 40.7)!;
+    expect(tr.perMonth).toBeCloseTo(-9, 0);
+    expect(tr.reachDays).toBe(69); // (40,7 - 20) / 0,3
+  });
+  it('Ausreißer stören nicht; neue Batterie in der Mitte: nur der Verlauf danach zählt', () => {
+    const pts = series(240, (i) => (i < 100 ? 90 - i * 0.5 : 100 - (i - 100) * 0.25));
+    pts[239]!.v = 100; // kurzer Ausschlag am Ende
+    pts[50]!.v = 0;
+    const tr = trendOf(pts, null, 66)!;
+    expect(tr.perMonth).toBeCloseTo(-7.5, 0);
+    expect(tr.reachDays).toBeNull();
+  });
+  it('kein klarer Verlauf (flach, wild, zu kurz): null; steigend gegen „unter“: kein Termin', () => {
+    expect(trendOf(series(100, () => 50), null, 50)).toBeNull();
+    expect(trendOf(series(100, (i) => (i % 2 ? 10 : 90)), null, 90)).toBeNull();
+    expect(trendOf(series(5, (i) => 100 - i * 10), null, 60)).toBeNull();
+    expect(trendOf(series(60, (i) => 10 + i), { kind: 'below', value: 5 }, 70)!.reachDays).toBeNull();
+    expect(trendOf(series(60, (i) => 10 + i), { kind: 'above', value: 100 }, 70)!.reachDays).toBe(30);
   });
 });

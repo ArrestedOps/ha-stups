@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { valueText } from '../lib/history';
+  import { valueText, lastText } from '../lib/history';
   import { cardTitleWithEntity } from '../lib/cardTitle';
   import { t } from '../lib/i18n/index.svelte';
   import { personById, ui } from '../lib/store.svelte';
@@ -46,12 +46,12 @@
     <div class="rounded-[16px] border border-line bg-bg px-3.5 pt-3 pb-2.5" data-testid="graph-card">
       <div class="flex items-baseline justify-between gap-3">
         <span class="text-[13px] text-fg2">{t('jetzt')} <b class="text-[17px] font-extrabold text-fg" data-testid="desk-current">{current || '–'}</b></span>
-        <span class="min-w-0 truncate text-[12px] text-fg2">{t('letzte 3 Stunden')}</span>
+        <span class="min-w-0 truncate text-[12px] text-fg2">{lastText(ed.history?.hours ?? 24)}</span>
       </div>
-      <EntityGraph history={ed.history} busy={ed.historyBusy} name={f.entityName || f.entityId} {unit} {threshold} thresholdState={f.kind === 'state' ? f.to.trim() : null} />
+      <EntityGraph history={ed.history} busy={ed.historyBusy} onwindow={(h) => ed.setHistoryHours(h)} name={f.entityName || f.entityId} {unit} {threshold} thresholdState={f.kind === 'state' ? f.to.trim() : null} />
     </div>
     {#if ed.history?.status === 'ok' && ed.history.points.length >= 2}
-      <p class="px-1 text-[12.5px] leading-[1.45] text-hint" data-testid="duration-hint">{durationHint(minutes, ed.history.hours, ed.history.fired.length)}</p>
+      <p class="px-1 text-[12.5px] leading-[1.45] text-hint" data-testid="duration-hint">{durationHint(minutes, Math.min(ed.history.hours, 168), ed.history.fired.length)}</p>
     {/if}
   {:else if graphKind && !many}
     <div class="flex h-[120px] items-center justify-center rounded-[16px] border border-dashed border-track px-4 text-center text-[13px] text-fg2" data-testid="graph-placeholder">

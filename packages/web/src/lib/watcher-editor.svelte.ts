@@ -35,6 +35,9 @@ export class WatcherEditor {
   /** Verlauf der Entität (null: noch nicht geladen) und ob er gerade lädt */
   history = $state<EntityHistory | null>(null);
   historyBusy = $state(false);
+  /** Zeitfenster des Verlaufs in Stunden; `auto`: der Server wählt (bei neuer Entität wieder) */
+  historyHours = $state<number | 'auto'>('auto');
+  private historyFor = '';
   /** Reihenfolge für „An wen" */
   order = $state<OrderView | null>(null);
   /** Gemeinsam einrichten: alle Treffer (ab zwei) und die davon abgewählten; angelegt wird je gewähltes Gerät ein Wächter */
@@ -164,7 +167,7 @@ export class WatcherEditor {
   private historyQuery(entityId: string): Parameters<typeof api.entityHistory>[0] {
     const f = this.form;
     const rule = f.kind === 'state' ? { kind: 'state', to: f.to.trim() } : f.kind === 'above' || f.kind === 'below' ? { kind: f.kind, value: f.value.trim().replace(',', '.') } : {};
-    return { entityId, hours: 3, ...rule, ...(rule.kind ? { forMin: f.forMin.trim() === '' ? (f.kind === 'state' ? '0' : '3') : f.forMin.trim(), count: f.count.trim() || '1', cooldownMin: f.cooldownMin.trim() || '10' } : {}) };
+    return { entityId, hours: entityId === this.form.entityId ? this.historyHours : 'auto', ...rule, ...(rule.kind ? { forMin: f.forMin.trim() === '' ? (f.kind === 'state' ? '0' : '3') : f.forMin.trim(), count: f.count.trim() || '1', cooldownMin: f.cooldownMin.trim() || '10' } : {}) };
   }
 
   /** Verlauf der Entität mit der Regel des Formulars (Auslösepunkte); veraltete Antworten fallen weg */
@@ -173,6 +176,11 @@ export class WatcherEditor {
     if (!f.entityId) {
       this.history = null;
       return;
+    }
+    // Eine andere Entität: der Server sucht das Fenster wieder selbst
+    if (f.entityId !== this.historyFor) {
+      this.historyFor = f.entityId;
+      this.historyHours = 'auto';
     }
     const mine = ++this.historySeq;
     this.historyBusy = true;
@@ -189,6 +197,12 @@ export class WatcherEditor {
       });
   }
 
+  /** Ein anderes Fenster für den Verlauf (die Knöpfe unter dem Diagramm) */
+  setHistoryHours(hours: number): void {
+    this.historyHours = hours;
+    this.loadHistory();
+  }
+
   /** Gemeinsam einrichten: der Verlauf jedes gewählten Geräts mit der Regel des Formulars (höchstens vier Anfragen gleichzeitig, höchstens 30 Geräte) */
   loadDeviceHistories(): void {
     if (this.devices.length < 2) return;
@@ -202,7 +216,7 @@ export class WatcherEditor {
         // Ohne Verlauf (Recorder aus, neues Gerät) bleibt wenigstens der aktuelle Wert: Home Assistant kennt ihn
         if (!h || h.current === null) {
           const e = (await api.haEntities(id).catch(() => [])).find((x) => x.entityId === id);
-          if (e) h = { status: 'no_data', from: '', to: '', hours: 3, kind: Number.isFinite(Number(e.state)) && e.state.trim() !== '' ? 'numeric' : 'state', states: [], points: [], fired: [], min: null, max: null, ...(h ?? {}), current: e.state };
+          if (e) h = { status: 'no_data', from: '', to: '', hours: 24, kind: Number.isFinite(Number(e.state)) && e.state.trim() !== '' ? 'numeric' : 'state', states: [], points: [], fired: [], min: null, max: null, ...(h ?? {}), current: e.state };
         }
         if (mine !== this.deviceSeq) return;
         this.deviceHistory = { ...this.deviceHistory, [id]: h };

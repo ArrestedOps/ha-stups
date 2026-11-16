@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { firedText, graphAlt, graphOf, type EntityHistory, valueText, windowText } from '../src/lib/history';
+import { firedText, firedTextLong, graphAlt, graphOf, spanText, startText, trendText, type EntityHistory, valueText, windowLabel, windowText } from '../src/lib/history';
 import { setLanguage } from '../src/lib/i18n/index.svelte';
 
 // Feste Uhr: Mi 04.11.2026, 12:00 UTC = 13:00 Berlin
@@ -131,5 +131,62 @@ describe('Beschriftung', () => {
     expect(alt).toBe('Verlauf der letzten 3 Stunden: Waschmaschine Leistung, jetzt 50 W, zwischen 0 W und 100 W. Schwelle bei 5 W. heute 10:58 ausgelöst.');
     const states = graphAlt(numeric({ kind: 'state', states: ['off', 'on'], min: null, max: null, current: 'on' }), { name: 'Tür', unit: null, threshold: null, now: NOW, tz: TZ });
     expect(states).toBe('Verlauf der letzten 3 Stunden: Tür, jetzt on, Zustände: off, on. nicht ausgelöst.');
+  });
+});
+
+describe('lange Fenster', () => {
+  const long = (over: Partial<EntityHistory> = {}): EntityHistory => ({
+    status: 'ok',
+    from: '2025-11-04T12:00:00Z',
+    to: '2026-11-04T12:00:00Z',
+    hours: 8760,
+    kind: 'numeric',
+    states: [],
+    points: [{ at: '2025-11-04T12:00:00Z', v: 100 }, { at: '2026-11-04T12:00:00Z', v: 16 }],
+    fired: [],
+    current: '16',
+    min: 16,
+    max: 100,
+    source: 'statistics',
+    ...over,
+  });
+  afterEach(() => setLanguage('de'));
+
+  it('Knöpfe, Anfang und Satzteile je Fenster', () => {
+    expect([3, 24, 168, 720, 8760].map(windowLabel)).toEqual(['3 Std.', '24 Std.', '7 Tage', '30 Tage', '1 Jahr']);
+    expect([3, 168, 720, 8760].map(spanText)).toEqual(['3 Stunden', '7 Tage', '30 Tage', '12 Monate']);
+    expect([3, 168, 8760].map(windowText)).toEqual(['vor 3 Std.', 'vor 7 Tagen', 'vor einem Jahr']);
+    expect(startText(long(), TZ)).toBe('Nov 2025');
+    expect(startText(long({ hours: 168, from: '2026-10-28T12:00:00Z' }), TZ)).toBe('28. Okt');
+    expect(startText(numeric(), TZ)).toBe('10:00');
+  });
+
+  it('Auslösepunkte nur aus der letzten Woche: das sagt der Text; ältere Auslösung mit Wochentag', () => {
+    expect(firedTextLong(long(), NOW, TZ)).toBe('in 7 Tagen nicht ausgelöst');
+    expect(firedTextLong(numeric(), NOW, TZ)).toBe('nicht ausgelöst');
+    expect(firedText([{ at: '2026-11-02T09:00:00Z' }], NOW, TZ)).toBe('Mo 10:00 ausgelöst');
+  });
+
+  it('Trend: „sinkt um etwa 8,4 % im Monat · erreicht 20 % in etwa 2 Monaten“', () => {
+    const h = long({ trend: { perMonth: -8.4, reachDays: 70 } });
+    expect(trendText(h, { unit: '%', threshold: 20 })).toBe('sinkt um etwa 8,4 % im Monat · erreicht 20 % in etwa 2 Monaten');
+    expect(trendText(long({ trend: { perMonth: -8.4, reachDays: null } }), { unit: '%', threshold: 20 })).toBe('sinkt um etwa 8,4 % im Monat');
+    expect(trendText(long({ trend: { perMonth: 3, reachDays: 5 } }), { unit: '°C', threshold: 25 })).toBe('steigt um etwa 3 °C im Monat · erreicht 25 °C in etwa 5 Tagen');
+    expect(trendText(long({ trend: { perMonth: -2, reachDays: 21 } }), { unit: '%', threshold: 20 })).toContain('in etwa 3 Wochen');
+    expect(trendText(long(), { unit: '%', threshold: 20 })).toBeNull();
+    expect(trendText(long({ trend: { perMonth: 0, reachDays: null } }), { unit: '%', threshold: 20 })).toBeNull();
+  });
+
+  it('Textalternative nennt Zeitraum und Trend; Englisch', () => {
+    const h = long({ trend: { perMonth: -8.4, reachDays: 70 } });
+    const alt = graphAlt(h, { name: 'Batterie', unit: '%', threshold: 20, now: NOW, tz: TZ });
+    expect(alt).toContain('Verlauf der letzten 12 Monate: Batterie, jetzt 16 %');
+    expect(alt).toContain('sinkt um etwa 8,4 % im Monat');
+    expect(alt).toContain('in 7 Tagen nicht ausgelöst');
+    setLanguage('en');
+    expect(trendText(h, { unit: '%', threshold: 20 })).toBe('falls by about 8.4 % a month · reaches 20 % in about 2 months');
+    expect(windowLabel(8760)).toBe('1 year');
+    expect(windowLabel(168)).toBe('7 days');
+    expect(startText(long(), TZ)).toBe('Nov 2025');
   });
 });

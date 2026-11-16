@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { lastText } from '../lib/history';
   import { cardTitleWithEntity } from '../lib/cardTitle';
   import { t, tn } from '../lib/i18n/index.svelte';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
@@ -47,7 +48,7 @@
     <div class="flex items-center gap-3">
       <span class="flex min-w-0 flex-1 flex-col gap-1">
         <span class="wrap-anywhere text-[15px] font-bold tracking-tight">{one.name}</span>
-        <span class="wrap-anywhere text-[13px] text-fg2">{t('letzte 3 Stunden')}</span>
+        <span class="wrap-anywhere text-[13px] text-fg2">{lastText(hist(one.entityId)?.hours ?? 24)}</span>
       </span>
       <span class="ml-auto shrink-0 text-right">
         <span class="block text-[24px] leading-none font-extrabold">{deviceValue(hist(one.entityId), one.unit)}</span>

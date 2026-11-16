@@ -67,7 +67,7 @@ test('Assistent in vier Schritten: Verlauf mit Auslösepunkt, „Reihum“ ist v
   await expect(d.getByTestId('graph-threshold')).toBeAttached();
   await expect(d.getByTestId('graph-mark')).toHaveCount(1); // 3 Minuten unter 5 W: nur zwischen den Gängen (am Anfang war es schon so)
   await expect(d.getByTestId('graph-fired')).toContainText('ausgelöst');
-  await expect(d.getByRole('img', { name: /Verlauf der letzten 3 Stunden/ })).toBeVisible();
+  await expect(d.getByRole('img', { name: /Verlauf der letzten \d+ Stunden/ })).toBeVisible();
   // ohne Schwellwert kein Weiter
   await d.getByLabel('Schwellwert').fill('');
   await d.getByRole('button', { name: 'Weiter: Dann' }).click();
@@ -271,4 +271,36 @@ test('Sehr lange Entitätsnamen brechen um und machen die Seite nicht breiter (A
   });
   expect(m.scroll).toBeLessThanOrEqual(0);
   expect(m.overflowing).toEqual([]);
+});
+
+test('Batterie: bewegt sich im Monat nichts, zeigt das Diagramm das Jahr aus der Statistik, mit Trend; die Knöpfe schalten um', async ({ page, request }) => {
+  const s = await setup(request);
+  const day = 86_400_000;
+  // 300 Tage Tageswerte von 100 % auf 16 %, die letzten 40 Tage gleichbleibend (wie ein Türschloss-Sensor); die Rohdaten der Woche sind flach
+  const stats = Array.from({ length: 300 }, (_, i) => ({ start: Date.now() - (300 - i) * day, mean: i >= 260 ? 16 : Math.round((100 - (84 * i) / 259) * 10) / 10 }));
+  await post(request, '/mock/statistics', { entityId: 'sensor.bad_batterie', points: stats });
+  await post(request, '/mock/history', { entityId: 'sensor.bad_batterie', points: [{ state: '16', at: new Date(Date.now() - 4 * day).toISOString() }, { state: '16', at: new Date(Date.now() - 3_600_000).toISOString() }] });
+  await post(request, '/mock/state', { entityId: 'sensor.bad_batterie', state: '16' });
+  await page.addInitScript((id) => localStorage.setItem('stups.board', id), s.boardId);
+  await page.goto('/');
+  await nav(page).getByRole('button', { name: 'Wächter' }).click();
+  await page.getByRole('button', { name: 'Neuer Wächter', exact: true }).click();
+  const d = page.getByRole('dialog');
+  await d.getByRole('button', { name: 'Entität wählen' }).click();
+  await d.getByLabel('Entität suchen').fill('bad fenster batterie');
+  await d.getByRole('button', { name: /Bad Fenster Batterie/ }).first().click();
+
+  // der Server wählt das Jahr: der Knopf „1 Jahr“ ist gedrückt, der Trend steht darunter
+  const windows = d.getByRole('group', { name: 'Zeitraum' });
+  await expect(windows.getByRole('button', { name: '1 Jahr' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(d.getByRole('img', { name: /Verlauf der letzten 12 Monate/ })).toBeVisible();
+  await expect(d.getByTestId('graph-trend')).toContainText('sinkt um etwa');
+  await expect(d.getByTestId('graph-fired')).toContainText('in 7 Tagen nicht ausgelöst');
+
+  // 24 Std.: Rohdaten, kein Trend, Uhrzeit am linken Ende
+  await windows.getByRole('button', { name: '24 Std.' }).click();
+  await expect(d.getByRole('img', { name: /Verlauf der letzten 24 Stunden/ })).toBeVisible();
+  await expect(d.getByTestId('graph-trend')).toHaveCount(0);
+  await expect(d.getByTestId('graph-start')).toContainText(/^\d\d:\d\d$/);
+  await expect(windows.getByRole('button', { name: '24 Std.' })).toHaveAttribute('aria-pressed', 'true');
 });

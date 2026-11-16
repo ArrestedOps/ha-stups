@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from '../lib/i18n/index.svelte';
-  import { valueText } from '../lib/history';
+  import { valueText, lastText } from '../lib/history';
     import type { WatcherEditor } from '../lib/watcher-editor.svelte';
   import { conditionItems, durationChips, durationHint, durationLabel, nameSymbol, sliderRange } from '../lib/watcher-flow';
   import type { TriggerKind } from '../lib/watcher-types';
@@ -77,14 +77,14 @@
           <Tile color="purple">{#if icon}<SymbolIcon id={icon} size={24} />{:else}<Icon name="eye" size={24} />{/if}</Tile>
           <span class="flex min-w-0 flex-1 flex-col gap-1">
             <span class="wrap-anywhere text-[15px] font-bold tracking-tight">{f.entityName || f.entityId}</span>
-            <span class="wrap-anywhere text-[13px] text-fg2">{t('letzte 3 Stunden')}</span>
+            <span class="wrap-anywhere text-[13px] text-fg2">{lastText(ed.history?.hours ?? 24)}</span>
           </span>
           <span class="ml-auto shrink-0 text-right">
             <span class="block text-[24px] leading-none font-extrabold">{current}</span>
             <span class="block text-[12px] text-fg2">{t('jetzt')}</span>
           </span>
         </div>
-        <EntityGraph history={ed.history} busy={ed.historyBusy} name={f.entityName || f.entityId} {unit} {threshold} thresholdState={f.kind === 'state' ? f.to.trim() : null} />
+        <EntityGraph history={ed.history} busy={ed.historyBusy} onwindow={(h) => ed.setHistoryHours(h)} name={f.entityName || f.entityId} {unit} {threshold} thresholdState={f.kind === 'state' ? f.to.trim() : null} />
       </div>
     {/if}
     {#if f.kind === 'calendar_event'}
@@ -158,7 +158,7 @@
         {/each}
       </div>
       {#if ed.history?.status === 'ok' && ed.history.points.length >= 2}
-        <p class="px-1 text-[12.5px] leading-[1.45] text-hint" data-testid="duration-hint">{durationHint(minutes, ed.history.hours, ed.history.fired.length)}</p>
+        <p class="px-1 text-[12.5px] leading-[1.45] text-hint" data-testid="duration-hint">{durationHint(minutes, Math.min(ed.history.hours, 168), ed.history.fired.length)}</p>
       {/if}
     {/if}
   {/if}

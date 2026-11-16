@@ -172,7 +172,7 @@
             <p class="text-[15px] leading-[1.45] text-text-soft" data-testid="when-sum">{#each whenParts(f) as p, i (i)}{#if p.bold}<b class="text-fg">{p.text}</b>{:else}{p.text}{/if}{/each}</p>
           </div>
           {#if f.kind !== 'calendar_event' && f.kind !== 'forecast'}
-            <EntityGraph compact history={ed.history} busy={ed.historyBusy} name={f.entityName || f.entityId} {unit} {threshold} thresholdState={f.kind === 'state' ? f.to.trim() : null} />
+            <EntityGraph compact history={ed.history} busy={ed.historyBusy} onwindow={(h) => ed.setHistoryHours(h)} name={f.entityName || f.entityId} {unit} {threshold} thresholdState={f.kind === 'state' ? f.to.trim() : null} />
           {/if}
           {#if open === 'when'}<div class="border-t border-line pt-3"><WatcherWhenEditor {ed} graph={false} entityRow={false} /></div>{/if}
         </section>

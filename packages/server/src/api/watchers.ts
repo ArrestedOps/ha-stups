@@ -1,8 +1,8 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../errors.js';
 import { type HaState } from '../ha.js';
-import { DRY_RUN_DAYS, dryRun } from '../dry-run.js';
-import { clampHours, historyOf, unavailableHistory } from '../entity-history.js';
+import { DRY_RUN_DAYS, dryRun, type HistoryPoint } from '../dry-run.js';
+import { autoWindow, clampHours, historyOf, historyOfStatistics, HISTORY_RECENT_HOURS, movesInLastMonth, unavailableHistory, windowed, type EntityHistory } from '../entity-history.js';
 import { categoryOfEntity, categoryOfTemplate, cleanCategory } from '../watcher-categories.js';
 import { hasPermission, requirePermission } from '../permissions.js';
 import { detectSuggestions, suggestionKey, watcherTemplates } from '../watcher-templates.js';
@@ -187,7 +187,7 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
     return dryRun({ trigger, cooldownMin }, history, nowMs);
   });
   /**
-   * Verlauf einer Entität (Standard: letzte 3 Stunden) für den Wächter-Editor, verdichtet auf Zahlen und Zeitpunkte, mit den Stellen, an
+   * Verlauf einer Entität (`hours`: 1 bis 8760, Standard 3, `auto` wählt der Server; ab einem Tag aus der Langzeitstatistik) für den Wächter-Editor, verdichtet auf Zahlen und Zeitpunkte, mit den Stellen, an
    * denen die Regel (Query: kind, value, to, forMin, count, cooldownMin) ausgelöst hätte. Administratoren und Mitglieder mit dem Recht „watchers“ fragen jede Entität ab, andere Mitglieder
    * nur die, die ein Wächter beobachtet. **Kind: verboten** (Erlaubnisliste in child-guard.ts). Ohne Verbindung oder ohne Recorder gibt es
    * einen Verlauf mit Status `unavailable` oder `no_data`, nie einen Fehler.
@@ -200,9 +200,11 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       const watched = (deps.watcherData?.list() ?? []).some((w) => w.trigger.entityId === entityId || w.done?.entityId === entityId);
       if (!watched) throw new ForbiddenError(t('Das dürfen nur Administratoren'));
     }
-    const hours = clampHours(q.hours);
+    const auto = q.hours === 'auto';
+    let hours = auto ? 24 : clampHours(q.hours);
     const nowMs = (deps.now?.() ?? new Date()).getTime();
-    if (!deps.ha?.getHistory) return unavailableHistory(nowMs, hours);
+    const ha = deps.ha;
+    if (!ha?.getHistory) return unavailableHistory(nowMs, hours);
     let trigger: WatchTrigger | null = null;
     try {
       if (q.kind) trigger = parseTrigger({ entityId, kind: q.kind, to: q.to ?? null, value: q.value === undefined || q.value === '' ? null : Number(q.value), forMin: q.forMin === undefined ? undefined : Number(q.forMin), count: q.count === undefined ? undefined : Number(q.count) });
@@ -210,13 +212,39 @@ export function registerWatcherRoutes(app: FastifyInstance, k: ApiKit): void {
       trigger = null; // eine unfertige Regel zeichnet den Verlauf trotzdem, nur ohne Auslösepunkte
     }
     const cooldownMin = q.cooldownMin !== undefined && Number.isFinite(Number(q.cooldownMin)) ? Math.min(1440, Math.max(0, Math.round(Number(q.cooldownMin)))) : 10;
+    const limited = <T>(p: Promise<T>): Promise<T> => Promise.race([p, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Zeitlimit')), HISTORY_TIMEOUT_MS).unref())]);
+    const iso = (ms: number): string => new Date(ms).toISOString();
+    // Rohdaten der letzten sieben Tage (neueste zuerst behalten): aktueller Wert, Auslösepunkte, Wahl des Fensters
+    const recentOf = (): Promise<HistoryPoint[]> => limited(ha.getHistory!(entityId, iso(nowMs - HISTORY_RECENT_HOURS * 3_600_000), iso(nowMs), 'last'));
+    // Langzeitstatistik; ohne sie (kein state_class, ältere Home Assistant) bleibt die Liste leer
+    const statsOf = (h: number): Promise<{ at: string; mean: number }[]> =>
+      ha.getStatistics ? limited(ha.getStatistics(entityId, iso(nowMs - h * 3_600_000), iso(nowMs), h <= 720 ? 'hour' : 'day')).catch(() => []) : Promise.resolve([]);
     try {
-      const from = new Date(nowMs - hours * 3_600_000).toISOString();
-      const history = await Promise.race([
-        deps.ha.getHistory(entityId, from, new Date(nowMs).toISOString()),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Zeitlimit')), HISTORY_TIMEOUT_MS).unref()),
-      ]);
-      return historyOf({ history, nowMs, hours, trigger, cooldownMin });
+      let recent: HistoryPoint[] | null = null;
+      let stats: { at: string; mean: number }[] | null = null;
+      if (auto) {
+        recent = await recentOf();
+        const w = autoWindow(recent, nowMs);
+        if (w !== 'slow') hours = w;
+        else {
+          // Es bewegt sich kaum: das Jahr aus der Statistik entscheidet, ob ein Monat reicht
+          stats = await statsOf(8760);
+          hours = stats.length >= 2 ? (movesInLastMonth(stats, nowMs) ? 720 : 8760) : 168;
+          if (hours !== 8760) stats = null;
+        }
+      }
+      let out: EntityHistory;
+      if (hours <= 24) {
+        const fromMs = nowMs - hours * 3_600_000;
+        const history = recent ? windowed(recent, fromMs) : await limited(ha.getHistory(entityId, iso(fromMs), iso(nowMs), 'last'));
+        out = historyOf({ history, nowMs, hours, trigger, cooldownMin });
+      } else {
+        const [s, r] = await Promise.all([stats ?? statsOf(hours), recent ?? recentOf().catch(() => [] as HistoryPoint[])]);
+        if (s.length >= 2) out = historyOfStatistics({ stats: s, recent: r, nowMs, hours, trigger, cooldownMin });
+        else if (hours <= HISTORY_RECENT_HOURS) out = historyOf({ history: windowed(r, nowMs - hours * 3_600_000), nowMs, hours, trigger, cooldownMin });
+        else out = { ...historyOf({ history: [], nowMs, hours, trigger, cooldownMin }), needsStatistics: true };
+      }
+      return auto ? { ...out, auto: true } : out;
     } catch {
       return unavailableHistory(nowMs, hours);
     }

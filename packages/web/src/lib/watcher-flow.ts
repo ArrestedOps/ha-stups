@@ -224,7 +224,8 @@ export function sliderRange(value: number | null): { min: number; max: number; s
 /** Der Satz unter der Dauer: was die Regel in dem Fenster getan hätte (Zahl der Auslösungen aus dem Verlauf) */
 export function durationHint(minutes: number, hours: number, fired: number): string {
   const lead = minutes <= 0 ? t('Ohne Wartezeit') : t('Mit {duration}', { duration: durationLabel(minutes) });
-  const window = tn('{n} Stunde', '{n} Stunden', hours);
+  // ab zwei Tagen in Tagen („in den letzten 7 Tagen“); die Auslösepunkte kennen höchstens die letzte Woche
+  const window = hours >= 48 ? t('{n} Tagen', { n: Math.round(hours / 24) }) : tn('{n} Stunde', '{n} Stunden', hours);
   if (fired === 0) return t('{lead} hätte Stups in den letzten {window} nicht ausgelöst.', { lead, window });
   if (fired === 1) return t('{lead} hätte Stups in den letzten {window} genau einmal ausgelöst – kurze Pausen zählen nicht.', { lead, window });
   return t('{lead} hätte Stups in den letzten {window} {n} Mal ausgelöst – kurze Pausen zählen nicht.', { lead, window, n: fired });

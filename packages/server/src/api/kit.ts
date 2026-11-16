@@ -58,7 +58,8 @@ export interface ApiDeps {
     listNotifyServices?(): Promise<string[]>;
     probeWatchers?(entityId?: string): Promise<WatcherProbe>;
     getStates?(): Promise<HaState[]>;
-    getHistory?(entityId: string, fromIso: string, toIso: string): Promise<HistoryPoint[]>;
+    getHistory?(entityId: string, fromIso: string, toIso: string, keep?: 'first' | 'last'): Promise<HistoryPoint[]>;
+    getStatistics?(entityId: string, fromIso: string, toIso: string, period: 'hour' | 'day' | 'week' | 'month'): Promise<{ at: string; mean: number }[]>;
   };
   /** Die Uhr (für Tests); Vorgabe: die Systemuhr */
   now?: () => Date;

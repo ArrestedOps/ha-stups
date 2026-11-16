@@ -68,6 +68,8 @@ export async function startMockHa({ port, first, second, token, extraPersons = [
   setState('sensor.luftreiniger_filter', '64', { friendly_name: 'Luftreiniger Filter', unit_of_measurement: '%' });
   /** Historie je Entität für den Probelauf (POST /mock/history), Kalendertermine (POST /mock/calendar), Vorhersagen (POST /mock/forecast) */
   const histories = new Map();
+  /** Langzeitstatistik je Entität (POST /mock/statistics): [{ start (ms), mean }] */
+  const statistics = new Map();
   const calendars = new Map();
   const forecasts = new Map();
   setState('binary_sensor.waschmaschine_tuer', 'off', { friendly_name: 'Waschmaschine Tür' });
@@ -139,6 +141,11 @@ export async function startMockHa({ port, first, second, token, extraPersons = [
     if (req.method === 'POST' && url.pathname === '/mock/history') {
       const b = await body(req);
       histories.set(b.entityId, b.points);
+      return send({ ok: true });
+    }
+    if (req.method === 'POST' && url.pathname === '/mock/statistics') {
+      const b = await body(req);
+      statistics.set(b.entityId, b.points);
       return send({ ok: true });
     }
     if (req.method === 'POST' && url.pathname === '/mock/calendar') {
@@ -234,6 +241,13 @@ export async function startMockHa({ port, first, second, token, extraPersons = [
           // wie Home Assistant mit minimal_response: { entity_id: [{ s, lu }] }, lu = Sekunden seit 1970
           const out = {};
           for (const id of msg.entity_ids ?? []) out[id] = (histories.get(id) ?? []).map((p) => ({ s: p.state, lu: Date.parse(p.at) / 1000 }));
+          return ok(out);
+        }
+        case 'recorder/statistics_during_period': {
+          // wie Home Assistant: { entity_id: [{ start, end, mean }] }, start in Millisekunden
+          const from = Date.parse(msg.start_time);
+          const out = {};
+          for (const id of msg.statistic_ids ?? []) out[id] = (statistics.get(id) ?? []).filter((p) => p.start >= from).map((p) => ({ start: p.start, end: p.start + 3_600_000, mean: p.mean, min: p.mean, max: p.mean }));
           return ok(out);
         }
         case 'call_service':

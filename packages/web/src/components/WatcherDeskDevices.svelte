@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { lastText } from '../lib/history';
   import { cardTitleWithEntity } from '../lib/cardTitle';
   import { t, tn } from '../lib/i18n/index.svelte';
   import type { WatcherEditor } from '../lib/watcher-editor.svelte';
@@ -64,7 +65,7 @@
     <div class="border-t border-line px-4 pt-3 pb-2.5" data-testid="graph-card">
       <div class="flex items-baseline justify-between gap-3">
         <span class="min-w-0 truncate text-[14px] font-bold">{shown.name}</span>
-        <span class="shrink-0 text-[12px] text-fg2">{t('letzte 3 Stunden')}</span>
+        <span class="shrink-0 text-[12px] text-fg2">{lastText(hist(shown.entityId)?.hours ?? 24)}</span>
       </div>
       <EntityGraph history={hist(shown.entityId)} busy={!(shown.entityId in ed.deviceHistory)} name={shown.name} unit={shown.unit ?? null} {threshold} {thresholdState} />
     </div>

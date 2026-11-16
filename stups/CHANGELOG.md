@@ -2,6 +2,10 @@
 
 > 🇩🇪 [Deutsche Fassung](CHANGELOG.de.md) · This English version is the authoritative one.
 
+## 1.42.4
+
+- **The watcher chart can show months, not just 3 hours.** Under the chart you now pick the period: **3 h · 24 h · 7 days · 30 days · 1 year**. Periods of a day or more come from Home Assistant's long-term statistics (which it keeps for good, not just 10 days). Stups picks the period itself, so something moves in the chart: busy values such as power get 3 hours, phone batteries a day or a week, and a window-sensor battery that hardly changes for weeks gets the whole year. For long periods a line says where it is heading, for example “falls by about 8 % a month · reaches 20 % in about 2 months”. Triggers (green dots) are only known for the last 7 days; entities without long-term statistics stay at the last days, with a note.
+
 ## 1.42.3
 
 - **Better suggestions when nudging.** The quick messages in the Nudge window now fit the task: they differ for overdue tasks (“This one is overdue – can you get to it?”), tasks due today (“Can you get this done today?”), due within three days, watcher tasks, tasks you are also assigned to (“Shall we do it together?”), tasks without a date, and when you have already nudged and got no answer (“Quick reminder ☝️”). The best fit is preselected; four suggestions are on offer, and you can still write your own text. Nudges sent earlier keep their text.

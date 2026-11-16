@@ -2,7 +2,7 @@
 
 > 🇬🇧 [English version](CHANGELOG.md) · Die englische Fassung ist maßgeblich.
 
-## Unreleased
+## 1.42.2
 
 - **Bescheid, wenn sich eine Aufgabe von selbst erledigt.** Erledigt sich die Aufgabe eines Wächters von selbst („Erledigt sich selbst, wenn …“, zum Beispiel das Fenster ist wieder zu), bekommen die Zuständigen jetzt eine ruhige Nachricht „Hat sich von selbst erledigt“; sie ersetzt die Nachricht „Neue Aufgabe“. Standardmäßig an, für alle abschaltbar unter *Einstellungen › Erinnerungszeiten › Von selbst erledigt › Bescheid sagen*.
 - **Weniger Doppeltes in den Listen.** Wem eine Aufgabe gehört, zeigt nur noch das Bild der Person; die Vornamen neben dem Datum entfallen, am Handy bei Aufgaben und in den Karten der Boards. Am Desktop zeigt die Aufgabentabelle jetzt das eigene Symbol der Aufgabe und ihre Kategorien (bis zu zwei, mit Farbpunkt) unter dem Titel.

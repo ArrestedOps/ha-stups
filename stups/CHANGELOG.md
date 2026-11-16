@@ -2,6 +2,10 @@
 
 > 🇩🇪 [Deutsche Fassung](CHANGELOG.de.md) · This English version is the authoritative one.
 
+## Unreleased
+
+- **The task list says what it hides.** Under “My tasks” (the start view) other people's tasks and tasks without an assignee are hidden, and so are tasks without a date unless the “No date” filter is on; watcher tasks usually have no date. A quiet line above the list now says how many are hidden, with **Show all** and **Show**.
+
 ## 1.42.0
 
 - **New design.** Stups looks calmer and more like an iPhone app: flat orange instead of glowing gradients, grouped lists with hairlines, a floating tab bar (Tasks · Boards · **+** · Calendar · Watchers) and four number tiles on Tasks. The board shows as a coloured dot with its name in every row; the check circle stays neutral. Dark mode follows the same rules, and the contrast of every colour pair is tested.

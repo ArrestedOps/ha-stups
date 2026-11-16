@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.1-beta.1
+
+**Die Aufgabenliste sagt, was sie ausblendet.** Aufgaben von Wächtern haben meist keinen Termin und stehen in der Liste nur mit dem Filter „Ohne Termin“; unter „Meine Aufgaben“ (beim Start immer gewählt) fehlen außerdem Aufgaben anderer und Aufgaben ohne Zuständigen. Wer am Handy einen Filter gemerkt hatte, sah eine Aufgabe dort, am Desktop (neues Gerät) nicht. Über der Liste steht jetzt, wie viele ausgeblendet sind, mit **Alle anzeigen** (Personenfilter aufheben) und **Anzeigen** („Ohne Termin“ dazunehmen). Gilt am Handy und am Desktop.
+
+**Bitte prüfen (Testliste):** (1) Desktop: Aufgaben, „Meine Aufgaben“: steht der Hinweis „… Aufgaben ohne Termin sind ausgeblendet“? (2) **Anzeigen** klicken: die Aufgabe „Batterie wechseln: …“ erscheint. (3) Hinweis „… von anderen oder ohne Zuständigen“ und **Alle anzeigen**. (4) Dasselbe am Handy.
+
 ## 1.42.0-beta.14
 
 **Gefunden: eine Seite am Desktop, Kästchen immer da.** Am Desktop öffnet „Gefunden“ keine Handy-Fenster mehr, sondern eine Seite im Reiter Wächter: links die Arten mit Zähler (dazu „Auch ohne Gerät“, „Alle Vorlagen“, „Ausgeblendet“), rechts die Geräte der gewählten Art. Das Suchfeld sucht über alle Arten. **Der Knopf „Auswählen“ entfällt:** die Kästchen stehen immer da, eine Zeile anklicken wählt sie, „Alle N wählen“ steht im Kopf jeder Art. Eine Leiste unten nennt die Auswahl und bietet „N gemeinsam einrichten“, „Ausblenden“ und „Auswahl aufheben“. Am Handy gilt dieselbe Regel in der Liste.

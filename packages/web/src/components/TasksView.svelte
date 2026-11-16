@@ -6,12 +6,12 @@
   import { columnForNew, dayKeyOf, isoWeek, rangeTitle, step as stepCal, type CalMode } from '../lib/calendar';
   import { deviceTz } from '../lib/datetime';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { activeFilterCount, DEFAULT_FILTER, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId } from '../lib/schedule';
+  import { activeFilterCount, DEFAULT_FILTER, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId, WHEN_KEYS } from '../lib/schedule';
   import { matchesQuery } from '../lib/search';
   import type { StatsKind } from '../lib/statsSheets';
   import { groupTasks, nudgesToMe, parseTasksView, taskStats, taskStatsFor, type TasksView } from '../lib/tasks';
   import { ageText, sourceLine } from '../lib/today';
-    import { activeScheduleFilter, claimCard, closeDetail, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setScheduleFilter, ui } from '../lib/store.svelte';
+    import { activeScheduleFilter, claimCard, closeDetail, completeCard, filterContext, openCardAnywhere, openSheet, passCard, personById, setPersonScope, setScheduleFilter, ui } from '../lib/store.svelte';
   import Avatar from './Avatar.svelte';
   import CalendarBoards from './CalendarBoards.svelte';
   import CalendarView from './CalendarView.svelte';
@@ -110,13 +110,26 @@
   /** Handy: das Suchfeld unter dem Titel (Desktop: das Feld oben in der Kopfzeile) */
   let phoneQuery = $state('');
   const query = $derived((ui.desktop ? ui.query : phoneQuery).trim());
-  const visible = (list: typeof open) =>
-    filterSchedule(ui.isChild ? list.filter((c) => !!meId && c.assigneeIds.includes(meId)) : list, sf, fctx).filter(
+  const visible = (list: typeof open, f = sf) =>
+    filterSchedule(ui.isChild ? list.filter((c) => !!meId && c.assigneeIds.includes(meId)) : list, f, fctx).filter(
       (c) => !query || matchesQuery(query, c.title, c.description, c.boardName, ...c.categories.map((x) => x.name)),
     );
   const house = $derived<TodayCard[]>(ui.isChild ? [] : (today?.house ?? []).filter((c) => !query || matchesQuery(query, c.title, c.why, c.boardName)));
   const houseIds = $derived(new Set(house.map((c) => c.id)));
   const shownOpen = $derived(visible([...open, ...undated]).filter((c) => !houseIds.has(c.id)));
+  /**
+   * Was die Liste gerade ausblendet, ohne dass man es sieht: (1) Aufgaben anderer und Aufgaben ohne Zuständigen, solange „Meine“ (oder eine Person)
+   * gewählt ist (beim Start immer), und (2) Aufgaben ohne Termin, solange der Filter „Ohne Termin“ aus ist; Aufgaben von Wächtern haben meist keinen
+   * Termin. Ohne Hinweis wirkt eine Aufgabe, die man am Handy sieht, am Desktop wie verschwunden.
+   */
+  const allWhen = [...WHEN_KEYS];
+  const everyOpen = $derived([...open, ...undated]);
+  const hiddenByScope = $derived(
+    ui.isChild || !personFilterActive(sf) ? 0 : visible(everyOpen, { ...sf, personIds: [], unassigned: false }).filter((c) => !houseIds.has(c.id)).length - shownOpen.length,
+  );
+  const hiddenUndated = $derived(
+    ui.isChild || sf.when.includes('undated') ? 0 : visible(everyOpen, { ...sf, when: allWhen }).filter((c) => !houseIds.has(c.id)).length - shownOpen.length,
+  );
   const groups = $derived(
     groupTasks(sf.showDone ? [...shownOpen, ...visible(recentDone).filter((c) => !houseIds.has(c.id))] : shownOpen, nowMs, tz, {
       withDone: sf.showDone,
@@ -212,6 +225,21 @@
   });
   /** Ein Stups: die Aufgabe öffnen (dort die Antwort); mehrere: die Liste der Mitteilungen */
 </script>
+
+{#snippet scopeHint()}
+  {#if hiddenByScope > 0}
+    <p class="flex flex-wrap items-center gap-x-2 px-1 text-[13.5px] text-fg2" data-testid="scope-hidden">
+      <span>{tn('{n} weitere Aufgabe ist ausgeblendet (von anderen oder ohne Zuständigen).', '{n} weitere Aufgaben sind ausgeblendet (von anderen oder ohne Zuständigen).', hiddenByScope)}</span>
+      <button type="button" class="font-bold text-accent-text" data-testid="scope-show-all" onclick={() => setPersonScope([])}>{t('Alle anzeigen')}</button>
+    </p>
+  {/if}
+  {#if hiddenUndated > 0}
+    <p class="flex flex-wrap items-center gap-x-2 px-1 text-[13.5px] text-fg2" data-testid="undated-hidden">
+      <span>{tn('{n} Aufgabe ohne Termin ist ausgeblendet.', '{n} Aufgaben ohne Termin sind ausgeblendet.', hiddenUndated)}</span>
+      <button type="button" class="font-bold text-accent-text" data-testid="undated-show" onclick={() => setScheduleFilter({ when: allWhen })}>{t('Anzeigen')}</button>
+    </p>
+  {/if}
+{/snippet}
 
 {#snippet scopeItem(label: string, on: boolean, run: () => void)}
   <button class="flex h-11 w-full items-center justify-between gap-3 px-4 text-left text-[16px]" role="menuitemradio" aria-checked={on} onclick={() => { run(); scopeOpen = false; }}>
@@ -399,6 +427,7 @@
                 {@render filterButton(extraFilter, true)}
               </label>
             {/if}
+            {@render scopeHint()}
             <div class="grid px-4 text-[12px] font-medium text-text-soft" style:grid-template-columns="minmax(0,1fr) 170px 150px 92px" aria-hidden="true">
               <span class="pl-11">{t('Aufgabe')}</span><span>Board</span><span>{t('Fällig')}</span><span class="text-right">{t('Wer')}</span>
             </div>
@@ -459,6 +488,7 @@
             </section>
           {/if}
 
+          {#if !ui.desktop}{@render scopeHint()}{/if}
           {#each ui.desktop ? [] : groups as g (g.key)}
             {@const isOpen = !closed.includes(g.key)}
             <section aria-label={g.title} data-testid="group-{g.key}">

@@ -2,6 +2,10 @@
 
 > 🇬🇧 [English version](CHANGELOG.md) · Die englische Fassung ist maßgeblich.
 
+## Unreleased
+
+- **Die Aufgabenliste sagt, was sie ausblendet.** Unter „Meine Aufgaben“ (die Ansicht beim Start) fehlen Aufgaben anderer und Aufgaben ohne Zuständigen, ebenso Aufgaben ohne Termin, solange der Filter „Ohne Termin“ aus ist; Aufgaben von Wächtern haben meist keinen Termin. Eine leise Zeile über der Liste nennt jetzt, wie viele ausgeblendet sind, mit **Alle anzeigen** und **Anzeigen**.
+
 ## 1.42.0
 
 - **Neues Design.** Stups wirkt ruhiger und mehr wie eine iPhone-App: flaches Orange statt leuchtender Verläufe, gruppierte Listen mit feinen Linien, eine schwebende Leiste (Aufgaben · Boards · **+** · Kalender · Wächter) und vier Zahlenkacheln bei Aufgaben. Das Board steht in jeder Zeile als farbiger Punkt mit Namen; der Erledigt-Kreis bleibt neutral. Der dunkle Modus folgt denselben Regeln, der Kontrast jedes Farbpaars wird getestet.

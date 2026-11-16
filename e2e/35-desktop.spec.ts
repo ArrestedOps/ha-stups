@@ -414,11 +414,11 @@ test.describe('Ruhige Navigation', () => {
     await expect(label).toHaveText('Meine Aufgaben');
   });
 
-  test('Was die Liste ausblendet, steht da: Aufgaben anderer und ohne Termin; „Alle anzeigen“ und „Anzeigen“ holen sie', async ({ page, request }) => {
+  test('Aufgaben ohne Termin stehen immer unten in der Liste; was „Meine“ ausblendet, steht als Hinweis da', async ({ page, request }) => {
     const board = await (await request.post('/api/boards', { data: { name: unique('Hinweis') } })).json();
     const view = await (await request.get(`/api/boards/${board.id}`)).json();
     const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
-    const make = async (title: string, assigneeIds: string[], dueAt?: string) => (await request.post(`/api/boards/${board.id}/cards`, { data: { title, columnId: view.columns[0].id, assigneeIds, ...(dueAt ? { dueAt } : {}) } }));
+    const make = async (title: string, assigneeIds: string[], dueAt?: string) => request.post(`/api/boards/${board.id}/cards`, { data: { title, columnId: view.columns[0].id, assigneeIds, ...(dueAt ? { dueAt } : {}) } });
     const rene = people.find((p) => p.name === 'Rene')!.id;
     const conny = people.find((p) => p.name === 'Conny')!.id;
     const dayOf = (ms: number) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date(ms));
@@ -431,16 +431,16 @@ test.describe('Ruhige Navigation', () => {
     await make(noDate, [rene]); // wie eine Aufgabe von einem Wächter: ohne Termin
     await page.goto('/');
     await expect(row(page, mine)).toBeVisible();
-    await expect(row(page, others)).toHaveCount(0);
-    await expect(row(page, noDate)).toHaveCount(0);
-
-    // beides steht als Hinweis da, nicht stumm
-    await expect(page.getByTestId('scope-hidden')).toContainText(/weitere Aufgabe(n sind| ist) ausgeblendet \(von anderen oder ohne Zuständigen\)/);
-    await expect(page.getByTestId('undated-hidden')).toContainText(/ohne Termin (ist|sind) ausgeblendet/);
-
-    await page.getByTestId('undated-show').click();
-    await expect(row(page, noDate)).toBeVisible();
+    // ohne Termin: immer in der Liste, in der Gruppe „Ohne Termin“ ganz unten (unter allen Gruppen mit Termin)
+    const undated = page.getByTestId('group-undated');
+    await expect(undated.getByText(noDate)).toBeVisible();
+    const lastDated = (await page.locator('[data-testid^="group-"]:not([data-testid="group-undated"])').last().boundingBox())!.y;
+    expect((await undated.boundingBox())!.y).toBeGreaterThan(lastDated);
     await expect(page.getByTestId('undated-hidden')).toHaveCount(0);
+
+    // „Meine“ blendet die Aufgabe von Conny aus: der Hinweis sagt es, „Alle anzeigen“ holt sie
+    await expect(row(page, others)).toHaveCount(0);
+    await expect(page.getByTestId('scope-hidden')).toContainText(/weitere Aufgabe(n sind| ist) ausgeblendet \(von anderen oder ohne Zuständigen\)/);
     await page.getByTestId('scope-show-all').click();
     await expect(page.getByTestId('scope-label')).toHaveText('Alle Aufgaben');
     await expect(row(page, others)).toBeVisible();

@@ -6,7 +6,7 @@
   import { columnForNew, dayKeyOf, isoWeek, rangeTitle, step as stepCal, type CalMode } from '../lib/calendar';
   import { deviceTz } from '../lib/datetime';
   import { t, tn } from '../lib/i18n/index.svelte';
-  import { activeFilterCount, DEFAULT_FILTER, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId, WHEN_KEYS } from '../lib/schedule';
+  import { activeFilterCount, DEFAULT_FILTER, extraFilterCount, filterSchedule, isFiltered, personFilterActive, toggleId } from '../lib/schedule';
   import { matchesQuery } from '../lib/search';
   import type { StatsKind } from '../lib/statsSheets';
   import { groupTasks, nudgesToMe, parseTasksView, taskStats, taskStatsFor, type TasksView } from '../lib/tasks';
@@ -144,17 +144,11 @@
   const houseRows = $derived(houseAll || ui.taskView === 'house' || house.length <= HOUSE_LIMIT ? house : house.slice(0, HOUSE_LIMIT));
   const shownOpen = $derived(visible([...open, ...undated]).filter((c) => !houseIds.has(c.id)));
   /**
-   * Was die Liste gerade ausblendet, ohne dass man es sieht: (1) Aufgaben anderer und Aufgaben ohne Zuständigen, solange „Meine“ (oder eine Person)
-   * gewählt ist (beim Start immer), und (2) Aufgaben ohne Termin, solange der Filter „Ohne Termin“ aus ist; Aufgaben von Wächtern haben meist keinen
-   * Termin. Ohne Hinweis wirkt eine Aufgabe, die man am Handy sieht, am Desktop wie verschwunden.
+   * Wie viele Aufgaben anderer und Aufgaben ohne Zuständigen die Wahl „Meine“ (oder einer Person) gerade ausblendet (beim Start ist immer „Meine“
+   * gewählt). Ohne Hinweis wirkt eine Aufgabe, die man am Handy in „Alle“ sieht, am Desktop wie verschwunden.
    */
-  const allWhen = [...WHEN_KEYS];
-  const everyOpen = $derived([...open, ...undated]);
   const hiddenByScope = $derived(
-    ui.isChild || !personFilterActive(sf) ? 0 : visible(everyOpen, { ...sf, personIds: [], unassigned: false }).filter((c) => !houseIds.has(c.id)).length - shownOpen.length,
-  );
-  const hiddenUndated = $derived(
-    ui.isChild || sf.when.includes('undated') ? 0 : visible(everyOpen, { ...sf, when: allWhen }).filter((c) => !houseIds.has(c.id)).length - shownOpen.length,
+    ui.isChild || !personFilterActive(sf) ? 0 : visible([...open, ...undated], { ...sf, personIds: [], unassigned: false }).filter((c) => !houseIds.has(c.id)).length - shownOpen.length,
   );
   const groups = $derived(
     groupTasks(sf.showDone ? [...shownOpen, ...visible(recentDone).filter((c) => !houseIds.has(c.id))] : shownOpen, nowMs, tz, {
@@ -258,12 +252,6 @@
     <p class="flex flex-wrap items-center gap-x-2 px-1 text-[13.5px] text-fg2" data-testid="scope-hidden">
       <span>{tn('{n} weitere Aufgabe ist ausgeblendet (von anderen oder ohne Zuständigen).', '{n} weitere Aufgaben sind ausgeblendet (von anderen oder ohne Zuständigen).', hiddenByScope)}</span>
       <button type="button" class="font-bold text-accent-text" data-testid="scope-show-all" onclick={() => setPersonScope([])}>{t('Alle anzeigen')}</button>
-    </p>
-  {/if}
-  {#if hiddenUndated > 0}
-    <p class="flex flex-wrap items-center gap-x-2 px-1 text-[13.5px] text-fg2" data-testid="undated-hidden">
-      <span>{tn('{n} Aufgabe ohne Termin ist ausgeblendet.', '{n} Aufgaben ohne Termin sind ausgeblendet.', hiddenUndated)}</span>
-      <button type="button" class="font-bold text-accent-text" data-testid="undated-show" onclick={() => setScheduleFilter({ when: allWhen })}>{t('Anzeigen')}</button>
     </p>
   {/if}
 {/snippet}
@@ -562,8 +550,8 @@
 
           {#if !ui.desktop && groups.length === 0 && house.length === 0}
             <div class="py-6 text-center" data-testid="tasks-empty">
-              <p class="text-[17px] font-semibold">{t('Keine Aufgaben mit Termin')}</p>
-              <p class="mt-1 text-[15px] text-fg2">{t('Aufgaben mit Termin erscheinen hier, nach Fälligkeit geordnet.')}</p>
+              <p class="text-[17px] font-semibold">{t('Hier ist nichts offen.')}</p>
+              <p class="mt-1 text-[15px] text-fg2">{t('Gute Arbeit.')}</p>
               {#if isFiltered(sf)}
                 <button class="mt-3 min-h-11 rounded-xl border border-line px-4 text-[15px]" onclick={() => setScheduleFilter({ ...DEFAULT_FILTER })}>{t('Zurücksetzen')}</button>
               {/if}

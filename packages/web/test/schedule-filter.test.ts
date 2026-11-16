@@ -74,12 +74,12 @@ describe('whenOf: in welche Gruppe fällt eine Aufgabe', () => {
 });
 
 describe('filterSchedule: jede Filterart einzeln', () => {
-  it('Standard: offene Aufgaben mit Termin, nichts ohne Termin, nichts Erledigtes', () => {
-    expect(run({})).toEqual(['alt', 'frueh', 'abend', 'freitag', 'naechste']);
+  it('Standard: alle offenen Aufgaben, auch ohne Termin (zuletzt), nichts Erledigtes', () => {
+    expect(run({})).toEqual(['alt', 'frueh', 'abend', 'freitag', 'naechste', 'ohne']);
   });
 
   it('Wer (auch Niemand)', () => {
-    expect(run({ personIds: ['ben'] })).toEqual(['frueh', 'freitag']);
+    expect(run({ personIds: ['ben'] })).toEqual(['frueh', 'freitag', 'ohne']);
     expect(run({ personIds: ['anna'], unassigned: true })).toEqual(['alt', 'abend', 'freitag', 'naechste']);
   });
 
@@ -90,7 +90,9 @@ describe('filterSchedule: jede Filterart einzeln', () => {
     expect(run({ when: ['later'] })).toEqual(['naechste']);
   });
 
-  it('Wann „Ohne Termin" holt Aufgaben ohne Termin dazu (sonst nie)', () => {
+  it('Wann: ohne Auswahl stehen Aufgaben ohne Termin dabei; wer Gruppen wählt, sieht nur diese, „Ohne Termin“ ist eine davon', () => {
+    expect(run({ when: [] })).toContain('ohne');
+    expect(run({ when: ['later'] })).not.toContain('ohne');
     expect(run({ when: ['undated'] })).toEqual(['ohne']);
     expect(run({ when: ['undated', 'later'] })).toEqual(['naechste', 'ohne']);
   });
@@ -116,7 +118,7 @@ describe('filterSchedule: jede Filterart einzeln', () => {
   });
 
   it('Erledigte anzeigen: auch erledigte Aufgaben; mit Wann nur die, die in eine Gruppe fallen', () => {
-    expect(run({ showDone: true })).toEqual(['alt', 'frueh', 'abend', 'freitag', 'naechste', 'fertig-heute', 'fertig-gestern']);
+    expect(run({ showDone: true })).toEqual(['alt', 'frueh', 'abend', 'freitag', 'naechste', 'ohne', 'fertig-heute', 'fertig-gestern']);
     expect(run({ showDone: true, when: ['today'] })).toEqual(['abend', 'fertig-heute']);
     expect(run({ showDone: true, when: ['overdue'] })).toEqual(['alt', 'frueh']);
   });

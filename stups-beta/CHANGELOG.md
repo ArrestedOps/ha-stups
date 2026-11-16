@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.1-beta.3
+
+**Aufgaben ohne Termin stehen immer unten in der Liste.** Eine Aufgabe ohne Termin (bei Wächtern der Normalfall) erschien bisher nur mit dem Filter „Ohne Termin“. Jetzt steht die Gruppe **„Ohne Termin“ immer zuletzt**, unter „Später“, am Handy und am Desktop; „Vom Haus“ bleibt oben. Wer unter „Wann“ im Filter Gruppen wählt, sieht weiter nur diese („Ohne Termin“ ist eine davon). Der Hinweis „… ohne Termin sind ausgeblendet“ aus beta.1 entfällt, der Hinweis für „Meine“ („… von anderen oder ohne Zuständigen“) bleibt. Die leere Seite sagt jetzt „Hier ist nichts offen“ statt „Keine Aufgaben mit Termin“.
+
+**Bitte prüfen (Testliste):** (1) Desktop und Handy: Aufgaben: ganz unten steht „Ohne Termin“ mit der Aufgabe „Batterie wechseln: …“. (2) Filter › Wann › „Später“ wählen: die Gruppe „Ohne Termin“ verschwindet; wieder abwählen: sie ist zurück. (3) Filter › Wann › nur „Ohne Termin“: nur diese. (4) „Vom Haus“ steht weiter ganz oben.
+
 ## 1.42.1-beta.2
 
 **„Vom Haus“ steht überall ganz oben.** Aufgaben von Wächtern, die dir oder noch niemandem gehören, standen am Handy oben, am Desktop aber ganz unten unter der Tabelle (große Handy-Karten, kaum zu finden). Jetzt ist es die oberste Gruppe der Tabelle am Desktop, in denselben Spalten: Symbol, Titel, darunter Wächter, Alter und der Grund („Reihum unter allen, die zu Hause sind“), das Board, rechts **Übernehmen** (wenn noch niemand zuständig ist) oder **Erledigt** und **Weitergeben**. Eine **fünfte Kachel „Vom Haus“** zeigt nur diese Aufgaben. Am Handy und am Desktop stehen höchstens fünf Zeilen da, der Rest hinter „Alle N anzeigen“; die Gruppe lässt sich am Kopf zuklappen, das Gerät merkt es sich. Unabhängig von „Meine“ und den Kacheln.

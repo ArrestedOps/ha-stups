@@ -26,7 +26,7 @@ export interface ScheduleFilter {
   /** leer = alle Boards */
   boardIds: string[];
   showDone: boolean;
-  /** leer = alle Aufgaben mit Termin; mehrere Gruppen gelten zusammen (eine davon genügt); „Ohne Termin" holt die Aufgaben ohne Termin dazu */
+  /** leer = alle Aufgaben, auch die ohne Termin; mehrere Gruppen gelten zusammen (eine davon genügt); „Ohne Termin" ist eine dieser Gruppen */
   when: WhenKey[];
   /** null = alle */
   priority: Priority | null;
@@ -139,7 +139,8 @@ function passes(c: ScheduleCard, f: ScheduleFilter, ctx: FilterContext, skip?: F
   if (skip !== 'board' && f.boardIds.length > 0 && !f.boardIds.includes(c.boardId)) return false;
   if (skip !== 'when') {
     if (!c.dueAt) {
-      if (!f.when.includes('undated')) return false;
+      // Ohne Auswahl stehen Aufgaben ohne Termin immer dabei (in der Liste ganz unten); wer Gruppen wählt, sieht nur diese
+      if (f.when.length > 0 && !f.when.includes('undated')) return false;
     } else if (f.when.length > 0) {
       const w = whenOf(c, ctx.nowMs, ctx.tz);
       if (!w || !f.when.includes(w)) return false;

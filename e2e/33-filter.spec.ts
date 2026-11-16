@@ -42,7 +42,7 @@ const openFilter = async (page: Page) => {
   await page.getByTestId('filter-sheet').waitFor();
 };
 
-test('Filter: Wann, Board, Priorität und Trefferzahl; „Ohne Termin" holt Aufgaben ohne Termin; Wahl bleibt nach dem Neuladen; Zurücksetzen', async ({ page, request }) => {
+test('Filter: Wann, Board, Priorität und Trefferzahl; „Ohne Termin" ist eine Gruppe, ohne Wahl steht sie immer unten; Wahl bleibt nach dem Neuladen; Zurücksetzen', async ({ page, request }) => {
   const s = await seed(request);
   await page.goto('/');
   await page.getByRole('navigation', { name: 'Ansicht' }).getByRole('button', { name: 'Aufgaben' }).click();
@@ -56,9 +56,9 @@ test('Filter: Wann, Board, Priorität und Trefferzahl; „Ohne Termin" holt Aufg
   for (const name of ['Wer', 'Wann', 'Boards', 'Priorität', 'Außerdem', 'Sortieren nach']) await expect(sheet.getByRole('heading', { name }).or(sheet.getByText(name, { exact: true }).first())).toBeVisible();
   await expect(sheet.getByRole('switch', { name: 'Nur von Wächtern' })).toBeVisible();
 
-  // nur dieses Board: drei Aufgaben mit Termin (die ohne Termin gehört nicht zur Liste, solange „Ohne Termin" nicht gewählt ist)
+  // nur dieses Board: vier Aufgaben, auch die ohne Termin (sie steht ohne Auswahl bei „Wann“ immer in der Liste, ganz unten)
   await sheet.getByRole('group', { name: 'Boards' }).getByRole('button', { name: new RegExp(s.boardName) }).click();
-  await expect(cta(page, /^3 Aufgaben anzeigen$/)).toBeVisible();
+  await expect(cta(page, /^4 Aufgaben anzeigen$/)).toBeVisible();
   // Priorität Hoch: zwei
   await sheet.getByRole('radiogroup', { name: 'Priorität' }).getByRole('radio', { name: 'Hoch' }).click();
   await expect(cta(page, /^2 Aufgaben anzeigen$/)).toBeVisible();
@@ -112,5 +112,5 @@ test('Filter: Wann, Board, Priorität und Trefferzahl; „Ohne Termin" holt Aufg
   await page.getByRole('dialog').getByRole('button', { name: /Aufgaben anzeigen$/ }).click();
   await expect(page.getByTestId('filter-count')).toHaveCount(0);
   await expect(tasks.getByText(s.t.alt)).toBeVisible();
-  await expect(tasks.getByText(s.t.ohne)).toBeHidden();
+  await expect(tasks.getByTestId('group-undated').getByText(s.t.ohne)).toBeVisible();
 });

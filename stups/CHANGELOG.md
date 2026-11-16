@@ -2,7 +2,7 @@
 
 > 🇩🇪 [Deutsche Fassung](CHANGELOG.de.md) · This English version is the authoritative one.
 
-## Unreleased
+## 1.42.1
 
 - **Tasks without a date are always in the list, at the bottom.** Before, a task without a date (watcher tasks usually have none) showed only with the “No date” filter, so it could be missing on a new device. Now the group “No date” always stands last, below “Later”, on the phone and on the desktop; only if you pick groups under “When” do you see just those. A quiet line above the list still says how many tasks of others or without an assignee “My tasks” hides, with **Show all**.
 - **“From the house” is always at the top.** Tasks that a watcher created and that are yours or nobody's now stand first on Tasks, on the desktop too (before, only the phone showed them at the top and the desktop at the very bottom). On the desktop they are the first group of the table with **Take it**, **Done** and **Pass on** in the row, and a fifth tile “From the house” shows only them. Up to five rows show, the rest sit behind “Show all N”; the group can be folded, and the device remembers it.

@@ -2,7 +2,7 @@
 
 > 🇬🇧 [English version](CHANGELOG.md) · Die englische Fassung ist maßgeblich.
 
-## Unreleased
+## 1.42.1
 
 - **Aufgaben ohne Termin stehen immer in der Liste, ganz unten.** Bisher erschien eine Aufgabe ohne Termin (bei Wächtern der Normalfall) nur mit dem Filter „Ohne Termin“ und fehlte deshalb auf einem neuen Gerät. Jetzt steht die Gruppe „Ohne Termin“ immer zuletzt, unter „Später“, am Handy und am Desktop; nur wer unter „Wann“ Gruppen wählt, sieht allein diese. Eine leise Zeile über der Liste sagt weiter, wie viele Aufgaben anderer oder ohne Zuständigen „Meine Aufgaben“ ausblendet, mit **Alle anzeigen**.
 - **„Vom Haus“ steht immer oben.** Aufgaben, die ein Wächter angelegt hat und die dir oder noch niemandem gehören, stehen bei Aufgaben jetzt zuerst, auch am Desktop (vorher nur am Handy oben, am Desktop ganz unten). Am Desktop sind sie die oberste Gruppe der Tabelle mit **Übernehmen**, **Erledigt** und **Weitergeben** in der Zeile, und eine fünfte Kachel „Vom Haus“ zeigt nur sie. Bis zu fünf Zeilen stehen da, der Rest hinter „Alle N anzeigen“; die Gruppe lässt sich zuklappen, das Gerät merkt es sich.

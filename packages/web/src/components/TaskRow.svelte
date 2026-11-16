@@ -11,7 +11,7 @@
 
   /**
    * Eine Aufgabe mit Termin in der Liste von Aufgaben (aus allen Boards), wie im Mockup: Erledigt-Kreis, Kachel, Titel,
-   * Meta-Zeile („Mo, 27. Jan • Ben • 0/3 • 1"), rechts das Bild der Person und der Mehr-Knopf („…", öffnet das Aufgaben-Menü)
+   * Meta-Zeile („Mo, 27. Jan • 0/3 • 1"), rechts das Bild der Person und der Mehr-Knopf („…", öffnet das Aufgaben-Menü)
    */
   let { card, nowMs }: { card: ScheduleCard; nowMs: number } = $props();
 
@@ -44,7 +44,7 @@
   onclick={() => void openCardAnywhere(card)}
 >
   {#snippet meta()}
-    <CardMeta {card} {done} {overdue} {nowMs} {categories} quietDue wrap={!ui.desktop} showBoard={ui.boards.length > 1} people={ui.desktop ? [] : assignees} />
+    <CardMeta {card} {done} {overdue} {nowMs} {categories} quietDue wrap={!ui.desktop} showBoard={ui.boards.length > 1} />
   {/snippet}
   {#snippet right()}
     <AvatarStack people={assignees} />

@@ -6,7 +6,9 @@
   import type { ScheduleCard } from '../lib/schedule';
   import { closeDetail, completeCard, openCardAnywhere, openCardMenuAnywhere, openSheet, personById, shiftCards, ui } from '../lib/store.svelte';
   import { canNudge } from '../lib/nudge';
+  import { categoryFg } from '../lib/cardMeta';
   import AvatarStack from './AvatarStack.svelte';
+  import CardTile from './CardTile.svelte';
   import Icon from './Icon.svelte';
 
   /**
@@ -21,7 +23,9 @@
   const nudgers = $derived([...new Set((card.openNudges ?? []).filter((n) => n.toId === ui.me?.id).map((n) => n.fromId))].map(personById).filter((p) => p !== undefined));
   const dot = $derived(`var(--c-${boardColorKey(ui.boards, card.boardId)}-fg)`);
   const current = $derived(ui.detailId === card.id);
-  const hasSub = $derived(nudgers.length > 0 || !!card.recurrence || card.priority === 'high' || card.priority === 'medium');
+  /** die Kategorien der Aufgabe (vom Server mitgeliefert): bis zu zwei mit Farbpunkt unter dem Titel */
+  const categories = $derived(card.categories ?? []);
+  const hasSub = $derived(nudgers.length > 0 || !!card.recurrence || card.priority === 'high' || card.priority === 'medium' || categories.length > 0);
 </script>
 
 <div
@@ -47,6 +51,7 @@
         <span class="h-[22px] w-[22px] rounded-full border-[1.75px] border-ring"></span>
       {/if}
     </button>
+ {#if card.icon}<CardTile {card} size="sm" />{/if}
     <button type="button" data-row-open aria-current={current ? 'true' : undefined} class="min-w-0 flex-1 text-left" onclick={() => (current ? closeDetail() : void openCardAnywhere(card))}>
       <span class="block truncate text-[15px] leading-tight {done ? 'text-hint line-through' : ''}">{card.title}</span>
       {#if hasSub}
@@ -54,6 +59,10 @@
           {#if nudgers.length > 0}<span class="inline-flex items-center gap-1 font-semibold text-accent-text"><Icon name="hand" size={12} stroke={2} />{t('{names} stupst dich', { names: nudgers.map((p) => p.displayName).join(', ') })}</span>{/if}
           {#if card.recurrence}<span class="inline-flex items-center gap-1"><Icon name="repeat" size={12} stroke={2} />{describeRecurrence(card.recurrence)}</span>{/if}
           {#if card.priority === 'high' || card.priority === 'medium'}<span class="inline-flex items-center gap-1 font-semibold text-accent-text"><Icon name="flag" size={12} stroke={2} />{card.priority === 'high' ? t('Hoch') : t('Mittel')}</span>{/if}
+          {#each categories.slice(0, 2) as c (c.id)}
+            <span class="inline-flex min-w-0 items-center gap-1.5 font-semibold" style:color={categoryFg(c.color)} data-testid="card-category"><i class="block h-2 w-2 shrink-0 rounded-full bg-current" aria-hidden="true"></i><span class="truncate">{c.name}</span></span>
+          {/each}
+          {#if categories.length > 2}<span class="font-semibold text-text-soft">+{categories.length - 2}</span>{/if}
         </span>
       {/if}
     </button>

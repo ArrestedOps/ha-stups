@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.2-beta.2
+
+**Aufgaben: weniger Doppeltes, am Desktop Symbol und Kategorien.** Wem eine Aufgabe gehört, steht nur noch als **Bild der Person** da; der Vorname neben dem Datum entfällt, am Handy bei Aufgaben und in den Karten der Boards. Am Desktop zeigt die Tabelle bei Aufgaben jetzt das **eigene Symbol** der Aufgabe (wenn sie eins hat) und ihre **Kategorien** (bis zu zwei mit Farbpunkt, bei mehr „+N“) in der Zeile unter dem Titel.
+
+**Bitte prüfen (Testliste):** (1) Handy: Aufgaben und Board: neben dem Datum steht kein Vorname mehr, rechts das Bild. (2) Desktop: Aufgabe mit eigenem Symbol: Symbol vor dem Titel. (3) Aufgabe mit Kategorien: Farbpunkt und Name unter dem Titel.
+
 ## 1.42.2-beta.1
 
 **Bescheid, wenn sich eine Aufgabe von selbst erledigt.** Erledigt sich die Aufgabe eines Wächters von selbst („Erledigt sich selbst, wenn …“), bekommen die Zuständigen eine ruhige Push-Nachricht „Hat sich von selbst erledigt“; sie ersetzt „Neue Aufgabe“ (gleiches Tag). War die Aufgabe noch niemandem zugewiesen, verschwindet stattdessen die Frage „Wer übernimmt?“. **Standardmäßig an**, für alle einstellbar unter *Einstellungen › Erinnerungszeiten › Von selbst erledigt › Bescheid sagen* (Administratoren und wer „App-Einstellungen“ darf). Die Nachricht erreicht nie das Haus (Ansage, Lampe).

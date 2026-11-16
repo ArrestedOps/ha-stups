@@ -5,6 +5,7 @@
 ## Unreleased
 
 - **A message when a task completes by itself.** When a watcher task completes by itself (“Completes by itself when …”, for example the window is closed again), the people it belonged to now get a quiet message “Completed by itself”; it replaces the “New task” message. It is on by default and can be switched off for everyone under *Settings › Reminder times › Completed by itself › Tell them*.
+- **Less double information in the lists.** Who a task belongs to is shown by the person's picture only; the first names next to the date are gone, on the phone in Tasks and on the board cards. On the desktop the task table now shows the task's own icon and its categories (up to two, with a colour dot) under the title.
 
 ## 1.42.1
 

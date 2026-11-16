@@ -2,6 +2,10 @@
 
 > 🇩🇪 [Deutsche Fassung](CHANGELOG.de.md) · This English version is the authoritative one.
 
+## Unreleased
+
+- **A message when a task completes by itself.** When a watcher task completes by itself (“Completes by itself when …”, for example the window is closed again), the people it belonged to now get a quiet message “Completed by itself”; it replaces the “New task” message. It is on by default and can be switched off for everyone under *Settings › Reminder times › Completed by itself › Tell them*.
+
 ## 1.42.1
 
 - **Tasks without a date are always in the list, at the bottom.** Before, a task without a date (watcher tasks usually have none) showed only with the “No date” filter, so it could be missing on a new device. Now the group “No date” always stands last, below “Later”, on the phone and on the desktop; only if you pick groups under “When” do you see just those. A quiet line above the list still says how many tasks of others or without an assignee “My tasks” hides, with **Show all**.

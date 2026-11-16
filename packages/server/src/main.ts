@@ -159,6 +159,7 @@ const watchers = token
       onAssigned: (card, ids) => void notifier.notifyAssigned(card, ids).catch((err) => app.log.warn(err, 'Push zur neuen Aufgabe fehlgeschlagen')),
       onSuggest: (card, ids) => void notifier.notifySuggest(card, ids).catch((err) => app.log.warn(err, 'Frage „Wer übernimmt?" fehlgeschlagen')),
       onSuggestClosed: (card) => void notifier.suggestClosed(card).catch(() => undefined),
+      onAutoDone: (card, ids) => void notifier.notifyAutoDone(card, ids).catch((err) => app.log.warn(err, 'Push zum automatischen Erledigen fehlgeschlagen')),
       onChange: () => bus.emit({ by: null }),
       log,
     })

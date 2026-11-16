@@ -2,6 +2,10 @@
 
 > 🇬🇧 [English version](CHANGELOG.md) · Die englische Fassung ist maßgeblich.
 
+## Unreleased
+
+- **Bescheid, wenn sich eine Aufgabe von selbst erledigt.** Erledigt sich die Aufgabe eines Wächters von selbst („Erledigt sich selbst, wenn …“, zum Beispiel das Fenster ist wieder zu), bekommen die Zuständigen jetzt eine ruhige Nachricht „Hat sich von selbst erledigt“; sie ersetzt die Nachricht „Neue Aufgabe“. Standardmäßig an, für alle abschaltbar unter *Einstellungen › Erinnerungszeiten › Von selbst erledigt › Bescheid sagen*.
+
 ## 1.42.1
 
 - **Aufgaben ohne Termin stehen immer in der Liste, ganz unten.** Bisher erschien eine Aufgabe ohne Termin (bei Wächtern der Normalfall) nur mit dem Filter „Ohne Termin“ und fehlte deshalb auf einem neuen Gerät. Jetzt steht die Gruppe „Ohne Termin“ immer zuletzt, unter „Später“, am Handy und am Desktop; nur wer unter „Wann“ Gruppen wählt, sieht allein diese. Eine leise Zeile über der Liste sagt weiter, wie viele Aufgaben anderer oder ohne Zuständigen „Meine Aufgaben“ ausblendet, mit **Alle anzeigen**.

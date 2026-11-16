@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.2-beta.1
+
+**Bescheid, wenn sich eine Aufgabe von selbst erledigt.** Erledigt sich die Aufgabe eines Wächters von selbst („Erledigt sich selbst, wenn …“), bekommen die Zuständigen eine ruhige Push-Nachricht „Hat sich von selbst erledigt“; sie ersetzt „Neue Aufgabe“ (gleiches Tag). War die Aufgabe noch niemandem zugewiesen, verschwindet stattdessen die Frage „Wer übernimmt?“. **Standardmäßig an**, für alle einstellbar unter *Einstellungen › Erinnerungszeiten › Von selbst erledigt › Bescheid sagen* (Administratoren und wer „App-Einstellungen“ darf). Die Nachricht erreicht nie das Haus (Ansage, Lampe).
+
+**Bitte prüfen (Testliste):** (1) Einen Wächter mit „Erledigt sich selbst, wenn …“ anlegen, auslösen: „Neue Aufgabe“ kommt. (2) Die zweite Bedingung herstellen (Fenster zu): die Nachricht wird durch „Hat sich von selbst erledigt“ ersetzt. (3) Einstellungen › Erinnerungszeiten › Bescheid sagen ausschalten: beim nächsten Mal kommt nichts. (4) Wieder einschalten.
+
 ## 1.42.1-beta.3
 
 **Aufgaben ohne Termin stehen immer unten in der Liste.** Eine Aufgabe ohne Termin (bei Wächtern der Normalfall) erschien bisher nur mit dem Filter „Ohne Termin“. Jetzt steht die Gruppe **„Ohne Termin“ immer zuletzt**, unter „Später“, am Handy und am Desktop; „Vom Haus“ bleibt oben. Wer unter „Wann“ im Filter Gruppen wählt, sieht weiter nur diese („Ohne Termin“ ist eine davon). Der Hinweis „… ohne Termin sind ausgeblendet“ aus beta.1 entfällt, der Hinweis für „Meine“ („… von anderen oder ohne Zuständigen“) bleibt. Die leere Seite sagt jetzt „Hier ist nichts offen“ statt „Keine Aufgaben mit Termin“.

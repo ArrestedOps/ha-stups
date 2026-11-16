@@ -20,6 +20,8 @@ let anna: string;
 let ben: string;
 let conny: string;
 let assigned: { card: Card; ids: string[] }[];
+let autoDone: { card: Card; ids: string[] }[];
+let suggestClosed: Card[];
 
 const advance = (min: number) => (t += min * 60_000);
 const home = (person: 'anna' | 'ben' | 'conny', on: boolean) => ha.set(`person.${person}`, on ? 'home' : 'not_home');
@@ -37,6 +39,8 @@ function startEngine(): Watchers {
     timeZone: () => 'Europe/Berlin',
     enabled: () => enabled,
     onAssigned: (card, ids) => assigned.push({ card, ids }),
+    onAutoDone: (card, ids) => autoDone.push({ card, ids }),
+    onSuggestClosed: (card) => suggestClosed.push(card),
   });
   engine.start();
   return engine;
@@ -78,6 +82,8 @@ beforeEach(() => {
   enabled = true;
   ha = new FakeHa();
   assigned = [];
+  autoDone = [];
+  suggestClosed = [];
   db = openDb(':memory:');
   store = createStore(db, { now: () => new Date(t), timeZone: () => 'Europe/Berlin' });
   data = createWatcherData(db, () => new Date(t));
@@ -874,6 +880,32 @@ describe('Erledigt sich selbst', () => {
     await engine.idle();
     expect(cards()[0]!.completedAt).not.toBeNull();
     expect(data.runs(w.id)[0]!.result).toBe('auto_done');
+  });
+
+  it('meldet das Erledigen den Zuständigen (damit sie Bescheid bekommen), nur einmal', async () => {
+    ha.set('binary_sensor.tuer', 'off');
+    const w = await create({ done: { entityId: 'binary_sensor.tuer', kind: 'state', to: 'on' } });
+    await done(w);
+    expect(autoDone).toEqual([]);
+    ha.emit(`w:${w.id}:done`, 'on');
+    await engine.idle();
+    expect(autoDone).toHaveLength(1);
+    expect(autoDone[0]!.ids).toEqual([anna]);
+    expect(autoDone[0]!.card.title).toContain('Waschmaschine ausräumen');
+    ha.emit(`w:${w.id}:done`, 'on'); // keine offene Aufgabe mehr: keine zweite Meldung
+    await engine.idle();
+    expect(autoDone).toHaveLength(1);
+  });
+
+  it('war die Aufgabe noch niemandem zugewiesen, räumt das Erledigen die Frage „Wer übernimmt?“ weg, statt jemanden zu melden', async () => {
+    ha.set('binary_sensor.tuer', 'off');
+    const w = await create({ done: { entityId: 'binary_sensor.tuer', kind: 'state', to: 'on' }, assign: { mode: 'none', personIds: [] } });
+    await done(w);
+    ha.emit(`w:${w.id}:done`, 'on');
+    await engine.idle();
+    expect(cards()[0]!.completedAt).not.toBeNull();
+    expect(autoDone).toEqual([]);
+    expect(suggestClosed).toHaveLength(1);
   });
 
   it('ohne offene Aufgabe oder bei einem anderen Zustand passiert nichts', async () => {

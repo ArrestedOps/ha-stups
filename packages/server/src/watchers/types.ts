@@ -36,6 +36,8 @@ export interface WatcherDeps {
   onSuggest?: (card: Card, userIds: string[]) => void;
   /** Der Vorschlag ist vorbei (übernommen oder Rückfall): die Frage bei den anderen wegräumen */
   onSuggestClosed?: (card: Card) => void;
+  /** Die Aufgabe hat sich von selbst erledigt („Erledigt sich selbst, wenn …“): hier geht die Push-Nachricht an die Zuständigen raus */
+  onAutoDone?: (card: Card, userIds: string[]) => void;
   /** Etwas hat sich geändert (Live-Sync) */
   onChange?: () => void;
   log?: { info(m: string): void; warn(m: string): void };

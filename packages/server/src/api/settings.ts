@@ -36,8 +36,8 @@ export function registerSettingsRoutes(app: FastifyInstance, k: ApiKit): void {
     // Dashboard und Panel-Pfad gelten für alle (der Panel-Pfad steckt in jeder Push-Adresse): nur Administratoren, nie delegierbar.
     // Die Zeiten (Fälligkeit, Tageszusammenfassung, Nachhaken) ändert auch, wer das Recht „settings“ hat. Ein verbotenes Feld macht die ganze Anfrage unzulässig.
     if (b.dashboardPath !== undefined || b.panelPath !== undefined) requireAdmin(req);
-    if (b.defaultDueTime !== undefined || b.dailySummaryTime !== undefined || b.overdueNagTime !== undefined) requirePermission(req, 'settings');
-    store.setSettings({ dashboardPath: b.dashboardPath, panelPath: b.panelPath, defaultDueTime: b.defaultDueTime, dailySummaryTime: b.dailySummaryTime, overdueNagTime: b.overdueNagTime });
+    if (b.defaultDueTime !== undefined || b.dailySummaryTime !== undefined || b.overdueNagTime !== undefined || b.notifyAutoDone !== undefined) requirePermission(req, 'settings');
+    store.setSettings({ dashboardPath: b.dashboardPath, panelPath: b.panelPath, defaultDueTime: b.defaultDueTime, dailySummaryTime: b.dailySummaryTime, overdueNagTime: b.overdueNagTime, notifyAutoDone: b.notifyAutoDone });
     return effectiveSettings();
   });
   // Beta: Push und Wächter sind zunächst aus (siehe beta-gate.ts). Jeder sieht den Stand, Administratoren ändern ihn.

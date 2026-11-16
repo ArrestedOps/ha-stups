@@ -187,7 +187,7 @@ describe('Einstellungen mit Wirkung auf alle', () => {
     expect(store.getSettings().panelPath).toBeNull();
     expect((await call(chef, 'PUT', '/api/settings', { panelPath: '/abc_stups' })).status).toBe(200);
     expect((await call(chef, 'PUT', '/api/settings', { dashboardPath: '/dashboard-handy' })).status).toBe(200);
-    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy', panelPath: '/abc_stups', defaultDueTime: '09:00', dailySummaryTime: null, overdueNagTime: null });
+    expect(store.getSettings()).toEqual({ dashboardPath: '/dashboard-handy', panelPath: '/abc_stups', defaultDueTime: '09:00', dailySummaryTime: null, overdueNagTime: null, notifyAutoDone: true });
   });
 
   it.each(['/\\evil.example', '//evil.example', 'https://evil.example', 'javascript:alert(1)', 'evil', '/a\\b', '/mit leerzeichen', '/x'.padEnd(201, 'a'), '/a://b'])(
@@ -198,6 +198,18 @@ describe('Einstellungen mit Wirkung auf alle', () => {
       expect(store.getSettings().panelPath).toBeNull();
     },
   );
+
+  it('„Bescheid sagen“ bei von selbst erledigten Aufgaben: Standard an, ändert nur, wer die Berechtigung hat, nur an oder aus', async () => {
+    expect(store.getSettings().notifyAutoDone).toBe(true);
+    expect((await call(anna, 'PUT', '/api/settings', { notifyAutoDone: false })).status).toBe(403);
+    expect(store.getSettings().notifyAutoDone).toBe(true);
+    expect((await call(chef, 'PUT', '/api/settings', { notifyAutoDone: false })).status).toBe(200);
+    expect(store.getSettings().notifyAutoDone).toBe(false);
+    expect((await call(chef, 'PUT', '/api/settings', { notifyAutoDone: 'nein' })).status).toBe(400);
+    expect((await call(chef, 'GET', '/api/settings')).body).toMatchObject({ notifyAutoDone: false });
+    expect((await call(chef, 'PUT', '/api/settings', { notifyAutoDone: true })).status).toBe(200);
+    expect(store.getSettings().notifyAutoDone).toBe(true);
+  });
 
   it('die Uhrzeit der Tageszusammenfassung ändert nur ein Administrator', async () => {
     expect((await call(anna, 'PUT', '/api/settings', { dailySummaryTime: '07:15' })).status).toBe(403);

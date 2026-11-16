@@ -302,6 +302,8 @@ export interface Settings {
   effectiveDailySummaryTime: string;
   /** Uhrzeit des Nachhakens in Tagen oder Wochen ohne eigene Uhrzeit, in der App eingestellt; null: die Standard-Uhrzeit gilt */
   overdueNagTime: string | null;
+  /** Bescheid sagen (Push), wenn sich eine Aufgabe eines Wächters von selbst erledigt hat (Standard: an) */
+  notifyAutoDone: boolean;
   defaultOverdueNagTime: string;
   effectiveOverdueNagTime: string;
 }

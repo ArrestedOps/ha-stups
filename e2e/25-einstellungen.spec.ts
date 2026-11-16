@@ -134,3 +134,23 @@ test('Erinnerungszeiten: Tageszusammenfassung, Uhrzeit in der App ändern gilt v
   await back(page);
   await expect(d.getByText(/^\d\d:\d\d · \d\d:\d\d$/).first()).toBeVisible();
 });
+
+test('Erinnerungszeiten: „Bescheid sagen“ bei von selbst erledigten Aufgaben ist standardmäßig an und lässt sich aus- und wieder einschalten', async ({ page, request }) => {
+  const get = async () => ((await (await request.get('/api/settings')).json()) as { notifyAutoDone: boolean }).notifyAutoDone;
+  expect(await get()).toBe(true);
+  await page.goto('/');
+  await openBoards(page);
+  await openSettingsPage(page);
+  const d = dialog(page);
+  await d.getByRole('button', { name: 'Erinnerungszeiten' }).click();
+  const toggle = d.getByRole('switch', { name: 'Bescheid sagen, wenn sich eine Aufgabe von selbst erledigt' });
+  await expect(toggle).toHaveAttribute('aria-checked', 'true');
+  try {
+    await toggle.click();
+    await expect.poll(get).toBe(false);
+    await expect(toggle).toHaveAttribute('aria-checked', 'false');
+  } finally {
+    await request.put('/api/settings', { data: { notifyAutoDone: true } });
+  }
+  expect(await get()).toBe(true);
+});

@@ -57,6 +57,9 @@ export function createEvaluate(ctx: Ctx, calls: () => Parts) {
     data.removeWaiting(open.id);
     data.addRun({ watcherId: w.id, result: 'auto_done', cardId: open.id, note: 'erledigt, weil die Bedingung eingetreten ist' });
     deps.onChange?.();
+    // Die Zuständigen erfahren es (ersetzt die Nachricht „Neue Aufgabe“); war sie noch ohne Zuständige, verschwindet die Frage „Wer übernimmt?“
+    if (open.assigneeIds.length > 0) deps.onAutoDone?.(open, open.assigneeIds);
+    else deps.onSuggestClosed?.(open);
   }
 
   /**

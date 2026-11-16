@@ -166,8 +166,14 @@ test('Wer zuerst nach Hause kommt: Aufgabe wartet, die erste Heimkehr bekommt si
     .toEqual(['mobile_app_conny_e2e']);
 
   // Die Tür der Waschmaschine geht auf: die Aufgabe erledigt sich von selbst
+  await request.post(`${MOCK}/mock/pushes/clear`);
   await setState(request, 'binary_sensor.waschmaschine_tuer', 'on');
   await expect.poll(async () => (await cardsOf(request, s.boardId))[0]!.completedAt, { timeout: 15_000 }).not.toBeNull();
+  // …und Conny erfährt es: eine ruhige Nachricht „Hat sich von selbst erledigt“ (ersetzt „Neue Aufgabe“); sonst niemand
+  const pushed = async () => (await (await request.get(`${MOCK}/mock/pushes`)).json()) as { service: string; title: string; message: string }[];
+  await expect
+    .poll(async () => (await pushed()).filter((p) => p.title.startsWith(title)).map((p) => `${p.service}: ${p.message}`), { timeout: 10_000 })
+    .toEqual(['mobile_app_conny_e2e: Hat sich von selbst erledigt']);
 });
 
 test('Eigene Automation: das Ereignis stups_create_card legt eine Aufgabe an, ohne Doppel bei gleichem dedupe_key', async ({ request }) => {
@@ -221,4 +227,40 @@ test('„Testen" legt eine Aufgabe an (Reiter Wächter › Wächter öffnen)', a
   const cards = await cardsOf(request, s.boardId);
   expect(cards).toHaveLength(1);
   expect(cards[0]).toMatchObject({ title: `Probe ${s.tag}: Waschmaschine Leistung`, assigneeIds: [s.rene.id], watcherId: id });
+});
+
+test('„Bescheid sagen“ aus: die Aufgabe erledigt sich von selbst, aber es kommt keine Nachricht', async ({ request }) => {
+  const s = await setup(request);
+  await request.post(`${MOCK}/mock/pushes/clear`);
+  await setState(request, 'person.rene', 'home');
+  await setState(request, 'person.conny', 'not_home');
+  await setState(request, 'vacuum.s7', 'cleaning');
+  await setState(request, 'binary_sensor.waschmaschine_tuer', 'off');
+  try {
+    expect((await request.put('/api/settings', { data: { notifyAutoDone: false } })).status()).toBe(200);
+    const created = await request.post('/api/watchers', {
+      data: {
+        name: `Saugroboter still ${s.tag}`,
+        trigger: { entityId: 'vacuum.s7', kind: 'state', to: 'docked', forMin: 0, count: 1 },
+        card: { boardId: s.boardId, columnId: s.columnId, title: `Still ${s.tag}`, due: { kind: 'in', minutes: 30 } },
+        assign: { mode: 'fixed', personIds: [s.rene.id] },
+        done: { entityId: 'binary_sensor.waschmaschine_tuer', kind: 'state', to: 'on' },
+        cooldownMin: 0,
+      },
+    });
+    expect(created.status()).toBe(201);
+    await setState(request, 'vacuum.s7', 'docked');
+    await expect.poll(async () => (await cardsOf(request, s.boardId)).length, { timeout: 15_000 }).toBe(1);
+    const pushed = async () => (await (await request.get(`${MOCK}/mock/pushes`)).json()) as { title: string; message: string }[];
+    await expect.poll(async () => (await pushed()).some((p) => p.title.startsWith(`Still ${s.tag}`) && p.message.startsWith('Neue Aufgabe')), { timeout: 10_000 }).toBe(true);
+    await request.post(`${MOCK}/mock/pushes/clear`);
+    await setState(request, 'binary_sensor.waschmaschine_tuer', 'on');
+    await expect.poll(async () => (await cardsOf(request, s.boardId))[0]!.completedAt, { timeout: 15_000 }).not.toBeNull();
+    await new Promise((r) => setTimeout(r, 1500));
+    expect((await pushed()).filter((p) => p.message === 'Hat sich von selbst erledigt')).toEqual([]);
+  } finally {
+    await request.put('/api/settings', { data: { notifyAutoDone: true } });
+    await setState(request, 'person.rene', 'not_home');
+    await setState(request, 'person.conny', 'home');
+  }
 });

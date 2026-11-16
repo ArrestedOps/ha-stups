@@ -71,3 +71,24 @@ describe('Seite „Erinnerungszeiten"', () => {
     expect(out).not.toContain('Konfiguration');
   });
 });
+
+describe('Von selbst erledigt: „Bescheid sagen“', () => {
+  const sw = (out: string) => out.match(/<button[^>]*role="switch"[^>]*aria-label="Bescheid sagen, wenn sich eine Aufgabe von selbst erledigt"[^>]*>/)?.[0] ?? '';
+
+  it('steht auf der Seite und ist standardmäßig an (auch bei einem älteren Server ohne das Feld)', () => {
+    const out = html();
+    expect(out).toContain('data-testid="auto-done-setting"');
+    expect(sw(out)).toContain('aria-checked="true"');
+    ui.settings = settings({ notifyAutoDone: undefined as unknown as boolean });
+    expect(sw(html())).toContain('aria-checked="true"');
+  });
+
+  it('aus, wenn eingestellt; ohne die Berechtigung „App-Einstellungen“ gesperrt', () => {
+    ui.settings = settings({ notifyAutoDone: false });
+    expect(sw(html())).toContain('aria-checked="false"');
+    expect(sw(html())).not.toMatch(/\sdisabled[\s>=]/);
+    ui.isAdmin = false;
+    ui.permissions = [];
+    expect(sw(html())).toMatch(/\sdisabled[\s>=]/);
+  });
+});

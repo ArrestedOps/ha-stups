@@ -530,7 +530,7 @@ export function createPeople(c: Ctx, late: unknown) {
 
   function getSettings(): Settings {
     const get = (k: string) => (one('select value from settings where key = ?', k)?.value as string | undefined) ?? null;
-    return { dashboardPath: get('dashboardPath'), panelPath: get('panelPath'), defaultDueTime: get('defaultDueTime') ?? DEFAULT_DUE_TIME, dailySummaryTime: get('dailySummaryTime'), overdueNagTime: get('overdueNagTime') };
+    return { dashboardPath: get('dashboardPath'), panelPath: get('panelPath'), defaultDueTime: get('defaultDueTime') ?? DEFAULT_DUE_TIME, dailySummaryTime: get('dailySummaryTime'), overdueNagTime: get('overdueNagTime'), notifyAutoDone: get('notifyAutoDone') !== '0' };
   }
 
   /** Eine Uhrzeit-Einstellung (HH:MM): undefined lässt sie, null löscht sie, alles andere muss die Form haben */
@@ -541,7 +541,7 @@ export function createPeople(c: Ctx, late: unknown) {
     else throw new ValidationError(t('Die Uhrzeit muss die Form HH:MM haben, zum Beispiel 09:00'));
   }
 
-  function setSettings(patch: { dashboardPath?: string | null; panelPath?: string | null; defaultDueTime?: string | null; dailySummaryTime?: string | null; overdueNagTime?: string | null }): Settings {
+  function setSettings(patch: { dashboardPath?: string | null; panelPath?: string | null; defaultDueTime?: string | null; dailySummaryTime?: string | null; overdueNagTime?: string | null; notifyAutoDone?: boolean }): Settings {
     for (const key of ['dashboardPath', 'panelPath'] as const) {
       const value = patch[key];
       if (value === undefined) continue;
@@ -555,6 +555,10 @@ export function createPeople(c: Ctx, late: unknown) {
     putTimeSetting('defaultDueTime', patch.defaultDueTime);
     putTimeSetting('dailySummaryTime', patch.dailySummaryTime);
     putTimeSetting('overdueNagTime', patch.overdueNagTime);
+    if (patch.notifyAutoDone !== undefined) {
+      if (typeof patch.notifyAutoDone !== 'boolean') throw new ValidationError(t('„Bescheid sagen“ muss an oder aus sein'));
+      putSetting('notifyAutoDone', patch.notifyAutoDone ? '1' : '0');
+    }
     return getSettings();
   }
 

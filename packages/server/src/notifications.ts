@@ -132,6 +132,30 @@ export function createNotifier(deps: NotifierDeps) {
     }
   }
 
+  /**
+   * Die Aufgabe eines Wächters hat sich von selbst erledigt (zum Beispiel das Fenster ist wieder zu): den Zuständigen Bescheid sagen. Gleiches Tag
+   * wie „Neue Aufgabe“, die Nachricht ersetzt sie also. Ruhig (passiv) und nie über das Haus (Ansage, Lampe). Einstellbar: „Bescheid sagen“ unter
+   * Benachrichtigungen, Standard an.
+   */
+  async function notifyAutoDone(card: { id: string; title: string }, userIds: string[]): Promise<void> {
+    if (!store.getSettings().notifyAutoDone) return;
+    for (const id of userIds) {
+      if (!push.canReach(id)) {
+        warnNoServices(id);
+        continue;
+      }
+      const message = inLang(id, (): PushMessage => ({
+        title: card.title,
+        body: t('Hat sich von selbst erledigt'),
+        tag: cardTag(card.id),
+        group: GROUP,
+        open: { cardId: card.id },
+        level: 'passive',
+      }));
+      if (await send(id, message)) log.info(`Push (erledigt sich selbst) „${card.title}" an ${store.userById(id)?.name ?? id} gesendet`);
+    }
+  }
+
   /** "Erst vorschlagen": alle, die zu Hause sind, fragen, wer die Aufgabe übernimmt (Knopf „Übernehmen") */
   async function notifySuggest(card: { id: string; title: string }, userIds: string[]): Promise<void> {
     for (const id of userIds) {
@@ -771,7 +795,7 @@ export function createNotifier(deps: NotifierDeps) {
   /** Antwort auf einen Stups aus der App (Aufgabe oben in Aufgaben): dieselben Regeln und Rückmeldungen wie der Tipp in der Push-Nachricht */
   const replyToNudge = (nudgeId: string, personId: string, kind: 'DONE' | 'ACK' | 'LATER'): Promise<ActionResult> => handleNudgeAction(kind, nudgeId, { id: '', title: '', action: '', personId } as PushAction);
 
-  return { tick, handleAction, replyToNudge, clearFor, nudgesClosed, notifyAssigned, notifySuggest, suggestClosed, confirmationRequested, confirmationAnswered, idle };
+  return { tick, handleAction, replyToNudge, clearFor, nudgesClosed, notifyAssigned, notifyAutoDone, notifySuggest, suggestClosed, confirmationRequested, confirmationAnswered, idle };
 }
 
 export type Notifier = ReturnType<typeof createNotifier>;

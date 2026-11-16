@@ -106,6 +106,33 @@ describe('Neue Aufgabe von einem Wächter', () => {
   });
 });
 
+describe('Aufgabe eines Wächters hat sich von selbst erledigt', () => {
+  it('sagt den Zuständigen Bescheid, mit demselben Tag wie „Neue Aufgabe“ (die Nachricht ersetzt sie), ruhig und ohne Knopf', async () => {
+    const c = card({ assigneeIds: [rene.id] });
+    await makeNotifier().notifyAutoDone(c, [rene.id]);
+    expect(calls.map((x) => x.service).sort()).toEqual(['svc_rene', 'svc_rene_ipad']);
+    expect(calls[0]!.data).toMatchObject({ title: 'Bad putzen', message: 'Hat sich von selbst erledigt', data: { tag: `stups-card-${c.id}` } });
+    expect(calls[0]!.data.data.actions).toBeUndefined();
+  });
+
+  it('ist die Einstellung „Bescheid sagen“ aus, kommt nichts; an ist der Standard', async () => {
+    const c = card({ assigneeIds: [rene.id] });
+    store.setSettings({ notifyAutoDone: false });
+    await makeNotifier().notifyAutoDone(c, [rene.id]);
+    expect(calls).toEqual([]);
+    store.setSettings({ notifyAutoDone: true });
+    await makeNotifier().notifyAutoDone(c, [rene.id]);
+    expect(calls.length).toBeGreaterThan(0);
+  });
+
+  it('wer kein Push-Gerät hat, wird übersprungen, die anderen bekommen es trotzdem', async () => {
+    store.setNotifyServices(rene.id, []);
+    const c = card({ assigneeIds: [rene.id, conny.id] });
+    await makeNotifier().notifyAutoDone(c, [rene.id, conny.id]);
+    expect(calls.map((x) => x.service)).toEqual(['svc_conny']);
+  });
+});
+
 describe('Fälligkeit', () => {
   it('sendet genau zum Termin an die zugewiesene Person, mit allen ihren Geräten', async () => {
     card({ dueAt: '2026-11-01T09:00:00Z', assigneeIds: [rene.id] }); // 10:00 Berlin

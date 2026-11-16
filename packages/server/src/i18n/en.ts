@@ -251,6 +251,8 @@ export const en: Catalog = {
   // Push, Zeiten, Stups-Vorlagen
   'Neue Aufgabe für dich · fällig {due}': 'New task for you · due {due}',
   'Neue Aufgabe für dich': 'New task for you',
+  'Hat sich von selbst erledigt': 'Completed by itself',
+  '„Bescheid sagen“ muss an oder aus sein': '“Tell me” must be on or off',
   'Noch offen: Denkst du dran?': 'Still open: are you on it?',
   '… und {n} weitere': '… and {n} more',
   'Heute fällig: {today} · Überfällig: {overdue}': 'Due today: {today} · Overdue: {overdue}',

@@ -4,6 +4,7 @@
   import { act, can, ui } from '../../lib/store.svelte';
   import Icon from '../Icon.svelte';
   import ListRow from '../ui/ListRow.svelte';
+  import Toggle from '../ui/Toggle.svelte';
   import Tile from '../ui/Tile.svelte';
   import Page from './Page.svelte';
 
@@ -35,6 +36,13 @@
       fallback: ui.settings?.defaultOverdueNagTime ?? '18:00',
     },
   ]);
+
+  /** „Bescheid sagen“, wenn sich eine Aufgabe von selbst erledigt: gilt für alle, Standard an */
+  const notifyAutoDone = $derived(ui.settings?.notifyAutoDone ?? true);
+  async function saveAutoDone(on: boolean) {
+    const settings = await act(() => api.saveSettings({ notifyAutoDone: on }));
+    if (settings) ui.settings = settings;
+  }
 
   async function save(key: 'dailySummaryTime' | 'overdueNagTime', value: string | null) {
     const patch: Partial<Settings> = { [key]: value === '' ? null : value };
@@ -74,5 +82,15 @@
         {/if}
       </section>
     {/each}
+    <section class="flex flex-col gap-2 pt-1" aria-label={t('Von selbst erledigt')} data-testid="auto-done-setting">
+      <h3 class="px-1 text-[12px] font-bold tracking-[0.06em] text-fg2 uppercase">{t('Von selbst erledigt')}</h3>
+      <p class="px-1 text-[13px] leading-[1.45] text-hint">
+        {t('Erledigt sich die Aufgabe eines Wächters von selbst (zum Beispiel: das Fenster ist wieder zu), sagt Stups den Zuständigen Bescheid. Die Nachricht ersetzt „Neue Aufgabe“.')}
+      </p>
+      <div class="flex min-h-[52px] items-center justify-between gap-3 rounded-row border border-line bg-surface px-3.5 py-1.5">
+        <span class="text-[15px] font-bold">{t('Bescheid sagen')}</span>
+        <Toggle checked={notifyAutoDone} disabled={!can('settings')} label={t('Bescheid sagen, wenn sich eine Aufgabe von selbst erledigt')} onchange={(on) => void saveAutoDone(on)} />
+      </div>
+    </section>
   </div>
 </Page>

@@ -121,7 +121,9 @@ describe('GET /api/cards/:id/nudges', () => {
     const r = (await call(anna, 'GET', `/api/cards/${cardId}/nudges`)).body;
     expect(r.canNudge).toBe(true);
     expect(r.maxText).toBe(120);
-    expect(r.templates).toMatchObject({ think: 'Denkst du dran?' });
+    expect(r.templates).toMatchObject({ think: 'Denkst du dran?', whenFits: 'Wann passt es dir?' });
+    // Aufgabe ohne Termin, Anna nicht zuständig → Vorschläge für „ohne Termin“, der erste ist vorausgewählt
+    expect(r.suggestions).toEqual(['onRadar', 'whenFits', 'thisWeek', 'seen']);
     expect(r.people).toEqual([
       { id: benId, name: 'Ben', color: expect.any(String), selectable: true, reason: null, retryAt: null, deliverAt: null, preselected: true },
     ]);
@@ -129,7 +131,7 @@ describe('GET /api/cards/:id/nudges', () => {
 
   it('wer keine Person ist, bekommt keine Auswahl', async () => {
     const r = (await call(fremd, 'GET', `/api/cards/${cardId}/nudges`)).body;
-    expect(r).toMatchObject({ canNudge: false, people: [] });
+    expect(r).toMatchObject({ canNudge: false, people: [], suggestions: [] });
   });
 });
 

@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { setLanguage } from '../src/lib/i18n/index.svelte';
 import type { NudgeTarget } from '../src/lib/api';
-import { canNudge, clock, nudgeBadge, preselected, sentMessage, targetHint } from '../src/lib/nudge';
+import { canNudge, clock, nudgeBadge, preselected, sentMessage, targetHint, templateLabel } from '../src/lib/nudge';
 
 describe('canNudge', () => {
   it('nur bei Aufgaben, die jemand anderem zugewiesen sind', () => {
@@ -84,5 +85,22 @@ describe('sentMessage', () => {
 describe('preselected', () => {
   it('nimmt nur vorgeschlagene und wählbare Personen', () => {
     expect(preselected([target({ id: 'a', preselected: true }), target({ id: 'b', preselected: true, selectable: false }), target({ id: 'c' })])).toEqual(['a']);
+  });
+});
+
+describe('templateLabel', () => {
+  beforeEach(() => setLanguage('de'));
+
+  it('übersetzt die Schlüssel der Schnellauswahl, auch die alten', () => {
+    expect(templateLabel('todayDo')).toBe('Schaffst du das heute noch?');
+    expect(templateLabel('today')).toBe('Heute noch?');
+    setLanguage('en');
+    expect(templateLabel('todayDo')).toBe('Can you get this done today?');
+    expect(templateLabel('overdue')).toBe('This one is overdue – can you get to it?');
+  });
+
+  it('unbekannte Schlüssel (und Namen wie „constructor“) geben null zurück', () => {
+    expect(templateLabel('quatsch')).toBeNull();
+    expect(templateLabel('constructor')).toBeNull();
   });
 });

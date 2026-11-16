@@ -65,6 +65,7 @@ export function createStore(db: DatabaseSync, opts: StoreOptions = {}) {
     markInboxSeen: s.markInboxSeen,
     createNudges: s.createNudges,
     nudgeTargets: s.nudgeTargets,
+    nudgeSuggestions: s.nudgeSuggestions,
     dueNudges: s.dueNudges,
     claimNudge: s.claimNudge,
     releaseNudge: s.releaseNudge,

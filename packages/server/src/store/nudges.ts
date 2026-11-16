@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { ConflictError, ForbiddenError, ValidationError } from '../errors.js';
 import { isHm, quietEnd } from '../quiet.js';
-import { NUDGE_TEMPLATES, NUDGE_TEXT_MAX, NUDGE_COOLDOWN_MS, NUDGE_LATER_MS, NUDGE_LATER_MAX, type User, type NudgeTemplate, type Nudge, type NudgeSent, type NudgeSkipped, type NudgeTarget, type DueNudge, type RecentNudge, type ActivityEntry, type Row } from './types.js';
+import { dayDiff } from '../time.js';
+import { NUDGE_TEMPLATES, NUDGE_SUGGESTIONS, NUDGE_TEXT_MAX, NUDGE_COOLDOWN_MS, NUDGE_LATER_MS, NUDGE_LATER_MAX, type User, type NudgeSituation, type NudgeTemplate, type Nudge, type NudgeSent, type NudgeSkipped, type NudgeTarget, type DueNudge, type RecentNudge, type ActivityEntry, type Row } from './types.js';
 import { LIVE_BOARD, OPEN_CARD, PUBLIC_BOARD } from './constants.js';
 import { lazy, type Ctx } from './context.js';
 import type { Internals } from './internals.js';
@@ -157,6 +158,29 @@ export function createNudgesPart(c: Ctx, late: unknown) {
       selectable[0]!.preselected = true;
     }
     return targets;
+  }
+
+  /**
+   * Die Vorschläge für das Stups-Sheet nach der Lage der Aufgabe; der erste ist vorausgewählt.
+   * Reihenfolge der Lagen: schon gestupst ohne Antwort · überfällig · heute · in den nächsten drei Tagen · ich bin auch zuständig · Wächter · später · ohne Termin
+   */
+  function nudgeSuggestions(cardId: string, fromId: string): { situation: NudgeSituation; templates: NudgeTemplate[] } {
+    const card = visibleCardRow(cardId);
+    const nowMs = now().getTime();
+    const again = one('select 1 as x from nudges where card_id = ? and from_user = ? and reply is null limit 1', cardId, fromId) !== undefined;
+    const mine = one('select 1 as x from card_assignees where card_id = ? and user_id = ?', cardId, fromId) !== undefined;
+    const dueMs = typeof card.due_at === 'string' ? Date.parse(card.due_at) : null;
+    const days = dueMs === null ? null : dayDiff(dueMs, nowMs, timeZone());
+    const situation: NudgeSituation =
+      again ? 'again'
+      : dueMs !== null && dueMs < nowMs ? 'overdue'
+      : days === 0 ? 'today'
+      : days !== null && days <= 3 ? 'soon'
+      : mine ? 'together'
+      : card.watcher_id ? 'watcher'
+      : days !== null ? 'later'
+      : 'undated';
+    return { situation, templates: [...NUDGE_SUGGESTIONS[situation]] };
   }
 
   /** Stupse, die jetzt zugestellt werden sollen (noch nicht beantwortet, Aufgabe offen, Empfänger ist Person) */
@@ -344,6 +368,7 @@ export function createNudgesPart(c: Ctx, late: unknown) {
     deliverAtFor,
     createNudges,
     nudgeTargets,
+    nudgeSuggestions,
     dueNudges,
     claimNudge,
     releaseNudge,

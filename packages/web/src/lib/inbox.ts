@@ -1,6 +1,7 @@
 import type { InboxEntry, InboxKind } from './api';
 import { dayOfMonth, names } from './i18n/names';
 import { t } from './i18n/index.svelte';
+import { templateLabel } from './nudge';
 
 /**
  * Mitteilungen (Glocke): reine Funktionen über den Posteingang, den der Server je Person liefert (GET /api/inbox, store/inbox.ts).
@@ -111,14 +112,7 @@ function weekdayShort(iso: string, tz: string): string {
 
 /** Die Vorlagen-Stupse in der Sprache der Person (der Server speichert den deutschen Text; eigene Texte bleiben, wie sie sind) */
 function nudgeText(e: InboxEntry): string | null {
-  const byTemplate: Record<string, string> = {
-    think: t('Denkst du dran?'),
-    today: t('Heute noch?'),
-    help: t('Brauch deine Hilfe'),
-    thanks: t('Danke dir! ❤️'),
-  };
-  if (e.detail && e.detail in byTemplate) return byTemplate[e.detail]!;
-  return e.text;
+  return (e.detail ? templateLabel(e.detail) : null) ?? e.text;
 }
 
 /** Namen als Aufzählung ("Anna", "Anna, Ben") */

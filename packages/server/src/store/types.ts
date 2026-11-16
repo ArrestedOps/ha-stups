@@ -43,15 +43,48 @@ export interface User {
   busyUntil: string | null;
 }
 
-export type NudgeTemplate = 'think' | 'today' | 'help' | 'thanks';
+export type NudgeTemplate =
+  | 'think' | 'today' | 'help' | 'thanks' // die ersten vier: alte Schnellauswahl, nur noch zum Lesen bereits gesendeter Stupse
+  | 'overdue' | 'offerHelp' | 'takeOver' | 'todayDo' | 'tellMe' | 'soon' | 'when' | 'needs'
+  | 'onRadar' | 'whenFits' | 'thisWeek' | 'doIt' | 'together' | 'whenTime' | 'remind' | 'gotAround' | 'seen';
 
-/** Die Schnellauswahl im Stups-Sheet */
+/** Alle Texte der Schnellauswahl (deutsch; Push und Verlauf übersetzen sie über den Schlüssel) */
 export const NUDGE_TEMPLATES: Record<NudgeTemplate, string> = {
   think: 'Denkst du dran?',
   today: 'Heute noch?',
   help: 'Brauch deine Hilfe',
   thanks: 'Danke dir! ❤️',
+  overdue: 'Die ist schon überfällig – schaffst du das?',
+  offerHelp: 'Kann ich dir helfen?',
+  takeOver: 'Soll ich übernehmen?',
+  todayDo: 'Schaffst du das heute noch?',
+  tellMe: 'Sag Bescheid, wenn du Hilfe brauchst',
+  soon: 'Nicht vergessen, bald fällig!',
+  when: 'Wann schaffst du das?',
+  needs: 'Brauchst du was dafür?',
+  onRadar: 'Hast du die auf dem Schirm?',
+  whenFits: 'Wann passt es dir?',
+  thisWeek: 'Kannst du das diese Woche?',
+  doIt: 'Kümmerst du dich darum?',
+  together: 'Machen wir das zusammen?',
+  whenTime: 'Wann hast du Zeit?',
+  remind: 'Kurze Erinnerung ☝️',
+  gotAround: 'Und, schon dazu gekommen?',
+  seen: 'Schon gesehen? 😊',
 };
+
+/** Lage der Aufgabe → vier Vorschläge, der erste ist vorausgewählt */
+export const NUDGE_SUGGESTIONS = {
+  again: ['remind', 'gotAround', 'offerHelp', 'seen'],
+  overdue: ['overdue', 'offerHelp', 'takeOver', 'seen'],
+  today: ['todayDo', 'tellMe', 'takeOver', 'seen'],
+  soon: ['soon', 'when', 'needs', 'seen'],
+  together: ['together', 'whenTime', 'when', 'seen'],
+  watcher: ['doIt', 'todayDo', 'offerHelp', 'seen'],
+  later: ['onRadar', 'whenFits', 'needs', 'seen'],
+  undated: ['onRadar', 'whenFits', 'thisWeek', 'seen'],
+} as const satisfies Record<string, readonly NudgeTemplate[]>;
+export type NudgeSituation = keyof typeof NUDGE_SUGGESTIONS;
 
 export const NUDGE_TEXT_MAX = 120;
 /** Zwischen zwei Stupsen derselben Person an dieselbe Person zur selben Aufgabe */

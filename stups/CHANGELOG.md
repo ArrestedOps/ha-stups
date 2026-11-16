@@ -2,6 +2,10 @@
 
 > 🇩🇪 [Deutsche Fassung](CHANGELOG.de.md) · This English version is the authoritative one.
 
+## 1.42.3
+
+- **Better suggestions when nudging.** The quick messages in the Nudge window now fit the task: they differ for overdue tasks (“This one is overdue – can you get to it?”), tasks due today (“Can you get this done today?”), due within three days, watcher tasks, tasks you are also assigned to (“Shall we do it together?”), tasks without a date, and when you have already nudged and got no answer (“Quick reminder ☝️”). The best fit is preselected; four suggestions are on offer, and you can still write your own text. Nudges sent earlier keep their text.
+
 ## 1.42.2
 
 - **A message when a task completes by itself.** When a watcher task completes by itself (“Completes by itself when …”, for example the window is closed again), the people it belonged to now get a quiet message “Completed by itself”; it replaces the “New task” message. It is on by default and can be switched off for everyone under *Settings › Reminder times › Completed by itself › Tell them*.

@@ -2,7 +2,7 @@
   import { t } from '../lib/i18n/index.svelte';
   import { onMount } from 'svelte';
   import { api, ApiError, type NudgeInfo, type NudgeResult, type NudgeTemplate } from '../lib/api';
-  import { preselected, sentMessage, targetHint } from '../lib/nudge';
+  import { preselected, sentMessage, targetHint, templateLabel } from '../lib/nudge';
   import { closeSheet, hopCard, refresh, toast, ui } from '../lib/store.svelte';
   import logo from '../assets/stups-icon.png';
   import { formatDue } from '../lib/datetime';
@@ -23,13 +23,14 @@
   let info = $state<NudgeInfo | null>(null);
   let loadError = $state('');
   let selected = $state<string[]>([]);
-  let template = $state<NudgeTemplate>('think');
+  let template = $state<NudgeTemplate>('seen');
   let custom = $state('');
   let busy = $state(false);
 
   async function load(keepSelection = false) {
     try {
       info = await api.nudgeInfo(id);
+      if (!keepSelection && info.suggestions[0]) template = info.suggestions[0];
       selected = keepSelection ? selected.filter((s) => info!.people.find((p) => p.id === s)?.selectable) : preselected(info.people);
     } catch (e) {
       loadError = e instanceof ApiError ? e.message : t('Konnte die Auswahl nicht laden');
@@ -37,10 +38,10 @@
   }
   onMount(() => load());
 
-  const TEMPLATES: NudgeTemplate[] = ['think', 'today', 'help', 'thanks'];
-  // Die Vorlagen kommen vom Server (deutsch); hier stehen sie als Text, damit sie übersetzt werden
-  const templateText = (k: string): string =>
-    ({ think: t('Denkst du dran?'), today: t('Heute noch?'), help: t('Brauch deine Hilfe'), thanks: t('Danke dir! ❤️') })[k as 'think'] ?? (info?.templates as Record<string, string> | undefined)?.[k] ?? k;
+  // Die Vorschläge richten sich nach der Lage der Aufgabe (der Server wählt sie, der erste ist vorausgewählt)
+  const TEMPLATES = $derived(info?.suggestions ?? []);
+  // Die Vorlagen kommen vom Server (deutsch); übersetzt werden sie über ihren Schlüssel
+  const templateText = (k: string): string => templateLabel(k) ?? (info?.templates as Record<string, string> | undefined)?.[k] ?? k;
   const nameOf = (pid: string) => ui.people.find((p) => p.id === pid)?.displayName ?? t('Jemand');
   const previewText = $derived(custom.trim() || (info ? templateText(template) : ''));
   const ready = $derived(selected.length > 0 && (custom.trim().length > 0 || !!template));

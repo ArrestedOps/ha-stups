@@ -110,6 +110,7 @@
   "needsOnboarding",
   "ntfyTopic",
   "nudgeRecipients",
+  "nudgeSuggestions",
   "nudgeTargets",
   "onboardingOf",
   "openCardByDedupeKey",

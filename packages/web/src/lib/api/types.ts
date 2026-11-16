@@ -601,7 +601,10 @@ export interface ScheduleCard extends Card {
   categories: { id: string; name: string; color: string }[];
 }
 
-export type NudgeTemplate = 'think' | 'today' | 'help' | 'thanks';
+export type NudgeTemplate =
+  | 'think' | 'today' | 'help' | 'thanks'
+  | 'overdue' | 'offerHelp' | 'takeOver' | 'todayDo' | 'tellMe' | 'soon' | 'when' | 'needs'
+  | 'onRadar' | 'whenFits' | 'thisWeek' | 'doIt' | 'together' | 'whenTime' | 'remind' | 'gotAround' | 'seen';
 
 export interface OpenNudge {
   id: string;
@@ -630,6 +633,8 @@ export interface NudgeInfo {
   canNudge: boolean;
   maxText: number;
   templates: Record<NudgeTemplate, string>;
+  /** Die Schnellauswahl nach Lage der Aufgabe; der erste Eintrag ist vorausgewählt */
+  suggestions: NudgeTemplate[];
   people: NudgeTarget[];
 }
 

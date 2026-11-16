@@ -591,7 +591,29 @@ export function createNotifier(deps: NotifierDeps) {
 
   /** Die Texte der Schnellauswahl (die Vorlagen stehen deutsch in der Datenbank-Konstante; hier werden sie übersetzt) */
   const templateText = (tpl: NonNullable<DueNudge['template']>): string =>
-    ({ think: t('Denkst du dran?'), today: t('Heute noch?'), help: t('Brauch deine Hilfe'), thanks: t('Danke dir! ❤️') })[tpl];
+    ({
+      think: t('Denkst du dran?'),
+      today: t('Heute noch?'),
+      help: t('Brauch deine Hilfe'),
+      thanks: t('Danke dir! ❤️'),
+      overdue: t('Die ist schon überfällig – schaffst du das?'),
+      offerHelp: t('Kann ich dir helfen?'),
+      takeOver: t('Soll ich übernehmen?'),
+      todayDo: t('Schaffst du das heute noch?'),
+      tellMe: t('Sag Bescheid, wenn du Hilfe brauchst'),
+      soon: t('Nicht vergessen, bald fällig!'),
+      when: t('Wann schaffst du das?'),
+      needs: t('Brauchst du was dafür?'),
+      onRadar: t('Hast du die auf dem Schirm?'),
+      whenFits: t('Wann passt es dir?'),
+      thisWeek: t('Kannst du das diese Woche?'),
+      doIt: t('Kümmerst du dich darum?'),
+      together: t('Machen wir das zusammen?'),
+      whenTime: t('Wann hast du Zeit?'),
+      remind: t('Kurze Erinnerung ☝️'),
+      gotAround: t('Und, schon dazu gekommen?'),
+      seen: t('Schon gesehen? 😊'),
+    })[tpl];
 
   function nudgePayload(n: DueNudge): PushMessage {
     const actions = [

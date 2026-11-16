@@ -36,5 +36,33 @@ export function sentMessage(r: NudgeResult, nameOf: (id: string) => string, tz =
   return parts.join(' ');
 }
 
+/** Text einer Schnellauswahl in der Sprache der Person (der Server speichert nur den deutschen Text); unbekannter Schlüssel: null */
+export function templateLabel(key: string): string | null {
+  const byKey: Record<string, string> = {
+    think: t('Denkst du dran?'),
+    today: t('Heute noch?'),
+    help: t('Brauch deine Hilfe'),
+    thanks: t('Danke dir! ❤️'),
+    overdue: t('Die ist schon überfällig – schaffst du das?'),
+    offerHelp: t('Kann ich dir helfen?'),
+    takeOver: t('Soll ich übernehmen?'),
+    todayDo: t('Schaffst du das heute noch?'),
+    tellMe: t('Sag Bescheid, wenn du Hilfe brauchst'),
+    soon: t('Nicht vergessen, bald fällig!'),
+    when: t('Wann schaffst du das?'),
+    needs: t('Brauchst du was dafür?'),
+    onRadar: t('Hast du die auf dem Schirm?'),
+    whenFits: t('Wann passt es dir?'),
+    thisWeek: t('Kannst du das diese Woche?'),
+    doIt: t('Kümmerst du dich darum?'),
+    together: t('Machen wir das zusammen?'),
+    whenTime: t('Wann hast du Zeit?'),
+    remind: t('Kurze Erinnerung ☝️'),
+    gotAround: t('Und, schon dazu gekommen?'),
+    seen: t('Schon gesehen? 😊'),
+  };
+  return Object.hasOwn(byKey, key) ? byKey[key]! : null;
+}
+
 /** Vorauswahl im Sheet: die vom Server vorgeschlagenen, sonst niemand */
 export const preselected = (targets: NudgeTarget[]): string[] => targets.filter((target) => target.preselected && target.selectable).map((target) => target.id);

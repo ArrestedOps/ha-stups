@@ -2,6 +2,10 @@
 
 > 🇬🇧 [English version](CHANGELOG.md) · Die englische Fassung ist maßgeblich.
 
+## 1.42.3
+
+- **Bessere Vorschläge beim Stupsen.** Die Schnellauswahl im Stups-Fenster passt jetzt zur Aufgabe: Sie ist anders bei überfälligen Aufgaben („Die ist schon überfällig – schaffst du das?“), bei Aufgaben, die heute oder in den nächsten drei Tagen fällig sind, bei Wächter-Aufgaben, bei Aufgaben, für die du auch zuständig bist („Machen wir das zusammen?“), bei Aufgaben ohne Termin und wenn du schon gestupst und keine Antwort bekommen hast („Kurze Erinnerung ☝️“). Der passendste Text ist vorausgewählt, vier stehen zur Wahl, und ein eigener Text geht weiter. Bereits gesendete Stupse behalten ihren Text.
+
 ## 1.42.2
 
 - **Bescheid, wenn sich eine Aufgabe von selbst erledigt.** Erledigt sich die Aufgabe eines Wächters von selbst („Erledigt sich selbst, wenn …“, zum Beispiel das Fenster ist wieder zu), bekommen die Zuständigen jetzt eine ruhige Nachricht „Hat sich von selbst erledigt“; sie ersetzt die Nachricht „Neue Aufgabe“. Standardmäßig an, für alle abschaltbar unter *Einstellungen › Erinnerungszeiten › Von selbst erledigt › Bescheid sagen*.

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { openDb } from '../src/db.js';
 import { ConflictError, ForbiddenError, ValidationError } from '../src/errors.js';
 import { migrations } from '../src/migrations.js';
-import { createStore, NUDGE_TEMPLATES, type ClosedNudge, type Store } from '../src/store.js';
+import { createStore, NUDGE_SUGGESTIONS, NUDGE_TEMPLATES, type ClosedNudge, type Store } from '../src/store.js';
 
 let now: Date;
 let store: Store;
@@ -40,6 +40,51 @@ beforeEach(() => {
 
 const card = (extra: object = {}) => store.createCard(boardId, { columnId: openCol, title: 'Mülltonne raus', ...extra }, rene.id);
 
+describe('Vorschläge nach Lage der Aufgabe', () => {
+  const sug = (id: string, from = rene.id) => store.nudgeSuggestions(id, from);
+
+  it('überfällig, heute, bald, später und ohne Termin (jetzt 11:00 Berlin)', () => {
+    expect(sug(card({ dueAt: '2026-11-04T08:00:00Z' }).id)).toEqual({ situation: 'overdue', templates: ['overdue', 'offerHelp', 'takeOver', 'seen'] });
+    expect(sug(card({ dueAt: '2026-11-04T17:00:00Z' }).id)).toEqual({ situation: 'today', templates: ['todayDo', 'tellMe', 'takeOver', 'seen'] });
+    expect(sug(card({ dueAt: '2026-11-07T09:00:00Z' }).id).situation).toBe('soon'); // in drei Tagen
+    expect(sug(card({ dueAt: '2026-11-08T09:00:00Z' }).id)).toEqual({ situation: 'later', templates: ['onRadar', 'whenFits', 'needs', 'seen'] });
+    expect(sug(card().id)).toEqual({ situation: 'undated', templates: ['onRadar', 'whenFits', 'thisWeek', 'seen'] });
+  });
+
+  it('zuständig bin ich auch: „Machen wir das zusammen?“, aber ein nahender Termin geht vor', () => {
+    expect(sug(card({ assigneeIds: [rene.id, conny.id] }).id)).toEqual({ situation: 'together', templates: ['together', 'whenTime', 'when', 'seen'] });
+    expect(sug(card({ assigneeIds: [rene.id, conny.id], dueAt: '2026-11-04T17:00:00Z' }).id).situation).toBe('today');
+  });
+
+  it('Wächter-Aufgaben ohne Termin', () => {
+    const c = card();
+    store.setCardOrigin(c.id, { watcherId: 'w1' });
+    expect(sug(c.id)).toEqual({ situation: 'watcher', templates: ['doIt', 'todayDo', 'offerHelp', 'seen'] });
+    // ein Termin geht vor
+    const d = card({ dueAt: '2026-11-04T08:00:00Z' });
+    store.setCardOrigin(d.id, { watcherId: 'w1' });
+    expect(sug(d.id).situation).toBe('overdue');
+  });
+
+  it('schon gestupst und keine Antwort: Erinnerung statt Neuanfang; die Antwort beendet das', () => {
+    const c = card({ dueAt: '2026-11-04T08:00:00Z' });
+    const r = store.createNudges(c.id, rene.id, { to: [conny.id], template: 'overdue' });
+    expect(sug(c.id).situation).toBe('again');
+    expect(sug(c.id).templates[0]).toBe('remind');
+    // Conny sieht für ihre eigene Stups-Auswahl nichts davon: der Stups stammt von Rene
+    expect(sug(c.id, conny.id).situation).toBe('overdue');
+    store.replyNudge(r.sent[0]!.nudgeId, conny.id, 'ack');
+    expect(sug(c.id).situation).toBe('overdue');
+  });
+
+  it('jeder Vorschlag hat einen Text', () => {
+    for (const s of ['again', 'overdue', 'today', 'soon', 'together', 'watcher', 'later', 'undated'] as const) {
+      for (const k of NUDGE_SUGGESTIONS[s]) expect(NUDGE_TEMPLATES[k], `${s}/${k}`).toEqual(expect.any(String));
+      expect(NUDGE_SUGGESTIONS[s]).toHaveLength(4);
+    }
+  });
+});
+
 describe('Stups anlegen', () => {
   it('legt einen Stups je Empfänger an und zeigt ihn an der Aufgabe', () => {
     const c = card();
@@ -50,8 +95,8 @@ describe('Stups anlegen', () => {
     expect(store.getBoardView(boardId).cards[0]!.openNudges).toHaveLength(1);
   });
 
-  it('die Schnellauswahl hat vier Texte, ein eigener Text ersetzt sie', () => {
-    expect(NUDGE_TEMPLATES).toEqual({
+  it('die Texte der Schnellauswahl: die alten vier bleiben lesbar, ein eigener Text ersetzt sie', () => {
+    expect(NUDGE_TEMPLATES).toMatchObject({
       think: 'Denkst du dran?',
       today: 'Heute noch?',
       help: 'Brauch deine Hilfe',

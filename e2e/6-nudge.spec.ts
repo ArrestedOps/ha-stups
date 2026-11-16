@@ -55,7 +55,7 @@ test('Stupsen: Rene stupst Conny, Abzeichen und Verlauf erscheinen live bei ihr'
     await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
     await page.getByRole('button', { name: 'Stupsen' }).click();
     await expect(page.getByRole('dialog').getByRole('button', { name: 'Conny', pressed: true })).toBeVisible(); // die Personen sind Chips (aria-pressed)
-    await page.getByRole('radio', { name: 'Heute noch?' }).click();
+    await page.getByRole('radio', { name: 'Wann passt es dir?' }).click();
     await page.getByRole('button', { name: 'Stups senden' }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Gestupst!' })).toBeVisible();
     await expect(page.getByText('Senden fehlgeschlagen')).toHaveCount(0);
@@ -75,7 +75,7 @@ test('Stupsen: Rene stupst Conny, Abzeichen und Verlauf erscheinen live bei ihr'
 
     // Im Verlauf der Aufgabe steht der Stups
     await row.getByText(title).click();
-    await expect(conny.getByText(/Gestupst: Conny · Heute noch\?/)).toBeVisible();
+    await expect(conny.getByText(/Gestupst: Conny · Wann passt es dir\?/)).toBeVisible();
   } finally {
     await conny.context().close();
   }
@@ -94,7 +94,7 @@ test('Stupsen in der Ruhezeit: Hinweis nennt die Zustellzeit, kein Fehler', asyn
     await page.getByRole('tab', { name: /^Offen/ }).click();
     await page.locator('[role=presentation]').filter({ hasText: title }).getByText(title).click();
     await page.getByRole('button', { name: 'Stupsen' }).click();
-    await page.getByRole('radio', { name: 'Heute noch?' }).click();
+    await page.getByRole('radio', { name: 'Wann passt es dir?' }).click();
     await page.getByRole('button', { name: 'Stups senden' }).click();
     await expect(page.getByRole('status').filter({ hasText: /Gestupst! Conny bekommt es um \d\d:\d\d/ })).toBeVisible();
     await expect(page.getByText('Senden fehlgeschlagen')).toHaveCount(0);

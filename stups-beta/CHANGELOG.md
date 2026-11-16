@@ -4,6 +4,10 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.3-beta.1
+
+**Stupsen: Vorschläge nach Lage der Aufgabe.** Statt immer derselben vier Texte schlägt das Stups-Fenster vier passende vor, der erste ist vorausgewählt: bei **überfälligen** Aufgaben („Die ist schon überfällig – schaffst du das?“), **heute fälligen** („Schaffst du das heute noch?“), in den **nächsten drei Tagen** fälligen, **Wächter-Aufgaben**, solchen, für die du **auch zuständig** bist („Machen wir das zusammen?“), **ohne Termin** und nach einem **unbeantworteten Stups** („Kurze Erinnerung ☝️“). „Heute noch?“ und „Danke dir!“ entfallen für neue Stupse; alte bleiben lesbar. Auch auf Englisch.
+
 ## 1.42.2-beta.2
 
 **Aufgaben: weniger Doppeltes, am Desktop Symbol und Kategorien.** Wem eine Aufgabe gehört, steht nur noch als **Bild der Person** da; der Vorname neben dem Datum entfällt, am Handy bei Aufgaben und in den Karten der Boards. Am Desktop zeigt die Tabelle bei Aufgaben jetzt das **eigene Symbol** der Aufgabe (wenn sie eins hat) und ihre **Kategorien** (bis zu zwei mit Farbpunkt, bei mehr „+N“) in der Zeile unter dem Titel.

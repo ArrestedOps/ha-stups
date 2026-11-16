@@ -14,6 +14,8 @@ export function registerNudgeRoutes(app: FastifyInstance, k: ApiKit): void {
       canNudge,
       maxText: NUDGE_TEXT_MAX,
       templates: NUDGE_TEMPLATES,
+      // Vorschläge nach Lage der Aufgabe, der erste ist vorausgewählt
+      suggestions: canNudge ? store.nudgeSuggestions(req.params.id, me!.id).templates : [],
       people: canNudge ? store.nudgeTargets(req.params.id, me!.id) : [],
     };
   });

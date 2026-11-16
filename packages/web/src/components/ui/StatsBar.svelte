@@ -7,7 +7,7 @@
     /** Farbe der Kachel mit dem Symbol; ohne Angabe nach `tone` */
     color?: 'orange' | 'blue' | 'red' | 'green' | 'gray' | 'purple' | 'teal';
     /** Farbe der Zahl (und des Symbols, außer bei „heute": dort bleibt das Symbol hell) */
-    tone?: 'accent' | 'danger' | 'ok';
+    tone?: 'accent' | 'danger' | 'ok' | 'house';
   }
 </script>
 
@@ -32,10 +32,10 @@
 
 {#snippet deskCell(s: Stat)}
   <span class="flex items-center justify-between text-[13px] leading-tight font-semibold text-fg2">{s.label}{#if selected === s.id}<Icon name="x" size={14} stroke={2.4} />{/if}</span>
-  <span class="text-[30px] leading-[1.1] font-extrabold tracking-tight tabular-nums {s.tone === 'danger' && s.value > 0 ? 'text-danger' : ''}">{s.value}</span>
+  <span class="text-[30px] leading-[1.1] font-extrabold tracking-tight tabular-nums {s.tone === 'danger' && s.value > 0 ? 'text-danger' : s.tone === 'house' ? 'text-house' : ''}">{s.value}</span>
 {/snippet}
 
-<div class="grid gap-2 {desk ? 'grid-cols-4 !gap-3' : 'grid-cols-2'}" role="group" aria-label={label}>
+<div class="grid gap-2 {desk ? (items.length > 4 ? 'grid-cols-5 !gap-3' : 'grid-cols-4 !gap-3') : 'grid-cols-2'}" role="group" aria-label={label}>
   {#each items as s (s.id)}
     {#if desk}
       <button

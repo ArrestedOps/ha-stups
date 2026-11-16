@@ -5,6 +5,7 @@
 ## Unreleased
 
 - **The task list says what it hides.** Under “My tasks” (the start view) other people's tasks and tasks without an assignee are hidden, and so are tasks without a date unless the “No date” filter is on; watcher tasks usually have no date. A quiet line above the list now says how many are hidden, with **Show all** and **Show**.
+- **“From the house” is always at the top.** Tasks that a watcher created and that are yours or nobody's now stand first on Tasks, on the desktop too (before, only the phone showed them at the top and the desktop at the very bottom). On the desktop they are the first group of the table with **Take it**, **Done** and **Pass on** in the row, and a fifth tile “From the house” shows only them. Up to five rows show, the rest sit behind “Show all N”; the group can be folded, and the device remembers it.
 
 ## 1.42.0
 

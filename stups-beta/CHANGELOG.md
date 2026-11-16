@@ -4,6 +4,12 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.1-beta.2
+
+**„Vom Haus“ steht überall ganz oben.** Aufgaben von Wächtern, die dir oder noch niemandem gehören, standen am Handy oben, am Desktop aber ganz unten unter der Tabelle (große Handy-Karten, kaum zu finden). Jetzt ist es die oberste Gruppe der Tabelle am Desktop, in denselben Spalten: Symbol, Titel, darunter Wächter, Alter und der Grund („Reihum unter allen, die zu Hause sind“), das Board, rechts **Übernehmen** (wenn noch niemand zuständig ist) oder **Erledigt** und **Weitergeben**. Eine **fünfte Kachel „Vom Haus“** zeigt nur diese Aufgaben. Am Handy und am Desktop stehen höchstens fünf Zeilen da, der Rest hinter „Alle N anzeigen“; die Gruppe lässt sich am Kopf zuklappen, das Gerät merkt es sich. Unabhängig von „Meine“ und den Kacheln.
+
+**Bitte prüfen (Testliste):** (1) Desktop: Aufgaben: „Vom Haus“ steht vor „Überfällig“ und „Heute“. (2) Eine Aufgabe ohne Zuständigen: **Übernehmen**; danach **Erledigt** und **Weitergeben**. (3) Kachel „Vom Haus“ anklicken und wieder abwählen. (4) Mehr als fünf Aufgaben: „Alle N anzeigen“. (5) Gruppe zuklappen, Seite neu laden: bleibt zu. (6) Handy: dasselbe, „Vom Haus“ steht oben.
+
 ## 1.42.1-beta.1
 
 **Die Aufgabenliste sagt, was sie ausblendet.** Aufgaben von Wächtern haben meist keinen Termin und stehen in der Liste nur mit dem Filter „Ohne Termin“; unter „Meine Aufgaben“ (beim Start immer gewählt) fehlen außerdem Aufgaben anderer und Aufgaben ohne Zuständigen. Wer am Handy einen Filter gemerkt hatte, sah eine Aufgabe dort, am Desktop (neues Gerät) nicht. Über der Liste steht jetzt, wie viele ausgeblendet sind, mit **Alle anzeigen** (Personenfilter aufheben) und **Anzeigen** („Ohne Termin“ dazunehmen). Gilt am Handy und am Desktop.

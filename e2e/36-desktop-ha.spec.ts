@@ -373,3 +373,76 @@ test('Wächter mit vielen Kategorien: die größten als Reiter, der Rest hinter 
   await expect(page.getByTestId('watcher-row')).toHaveCount(ids.length);
   for (const id of ids) await request.delete(`/api/watchers/${id}`);
 });
+
+test('Aufgaben: „Vom Haus“ steht am Desktop ganz oben in der Tabelle (höchstens fünf Zeilen), mit Aktionen, Kachel und Zuklappen', async ({ page, request }) => {
+  const people = (await (await request.get('/api/people')).json()) as { id: string; name: string }[];
+  const rene = people.find((p) => p.name === 'Rene')!;
+  const tag = Date.now().toString(36);
+  const board = (await (await request.post('/api/boards', { data: { name: `Vom Haus ${tag}` } })).json()) as { id: string };
+  const view = (await (await request.get(`/api/boards/${board.id}`)).json()) as { columns: { id: string; isDone: boolean; isPlanned: boolean }[] };
+  const columnId = view.columns.find((c) => !c.isDone && !c.isPlanned)!.id;
+  await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.waschmaschine_leistung', state: '120' } });
+  for (let i = 0; i < 7; i += 1) {
+    const r = await request.post('/api/watchers', {
+      data: {
+        name: `Haus ${tag}${i}`,
+        trigger: { entityId: 'sensor.waschmaschine_leistung', kind: 'below', value: 5, forMin: 0 },
+        card: { boardId: board.id, columnId, title: `Vom Haus ${tag} ${i}`, due: { kind: 'none' } },
+        assign: { mode: 'fixed', personIds: [rene.id] },
+        cooldownMin: 0,
+      },
+    });
+    expect(r.status()).toBe(201);
+  }
+  // eine Aufgabe mit Termin von Rene: die Tabelle hat eine Gruppe, unter der „Vom Haus“ nicht stehen darf
+  await request.post(`/api/boards/${board.id}/cards`, { data: { title: `Mit Termin ${tag}`, columnId, assigneeIds: [rene.id], dueAt: new Date(Date.now() + 3_600_000).toISOString() } });
+  await request.post(`${MOCK}/mock/state`, { data: { entityId: 'sensor.waschmaschine_leistung', state: '2' } });
+  const mine = async () => ((await (await request.get(`/api/boards/${board.id}`)).json()) as { cards: { id: string; title: string; completedAt: string | null }[] }).cards;
+  await expect.poll(async () => (await mine()).filter((c) => c.title.startsWith('Vom Haus')).length, { timeout: 20_000 }).toBe(7);
+
+  await page.goto('/');
+  const house = page.getByTestId('today-house');
+  await expect(house).toBeVisible();
+  // ganz oben: vor der ersten Aufgabenzeile der Tabelle (und vor „Überfällig“, „Heute“ …)
+  const houseTop = (await house.boundingBox())!.y;
+  const firstTaskTop = (await page.getByTestId('task-table-row').first().boundingBox())!.y;
+  expect(houseTop).toBeLessThan(firstTaskTop);
+
+  // höchstens fünf Zeilen, der Rest hinter „Alle N anzeigen“
+  await expect(house.getByTestId('house-row')).toHaveCount(5);
+  const tile = page.getByTestId('desk-stat-house');
+  await expect(tile).toBeVisible();
+  const total = Number(((await tile.getAttribute('aria-label')) ?? '').match(/(\d+)$/)?.[1]);
+  expect(total).toBeGreaterThanOrEqual(7);
+  await expect(house.getByTestId('house-more')).toHaveText(`Alle ${total} anzeigen`);
+  await house.getByTestId('house-more').click();
+  await expect(house.getByTestId('house-row')).toHaveCount(total);
+  await house.getByTestId('house-more').click();
+  await expect(house.getByTestId('house-row')).toHaveCount(5);
+
+  // die Kachel zeigt nur „Vom Haus“, alle Zeilen, ohne die Tabelle darunter
+  await tile.click();
+  await expect(page.getByTestId('view-chip')).toContainText('Vom Haus');
+  await expect(house.getByTestId('house-row')).toHaveCount(total);
+  await expect(house.getByTestId('house-more')).toHaveCount(0);
+  await expect(page.getByTestId('task-table-row')).toHaveCount(0);
+  await tile.click();
+  await expect(page.getByTestId('view-chip')).toHaveCount(0);
+
+  // Erledigt in der Zeile (die Aufgabe ist Rene zugewiesen): sie ist erledigt und weg
+  const row = house.getByTestId('house-row').filter({ hasText: `Vom Haus ${tag}` }).first();
+  const title = ((await row.locator('[data-row-open]').getAttribute('title')) ?? '').trim();
+  expect(title).toContain(tag);
+  await row.getByRole('button', { name: 'Erledigt' }).click();
+  await expect.poll(async () => (await mine()).find((c) => c.title === title)?.completedAt ?? null).not.toBeNull();
+  await expect(house.getByText(title, { exact: true })).toHaveCount(0);
+
+  // Zuklappen: die Zeilen sind weg und bleiben es nach dem Neuladen (das Gerät merkt es sich); wieder aufklappen
+  await house.getByRole('button', { name: /Vom Haus/ }).first().click();
+  await expect(house.getByTestId('house-row')).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByTestId('today-house')).toBeVisible();
+  await expect(page.getByTestId('house-row')).toHaveCount(0);
+  await page.getByTestId('today-house').getByRole('button', { name: /Vom Haus/ }).first().click();
+  await expect(page.getByTestId('house-row').first()).toBeVisible();
+});

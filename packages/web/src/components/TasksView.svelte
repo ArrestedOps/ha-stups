@@ -20,6 +20,7 @@
   import type { ScheduleCard } from '../lib/schedule';
   import TaskRow from './TaskRow.svelte';
   import CardSheet from './CardSheet.svelte';
+  import HouseTableRow from './HouseTableRow.svelte';
   import TaskTableRow from './TaskTableRow.svelte';
   import TopBar from './TopBar.svelte';
   import StupsCard from './StupsCard.svelte';
@@ -116,6 +117,31 @@
     );
   const house = $derived<TodayCard[]>(ui.isChild ? [] : (today?.house ?? []).filter((c) => !query || matchesQuery(query, c.title, c.why, c.boardName)));
   const houseIds = $derived(new Set(house.map((c) => c.id)));
+  /**
+   * „Vom Haus“ steht überall ganz oben (Handy und Desktop): es ist das Einzige, was auf jemanden wartet. Bis zu fünf Aufgaben stehen da, die übrigen
+   * hinter „Alle N anzeigen“ (mit der Kachel „Vom Haus“ am Desktop alle); die Gruppe lässt sich zuklappen, das merkt sich das Gerät.
+   */
+  const HOUSE_LIMIT = 5;
+  const HOUSE_KEY = 'stups.houseClosed';
+  let houseClosed = $state((() => {
+    try {
+      return localStorage.getItem(HOUSE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  })());
+  let houseAll = $state(false);
+  const toggleHouse = () => {
+    houseClosed = !houseClosed;
+    try {
+      localStorage.setItem(HOUSE_KEY, houseClosed ? '1' : '0');
+    } catch {
+      /* egal */
+    }
+  };
+  /** Am Desktop: die Gruppe steht in der Tabelle (Ansicht „Alle offen“ und mit der Kachel „Vom Haus“), sonst nicht */
+  const showHouseDesk = $derived(ui.desktop && house.length > 0 && (ui.taskView === 'all' || ui.taskView === 'house'));
+  const houseRows = $derived(houseAll || ui.taskView === 'house' || house.length <= HOUSE_LIMIT ? house : house.slice(0, HOUSE_LIMIT));
   const shownOpen = $derived(visible([...open, ...undated]).filter((c) => !houseIds.has(c.id)));
   /**
    * Was die Liste gerade ausblendet, ohne dass man es sieht: (1) Aufgaben anderer und Aufgaben ohne Zuständigen, solange „Meine“ (oder eine Person)
@@ -140,6 +166,7 @@
   type DeskGroup = { key: string; title: string; cards: ScheduleCard[] };
   const deskGroups = $derived.by<DeskGroup[]>(() => {
     const v = ui.taskView;
+    if (v === 'house') return [];
     const base = v === 'done' ? visible(recentDone).filter((c) => !houseIds.has(c.id)) : shownOpen;
     if (v === 'nudged') {
       const ids = new Set(nudges.map((n) => n.card.id));
@@ -172,9 +199,9 @@
   /** Desktop: die Zahlen der Kacheln folgen dem Menü „Für wen?“ (ohne Auswahl alle Personen; ein Kind sieht nur das Eigene) */
   const deskStats = $derived(taskStatsFor([...open, ...recentDone], ui.isChild ? (meId ? [meId] : []) : sf.personIds, nowMs, tz));
   /** Die Kachel, die gerade die Liste filtert (Gestupst und Alle offen haben keine Kachel) */
-  const deskTile = $derived(ui.taskView === 'today' || ui.taskView === 'overdue' || ui.taskView === 'week' || ui.taskView === 'done' ? ui.taskView : null);
+  const deskTile = $derived(ui.taskView === 'today' || ui.taskView === 'overdue' || ui.taskView === 'week' || ui.taskView === 'done' || ui.taskView === 'house' ? ui.taskView : null);
   const pickTile = (id: string) => {
-    const v = id as 'today' | 'overdue' | 'week' | 'done';
+    const v = id as 'today' | 'overdue' | 'week' | 'done' | 'house';
     ui.taskView = ui.taskView === v ? 'all' : v;
   };
   const nudges = $derived(
@@ -388,13 +415,14 @@
                 { id: 'overdue', label: t('Überfällig'), value: deskStats.overdue, tone: 'danger' },
                 { id: 'week', label: t('Diese Woche'), value: deskStats.week },
                 { id: 'done', label: t('Erledigt heute'), value: deskStats.done },
+                ...(house.length > 0 || ui.taskView === 'house' ? [{ id: 'house', label: t('Vom Haus'), value: house.length, tone: 'house' as const }] : []),
               ]}
             />
             <div class="flex items-center justify-between gap-3" data-testid="desk-toolbar">
               <span class="flex min-h-7 items-center">
                 {#if ui.taskView !== 'all'}
                   <span class="inline-flex h-7 items-center gap-1 rounded-full bg-accent-soft pr-1 pl-3 text-[13px] font-bold text-accent-text" data-testid="view-chip">
-                    {{ nudged: t('Gestupst'), today: t('Heute fällig'), overdue: t('Überfällig'), week: t('Diese Woche'), done: t('Erledigt heute') }[ui.taskView as 'nudged' | 'today' | 'overdue' | 'week' | 'done']}
+                    {{ nudged: t('Gestupst'), today: t('Heute fällig'), overdue: t('Überfällig'), week: t('Diese Woche'), done: t('Erledigt heute'), house: t('Vom Haus') }[ui.taskView as 'nudged' | 'today' | 'overdue' | 'week' | 'done' | 'house']}
                     <button class="flex h-5 w-5 items-center justify-center rounded-full hover:bg-surface2" aria-label={t('Filter aufheben')} onclick={() => (ui.taskView = 'all')}><Icon name="x" size={12} stroke={2.6} /></button>
                   </span>
                 {/if}
@@ -434,6 +462,23 @@
             {#if ui.detailId && !deskGroups.some((g) => g.cards.some((c) => c.id === ui.detailId))}
               <div class="rounded-row bg-bg px-4 pt-3 pb-5 shadow-[inset_0_0_0_0.5px_var(--sep)]" data-testid="detail-row">{#key ui.detailId}<CardSheet inline id={ui.detailId} />{/key}</div>
             {/if}
+            {#if showHouseDesk}
+              <section aria-label={t('Vom Haus')} data-testid="today-house">
+                <SectionHeader title={t('Vom Haus')} icon="eye" tone="house" count={house.length} plain open={!houseClosed} ontoggle={toggleHouse} />
+                {#if !houseClosed}
+                  <ul class="list-group !mt-0 desk-table">
+                    {#each houseRows as c (c.id)}<li><HouseTableRow card={c} {nowMs} /></li>{/each}
+                    {#if house.length > HOUSE_LIMIT && ui.taskView !== 'house'}
+                      <li>
+                        <button type="button" class="flex min-h-11 w-full items-center justify-between px-4 text-[14px] font-semibold text-house" aria-expanded={houseAll} data-testid="house-more" onclick={() => (houseAll = !houseAll)}>
+                          {houseAll ? t('Weniger anzeigen') : t('Alle {n} anzeigen', { n: house.length })}<Icon name={houseAll ? 'chevron-up' : 'chevron-down'} size={18} />
+                        </button>
+                      </li>
+                    {/if}
+                  </ul>
+                {/if}
+              </section>
+            {/if}
             {#each deskGroups as g (g.key)}
               {@const isOpen = !closed.includes(g.key)}
               <section aria-label={g.title} data-testid="group-{g.key}">
@@ -450,7 +495,7 @@
                 {/if}
               </section>
             {/each}
-            {#if deskCount === 0}
+            {#if deskCount === 0 && !showHouseDesk}
               <div class="py-10 text-center" data-testid="tasks-empty">
                 <p class="text-[17px] font-semibold">{t('Hier ist nichts offen.')}</p>
                 <p class="mt-1 text-[15px] text-text-soft">{t('Gute Arbeit.')}</p>
@@ -458,11 +503,12 @@
             {/if}
           {/if}
 
-          {#if house.length > 0}
+          {#if !ui.desktop && house.length > 0}
             <section aria-label={t('Vom Haus')} data-testid="today-house">
-              <SectionHeader title={t('Vom Haus')} icon="eye" tone="house" count={house.length} large />
+              <SectionHeader title={t('Vom Haus')} icon="eye" tone="house" count={house.length} large open={!houseClosed} ontoggle={toggleHouse} />
+              {#if !houseClosed}
               <ul class="mt-2 space-y-2">
-                {#each house as c (c.id)}
+                {#each houseRows as c (c.id)}
                   <li class="rounded-row border border-house-line bg-house-bg p-3.5">
                     <p class="text-[13px] font-semibold text-house">{sourceLine(c).text} · {ageText(c.createdAt, nowMs)}</p>
                     <button class="mt-1 block w-full text-left text-[16px] leading-snug font-bold" onclick={() => openHouse(c)}>{c.title}</button>
@@ -485,6 +531,12 @@
                   </li>
                 {/each}
               </ul>
+              {#if house.length > HOUSE_LIMIT}
+                <button type="button" class="mt-2 flex min-h-12 w-full items-center justify-between rounded-2xl border border-house-line px-4 text-[16px] font-semibold text-house" aria-expanded={houseAll} data-testid="house-more" onclick={() => (houseAll = !houseAll)}>
+                  {houseAll ? t('Weniger anzeigen') : t('Alle {n} anzeigen', { n: house.length })}<Icon name={houseAll ? 'chevron-up' : 'chevron-down'} size={18} />
+                </button>
+              {/if}
+              {/if}
             </section>
           {/if}
 

@@ -5,6 +5,7 @@
 ## Unreleased
 
 - **Die Aufgabenliste sagt, was sie ausblendet.** Unter „Meine Aufgaben“ (die Ansicht beim Start) fehlen Aufgaben anderer und Aufgaben ohne Zuständigen, ebenso Aufgaben ohne Termin, solange der Filter „Ohne Termin“ aus ist; Aufgaben von Wächtern haben meist keinen Termin. Eine leise Zeile über der Liste nennt jetzt, wie viele ausgeblendet sind, mit **Alle anzeigen** und **Anzeigen**.
+- **„Vom Haus“ steht immer oben.** Aufgaben, die ein Wächter angelegt hat und die dir oder noch niemandem gehören, stehen bei Aufgaben jetzt zuerst, auch am Desktop (vorher nur am Handy oben, am Desktop ganz unten). Am Desktop sind sie die oberste Gruppe der Tabelle mit **Übernehmen**, **Erledigt** und **Weitergeben** in der Zeile, und eine fünfte Kachel „Vom Haus“ zeigt nur sie. Bis zu fünf Zeilen stehen da, der Rest hinter „Alle N anzeigen“; die Gruppe lässt sich zuklappen, das Gerät merkt es sich.
 
 ## 1.42.0
 

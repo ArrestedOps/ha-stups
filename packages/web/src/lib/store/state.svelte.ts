@@ -122,7 +122,7 @@ export const ui = $state({
   /** Wunsch von außen (Leiste unten): Aufgaben als Liste oder Kalender zeigen; TasksView nimmt ihn an und setzt ihn zurück */
   tasksGoto: null as 'list' | 'calendar' | null,
   /** Desktop: welche Ansicht der Aufgabenliste die Seitenleiste gewählt hat (Alle offen, Gestupst, Heute, Überfällig, Diese Woche, Erledigt) */
-  taskView: 'all' as 'all' | 'nudged' | 'today' | 'overdue' | 'week' | 'done',
+  taskView: 'all' as 'all' | 'nudged' | 'today' | 'overdue' | 'week' | 'done' | 'house',
   /** Desktop: die Liste nach Fälligkeit oder nach Board gruppiert */
   taskGroupBy: 'due' as 'due' | 'board',
   /** Desktop: wie viele Aufgaben die Liste gerade zeigt (für die Kopfzeile) */

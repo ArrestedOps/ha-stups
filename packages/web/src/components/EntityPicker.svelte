@@ -44,7 +44,8 @@
     <input class="min-w-0 flex-1 bg-transparent text-[16px] font-semibold placeholder:text-dim" bind:value={ed.query} placeholder={t('Entität suchen, z. B. waschmaschine')} aria-label={t('Entität suchen')} />
   </label>
   {#if error}<p class="px-1 text-[14px] text-danger">{error}</p>{/if}
-  <ul class="list-group !mt-0 max-h-64 overflow-y-auto">
+  <!-- .list-group setzt overflow: hidden außerhalb der Tailwind-Layer, deshalb erzwingt ! hier das eigene Scrollen -->
+  <ul class="list-group !mt-0 max-h-64 !overflow-y-auto overscroll-contain" data-testid="entity-results">
     {#each results as e (e.entityId)}
       <li>
         <button type="button" class="flex min-h-12 w-full items-center gap-2 px-3.5 py-1.5 text-left" onclick={() => ed.pick(e)}>

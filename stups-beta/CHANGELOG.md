@@ -4,6 +4,10 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.5-beta.1
+
+**Wächter: Entitätssuche scrollt am Handy.** Die Trefferliste beim manuellen Anlegen eines Wächters scrollt wieder selbst, statt die ganze Seite zu verschieben (`.list-group` setzte `overflow: hidden` über `overflow-y-auto`).
+
 ## 1.42.4-beta.1
 
 **Wächter-Diagramm: Zeiträume bis 1 Jahr.** Knöpfe unter dem Diagramm: 3 Std. · 24 Std. · 7 Tage · 30 Tage · 1 Jahr. Ab einem Tag aus der **Langzeitstatistik** von Home Assistant (Mittelwerte je Stunde oder Tag, dauerhaft gespeichert); darunter ein **Trend** („sinkt um etwa 8 % im Monat · erreicht 20 % in etwa 2 Monaten“). Der Server wählt den Zeitraum selbst (`hours=auto`): viele Änderungen in 3 Stunden → 3 Std., sonst 24 Std. oder 7 Tage, kaum Bewegung → 30 Tage oder das Jahr. Der Verlauf liest bei sehr vielen Zuständen jetzt die **neuesten** statt der ältesten. Ohne Langzeitstatistik sind die langen Zeiträume grau, mit Hinweis.

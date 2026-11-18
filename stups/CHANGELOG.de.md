@@ -2,6 +2,10 @@
 
 > 🇬🇧 [English version](CHANGELOG.md) · Die englische Fassung ist maßgeblich.
 
+## 1.42.5
+
+- **Die Entitätssuche scrollt am Handy.** Wenn du einen Wächter selbst anlegst und nach einer Entität suchst, scrollt die Trefferliste wieder, statt die ganze Seite zu verschieben.
+
 ## 1.42.4
 
 - **Das Diagramm bei den Wächtern zeigt jetzt auch Monate, nicht nur 3 Stunden.** Unter dem Diagramm wählst du den Zeitraum: **3 Std. · 24 Std. · 7 Tage · 30 Tage · 1 Jahr**. Zeiträume ab einem Tag kommen aus der Langzeitstatistik von Home Assistant (die behält es dauerhaft, nicht nur 10 Tage). Stups wählt den Zeitraum selbst, damit sich im Diagramm etwas bewegt: schnelle Werte wie Leistung bekommen 3 Stunden, Handy-Akkus einen Tag oder eine Woche, und die Batterie eines Fenstersensors, die sich wochenlang kaum ändert, das ganze Jahr. Bei langen Zeiträumen steht darunter, wohin es geht, zum Beispiel „sinkt um etwa 8 % im Monat · erreicht 20 % in etwa 2 Monaten“. Auslösepunkte (grüne Punkte) gibt es nur für die letzten 7 Tage; Entitäten ohne Langzeitstatistik bleiben bei den letzten Tagen, mit Hinweis.

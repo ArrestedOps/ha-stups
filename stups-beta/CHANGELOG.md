@@ -4,6 +4,10 @@ Die Beta bekommt jede neue Version vor der normalen App. Was sich ändert, steht
 
 **Versionsnummern:** `X-beta.N` ist die N-te Testversion der nächsten normalen Version `X`. Die Beta `1.41.0-beta.3` führt also zur normalen Version `1.41.0`, und der Changelog der normalen App gilt für sie.
 
+## 1.42.6-beta.1
+
+**Dokumentation und Bilder.** README, Anleitung und alle Screenshots sind neu aufgenommen (Handy und Computer, dunkel und hell, deutsch und englisch), das Demo-GIF ebenfalls. In der App ändert sich nichts.
+
 ## 1.42.5-beta.1
 
 **Wächter: Entitätssuche scrollt am Handy.** Die Trefferliste beim manuellen Anlegen eines Wächters scrollt wieder selbst, statt die ganze Seite zu verschieben (`.list-group` setzte `overflow: hidden` über `overflow-y-auto`).

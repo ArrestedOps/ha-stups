@@ -2,6 +2,10 @@
 
 > 🇩🇪 [Deutsche Fassung](CHANGELOG.de.md) · This English version is the authoritative one.
 
+## 1.42.6
+
+- **Documentation and screenshots brought up to date.** The README, the documentation (also shown in Home Assistant) and all pictures now match the current app: phone and computer views, dark and light (the README picks the one your GitHub theme uses), in German and English. New in the text: the four tabs with Calendar, the computer layout, “From the house” on top, the scope menu, found devices and setting up several at once, the watcher chart with periods up to a year, and the nudge suggestions that fit the task. The demo GIF shows the current flow.
+
 ## 1.42.5
 
 - **Entity search scrolls on the phone.** When you set up a watcher by hand and search for an entity, the list of results scrolls again instead of moving the whole page.

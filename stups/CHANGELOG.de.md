@@ -2,6 +2,10 @@
 
 > 🇬🇧 [English version](CHANGELOG.md) · Die englische Fassung ist maßgeblich.
 
+## 1.42.6
+
+- **Dokumentation und Screenshots auf dem aktuellen Stand.** Das README, die Anleitung (auch in Home Assistant zu sehen) und alle Bilder passen jetzt zur aktuellen App: Handy und Computer, dunkel und hell (das README nimmt das, was dein GitHub-Design nutzt), auf Deutsch und Englisch. Neu im Text: die vier Reiter mit dem Kalender, die Ansicht am Computer, „Vom Haus“ ganz oben, das Menü für den Bereich, gefundene Geräte und mehrere auf einmal einrichten, das Wächter-Diagramm mit Zeiträumen bis zu einem Jahr und die Stups-Vorschläge, die zur Aufgabe passen. Das Demo-GIF zeigt den heutigen Ablauf.
+
 ## 1.42.5
 
 - **Die Entitätssuche scrollt am Handy.** Wenn du einen Wächter selbst anlegst und nach einer Entität suchst, scrollt die Trefferliste wieder, statt die ganze Seite zu verschieben.

@@ -12,7 +12,7 @@ Stups läuft nicht nur als Home-Assistant-App, sondern auch als eigener Docker-C
 |---|---|---|
 | Anmeldung | die Benutzer von Home Assistant | eigene Konten mit Passwort |
 | Personen | aus Home Assistant | in Stups gepflegt (jeder Benutzer ist eine Person) |
-| Boards, Agenda, Kalender, Wiederholungen, Stupsen | ja | ja |
+| Aufgaben, Boards, Kalender, Wiederholungen, Stupsen | ja | ja |
 | Wächter und Sensoren | ja | nur mit Verbindung zu Home Assistant (siehe unten), sonst in der Oberfläche ausgeblendet |
 | Push-Nachrichten | Companion App | über [ntfy](https://ntfy.sh), mit Verbindung zu Home Assistant auch über die Companion App |
 

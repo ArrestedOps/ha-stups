@@ -50,6 +50,7 @@ const server = spawn(process.execPath, [join(root, 'packages', 'server', 'dist',
   },
   stdio: 'ignore',
 });
+const failed = [];
 const stop = () => server.kill();
 process.on('exit', stop);
 
@@ -231,12 +232,15 @@ async function seed() {
   await api('PUT', 'access/mode', { mode: 'selected' });
   await fetch(`${base}/api/me`, { headers: { ...cassandra, 'x-stups-language': lang } });
 
+  if (process.env.SHOTS_DEBUG) console.log('KARTEN', JSON.stringify((await api('GET', `boards/${haushalt.id}`)).cards.map((c) => [c.title, c.assigneeIds.length, c.completedAt ? 'fertig' : 'offen'])));
   return { anna, ben, haushalt: haushalt.id, c1: c1.id, c2: c2.id };
 }
 
 // ---------- Aufnahmen ----------
 // iPhone 13 mit der vollen Bildschirmhöhe (390 × 844, Faktor 3 = 1170 × 2532), wie die Mockups
 const phone = { ...devices['iPhone 13'], viewport: { width: 390, height: 844 }, screen: { width: 390, height: 844 } };
+// Desktop: 1440 × 900 wie in den Tests (Faktor 1,5 für scharfe Schrift bei vertretbarer Dateigröße)
+const desk = { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1.5 };
 const shot = async (page, name, scheme) => {
   await page.waitForTimeout(450);
   // SHOTS_MEASURE=1: Maße aller sichtbaren Elemente neben das Bild schreiben (zum genauen Vergleich mit den Mockups)
@@ -248,19 +252,27 @@ const shot = async (page, name, scheme) => {
   console.log('geschrieben:', `${name}-${scheme}.png`);
 };
 
-export async function capture(screens, baseUrl = base, extraHTTPHeaders = {}) {
+export async function capture(screens, baseUrl = base, extraHTTPHeaders = {}, { desktop = false } = {}) {
   const browser = await webkit.launch();
   for (const scheme of schemes) {
-    const context = await browser.newContext({ ...phone, locale: x('de-DE', 'en-GB'), timezoneId: 'Europe/Berlin', colorScheme: scheme === 'dunkel' ? 'dark' : 'light', extraHTTPHeaders });
+    const context = await browser.newContext({ ...(desktop ? desk : phone), locale: x('de-DE', 'en-GB'), timezoneId: 'Europe/Berlin', colorScheme: scheme === 'dunkel' ? 'dark' : 'light', extraHTTPHeaders });
     const page = await context.newPage();
+    page.setDefaultTimeout(+(process.env.SHOTS_TIMEOUT ?? 15000));
     for (const [name, run] of screens) {
       if (only && !only.includes(name)) continue;
       await page.goto(baseUrl + '/');
       await page.evaluate(() => localStorage.clear()); // gemerkte Ansicht und Filter wegräumen
       await page.reload();
       await page.locator('nav, [data-testid=no-access]').first().waitFor();
-      await run(page);
-      await shot(page, name, scheme);
+      try {
+        await run(page);
+        await shot(page, name, scheme);
+      } catch (e) {
+        // Eine Aufnahme, die nicht klappt, bricht nicht alle ab: sie steht am Ende in der Liste (nach einem Umbau der Oberfläche)
+        failed.push(`${name}-${scheme}: ${String(e.message).split('\n')[0]}`);
+        console.error('FEHLT:', name, scheme, String(e.message).split('\n')[0]);
+        if (process.env.SHOTS_DEBUG) await page.screenshot({ path: join(out, `FEHLT-${name}-${scheme}.png`) }).catch(() => undefined);
+      }
     }
     await context.close();
   }
@@ -268,50 +280,72 @@ export async function capture(screens, baseUrl = base, extraHTTPHeaders = {}) {
 }
 
 await waitUp();
-const seeded = await seed();
+await seed();
 
 const nav = (page, name) => page.getByRole('navigation', { name: x('Ansicht', 'View') }).getByRole('button', { name });
-const all = (page) => chip(page, x('Personen', 'People'), x('Alle', 'All'));
-/** Aufgaben öffnen und „Alle“ statt „Meine“ zeigen */
-const tasks = async (page) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await all(page); };
-/** Der Kalender (Tag, Woche, Monat) ist eine Seite unter Aufgaben: über den Kalender-Knopf der Wochenleiste, dann die Ansicht wählen */
-const calendar = async (page, view) => {
-  await page.getByRole('button', { name: x('Kalender öffnen', 'Open calendar') }).click();
-  await page.getByRole('radiogroup', { name: x('Ansicht', 'View') }).getByRole('radio', { name: view }).click();
-};
-const chip = (page, group, name) => page.getByRole('group', { name: group }).getByRole('button', { name, exact: typeof name === 'string' }).click();
 const re = (s) => new RegExp(`^${s}`);
+const chip = (page, group, name) => page.getByRole('group', { name: group }).getByRole('button', { name, exact: typeof name === 'string' }).click();
 
+/** Handy: „Meine Aufgaben ▾“ in Aufgaben öffnet das Menü, in dem man „Alle Aufgaben“ oder eine Person wählt */
+const scopeTo = async (page, who) => {
+  await page.getByTestId('scope-button').click();
+  await page.getByRole('menuitemradio', { name: who }).click();
+};
+/** Aufgaben öffnen und „Alle“ statt „Meine“ zeigen (die Standardwahl ist „Meine“) */
+const tasks = async (page) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await scopeTo(page, x('Alle Aufgaben', 'All tasks')); };
+/** Auf „Boards“ wechseln und das (gemerkte) Board öffnen: am Handy ist die Liste der Boards die Startseite */
+const boards = async (page, everyone = true) => {
+  await nav(page, 'Boards').click();
+  const list = page.getByTestId('board-list');
+  if (await list.count()) {
+    const current = list.locator('[aria-current="true"]');
+    await ((await current.count()) ? current.first() : list.getByRole('button').first()).click();
+  }
+  await page.getByTestId('boards-scroll').waitFor();
+  // Boards startet bei „Meine“; die Chips sind am Handy eingeklappt
+  if (everyone) {
+    const toggle = page.getByTestId('board-filter-toggle');
+    if ((await toggle.count()) && (await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
+    await chip(page, x('Personen', 'People'), x('Alle', 'All'));
+  }
+};
+/** Der Kalender (Tag, Woche, Monat) ist ein eigener Reiter in der Leiste */
+const calendar = async (page, view) => {
+  await nav(page, x('Kalender', 'Calendar')).click();
+  await page.getByRole('radiogroup', { name: x('Ansicht', 'View') }).getByRole('radio', { name: view, exact: true }).click();
+};
+const openFilter = async (page) => { await page.getByRole('button', { name: /^Filter(, \d+ (aktiv|active))?$/ }).click(); await page.getByTestId('filter-sheet').waitFor(); };
 /** Das Fenster „Boards“ (Board wechseln) über den Namen des Boards im Kopf von Boards öffnen */
-const switcher = async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Board wechseln', 'Switch board') }).click(); };
+const switcher = async (page) => { await boards(page, false); await page.getByRole('button', { name: x('Board wechseln', 'Switch board') }).click(); await page.getByRole('dialog', { name: 'Boards' }).waitFor(); };
 /** Die Einstellungen über den Avatar öffnen; mit Namen gleich eine Unterseite */
 const settings = async (page, name) => {
-  await nav(page, 'Boards').click();
   await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
   await page.getByTestId('settings-head').waitFor();
   if (name) await page.getByRole('dialog').getByRole('button', { name }).click();
 };
+const card = (page, title) => page.getByText(title).first();
 
 const screens = [
-  ['board', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: re(S.open) }).click(); }],
-  ['karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('tab', { name: re(S.open) }).click(); await page.getByText(S.tax).first().click(); await page.getByTestId('created-note').waitFor(); }],
-  ['neue-karte', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Aufgabe', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByTestId('symbol-chip').waitFor(); }],
-  ['symbol-waehlen', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Aufgabe', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByTestId('symbol-tile').click(); await page.getByTestId('symbol-name').waitFor(); }],
-  ['termin-waehlen', async (page) => { await nav(page, 'Boards').click(); await page.getByRole('button', { name: x('Neue Aufgabe', 'New card'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByRole('button', { name: x(/^Termin wählen/, /^Choose due date/) }).click(); await page.getByTestId('termin-summary').waitFor(); }],
+  ['board', async (page) => { await boards(page); await page.getByRole('tab', { name: re(S.open) }).click(); }],
+  ['karte', async (page) => { await boards(page); await page.getByRole('tab', { name: re(S.planned) }).click(); await card(page, S.tax).click(); await page.getByTestId('created-note').waitFor(); }],
+  ['neue-karte', async (page) => { await boards(page); await page.getByRole('button', { name: x('Neue Aufgabe', 'New task'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByTestId('symbol-chip').waitFor(); }],
+  ['symbol-waehlen', async (page) => { await boards(page); await page.getByRole('button', { name: x('Neue Aufgabe', 'New task'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByTestId('symbol-tile').click(); await page.getByTestId('symbol-name').waitFor(); }],
+  ['termin-waehlen', async (page) => { await boards(page); await page.getByRole('button', { name: x('Neue Aufgabe', 'New task'), exact: true }).click(); await page.getByLabel(x('Was steht an?', 'What needs doing?')).fill(S.quick); await page.getByRole('button', { name: x(/^Termin wählen/, /^Choose due date/) }).click(); await page.getByTestId('termin-summary').waitFor(); }],
   ['stupsen', async (page) => {
-    await nav(page, 'Boards').click();
+    await boards(page);
     await page.getByRole('tab', { name: re(S.planned) }).click();
-    await page.getByText(S.windows).first().click();
+    await card(page, S.windows).click();
     await page.getByRole('dialog').getByRole('button', { name: x(/stupsen/, /^Nudge/) }).click();
-    await page.getByRole('radio', { name: x(/Heute noch/, /Today still/) }).click();
+    await page.getByTestId('nudge-preview').waitFor();
   }],
-  ['aufgaben', async (page) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await page.getByTestId('tasks-sub').waitFor(); await page.getByTestId('week-strip').waitFor(); }],
+  ['aufgaben', async (page) => { await nav(page, x('Aufgaben', 'Tasks')).click(); await page.getByTestId('tasks').waitFor(); }],
   ['aufgaben-alle', async (page) => { await tasks(page); await page.getByTestId('tasks').getByText(S.windows).first().waitFor(); }],
   ['aufgaben-gefiltert', async (page) => {
     await tasks(page);
-    await chip(page, x('Personen', 'People'), /Ben/);
-    await page.getByRole('button', { name: 'Filter' }).click();
-    await chip(page, 'Boards', new RegExp(S.boardReno));
+    await openFilter(page);
+    const sheet = page.getByTestId('filter-sheet');
+    await sheet.getByRole('group', { name: x('Personen', 'People') }).getByRole('button', { name: /Ben/ }).click();
+    await sheet.getByRole('group', { name: 'Boards' }).getByRole('button', { name: new RegExp(S.boardReno) }).click();
     await page.getByRole('button', { name: x(/Aufgaben? anzeigen/, /Show \d+ tasks?/) }).click();
     await page.getByTestId('tasks').getByText(S.electrician).first().waitFor();
   }],
@@ -337,16 +371,11 @@ const screens = [
       { path: '/dashboard-handy', title: x('Handy', 'Phone') },
     ] } }));
     await settings(page, /^Dashboard$/); await page.getByTestId('dashboard-choices').waitFor(); }],
-  ['filter', async (page) => {
-    await tasks(page);
-    await page.getByRole('button', { name: 'Filter' }).click();
-    await page.getByTestId('filter-sheet').waitFor();
-  }],
+  ['filter', async (page) => { await tasks(page); await openFilter(page); }],
   ['filter-aktiv', async (page) => {
     await tasks(page);
-    await page.getByRole('button', { name: 'Filter' }).click();
+    await openFilter(page);
     const sheet = page.getByTestId('filter-sheet');
-    await sheet.waitFor();
     const pick = (group, name) => sheet.getByRole('group', { name: group }).getByRole('button', { name: typeof name === 'string' ? re(name) : name }).click();
     await pick(x('Personen', 'People'), /Ben/);
     await pick(x('Wann', 'When'), x('Heute', 'Today'));
@@ -357,26 +386,24 @@ const screens = [
   }],
   ['filter-unten', async (page) => {
     await tasks(page);
-    await page.getByRole('button', { name: 'Filter' }).click();
-    const sheet = page.getByTestId('filter-sheet');
-    await sheet.waitFor();
-    await sheet.getByRole('radiogroup', { name: x('Sortierung', 'Sort order') }).scrollIntoViewIfNeeded();
+    await openFilter(page);
+    await page.getByTestId('filter-sheet').getByRole('radiogroup', { name: x('Sortierung', 'Sort order') }).scrollIntoViewIfNeeded();
   }],
   ['aufgaben-filter-aktiv', async (page) => {
     await tasks(page);
-    await page.getByRole('button', { name: 'Filter' }).click();
+    await openFilter(page);
     await page.getByTestId('filter-sheet').getByRole('group', { name: x('Wann', 'When') }).getByRole('button', { name: re(x('Diese Woche', 'This week')) }).click();
     await page.getByRole('radiogroup', { name: x('Sortierung', 'Sort order') }).getByRole('radio', { name: x('Priorität', 'Priority') }).click();
     await page.getByRole('button', { name: x(/Aufgaben? anzeigen/, /Show \d+ tasks?/) }).click();
     await page.getByTestId('filter-count').waitFor();
   }],
   ['karte-menu', async (page) => {
-    await nav(page, 'Boards').click();
+    await boards(page);
     await page.getByRole('tab', { name: re(S.open) }).click();
     await page.getByRole('button', { name: x(/^Menü für/, /^Menu for/) }).first().click();
     await page.getByRole('dialog').getByText(x('Verschieben nach', 'Move to')).waitFor();
   }],
-  ['kalender-woche', async (page) => { await tasks(page); await calendar(page, x('Woche', 'Week')); if (new Date().getDay() === 0) await page.getByRole('button', { name: x('Weiter', 'Next') }).click(); /* sonntags liegt morgen in der nächsten Woche */ await page.getByRole('button', { name: re(S.windows) }).first().waitFor(); }],
+  ['kalender-woche', async (page) => { await tasks(page); await calendar(page, x('Woche', 'Week')); await page.getByRole('button', { name: re(S.windows) }).first().waitFor(); }],
   ['kalender-tag', async (page) => { await tasks(page); await calendar(page, x('Tag', 'Day')); await page.getByRole('button', { name: re(S.parcel) }).waitFor(); }],
   ['kalender-monat', async (page) => { await tasks(page); await calendar(page, x('Monat', 'Month')); await page.locator('[data-today]').waitFor(); }],
   ['kalender-neue-karte', async (page) => {
@@ -385,40 +412,30 @@ const screens = [
     await page.getByRole('button', { name: re(S.parcel) }).waitFor();
     const grid = page.getByTestId('calendar-grid');
     await grid.evaluate((el) => (el.scrollTop = 11 * 44));
-    const box = await page.getByRole('button', { name: x(/^Neue Aufgabe am/, /^New card on/) }).boundingBox();
+    const box = await page.getByRole('button', { name: x(/^Neue Aufgabe am/, /^New task on/) }).boundingBox();
     await page.mouse.click(box.x + box.width / 2, box.y + 12 * 44 + 14);
     await page.getByLabel(x('Titel', 'Title')).fill(S.dentist);
   }],
-  ['board-wechseln', async (page) => { await switcher(page); await page.getByRole('dialog').getByText(S.boardShop).waitFor(); }],
+  ['board-wechseln', async (page) => { await switcher(page); await page.getByRole('dialog', { name: 'Boards' }).getByText(S.boardShop).waitFor(); }],
   ['board-einstellungen', async (page) => {
     await switcher(page);
-    await page.getByRole('dialog').getByRole('button', { name: x('Bearbeiten', 'Edit') }).click();
-    await page.getByRole('dialog', { name: x('Board-Einstellungen', 'Board settings') }).waitFor();
+    await page.getByRole('dialog', { name: 'Boards' }).getByRole('button', { name: x('Board-Einstellungen', 'Board settings') }).click();
+    await page.getByTestId('settings-board').waitFor();
   }],
-  ['archiv', async (page) => {
-    await switcher(page);
-    await page.getByRole('dialog').getByRole('button', { name: x('Bearbeiten', 'Edit') }).click();
-    await page.getByRole('dialog').getByRole('button', { name: x(/Archiv/, /Archive/) }).click();
-    await page.getByText(S.archived1).waitFor();
-  }],
-  ['papierkorb', async (page) => {
-    await switcher(page);
-    await page.getByRole('dialog').getByRole('button', { name: x('Bearbeiten', 'Edit') }).click();
-    await page.getByRole('dialog').getByRole('button', { name: x(/Papierkorb/, /Trash/) }).click();
-    await page.getByText(S.bin1).waitFor();
-  }],
+  ['archiv', async (page) => { await settings(page, x(/Papierkorb/, /Bin/)); await page.getByRole('dialog').getByRole('button', { name: x('Archiv', 'Archive'), exact: true }).first().click(); await page.getByText(S.archived1).waitFor(); }],
+  ['papierkorb', async (page) => { await settings(page, x(/Papierkorb/, /Bin/)); await page.getByRole('dialog').getByRole('button', { name: x('Papierkorb', 'Trash'), exact: true }).first().click(); await page.getByText(S.bin1).waitFor(); }],
   ['dashboard-button', async (page) => { await settings(page, x('Dashboard-Button', 'Dashboard button')); await page.getByTestId('bubble-preview').waitFor(); }],
   ['dialoge', async (page) => {
-    await nav(page, 'Boards').click();
+    await boards(page);
     await page.getByRole('tab', { name: re(S.planned) }).click();
     await page.getByRole('button', { name: x(/^Menü für/, /^Menu for/) }).first().click();
     await page.getByRole('dialog').getByRole('button', { name: x(/Löschen/, /Delete/) }).click();
     await page.getByRole('alertdialog').waitFor();
   }],
   ['foto', async (page) => {
-    await nav(page, 'Boards').click();
-    await page.getByRole('tab', { name: re(S.open) }).click();
-    await page.getByText(S.tax).first().click();
+    await boards(page);
+    await page.getByRole('tab', { name: re(S.planned) }).click();
+    await card(page, S.tax).click();
     await page.getByTestId('created-note').waitFor();
     await page.getByRole('button', { name: new RegExp(x(`^${S.attachment1} ansehen`, `^View ${S.attachment1}`)) }).click();
     await page.getByRole('dialog', { name: S.attachment1 }).waitFor();
@@ -428,18 +445,32 @@ const screens = [
     await page.getByRole('button', { name: x(/Fairness diese Woche/, /Fairness this week/) }).click();
     await page.getByTestId('fairness').waitFor();
   }],
-  ['einstellungen', async (page) => {
-    await nav(page, 'Boards').click();
-    await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
-    await page.getByTestId('settings-head').waitFor();
-  }],
+  ['einstellungen', async (page) => { await settings(page); }],
   ['personen', async (page) => {
-    await nav(page, 'Boards').click();
-    await page.getByRole('button', { name: x('Einstellungen öffnen', 'Open settings') }).click();
-    await page.getByRole('dialog').getByRole('button', { name: x(/Personen/, /People/) }).click();
+    await settings(page, x(/Personen/, /People/));
     await page.getByRole('dialog').getByText(x('Wer darf Stups öffnen?', 'Who may open Stups?')).waitFor();
   }],
 ];
+
+// ---------- Desktop (ohne Home Assistant): Aufgaben, Board, Kalender, Aufgabe ----------
+const sideNav = (page, name) => page.getByRole('navigation', { name: x('Ansicht', 'View') }).getByRole('button', { name: new RegExp(`^${name}( \\d+)?$`) });
+/** Desktop: das Menü „Für wen?“ oben rechts */
+const deskScope = async (page, who) => {
+  await page.getByTestId('scope-trigger').click();
+  await page.getByRole('menu', { name: x('Personen', 'People') }).getByRole('menuitemradio', { name: who }).click();
+};
+const deskTasks = async (page) => { await sideNav(page, x('Aufgaben', 'Tasks')).click(); await deskScope(page, x(/Alle Aufgaben$/, /All tasks$/)); };
+const deskScreens = [
+  ['desktop-aufgaben', async (page) => { await deskTasks(page); await page.locator('button[data-row-open]').first().waitFor(); }],
+  ['desktop-karte', async (page) => {
+    await deskTasks(page);
+    await page.getByTestId('tasks').locator('button[data-row-open]').filter({ hasText: S.trash }).first().click();
+    await page.getByTestId('created-note').waitFor();
+  }],
+  ['desktop-board', async (page) => { await sideNav(page, 'Boards').click(); await page.getByTestId('kanban').waitFor(); }],
+  ['desktop-kalender', async (page) => { await sideNav(page, x('Kalender', 'Calendar')).click(); await page.getByRole('radiogroup', { name: x('Ansicht', 'View') }).getByRole('radio', { name: x('Woche', 'Week'), exact: true }).click(); await page.getByRole('button', { name: re(S.windows) }).first().waitFor(); }],
+];
+
 // ---------- Wächter: eigener Server mit nachgebautem Home Assistant (e2e/server-ha.mjs), erfundene Namen ----------
 const HA_PORT = 18510;
 const haBase = `http://127.0.0.1:${HA_PORT}`;
@@ -504,6 +535,11 @@ async function seedWatchers() {
   await fetch(`${mock}/mock/history`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ entityId: 'sensor.waschmaschine_leistung', points: pts.map(([m, v]) => ({ state: String(v), at: minAgo(m) })) }) });
   await setState('sensor.waschmaschine_leistung', '412', { friendly_name: 'Waschmaschine Leistung', unit_of_measurement: 'W' });
   await setState('person.anna', 'not_home', { friendly_name: 'Anna', user_id: 'dev-anna' });
+  // Batterie im Bad: ein Jahr Langzeitstatistik (von 100 % auf gut 10 %, seit einem Monat gleichbleibend), die Rohdaten der Woche sind flach (erfundene Werte)
+  const day = 86_400_000;
+  const stats = Array.from({ length: 330 }, (_, i) => ({ start: Date.now() - (330 - i) * day, mean: Math.round(Math.max(12, 100 - 0.3143 * i) * 10) / 10 }));
+  await fetch(`${mock}/mock/statistics`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ entityId: 'sensor.bad_batterie', points: stats }) });
+  await fetch(`${mock}/mock/history`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ entityId: 'sensor.bad_batterie', points: [{ state: '12', at: new Date(Date.now() - 5 * day).toISOString() }] }) });
 }
 
 const watcherScreens = [
@@ -524,16 +560,15 @@ const watcherScreens = [
     await page.getByTestId('home-found').click();
     await page.getByTestId('found-hit').first().waitFor();
   }],
+  // Die Wächter einer Kategorie als eigene Seite
   ['waechter-liste', async (page) => {
     await nav(page, x('Wächter', 'Watchers')).click();
-    await page.getByRole('button', { name: x('Alle Wächter verwalten', 'Manage all watchers') }).click();
-    await page.getByTestId('watcher-card').first().waitFor();
-    await page.getByTestId('watcher-activity').waitFor();
+    await page.getByTestId('watcher-category').first().getByRole('button').click();
+    await page.getByTestId('watcher-page').waitFor();
   }],
   ['waechter-bearbeiten', async (page) => {
     await nav(page, x('Wächter', 'Watchers')).click();
-    await page.getByRole('button', { name: x('Alle Wächter verwalten', 'Manage all watchers') }).click();
-    await page.getByRole('button', { name: x(/Wächter Waschmaschine fertig bearbeiten/, /Edit watcher Washing machine done/) }).click();
+    await page.getByRole('button', { name: x(`Wächter ${W.washer} öffnen`, `Open watcher ${W.washer}`) }).first().click();
     await page.getByTestId('graph-fired').waitFor();
   }],
   // Neuer Wächter in vier Schritten (mit der Vorlage Waschmaschine, damit der Verlauf gleich da ist)
@@ -549,10 +584,60 @@ const watcherScreens = [
     for (let i = 0; i < step - 1; i++) await d.getByRole('button', { name: next[i] }).click();
     if (step === 3) await d.getByTestId('assign-order').waitFor();
   }]),
+  // Aufgaben, die das Haus angelegt hat, stehen oben in „Vom Haus“
+  ['vom-haus', async (page) => {
+    await nav(page, x('Aufgaben', 'Tasks')).click();
+    await page.getByTestId('today-house').waitFor();
+  }],
+  // Neuer Wächter für eine Batterie: das Diagramm zeigt das ganze Jahr mit Trend, die Knöpfe schalten den Zeitraum um
+  ['waechter-diagramm', async (page) => {
+    await nav(page, x('Wächter', 'Watchers')).click();
+    await page.getByRole('button', { name: x('Neuer Wächter', 'New watcher'), exact: true }).click();
+    const d = page.getByRole('dialog');
+    await d.getByRole('button', { name: x('Entität wählen', 'Choose entity') }).click();
+    await d.getByLabel(x('Entität suchen', 'Search for an entity')).fill('bad fenster batterie');
+    await d.getByRole('button', { name: /Bad Fenster Batterie/ }).first().click();
+    await d.getByTestId('graph-trend').waitFor();
+  }],
   ['waechter-karte', async (page) => {
-    await nav(page, 'Boards').click();
+    await boards(page);
     await page.getByRole('tab', { name: re(S.open) }).click();
     await page.getByTestId('card-watcher').first().waitFor();
+  }],
+];
+
+// ---------- Desktop mit Wächtern (nachgebautes Home Assistant) ----------
+const deskWatcherScreens = [
+  // Aufgaben vom Haus stehen als erste Gruppe über den übrigen Aufgaben
+  ['desktop-vom-haus', async (page) => { await sideNav(page, x('Aufgaben', 'Tasks')).click(); await page.getByTestId('today-house').waitFor(); }],
+  ['desktop-waechter', async (page) => { await sideNav(page, x('Wächter', 'Watchers')).click(); await page.getByTestId('watchers-bar').waitFor(); }],
+  // „Gefunden“: Arten links, Geräte rechts
+  ['desktop-gefunden', async (page) => {
+    await sideNav(page, x('Wächter', 'Watchers')).click();
+    await page.getByTestId('home-found').click();
+    await page.getByTestId('found-desk').getByTestId('found-kind').first().waitFor();
+  }],
+  // Mehrere Geräte gemeinsam einrichten: das Formular mit „Das entsteht“
+  ['desktop-waechter-mehrere', async (page) => {
+    await sideNav(page, x('Wächter', 'Watchers')).click();
+    await page.getByTestId('home-found').click();
+    const d = page.getByTestId('found-desk');
+    await d.locator('[data-testid="found-kind"][data-kind="battery"]').click();
+    const batteries = d.locator('[data-testid="found-group"][data-group="battery"]');
+    await batteries.getByRole('checkbox', { name: /Bad Fenster Batterie/ }).check();
+    await batteries.getByRole('checkbox', { name: /iPhone Anna Battery Level/ }).check();
+    await batteries.getByRole('checkbox', { name: /Fenstersensor Batterie/ }).first().check();
+    await d.getByTestId('selection-setup').click();
+    await page.getByTestId('desk-devices-table').waitFor();
+  }],
+  ['desktop-waechter-formular', async (page) => {
+    await sideNav(page, x('Wächter', 'Watchers')).click();
+    await page.getByTestId('new-watcher').click();
+    await page.getByTestId('desk-then').waitFor();
+    const box = page.getByRole('combobox', { name: x('Entität suchen', 'Search for an entity') });
+    await box.fill('waschmaschine leistung');
+    await page.getByRole('option', { name: /Waschmaschine Leistung/ }).first().click();
+    await page.getByTestId('graph-fired').waitFor();
   }],
 ];
 // ---------- Kein Zugriff: ein Benutzer von Home Assistant, den ein Administrator noch nicht freigegeben hat ----------
@@ -578,7 +663,7 @@ async function saSetup(page) {
   await form.getByLabel(x('Passwort', 'Password'), { exact: true }).fill('ein-langes-passwort');
   await form.getByLabel(x('Passwort wiederholen', 'Repeat password')).fill('ein-langes-passwort');
   await form.getByRole('button', { name: x('Einrichten', 'Set up') }).click();
-  await page.getByRole('navigation', { name: x('Ansicht', 'View') }).waitFor();
+  await skipOnboarding(page);
 }
 /** Passkeys gibt es nur mit https-Adresse: für die Aufnahme melden die Antworten sie als vorhanden (erfundene Geräte) */
 async function fakePasskeys(page) {
@@ -591,6 +676,15 @@ async function fakePasskeys(page) {
     { id: 'p1', name: 'iPhone', createdAt: at(-3 * D), lastUsedAt: at(-1 * H) },
     { id: 'p2', name: 'MacBook', createdAt: at(-3 * D), lastUsedAt: at(-1 * D) },
   ] }));
+}
+/** Nach der ersten Anmeldung zeigt Stups die Einrichtung: für die Aufnahmen wird sie übersprungen */
+async function skipOnboarding(page) {
+  const dialog = page.getByRole('dialog', { name: x('Einrichtung', 'Setup') });
+  const navigation = page.getByRole('navigation', { name: x('Ansicht', 'View') });
+  await dialog.or(navigation).first().waitFor();
+  if ((await dialog.count()) === 0) return;
+  await dialog.getByRole('button', { name: x('Überspringen', 'Skip') }).click();
+  await navigation.waitFor();
 }
 async function captureDocker() {
   const browser = await webkit.launch();
@@ -638,11 +732,21 @@ async function fakePasskeysLogin(page) {
   });
 }
 
+const wants = (list) => !only || list.some(([n]) => only.includes(n));
 try {
-  await capture(screens);
-  await capture(noAccessScreens, base, cassandra);
-  await seedWatchers();
-  await capture(watcherScreens, haBase);
+  if (wants(screens)) await capture(screens);
+  if (wants(deskScreens)) await capture(deskScreens, base, {}, { desktop: true });
+  if (wants(noAccessScreens)) await capture(noAccessScreens, base, cassandra);
+  let seededWatchers = false;
+  if (wants(watcherScreens)) {
+    await seedWatchers();
+    seededWatchers = true;
+    await capture(watcherScreens, haBase);
+  }
+  if (wants(deskWatcherScreens)) {
+    if (!seededWatchers) await seedWatchers();
+    await capture(deskWatcherScreens, haBase, {}, { desktop: true });
+  }
   if (!only || only.includes('anmelden') || only.includes('konto')) {
     await waitUp(saBase);
     await captureDocker();
@@ -652,4 +756,5 @@ try {
   haServer.kill();
   saServer.kill();
 }
-console.log('fertig', seeded.haushalt ? '' : '');
+if (failed.length) console.error(`\n${failed.length} Aufnahmen fehlen:\n` + failed.join('\n'));
+console.log('fertig');

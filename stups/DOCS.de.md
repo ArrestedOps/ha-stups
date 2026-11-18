@@ -9,7 +9,7 @@ Dein Zuhause merkt, was zu tun ist, ihr entscheidet, wer es macht. Stups läuft 
 1. **Stups** im App-Store installieren, starten und in der Seitenleiste öffnen.
 2. Auf einer neuen Installation führt die Einrichtung Administratoren in etwa drei Minuten durch: Wer wohnt hier, ein erster Wächter, eine Testnachricht. Jeder Schritt lässt sich überspringen und später nachholen.
 3. Personen, Handys und Zugriff pflegst du in der App unter **Einstellungen › Haushalt › Personen & Zugriff**; das Ziel des Home-Knopfs oben unter **Einstellungen › Home Assistant › Dashboard**.
-4. Aufgaben legst du auf dem Reiter **Boards** mit dem **+** an, oder ein Wächter legt sie aus dem an, was dein Smart Home weiß.
+4. Aufgaben legst du mit dem orangen **+** in der Leiste unten an (am Computer: **Neue Aufgabe** oben rechts), oder ein Wächter legt sie aus dem an, was dein Smart Home weiß.
 
 ## Wenn etwas nicht klappt
 
@@ -21,7 +21,7 @@ Dein Zuhause merkt, was zu tun ist, ihr entscheidet, wer es macht. Stups läuft 
 
 **Erster Start:** Auf einer neuen Installation führt Stups Administratoren zuerst durch eine kurze Einrichtung, etwa drei Minuten: **Wer wohnt hier?** (die Personen aus Home Assistant sind vorgewählt, Handys erkennt Stups selbst, wer kein Handy hat, bekommt einen Link zur Companion App im App Store oder bei Google Play, und du legst fest, wer ein Kind ist; ein Administrator ist keine Person und steht nur dabei, wenn er „Mich auch hinzufügen“ einschaltet), **Dein erster Wächter** (genau dieselbe Liste und derselbe Assistent wie unter Wächter › Gefunden, mit den eben gewählten Personen schon ausgewählt), **Testnachricht** (ein echtes Beispiel der Nachricht zu einer neuen Aufgabe, an das Handy einer Person deiner Wahl; auf dem iPhone die Nachricht gedrückt halten, dann erscheint der Knopf *Erledigt*) und **Fertig**. Jeder Schritt lässt sich überspringen und später nachholen. Wo du aufgehört hast, merkt sich der Server: Du kannst auf einem anderen Gerät weitermachen. Mitglieder und Kinder sehen eine Kurzfassung (**Handy verbinden**, **Farbe wählen**). Bestehende Installationen zeigen sie nicht von selbst; *Einstellungen › Hilfe und Daten › Einrichtung nochmal durchgehen* öffnet sie jederzeit.
 
-**Danach** findest du alles unter **Einstellungen** (Zahnrad oder Avatar oben rechts; die Tabelle unter „Einstellungen“ zeigt, wo was steht). Die wichtigsten Seiten:
+**Danach** findest du alles unter **Einstellungen** (das Zahnrad oben rechts; die Tabelle unter „Einstellungen“ zeigt, wo was steht). Die wichtigsten Seiten:
 
 - **Personen & Zugriff** (Administratoren): Die Personen aus Home Assistant (Einstellungen › Personen) stehen zur Auswahl; wer hinzugefügt ist, kann zugewiesen werden und bekommt Push-Nachrichten. Pro Person die Geräte ankreuzen, auf denen die Nachrichten ankommen sollen (es erscheinen die Geräte mit angemeldeter Companion App; jede Person wählt ihre eigenen, ein Administrator auch für andere). Beim Zugriff gilt *Alle in Home Assistant* (jeder Home-Assistant-Benutzer darf die App öffnen) oder *Nur diese Personen* (nur die Liste und Administratoren; wer sonst öffnet, sieht „Kein Zugriff“ und steht für Administratoren unter „Wartet auf Freigabe“).
 - **Dashboard** (jede Person für sich): Ziel des Home-Knopfs oben rechts, der zurück zu Home Assistant führt.
@@ -70,25 +70,31 @@ Dunkel und hell folgen dem iPhone (oder dem Gerät). Ein farbiger **Balken links
 
 ### Die Reiter und die Kopfzeile
 
-Die Leiste unten hat drei Reiter: **Aufgaben** (der Start: die App öffnet immer dort, nur Boards merkt sie sich), **Boards** und **Wächter**. Kinder und der Container ohne Home Assistant sehen Wächter nicht. Oben steht auf jedem Reiter dieselbe Kopfzeile: rechts ein **Offline-Hinweis**, wenn die Verbindung fehlt, der **Home-Knopf** (nur im Add-on; führt zurück zum Home-Assistant-Dashboard, das Ziel wählst du unter Einstellungen › Dashboard), die **Glocke** (mit kleiner Zahl, wenn etwas auf dich wartet), das **Zahnrad** und dein **Avatar**. Zahnrad und Avatar öffnen die Einstellungen. Er zeigt dein Bild (aus Home Assistant oder selbst hochgeladen) oder sonst deine Initiale in deiner Farbe.
+Die Leiste unten hat vier Reiter und in der Mitte ein **+**: **Aufgaben** (der Start: die App öffnet immer dort), **Boards**, **Kalender** und **Wächter** (nur Boards merkt sie sich). Das **+** legt überall eine Aufgabe an. Kinder und der Container ohne Home Assistant sehen keine Wächter. Auf jedem Reiter steht dieselbe Kopfzeile: rechts ein **Offline-Hinweis**, wenn die Verbindung fehlt, der **Home-Knopf** (nur im Add-on; bringt dich zurück zum Dashboard von Home Assistant, das Ziel wählst du unter Einstellungen › Dashboard), die **Glocke** (mit einer kleinen Zahl, wenn etwas auf dich wartet) und das **Zahnrad**, das die Einstellungen öffnet (dort steht dein Bild oder dein Anfangsbuchstabe in deiner Farbe).
 
-**Am Computer (ab 1024 px Breite)** ersetzt eine feste Seitenleiste die Leiste unten (Reiter, Boards, deine Aufgabe). Die Kopfzeile hat Suche (**Strg/Cmd + K**), **Neue Aufgabe**, Home und Glocke. Aufgaben öffnen in einer Detailspalte rechts, Boards sind ein Kanban über die volle Breite, Wächter eine Tabelle, Fenster öffnen als Dialog in der Mitte. Handy und Companion App sehen aus wie bisher; Tablets zeigen die Handy-Ansicht zentriert.
+**Am Computer (ab 1024 px Breite)** ist die App für den großen Bildschirm gebaut, nicht nur gestreckt:
 
-Zwei Farben: Dein **Akzent** (Orange, wenn du keinen wählst) gehört den Menschen und Aktionen; **Türkis** gehört allem, was vom Haus kommt (Wächter-Aufgaben, Wächter). Darum fehlen im Farbkreis Grün und Türkis.
+- Eine feste **Seitenleiste** ersetzt die Leiste unten: die vier Ziele (Aufgaben, Boards, Kalender, Wächter), darunter die Boards mit der Zahl offener Aufgaben, unten du mit Glocke und Zahnrad. Sie lässt sich mit dem Knopf oben einklappen.
+- Oben auf jeder Seite: die Überschrift, die **Suche** (**Strg/Cmd + K** öffnet die Befehlspalette), das Menü **Für wen?** (*Meine Aufgaben*, *Alle Aufgaben* oder eine Person; es gilt für Aufgaben, Kalender und Wächter) und **Neue Aufgabe**.
+- **Aufgaben** sind eine Tabelle mit Zahlen als Filter darüber, **Boards** ein Kanban über die volle Breite, der **Kalender** ein Zeitraster wie bei Google Kalender, **Wächter** eine Tabelle. Aufgaben klappen **in der Zeile** auf (alle Felder im Raster, Kommentare und Verlauf in Reitern); Fenster öffnen als Dialog in der Mitte.
+
+Handy und Companion App sehen aus wie gewohnt; Tablets zeigen die Handy-Ansicht in der Mitte.
+
+Zwei Farben: Deine **Akzentfarbe** (orange, solange du keine wählst) gehört den Personen und Aktionen; **Teal** gehört allem, was vom Haus kommt (Wächter-Aufgaben, Wächter). Darum fehlen Grün und Teal im Farbrad.
 
 ### Aufgaben
 
 Aufgaben ist die Startseite und zeigt auf einen Blick, was für dich dran ist, von oben nach unten:
 
-- **Deine Zahlen:** heute fällig, überfällig, heute erledigt. Antippen öffnet ein Blatt (bei überfällig „Morgen" und „Alle verschieben", bei heute erledigt „Rückgängig").
-- **Diese Woche:** eine Wochenleiste mit Punkten; der Kalender-Knopf öffnet den Kalender (siehe unten).
-- **Stups-Banner**, nur wenn dich jemand gestupst hat und es noch offen ist.
-- **Chips:** *Meine* (hier startet die App immer), *Alle*, jede Person und **Filter**.
-- **Vom Haus** (nur wenn es etwas gibt): offene Aufgaben von Wächtern, die dir zugewiesen sind oder noch niemandem. Jede zeigt, wer sie ausgelöst hat und wann („Waschmaschine fertig · vor 4 Min."), und warum du dran bist („reihum unter allen, die zu Hause sind"). Knöpfe: **Erledigt**, **Weitergeben** (an die nächste Person der Rotation, ohne dass die Aufgabe erledigt zählt) und bei „Erst vorschlagen" **Übernehmen**.
-- **Deine Aufgaben**, gruppiert nach **Überfällig**, **Heute**, **Diese Woche** und **Später**. Die Uhrzeit ist rot, wenn überfällig, und in der Akzentfarbe, wenn sie heute ansteht.
+- **Deine Zahlen:** heute fällig, überfällig, diese Woche, heute erledigt (am Computer auch **Vom Haus**). Ein Tipp öffnet ein Blatt (bei überfällig gibt es „Morgen" und „Alle verschieben", bei heute erledigt „Rückgängig"); am Computer sind sie Filter.
+- **Menü für den Bereich:** *Meine Aufgaben* (die App startet immer hier), *Alle Aufgaben* oder eine Person. Daneben **Filter** und ein Suchfeld.
+- **Stups-Banner**, nur wenn dich jemand gestupst hat und es noch offen ist, mit **Erledigt**, **Mach ich** und **Später**.
+- **Vom Haus** (nur wenn etwas da ist, immer als Erstes, am Handy und am Desktop): offene Aufgaben von Wächtern, die dir oder noch niemandem zugewiesen sind, höchstens fünf, dazu **Alle anzeigen**; die Gruppe lässt sich einklappen. Jede zeigt, was sie ausgelöst hat und wann („Waschmaschine fertig · vor 4 Min.") und warum du dran bist („reihum unter allen, die zu Hause sind"). Knöpfe: **Erledigt**, **Weitergeben** (an die nächste Person der Reihenfolge, ohne als erledigt zu zählen) und bei „Erst vorschlagen" **Übernehmen**.
+- **Deine Aufgaben,** gruppiert als **Überfällig**, **Heute**, **Diese Woche**, **Später** und **Ohne Termin**. Die Uhrzeit ist rot, wenn sie überfällig ist, und in der Akzentfarbe, wenn sie heute fällig ist. **Ohne Termin** steht immer als letzte Gruppe (Wächter-Aufgaben haben meist keinen Termin) und ist immer da, außer du wählst unter *Wann* bestimmte Gruppen. Wem eine Aufgabe gehört, zeigt nur das Bild der Person.
+- **Eine leise Zeile** über der Liste sagt, wie viele Aufgaben anderer oder ohne Zuständige *Meine Aufgaben* ausblendet („3 weitere Aufgaben ausgeblendet"), mit **Alle anzeigen**.
 - **Fairness diese Woche** und **Bei den anderen:** eine Zeile mit den Avataren und der Zahl offener Aufgaben. Sie führt zu **Diese Woche**.
 
-Ein Kind sieht nur „Vom Haus" (eigene Aufgaben) und seine eigenen Aufgaben. Ist nichts offen, steht dort ein freundlicher Satz.
+Ein Kind sieht nur „Vom Haus" (die eigenen Aufgaben) und seine eigenen Aufgaben. Ist nichts offen, steht dort ein freundlicher Satz.
 
 ### Diese Woche: Wer macht wie viel?
 
@@ -103,13 +109,12 @@ Ein Kind sieht nur „Vom Haus" (eigene Aufgaben) und seine eigenen Aufgaben. Is
 
 ### Kalender
 
-Der Kalender ist eine Seite unter Aufgaben (öffnen mit dem Kalender-Knopf der Wochenleiste oder „Monatsansicht"; „‹ Aufgaben" führt zurück). Er zeigt die Aufgaben mit Termin als **Tag**, **Woche** oder **Monat**; die **Liste** ist die Aufgaben-Seite selbst. Mit den Pfeilen blätterst du, „Heute" springt zurück.
+Der Reiter **Kalender** zeigt die Aufgaben mit Termin als **Tag**, **3 Tage** (Handy), **Woche** oder **Monat**; die **Liste** ist die Aufgaben-Seite selbst. Die Pfeile blättern, „Heute" springt zurück. Wessen Aufgaben er zeigt, bestimmt das Menü *Meine Aufgaben / Alle Aufgaben / Person*.
 
 - **Tag und Woche** zeigen ein Zeitraster. Eine Aufgabe steht zur Uhrzeit ihres Termins in der Farbe ihres Boards; Aufgaben zur selben Zeit stehen nebeneinander. Ein Tipp öffnet die Aufgabe, ein Tipp auf die Tageszahl in der Wochenansicht öffnet den Tag.
 - **Monat:** Punkte (am großen Bildschirm die Titel) zeigen, wo etwas ansteht. Ein Tipp auf einen Tag öffnet die Tagesansicht.
 - **Aufgabe anlegen:** Auf einen freien Zeitpunkt im Raster tippen. Es öffnet sich ein kurzes Formular mit dem Termin: Titel, Board und Zuständige wählen, „Anlegen". Ist im Filter genau ein Board oder eine Person gewählt, sind sie vorbelegt. „Alle Felder …" öffnet das volle Formular.
-- **Liste (die Aufgaben-Seite):** alle Aufgaben mit Termin aus allen Boards, nach Tagen sortiert: zuerst **Überfällig**, dann Heute, Morgen und jeder weitere Tag. Mit dem Kreis links erledigst du eine Aufgabe, ein Tipp öffnet sie. Sie lädt die nächsten 60 Tage; liegt in dieser Zeit nichts an, schaut sie gleich ein Jahr voraus, und **„Weitere 60 Tage laden"** holt weiter entfernte Aufgaben.
-- **Filter:** Der Knopf „Filter" oben rechts (in der Liste: die Chips darüber) filtert nach **Personen** (du selbst, jede weitere Person, „Niemand" für Aufgaben ohne Zuständige) und **Boards**; **Erledigte** blendet die der letzten sieben Tage ein, „Zurücksetzen" löscht alle Filter. Der Filter wird auf dem Gerät gemerkt.
+- **Filter:** Der Knopf „Filter" filtert nach **Wer** (du selbst, jede weitere Person, „Niemand" für Aufgaben ohne Zuständige), **Wann** (überfällig, heute, diese Woche, später, ohne Termin), **Boards**, **Priorität** und ein paar Extras (nur mit offenem Stups, nur Wächter-Aufgaben, Erledigte anzeigen); Suche und Sortierung stehen auch darin. „Zurücksetzen" löscht alle Filter. Der Filter bleibt auf dem Gerät gemerkt.
 
 ### Wiederkehrende Aufgaben
 
@@ -141,7 +146,7 @@ An einer Aufgabe schaltest du **„Nochmal erinnern, wenn nicht erledigt"** ein:
 Mit **Stupsen** gibst du einer anderen Person zu einer Aufgabe einen freundlichen Stups („Denkst du dran?"). Der Knopf steht im Aufgaben-Fenster und im Menü „⋯" jeder Aufgabe. Das gilt für alle Personen, die unter Einstellungen › Haushalt › Personen & Zugriff stehen.
 
 1. **An wen:** Zuständige der Aufgabe (außer dir) sind vorausgewählt. Gibt es keine, wählst du selbst. Wer kein Push-Gerät hat, steht ausgegraut mit Hinweis.
-2. **Nachricht:** eine der vier Vorlagen oder ein eigener Text mit bis zu 120 Zeichen (er ersetzt die Vorlage).
+2. **Nachricht:** vier Vorschläge, die **zur Aufgabe passen**, der beste ist vorausgewählt, oder ein eigener Text mit bis zu 120 Zeichen (er ersetzt den Vorschlag). Bei einer überfälligen Aufgabe: „Die ist schon überfällig – schaffst du das?", bei einer heute fälligen „Schaffst du das heute noch?", bei einer in den nächsten drei Tagen fälligen „Nicht vergessen, bald fällig!", bei einer Wächter-Aufgabe „Kümmerst du dich darum?", bei einer, für die du auch zuständig bist, „Machen wir das zusammen?", bei einer ohne Termin „Hast du die auf dem Schirm?", und wenn du schon gestupst und keine Antwort bekommen hast „Kurze Erinnerung ☝️". Früher gesendete Stupse behalten ihren Text.
 3. **Stups senden.** Die Aufgabe hüpft kurz, ein Hinweis bestätigt es.
 
 Die Person bekommt eine Push-Nachricht mit drei Knöpfen (auf dem iPhone die Nachricht aufklappen):
@@ -200,12 +205,12 @@ Ein Administrator kann einzelnen Personen gezielt Rechte geben, ohne sie zu Admi
 
 ### Einstellungen
 
-Der Avatar oben rechts öffnet die Einstellungen als Übersicht mit Unterseiten. Oben stehen dein Bild, dein Name und woher das Bild kommt; **Bild ändern** lädt ein eigenes hoch (JPEG, PNG oder WebP bis 2 MB, wird auf dem Gerät auf 256 Pixel verkleinert), **Bild entfernen** geht zurück zum Bild aus Home Assistant oder zur Initiale. Ist deine Person einer Person in Home Assistant zugeordnet und hat diese ein Bild, holt Stups es von dort (nie direkt im Browser, immer über Stups). Ein hochgeladenes Bild hat Vorrang. Administratoren ändern das Bild auch für andere.
+Das Zahnrad oben rechts öffnet die Einstellungen als Übersicht mit Unterseiten. Oben stehen dein Bild, dein Name und woher das Bild kommt; **Bild ändern** lädt ein eigenes hoch (JPEG, PNG oder WebP bis 2 MB, wird auf dem Gerät auf 256 Pixel verkleinert), **Bild entfernen** geht zurück zum Bild aus Home Assistant oder zur Initiale. Ist deine Person einer Person in Home Assistant zugeordnet und hat diese ein Bild, holt Stups es von dort (nie direkt im Browser, immer über Stups). Ein hochgeladenes Bild hat Vorrang. Administratoren ändern das Bild auch für andere.
 
 | Gruppe | Seiten |
 |---|---|
 | **Für mich** (alle) | Benachrichtigungen (Test an mich, meine Geräte oder ntfy-Thema, Ruhezeit, Sonntagsrückblick, Wenig Zeit) · Sprache und Farbe · Konto und Anmeldung (nur im Container) |
-| **Haushalt** (Administratoren) | Personen & Zugriff (Personen, Handys, Zugriff, Kinder, Haus-Kanäle) · Wächter · Vorlagen (Board-Vorlagen) · Symbole (Symbole aus Titeln erkennen) · Termine (Standard-Uhrzeit) · Erinnerungszeiten (Tageszusammenfassung, Nachhaken um …) |
+| **Haushalt** (Administratoren) | Personen & Zugriff (Personen, Handys, Zugriff, Kinder, Haus-Kanäle) · Vorlagen (Board-Vorlagen) · Symbole (Symbole aus Titeln erkennen) · Termine (Standard-Uhrzeit) · Erinnerungszeiten (Tageszusammenfassung, Nachhaken um …, Bescheid bei von selbst erledigten Aufgaben) |
 | **Home Assistant** | Dashboard (Ziel des Home-Knopfs, jede Person für sich) · Dashboard-Button (Bubble Card, Administratoren) · Ansage und Lampe (Sprachdienst) · HA-Kopfzeile ausblenden (jede Person, nur dieses Gerät) |
 | **Hilfe und Daten** | Warum kommt nichts an? · Papierkorb, Archiv, Umzug · Feedback der Nutzer (mit der Berechtigung) · Beta (nur in der Beta) · Einrichtung nochmal durchgehen |
 
@@ -217,23 +222,29 @@ Beim Anlegen eines Boards (Reiter Boards › Neues Board) startest du **leer** o
 
 ### Wächter: Aufgaben automatisch aus Home Assistant
 
-Ein Wächter beobachtet eine Entität in Home Assistant und legt **von selbst eine Aufgabe an und weist sie zu**, sobald etwas passiert. Das Standardbeispiel: Die Waschmaschine ist fertig, und eine Person, die gerade zu Hause ist, bekommt die Aufgabe „Waschmaschine ausräumen" (fällig in 30 Minuten) samt Push-Nachricht. Wächter einrichten und ändern dürfen nur **Administratoren** von Home Assistant, alle Personen sehen sie.
+Ein Wächter beobachtet eine Entität in Home Assistant und legt **von selbst eine Aufgabe an und weist sie zu**, sobald etwas passiert. Das Standardbeispiel: Die Waschmaschine ist fertig, und eine Person, die zu Hause ist, bekommt die Aufgabe „Waschmaschine ausräumen" (fällig in 30 Minuten) samt Push-Nachricht. Wächter einrichten und ändern dürfen nur **Administratoren** von Home Assistant (und wer die Berechtigung *Wächter* hat); alle sehen sie.
 
-![Der Reiter Wächter](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-liste-dunkel.png)
+![Der Reiter Wächter am Computer](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/desktop-waechter-dunkel.png)
 
-**Der Reiter Wächter zeigt den Zustand, nicht die Regeln.** Der Reiter **Wächter** (dritter Reiter, für alle Erwachsenen) sortiert die Wächter nach dem, was gerade los ist: **Wartet auf jemanden** (eine Aufgabe ist offen: wer ist dran, seit wann, Knopf **Stupsen**), **Läuft gerade** (die Maschine läuft: seit wann, welche Aufgabe danach kommt), **Bald dran** (der Zähler steht auf „2 von 3", oder ein Termin im Kalender steht an) und eine Zeile **Ruhig** mit den Wächtern, die nichts melden. Fehlt die Verbindung zu Home Assistant, steht dort „Keine Verbindung zu Home Assistant seit …" (Boards und Aufgaben funktionieren weiter). Administratoren sehen dort außerdem „Stups hat N weitere Geräte gefunden". **Ein Tipp auf einen Wächter öffnet ihn:** Administratoren bearbeiten ihn dort direkt (Satz, Mehr Regeln, Testen, Pausieren, Löschen), alle anderen sehen Einstellungen und Verlauf lesend. Unten steht die **letzte Aktivität** aller Wächter; im Wächter selbst der Verlauf seiner letzten Läufe.
+**Der Reiter Wächter zeigt den Zustand, nicht die Regeln.** Er sortiert die Wächter nach dem, was gerade los ist: **Wartet auf jemanden** (eine Aufgabe ist offen: wer ist dran, seit wann, Knopf **Stupsen**), **Läuft gerade** (die Maschine läuft: seit wann, welche Aufgabe danach kommt), **Kommt bald** (der Zähler steht auf „2 von 3", oder ein Termin im Kalender steht an) und **Mit Problem** (Entität fehlt, niemand zuständig, Board weg). Am Computer sind das die vier Kacheln oben, darunter die Tabelle mit Wert, Status, Zuletzt, nächster Aufgabe und Zuständigen. Wächter können eine **Kategorie** haben (Waschmaschine, Tonnen, Batterien …); am Handy ist jede Kategorie eine eigene Seite, und **Kategorien vorschlagen** sortiert die vorhandenen für dich. Fehlt die Verbindung zu Home Assistant, steht dort „Keine Verbindung zu Home Assistant seit …" (Boards und Aufgaben funktionieren weiter). **Ein Tipp auf einen Wächter öffnet ihn:** Administratoren bearbeiten ihn dort direkt als Ablauf (Wenn · Dann Aufgabe · An wen · Erledigt sich selbst), alle anderen sehen Einstellungen und Verlauf lesend. Unten steht die **letzte Aktivität** aller Wächter (am Computer im Reiter *Aktivität*); im Wächter selbst der Verlauf seiner letzten Läufe.
 
-**Verwalten** (Liste, An/Aus, Bearbeiten, Löschen, letzte Aktivität): *Einstellungen › Haushalt › Wächter*. Alle Erwachsenen sehen die Liste, **Administratoren** ändern sie.
+**Mehrere auswählen:** Mit **Auswählen** hakst du Wächter an und kannst sie **pausieren oder fortsetzen**, **löschen** oder **gemeinsam bearbeiten**. Geändert wird nur, was du anfasst; ein Feld mit unterschiedlichen Werten sagt „verschieden". Name und Board bleiben bei jedem Wächter.
 
-**Einrichten, am leichtesten über „Gefunden":** *Einstellungen › Haushalt › Wächter › Wächter aus Vorlagen* (oder der Hinweis im Reiter Wächter). Stups sieht in Home Assistant nach und zeigt, wozu ein Wächter passt, mit Begründung („Steckdose Trockner misst die Leistung"): Waschmaschine, Trockner, Spülmaschine (Leistungssensor oder Programmstatus des Geräts), Tonnen rausstellen (Abfallkalender), Wäsche rein es regnet (Wetter), Batterie schwach, Saugroboter-Behälter. Ein Tipp auf **Einrichten** füllt den Satz aus; Entitäten, die schon ein Wächter beobachtet, fehlen. **Passt ein Vorschlag nicht** (du hast das Gerät nicht), tippe auf **Ausblenden**: Stups schlägt ihn nie wieder vor. Unter **Ausgeblendet** holst du ihn mit „Wieder anzeigen" zurück. Darunter steht **Auch ohne Gerät**: Aufgaben, die sich von selbst wiederholen (Entkalken, Rauchmelder testen, Filter wechseln, Bettwäsche wechseln), ohne Wächter. „Alle Vorlagen ansehen" zeigt auch die, zu denen nichts gefunden wurde.
+**Einrichten, am leichtesten über „Gefunden":** Der Knopf **Gefunden** (am Handy die Karte „Stups hat N weitere Geräte gefunden") zeigt, was Stups in Home Assistant entdeckt hat und welcher Wächter dazu passt, mit Begründung („Steckdose Trockner misst die Leistung"): Waschmaschine, Trockner, Spülmaschine, Tonnen rausstellen (Abfallkalender), Wäsche rein, es regnet (Wetter), Batterie schwach, Fenster lange offen, Saugroboter-Behälter und mehr. Am Computer ist Gefunden eine eigene Seite mit den Arten links und den Geräten rechts, am Handy ein Blatt mit Gruppen. **Einrichten** füllt den Satz aus. **Passt ein Vorschlag nicht** (du hast das Gerät nicht), **blende ihn aus**: Stups schlägt ihn nie wieder vor, unter **Ausgeblendet** holst du ihn zurück. Darunter **Auch ohne Gerät**: Aufgaben, die sich von selbst wiederholen (entkalken, Rauchmelder testen, Filter wechseln, Betten beziehen).
 
-![Wächter bearbeiten](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-bearbeiten-dunkel.png)
+![Gefunden am Computer](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/desktop-gefunden-dunkel.png)
 
-**Das Formular ist ein Satz:** „Wenn [Entität] länger als [3 Min.] unter [5 W] liegt, bekommt [wer zu Hause ist, reihum] die Aufgabe [Titel]." Jedes Feld in eckigen Klammern tippst du an und änderst. Darunter:
+**Mehrere Geräte auf einmal:** Die Kästchen in Gefunden sind immer da. Hake beliebig viele Geräte **einer Art** an (zum Beispiel alle Batterien der Fenstersensoren); Geräte anderer Art bleiben sichtbar, sind aber ausgegraut, mit dem Grund („Andere Art als …"), und **Stattdessen wählen** wechselt die Auswahl. **Einrichten** öffnet denselben Assistenten für alle: Schritt 1 zeigt jedes Gerät mit Wert und Diagramm und sagt, welche jetzt schon auslösen würden; du nimmst Geräte weg oder fügst passende derselben Art dazu, und der Probelauf läuft für jedes Gerät. Es entsteht ein Wächter je Gerät, benannt nach dem Gerät; Titel und Zuständige sind für alle gleich.
 
+![Mehrere Geräte am Computer einrichten](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/desktop-waechter-mehrere-dunkel.png)
+
+**Das Formular ist ein Satz:** „Wenn [Entität] länger als [3 Min.] unter [5 W] liegt, bekommt [wer zu Hause ist, reihum] die Aufgabe [Titel]." Am Handy fragt ein Assistent in vier Schritten nacheinander **Wenn**, **Dann**, **Wer** und **Feinschliff**; am Computer steht alles in einem Formular, daneben eine Vorschau („Das entsteht"). Darunter:
+
+- **Diagramm der Entität:** Es zeigt, was die Entität getan hat, mit der Schwelle als grün gestrichelter Linie und einem grünen Punkt dort, wo die Regel ausgelöst hätte. **Unter dem Diagramm wählst du den Zeitraum: 3 Stunden, 24 Stunden, 7 Tage, 30 Tage oder 1 Jahr.** Stups wählt ihn selbst, damit sich etwas bewegt: schnelle Werte (Leistung) bekommen 3 Stunden, ein Handy-Akku einen Tag oder eine Woche und die Batterie eines Fenstersensors, die sich wochenlang kaum ändert, das ganze Jahr. Zeiträume ab einem Tag kommen aus der **Langzeitstatistik** von Home Assistant, die es dauerhaft aufhebt (die einzelnen Werte nur etwa 10 Tage). Bei langen Zeiträumen steht eine Zeile darunter, wohin es geht, zum Beispiel „sinkt um etwa 8 % im Monat · erreicht 20 % in etwa 2 Monaten". Auslösepunkte (die grünen Punkte) gibt es nur für die letzten 7 Tage, und Entitäten ohne Langzeitstatistik (kein `state_class`) bleiben bei den letzten Tagen; die langen Zeiträume sind dann ausgegraut, mit Hinweis.
 - **Probelauf:** Stups holt die Historie der Entität der letzten 7 Tage (höchstens 20 000 Zustände) aus Home Assistant und rechnet die Regel darauf, ohne etwas zu speichern. Du siehst ein kleines Diagramm, wann der Wächter ausgelöst hätte, und einen Satz: „3 Auslösungen erkannt, kein Fehlalarm" oder „5 Mal ausgelöst, davon 4 innerhalb von 10 Minuten: Mindestdauer erhöhen?". Ohne Historie (Recorder aus, neue Entität) steht ein Hinweis statt des Diagramms.
 - **Erst vorschlagen:** Die Aufgabe entsteht ohne Zuständige, alle Erwachsenen, die zu Hause sind, bekommen die Frage „Wer übernimmt?" mit dem Knopf **Übernehmen** (Push) und auf Aufgaben. Wer zuerst tippt, bekommt die Aufgabe; die anderen erfahren, wer schneller war. Meldet sich in **30 Minuten** niemand, greift der Rückfall des Wächters. Ist niemand zu Hause, greift er sofort.
 - **Ehrlich beim Selbst-Erledigen:** Ein Leistungssensor kann nicht belegen, dass jemand das Gerät ausgeräumt hat. Bei Vorlagen, wo das so ist, ist „Erledigt sich selbst" aus, mit der Begründung daneben. Bei der Batterie-Vorlage erledigt sich die Aufgabe, wenn der Sensor wieder über 50 % steigt.
+- **Bescheid, wenn sich eine Aufgabe von selbst erledigt:** Erledigt sich die Aufgabe eines Wächters von selbst („Erledigt sich selbst, wenn …", zum Beispiel das Fenster ist wieder zu), bekommen die Zuständigen eine ruhige Nachricht „Hat sich von selbst erledigt"; sie ersetzt „Neue Aufgabe". Standardmäßig an, für alle abschaltbar unter *Einstellungen › Erinnerungszeiten › Von selbst erledigt › Bescheid sagen*.
 - **Mehr Regeln** klappt alles Weitere auf: Name, Board, Spalte, Beschreibung, Kategorien, Priorität, Fälligkeit, wer genau infrage kommt, die Rückfälle, „Erledigt sich selbst, wenn …", Zähler, Sperrzeit, Doppelaufgaben, Erinnern.
 - **Kalender und Wetter:** Zwei weitere Arten von Auslösern, die Stups **alle 30 Minuten** selbst abfragt. *Termin im Kalender* mit Vorlauf (zum Beispiel 12 Stunden vor der Leerung; jeder Termin bekommt genau eine Aufgabe, ganztägige Termine beginnen um Mitternacht) und *Regen in der Vorhersage* einer Wetter-Entität (in den nächsten 1 bis 48 Stunden; nach dem Regen ist der Wächter wieder scharf). Für sie gibt es keinen Probelauf.
 

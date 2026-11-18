@@ -34,10 +34,10 @@
 ## Why Stups
 
 ### 🏠 It knows what your house is doing
-Home Assistant already knows that the washing machine is done, the bin is going out tomorrow and the lock battery is at 8 %. **Watchers** turn that into cards by themselves, and hand them to whoever is at home, in turns, fairly. Stups **finds the matching devices itself** (washing machine, dryer, waste calendar, rain, batteries, robot vacuum). You set one up in four taps, see the entity's last three hours, and do a **trial run on the last 7 days** before it goes live. No YAML, no automations to maintain.
+Home Assistant already knows that the washing machine is done, the bin is going out tomorrow and the lock battery is at 8 %. **Watchers** turn that into cards by themselves, and hand them to whoever is at home, in turns, fairly. Stups **finds the matching devices itself** (washing machine, dryer, waste calendar, rain, batteries, robot vacuum). You set one up in four steps (or **several devices at once**, such as every window-sensor battery), see the entity's history up to **a whole year** with the trend ("falls by about 8 % a month, reaches 20 % in about 2 months"), and do a **trial run on the last 7 days** before it goes live. No YAML, no automations to maintain.
 
 ### 👉 A nudge instead of a nag
-Someone forgot their task? Send a **Stups**: a friendly "Are you on it?" with **Done**, **On it** and **Later** buttons right in the notification. Lock times and quiet hours per person mean nobody gets annoyed. You can also **nudge yourself** ("remind me again in 2 hours, at most 3 times").
+Someone forgot their task? Send a **Stups**: a friendly message that **fits the task** ("This one is overdue – can you get to it?", "Shall we do it together?") with **Done**, **On it** and **Later** buttons right in the notification. Lock times and quiet hours per person mean nobody gets annoyed. You can also **nudge yourself** ("remind me again in 2 hours, at most 3 times").
 
 ### ✅ Done in one tap, from the lock screen
 Push reminders through the Home Assistant Companion App: when due, in advance, as a follow-up while overdue and as a morning summary. **"Done" works right in the message.** Repeating tasks create the next card by themselves.
@@ -57,19 +57,21 @@ Everything lives in your Home Assistant (SQLite in the add-on storage, part of t
 - **Permissions** for individuals (watchers, settings, people …) without making them administrators.
 
 ### 📱 Feels like a native app
-Built for the iPhone: dark and light mode, swipe to move cards, live sync between all devices, English and German (push messages included). On a desktop you get a **sidebar layout** with search (Ctrl/Cmd + K), a Kanban over the full width and a detail column.
+Built for the iPhone: dark and light mode, swipe to move cards, live sync between all devices, English and German (push messages included). On a computer it is a real desktop app, not a stretched phone: a **sidebar**, search (Ctrl/Cmd + K), tasks as a table whose rows unfold in place, a Kanban over the full width, a calendar with a time grid and a form for watchers with a live preview.
 
 <p align="center">
-  <img src="docs/images/en/waechter-dunkel.png" alt="Watchers, dark" width="23%">
-  <img src="docs/images/en/gefunden-dunkel.png" alt="Found: Stups suggests devices, dark" width="23%">
-  <img src="docs/images/en/waechter-bearbeiten-dunkel.png" alt="A watcher as a flow, dark" width="23%">
-  <img src="docs/images/en/stupsen-dunkel.png" alt="Nudging, dark" width="23%">
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/en/desktop-aufgaben-hell.png"><img src="docs/images/en/desktop-aufgaben-dunkel.png" alt="Tasks on a computer: your numbers, a nudge banner and the list" width="100%"></picture>
 </p>
 <p align="center">
-  <img src="docs/images/en/aufgaben-dunkel.png" alt="Tasks, dark" width="23%">
-  <img src="docs/images/en/board-dunkel.png" alt="Board, dark" width="23%">
-  <img src="docs/images/en/kalender-woche-dunkel.png" alt="Calendar, week, dark" width="23%">
-  <img src="docs/images/en/aufgaben-hell.png" alt="Tasks, light" width="23%">
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/en/desktop-waechter-mehrere-hell.png"><img src="docs/images/en/desktop-waechter-mehrere-dunkel.png" alt="Setting up several watchers at once on a computer" width="49%"></picture>
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/en/desktop-gefunden-hell.png"><img src="docs/images/en/desktop-gefunden-dunkel.png" alt="Found: Stups suggests devices, on a computer" width="49%"></picture>
+</p>
+<p align="center">
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/en/aufgaben-hell.png"><img src="docs/images/en/aufgaben-dunkel.png" alt="Tasks on the phone" width="19%"></picture>
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/en/vom-haus-hell.png"><img src="docs/images/en/vom-haus-dunkel.png" alt="From the house: a card a watcher created" width="19%"></picture>
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/en/gefunden-hell.png"><img src="docs/images/en/gefunden-dunkel.png" alt="Found on the phone" width="19%"></picture>
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/en/waechter-diagramm-hell.png"><img src="docs/images/en/waechter-diagramm-dunkel.png" alt="Watcher chart with a year of battery history" width="19%"></picture>
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/en/stupsen-hell.png"><img src="docs/images/en/stupsen-dunkel.png" alt="Nudging with suggestions that fit the task" width="19%"></picture>
 </p>
 
 ## What you get
@@ -78,12 +80,12 @@ The house detects, Stups distributes and reminds, and the board is simply where 
 
 | | |
 |---|---|
-| **Watchers** | Cards from Home Assistant entities: suggested devices, four-step assistant, flow editor, trial run on the last 7 days, "pass on", "suggest first" (whoever taps first takes it), nudging after a while. |
-| **Push and nudging** | Companion App notifications with action buttons, daily summary, follow-ups, nudges with lock and quiet time. |
-| **Tasks (start page)** | What is on for you: cards from the house on top, your numbers (due today, overdue, done today), the week, a banner when someone nudged you, and your cards grouped as Overdue, Today, This week, Later. Chips switch between Mine, All and each person. |
+| **Watchers** | Cards from Home Assistant entities: suggested devices ("Found"), several devices at once, assistant or form, flow editor, a chart of up to a year with trend, trial run on the last 7 days, "pass on", "suggest first" (whoever taps first takes it), nudging after a while, a message when a task completes by itself. |
+| **Push and nudging** | Companion App notifications with action buttons, daily summary, follow-ups, nudges with suggestions that fit the task, with lock and quiet time. |
+| **Tasks (start page)** | What is on for you: cards from the house on top, your numbers (due today, overdue, this week, done today), a banner when someone nudged you, and your cards grouped as Overdue, Today, This week, Later and No date (always last). A menu switches between My tasks, All tasks and each person. |
 | **Boards** | Several boards with their own columns and categories. Cards with assignees, due date, priority, cost, effort, description, checklist, links, photos/PDFs and comments. Swipe to move. Archive, duplicate, or save as a template (Household, Moving house, Renovation and more). |
 | **Private & shared boards** | Visible to "Only me", "Everyone in Stups" or "Selected people". Children can create their own private boards. |
-| **Calendar** | Day, week, month or list. Tap a free slot to create a card for that time. Filter by person and board. |
+| **Calendar** | A tab of its own: day, 3 days, week or month (on a computer a time grid). Tap a free slot to create a card for that time. Filter by person and board. |
 | **Recurring tasks** | Fixed rhythm or counted from completion, also hourly (optionally within a time window), with "a small delay is okay". Every option shows a live example. The finished card keeps its history; the next one is created. |
 | **Fairness** | Effort per person for this week or month, optional Sunday-evening summary, per-board switch. |
 | **People and access** | Everyone gets a picture (from Home Assistant or uploaded). Control who may open the app. Roles: administrator, member, child. |
@@ -127,7 +129,7 @@ services:
     volumes: ["./stups-data:/data"]
 ```
 
-On first start the log (`docker logs stups`) shows a code for setting up the first administrator. Behind an https address (`STUPS_PUBLIC_URL`) you can also sign in with a **passkey** (fingerprint or face instead of a password). Boards, agenda, calendar, repeats and nudging work as in the app. Watchers and sensors need Home Assistant: with `HA_URL` and `HA_TOKEN` (long-lived token) the container connects to it too. Push messages arrive via [ntfy](https://ntfy.sh) (`STUPS_NTFY_URL`), with buttons such as "Done" right in the message. Everything else (Synology, HTTPS, setting up ntfy, settings, moving): [docs/docker.md](docs/docker.md).
+On first start the log (`docker logs stups`) shows a code for setting up the first administrator. Behind an https address (`STUPS_PUBLIC_URL`) you can also sign in with a **passkey** (fingerprint or face instead of a password). Tasks, boards, calendar, repeats and nudging work as in the app. Watchers and sensors need Home Assistant: with `HA_URL` and `HA_TOKEN` (long-lived token) the container connects to it too. Push messages arrive via [ntfy](https://ntfy.sh) (`STUPS_NTFY_URL`), with buttons such as "Done" right in the message. Everything else (Synology, HTTPS, setting up ntfy, settings, moving): [docs/docker.md](docs/docker.md).
 
 ## Documentation
 
@@ -149,6 +151,8 @@ pnpm exec playwright install webkit   # once
 pnpm e2e                              # browser tests (WebKit, iPhone view)
 node e2e/screenshots.mjs              # screenshots for this page (docs/images), German
 node e2e/screenshots.mjs --lang en    # the same in English (docs/images/en)
+python3 e2e/shrink-images.py          # then shrink them to 256 colours (about a third of the size)
+node e2e/demo.mjs --lang en           # demo GIF (docs/images/demo.en.gif)
 ```
 
 Details and the procedure for new versions are in [dev/entwicklung.md](dev/entwicklung.md) (German).

@@ -12,7 +12,7 @@ Stups runs not only as a Home Assistant app but also as a standalone Docker cont
 |---|---|---|
 | Sign-in | the Home Assistant users | own accounts with a password |
 | People | from Home Assistant | maintained in Stups (every user is a person) |
-| Boards, agenda, calendar, repeats, nudging | yes | yes |
+| Tasks, boards, calendar, repeats, nudging | yes | yes |
 | Watchers and sensors | yes | only with a connection to Home Assistant (see below), otherwise hidden in the interface |
 | Push messages | Companion App | via [ntfy](https://ntfy.sh), with a connection to Home Assistant also via the Companion App |
 

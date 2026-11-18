@@ -53,7 +53,7 @@ export async function startMockHa({ port, first, second, token, extraPersons = [
   // Sehr lange Namen (wie bei Geräten, deren Name die Kennung ist): sie dürfen die Seite nicht breiter machen
   setState('sensor.flur_schliesszylinder_wohnungseingangstuer_batterie_ladestand_zusatzmodul', '85', { friendly_name: 'sensor.flur_schliesszylinder_wohnungseingangstuer_batterie_ladestand_zusatzmodul', unit_of_measurement: '%', device_class: 'battery' });
   // Englischer Name mit Endung "Battery Level": der Gerätename im Wächter heißt "iPhone Rene"
-  setState('sensor.iphone_rene_battery_level', '14', { friendly_name: 'iPhone Rene Battery Level', unit_of_measurement: '%', device_class: 'battery' });
+  setState(`sensor.iphone_${first}_battery_level`, '14', { friendly_name: `iPhone ${cap(first)} Battery Level`, unit_of_measurement: '%', device_class: 'battery' });
   setState('sensor.bad_batterie', '12', { friendly_name: 'Bad Fenster Batterie', unit_of_measurement: '%', device_class: 'battery' });
   // Eine neue Umgebung hat viele Batteriesensoren: „Gefunden" zeigt sie alle, nach Vorlage gruppiert (die ersten fünf, „Alle N anzeigen", Suche).
   // Alle stärker als 14 %, damit „Bad Fenster Batterie" (12) und „iPhone Rene" (14) unter den ersten fünf der Gruppe bleiben.

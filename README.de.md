@@ -34,10 +34,10 @@
 ## Warum Stups
 
 ### 🏠 Es weiß, was dein Haus gerade macht
-Home Assistant weiß längst, dass die Waschmaschine fertig ist, morgen die Tonne rausmuss und die Batterie am Türschloss bei 8 % ist. **Wächter** machen daraus von selbst Aufgaben und geben sie reihum und fair an die, die zu Hause sind. Stups **findet passende Geräte selbst** (Waschmaschine, Trockner, Müllkalender, Regen, Batterien, Saugroboter). Einrichten in vier Schritten, mit dem Verlauf der Entität der letzten drei Stunden und einem **Probelauf über die letzten 7 Tage**, bevor es live geht. Ohne YAML, ohne Automationen, die du pflegen musst.
+Home Assistant weiß längst, dass die Waschmaschine fertig ist, morgen die Tonne rausmuss und die Batterie am Türschloss bei 8 % ist. **Wächter** machen daraus von selbst Aufgaben und geben sie reihum und fair an die, die zu Hause sind. Stups **findet passende Geräte selbst** (Waschmaschine, Trockner, Müllkalender, Regen, Batterien, Saugroboter). Einrichten in vier Schritten (oder **mehrere Geräte auf einmal**, zum Beispiel alle Batterien der Fenstersensoren), mit dem Verlauf der Entität bis zu **einem ganzen Jahr** samt Trend („sinkt um etwa 8 % im Monat, erreicht 20 % in etwa 2 Monaten“) und einem **Probelauf über die letzten 7 Tage**, bevor es live geht. Ohne YAML, ohne Automationen, die du pflegen musst.
 
 ### 👉 Ein Stups statt Nörgeln
-Jemand hat seine Aufgabe vergessen? Schick einen **Stups**: ein freundliches „Denkst du dran?“ mit den Knöpfen **Erledigt**, **Mach ich** und **Später** direkt in der Nachricht. Sperrzeiten und Ruhezeit pro Person sorgen dafür, dass sich keiner genervt fühlt. Du kannst dich auch **selbst stupsen** („erinnere mich in 2 Stunden nochmal, höchstens 3 ×“).
+Jemand hat seine Aufgabe vergessen? Schick einen **Stups**: eine freundliche Nachricht, die **zur Aufgabe passt** („Die ist schon überfällig – schaffst du das?“, „Machen wir das zusammen?“), mit den Knöpfen **Erledigt**, **Mach ich** und **Später** direkt in der Nachricht. Sperrzeiten und Ruhezeit pro Person sorgen dafür, dass sich keiner genervt fühlt. Du kannst dich auch **selbst stupsen** („erinnere mich in 2 Stunden nochmal, höchstens 3 ×“).
 
 ### ✅ Erledigt mit einem Tipp, vom Sperrbildschirm
 Push-Erinnerungen über die Home-Assistant-Companion-App: zur Fälligkeit, vorab, nachhakend bei Überfälligkeit und als Morgen-Zusammenfassung. **„Erledigt“ geht direkt in der Nachricht.** Wiederkehrende Aufgaben legen die nächste Aufgabe von selbst an.
@@ -57,19 +57,21 @@ Alles liegt in deinem Home Assistant (SQLite im Add-on-Speicher, Teil des normal
 - **Berechtigungen** für einzelne Personen (Wächter, Einstellungen, Personen …), ohne sie zu Administratoren zu machen.
 
 ### 📱 Fühlt sich an wie eine echte App
-Fürs iPhone gebaut: Dunkel- und Hellmodus, Wischen verschiebt Aufgaben, Live-Sync zwischen allen Geräten, Deutsch und English (auch die Push-Nachrichten). Am Desktop gibt es eine **Seitenleiste** mit Suche (Strg/Cmd + K), ein Kanban über die volle Breite und eine Detailspalte.
+Fürs iPhone gebaut: Dunkel- und Hellmodus, Wischen verschiebt Aufgaben, Live-Sync zwischen allen Geräten, Deutsch und English (auch die Push-Nachrichten). Am Computer ist es eine richtige Desktop-App, kein gestrecktes Handy: eine **Seitenleiste**, Suche (Strg/Cmd + K), Aufgaben als Tabelle, deren Zeilen sich an Ort und Stelle aufklappen, ein Kanban über die volle Breite, ein Kalender mit Zeitraster und ein Formular für Wächter mit Live-Vorschau.
 
 <p align="center">
-  <img src="docs/images/waechter-dunkel.png" alt="Wächter, dunkel" width="23%">
-  <img src="docs/images/gefunden-dunkel.png" alt="Gefunden: Stups schlägt Geräte vor, dunkel" width="23%">
-  <img src="docs/images/waechter-bearbeiten-dunkel.png" alt="Ein Wächter als Ablauf, dunkel" width="23%">
-  <img src="docs/images/stupsen-dunkel.png" alt="Stupsen, dunkel" width="23%">
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/desktop-aufgaben-hell.png"><img src="docs/images/desktop-aufgaben-dunkel.png" alt="Aufgaben am Computer: deine Zahlen, ein Stups-Banner und die Liste" width="100%"></picture>
 </p>
 <p align="center">
-  <img src="docs/images/aufgaben-dunkel.png" alt="Aufgaben, dunkel" width="23%">
-  <img src="docs/images/board-dunkel.png" alt="Board, dunkel" width="23%">
-  <img src="docs/images/kalender-woche-dunkel.png" alt="Kalender, Woche, dunkel" width="23%">
-  <img src="docs/images/aufgaben-hell.png" alt="Aufgaben, hell" width="23%">
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/desktop-waechter-mehrere-hell.png"><img src="docs/images/desktop-waechter-mehrere-dunkel.png" alt="Mehrere Wächter auf einmal am Computer einrichten" width="49%"></picture>
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/desktop-gefunden-hell.png"><img src="docs/images/desktop-gefunden-dunkel.png" alt="Gefunden: Stups schlägt Geräte vor, am Computer" width="49%"></picture>
+</p>
+<p align="center">
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/aufgaben-hell.png"><img src="docs/images/aufgaben-dunkel.png" alt="Aufgaben am Handy" width="19%"></picture>
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/vom-haus-hell.png"><img src="docs/images/vom-haus-dunkel.png" alt="Vom Haus: eine Aufgabe, die ein Wächter angelegt hat" width="19%"></picture>
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/gefunden-hell.png"><img src="docs/images/gefunden-dunkel.png" alt="Gefunden am Handy" width="19%"></picture>
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/waechter-diagramm-hell.png"><img src="docs/images/waechter-diagramm-dunkel.png" alt="Wächter-Diagramm mit einem Jahr Batterieverlauf" width="19%"></picture>
+  <picture><source media="(prefers-color-scheme: light)" srcset="docs/images/stupsen-hell.png"><img src="docs/images/stupsen-dunkel.png" alt="Stupsen mit Vorschlägen, die zur Aufgabe passen" width="19%"></picture>
 </p>
 
 ## Was du bekommst
@@ -78,12 +80,12 @@ Das Haus erkennt, Stups verteilt und erinnert, und das Board ist einfach der Ort
 
 | | |
 |---|---|
-| **Wächter** | Aufgaben aus Entitäten von Home Assistant: vorgeschlagene Geräte, Assistent in vier Schritten, Ablauf-Editor, Probelauf über 7 Tage, „Weitergeben“, „Erst vorschlagen“ (wer zuerst tippt, übernimmt), Stupsen nach einer Weile. |
-| **Push und Stupsen** | Companion-App-Nachrichten mit Aktionsknöpfen, Tageszusammenfassung, Nachhaken, Stupse mit Sperr- und Ruhezeit. |
-| **Aufgaben (Startseite)** | Was für dich dran ist: Aufgaben vom Haus oben, deine Zahlen (heute fällig, überfällig, heute erledigt), die Woche, ein Banner, wenn dich jemand gestupst hat, und deine Aufgaben gruppiert nach Überfällig, Heute, Diese Woche, Später. Chips schalten zwischen Meine, Alle und jeder Person um. |
+| **Wächter** | Aufgaben aus Entitäten von Home Assistant: vorgeschlagene Geräte („Gefunden“), mehrere Geräte auf einmal, Assistent oder Formular, Ablauf-Editor, Diagramm bis zu einem Jahr mit Trend, Probelauf über 7 Tage, „Weitergeben“, „Erst vorschlagen“ (wer zuerst tippt, übernimmt), Stupsen nach einer Weile, Bescheid, wenn sich eine Aufgabe von selbst erledigt. |
+| **Push und Stupsen** | Companion-App-Nachrichten mit Aktionsknöpfen, Tageszusammenfassung, Nachhaken, Stupse mit Vorschlägen, die zur Aufgabe passen, mit Sperr- und Ruhezeit. |
+| **Aufgaben (Startseite)** | Was für dich dran ist: Aufgaben vom Haus oben, deine Zahlen (heute fällig, überfällig, diese Woche, heute erledigt), ein Banner, wenn dich jemand gestupst hat, und deine Aufgaben gruppiert nach Überfällig, Heute, Diese Woche, Später und Ohne Termin (immer zuletzt). Ein Menü schaltet zwischen Meine Aufgaben, Alle Aufgaben und jeder Person um. |
 | **Boards** | Mehrere Boards mit eigenen Spalten und Kategorien. Aufgaben mit Zuständigen, Termin, Priorität, Kosten, Aufwand, Beschreibung, Checkliste, Links, Fotos/PDFs und Kommentaren. Wischen verschiebt. Archivieren, duplizieren oder als Vorlage speichern (Haushalt, Umzug, Renovierung und mehr). |
 | **Private und geteilte Boards** | Sichtbar für „Nur ich“, „Alle in Stups“ oder „Ausgewählte Personen“. Kinder können eigene private Boards anlegen. |
-| **Kalender** | Tag, Woche, Monat oder Liste. Auf einen freien Zeitpunkt tippen legt eine Aufgabe dafür an. Filter nach Person und Board. |
+| **Kalender** | Ein eigener Reiter: Tag, 3 Tage, Woche oder Monat (am Computer ein Zeitraster). Auf einen freien Zeitpunkt tippen legt eine Aufgabe dafür an. Filter nach Person und Board. |
 | **Wiederkehrende Aufgaben** | Fester Rhythmus oder ab Erledigung, auch stündlich (auf Wunsch nur im Zeitfenster), mit „kleine Verspätung ist okay“. Jede Option zeigt ein Beispiel live. Die erledigte Aufgabe behält ihren Verlauf, die nächste entsteht. |
 | **Fairness** | Aufwand pro Person für diese Woche oder diesen Monat, optionale Zusammenfassung am Sonntagabend, Schalter je Board. |
 | **Personen und Zugriff** | Jeder bekommt ein Bild (aus Home Assistant oder hochgeladen). Du bestimmst, wer die App öffnen darf. Rollen: Administrator, Mitglied, Kind. |
@@ -127,7 +129,7 @@ services:
     volumes: ["./stups-daten:/data"]
 ```
 
-Beim ersten Start zeigt das Protokoll (`docker logs stups`) einen Code für die Einrichtung des ersten Administrators. Hinter einer https-Adresse (`STUPS_PUBLIC_URL`) meldest du dich auch mit **Passkey** an (Fingerabdruck oder Gesicht statt Passwort). Boards, Agenda, Kalender, Wiederholungen und Stupsen funktionieren wie in der App. Wächter und Sensoren brauchen Home Assistant: Mit `HA_URL` und `HA_TOKEN` (Long-Lived-Token) verbindet sich auch der Container damit. Push-Nachrichten kommen dort über [ntfy](https://ntfy.sh) (`STUPS_NTFY_URL`), mit Knöpfen wie „Erledigt" direkt in der Nachricht. Alles Weitere (Synology, HTTPS, ntfy einrichten, Einstellungen, Umzug): [docs/docker.md](docs/docker.md).
+Beim ersten Start zeigt das Protokoll (`docker logs stups`) einen Code für die Einrichtung des ersten Administrators. Hinter einer https-Adresse (`STUPS_PUBLIC_URL`) meldest du dich auch mit **Passkey** an (Fingerabdruck oder Gesicht statt Passwort). Aufgaben, Boards, Kalender, Wiederholungen und Stupsen funktionieren wie in der App. Wächter und Sensoren brauchen Home Assistant: Mit `HA_URL` und `HA_TOKEN` (Long-Lived-Token) verbindet sich auch der Container damit. Push-Nachrichten kommen dort über [ntfy](https://ntfy.sh) (`STUPS_NTFY_URL`), mit Knöpfen wie „Erledigt" direkt in der Nachricht. Alles Weitere (Synology, HTTPS, ntfy einrichten, Einstellungen, Umzug): [docs/docker.md](docs/docker.md).
 
 ## Dokumentation
 
@@ -145,7 +147,9 @@ pnpm install
 pnpm lint && pnpm typecheck && pnpm test && pnpm build
 pnpm exec playwright install webkit   # einmalig
 pnpm e2e                              # Browser-Tests (WebKit, iPhone-Ansicht)
-node e2e/screenshots.mjs              # Screenshots für diese Seite (docs/images)
+node e2e/screenshots.mjs              # Screenshots für diese Seite (docs/images; mit --lang en nach docs/images/en)
+python3 e2e/shrink-images.py          # danach auf 256 Farben verkleinern (rund ein Drittel der Größe)
+node e2e/demo.mjs --lang de           # Demo-GIF (docs/images/demo.de.gif)
 ```
 
 Details und der Ablauf für neue Versionen stehen in [dev/entwicklung.md](dev/entwicklung.md).

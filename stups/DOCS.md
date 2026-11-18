@@ -9,7 +9,7 @@ Your home notices what needs doing, you decide who does it. Stups runs right ins
 1. Install **Stups** from the app store, start it and open it from the sidebar.
 2. On a new installation, administrators are guided through a short setup (about three minutes): who lives here, a first watcher, a test message. Every step can be skipped and done later.
 3. People, phones and access are managed in the app under **Settings › Household › People & access**; the target of the Home button at the top under **Settings › Home Assistant › Dashboard**.
-4. Add cards on the **Boards** tab with the **+** button, or let a watcher create them from what your smart home knows.
+4. Add a task with the orange **+** in the bar at the bottom (on a computer: **New task** at the top right), or let a watcher create it from what your smart home knows.
 
 ## If something does not work
 
@@ -21,7 +21,7 @@ Your home notices what needs doing, you decide who does it. Stups runs right ins
 
 **First start:** on a new installation Stups first guides administrators through a short setup, about three minutes: **Who lives here?** (the people from Home Assistant are preselected, phones are detected by themselves, anyone without a phone gets a link to the Companion App in the App Store or Google Play, and you mark the children; an administrator is not a person and only appears if they switch on “Add me too”), **Your first watcher** (exactly the same list and assistant as under Watchers › Found, with the people you just chose already selected), **Test message** (a real example of the message a new card sends, to the phone of a person you choose; on an iPhone press and hold it to see the *Done* button) and **Done**. Every step can be skipped and done later. Where you stopped is saved on the server, so you can carry on on another device. Members and children see a short version (**Connect phone**, **Choose a colour**). Installations that already existed do not show it by themselves; *Settings › Help and data › Go through the setup again* opens it any time.
 
-**Afterwards** everything is under **Settings** (cog or avatar at the top right; the table under “Settings” shows where to find what). The most important pages:
+**Afterwards** everything is under **Settings** (the cog at the top right; the table under “Settings” shows where to find what). The most important pages:
 
 - **People & access** (administrators): the people from Home Assistant (Settings › People) are offered; whoever is added can be assigned cards and receives push messages. Tick, per person, the devices that should receive the messages (the devices where the Companion App is signed in appear; everyone chooses their own, an administrator can also do it for others). For access, choose *Everyone in Home Assistant* (every Home Assistant user may open the app) or *Only these people* (only the list and administrators; anyone else who opens it sees “No access” and appears for administrators under “Waiting for approval”).
 - **Dashboard** (each person for themselves): where the Home button at the top right leads, back to Home Assistant.
@@ -42,7 +42,7 @@ Your home notices what needs doing, you decide who does it. Stups runs right ins
 - **Swiping:** swiping a card to the left moves it to the next status, to the right to the previous one. Behind the card it says where it will jump. "Planned" is skipped.
 - **Moving and more:** via "⋯" on the card (Move to …, Mark as done, Duplicate, Details, Delete). On large screens cards can be dragged with the mouse.
 - **Planned:** cards with a due date after today sit in "Planned" and move to "Open" on the due date. This keeps "Open" tidy. Per board you can choose which column is "Planned" and which is "Done".
-- **Settings** are behind the **avatar at the top right** of every tab.
+- **Settings** are behind the **cog at the top right** of every tab.
 
 ### Creating cards quickly
 
@@ -73,9 +73,15 @@ Dark and light follow the iPhone (or the device). A coloured **bar on the left**
 
 ### The tabs and the header
 
-The bar at the bottom has three tabs: **Tasks** (the start: the app always opens there; only Boards is remembered), **Boards** and **Watchers**. Children and the container without Home Assistant do not see Watchers. The same header sits on every tab: an **offline notice** on the right when the connection is missing, the **Home button** (add-on only; takes you back to the Home Assistant dashboard, you choose the target under Settings › Dashboard), the **bell** (with a small number when something is waiting for you), the **cog** and your **avatar**. Cog and avatar open the settings. It shows your picture (from Home Assistant or uploaded by you) or your initial in your colour.
+The bar at the bottom has four tabs and a **+** in the middle: **Tasks** (the start: the app always opens there), **Boards**, **Calendar** and **Watchers** (Boards is remembered, the others are not). The **+** creates a task wherever you are. Children and the container without Home Assistant do not see Watchers. The same header sits on every tab: an **offline notice** on the right when the connection is missing, the **Home button** (add-on only; takes you back to the Home Assistant dashboard, you choose the target under Settings › Dashboard), the **bell** (with a small number when something is waiting for you) and the **cog**, which opens the settings (your picture or your initial in your colour is shown there).
 
-**On a computer (from 1024 px wide)** a fixed sidebar replaces the bottom bar (tabs, boards, your card). The header has search (**Ctrl/Cmd + K**), **New task**, Home and the bell. Tasks open in a detail column on the right, Boards are a Kanban across the full width, Watchers a table, and windows open as a centred dialog. Phones and the Companion App look as before; tablets show the phone view centred.
+**On a computer (from 1024 px wide)** the app is built for the large screen, not just stretched:
+
+- A fixed **sidebar** replaces the bottom bar: the four destinations (Tasks, Boards, Calendar, Watchers), the boards below with their number of open tasks, and you with the bell and the cog at the bottom. It folds away with the button at the top.
+- At the top of every page: the heading, **search** (**Ctrl/Cmd + K** opens the command palette), the menu **For whom?** (*My tasks*, *All tasks* or one person; it applies to Tasks, Calendar and Watchers) and **New task**.
+- **Tasks** are a table with numbers as filters at the top, **Boards** a Kanban across the full width, **Calendar** a time grid like Google Calendar, **Watchers** a table. Tasks open **inline** in the row (all fields in a grid, comments and history in tabs); windows open as a centred dialog.
+
+Phones and the Companion App look as before; tablets show the phone view centred.
 
 Two colours: your **accent** (orange unless you pick one) belongs to people and actions; **teal** belongs to everything that comes from the house (watcher cards, Watchers). That is why green and teal are missing from the colour wheel.
 
@@ -83,12 +89,12 @@ Two colours: your **accent** (orange unless you pick one) belongs to people and 
 
 Tasks is the start page and shows at a glance what is on for you, from top to bottom:
 
-- **Your numbers:** due today, overdue, done today. Tap one to open a sheet (overdue offers "Tomorrow" and "Move all", done today offers "Undo").
-- **This week:** a strip of the week with dots; the calendar button opens the calendar (see below).
-- **Nudge banner**, only when somebody nudged you and it is still open.
-- **Chips:** *Mine* (the app always starts here), *All*, each person, and **Filter**.
-- **From the house** (only when there is something): open cards from watchers that are assigned to you or to nobody yet. Each shows what triggered it and when ("Washing machine done · 4 min ago") and why you are up ("in turn among everyone who is home"). Buttons: **Done**, **Pass on** (to the next person in the rotation, without counting as done) and, with "Suggest first", **Take it**.
-- **Your cards,** grouped as **Overdue**, **Today**, **This week** and **Later**. The time is red when overdue and in the accent colour when due today.
+- **Your numbers:** due today, overdue, this week, done today (on a computer also **From the house**). Tap one to open a sheet (overdue offers "Tomorrow" and "Move all", done today offers "Undo"); on a computer they work as filters.
+- **Scope menu:** *My tasks* (the app always starts here), *All tasks* or one person. Next to it **Filter** and a search field.
+- **Nudge banner**, only when somebody nudged you and it is still open, with **Done**, **On it** and **Later**.
+- **From the house** (only when there is something, always first, in both phone and desktop): open cards from watchers that are assigned to you or to nobody yet, at most five, with **Show all**; the group can be folded away. Each shows what triggered it and when ("Washing machine done · 4 min ago") and why you are up ("in turn among everyone who is home"). Buttons: **Done**, **Pass on** (to the next person in the rotation, without counting as done) and, with "Suggest first", **Take it**.
+- **Your cards,** grouped as **Overdue**, **Today**, **This week**, **Later** and **No date**. The time is red when overdue and in the accent colour when due today. **No date** is always the last group (watcher cards usually have no date) and is always shown, unless you pick groups under *When*. Who a card belongs to is shown by their picture only.
+- **A quiet line** above the list says how many cards of others or without an assignee *My tasks* hides ("3 more tasks are hidden"), with **Show all**.
 - **Fairness this week** and **With the others:** one line with the avatars and the number of open cards. It leads to **This week**.
 
 A child only sees "From the house" (its own cards) and its own cards. When nothing is open, a friendly sentence appears.
@@ -106,13 +112,12 @@ Through "With the others" on Tasks you reach **This week** (or this month). It s
 
 ### Calendar
 
-The calendar is a page under Tasks (open it with the calendar button on the week strip or "Month view"; "‹ Tasks" takes you back). It shows the cards with a due date as **Day**, **Week** or **Month**; the **list** is the Tasks page itself. The arrows page through, "Today" jumps back.
+The **Calendar** tab shows the cards with a due date as **Day**, **3 days** (phone), **Week** or **Month**; the **list** is the Tasks page itself. The arrows page through, "Today" jumps back. Who is shown follows the menu *My tasks / All tasks / person*.
 
 - **Day and week** show a time grid. A card sits at the time of its due date in the colour of its board; cards at the same time sit side by side. A tap opens the card, a tap on the day number in the week view opens the day.
 - **Month:** dots (on a large screen the titles) show where something is due. A tap on a day opens the day view.
 - **Creating a card:** tap a free time in the grid. A short form opens with the due date: choose title, board and assignees, "Create". If exactly one board or person is chosen in the filter, they are preset. "All fields …" opens the full form.
-- **List (the Tasks page):** all cards with a due date from all boards, sorted by day: **Overdue** first, then Today, Tomorrow and every further day. Tap the circle on the left to complete a card, tap the card to open it. It loads the next 60 days; if nothing is due in that time it looks a year ahead, and **"Load 60 more days"** fetches cards further away.
-- **Filter:** the "Filter" button at the top right (in the list: the chips above it) filters by **people** (yourself, every other person, "Nobody" for cards without an assignee) and **boards**; **Done** shows the ones completed in the last seven days, "Reset" clears all filters. The filter is remembered on the device.
+- **Filter:** the "Filter" button filters by **who** (yourself, every other person, "Nobody" for cards without an assignee), **when** (overdue, today, this week, later, no date), **boards**, **priority** and a few extras (only with an open nudge, only watcher cards, show completed ones); search and sort order are in there too. "Reset" clears all filters. The filter is remembered on the device.
 
 ### Recurring tasks
 
@@ -145,7 +150,7 @@ On a task you can switch on **"Remind me again if not done"**: after X, repeatin
 With **Nudge** you give another person a friendly nudge for a card ("Are you on it?"). The button is in the card window and in the "⋯" menu of every card. It applies to all people listed under Settings › Household › People & access.
 
 1. **To whom:** the card's assignees (except you) are preselected. If there are none, you choose. Whoever has no push device appears greyed out with a hint.
-2. **Message:** one of the four templates or your own text of up to 120 characters (it replaces the template).
+2. **Message:** four suggestions that **fit the task**, the best one preselected, or your own text of up to 120 characters (it replaces the suggestion). For an overdue task: "This one is overdue – can you get to it?", for one due today "Can you get this done today?", for one due in the next three days "Don't forget, due soon!", for a watcher task "Will you take care of it?", for one you are assigned to as well "Shall we do it together?", for one without a date "Is this on your radar?", and if you have already nudged without an answer "Quick reminder ☝️". Nudges that were sent earlier keep their text.
 3. **Send nudge.** The card hops briefly, a hint confirms it.
 
 The person gets a push message with three buttons (on the iPhone expand the message):
@@ -204,12 +209,12 @@ An administrator can give individual people specific rights without making them 
 
 ### Settings
 
-The avatar at the top right opens the settings as an overview with sub-pages. At the top are your picture, your name and where the picture comes from; **Change picture** uploads your own (JPEG, PNG or WebP up to 2 MB, shrunk to 256 pixels on the device), **Remove picture** goes back to the picture from Home Assistant or to the initial. If your person is matched with a person in Home Assistant that has a picture, Stups fetches it from there (never directly in the browser, always through Stups). An uploaded picture takes precedence. Administrators can also change the picture for others.
+The cog at the top right opens the settings as an overview with sub-pages. At the top are your picture, your name and where the picture comes from; **Change picture** uploads your own (JPEG, PNG or WebP up to 2 MB, shrunk to 256 pixels on the device), **Remove picture** goes back to the picture from Home Assistant or to the initial. If your person is matched with a person in Home Assistant that has a picture, Stups fetches it from there (never directly in the browser, always through Stups). An uploaded picture takes precedence. Administrators can also change the picture for others.
 
 | Group | Pages |
 |---|---|
 | **For me** (everyone) | Notifications (test to me, my devices or ntfy topic, quiet time, Sunday recap, little time) · Language and colour · Account and sign-in (container only) |
-| **Household** (administrators) | People & access (people, phones, access, children, house channels) · Watchers · Templates (board templates) · Icons (recognise icons from titles) · Dates (default time) · Reminder times (daily summary, follow-up at …) |
+| **Household** (administrators) | People & access (people, phones, access, children, house channels) · Templates (board templates) · Icons (recognise icons from titles) · Dates (default time) · Reminder times (daily summary, follow-up at …, a message when a task completes by itself) |
 | **Home Assistant** | Dashboard (target of the Home button, each person for themselves) · Dashboard button (Bubble Card, administrators) · Announcements and lamp (speech service) · Hide HA header (each person, this device only) |
 | **Help and data** | Why does nothing arrive? · Bin, archive, move · User feedback (with the permission) · Beta (beta only) · Go through the setup again |
 
@@ -221,23 +226,29 @@ When you create a board (Boards tab › New board), you can start **empty** or f
 
 ### Watchers: cards created automatically from Home Assistant
 
-A watcher observes an entity in Home Assistant and **creates a card and assigns it by itself** as soon as something happens. The standard example: the washing machine is done, and a person who is at home gets the card "Empty the washing machine" (due in 30 minutes) along with a push message. Only Home Assistant **administrators** may set up and change watchers; everyone sees them.
+A watcher observes an entity in Home Assistant and **creates a card and assigns it by itself** as soon as something happens. The standard example: the washing machine is done, and a person who is at home gets the card "Empty the washing machine" (due in 30 minutes) along with a push message. Only Home Assistant **administrators** (and people with the *Watchers* permission) may set up and change watchers; everyone sees them.
 
-![The Watchers tab](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/waechter-liste-dunkel.png)
+![The Watchers tab on a computer](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/desktop-waechter-dunkel.png)
 
-**The Watchers tab shows the state, not the rules.** The **Watchers** tab (third tab, for all adults) sorts the watchers by what is going on: **Waiting for someone** (a card is open: who is up, since when, **Nudge** button), **Running now** (the machine is running: since when, which card comes next), **Coming up** (the counter is at "2 of 3", or a calendar appointment is due) and a **Quiet** line with the watchers that report nothing. Without a connection to Home Assistant it says "No connection to Home Assistant since …" (boards and cards keep working). Administrators also see "Stups has found N more devices". **Tapping a watcher opens it:** administrators edit it right there (sentence, More rules, Test, Pause, Delete), everyone else sees settings and history read-only. At the bottom is the **recent activity** of all watchers; inside a watcher the history of its latest runs.
+**The Watchers tab shows the state, not the rules.** It sorts the watchers by what is going on: **Waiting for someone** (a card is open: who is up, since when, **Nudge** button), **Running now** (the machine is running: since when, which card comes next), **Coming up** (the counter is at "2 of 3", or a calendar appointment is due) and **With a problem** (entity missing, no assignee, board gone). On a computer these are the four tiles at the top, below them the table with value, status, last run, next card and who. Watchers can have a **category** (washing machine, bins, batteries …); on the phone each category is a page of its own, and **Suggest categories** sorts the existing ones for you. Without a connection to Home Assistant it says "No connection to Home Assistant since …" (boards and cards keep working). **Tapping a watcher opens it:** administrators edit it right there as a flow (When · Then card · To whom · Completes itself), everyone else sees the settings and history read-only. The **recent activity** of all watchers is at the bottom (on a computer in the tab *Activity*); inside a watcher the history of its latest runs.
 
-**Managing** (list, on/off, edit, delete, recent activity): *Settings › Household › Watchers*. All adults see the list, **administrators** change it.
+**Select several:** with **Select** you tick watchers and **pause or resume** them, **delete** them, or **edit them together**. Only what you touch is changed, a field with different values says "different". Name and board stay with each watcher.
 
-**Setting up, easiest via "Found":** *Settings › Household › Watchers › Watchers from templates* (or the hint on the Watchers tab). Stups looks in Home Assistant and shows what a watcher fits, with a reason ("Socket dryer measures the power"): washing machine, dryer, dishwasher (power sensor or the appliance's programme status), put the bins out (waste calendar), laundry in it is raining (weather), battery low, robot vacuum bin. **Set up** fills in the sentence; entities that a watcher already observes are left out. **If a suggestion does not fit** (you do not have that device), tap **Hide**: Stups never suggests it again. Under **Hidden** you bring it back with "Show again". Below, **Also without a device**: cards that repeat by themselves (descale, test smoke detectors, change the filter, change the bedding), no watcher needed. "View all templates" also shows the ones nothing was found for.
+**Setting up, easiest via "Found":** the **Found** button (on the phone the card "Stups found N more devices") shows what Stups discovered in Home Assistant and which watcher fits it, with a reason ("Socket dryer measures the power"): washing machine, dryer, dishwasher, put the bins out (waste calendar), laundry in it is raining (weather), battery low, window open for long, robot vacuum bin and more. On a computer Found is a page of its own with the kinds on the left and the devices on the right; on the phone it is a sheet with groups. **Set up** fills in the sentence. **If a suggestion does not fit** (you do not have that device), **Hide** it: Stups never suggests it again, and under **Hidden** you bring it back. Below, **Also without a device**: cards that repeat by themselves (descale, test smoke detectors, change the filter, change the bedding).
 
-![Edit a watcher](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/waechter-bearbeiten-dunkel.png)
+![Found on a computer](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/desktop-gefunden-dunkel.png)
 
-**The form is a sentence:** "When [entity] stays below [5 W] for more than [3 min], [whoever is home, in turn] gets the card [title]." You tap every field in square brackets and change it. Below:
+**Several devices at once:** the boxes in Found are always there. Tick as many devices of **one kind** as you like (for example all window-sensor batteries); devices of another kind stay visible but are greyed out with the reason ("Different kind than …"), and **Choose instead** switches the selection. **Set up** opens the same assistant for all of them: step 1 shows each device with its value and chart and tells which ones would trigger right now; you take devices away or add ones of the same kind, and the trial run runs for every device. One watcher per device is created, named after the device; the title and the people are the same for all.
 
-- **Trial run:** Stups fetches the history of the entity for the last 7 days (at most 20,000 states) from Home Assistant and applies the rule to it without saving anything. You see a small chart of when the watcher would have fired and a sentence: "3 triggers detected, no false alarm" or "Fired 5 times, 4 of them within 10 minutes: increase the minimum duration?". Without history (recorder off, new entity) a notice replaces the chart.
+![Setting up several devices on a computer](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/desktop-waechter-mehrere-dunkel.png)
+
+**The form is a sentence:** "When [entity] stays below [5 W] for more than [3 min], [whoever is home, in turn] gets the card [title]." On the phone a four-step assistant asks **When**, **Then**, **Who** and **Fine-tuning** one after the other; on a computer everything is in one form with a live preview ("What will be created") next to it. Below:
+
+- **Chart of the entity:** the chart shows what the entity did, with the threshold as a dashed green line and a green dot wherever the rule would have fired. **Under the chart you choose the period: 3 hours, 24 hours, 7 days, 30 days or 1 year.** Stups chooses it for you so that something moves: values that change fast (power) get 3 hours, a phone battery a day or a week, and the battery of a window sensor, which hardly changes for weeks, the whole year. Periods of a day or more come from Home Assistant's **long-term statistics**, which Home Assistant keeps for good (the raw values only for about 10 days). For long periods one line says where it is heading, for example "falls by about 8 % a month · reaches 20 % in about 2 months". Triggers (the green dots) are only known for the last 7 days, and entities without long-term statistics (no `state_class`) stay with the last days; the long periods are greyed out then, with a note.
+- **Trial run:** Stups fetches the history of the entity for the last 7 days (at most 20,000 states) from Home Assistant and applies the rule to it without saving anything. You see when the watcher would have fired and a sentence: "3 triggers detected, no false alarm" or "Fired 5 times, 4 of them within 10 minutes: increase the minimum duration?". Without history (recorder off, new entity) a notice replaces the chart.
 - **Suggest first:** the card appears without an assignee, every adult who is home gets the question "Who takes it?" with a **Take it** button (push) and on Tasks. Whoever taps first gets the card; the others learn who was faster. If nobody answers within **30 minutes**, the watcher's fallback applies. If nobody is home, it applies at once.
 - **Honest about self-completing:** a power sensor cannot prove that someone emptied the appliance. For templates where that is so, "Completes itself" is off, with the reason next to it. With the battery template the card completes itself when the sensor rises above 50 % again.
+- **A message when a task completes by itself:** when a watcher card completes by itself ("Completes itself when …", for example the window is closed again), the people it belonged to get a quiet message "Completed by itself"; it replaces "New task". It is on by default and can be switched off for everyone under *Settings › Reminder times › Completed by itself › Tell them*.
 - **More rules** opens everything else: name, board, column, description, categories, priority, due date, who exactly is in the circle, the fallbacks, "Completes itself when …", counter, lockout, duplicate cards, reminder.
 - **Calendar and weather:** two more kinds of triggers that Stups queries itself **every 30 minutes**. *Appointment in a calendar* with a lead time (for example 12 hours before the collection; every appointment gets exactly one card, all-day appointments start at midnight) and *rain in the forecast* of a weather entity (within the next 1 to 48 hours; after the rain the watcher is armed again). There is no trial run for them.
 
@@ -265,7 +276,7 @@ The conditions in detail:
 - The card is an entirely normal card (due push, reminders, nudging), with an eye symbol and the entry "Created by watcher …" in the history.
 - **Test** creates the card once immediately (marked "Test") so you can check push and assignment.
 
-![Card from a watcher](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/waechter-karte-dunkel.png)
+![A card from a watcher in the board](https://raw.githubusercontent.com/ArrestedOps/ha-stups/main/docs/images/en/waechter-karte-dunkel.png)
 
 **A note on washing machine and dryer:** if both are on the same socket, power alone cannot tell them apart. A separate sensor per appliance helps then (for example a template sensor or a second socket).
 
